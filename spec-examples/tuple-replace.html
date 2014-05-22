@@ -4,7 +4,7 @@
   <head>
     <meta name="description" content ="CS61A: Structure and Interpretation of Computer Programs" />
     <meta name="keywords" content ="CS61A, Computer Science, CS, 61A, Programming, John DeNero, Berkeley, EECS" />
-<link rel="stylesheet" type="text/css" href="questions.css">
+<link rel="stylesheet" type="text/css" href="../questions.css">
 
 <div id="tuple-replace" class="question" data-type="coding" data-topic="tuples hofs">
     <div class="question-header">
@@ -12,8 +12,7 @@
         Define tuple_replace, which takes a tuple TUP and a number N, and returns a function with input function FN that replaces the elements N to len(TUP) - 1 with those same elements, now applied with FN. If N does not exist in the tuple, return the tuple unchanged.
     </div>
     <div class="question-template">
-<pre><code>
-def tuple_replace(tup, n):
+<pre><code>def tuple_replace(tup, n):
     '''
     >>> orig_tup = (2,4,6,8)
     >>> add_four = lambda x : x + 4
@@ -27,8 +26,7 @@ def tuple_replace(tup, n):
         </div>
     <button class="toggle">toggle solution</button>
         <div class="solution hide">
-<pre><code>
-def tuple_replace(tup, n):
+<pre><code>def tuple_replace(tup, n):
     def gen(fn):
         count, result, apply = 0, (), False
         while count < len(tup):
