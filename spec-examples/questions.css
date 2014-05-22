@@ -3,7 +3,7 @@
 :Contact: papajohn@gmail.com
 :Copyright: This stylesheet has been placed in the public domain.
 
-Stylesheet for use with docutils for 61A lecture notes.
+Stylesheet for use with 61A practice problems
 
 */
 
@@ -64,6 +64,23 @@ body {
 
 tt {
   color: #002;
+}
+
+button {
+  margin-top: 1%;
+  margin-bottom: 1%;
+  font-family: Helvetica, sans-serif;
+  font-size: 14px;
+  background-color: steelblue;
+  color: white;
+  border: none;
+  padding: 1%;
+  box-shadow: none;
+}
+
+/* solutions */
+.solution.hide {
+  display: none;
 }
 
 /* links */
