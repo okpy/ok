@@ -1,26 +1,43 @@
-application: okpy-server
-version: prod
+application: flaskgithub
+version: 1
 runtime: python27
 api_version: 1
-threadsafe: false
+threadsafe: true
 
-default_expiration: 7d  # This is good for images, which never change
-
-handlers:
-- url: /static
-  static_dir: static
-
-- url: /.*
-  script: main.application
+default_expiration: "5d"
 
 builtins:
 - appstats: on
-- remote_api: on
+- admin_redirect: on
 - deferred: on
+- remote_api: on
 
 libraries:
-- name: django
-  version: 1.5
+- name: jinja2
+  version: "2.6"
+- name: markupsafe
+  version: "0.15"
 
-env_variables:
-  DJANGO_SETTINGS_MODULE: 'settings'
+inbound_services:
+- warmup
+
+handlers:
+- url: /favicon.ico
+  static_files: app/static/img/favicon.ico
+  upload: app/static/img/favicon.ico
+
+- url: /robots.txt
+  static_files: app/static/robots.txt
+  upload: app/static/robots.txt
+
+- url: /gae_mini_profiler/static
+  static_dir: lib/gae_mini_profiler/static
+
+- url: /gae_mini_profiler/.*
+  script: lib.gae_mini_profiler.main.app
+
+- url: /static
+  static_dir: app/static
+
+- url: .*
+  script: run.app.app
