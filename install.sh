@@ -6,6 +6,13 @@ else
     echo 'You need to set $VIRTUAL_ENV before continuing'
     exit  11
 fi
+if env | grep -q ^GAE_SDK=
+then
+    echo '$GAE_SDK is defined'
+else
+    echo 'You need to set $GAE_SDK before continuing'
+    exit  11
+fi
 
 server/app/generate_keys.py
 
