@@ -5,13 +5,16 @@ Flask-SQLAlchemy==1.0
 Jinja2==2.7.3
 MarkupSafe==0.23
 PyYAML==3.11
+Pygments==1.6
 SQLAlchemy==0.9.4
+Sphinx==1.2.2
 Werkzeug==0.9.6
 argparse==1.2.1
 astroid==1.1.1
+docutils==0.11
 git-pylint-commit-hook==2.0.5
 itsdangerous==0.24
--e git://github.com/ze-phyr-us/linkenv.git#egg=linkenv
+-e git://github.com/ze-phyr-us/linkenv.git@ae463b3211cb8dcc8868e88176a1101733c83b6d#egg=linkenv-master
 logilab-common==0.61.0
 mimerender==0.5.4
 nose==1.3.3
