@@ -9,6 +9,7 @@ before_script:
   - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.6.zip -nv -O gae_sdk.zip
   - unzip -q gae_sdk.zip
   - mv google_appengine gae_sdk
+  - ls gae_sdk
   - export PYTHONPATH=$PYTHONPATH:$GAE_SDK
   - echo $GAE_SDK
   - echo $PYTHONPATH
