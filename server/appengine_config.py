@@ -2,10 +2,6 @@
 App Engine config
 
 """
-import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'gaenv'))
-
 
 def gae_mini_profiler_should_profile_production():
     """Uncomment the first two lines to enable GAE
