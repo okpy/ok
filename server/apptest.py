@@ -33,6 +33,7 @@ if __name__ == '__main__':
         SDK_PATH = sys.argv[1] # ...or hardcoded path
         #Path to tests folder
         TEST_PATH = os.path.join(os.path.dirname(os.path.abspath(__name__)),'tests')
+        print SDK_PATH, TEST_PATH
         main(SDK_PATH, TEST_PATH)
     except IndexError:
         # you probably forgot about path as first argument
