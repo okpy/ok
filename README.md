@@ -9,6 +9,11 @@ Visit http://okpy.org to configure our hosted service for a new course.
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
+Installation
+-------------
+* First, clone this repo
+* Run `install.sh`
+
 Core Features
 -------------
 
