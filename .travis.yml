@@ -10,3 +10,5 @@ before_script:
   - unzip -q gae_sdk.zip
   - mv google_appengine gae_sdk
   - export PYTHONPATH=$PYTHONPATH:$GAE_SDK
+  - echo $GAE_SDK
+  - echo $PYTHONPATH
