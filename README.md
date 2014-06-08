@@ -15,6 +15,13 @@ Installation
 * First, clone this repo
 * Run `install.sh`
 
+
+Starting the Server
+-------------
+```bash
+$ cd server
+$ ./start_server
+```
 Core Features
 -------------
 
