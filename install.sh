@@ -14,4 +14,4 @@ pip install -r requirements.txt
 ln -s ../../hooks/pre-commit.py .git/hooks/pre-commit
 
 echo 'Linking environments'
-linkenv $VIRTUAL_ENV/lib/python2.7/site-packages gaenv  1>/dev/null
+linkenv $VIRTUAL_ENV/lib/python2.7/site-packages server/gaenv  1>/dev/null
