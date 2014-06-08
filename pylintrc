@@ -1,0 +1,2 @@
+[MASTER]
+ignore=server/appengine_config.py
