@@ -4,6 +4,7 @@ Flask-Restless==0.13.1
 Flask-SQLAlchemy==1.0
 Jinja2==2.7.3
 MarkupSafe==0.23
+MySQL-python==1.2.5
 PyYAML==3.11
 Pygments==1.6
 SQLAlchemy==0.9.4
