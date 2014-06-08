@@ -2,3 +2,6 @@
 
 cd server
 python apptest.py $GAE_SDK
+RESULT=$?
+
+exit $RESULT
