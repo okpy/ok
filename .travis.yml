@@ -11,3 +11,4 @@ before_script:
   - export GAE_SDK=$PWD/gae_sdk
   - export PATH=$PATH:$GAE_SDK
   - export PYTHONPATH=$PYTHONPATH:$GAE_SDK
+  - python server/app/generate_keys.py
