@@ -15,7 +15,6 @@ FormEncode==1.2.6
 git-pylint-commit-hook==2.0.5
 itsdangerous==0.24
 Jinja2>=2.7.1
-linkenv==0.1.0
 logilab-common==0.61.0
 M2Crypto==0.21.1
 Mako==0.9.1
