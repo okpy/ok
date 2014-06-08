@@ -3,7 +3,7 @@ settings.py
 
 Configuration for Flask app
 
-Important: Place your keys in the secret_keys.py module, 
+Important: Place your keys in the secret_keys.py module,
            which should be kept out of version control.
 
 """
@@ -18,12 +18,10 @@ class Config(object):
     CSRF_SESSION_KEY = SESSION_KEY
     # Flask-Cache settings
     CACHE_TYPE = 'gaememcached'
+    SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://development:develpp11pp@127.0.0.1'
 
 class Development(Config):
     DEBUG = True
-    # Flask-DebugToolbar settings
-    DEBUG_TB_PROFILER_ENABLED = True
-    DEBUG_TB_INTERCEPT_REDIRECTS = False
     CSRF_ENABLED = True
 
 class Testing(Config):

@@ -8,6 +8,11 @@ from werkzeug.debug import DebuggedApplication
 
 app = Flask('app')
 
+from app.models import model_blueprint
+from app import api
+
+app.register_blueprint(model_blueprint)
+
 if os.getenv('FLASK_CONF') == 'DEV':
 	#development settings n
     app.config.from_object('app.settings.Development')
@@ -17,7 +22,6 @@ if os.getenv('FLASK_CONF') == 'DEV':
     app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
 elif os.getenv('FLASK_CONF') == 'TEST':
     app.config.from_object('app.settings.Testing')
-
 else:
     app.config.from_object('app.settings.Production')
 
@@ -26,3 +30,4 @@ app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 
 # Pull in URL dispatch routes
 import urls
+
