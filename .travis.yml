@@ -1,6 +1,5 @@
 language: python
 env:
-  - GAE_SDK=$PWD/gae_sdk
 python:
   - "2.7"
 install: "pip install -r requirements.txt"
@@ -10,6 +9,8 @@ before_script:
   - unzip -q gae_sdk.zip
   - mv google_appengine gae_sdk
   - ls gae_sdk
+  - export GAE_SDK=$PWD/gae_sdk
+  - export PATH=$PATH:$GAE_SDK
   - export PYTHONPATH=$PYTHONPATH:$GAE_SDK
   - echo $GAE_SDK
   - echo $PYTHONPATH
