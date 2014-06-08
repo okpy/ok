@@ -23,7 +23,10 @@ def main(sdk_path, test_path):
     dev_appserver.fix_sys_path()
     sys.path.insert(1, os.path.join(os.path.abspath('.'), 'lib'))
     suite = unittest2.loader.TestLoader().discover(test_path)
-    unittest2.TextTestRunner(verbosity=2).run(suite)
+    result = unittest2.TextTestRunner(verbosity=2).run(suite)
+    if len(result.failures):
+        sys.exit(1)
+    sys.exit(0)
 
 
 if __name__ == '__main__':
