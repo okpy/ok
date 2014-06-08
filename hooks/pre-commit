@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+
+"""
+Git pre-commit hook for checking Python code quality. The hook requires pylint
+to check the code quality.
+
+AUTHOR:
+    Sebastian Dahlgren <sebastian.dahlgren@gmail.com>
+
+LICENSE:
+    Apache License 2.0
+    http://www.apache.org/licenses/LICENSE-2.0.html
+"""
+
+VERSION = '2.0.2'
+
+import argparse
+import sys
+
+from git_pylint_commit_hook import commit_hook
+
+
+def main():
+    """ Main function handling configuration files etc """
+    parser = argparse.ArgumentParser(
+        description='Git pylint commit hook')
+    parser.add_argument(
+        '--limit',
+        default=8.0,
+        type=float,
+        help=(
+            'Score limit, files with a lower score will stop the '
+            'commit. Default: 8.0'))
+    parser.add_argument(
+        '--pylint',
+        default='pylint',
+        help='Path to pylint executable. Default: pylint')
+    parser.add_argument(
+        '--pylintrc',
+        default='.pylintrc',
+        help=(
+            'Path to pylintrc file. Options in the pylintrc will '
+            'override the command line parameters. Default: .pylintrc'))
+    parser.add_argument(
+        '--pylint-params',
+        help='Custom pylint parameters to add to the pylint command')
+    parser.add_argument(
+        '--version',
+        action='store_true',
+        help='Print current version number')
+    args = parser.parse_args()
+
+    if args.version:
+        print('git-pylint-commit-hook version {}'.format(VERSION))
+        sys.exit(0)
+
+    result = commit_hook.check_repo(
+        args.limit, args.pylint, args.pylintrc, args.pylint_params)
+
+    if result:
+        sys.exit(0)
+    sys.exit(1)
+
+if __name__ == '__main__':
+    main()
+    sys.exit(0)
+
+sys.exit(1)
