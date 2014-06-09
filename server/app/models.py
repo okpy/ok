@@ -52,8 +52,8 @@ class Submission(db.Model): #pylint: disable=R0903
     """
     id = db.Column(db.Integer, primary_key=True)
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'))
-    assignment = db.relationship("Assignment",
-                                 db.backref('submissions', lazy='dynamic'))
+    adssignment = db.relationship("Assignment",
+                                  backref=db.backref('submissions', lazy='dynamic'))
     location = db.Column(db.String(255))
 
     def __init__(self, assignment, location):
