@@ -5,7 +5,7 @@ python:
 install: "pip install -r requirements.txt"
 script: ./run_tests
 before_script:
-  - mysql -e 'create database mysql'
+  - mysql -e 'create database okpy'
   - mysql -e "create user 'development'@'localhost' identified by 'develpp11pp'"
   - mysql -e "grant all privileges on *.* to 'development'@'localhost'; flush privileges"
   - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.6.zip -nv -O gae_sdk.zip
