@@ -1,6 +1,6 @@
 #!/bin/sh
 
 cd server
-FLASK_CONF=TEST python apptest.py $GAE_SDK
+FLASK_CONF=TEST python apptest.py $1
 RESULT=$?
 exit $RESULT
