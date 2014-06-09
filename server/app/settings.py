@@ -34,6 +34,8 @@ class Testing(Config): #pylint: disable=R0903
     Testing config
     """
     TESTING = True
+    SQLALCHEMY_DATABASE_URI = (
+    '''mysql+mysqldb://development:develpp11pp@127.0.0.1/okpyTEST''')
     DEBUG = True
     CSRF_ENABLED = True
 
