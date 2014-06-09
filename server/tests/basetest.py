@@ -10,7 +10,6 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..')))
-import unittest
 
 from google.appengine.ext import testbed
 
@@ -20,17 +19,16 @@ from flask import Flask
 import app
 from app.models import db
 
-class BaseTestCase(TestCase):
+class BaseTestCase(TestCase): #pylint: disable=no-init
 
     def create_app(self): #pylint: disable=no-self-use
         """
         Creates the app
         """
-        app = Flask(__name__)
-        app.config.from_object('app.settings.Testing')
-        return app
+        app.app.config.from_object('app.settings.Testing')
+        return app.app
 
-    def setUp(self):
+    def setUp(self): #pylint: disable=invalid-name, missing-docstring
         # Flask apps testing. See: http://flask.pocoo.org/docs/testing/
         self.app_import = app
         self.testbed = testbed.Testbed()
@@ -40,12 +38,12 @@ class BaseTestCase(TestCase):
         self.testbed.init_memcache_stub()
         db.create_all()
 
-    def tearDown(self):
+    def tearDown(self): #pylint: disable=invalid-name, missing-docstring
         self.testbed.deactivate()
         db.session.remove()
         db.drop_all()
 
-    def setCurrentUser(self, email, user_id, is_admin=False):
+    def set_current_user(self, email, user_id, is_admin=False): #pylint: disable=no-self-use
         os.environ['USER_EMAIL'] = email or ''
         os.environ['USER_ID'] = user_id or ''
         os.environ['USER_IS_ADMIN'] = '1' if is_admin else '0'

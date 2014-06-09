@@ -24,13 +24,16 @@ class APIResource(object):
         """
         return NotImplemented()
 
-    def get(self, user_id):
+    def get(self, db_id):
         """
         The GET HTTP method
         """
-        if user_id is None:
+        if db_id is None:
             return self.index()
-        return json.dumps(self.get_model().query.get(user_id))
+        db_obj = self.get_model().query.get(db_id)
+        if not db_obj:
+            return ("Resource {} not found".format(db_id), 404, {})
+        return json.dumps(db_obj)
 
     def put(self):
         """
@@ -101,4 +104,4 @@ def register_api(view, endpoint, url, primary_key='id', pk_type='int'):
     app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
                      view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
-register_api(UserAPI, 'user_api', '/users', primary_key='user_id')
+register_api(UserAPI, 'user_api', '/users', primary_key='db_id')

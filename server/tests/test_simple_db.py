@@ -7,7 +7,7 @@ This module runs basic tests on the MySQL database.
 """
 import basetest
 
-class TrivialTestCase(basetest.BaseTestCase): #pylint: disable=R0904
+class TrivialTestCase(basetest.BaseTestCase): #pylint: disable=no-init
     """
     Performs extremely simple database operations
     """
@@ -29,7 +29,7 @@ class TrivialTestCase(basetest.BaseTestCase): #pylint: disable=R0904
         query_user = model.User.query.filter_by(email= #pylint: disable=no-member
                                                 "sharad@sharad.com").first()
 
-        self.assertTrue(query_user is test_user)
+        self.assertTrue(query_user is test_user) #pylint: disable=no-member
 
         database.session.delete(test_user)
         database.session.commit()
@@ -37,4 +37,4 @@ class TrivialTestCase(basetest.BaseTestCase): #pylint: disable=R0904
         query_user = model.User.query.filter_by(email= #pylint: disable=no-member
                                                 "sharad@sharad.com").first()
 
-        self.assertTrue(query_user is None)
+        self.assertTrue(query_user is None) #pylint: disable=no-member

@@ -24,7 +24,7 @@ class JSONEncoder(old_json):
 
     def default(self, obj): #pylint: disable=E0202
         try:
-            return obj.tojson()
+            return obj.to_json()
         except AttributeError:
             return json.JSONEncoder.default(self, obj)
 
@@ -52,7 +52,7 @@ class Base(object):
         """
         return dict([(c, getattr(self, c)) for c in self.columns])
 
-    def tojson(self):
+    def to_json(self):
         """
         Converts the object to json.
         """
