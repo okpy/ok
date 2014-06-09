@@ -1,6 +1,8 @@
 #!/bin/sh
 
-cd server
-python apptest.py $GAE_SDK
+python server/apptest.py $GAE_SDK
+
+python3 client/runtest.py
+
 RESULT=$?
 exit $RESULT

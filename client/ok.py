@@ -6,7 +6,7 @@ class Protocol(object):
     name = None
 
     def __init__(self, cmd_line_args):
-        this.args = cmd_line_args
+        self.args = cmd_line_args
 
     def on_start(self, buf):
         pass
@@ -22,8 +22,8 @@ def send_to_server(buf):
     # Insert code for sending to the server here...
 
     buf.clear()
-    buf[student] = student_login
-    buf[msg_type] = "interact"
+    buf[STUDENT_KEY] = student_login
+    buf[MSG_TYPE] = MSG_INTERACT
 
 def receive_from_server():
     """
@@ -37,8 +37,12 @@ def receive_from_server():
 # Configuration variables and runtime methods
 
 student_login = ""
+STUDENT_KEY = 'student'
+MSG_TYPE = 'msg_type'
+MSG_START = 'start'
+MSG_INTERACT = 'interact'
 
-input_buffer = {student: student_login, msg_type: "start"}
+input_buffer = {STUDENT_KEY : student_login, MSG_TYPE : MSG_START}
 
 protocols = list()
 
@@ -64,7 +68,7 @@ def ok_main(cmd_line_args):
     send_to_server(input_buffer)
 
     if cmd_line_args.mode != None:
-        name_to_protocols[cmd_line_args.mode].on_interact(input_buffer)
+        name_to_protocol[cmd_line_args.mode].on_interact(input_buffer)
 
     send_to_server(input_buffer)
 
