@@ -20,30 +20,42 @@ class User(db.Model): #pylint: disable=R0903
     email = db.Column(db.String(120), unique=True)
     login = db.Column(db.String(30))
     role = db.Column(db.Integer, default=constants.STUDENT_ROLE)
+    first_name = db.Column(db.String(255))
+    last_name = db.Column(db.String(255))
 
-    def __init__(self, username, email):
-        self.username = username
+    def __init__(self, email, login,
+                 role, first_name, last_name):
         self.email = email
+        self.login = login
+        self.role = role
+        self.first_name = first_name
+        self.last_name = last_name
 
     def __repr__(self):
-        return '<User %r>' % self.username
+        return '<User %r>' % self.email
 
 class Assignment(db.Model): #pylint: disable=R0903
     """
     The Assignment Model
     """
     id = db.Column(db.Integer, primary_key=True)
-    submissions = db.relationship('Submission', backref="assignment")
+    name = db.Column(db.String(255), unique=True)
+    points = db.Column(db.Integer)
 
-    def __init__(self, *args, **kwds):
-        db.Model.__init__(*args, **kwds)
+    def __init__(self, name, points):
+        self.name = name
+        self.points = points
 
 class Submission(db.Model): #pylint: disable=R0903
     """
     The Submission Model
     """
     id = db.Column(db.Integer, primary_key=True)
-    person_id = db.Column(db.Integer, db.ForeignKey('assignment.id'))
+    assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'))
+    assignment = db.relationship("Assignment",
+                                 db.backref('submissions', lazy='dynamic'))
+    location = db.Column(db.String(255))
 
-    def __init__(self, *args, **kwds):
-        db.Model.__init__(*args, **kwds)
+    def __init__(self, assignment, location):
+        self.assignment = assignment
+        self.location = location
