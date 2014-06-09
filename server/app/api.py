@@ -1,65 +1,104 @@
-from sqlalchemy.ext.serializer import loads, dumps
-
-from flask.views import MethodViewType, MethodView
+"""
+The public API for ok.py
+"""
+from flask.views import MethodView
 from flask.app import request
 from flask import json
 
 from app import app
 from app import models
+from app.models import db
 
 API_PREFIX = '/api/v1'
 
-def to_json(wrapped):
-    def wrapper(*args, **kwds):
-        rval = wrapped(*args, **kwds)
-        if type(rval) is not str:
-            rval = json.dumps(rval)
-        return rval
-    return wrapper
+class APIResource(object):
+    """
+    The base class for an API Resource
+    """
 
-class APIResource():
-    @to_json
+    @classmethod
+    def get_model(cls):
+        """
+        Get the model this api resource is associated with.
+        Needs to be overridden by a subclass
+        """
+        return NotImplemented()
+
     def get(self, user_id):
+        """
+        The GET HTTP method
+        """
         if user_id is None:
             return self.index()
-        return self._model.query.get(user_id)
+        return json.dumps(self.get_model().query.get(user_id))
 
-    @to_json
     def put(self):
-        new_mdl = self._model()
-
-    @to_json
-    def post(self):
-        new_mdl = self._model(request.form)
+        """
+        The PUT HTTP method
+        """
+        new_mdl = self.get_model()()
         db.session.add(new_mdl)
         db.session.commit()
+        return json.dumps({'status': 200})
 
-    @to_json
+    def post(self):
+        """
+        The POST HTTP method
+        """
+        new_mdl = self.get_model()(request.form)
+        db.session.add(new_mdl)
+        db.session.commit()
+        return json.dumps({'status': 200})
+
     def delete(self, user_id):
-        ent = self._model.get(user_id)
+        """
+        The DELETE HTTP method
+        """
+        ent = self.get_model().get(user_id)
         db.session.delete(ent)
         db.session.commit()
+        return json.dumps({'status': 200})
 
-    @to_json
     def index(self):
-        return self._model.query.all()
+        """
+        Index HTTP method thing.
+        """
+        return json.dumps(self.get_model().query.all())
 
 class UserAPI(MethodView, APIResource):
-    _model = models.User
+    """
+    The API resource for the User Object
+    """
+    @classmethod
+    def get_model(cls):
+        return models.User
 
 class AssignmentAPI(MethodView, APIResource):
-    _model = models.User
+    """
+    The API resource for the Assignment Object
+    """
+    @classmethod
+    def get_model(cls):
+        return models.User
 
     class SubmissionAPI(MethodView, APIResource):
-        _model = models.User
+        """
+        The API resource for the Submission Object
+        """
+        @classmethod
+        def get_model(cls):
+            return models.User
 
-def register_api(view, endpoint, url, pk='id', pk_type='int'):
+def register_api(view, endpoint, url, primary_key='id', pk_type='int'):
+    """
+    Register the given view at the endpoint, accessible by the given url.
+    """
     url = API_PREFIX + url
     view_func = view.as_view(endpoint)
-    app.add_url_rule(url, defaults={pk: None},
+    app.add_url_rule(url, defaults={primary_key: None},
                      view_func=view_func, methods=['GET',])
     app.add_url_rule(url, view_func=view_func, methods=['POST',])
-    app.add_url_rule('%s/<%s:%s>' % (url, pk_type, pk), view_func=view_func,
-                     methods=['GET', 'PUT', 'DELETE'])
+    app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
+                     view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
-register_api(UserAPI, 'user_api', '/users', pk='user_id')
+register_api(UserAPI, 'user_api', '/users', primary_key='user_id')

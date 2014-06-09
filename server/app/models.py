@@ -12,17 +12,17 @@ model_blueprint = Blueprint('models', __name__)
 
 from app import app
 from flask import json
-from flask.json import JSONEncoder
+from flask.json import JSONEncoder as old_json
 
 db = SQLAlchemy(app)
 
-class JSONEncoder(JSONEncoder):
+class JSONEncoder(old_json):
     """
     Wrapper class to try calling an object's tojson() method. This allows
     us to JSONify objects coming from the ORM. Also handles dates and datetimes.
     """
 
-    def default(self, obj):
+    def default(self, obj): #pylint: disable=E0202
         try:
             return obj.tojson()
         except AttributeError:
@@ -40,15 +40,23 @@ class Base(object):
 
     @property
     def columns(self):
-        return [ c.name for c in self.__table__.columns ]
+        """
+        Returns a list of the names of the columns for this object
+        """
+        return [c.name for c in self.__table__.columns] #pylint: disable=no-member
 
     @property
-    def columnitems(self):
-        return dict([ (c, getattr(self, c)) for c in self.columns ])
+    def column_items(self):
+        """
+        Returns a dictionary of column to data value for this object
+        """
+        return dict([(c, getattr(self, c)) for c in self.columns])
 
     def tojson(self):
-        rval = self.columnitems
-        return rval
+        """
+        Converts the object to json.
+        """
+        return self.column_items
 
 class User(db.Model, Base): #pylint: disable=R0903
     """
