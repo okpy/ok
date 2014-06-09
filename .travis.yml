@@ -16,4 +16,4 @@ before_script:
   - export PYTHONPATH=$PYTHONPATH:$GAE_SDK
   - python server/app/generate_keys.py
   - cd server; python alembic/create_all.py
-  - cd ..; ./run_tests
+  - exit $(python apptest.py $GAE_SDK)
