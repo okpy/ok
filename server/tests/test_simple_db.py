@@ -16,12 +16,13 @@ class TrivialTestCase(basetest.BaseTestCase): #pylint: disable=R0904
         """
         Creates test user and deletes it
         """
-        database = self.app.models.db
-        model = self.app.models
-        constants = self.app.constants
+        database = self.app_import.models.db
+        model = self.app_import.models
+        constants = self.app_import.constants
 
-        test_user = model.User("sharad@sharad.com", "cs61a-tt",
-                               constants.ADMIN_ROLE, "Sharad", "Vikram")
+        test_user = model.User(email="sharad@sharad.com", login="cs61a-tt",
+                               role=constants.ADMIN_ROLE, first_name="Sharad",
+                               last_name="Vikram")
         database.session.add(test_user)
         database.session.commit()
 

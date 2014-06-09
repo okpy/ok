@@ -6,28 +6,44 @@ simple_db_tests.py
 This module runs basic tests on the MySQL database.
 """
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..')))
 import unittest
 
 from google.appengine.ext import testbed
 
-import app
+from flask.ext.testing import TestCase #pylint: disable=import-error, no-name-in-module
+from flask import Flask
 
-class BaseTestCase(unittest.TestCase):
+import app
+from app.models import db
+
+class BaseTestCase(TestCase):
+
+    def create_app(self): #pylint: disable=no-self-use
+        """
+        Creates the app
+        """
+        app = Flask(__name__)
+        app.config.from_object('app.settings.Testing')
+        return app
 
     def setUp(self):
         # Flask apps testing. See: http://flask.pocoo.org/docs/testing/
-        app.app.config['TESTING'] = True
-        app.app.config['CSRF_ENABLED'] = False
-        self.app_client = app.app.test_client()
+        self.app_import = app
         self.testbed = testbed.Testbed()
         self.testbed.activate()
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_user_stub()
         self.testbed.init_memcache_stub()
-        self.app = app
+        db.create_all()
 
     def tearDown(self):
         self.testbed.deactivate()
+        db.session.remove()
+        db.drop_all()
 
     def setCurrentUser(self, email, user_id, is_admin=False):
         os.environ['USER_EMAIL'] = email or ''
