@@ -28,7 +28,7 @@ class SimpleTestCase(BaseTestCase): #pylint: disable=no-init
     def test_users_index_empty(self):
         """ Tests there are no users when the db is created """
         response = self.api_get('/users')
-        assert response.status == 200
+        assert response.status == '200 OK'
         assert response.json == []
 
     def test_users_index_when_one_added(self):
@@ -36,7 +36,7 @@ class SimpleTestCase(BaseTestCase): #pylint: disable=no-init
         models.db.session.add(self.user)
         models.db.session.commit()
         response = self.api_get('/users')
-        assert response.status == 200
+        assert response.status == '200 OK'
         assert response.json == [self.user.to_json()]
 
     def test_add_user_and_get(self):
@@ -44,13 +44,13 @@ class SimpleTestCase(BaseTestCase): #pylint: disable=no-init
         models.db.session.add(self.user)
         models.db.session.commit()
         response = self.api_get('/users/{}'.format(self.user.user_id))
-        assert response.status == 200
+        assert response.status == '200 OK'
         assert response.json == self.user.to_json()
 
     def test_get_invalid_id_errors(self):
         """ Tests that a get on an invalid ID errors """
         response = self.api_get('/users/1')
-        assert response.status == 404
+        assert response.status == '404 NOT FOUND'
 
 if __name__ == '__main__':
     unittest.main()
