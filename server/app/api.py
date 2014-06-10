@@ -82,15 +82,15 @@ class AssignmentAPI(MethodView, APIResource):
     """
     @classmethod
     def get_model(cls):
-        return models.User
+        return models.Assignment
 
-    class SubmissionAPI(MethodView, APIResource):
-        """
-        The API resource for the Submission Object
-        """
-        @classmethod
-        def get_model(cls):
-            return models.User
+class SubmissionAPI(MethodView, APIResource):
+    """
+    The API resource for the Submission Object
+    """
+    @classmethod
+    def get_model(cls):
+        return models.Submission
 
 def register_api(view, endpoint, url, primary_key='id', pk_type='int'):
     """
