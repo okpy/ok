@@ -1,6 +1,6 @@
 import unittest
 import argparse
-from ok import *
+from ok import PROTOCOLS, Protocol, parse_input, ok_main
 
 class TestProtocol(Protocol):
     name = "test"
@@ -16,13 +16,13 @@ class TestProtocol(Protocol):
     def on_interact(self, buf):
         TestProtocol.called_interact += 1
 
-class FrameworkTest(unittest.TestCase):
+class FrameworkTest(unittest.TestCase): #pylint: disable=too-many-public-methods
     def setUp(self):
         self.args = argparse.ArgumentParser().parse_args()
-        del protocols[:]
-        protocols.append(TestProtocol)
+        del PROTOCOLS[:]
+        PROTOCOLS.append(TestProtocol)
 
-    def test_parser(self):
+    def test_parser(self): #pylint: disable=no-self-use
         arguments = parse_input()
         assert arguments.mode == None
 
