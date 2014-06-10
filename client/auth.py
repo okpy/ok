@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     redirect_uri = 'http://localhost:7777'
     params = {
-                'scope': 'email',
+                'scope': 'profile email',
                 'response_type': 'code',
                 'redirect_uri': redirect_uri,
                 'access_type': 'offline'
@@ -69,5 +69,7 @@ if __name__ == "__main__":
     r = requests.get("https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s" % auth_token)
     user_info = json.loads(r.text)
 
+    print(user_info)
+    print(user_info["given_name"], user_info["family_name"])
     print(user_info["email"])
 
