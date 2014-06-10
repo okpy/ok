@@ -1,6 +1,12 @@
 #!/bin/sh
 
 python3 client/runtest.py
+RESULT=$?
+
+if [ $RESULT -ne 0 ];
+then
+  exit $RESULT
+fi
 
 cd server
 FLASK_CONF=TEST python apptest.py $1
