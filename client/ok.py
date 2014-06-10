@@ -17,7 +17,6 @@ The only useful methods in the framework code are send_to_server and
 receive_from_server, which should be invoked if you wish to send information to
 the server or receive information from the server outside of the default times.
 """
-
 import argparse
 
 # Template protocol. All protocols must subclass this.
