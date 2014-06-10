@@ -1,8 +1,8 @@
 #!/bin/sh
 
-python server/apptest.py $GAE_SDK
-
 python3 client/runtest.py
 
+cd server
+FLASK_CONF=TEST python apptest.py $1
 RESULT=$?
 exit $RESULT
