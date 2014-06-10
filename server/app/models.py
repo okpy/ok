@@ -62,7 +62,7 @@ class User(db.Model, Base): #pylint: disable=R0903
     """
     The User Model
     """
-    user_id = db.Column(db.Integer, primary_key=True)
+    db_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)
     login = db.Column(db.String(30))
     role = db.Column(db.Integer, default=constants.STUDENT_ROLE)
@@ -76,7 +76,7 @@ class Assignment(db.Model, Base): #pylint: disable=R0903
     """
     The Assignment Model
     """
-    id = db.Column(db.Integer, primary_key=True)
+    db_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True)
     points = db.Column(db.Integer)
 
@@ -88,8 +88,8 @@ class Submission(db.Model, Base): #pylint: disable=R0903
     """
     The Submission Model
     """
-    id = db.Column(db.Integer, primary_key=True)
-    assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'))
+    db_id = db.Column(db.Integer, primary_key=True)
+    assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.db_id'))
     adssignment = db.relationship("Assignment",
                                   backref=db.backref('submissions', lazy='dynamic'))
     location = db.Column(db.String(255))

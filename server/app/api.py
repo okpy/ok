@@ -32,6 +32,7 @@ class APIResource(object):
             return self.index()
         db_obj = self.get_model().query.get(db_id)
         if not db_obj:
+            #TODO(stephen) Make error json, and more descriptive
             return ("Resource {} not found".format(db_id), 404, {})
         return json.dumps(db_obj)
 
