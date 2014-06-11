@@ -58,6 +58,30 @@ class Base(object):
         """
         return self.column_items
 
+    def update_values(self, values):
+        """
+        Merge in items in the values dict into our object if it's one of our columns
+        """
+        for c in self.__table__.columns:
+            if c.name in values:
+                setattr(self, c.name, values[c.name])
+                del values[c.name]
+
+    @classmethod
+    def from_dict(cls, values):
+        inst = cls()
+        inst.update_values(values)
+        return inst
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        for c in self.__table__.columns:
+            if getattr(self, c.name) != getattr(other, c.name):
+                return False
+        return True
+
+
 class User(db.Model, Base): #pylint: disable=R0903
     """
     The User Model
