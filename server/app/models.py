@@ -1,4 +1,4 @@
-#pylint: disable=C0103
+#pylint: disable=C0103,no-member
 """
 Models
 """
@@ -43,7 +43,7 @@ class Base(object):
         """
         Returns a list of the names of the columns for this object
         """
-        return [c.name for c in self.__table__.columns] #pylint: disable=no-member
+        return [c.name for c in self.__table__.columns]
 
     @property
     def column_items(self):
@@ -60,7 +60,8 @@ class Base(object):
 
     def update_values(self, values):
         """
-        Merge in items in the values dict into our object if it's one of our columns
+        Merge in items in the values dict into our object if it's one of
+        our columns
         """
         for c in self.__table__.columns:
             if c.name in values:
@@ -69,6 +70,9 @@ class Base(object):
 
     @classmethod
     def from_dict(cls, values):
+        """
+        Creates an instance from the given values
+        """
         inst = cls()
         inst.update_values(values)
         return inst
@@ -115,7 +119,8 @@ class Submission(db.Model, Base): #pylint: disable=R0903
     db_id = db.Column(db.Integer, primary_key=True)
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.db_id'))
     adssignment = db.relationship("Assignment",
-                                  backref=db.backref('submissions', lazy='dynamic'))
+                                  backref=db.backref('submissions',
+                                                     lazy='dynamic'))
     location = db.Column(db.String(255))
 
     def __init__(self, assignment, location):
