@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """ The client side autograder functionality.
 
 This file is responsible for all communication with the server and will contain

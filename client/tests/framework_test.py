@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import unittest
 import argparse
 from ok import PROTOCOLS, Protocol, parse_input, ok_main
