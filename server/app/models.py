@@ -30,7 +30,6 @@ class JSONEncoder(old_json):
 
 app.json_encoder = JSONEncoder
 
-# Let's make this a class decorator
 base = declarative_base()
 
 class Base(object):

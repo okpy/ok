@@ -33,12 +33,13 @@ class APITest(BaseTestCase): #pylint: disable=no-init
         """Skip testing base class """
         if cls is APITest:
             raise unittest.SkipTest("Skip APITest; it's a base class")
+        cls.num = 1
         super(APITest, cls).setUpClass()
 
     def setUp(self): #pylint: disable=super-on-old-class
         """Set up"""
         super(APITest, self).setUp()
-        self.inst = self.model()
+        self.inst = self.__class__.get_basic_instance()
 
     def get(self, url, *args, **kwds):
         """
@@ -101,7 +102,9 @@ class APITest(BaseTestCase): #pylint: disable=no-init
         Test that removing one item out of two in the DB makes sure
         the other item is still found"""
         SESSION.add(self.inst)
-        inst2 = self.model()
+        inst2 = self.__class__.get_basic_instance()
+        print self.inst
+        print inst2
         SESSION.add(inst2)
         SESSION.commit()
         self.get('/{}'.format(self.name))
@@ -125,7 +128,7 @@ class APITest(BaseTestCase): #pylint: disable=no-init
         Testing that getting one entity with two in the DB gives the
         right one """
         SESSION.add(self.inst)
-        inst2 = self.model()
+        inst2 = self.__class__.get_basic_instance()
         SESSION.add(inst2)
         SESSION.commit()
 
@@ -157,20 +160,26 @@ class UserAPITest(APITest):
     model = models.User
     name = 'users'
 
+    num = 1
     @classmethod
     def get_basic_instance(cls):
-        return models.User(email=u'test@example.com', login=u'cs61a-ab',
+        rval = models.User(email=str(cls.num) + u'test@example.com', login=u'cs61a-ab',
                            role=constants.STUDENT_ROLE, first_name=u"Joe",
                            last_name=u"Schmoe")
+        cls.num += 1
+        return rval
 
 class AssignmentAPITest(APITest):
     """ Assignment API test"""
     model = models.Assignment
     name = 'assignments'
 
+    num = 1
     @classmethod
     def get_basic_instance(cls):
-        return models.Assignment(name='proj1')
+        rval = models.Assignment('proj' + str(cls.num), 3)
+        cls.num += 1
+        return rval
 
 
 if __name__ == '__main__':
