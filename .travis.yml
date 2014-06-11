@@ -2,6 +2,7 @@ language: python
 env:
 python:
   - "2.7"
+  - "3.3"
 install: "pip install -r requirements.txt"
 script: ./run_tests $GAE_SDK
 before_script:
