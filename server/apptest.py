@@ -33,7 +33,10 @@ if __name__ == '__main__':
     #See: http://code.google.com/appengine/docs/python/tools/localunittesting.html
     try:
         #Path to the SDK installation
-        SDK_PATH = sys.argv[1] # ...or hardcoded path
+        if 'GAE_SDK' in os.environ:
+            SDK_PATH = os.environ['GAE_SDK']
+        else:
+            SDK_PATH = sys.argv[1] # ...or hardcoded path
         #Path to tests folder
         TEST_PATH = os.path.join(os.path.dirname(os.path.abspath(__name__)),'tests')
         main(SDK_PATH, TEST_PATH)

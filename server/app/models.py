@@ -117,7 +117,3 @@ class Submission(db.Model, Base): #pylint: disable=R0903
                                   backref=db.backref('submissions',
                                                      lazy='dynamic'))
     location = db.Column(db.String(255))
-
-    def __init__(self, assignment, location):
-        self.assignment = assignment
-        self.location = location
