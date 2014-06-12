@@ -107,10 +107,6 @@ class Assignment(db.Model, Base): #pylint: disable=R0903
     name = db.Column(db.String(255), unique=True)
     points = db.Column(db.Integer)
 
-    def __init__(self, name, points):
-        self.name = name
-        self.points = points
-
 class Submission(db.Model, Base): #pylint: disable=R0903
     """
     The Submission Model

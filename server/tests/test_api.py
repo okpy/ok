@@ -54,13 +54,6 @@ class APITest(BaseTestCase): #pylint: disable=no-init
         kwds.setdefault('content_type', 'application/json')
         self.response = self.client.post(API_PREFIX + url, *args, **kwds)
 
-    def post(self, url, *args, **kwds):
-        """
-        Utility method to do a post request, with json
-        """
-        kwds.setdefault('content_type', 'application/json')
-        self.response = self.client.post(API_PREFIX + url, *args, **kwds)
-
     ## ASSERTS ##
 
     def assertStatusCode(self, code): #pylint: disable=invalid-name
@@ -103,8 +96,6 @@ class APITest(BaseTestCase): #pylint: disable=no-init
         the other item is still found"""
         SESSION.add(self.inst)
         inst2 = self.__class__.get_basic_instance()
-        print self.inst
-        print inst2
         SESSION.add(inst2)
         SESSION.commit()
         self.get('/{}'.format(self.name))
@@ -148,7 +139,7 @@ class APITest(BaseTestCase): #pylint: disable=no-init
                   data=models.json.dumps(inst.to_json()))
         self.assertStatusCode(200)
         inst.db_id = self.response.json['id']
-        gotten = models.User.query.get(self.response.json['id'])
+        gotten = self.model.query.get(self.response.json['id'])
         self.assertEqual(gotten, inst)
 
     ## ENTITY PUT ##
@@ -177,7 +168,7 @@ class AssignmentAPITest(APITest):
     num = 1
     @classmethod
     def get_basic_instance(cls):
-        rval = models.Assignment('proj' + str(cls.num), 3)
+        rval = models.Assignment(name='proj' + str(cls.num), points=3)
         cls.num += 1
         return rval
 

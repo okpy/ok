@@ -95,7 +95,7 @@ class SubmissionAPI(MethodView, APIResource):
     def get_model(cls):
         return models.Submission
 
-def register_api(view, endpoint, url, primary_key='id', pk_type='int'):
+def register_api(view, endpoint, url, primary_key='db_id', pk_type='int'):
     """
     Register the given view at the endpoint, accessible by the given url.
     """
@@ -107,4 +107,5 @@ def register_api(view, endpoint, url, primary_key='id', pk_type='int'):
     app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
                      view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
-register_api(UserAPI, 'user_api', '/users', primary_key='db_id')
+register_api(UserAPI, 'user_api', '/users')
+register_api(AssignmentAPI, 'assignment_api', '/assignments')
