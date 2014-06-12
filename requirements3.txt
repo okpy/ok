@@ -1,2 +1,1 @@
-nose
-    print(result)
+nose==1.3.3
