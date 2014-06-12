@@ -5,6 +5,9 @@ python:
 install: "pip install -r requirements.txt"
 script: ./run_tests $GAE_SDK
 before_script:
+  - sudo apt-get install python3 python3-setuptools
+  - sudo easy_install3 pip
+  - sudo pip3 install -r requirements3.txt
   - mysql -u root -e 'create database okpy; create database okpytest'
   - mysql -u root -e "create user 'development'@'localhost' identified by 'develpp11pp'"
   - mysql -u root -e "grant all privileges on *.* to 'development'@'localhost'; flush privileges"

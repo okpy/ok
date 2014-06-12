@@ -1,4 +1,4 @@
-#pylint: disable=C0103
+#pylint: disable=C0103,no-member
 """
 Models
 """
@@ -30,7 +30,6 @@ class JSONEncoder(old_json):
 
 app.json_encoder = JSONEncoder
 
-# Let's make this a class decorator
 base = declarative_base()
 
 class Base(object):
@@ -43,7 +42,7 @@ class Base(object):
         """
         Returns a list of the names of the columns for this object
         """
-        return [c.name for c in self.__table__.columns] #pylint: disable=no-member
+        return [c.name for c in self.__table__.columns]
 
     @property
     def column_items(self):
@@ -58,11 +57,39 @@ class Base(object):
         """
         return self.column_items
 
+    def update_values(self, values):
+        """
+        Merge in items in the values dict into our object if it's one of
+        our columns
+        """
+        for c in self.__table__.columns:
+            if c.name in values:
+                setattr(self, c.name, values[c.name])
+                del values[c.name]
+
+    @classmethod
+    def from_dict(cls, values):
+        """
+        Creates an instance from the given values
+        """
+        inst = cls()
+        inst.update_values(values)
+        return inst
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        for c in self.__table__.columns:
+            if getattr(self, c.name) != getattr(other, c.name):
+                return False
+        return True
+
+
 class User(db.Model, Base): #pylint: disable=R0903
     """
     The User Model
     """
-    user_id = db.Column(db.Integer, primary_key=True)
+    db_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)
     login = db.Column(db.String(30))
     role = db.Column(db.Integer, default=constants.STUDENT_ROLE)
@@ -76,22 +103,19 @@ class Assignment(db.Model, Base): #pylint: disable=R0903
     """
     The Assignment Model
     """
-    id = db.Column(db.Integer, primary_key=True)
+    db_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True)
     points = db.Column(db.Integer)
-
-    def __init__(self, name, points):
-        self.name = name
-        self.points = points
 
 class Submission(db.Model, Base): #pylint: disable=R0903
     """
     The Submission Model
     """
-    id = db.Column(db.Integer, primary_key=True)
-    assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'))
+    db_id = db.Column(db.Integer, primary_key=True)
+    assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.db_id'))
     adssignment = db.relationship("Assignment",
-                                  backref=db.backref('submissions', lazy='dynamic'))
+                                  backref=db.backref('submissions',
+                                                     lazy='dynamic'))
     location = db.Column(db.String(255))
 
     def __init__(self, assignment, location):
