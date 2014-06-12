@@ -109,3 +109,4 @@ def register_api(view, endpoint, url, primary_key='db_id', pk_type='int'):
 
 register_api(UserAPI, 'user_api', '/users')
 register_api(AssignmentAPI, 'assignment_api', '/assignments')
+register_api(SubmissionAPI, 'submission_api', '/submissions')
