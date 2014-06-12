@@ -17,6 +17,7 @@ fi
 server/app/generate_keys.py
 
 pip install -r requirements.txt
+pip3 install -r requirements3.txt
 
 ln -s ../../hooks/pre-commit.py .git/hooks/pre-commit
 
