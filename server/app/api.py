@@ -32,6 +32,7 @@ class APIResource(object):
             return self.index()
         db_obj = self.get_model().query.get(db_id)
         if not db_obj:
+            #TODO(stephen) Make error json, and more descriptive
             return ("Resource {} not found".format(db_id), 404, {})
         return json.dumps(db_obj)
 
@@ -48,16 +49,18 @@ class APIResource(object):
         """
         The POST HTTP method
         """
-        new_mdl = self.get_model()(request.form)
+        POST = request.json
+        new_mdl = self.get_model().from_dict(POST)
+        # TODO(stephen) look at what's left over in request.POST
         db.session.add(new_mdl)
         db.session.commit()
-        return json.dumps({'status': 200})
+        return json.dumps({'status': 200, 'id': new_mdl.db_id})
 
     def delete(self, user_id):
         """
         The DELETE HTTP method
         """
-        ent = self.get_model().get(user_id)
+        ent = self.get_model().query.get(user_id)
         db.session.delete(ent)
         db.session.commit()
         return json.dumps({'status': 200})
@@ -92,7 +95,7 @@ class SubmissionAPI(MethodView, APIResource):
     def get_model(cls):
         return models.Submission
 
-def register_api(view, endpoint, url, primary_key='id', pk_type='int'):
+def register_api(view, endpoint, url, primary_key='db_id', pk_type='int'):
     """
     Register the given view at the endpoint, accessible by the given url.
     """
@@ -100,8 +103,9 @@ def register_api(view, endpoint, url, primary_key='id', pk_type='int'):
     view_func = view.as_view(endpoint)
     app.add_url_rule(url, defaults={primary_key: None},
                      view_func=view_func, methods=['GET',])
-    app.add_url_rule(url, view_func=view_func, methods=['POST',])
+    app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST',])
     app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
                      view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
-register_api(UserAPI, 'user_api', '/users', primary_key='db_id')
+register_api(UserAPI, 'user_api', '/users')
+register_api(AssignmentAPI, 'assignment_api', '/assignments')
