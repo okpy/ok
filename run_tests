@@ -1,6 +1,8 @@
 #!/bin/sh
 
-python3 client/runtest.py
+cd client;
+nosetests
+cd ..
 RESULT=$?
 
 if [ $RESULT -ne 0 ];
@@ -9,6 +11,7 @@ then
 fi
 
 cd server
-FLASK_CONF=TEST python apptest.py $1
+#FLASK_CONF=TEST python apptest.py $1
+cd ..
 RESULT=$?
 exit $RESULT
