@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
-sys.path.insert(0, './.lib/sanction.zip')
+sys.path.insert(0, './.lib/')
 
 import time
 import webbrowser
@@ -12,8 +12,8 @@ import json
 
 from sanction import Client, transport_headers
 
-CLIENT_ID = '479286488889-loj7p7nmvhvbp3ja9tcqlft39sdn1gnq.apps.googleusercontent.com'
-CLIENT_SECRET = 'bmMO2-2uO5CpTdw93L19oZ0d'
+CLIENT_ID = '268270530197-0ulshcio7meobp6cdpje1a31ouhrcfde.apps.googleusercontent.com'
+CLIENT_SECRET = 'nbCCdqiKOFvJaSrTCmjtjGMe'
 REFRESH_FILE = '.refresh'
 REDIRECT_URI = "http://localhost:7777/"
 TIMEOUT = 10
@@ -70,7 +70,7 @@ def authenticate(force=False):
 
     c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
                client_id=CLIENT_ID)
-    url = c.auth_uri(scope="profile email", access_type='offline',
+    url = c.auth_uri(scope="profile email", access_type='offline', name='okpy-ucb',
                      redirect_uri=REDIRECT_URI)
 
     webbrowser.open(url)
