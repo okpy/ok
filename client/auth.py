@@ -63,8 +63,8 @@ def authenticate(force=False):
     """
     if not force:
         try:
-            refresh_file = open(REFRESH_FILE, 'r')
-            refresh_token = refresh_file.read()
+            with open(REFRESH_FILE) as refresh_file:
+                refresh_token = refresh_file.read()
             auth_token = make_refresh_post(refresh_token)
             return auth_token
         except IOError as error:
@@ -118,9 +118,8 @@ def authenticate(force=False):
     httpd = http.server.HTTPServer(server_address, CodeHandler)
     httpd.handle_request()
 
-    fp = open(REFRESH_FILE, 'w')
-    fp.write(refresh_token)
-    fp.close()
+    with open(REFRESH_FILE, 'w') as fp:
+        fp.write(refresh_token)
     return access_token
 
 if __name__ == "__main__":
