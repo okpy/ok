@@ -59,8 +59,8 @@ def authenticate(force=False):
     """
     if not force:
         try:
-            refresh_file = open(REFRESH_FILE, 'r')
-            refresh_token = refresh_file.read()
+            with open(REFRESH_FILE) as refresh_file:
+                refresh_token = refresh_file.read()
             auth_token = make_refresh_post(refresh_token)
             return auth_token
         except IOError as error:
