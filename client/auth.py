@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
-sys.path.insert(0, './.lib/')
+sys.path.insert(0, './.lib/sanction.zip')
 
 import time
 import webbrowser
