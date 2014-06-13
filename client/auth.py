@@ -9,13 +9,13 @@ import pdb
 from urllib.parse import urlparse, parse_qs
 import http.server
 import json
-from rauth import OAuth2Service
-import requests
+
+from sanction import Client, transport_headers
 
 CLIENT_ID = '479286488889-loj7p7nmvhvbp3ja9tcqlft39sdn1gnq.apps.googleusercontent.com'
 CLIENT_SECRET = 'bmMO2-2uO5CpTdw93L19oZ0d'
-AUTH_URL = "https://accounts.google.com/o/oauth2/token"
 REFRESH_FILE = '.refresh'
+REDIRECT_URI = "http://localhost:7777/"
 TIMEOUT = 10
 
 SUCCESS_HTML ="""
@@ -30,32 +30,28 @@ SUCCESS_HTML ="""
 """
 
 def make_code_post(code):
+    client = Client(token_endpoint='https://accounts.google.com/o/oauth2/token',
+                    resource_endpoint='https://www.googleapis.com/oauth2/v1',
+                    client_id=CLIENT_ID,
+                    client_secret=CLIENT_SECRET
+                    )
     params = {
-        "code": code,
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "grant_type": "authorization_code",
-        "redirect_uri": "http://localhost:7777",
+        "redirect_uri": REDIRECT_URI
     }
-    r = requests.post(AUTH_URL, data=params)
-    result = json.loads(r.text)
-    auth_token = result["access_token"]
-    refresh_token = result["refresh_token"]
-    return auth_token, refresh_token
+    client.request_token(code=code, **params)
+    return client.access_token, client.refresh_token
 
 def make_refresh_post(refresh_token):
+    client = Client(token_endpoint='https://accounts.google.com/o/oauth2/token',
+                    resource_endpoint='https://www.googleapis.com/oauth2/v1',
+                    client_id=CLIENT_ID,
+                    client_secret=CLIENT_SECRET
+                    )
     params = {
-        "refresh_token": refresh_token,
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "grant_type": "refresh_token",
+        "grant_type": "refresh_token"
     }
-    r = requests.post(AUTH_URL, data=params)
-    result = json.loads(r.text)
-    if "access_token" not in result:
-        raise Exception("refresh token invalid")
-    auth_token = result["access_token"]
-    return auth_token
+    client.request_token(refresh_token=refresh_token, **params)
+    return client.access_token
 
 def authenticate(force=False):
     """
@@ -72,23 +68,11 @@ def authenticate(force=False):
         except Exception as error:
             print('Performing authentication')
 
-    google = OAuth2Service(
-        client_id=CLIENT_ID,
-        client_secret=CLIENT_SECRET,
-        authorize_url='https://accounts.google.com/o/oauth2/auth',
-        access_token_url='https://accounts.google.com/o/oauth2/token',
-        base_url='https://accounts.google.com/o/oauth2/auth',
-        name='test-project')
+    c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
+               client_id=CLIENT_ID)
+    url = c.auth_uri(scope="profile email", access_type='offline',
+                     redirect_uri=REDIRECT_URI)
 
-    redirect_uri = 'http://localhost:7777'
-    params = {
-        'scope': 'profile email',
-        'response_type': 'code',
-        'redirect_uri': redirect_uri,
-        'access_type': 'offline'
-    }
-
-    url = google.get_authorize_url(**params)
     webbrowser.open(url)
 
     HOST_NAME = 'localhost'
@@ -103,7 +87,6 @@ def authenticate(force=False):
             path = urlparse(self.path)
             nonlocal access_token, refresh_token, done
             qs = parse_qs(path.query)
-            print(qs)
             code = qs['code'][0]
             access_token, refresh_token = make_code_post(code)
 
@@ -112,16 +95,15 @@ def authenticate(force=False):
             self.send_header("Content-type", "text/html")
             self.end_headers()
             self.wfile.write(bytes(SUCCESS_HTML, "utf-8"))
-            self.wfile.close()
 
     server_address = ('localhost', 7777)
     httpd = http.server.HTTPServer(server_address, CodeHandler)
     httpd.handle_request()
 
-    fp = open(REFRESH_FILE, 'w')
-    fp.write(refresh_token)
-    fp.close()
+    with open(REFRESH_FILE, 'w') as fp:
+        fp.write(refresh_token)
+
     return access_token
 
 if __name__ == "__main__":
-    print(authenticate(force=True))
+    print(authenticate())
