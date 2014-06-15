@@ -11,9 +11,10 @@ The ok.py software was developed for CS 61A at UC Berkeley.
 
 Installation
 -------------
-* Make sure the [Google App Engine SDK](https://developers.google.com/appengine/downloads) is installed and that you've added it to your `$PATH`.
+* Clone this repo
+* Make sure the [Google App Engine SDK](https://developers.google.com/appengine/downloads) is installed and that you've added it to your `$PATH`. You can do `brew install google-app-engine` on a mac. 
+* Make sure that you `virtualenv` installed, and have a local virtual environment installed in the root directory. You can do `brew install virtualenv` on a mac. 
 * `export GAE_SDK=<location of unzipped GAE SDK>`
-* First, clone this repo
 * Run `install.sh`
 
 
