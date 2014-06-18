@@ -14,7 +14,7 @@ from app import models, constants
 
 SESSION = models.db.session
 
-class APITest(BaseTestCase): #pylint: disable=no-init
+class APITest(object): #pylint: disable=no-init
     """
     Simple test case for the API
     """
@@ -28,15 +28,7 @@ class APITest(BaseTestCase): #pylint: disable=no-init
         """
         raise NotImplementedError()
 
-    @classmethod
-    def setUpClass(cls): #pylint: disable=invalid-name
-        """Skip testing base class """
-        if cls is APITest:
-            raise unittest.SkipTest("Skip APITest; it's a base class")
-        cls.num = 1
-        super(APITest, cls).setUpClass()
-
-    def setUp(self): #pylint: disable=super-on-old-class
+    def setUp(self): #pylint: disable=super-on-old-class, invalid-name
         """Set up"""
         super(APITest, self).setUp()
         self.inst = self.__class__.get_basic_instance()
@@ -146,7 +138,7 @@ class APITest(BaseTestCase): #pylint: disable=no-init
 
     ## ENTITY DELETE ##
 
-class UserAPITest(APITest):
+class UserAPITest(APITest, BaseTestCase):
     """User API test"""
     model = models.User
     name = 'users'
@@ -154,13 +146,13 @@ class UserAPITest(APITest):
     num = 1
     @classmethod
     def get_basic_instance(cls):
-        rval = models.User(email=str(cls.num) + u'test@example.com', login=u'cs61a-ab',
-                           role=constants.STUDENT_ROLE, first_name=u"Joe",
-                           last_name=u"Schmoe")
+        rval = models.User(email=str(cls.num) + u'test@example.com',
+                           login=u'cs61a-ab', role=constants.STUDENT_ROLE,
+                           first_name=u"Joe", last_name=u"Schmoe")
         cls.num += 1
         return rval
 
-class AssignmentAPITest(APITest):
+class AssignmentAPITest(APITest, BaseTestCase):
     """ Assignment API test"""
     model = models.Assignment
     name = 'assignments'
@@ -172,6 +164,17 @@ class AssignmentAPITest(APITest):
         cls.num += 1
         return rval
 
+class SubmissionAPITest(APITest, BaseTestCase):
+    """ Assignment API test"""
+    model = models.Submission
+    name = 'submissions'
+
+    num = 1
+    @classmethod
+    def get_basic_instance(cls):
+        rval = models.Submission(location="hihi")
+        cls.num += 1
+        return rval
 
 if __name__ == '__main__':
     unittest.main()
