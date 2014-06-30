@@ -19,8 +19,6 @@ class Config(object): #pylint: disable=R0903
     CSRF_SESSION_KEY = secret_keys.SESSION_KEY
     # Flask-Cache settings
     CACHE_TYPE = 'gaememcached'
-    SQLALCHEMY_DATABASE_URI = (
-    '''mysql+mysqldb://development:develpp11pp@127.0.0.1/okpy''')
 
 class Development(Config): #pylint: disable=R0903
     """
@@ -34,8 +32,6 @@ class Testing(Config): #pylint: disable=R0903
     Testing config
     """
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = (
-    '''mysql+mysqldb://development:develpp11pp@127.0.0.1/okpytest''')
     DEBUG = True
     CSRF_ENABLED = True
 

@@ -13,35 +13,31 @@ sys.path.insert(0, os.path.abspath(os.path.join(
 
 from google.appengine.ext import testbed
 
-from flask.ext.testing import TestCase #pylint: disable=import-error, no-name-in-module
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 from flask import Flask
 
 import app
-from app.models import db
 
-class BaseTestCase(TestCase): #pylint: disable=no-init
-
-    def create_app(self): #pylint: disable=no-self-use
-        """
-        Creates the app
-        """
-        app.app.config.from_object('app.settings.Testing')
-        return app.app
-
+class BaseTestCase(unittest.TestCase): #pylint: disable=no-init
     def setUp(self): #pylint: disable=invalid-name, missing-docstring
         # Flask apps testing. See: http://flask.pocoo.org/docs/testing/
+        app.app.config.from_object('app.settings.Testing')
+        self.app = app.app
+        self.client = self.app.test_client()
+
         self.app_import = app
         self.testbed = testbed.Testbed()
         self.testbed.activate()
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_user_stub()
         self.testbed.init_memcache_stub()
-        db.create_all()
 
     def tearDown(self): #pylint: disable=invalid-name, missing-docstring
         self.testbed.deactivate()
-        db.session.remove()
-        db.drop_all()
 
     def set_current_user(self, email, user_id, is_admin=False): #pylint: disable=no-self-use
         os.environ['USER_EMAIL'] = email or ''

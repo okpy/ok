@@ -31,13 +31,29 @@ class APITest(object): #pylint: disable=no-init
     def setUp(self): #pylint: disable=super-on-old-class, invalid-name
         """Set up"""
         super(APITest, self).setUp()
-        self.inst = self.__class__.get_basic_instance()
+        self.inst = self.get_basic_instance()
 
     def get(self, url, *args, **kwds):
         """
         Utility method to do a get request
         """
         self.response = self.client.get(API_PREFIX + url, *args, **kwds)
+        try:
+            self.response_json = models.json.loads(self.response.data)
+        except Exception:
+            self.response_json = None
+
+    def get_index(self, *args, **kwds):
+        """
+        Utility method to do a get on the index
+        """
+        self.get('/{}'.format(self.name), *args, **kwds)
+
+    def get_entity(self, inst, *args, **kwds):
+        """
+        Utility method to do a get on a particular instance
+        """
+        self.get('/{}/{}'.format(self.name, inst.key.id()), *args, **kwds)
 
     def post(self, url, *args, **kwds):
         """
@@ -45,6 +61,35 @@ class APITest(object): #pylint: disable=no-init
         """
         kwds.setdefault('content_type', 'application/json')
         self.response = self.client.post(API_PREFIX + url, *args, **kwds)
+        try:
+            self.response_json = models.json.loads(self.response.data)
+        except e:
+            self.response_json = None
+
+    def post_json(self, url, *args, **kwds):
+        """
+        Utility method for posting JSON
+        """
+        data = kwds.get('data', {})
+        if isinstance(data, models.Base):
+            data = data.to_dict()
+        if isinstance(data, dict):
+            data = models.json.dumps(data)
+        kwds['data'] = data
+        kwds.setdefault('content_type', 'application/json')
+        self.post(url, *args, **kwds)
+
+    def post_entity(self, inst, *args, **kwds):
+        """
+        Posts an entity to the server
+        """
+        self.post_json('/{}/new'.format(self.name), data=inst, *args, **kwds)
+        if inst.key:
+            if self.response_json.get('key'):
+                self.assertEqual(inst.key, self.response['key'])
+        else:
+            inst.key = models.ndb.Key(self.model, self.response_json.get('key'))
+        self.assertStatusCode(200)
 
     ## ASSERTS ##
 
@@ -53,9 +98,9 @@ class APITest(object): #pylint: disable=no-init
         self.assertEqual(self.response.status_code, code)
 
     def assertJson(self, correct_json): #pylint: disable=invalid-name
-        """Asserts that the response was `correct_json`"""
+        """Asserts that the response was |correct_json|"""
         self.assertStatusCode(200)
-        self.assertEqual(self.response.json, correct_json) #pylint: disable=no-member
+        self.assertEqual(self.response_json, correct_json)
 
     ## INDEX ##
     def test_index_empty(self):
@@ -65,58 +110,51 @@ class APITest(object): #pylint: disable=no-init
 
     def test_index_one_added(self):
         """ Tests that the index method gives me an entity I add """
-        SESSION.add(self.inst)
-        SESSION.commit()
-        self.get('/{}'.format(self.name))
-        self.assertJson([self.inst.to_json()])
+        self.inst.put()
+        self.get_index()
+        self.assertJson([self.inst.to_dict()])
 
     def test_index_one_removed(self):
         """Tests that removing an entity makes it disappear from the index """
-        SESSION.add(self.inst)
-        SESSION.commit()
-        self.get('/{}'.format(self.name))
-        self.assertJson([self.inst.to_json()])
+        self.inst.put()
+        self.get_index()
+        self.assertJson([self.inst.to_dict()])
 
-        SESSION.delete(self.inst)
-        SESSION.commit()
-        self.get('/{}'.format(self.name))
+        self.inst.key.delete()
+        self.get_index()
         self.assertJson([])
 
     def test_index_one_removed_from_two(self):
         """
         Test that removing one item out of two in the DB makes sure
         the other item is still found"""
-        SESSION.add(self.inst)
-        inst2 = self.__class__.get_basic_instance()
-        SESSION.add(inst2)
-        SESSION.commit()
-        self.get('/{}'.format(self.name))
-        self.assertJson([self.inst.to_json(), inst2.to_json()])
+        self.inst.put()
+        inst2 = self.get_basic_instance()
+        inst2.put()
+        self.get_index()
+        self.assertJson(sorted([self.inst.to_dict(), inst2.to_dict()]))
 
-        SESSION.delete(inst2)
-        SESSION.commit()
-        self.get('/{}'.format(self.name))
-        self.assertJson([self.inst.to_json()])
+        inst2.key.delete()
+        self.get_index()
+        self.assertJson([self.inst.to_dict()])
 
     ## ENTITY GET ##
     def test_get_basic(self):
         """ Tests that a basic get works """
-        SESSION.add(self.inst)
-        SESSION.commit()
-        self.get('/{}/{}'.format(self.name, self.inst.db_id))
-        self.assertJson(self.inst.to_json())
+        self.inst.put()
+        self.get_entity(self.inst)
+        self.assertJson(self.inst.to_dict())
 
     def test_get_with_two_entities(self):
         """
         Testing that getting one entity with two in the DB gives the
         right one """
-        SESSION.add(self.inst)
-        inst2 = self.__class__.get_basic_instance()
-        SESSION.add(inst2)
-        SESSION.commit()
+        self.inst.put()
+        inst2 = self.get_basic_instance()
+        inst2.put()
 
-        self.get('/{}/{}'.format(self.name, inst2.db_id))
-        self.assertJson(inst2.to_json())
+        self.get_entity(inst2)
+        self.assertJson(inst2.to_dict())
 
     def test_get_invalid_id_errors(self):
         """ Tests that a get on an invalid ID errors """
@@ -126,13 +164,10 @@ class APITest(object): #pylint: disable=no-init
     ## ENTITY POST ##
     def test_entity_create_basic(self):
         """Basic test to see if you can create an empty entity"""
-        inst = self.__class__.get_basic_instance()
-        self.post('/{}/new'.format(self.name),
-                  data=models.json.dumps(inst.to_json()))
-        self.assertStatusCode(200)
-        inst.db_id = self.response.json['id']
-        gotten = self.model.query.get(self.response.json['id'])
-        self.assertEqual(gotten, inst)
+        self.post_entity(self.inst)
+
+        gotten = self.model.get_by_id(self.response_json['key'])
+        self.assertEqual(gotten, self.inst)
 
     ## ENTITY PUT ##
 
@@ -169,12 +204,36 @@ class SubmissionAPITest(APITest, BaseTestCase):
     model = models.Submission
     name = 'submissions'
 
-    num = 1
-    @classmethod
-    def get_basic_instance(cls):
-        rval = models.Submission(location="hihi")
-        cls.num += 1
+    def setUp(self):
+        self.project = models.Assignment(name='testProject', points=3)
+        super(SubmissionAPITest, self).setUp()
+        self.project.put()
+
+    def get_basic_instance(self):
+        rval = models.Submission(location='whatisthis' + str(self.num),
+                parent=self.project.key)
+        self.num += 1
         return rval
+
+    def test_invalid_student_submission(self):
+        self.post_entity(self.inst)
+
+        self.assertStatusCode(422)
+
+    def test_student_submission(self):
+        project = AssignmentAPITest.get_basic_instance()
+        inst = self.get_basic_instance()
+        inst.assignment = project
+        project.put()
+
+        self.post_entity(inst)
+
+        self.assertStatusCode(200)
+
+    def test_entity_create_basic(self):
+        """Basic test to see if you can create an empty entity"""
+        self.inst.assignment_id = self.project.key
+        super(SubmissionAPITest, self).test_entity_create_basic()
 
 if __name__ == '__main__':
     unittest.main()

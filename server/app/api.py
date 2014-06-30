@@ -24,17 +24,17 @@ class APIResource(object):
         """
         return NotImplemented()
 
-    def get(self, db_id):
+    def get(self, key):
         """
         The GET HTTP method
         """
-        if db_id is None:
+        if key is None:
             return self.index()
-        db_obj = self.get_model().query.get(db_id)
-        if not db_obj:
+        obj = self.get_model().get_by_id(key)
+        if not obj:
             #TODO(stephen) Make error json, and more descriptive
-            return ("Resource {} not found".format(db_id), 404, {})
-        return json.dumps(db_obj)
+            return ("Resource {} not found".format(key), 404, {})
+        return json.dumps(obj)
 
     def put(self):
         """
@@ -49,12 +49,18 @@ class APIResource(object):
         """
         The POST HTTP method
         """
-        POST = request.json
-        new_mdl = self.get_model().from_dict(POST)
-        # TODO(stephen) look at what's left over in request.POST
-        db.session.add(new_mdl)
-        db.session.commit()
-        return json.dumps({'status': 200, 'id': new_mdl.db_id})
+        post_dict = request.json
+        retval, new_mdl = self.new_entity(post_dict)
+        if retval:
+            return json.dumps({'status': 200, 'key': new_mdl.key})
+
+    def new_entity(self, attributes):
+        """
+        Creates a new entity with given attributes
+        """
+        new_mdl = self.get_model().from_dict(attributes)
+        new_mdl.put()
+        return True, new_mdl
 
     def delete(self, user_id):
         """
@@ -69,7 +75,7 @@ class APIResource(object):
         """
         Index HTTP method thing.
         """
-        return json.dumps(self.get_model().query.all())
+        return json.dumps(list(self.get_model().query()))
 
 class UserAPI(MethodView, APIResource):
     """
@@ -95,7 +101,26 @@ class SubmissionAPI(MethodView, APIResource):
     def get_model(cls):
         return models.Submission
 
-def register_api(view, endpoint, url, primary_key='db_id', pk_type='int'):
+    def post(self):
+        post_dict = request.json
+        if 'project_name' not in post_dict:
+            # FIXME issue #21
+            return json.dumps(
+                {'status': 422, 'message': 'Need a project name.'})
+        project = list(models.Assignment.query().filter(
+            models.Assignment.name == post_dict['project_name']))
+        if len(project) > 1:
+            return json.dumps({'status': 500}) # Make more descriptive later
+
+        project = project[0]
+        post_dict['assignment_id'] = project.db_id
+
+        retval, new_mdl = self.new_entity(post_dict)
+        if retval:
+            return json.dumps({'status': 200, 'db_id': new_mdl.db_id})
+
+
+def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
     """
     Register the given view at the endpoint, accessible by the given url.
     """
