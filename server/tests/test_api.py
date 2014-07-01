@@ -12,14 +12,20 @@ from basetest import BaseTestCase #pylint: disable=relative-import
 from app.api import API_PREFIX
 from app import models, constants
 
-SESSION = models.db.session
+def _dict_unicode(obj):
+    if isinstance(obj, dict):
+        return {unicode(key): value for
+                key, value in obj.iteritems()}
+    else:
+        return sorted([_dict_unicode(item) for item in obj])
 
 class APITest(object): #pylint: disable=no-init
     """
     Simple test case for the API
     """
-    model = models.declarative_base
+    model = None
     name = ""
+    num = 1
 
     @classmethod
     def get_basic_instance(cls):
@@ -37,6 +43,7 @@ class APITest(object): #pylint: disable=no-init
         """
         Utility method to do a get request
         """
+        print "getting url {}".format(url)
         self.response = self.client.get(API_PREFIX + url, *args, **kwds)
         try:
             self.response_json = models.json.loads(self.response.data)
@@ -100,7 +107,7 @@ class APITest(object): #pylint: disable=no-init
     def assertJson(self, correct_json): #pylint: disable=invalid-name
         """Asserts that the response was |correct_json|"""
         self.assertStatusCode(200)
-        self.assertEqual(self.response_json, correct_json)
+        self.assertEqual(_dict_unicode(self.response_json), _dict_unicode(correct_json))
 
     ## INDEX ##
     def test_index_empty(self):
@@ -154,6 +161,7 @@ class APITest(object): #pylint: disable=no-init
         inst2.put()
 
         self.get_entity(inst2)
+        print 'inst1 {} inst2 {}'.format(self.inst.key, inst2.key)
         self.assertJson(inst2.to_dict())
 
     def test_get_invalid_id_errors(self):
@@ -216,7 +224,9 @@ class SubmissionAPITest(APITest, BaseTestCase):
         return rval
 
     def test_invalid_student_submission(self):
-        self.post_entity(self.inst)
+        inst = self.get_basic_instance()
+        inst.project = None
+        self.post_entity(inst)
 
         self.assertStatusCode(422)
 
@@ -229,11 +239,6 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self.post_entity(inst)
 
         self.assertStatusCode(200)
-
-    def test_entity_create_basic(self):
-        """Basic test to see if you can create an empty entity"""
-        self.inst.assignment_id = self.project.key
-        super(SubmissionAPITest, self).test_entity_create_basic()
 
 if __name__ == '__main__':
     unittest.main()
