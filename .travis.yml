@@ -8,9 +8,6 @@ before_script:
   - sudo apt-get install python3 python3-setuptools
   - sudo easy_install3 pip
   - sudo pip3 install -r requirements3.txt
-  - mysql -u root -e 'create database okpy; create database okpytest'
-  - mysql -u root -e "create user 'development'@'localhost' identified by 'develpp11pp'"
-  - mysql -u root -e "grant all privileges on *.* to 'development'@'localhost'; flush privileges"
   - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.6.zip -nv -O gae_sdk.zip
   - unzip -q gae_sdk.zip
   - mv google_appengine gae_sdk
