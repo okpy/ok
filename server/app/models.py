@@ -42,6 +42,11 @@ class Base(ndb.Model):
         inst.populate(**values)
         return inst
 
+class Submission(Base): #pylint: disable=R0903
+    """
+    The Submission Model
+    """
+    location = ndb.StringProperty()
 
 class User(Base): #pylint: disable=R0903
     """
@@ -52,15 +57,10 @@ class User(Base): #pylint: disable=R0903
     role = ndb.IntegerProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
+    submissions = ndb.StructuredProperty(Submission, repeated=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
-
-class Submission(Base): #pylint: disable=R0903
-    """
-    The Submission Model
-    """
-    location = ndb.StringProperty()
 
 class Assignment(Base): #pylint: disable=R0903
     """
@@ -68,3 +68,5 @@ class Assignment(Base): #pylint: disable=R0903
     """
     name = ndb.StringProperty()
     points = ndb.IntegerProperty()
+    submissions = ndb.StructuredProperty(Submission, repeated=True)
+

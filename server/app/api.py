@@ -100,17 +100,17 @@ class SubmissionAPI(MethodView, APIResource):
 
     def post(self):
         post_dict = request.json
-        if 'project_name' not in post_dict:
+
+        project_name = post_dict.pop('project_name', None)
+        project = list(models.Assignment.query().filter(
+            models.Assignment.name == project_name))
+        if not project_name or not project:
             # FIXME issue #21
             return json.dumps(
-                {'status': 422, 'message': 'Need a project name.'})
-        project = list(models.Assignment.query().filter(
-            models.Assignment.name == post_dict['project_name']))
-        if len(project) > 1:
-            return json.dumps({'status': 500}) # Make more descriptive later
-
-        project = project[0]
-        post_dict['assignment_id'] = project.key
+                {'message': 'Need a project name.'}), 422
+        if len(project) != 1:
+            # Make more descriptive later
+            return json.dumps({'message': 'too many projects'}), 500 
 
         retval, new_mdl = self.new_entity(post_dict)
         if retval:
