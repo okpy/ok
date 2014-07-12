@@ -7,7 +7,6 @@ from flask import json
 
 from app import app
 from app import models
-from app.models import db
 
 API_PREFIX = '/api/v1'
 
@@ -41,8 +40,7 @@ class APIResource(object):
         The PUT HTTP method
         """
         new_mdl = self.get_model()()
-        db.session.add(new_mdl)
-        db.session.commit()
+        new_mdl.put()
         return json.dumps({'status': 200})
 
     def post(self):
@@ -67,8 +65,7 @@ class APIResource(object):
         The DELETE HTTP method
         """
         ent = self.get_model().query.get(user_id)
-        db.session.delete(ent)
-        db.session.commit()
+        ent.key.delete()
         return json.dumps({'status': 200})
 
     def index(self):
@@ -103,21 +100,21 @@ class SubmissionAPI(MethodView, APIResource):
 
     def post(self):
         post_dict = request.json
-        if 'project_name' not in post_dict:
+
+        project_name = post_dict.pop('project_name', None)
+        project = list(models.Assignment.query().filter(
+            models.Assignment.name == project_name))
+        if not project_name or not project:
             # FIXME issue #21
             return json.dumps(
-                {'status': 422, 'message': 'Need a project name.'})
-        project = list(models.Assignment.query().filter(
-            models.Assignment.name == post_dict['project_name']))
-        if len(project) > 1:
-            return json.dumps({'status': 500}) # Make more descriptive later
-
-        project = project[0]
-        post_dict['assignment_id'] = project.db_id
+                {'message': 'Need a project name.'}), 422
+        if len(project) != 1:
+            # Make more descriptive later
+            return json.dumps({'message': 'too many projects'}), 500 
 
         retval, new_mdl = self.new_entity(post_dict)
         if retval:
-            return json.dumps({'status': 200, 'db_id': new_mdl.db_id})
+            return json.dumps({'status': 200, 'key': new_mdl.key})
 
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
