@@ -1,9 +1,13 @@
 #!/usr/bin/python
+
+"""Run server tests."""
+
 import sys, os
 import unittest2
 import warnings
+
 # silences Python's complaints about imports
-warnings.filterwarnings('ignore',category=UserWarning)
+warnings.filterwarnings('ignore', category=UserWarning)
 
 USAGE = """
 Path to your sdk must be the first argument. To run type:

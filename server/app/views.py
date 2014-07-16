@@ -1,6 +1,4 @@
 """
-views.py
-
 URL route handlers
 
 Note that any handler params must match the URL route params.

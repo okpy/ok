@@ -1,6 +1,7 @@
 """
-The public API for ok.py
+The public API
 """
+
 from flask.views import MethodView
 from flask.app import request
 from flask import json
@@ -10,7 +11,7 @@ from app import models
 
 API_PREFIX = '/api/v1'
 
-class APIResource(object):
+class APIResource:
     """
     The base class for an API Resource
     """
@@ -18,8 +19,8 @@ class APIResource(object):
     @classmethod
     def get_model(cls):
         """
-        Get the model this api resource is associated with.
-        Needs to be overridden by a subclass
+        Get the model this API resource is associated with.
+        Needs to be overridden by a subclass.
         """
         return NotImplemented()
 
@@ -54,7 +55,7 @@ class APIResource(object):
 
     def new_entity(self, attributes):
         """
-        Creates a new entity with given attributes
+        Creates a new entity with given attributes.
         """
         new_mdl = self.get_model().from_dict(attributes)
         new_mdl.put()
@@ -110,7 +111,7 @@ class SubmissionAPI(MethodView, APIResource):
                 {'message': 'Need a project name.'}), 422
         if len(project) != 1:
             # Make more descriptive later
-            return json.dumps({'message': 'too many projects'}), 500 
+            return json.dumps({'message': 'too many projects'}), 500
 
         retval, new_mdl = self.new_entity(post_dict)
         if retval:
@@ -119,7 +120,7 @@ class SubmissionAPI(MethodView, APIResource):
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
     """
-    Register the given view at the endpoint, accessible by the given url.
+    Registers the given view at the endpoint, accessible by the given url.
     """
     url = API_PREFIX + url
     view_func = view.as_view(endpoint)

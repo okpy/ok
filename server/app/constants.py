@@ -1,3 +1,4 @@
+"""App constants"""
 
 STUDENT_ROLE = 0
 TA_ROLE = 5
