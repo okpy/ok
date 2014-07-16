@@ -44,7 +44,7 @@ symbols=no
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=C,W,import-error,locally-disabled,cyclic-import,no-name-in-module,too-few-public-methods
+disable=C,W,import-error,locally-disabled,cyclic-import,no-name-in-module,too-few-public-methods,too-many-public-methods
 
 
 [REPORTS]

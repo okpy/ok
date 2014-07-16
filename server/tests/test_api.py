@@ -74,7 +74,7 @@ class APITest(object): #pylint: disable=no-init
         self.response = self.client.post(API_PREFIX + url, *args, **kwds)
         try:
             self.response_json = models.json.loads(self.response.data)
-        except e:
+        except:
             self.response_json = None
 
     def post_json(self, url, *args, **kwds):
