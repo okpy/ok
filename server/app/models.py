@@ -53,8 +53,7 @@ class User(Base): #pylint: disable=R0903
     The User Model
     """
     email = ndb.StringProperty()
-    login = ndb.StringProperty()
-    role = ndb.IntegerProperty(default=constants.STUDENT_ROLE)
+    role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     submissions = ndb.StructuredProperty(Submission, repeated=True)
