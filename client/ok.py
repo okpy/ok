@@ -30,7 +30,6 @@ the server or receive information from the server outside of the default times.
 """
 import argparse
 
-# Template protocol. All protocols must subclass this.
 
 class Protocol(object):
     """
@@ -60,6 +59,17 @@ class Protocol(object):
         """
         pass
 
+
+class FileContents(Protocol):
+    """The contents of files are sent to the server."""
+    name = 'file_contents'
+
+
+class TestResults(Protocol):
+    """Results of unlocked tests are sent to the server."""
+    file = 'test_results'
+
+
 def send_to_server(buf):
     """
     This depends on the server-side API. But this method will construct
@@ -70,6 +80,7 @@ def send_to_server(buf):
     buf.clear()
     buf[STUDENT_KEY] = STUDENT_LOGIN
     buf[MSG_TYPE] = MSG_INTERACT
+
 
 def receive_from_server():
     """

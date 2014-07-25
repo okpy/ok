@@ -11,7 +11,11 @@ from app import app
 from flask import json
 from flask.json import JSONEncoder as old_json
 
-from google.appengine.ext import ndb
+from google.appengine.ext import db, ndb
+
+# Exception class for validation errors (exported to the rest of the app).
+BadValueError = db.BadValueError
+
 
 class JSONEncoder(old_json):
     """
@@ -29,6 +33,7 @@ class JSONEncoder(old_json):
 
 app.json_encoder = JSONEncoder
 
+
 class Base(ndb.Model):
     """
     Add some default properties and methods to the SQLAlchemy declarative Base.
@@ -42,11 +47,36 @@ class Base(ndb.Model):
         inst.populate(**values)
         return inst
 
+
 class Submission(Base): #pylint: disable=R0903
     """
     The Submission Model
     """
-    location = ndb.StringProperty()
+
+    @staticmethod
+    def validate_contents(contents):
+        """Contents encodes a JSON map from file paths to file contents."""
+        if not contents:
+            raise BadValueError('Empty contents')
+        try:
+            files = json.loads(contents)
+            if not isinstance(files, dict):
+                raise BadValueError('Contents is not a JSON map')
+            for k, v in files.items():
+                if not isinstance(k, (str, unicode)):
+                    raise BadValueError('key %r is not a string' % k)
+                if not isinstance(v, (str, unicode)):
+                    raise BadValueError('key %r is not a string' % v)
+                # TODO(denero) Validate that .py files have expected contents.
+        except Exception as e:
+            raise BadValueError(e)
+
+    submitter = ndb.UserProperty()
+    assignment = ndb.StructuredProperty(Assignment)
+    contents = ndb.StringProperty(validator=validate_contents)
+    date = ndb.DateTimeProperty(auto_now_add=True)
+    location = ndb.StringProperty() # TODO(denero) What's this? Document or delete.
+
 
 class User(Base): #pylint: disable=R0903
     """
@@ -62,6 +92,7 @@ class User(Base): #pylint: disable=R0903
     def __repr__(self):
         return '<User %r>' % self.email
 
+
 class Assignment(Base): #pylint: disable=R0903
     """
     The Assignment Model
@@ -69,4 +100,7 @@ class Assignment(Base): #pylint: disable=R0903
     name = ndb.StringProperty()
     points = ndb.IntegerProperty()
     submissions = ndb.StructuredProperty(Submission, repeated=True)
+
+    def __repr__(self):
+        return '<Assignment %r>' % self.name
 
