@@ -1,7 +1,7 @@
 """
-Initialize Flask app
-
+Initialize Flask app.
 """
+
 from flask import Flask
 import os
 from werkzeug.debug import DebuggedApplication
@@ -14,7 +14,6 @@ from app import api
 app.register_blueprint(model_blueprint)
 
 if os.getenv('FLASK_CONF') == 'DEV':
-	#development settings n
     app.config.from_object('app.settings.Development')
 
     # Google app engine mini profiler

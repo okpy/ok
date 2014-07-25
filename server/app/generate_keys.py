@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-generate_keys.py
 
-Generate CSRF and Session keys, output to secret_keys.py file
+"""
+Generates CSRF and Session keys, output to secret_keys.py file.
 
 Usage:
     generate_keys.py [-f]
@@ -11,9 +10,7 @@ Usage:
 Outputs secret_keys.py file in current folder
 
 By default, an existing secret_keys file will not be replaced.
-Use the '-f' flag to force the new keys to be written to the file
-
-
+Use the '-f' flag to force the new keys to be written to the file.
 """
 
 import string
@@ -37,9 +34,9 @@ SESSION_KEY = '$session_key'
 
 # Get options from command line
 parser = OptionParser()
-parser.add_option("-f", "--force", dest="force", 
+parser.add_option("-f", "--force", dest="force",
     help="force overwrite of existing secret_keys file", action="store_true")
-parser.add_option("-r", "--randomness", dest="randomness", 
+parser.add_option("-r", "--randomness", dest="randomness",
     help="length (randomness) of generated key; default = 24", default=24)
 (options, args) = parser.parse_args()
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-simple_db_tests.py
 
-This module runs basic tests on the MySQL database.
 """
+Server test case scaffolding
+"""
+
 import os
 import sys
 
@@ -38,8 +38,3 @@ class BaseTestCase(unittest.TestCase): #pylint: disable=no-init
 
     def tearDown(self): #pylint: disable=invalid-name, missing-docstring
         self.testbed.deactivate()
-
-    def set_current_user(self, email, user_id, is_admin=False): #pylint: disable=no-self-use
-        os.environ['USER_EMAIL'] = email or ''
-        os.environ['USER_ID'] = user_id or ''
-        os.environ['USER_IS_ADMIN'] = '1' if is_admin else '0'

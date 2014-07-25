@@ -1,9 +1,7 @@
 """
-urls.py
-
 URL dispatch route mappings and error handlers
-
 """
+
 from flask import render_template
 
 from app import app

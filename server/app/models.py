@@ -16,7 +16,7 @@ from google.appengine.ext import ndb
 class JSONEncoder(old_json):
     """
     Wrapper class to try calling an object's to_dict() method. This allows
-    us to JSONify objects coming from the ORM. Also handles dates and datetimes.
+    us to JSONify objects coming from the ORM. Also handles dates & datetimes.
     """
 
     def default(self, obj): #pylint: disable=E0202
@@ -54,7 +54,7 @@ class User(Base): #pylint: disable=R0903
     """
     email = ndb.StringProperty()
     login = ndb.StringProperty()
-    role = ndb.IntegerProperty(default=constants.STUDENT_ROLE)
+    role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     submissions = ndb.StructuredProperty(Submission, repeated=True)

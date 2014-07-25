@@ -1,7 +1,7 @@
 """
-Sets up the path and stuff for anything running this.
+Sets up sys.path and runs the app.
 
-You can run "python -i run.py" to have a sort of console.
+Use "python -i run.py" to start a console in the app environment.
 """
 import os
 import sys
