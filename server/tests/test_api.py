@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
-#pylint: disable=no-member, no-init, too-many-public-methods
-#pylint: disable=attribute-defined-outside-init
-"""
-tests.py
+#pylint: disable=no-member, no-init
 
+"""
+API tests
 """
 
 import unittest
@@ -12,8 +11,8 @@ from flask import json
 
 from test_base import BaseTestCase #pylint: disable=relative-import
 
-from app.api import API_PREFIX #pylint: disable=import-error
-from app import models, constants #pylint: disable=import-error
+from app.api import API_PREFIX
+from app import models, constants
 
 class APITest(object): #pylint: disable=no-init
     """
@@ -45,7 +44,7 @@ class APITest(object): #pylint: disable=no-init
         try:
             response_json = json.loads(self.response.data)['data']
             self.response_json = models.json.loads(json.dumps(response_json))
-        except ValueError:
+        except Exception as e:
             self.response_json = None
 
     def get_index(self, *args, **kwds):

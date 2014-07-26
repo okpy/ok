@@ -31,7 +31,7 @@ class Testing(Config): #pylint: disable=R0903
     """
     TESTING = True
     DEBUG = True
-    CSRF_ENABLED = True
+    CSRF_ENABLED = False
 
 class Production(Config): #pylint: disable=R0903
     """

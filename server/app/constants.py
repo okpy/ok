@@ -1,6 +1,6 @@
 """App constants"""
 
-STUDENT_ROLE = 'student'
-STAFF_ROLE = 'staff'
-ADMIN_ROLE = 'admin'
+STUDENT_ROLE = 0
+STAFF_ROLE = 1
+ADMIN_ROLE = 2
 VALID_ROLES = [STUDENT_ROLE, STAFF_ROLE, ADMIN_ROLE]

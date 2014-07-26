@@ -3,8 +3,7 @@ The public API
 """
 
 from flask.views import MethodView
-from flask.app import request
-from flask import jsonify
+from flask import jsonify, request
 
 from google.appengine.api import users
 
@@ -36,7 +35,7 @@ class APIResource(object):
 
     Set the name and get_model for each subclass.
     """
-    name = None
+    name = "BASE API RESOURCE"
 
     @classmethod
     def get_model(cls):
@@ -74,19 +73,22 @@ class APIResource(object):
         """
         The POST HTTP method
         """
-        post_dict = request.json
-        retval, new_mdl = self.new_entity(post_dict)
+        form = self.get_model().new_form()
+        if not form.validate_on_submit():
+            return create_api_response(400, str(form.errors))
+        retval, new_mdl = self.new_entity(form)
         if retval:
             return create_api_response(200, "success", {
                 'key': new_mdl.key
             })
         return create_api_response(500, "could not create resource")
 
-    def new_entity(self, attributes):
+    def new_entity(self, form):
         """
         Creates a new entity with given attributes.
         """
-        new_mdl = self.get_model().from_dict(attributes)
+        new_mdl = self.get_model()()
+        form.populate_obj(new_mdl)
         new_mdl.put()
         return True, new_mdl
 
