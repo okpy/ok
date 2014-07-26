@@ -3,7 +3,8 @@
 #pylint: disable=no-member, no-init, too-many-public-methods
 #pylint: disable=attribute-defined-outside-init
 """
-API tests
+tests.py
+
 """
 
 import unittest
@@ -186,6 +187,7 @@ class APITest(object): #pylint: disable=no-init
         self.post_entity(self.inst)
         self.assertStatusCode(200)
 
+        print self.response_json
         gotten = self.model.get_by_id(self.response_json['key'])
         self.assertEqual(gotten, self.inst)
 
