@@ -19,8 +19,8 @@ def handle_error(func):
     def decorated(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except:
-            return create_response(500, 'internal server error', None)
+        except Exception as e:
+            return create_api_response(500, 'internal server error: %s' % e.message, None)
     return decorated
 
 class APIResource:
@@ -57,7 +57,7 @@ class APIResource:
         """
         new_mdl = self.get_model()()
         new_mdl.put()
-        return create_response(200, "model created successfully", None)
+        return create_api_response(200, "model created successfully", None)
 
     @handle_error
     def post(self):
@@ -130,12 +130,12 @@ class SubmissionAPI(MethodView, APIResource):
         project_name = post_dict.pop('project_name', None)
         if not project_name:
             return create_api_response(400, "project name needs to be specified", None)
-        project = models.Assignment.query().filter(
-            models.Assignment.name == project_name).all()
+        project = list(models.Assignment.query().filter(
+            models.Assignment.name == project_name))
         if len(project) == 0:
-            return create_api_response(500, "project name doesn't exist", None)
+            return create_api_response(400, "project name doesn't exist", None)
         if len(project) != 1:
-            return create_api_response(500, "more than one project with given name exist", None)
+            return create_api_response(400, "more than one project with given name exist", None)
         retval, new_mdl = self.new_entity(post_dict)
         if retval:
             return create_api_response(200, 'success', {
@@ -151,9 +151,7 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
     view_func = view.as_view(endpoint)
     app.add_url_rule(url, defaults={primary_key: None},
                      view_func=view_func, methods=['GET',])
-    app.add_url_rule("%s/" % url, defaults={primary_key: None},
-                     view_func=view_func, methods=['GET',])
-    app.add_url_rule('%s/' % url, view_func=view_func, methods=['POST',])
+    app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST',])
     app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
                      view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
