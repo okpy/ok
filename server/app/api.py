@@ -70,7 +70,7 @@ class APIResource:
             return create_api_response(200, "success", {
                 'key': new_mdl.key
             })
-        return create_api_response(500, "success", None)
+        return create_api_response(500, "could not create resource", None)
 
     def new_entity(self, attributes):
         """
