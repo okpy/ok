@@ -57,7 +57,7 @@ class APIResource:
         """
         new_mdl = self.get_model()()
         new_mdl.put()
-        return create_api_response(200, "model created successfully", None)
+        return create_api_response(200, "success", None)
 
     @handle_error
     def post(self):
