@@ -238,7 +238,6 @@ class SubmissionAPITest(APITest, BaseTestCase):
         """
         data = inst.to_dict()
         data['project_name'] = kwds.pop('project_name', self.project_name)
-        #super(SubmissionAPITest, self).post_entity(inst, *args, **kwds)
         self.post_json('/{}/new'.format(self.name), data=data, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:
