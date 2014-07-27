@@ -30,4 +30,3 @@ def admin_required(func):
     decorated.login_required = True
     decorated.admin_required = True
     return decorated
-
