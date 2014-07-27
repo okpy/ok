@@ -69,19 +69,24 @@ class APIResource(object):
         """
         The POST HTTP method
         """
-        post_dict = request.json
-        retval, new_mdl = self.new_entity(post_dict)
+        form = self.get_model().new_form()
+        if not form.validate_on_submit():
+            return json.dumps(
+                {'message': str(form.errors)}), 422
+        retval, new_mdl = self.new_entity(form)
+        print new_mdl.to_dict()
         if retval:
             return create_api_response(200, "success", {
                 'key': new_mdl.key
             })
         return create_api_response(500, "could not create resource")
 
-    def new_entity(self, attributes):
+    def new_entity(self, form):
         """
         Creates a new entity with given attributes.
         """
-        new_mdl = self.get_model().from_dict(attributes)
+        new_mdl = self.get_model()()
+        form.populate_obj(new_mdl)
         new_mdl.put()
         return True, new_mdl
 
@@ -133,28 +138,6 @@ class SubmissionAPI(MethodView, APIResource):
     @classmethod
     def get_model(cls):
         return models.Submission
-
-    @handle_error
-    def post(self):
-        post_dict = request.json
-
-        project_name = post_dict.pop('project_name', None)
-        if not project_name:
-            return create_api_response(400,
-                                       "project name needs to be specified")
-        project = list(models.Assignment.query().filter(
-            models.Assignment.name == project_name))
-        if len(project) == 0:
-            return create_api_response(400, "project name doesn't exist")
-        if len(project) != 1:
-            return create_api_response(400,
-                                       "more than one project"
-                                       "with given name exist")
-        retval, new_mdl = self.new_entity(post_dict)
-        if retval:
-            return create_api_response(200, 'success', {
-                'key': new_mdl.key
-            })
 
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int'):

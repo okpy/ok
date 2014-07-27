@@ -109,7 +109,8 @@ class APITest(object): #pylint: disable=no-init
 
     def assertStatusCode(self, code): #pylint: disable=invalid-name
         """Asserts the status code."""
-        self.assertEqual(self.response.status_code, code)
+        self.assertEqual(self.response.status_code, code, 
+                         self.response.data)
 
     def assertJson(self, correct_json): #pylint: disable=invalid-name
         """Asserts that the response is correct_json."""
@@ -185,7 +186,6 @@ class APITest(object): #pylint: disable=no-init
         self.post_entity(self.inst)
         self.assertStatusCode(200)
 
-        print self.response_json
         gotten = self.model.get_by_id(self.response_json['key'])
         self.assertEqual(gotten, self.inst)
 
