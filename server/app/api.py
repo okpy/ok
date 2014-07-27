@@ -10,8 +10,10 @@ from app import app
 from app import models
 
 from functools import wraps
+import traceback
 
 API_PREFIX = '/api/v1'
+
 
 def handle_error(func):
     """Handles all errors that happen in an API request"""
@@ -19,11 +21,14 @@ def handle_error(func):
     def decorated(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception as e:
-            return create_api_response(500, 'internal server error: %s' % e.message, None)
+        except:
+            error_message = traceback.format_exc()
+            return create_api_response(500, 'internal server error:\n%s' %
+                                       error_message)
     return decorated
 
-class APIResource:
+
+class APIResource(object):
     """
     The base class for an API Resource
     """
@@ -47,7 +52,7 @@ class APIResource:
         if not obj:
             return create_api_response(404, "{resource} {key} not found"
                                        .format(resource=self.name,
-                                               key=key), None)
+                                               key=key))
         return create_api_response(200, "", obj)
 
     @handle_error
@@ -57,7 +62,7 @@ class APIResource:
         """
         new_mdl = self.get_model()()
         new_mdl.put()
-        return create_api_response(200, "success", None)
+        return create_api_response(200, "success")
 
     @handle_error
     def post(self):
@@ -70,7 +75,7 @@ class APIResource:
             return create_api_response(200, "success", {
                 'key': new_mdl.key
             })
-        return create_api_response(500, "could not create resource", None)
+        return create_api_response(500, "could not create resource")
 
     def new_entity(self, attributes):
         """
@@ -87,7 +92,7 @@ class APIResource:
         """
         ent = self.get_model().query.get(user_id)
         ent.key.delete()
-        return create_api_response(200, "success", None)
+        return create_api_response(200, "success")
 
     @handle_error
     def index(self):
@@ -96,29 +101,35 @@ class APIResource:
         """
         return create_api_response(200, "success", list(self.get_model().query()))
 
+
 class UserAPI(MethodView, APIResource):
     """
     The API resource for the User Object
     """
     name = "User"
+
     @classmethod
     def get_model(cls):
         return models.User
+
 
 class AssignmentAPI(MethodView, APIResource):
     """
     The API resource for the Assignment Object
     """
     name = "Assignment"
+
     @classmethod
     def get_model(cls):
         return models.Assignment
+
 
 class SubmissionAPI(MethodView, APIResource):
     """
     The API resource for the Submission Object
     """
     name = "Submission"
+
     @classmethod
     def get_model(cls):
         return models.Submission
@@ -129,13 +140,16 @@ class SubmissionAPI(MethodView, APIResource):
 
         project_name = post_dict.pop('project_name', None)
         if not project_name:
-            return create_api_response(400, "project name needs to be specified", None)
+            return create_api_response(400,
+                                       "project name needs to be specified")
         project = list(models.Assignment.query().filter(
             models.Assignment.name == project_name))
         if len(project) == 0:
-            return create_api_response(400, "project name doesn't exist", None)
+            return create_api_response(400, "project name doesn't exist")
         if len(project) != 1:
-            return create_api_response(400, "more than one project with given name exist", None)
+            return create_api_response(400,
+                                       "more than one project"
+                                       "with given name exist")
         retval, new_mdl = self.new_entity(post_dict)
         if retval:
             return create_api_response(200, 'success', {
@@ -150,12 +164,13 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
     url = API_PREFIX + url
     view_func = view.as_view(endpoint)
     app.add_url_rule(url, defaults={primary_key: None},
-                     view_func=view_func, methods=['GET',])
-    app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST',])
+                     view_func=view_func, methods=['GET', ])
+    app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST', ])
     app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
                      view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
-def create_api_response(status, message, data):
+
+def create_api_response(status, message, data=None):
     """Creates a JSON response that contains status code (HTTP),
     an arbitrary message string, and a dictionary or list of data"""
     response = jsonify(**{
