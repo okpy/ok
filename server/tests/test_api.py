@@ -187,7 +187,6 @@ class APITest(object): #pylint: disable=no-init
         self.post_entity(self.inst)
         self.assertStatusCode(200)
 
-        print self.response_json
         gotten = self.model.get_by_id(self.response_json['key'])
         self.assertEqual(gotten, self.inst)
 

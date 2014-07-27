@@ -59,7 +59,6 @@ class Base(ndb.Model):
     def new_form(cls):
         return cls.form(csrf_enabled=app.config['CSRF_ENABLED'])
 
-
 def invalid_project_name(name):
     gotten = Assignment.query(Assignment.name == name).count()
     return not gotten == 1

@@ -3,7 +3,6 @@ The public API
 """
 
 from flask.views import MethodView
-from flask.app import request
 from flask import jsonify
 
 from app import app
@@ -32,6 +31,7 @@ class APIResource(object):
     """
     The base class for an API Resource
     """
+    name = "BASE API RESOURCE"
 
     @classmethod
     def get_model(cls):
@@ -71,8 +71,7 @@ class APIResource(object):
         """
         form = self.get_model().new_form()
         if not form.validate_on_submit():
-            return json.dumps(
-                {'message': str(form.errors)}), 422
+            return create_api_response(400, str(form.errors))
         retval, new_mdl = self.new_entity(form)
         print new_mdl.to_dict()
         if retval:
