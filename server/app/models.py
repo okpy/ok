@@ -44,7 +44,8 @@ class Base(ndb.Model):
 
     def to_dict(self):
         result = super(Base, self).to_dict()
-        result['key'] = self.key.id() #get the key as a string
+        if self.key:
+            result['key'] = self.key.id() # Add the key as a string
         return result
 
 class Submission(Base): #pylint: disable=R0903
