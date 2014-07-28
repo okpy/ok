@@ -7,7 +7,7 @@ API tests
 """
 
 import unittest
-import json
+from flask import json
 
 from test_base import BaseTestCase #pylint: disable=relative-import
 
