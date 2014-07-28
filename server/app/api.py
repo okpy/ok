@@ -6,8 +6,12 @@ from flask.views import MethodView
 from flask.app import request
 from flask import jsonify
 
+from google.appengine.ext.db import Key
+from google.appengine.api import users
+
 from app import app
 from app import models
+from app.models import BadValueError
 
 from functools import wraps
 import traceback
@@ -29,9 +33,11 @@ def handle_error(func):
 
 
 class APIResource(object):
+    """The base class for API resources.
+
+    Set the name and get_model for each subclass.
     """
-    The base class for an API Resource
-    """
+    name = None
 
     @classmethod
     def get_model(cls):
@@ -103,9 +109,7 @@ class APIResource(object):
 
 
 class UserAPI(MethodView, APIResource):
-    """
-    The API resource for the User Object
-    """
+    """The API resource for the User Object"""
     name = "User"
 
     @classmethod
@@ -114,9 +118,7 @@ class UserAPI(MethodView, APIResource):
 
 
 class AssignmentAPI(MethodView, APIResource):
-    """
-    The API resource for the Assignment Object
-    """
+    """The API resource for the Assignment Object"""
     name = "Assignment"
 
     @classmethod
@@ -124,37 +126,64 @@ class AssignmentAPI(MethodView, APIResource):
         return models.Assignment
 
 
+class SubmitNDBImplementation:
+    """Implementation of DB calls required by submission using Google NDB"""
+
+    def lookup_assignments_by_name(self, name):
+        """Look up all assignments of a given name."""
+        by_name = models.Assignment.name == name
+        return list(models.Assignment.query().filter(by_name))
+
+    def create_submission(self, user, assignment, messages):
+        """Create submission using user as parent to ensure ordering."""
+        user_key = Key.from_path('User', user or 'no user')
+        submission =  models.Submission(parent=user_key, submitter=user,
+                                        assignment=assignment,
+                                        messages=messages)
+        submission.put()
+        return submission
+
+
 class SubmissionAPI(MethodView, APIResource):
-    """
-    The API resource for the Submission Object
-    """
+    """The API resource for the Submission Object"""
     name = "Submission"
+    db = SubmitNDBImplementation()
+    post_fields = ['access_token', 'assignment', 'messages']
 
     @classmethod
     def get_model(cls):
         return models.Submission
 
+    def get_assignment(self, name):
+        """Look up an assignment by name or raise a validation error."""
+        assignments = self.db.lookup_assignments_by_name(name)
+        if not assignments:
+            raise BadValueError('Assignment "%s" not found' % name)
+        if len(assignments) > 1:
+            raise BadValueError('Multiple assignments named "%s"' % name)
+        return assignments[0]
+
+    # TODO(denero) Fix user plumbing using @requires_authenticated_user
+    def submit(self, access_token, assignment, messages):
+        """Process submission messages for an assignment from a user."""
+        user = users.get_current_user()
+        valid_assignment = self.get_assignment(assignment)
+        self.db.create_submission(user, valid_assignment, messages)
+        return create_api_response(200, "success")
+
     @handle_error
     def post(self):
-        post_dict = request.json
+        for key in request.json:
+            if key not in self.post_fields:
+                return create_api_response(400, 'Unknown field %s' % key)
+        for field in self.post_fields:
+            if field not in request.json:
+                return create_api_response(400,
+                                           'Missing required field %s' % field)
+        return self.submit(**request.json)
 
-        project_name = post_dict.pop('project_name', None)
-        if not project_name:
-            return create_api_response(400,
-                                       "project name needs to be specified")
-        project = list(models.Assignment.query().filter(
-            models.Assignment.name == project_name))
-        if len(project) == 0:
-            return create_api_response(400, "project name doesn't exist")
-        if len(project) != 1:
-            return create_api_response(400,
-                                       "more than one project"
-                                       "with given name exist")
-        retval, new_mdl = self.new_entity(post_dict)
-        if retval:
-            return create_api_response(200, 'success', {
-                'key': new_mdl.key
-            })
+
+
 
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
@@ -181,6 +210,7 @@ def create_api_response(status, message, data=None):
     response.status_code = status
     return response
 
+# TODO(denero) Add appropriate authentication requirements
 register_api(UserAPI, 'user_api', '/user')
 register_api(AssignmentAPI, 'assignment_api', '/assignment')
 register_api(SubmissionAPI, 'submission_api', '/submission')
