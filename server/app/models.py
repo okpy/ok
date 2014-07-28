@@ -70,6 +70,16 @@ class Assignment(Base):
     creator = ndb.StructuredProperty(User)
 
 
+class Course(Base):
+    """Courses have enrolled students and assignment lists with due dates."""
+    institution = ndb.StringProperty() # E.g., 'UC Berkeley'
+    name = ndb.StringProperty() # E.g., 'CS 61A'
+    offering = ndb.StringProperty()  # E.g., 'Fall 2014'
+    assignments = ndb.StructuredProperty(Assignment, repeated=True)
+    due_dates = ndb.DateTimeProperty(repeated=True)
+    creator = ndb.StructuredProperty(User)
+
+
 def validate_contents(contents):
     """Contents is a JSON string encoding a map from protocols to data."""
     if not contents:
