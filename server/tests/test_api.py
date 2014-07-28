@@ -232,9 +232,8 @@ class SubmissionAPITest(APITest, BaseTestCase):
         return rval
 
     def post_entity(self, inst, *args, **kwds):
-        """
-        Posts an entity to the server.
-        """
+        """Posts an entity to the server."""
+        # TODO(denero) Unused because test_entity_create_basic disabled.
         data = inst.to_dict()
         data['assignment'] = kwds.pop('assignment', self.assignment_name)
         self.post_json('/{}/new'.format(self.name), data=data, *args, **kwds)
@@ -245,10 +244,20 @@ class SubmissionAPITest(APITest, BaseTestCase):
                 inst.key = models.ndb.Key(self.model, self.response_json.get('key'))
 
     def test_entity_create_basic(self):
-        pass
+        pass # TODO(denero) Re-enable when self.inst is actually valid.
 
-    def test_invalid_student_submission(self):
+    def test_valid_student_submission(self):
+        pass # TODO(denero) Implement
+
+    def test_missing_field(self):
+        pass # TODO(denero) Implement
+
+    def test_extra_field(self):
+        pass # TODO(denero) Implement
+
+    def test_invalid_assignment_name(self):
         self.assignment_name = 'assignment'
+        # TODO(denero) Implement
         # self.post_entity(self.inst)
         # self.assertStatusCode(400)
 
