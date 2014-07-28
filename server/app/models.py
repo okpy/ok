@@ -42,6 +42,11 @@ class Base(ndb.Model):
         inst.populate(**values)
         return inst
 
+    def to_dict(self):
+        result = super(Base, self).to_dict()
+        result['key'] = self.key.id() #get the key as a string
+        return result
+
 class Submission(Base): #pylint: disable=R0903
     """
     The Submission Model
