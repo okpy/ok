@@ -82,7 +82,7 @@ class Course(Base):
     creator = ndb.StructuredProperty(User)
 
 
-def validate_messages(messages):
+def validate_messages(property, messages):
     """Messages is a JSON string encoding a map from protocols to data."""
     if not messages:
         raise BadValueError('Empty messages')
