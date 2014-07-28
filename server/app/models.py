@@ -1,5 +1,7 @@
 #pylint: disable=no-member
-"""Models."""
+
+"""Data models."""
+
 from flask import Blueprint
 from app import constants
 
@@ -80,14 +82,14 @@ class Course(Base):
     creator = ndb.StructuredProperty(User)
 
 
-def validate_contents(contents):
-    """Contents is a JSON string encoding a map from protocols to data."""
-    if not contents:
-        raise BadValueError('Empty contents')
+def validate_messages(messages):
+    """Messages is a JSON string encoding a map from protocols to data."""
+    if not messages:
+        raise BadValueError('Empty messages')
     try:
-        files = json.loads(contents)
+        files = json.loads(messages)
         if not isinstance(files, dict):
-            raise BadValueError('Contents is not a JSON map')
+            raise BadValueError('messages is not a JSON map')
         for k in files:
             if not isinstance(k, (str, unicode)):
                 raise BadValueError('key %r is not a string' % k)
@@ -101,5 +103,5 @@ class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.UserProperty()
     assignment = ndb.StructuredProperty(Assignment)
-    contents = ndb.StringProperty(validator=validate_contents)
+    messages = ndb.StringProperty(validator=validate_messages)
     date = ndb.DateTimeProperty(auto_now_add=True)
