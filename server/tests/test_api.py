@@ -7,6 +7,7 @@ API tests
 """
 
 import unittest
+import json
 
 from test_base import BaseTestCase #pylint: disable=relative-import
 
@@ -50,8 +51,9 @@ class APITest(object): #pylint: disable=no-init
         """
         self.response = self.client.get(API_PREFIX + url, *args, **kwds)
         try:
-            self.response_json = models.json.loads(self.response.data)
-        except Exception:
+            response_json = json.loads(self.response.data)['data']
+            self.response_json = models.json.loads(json.dumps(response_json))
+        except Exception as e:
             self.response_json = None
 
     def get_index(self, *args, **kwds):
@@ -73,8 +75,9 @@ class APITest(object): #pylint: disable=no-init
         kwds.setdefault('content_type', 'application/json')
         self.response = self.client.post(API_PREFIX + url, *args, **kwds)
         try:
-            self.response_json = models.json.loads(self.response.data)
-        except:
+            response_json = json.loads(self.response.data)
+            self.response_json = models.json.loads(json.dumps(response_json['data']))
+        except Exception as e:
             self.response_json = None
 
     def post_json(self, url, *args, **kwds):
@@ -95,11 +98,11 @@ class APITest(object): #pylint: disable=no-init
         Posts an entity to the server.
         """
         self.post_json('/{}/new'.format(self.name), data=inst, *args, **kwds)
-        if inst.key:
-            if self.response_json.get('key'):
+        if self.response_json and 'key' in self.response_json:
+            if inst.key:
                 self.assertEqual(inst.key.id(), self.response_json['key'])
-        else:
-            inst.key = models.ndb.Key(self.model, self.response_json.get('key'))
+            else:
+                inst.key = models.ndb.Key(self.model, self.response_json['key'])
         self.assertStatusCode(200)
 
     ## ASSERTS ##
@@ -191,7 +194,7 @@ class APITest(object): #pylint: disable=no-init
 
 class UserAPITest(APITest, BaseTestCase):
     model = models.User
-    name = 'users'
+    name = 'user'
     num = 1
 
     @classmethod
@@ -204,7 +207,7 @@ class UserAPITest(APITest, BaseTestCase):
 
 class AssignmentAPITest(APITest, BaseTestCase):
     model = models.Assignment
-    name = 'assignments'
+    name = 'assignment'
     num = 1
 
     @classmethod
@@ -215,7 +218,7 @@ class AssignmentAPITest(APITest, BaseTestCase):
 
 class SubmissionAPITest(APITest, BaseTestCase):
     model = models.Submission
-    name = 'submissions'
+    name = 'submission'
 
     def setUp(self):
         super(SubmissionAPITest, self).setUp()
@@ -236,17 +239,17 @@ class SubmissionAPITest(APITest, BaseTestCase):
         data = inst.to_dict()
         data['project_name'] = kwds.pop('project_name', self.project_name)
         self.post_json('/{}/new'.format(self.name), data=data, *args, **kwds)
-        if inst.key:
-            if self.response_json.get('key'):
+        if self.response_json and 'key' in self.response_json:
+            if inst.key:
                 self.assertEqual(inst.key.id(), self.response_json['key'])
-        else:
-            inst.key = models.ndb.Key(self.model, self.response_json.get('key'))
+            else:
+                inst.key = models.ndb.Key(self.model, self.response_json.get('key'))
 
     def test_invalid_student_submission(self):
         self.project_name = 'project'
         self.post_entity(self.inst)
 
-        self.assertStatusCode(422)
+        self.assertStatusCode(400)
 
 if __name__ == '__main__':
     unittest.main()
