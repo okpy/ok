@@ -10,6 +10,7 @@ app = Flask('app')
 
 from app.models import model_blueprint
 from app import api
+from app import auth
 
 app.register_blueprint(model_blueprint)
 
