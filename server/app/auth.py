@@ -36,7 +36,8 @@ def requires_authenticated_user(func):
             memcache.set(mc_key, email, time=60) # pylint: disable=no-member
         users = list(models.User.query().filter(models.User.email == email))
         if len(users) == 0:
-            return create_api_response(401, "user doesn't exist")
+            return create_api_response(401, "user with email(%s) doesn't exist"
+                                       % email)
         user = users[0]
         return func(*args, user=user, **kwargs)
     return decorated
