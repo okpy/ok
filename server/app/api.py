@@ -163,10 +163,8 @@ class SubmissionAPI(MethodView, APIResource):
             raise BadValueError('Multiple assignments named "%s"' % name)
         return assignments[0]
 
-    # TODO(denero) Fix user plumbing using @requires_authenticated_user
-    def submit(self, access_token, assignment, messages):
+    def submit(self, user, assignment, messages):
         """Process submission messages for an assignment from a user."""
-        user = users.get_current_user()
         valid_assignment = self.get_assignment(assignment)
         self.db.create_submission(user, valid_assignment, messages)
         return create_api_response(200, "success")
@@ -180,10 +178,11 @@ class SubmissionAPI(MethodView, APIResource):
             if field not in request.json:
                 return create_api_response(400,
                                            'Missing required field %s' % field)
-        return self.submit(**request.json)
 
-
-
+        # TODO(denero) Fix user plumbing using @requires_authenticated_user
+        #              and change to self.submit(**request.json)
+        user = users.get_current_user()
+        return self.submit(user, request.json['assignment'], request.json['messages'])
 
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
