@@ -1,6 +1,15 @@
 #!/usr/bin/python3
 
-""" The client side autograder functionality.
+"""The ok.py script runs tests, checks for updates, and submits your code.
+
+TODO(denero) Add student instructions.
+"""
+
+# TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
+"""DEVELOPER INSTRUCTIONS
+
+This multi-line string contains instructions for developers. It is removed
+when the client is distributed to students.
 
 This file is responsible for all communication with the server and will contain
 all protocols that are used in this project. Students should never need to
@@ -21,7 +30,6 @@ the server or receive information from the server outside of the default times.
 """
 import argparse
 
-# Template protocol. All protocols must subclass this.
 
 class Protocol(object):
     """
@@ -51,6 +59,17 @@ class Protocol(object):
         """
         pass
 
+
+class FileContents(Protocol):
+    """The contents of files are sent to the server."""
+    name = 'file_contents'
+
+
+class TestResults(Protocol):
+    """Results of unlocked tests are sent to the server."""
+    file = 'test_results'
+
+
 def send_to_server(buf):
     """
     This depends on the server-side API. But this method will construct
@@ -61,6 +80,7 @@ def send_to_server(buf):
     buf.clear()
     buf[STUDENT_KEY] = STUDENT_LOGIN
     buf[MSG_TYPE] = MSG_INTERACT
+
 
 def receive_from_server():
     """
@@ -79,26 +99,21 @@ MSG_TYPE = 'msg_type'
 MSG_START = 'start'
 MSG_INTERACT = 'interact'
 
+# TODO(denero) Pass around a buffer that checks for message duplication, rather
+#              than using a global variable with shared access.
 INPUT_BUFFER = {STUDENT_KEY : STUDENT_LOGIN, MSG_TYPE : MSG_START}
 
 PROTOCOLS = list()
 
 def parse_input():
-    """
-    Parses command line input from the student.
-    """
+    """Parses command line input."""
     parser = argparse.ArgumentParser(description="Autograder parser")
     parser.add_argument('-m', '--mode', type=str, default=None,
                         help="Mode the autograder should run in.")
-
-    args = parser.parse_args()
-
-    return args
+    return parser.parse_args()
 
 def ok_main(cmd_line_args):
-    """
-    The main method for this module that is run when it is invoked.
-    """
+    """Run all relevant aspects of ok.py."""
     name_to_protocol = dict()
 
     for protocol in PROTOCOLS:

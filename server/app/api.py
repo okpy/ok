@@ -1,5 +1,5 @@
 """
-The public API
+The administration API
 """
 
 from flask.views import MethodView
@@ -8,6 +8,7 @@ from flask import jsonify
 
 from app import app
 from app import models
+from app.decorators import admin_required
 
 from functools import wraps
 import traceback
@@ -162,7 +163,7 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
     Registers the given view at the endpoint, accessible by the given url.
     """
     url = API_PREFIX + url
-    view_func = view.as_view(endpoint)
+    view_func = admin_required(view.as_view(endpoint))
     app.add_url_rule(url, defaults={primary_key: None},
                      view_func=view_func, methods=['GET', ])
     app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST', ])
