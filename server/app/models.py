@@ -1,7 +1,5 @@
-#pylint: disable=C0103,no-member
-"""
-Models
-"""
+#pylint: disable=no-member
+"""Models."""
 from flask import Blueprint
 from app import constants
 
@@ -11,7 +9,10 @@ from app import app
 from flask import json
 from flask.json import JSONEncoder as old_json
 
-from google.appengine.ext import ndb
+from google.appengine.ext import db,ndb
+
+BadValueError = db.BadValueError
+
 
 class JSONEncoder(old_json):
     """
@@ -29,15 +30,13 @@ class JSONEncoder(old_json):
 
 app.json_encoder = JSONEncoder
 
+
 class Base(ndb.Model):
-    """
-    Add some default properties and methods to the SQLAlchemy declarative Base.
-    """
+    """Shared utilities."""
+
     @classmethod
     def from_dict(cls, values):
-        """
-        Creates an instance from the given values
-        """
+        """Creates an instance from the given values."""
         inst = cls()
         inst.populate(**values)
         return inst
@@ -48,31 +47,49 @@ class Base(ndb.Model):
             result['key'] = self.key.id() # Add the key as a string
         return result
 
-class Submission(Base): #pylint: disable=R0903
-    """
-    The Submission Model
-    """
-    location = ndb.StringProperty()
 
-class User(Base): #pylint: disable=R0903
-    """
-    The User Model
-    """
-    email = ndb.StringProperty()
-    login = ndb.StringProperty()
+class User(Base):
+    """Users."""
+    email = ndb.StringProperty() # Must be associated with some OAuth login.
+    login = ndb.StringProperty() # TODO(denero) Legacy of glookup system
     role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
-    submissions = ndb.StructuredProperty(Submission, repeated=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
 
-class Assignment(Base): #pylint: disable=R0903
+
+class Assignment(Base):
     """
     The Assignment Model
     """
-    name = ndb.StringProperty()
-    points = ndb.IntegerProperty()
-    submissions = ndb.StructuredProperty(Submission, repeated=True)
+    name = ndb.StringProperty() # Must be unique to support submission.
+    # TODO(denero) Validate uniqueness of name.
+    points = ndb.FloatProperty()
+    creator = ndb.StructuredProperty(User)
 
+
+def validate_contents(contents):
+    """Contents is a JSON string encoding a map from protocols to data."""
+    if not contents:
+        raise BadValueError('Empty contents')
+    try:
+        files = json.loads(contents)
+        if not isinstance(files, dict):
+            raise BadValueError('Contents is not a JSON map')
+        for k in files:
+            if not isinstance(k, (str, unicode)):
+                raise BadValueError('key %r is not a string' % k)
+        # TODO(denero) Check that each key corresponds to a known protocol,
+        #              and call protocol-specific validators on each value.
+    except Exception as e:
+        raise BadValueError(e)
+
+
+class Submission(Base):
+    """A submission is generated each time a student runs the client."""
+    submitter = ndb.UserProperty()
+    assignment = ndb.StructuredProperty(Assignment)
+    contents = ndb.StringProperty(validator=validate_contents)
+    date = ndb.DateTimeProperty(auto_now_add=True)
