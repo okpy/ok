@@ -225,9 +225,9 @@ class SubmissionAPITest(APITest, BaseTestCase):
     num = 1
     def setUp(self):
         super(SubmissionAPITest, self).setUp()
-        self.project_name = u'test Project'
-        self.project = models.Assignment(name=self.project_name, points=3)
-        self.project.put()
+        self.assignment_name = u'test assignment'
+        self.assignment = models.Assignment(name=self.assignment_name, points=3)
+        self.assignment.put()
 
     def get_basic_instance(self):
         rval = models.Submission(messages="{}")
@@ -239,7 +239,7 @@ class SubmissionAPITest(APITest, BaseTestCase):
         Posts an entity to the server.
         """
         data = inst.to_dict()
-        data['project_name'] = kwds.pop('project_name', self.project_name)
+        data['assignment'] = kwds.pop('assignment', self.assignment_name)
         self.post_json('/{}/new'.format(self.name), data=data, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:
@@ -251,7 +251,7 @@ class SubmissionAPITest(APITest, BaseTestCase):
         pass
 
     def test_invalid_student_submission(self):
-        self.project_name = 'project'
+        self.assignment_name = 'assignment'
         # self.post_entity(self.inst)
         # self.assertStatusCode(400)
 
