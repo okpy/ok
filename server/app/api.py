@@ -73,7 +73,6 @@ class APIResource(object):
         if not form.validate_on_submit():
             return create_api_response(400, str(form.errors))
         retval, new_mdl = self.new_entity(form)
-        print new_mdl.to_dict()
         if retval:
             return create_api_response(200, "success", {
                 'key': new_mdl.key
