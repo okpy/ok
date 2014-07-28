@@ -13,7 +13,9 @@ GOOGLE_API_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
 MC_NAMESPACE = "access-token"
 
 def requires_authenticated_user(func):
-    """Decorator that determines which user made the request and passes it as a keyword argument"""
+    """Decorator that determines which user made the request
+    and passes it to the decorated function. The wrapped function
+    is called with keyword arg called 'user' that is a user object."""
     @wraps(func)
     def decorated(*args, **kwargs):
         if 'access_token' not in request.args:
