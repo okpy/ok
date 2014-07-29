@@ -6,7 +6,7 @@ from flask.views import MethodView
 from flask.app import request
 from flask import jsonify
 
-from google.appengine.ext.db import Key
+from google.appengine.ext.ndb import Key
 from google.appengine.api import users
 
 from app import app
@@ -132,12 +132,11 @@ class SubmitNDBImplementation:
     def lookup_assignments_by_name(self, name):
         """Look up all assignments of a given name."""
         by_name = models.Assignment.name == name
-        return list(models.Assignment.query().filter(by_name))
+        return models.Assignment.query().filter(by_name).fetch(2)
 
     def create_submission(self, user, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
-        user_key = Key.from_path('User', user or 'no user')
-        submission =  models.Submission(parent=user_key, submitter=user,
+        submission =  models.Submission(submitter=user,
                                         assignment=assignment,
                                         messages=messages)
         submission.put()
@@ -166,8 +165,10 @@ class SubmissionAPI(MethodView, APIResource):
     def submit(self, user, assignment, messages):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
-        self.db.create_submission(user, valid_assignment, messages)
-        return create_api_response(200, "success")
+        submission = self.db.create_submission(user, valid_assignment, messages)
+        return create_api_response(200, "success", {
+                'key': submission.key.id()
+            })
 
     @handle_error
     def post(self):

@@ -12,7 +12,7 @@ from flask import json
 
 from test_base import BaseTestCase #pylint: disable=relative-import
 
-from app.api import API_PREFIX #pylint: disable=import-error
+from app.api import API_PREFIX, Key #pylint: disable=import-error
 from app import models, constants #pylint: disable=import-error
 
 def _dict_unicode(obj):
@@ -106,6 +106,9 @@ class APITest(object): #pylint: disable=no-init
                 inst.key = models.ndb.Key(self.model, self.response_json['key'])
         self.assertStatusCode(200)
 
+    def get_by_id(self, key):
+        return self.model.get_by_id(key)
+
     ## ASSERTS ##
 
     def assertStatusCode(self, code): #pylint: disable=invalid-name
@@ -187,7 +190,7 @@ class APITest(object): #pylint: disable=no-init
         self.post_entity(self.inst)
         self.assertStatusCode(200)
 
-        gotten = self.model.get_by_id(self.response_json['key'])
+        gotten = self.get_by_id(self.response_json['key'])
         self.assertEqual(gotten, self.inst)
 
     ## ENTITY PUT ##
@@ -228,9 +231,10 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self.assignment_name = u'test assignment'
         self.assignment = models.Assignment(name=self.assignment_name, points=3)
         self.assignment.put()
+        self.inst.assignment = self.assignment
 
     def get_basic_instance(self):
-        rval = models.Submission(messages="{}")
+        rval = models.Submission(messages="{}",submitter=None)
         self.num += 1
         return rval
 
@@ -239,21 +243,13 @@ class SubmissionAPITest(APITest, BaseTestCase):
         # TODO(denero) Unused because test_entity_create_basic disabled.
         data = inst.to_dict()
         data['assignment'] = kwds.pop('assignment', self.assignment_name)
+        data['access_token'] = 'LETMEIN' # TODO make this access token somewhat real
         self.post_json('/{}/new'.format(self.name), data=data, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:
                 self.assertEqual(inst.key.id(), self.response_json['key'])
             else:
                 inst.key = models.ndb.Key(self.model, self.response_json.get('key'))
-
-    def test_valid_student_submission(self):
-        pass # TODO(denero) Implement
-
-    def test_missing_field(self):
-        pass # TODO(denero) Implement
-
-    def test_extra_field(self):
-        pass # TODO(denero) Implement
 
     def test_invalid_assignment_name(self):
         self.assignment_name = 'assignment'

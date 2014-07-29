@@ -61,6 +61,10 @@ class User(Base):
     def __repr__(self):
         return '<User %r>' % self.email
 
+    @classmethod
+    def user_from_key(cls, name=None):
+        return ndb.Key(cls, name or 'no user')
+
 
 class Assignment(Base):
     """
