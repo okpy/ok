@@ -1,55 +1,71 @@
 #!/usr/bin/python3
 
-""" The client side autograder functionality.
+"""The ok.py script runs tests, checks for updates, and saves your work.
 
-This file is responsible for all communication with the server and will contain
-all protocols that are used in this project. Students should never need to
-modify this file and staff should change the "protocols" list in the
-configuration variables to include the protocols that they wish to use for the
-project.
+Common uses:
+  python3 ok.py        Run unlocked tests, check for updates, and save work.
+  python3 ok.py -u     Unlock new tests interactively.
+  python3 ok.py -h     Display full help documentation.
 
+This script will search the current directory for assignments. Make sure that
+ok.py appears in the same directory as the assignment you wish to test.
+"""
 
+# TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
+"""DEVELOPER INSTRUCTIONS
+
+This multi-line string contains instructions for developers. It is removed
+when the client is distributed to students.
+
+This file is responsible for coordinating all communication with the ok-server.
+Students should never need to modify this file.
+
+Local and remote interactions are encapsulated as protocols.
 Contributors should do the following to add a protocol to this autograder:
 
     1- Extend the Protocol class and implement on_start and on_interact.
     2- Add the classname of your protocol to the "protocols" list.
     3- If your protocol needs command line arguments, change parse_input.
 
-The only useful methods in the framework code are send_to_server and
-receive_from_server, which should be invoked if you wish to send information to
-the server or receive information from the server outside of the default times.
+A standard protocol lifecycle has only one round-trip communication with the
+server. If other interactions are required outside of this lifecycle, the
+functions send_to_server and receive_from_server can be used to send and
+receive information from the server outside of the default times.
 """
 import argparse
 
-# Template protocol. All protocols must subclass this.
 
 class Protocol(object):
-    """
-    The template class that all protocols must follow.
-    """
+    """TODO(denero) Describe protocols, once we actually know what they do."""
     name = None
 
     def __init__(self, cmd_line_args):
-        """
-        Initializes an instance of the Protocol class.
-        """
-        self.args = cmd_line_args
+        self.args = cmd_line_args # A dictionary of parsed arguments.
 
     def on_start(self, buf):
-        """
-        This method is called only once, which is when the autograder first
-        starts. It is called every time that the autograder starts, regardless
-        of what mode the student wants to run the autograder in.
-        """
+        """Always called when ok.py starts. """
         pass
 
     def on_interact(self, buf):
         """
+        TODO(denero) I don't understand what on_interact is supposed to do.
+
         This method is called if the student chooses the mode that specifically
         selects this protocol. This might also be called in another protocol's
         on_interact method as well.
         """
         pass
+
+
+class FileContents(Protocol):
+    """The contents of changed source files are sent to the server."""
+    name = 'file_contents'
+
+
+class RunTests(Protocol):
+    """Runs tests, formats results, and sends results to the server."""
+    file = 'test_results'
+
 
 def send_to_server(buf):
     """
@@ -61,6 +77,7 @@ def send_to_server(buf):
     buf.clear()
     buf[STUDENT_KEY] = STUDENT_LOGIN
     buf[MSG_TYPE] = MSG_INTERACT
+
 
 def receive_from_server():
     """
@@ -79,26 +96,21 @@ MSG_TYPE = 'msg_type'
 MSG_START = 'start'
 MSG_INTERACT = 'interact'
 
+# TODO(denero) Pass around a buffer that checks for message duplication, rather
+#              than using a global variable with shared access.
 INPUT_BUFFER = {STUDENT_KEY : STUDENT_LOGIN, MSG_TYPE : MSG_START}
 
 PROTOCOLS = list()
 
 def parse_input():
-    """
-    Parses command line input from the student.
-    """
+    """Parses command line input."""
     parser = argparse.ArgumentParser(description="Autograder parser")
     parser.add_argument('-m', '--mode', type=str, default=None,
                         help="Mode the autograder should run in.")
-
-    args = parser.parse_args()
-
-    return args
+    return parser.parse_args()
 
 def ok_main(cmd_line_args):
-    """
-    The main method for this module that is run when it is invoked.
-    """
+    """Run all relevant aspects of ok.py."""
     name_to_protocol = dict()
 
     for protocol in PROTOCOLS:
