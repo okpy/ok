@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
-#pylint: disable=no-member, no-init
-
+#pylint: disable=no-member, no-init, too-many-public-methods
+#pylint: disable=attribute-defined-outside-init
 """
-API tests
+tests.py
+
 """
 
 import unittest
@@ -11,8 +12,8 @@ import json
 
 from test_base import BaseTestCase #pylint: disable=relative-import
 
-from app.api import API_PREFIX
-from app import models, constants
+from app.api import API_PREFIX #pylint: disable=import-error
+from app import models, constants #pylint: disable=import-error
 
 def _dict_unicode(obj):
     """
@@ -53,7 +54,7 @@ class APITest(object): #pylint: disable=no-init
         try:
             response_json = json.loads(self.response.data)['data']
             self.response_json = models.json.loads(json.dumps(response_json))
-        except Exception as e:
+        except ValueError:
             self.response_json = None
 
     def get_index(self, *args, **kwds):
@@ -77,7 +78,7 @@ class APITest(object): #pylint: disable=no-init
         try:
             response_json = json.loads(self.response.data)
             self.response_json = models.json.loads(json.dumps(response_json['data']))
-        except Exception as e:
+        except ValueError:
             self.response_json = None
 
     def post_json(self, url, *args, **kwds):
@@ -109,7 +110,8 @@ class APITest(object): #pylint: disable=no-init
 
     def assertStatusCode(self, code): #pylint: disable=invalid-name
         """Asserts the status code."""
-        self.assertEqual(self.response.status_code, code)
+        self.assertEqual(self.response.status_code, code,
+                         self.response.data)
 
     def assertJson(self, correct_json): #pylint: disable=invalid-name
         """Asserts that the response is correct_json."""
@@ -220,6 +222,7 @@ class SubmissionAPITest(APITest, BaseTestCase):
     model = models.Submission
     name = 'submission'
 
+    num = 1
     def setUp(self):
         super(SubmissionAPITest, self).setUp()
         self.project_name = u'test Project'
