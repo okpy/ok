@@ -3,9 +3,9 @@
 """The ok.py script runs tests, checks for updates, and saves your work.
 
 Common uses:
-  python3 ok.py        Run unlocked tests, check for updates, and save work.
-  python3 ok.py -u     Unlock new tests interactively.
-  python3 ok.py -h     Display full help documentation.
+  python3 ok.py          Run unlocked tests (and save your work).
+  python3 ok.py -u       Unlock new tests interactively.
+  python3 ok.py -h       Display full help documentation.
 
 This script will search the current directory for assignments. Make sure that
 ok.py appears in the same directory as the assignment you wish to test.
@@ -33,6 +33,7 @@ are required outside of this lifecycle, the send_to_server function can be used
 to send and receive information from the server outside of the default times.
 Such communications should be limited to the body of an on_interact method.
 """
+
 import argparse
 
 
@@ -74,34 +75,28 @@ def send_to_server(messages):
     # TODO(denero) Send an {access_token, assignment, messages} post.
 
 
-# TODO(denero) Pass around a buffer that checks for message duplication, rather
-#              than using a global variable with shared access.
-INPUT_BUFFER = {}
-
-PROTOCOLS = list()
-
 def parse_input():
     """Parses command line input."""
-    parser = argparse.ArgumentParser(description="Autograder parser")
-    parser.add_argument('-m', '--mode', type=str, default=None,
-                        help="Mode the autograder should run in.")
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-a', '--assignment', metavar='A', type=str,
+                        help="assignment name to check. Partial names are ok.")
+    parser.add_argument('-u', '--unlock', action='store_true',
+                        help="unlock tests interactively.")
     return parser.parse_args()
 
-def ok_main(cmd_line_args):
+
+def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    name_to_protocol = dict()
+    protocols = [FileContents]
+    messages = dict()
 
-    for protocol in PROTOCOLS:
-        proto_inst = protocol(cmd_line_args)
-        name_to_protocol[protocol.name] = proto_inst
-        proto_inst.on_start(INPUT_BUFFER)
+    for protocol in protocols:
+        p = protocol(args)
+        messages[p.name] = p.on_start()
 
-    send_to_server(INPUT_BUFFER)
-
-    if cmd_line_args.mode != None:
-        name_to_protocol[cmd_line_args.mode].on_interact(INPUT_BUFFER)
-
-    send_to_server(INPUT_BUFFER)
+    send_to_server(messages)
 
 if __name__ == '__main__':
     ok_main(parse_input())
