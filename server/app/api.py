@@ -148,7 +148,7 @@ class SubmissionAPI(MethodView, APIResource):
     """The API resource for the Submission Object"""
     name = "Submission"
     db = SubmitNDBImplementation()
-    post_fields = ['access_token', 'assignment', 'messages']
+    post_fields = ['access_token', 'assignment', 'messages', 'submitter']
 
     @classmethod
     def get_model(cls):

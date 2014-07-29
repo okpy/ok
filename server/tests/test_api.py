@@ -246,9 +246,6 @@ class SubmissionAPITest(APITest, BaseTestCase):
             else:
                 inst.key = models.ndb.Key(self.model, self.response_json.get('key'))
 
-    def test_entity_create_basic(self):
-        pass # TODO(denero) Re-enable when self.inst is actually valid.
-
     def test_valid_student_submission(self):
         pass # TODO(denero) Implement
 
