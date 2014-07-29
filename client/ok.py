@@ -81,9 +81,14 @@ def parse_input():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-a', '--assignment', metavar='A', type=str,
-                        help="assignment name to check. Partial names are ok.")
+                        help="assignment name to check (partial names are ok)")
+    parser.add_argument('-q', '--question', type=int,
+                        help="focus on a specific question")
     parser.add_argument('-u', '--unlock', action='store_true',
-                        help="unlock tests interactively.")
+                        help="unlock tests interactively")
+    parser.add_argument('-v', '--verbose', type=int,
+                        help="print more output")
+    # TODO(denero) Port -i for interactive mode from old autograder.py
     return parser.parse_args()
 
 
