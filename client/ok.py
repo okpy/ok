@@ -28,9 +28,10 @@ Contributors should do the following to add a protocol to this autograder:
     3- If your protocol needs command line arguments, change parse_input.
 
 A standard protocol lifecycle has only one round-trip communication with the
-server. If other interactions are required outside of this lifecycle, the
-functions send_to_server and receive_from_server can be used to send and
-receive information from the server outside of the default times.
+server, processed by on_start and on_response methods. If other interactions
+are required outside of this lifecycle, the send_to_server function can be used
+to send and receive information from the server outside of the default times.
+Such communications should be limited to the body of an on_interact method.
 """
 import argparse
 
@@ -42,63 +43,40 @@ class Protocol(object):
     def __init__(self, cmd_line_args):
         self.args = cmd_line_args # A dictionary of parsed arguments.
 
-    def on_start(self, buf):
-        """Always called when ok.py starts. """
-        pass
+    def on_start(self):
+        """Called when ok.py starts. Returns an object to be sent to server."""
 
-    def on_interact(self, buf):
-        """
-        TODO(denero) I don't understand what on_interact is supposed to do.
+    def on_response(self, response):
+        """Called when ok-server responds with the server response."""
 
-        This method is called if the student chooses the mode that specifically
-        selects this protocol. This might also be called in another protocol's
-        on_interact method as well.
-        """
-        pass
+    def on_interact(self):
+        """Called to execute an interactive or output-intensive session."""
 
 
 class FileContents(Protocol):
     """The contents of changed source files are sent to the server."""
     name = 'file_contents'
 
+    def on_start(self):
+        """Find all source files and return their complete contents."""
+
 
 class RunTests(Protocol):
     """Runs tests, formats results, and sends results to the server."""
-    file = 'test_results'
+    name = 'run_tests'
+
+    def on_interact(self):
+        """Run unlocked tests and print results."""
 
 
-def send_to_server(buf):
-    """
-    This depends on the server-side API. But this method will construct
-    an HTTPS request and send it to the server according to the API.
-    """
-    # Insert code for sending to the server here...
+def send_to_server(messages):
+    """Send messages to server, along with user authentication."""
+    # TODO(denero) Send an {access_token, assignment, messages} post.
 
-    buf.clear()
-    buf[STUDENT_KEY] = STUDENT_LOGIN
-    buf[MSG_TYPE] = MSG_INTERACT
-
-
-def receive_from_server():
-    """
-    This also depends on the server side API, but it might need to take
-    in a list of connections- to be decided.
-
-    Returns a response from the server.
-    """
-    pass
-
-# Configuration variables and runtime methods
-
-STUDENT_LOGIN = ""
-STUDENT_KEY = 'student'
-MSG_TYPE = 'msg_type'
-MSG_START = 'start'
-MSG_INTERACT = 'interact'
 
 # TODO(denero) Pass around a buffer that checks for message duplication, rather
 #              than using a global variable with shared access.
-INPUT_BUFFER = {STUDENT_KEY : STUDENT_LOGIN, MSG_TYPE : MSG_START}
+INPUT_BUFFER = {}
 
 PROTOCOLS = list()
 
