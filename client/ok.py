@@ -142,7 +142,7 @@ def find_assignment(assignment_hint, root, max_files=1000):
     paths = [join(d, f) for (d, _, fs) in files for f in fs if is_src_file(f)]
     assignments = group_by_assignment(paths)
 
-    ex = NameError
+    ex = Exception
     if not assignments:
         raise ex('No assignment found in directory "{}".\n'.format(root) +
                  'Put ok.py with your assignment or use -r to specify a root.')
@@ -171,7 +171,7 @@ def ok_main(args):
     root = args.root if args.root else ok_root
     try:
         assignment, src_files = find_assignment(args.assignment, root)
-    except NameError as ex:
+    except Exception as ex:
         print(ex)
         sys.exit(1)
 
