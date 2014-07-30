@@ -38,6 +38,8 @@ import argparse
 import itertools
 import os
 import sys
+from urllib import request, error, parse
+import json
 
 
 class Protocol(object):
@@ -64,6 +66,13 @@ class FileContents(Protocol):
 
     def on_start(self):
         """Find all source files and return their complete contents."""
+        contents = {}
+        for path in self.src_files:
+            key = os.path.normpath(path)
+            with open(path, 'r', encoding='utf-8') as lines:
+                value = lines.read()
+            contents[key] = value
+        return contents
 
 
 class RunTests(Protocol):
@@ -72,11 +81,28 @@ class RunTests(Protocol):
 
     def on_interact(self):
         """Run unlocked tests and print results."""
+        # TODO(denero) Import all the existing autograder functionality here.
 
 
-def send_to_server(messages, assignment):
+def send_to_server(messages, assignment, server, endpoint='submit'):
     """Send messages to server, along with user authentication."""
-    # TODO(denero) Send an {access_token, assignment, messages} post.
+    data = {
+        'access_token': 'TODO',
+        'assignment': assignment,
+        'messages': messages,
+    }
+    try:
+        # TODO(denero) Change to https.
+        address = 'http://' + server + '/api/v1/' + endpoint
+        serialized = json.dumps(data).encode(encoding='utf-8')
+        quoted = parse.quote_plus(serialized)
+        data = quoted.encode(encoding='utf-8')
+        # TODO(denero) Wrap in timeout.
+        response = request.urlopen(address, data)
+        return response.read().decode('utf-8')
+    except (error.URLError, error.HTTPError, UnicodeError) as ex:
+        print("Error while sending to server: {}".format(ex))
+        raise # TODO(denero) Figure out how we want to handle server errors.
 
 
 def parse_input():
@@ -90,7 +116,7 @@ def parse_input():
                         help="focus on a specific question")
     parser.add_argument('-r', '--root', type=str, default=None,
                         help="path to root directory of assignment")
-    parser.add_argument('-s', '--server', type=str, default='localhost:8000',
+    parser.add_argument('-s', '--server', type=str, default='localhost:8080',
                         help="server address")
     parser.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
@@ -179,13 +205,13 @@ def ok_main(args):
 
     start_protocols = [p(args, src_files) for p in [FileContents]]
     interact_protocols = [p(args, src_files) for p in [RunTests]]
-    messages = dict()
 
+    messages = dict()
     for protocol in start_protocols:
         messages[protocol.name] = protocol.on_start()
 
     # TODO(denero) Send and receive in a separate thread.
-    send_to_server(messages, assignment)
+    send_to_server(messages, assignment, args.server)
 
     for protocol in interact_protocols:
         protocol.on_interact()
