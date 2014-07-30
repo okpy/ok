@@ -94,14 +94,16 @@ def parse_input():
                         help="server address")
     parser.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
-    parser.add_argument('-v', '--verbose', type=int,
+    parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
     return parser.parse_args()
 
 
 def is_src_file(filename):
     """Return whether filename is an assignment source file."""
-    return filename.endswith('.py') and filename != 'ok.py'
+    return filename.endswith('.py') and \
+        filename != 'ok.py' and \
+        not filename.endswith('_tests.py')
 
 
 def get_assignment(path):

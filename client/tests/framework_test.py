@@ -1,45 +1,47 @@
 #!/usr/bin/python3
 
 import unittest
-import argparse
-from ok import PROTOCOLS, Protocol, parse_input, ok_main
+import ok
 
-class TestProtocol(Protocol):
+class TestProtocol(ok.Protocol):
     name = "test"
-    called_start = 0
-    called_interact = 0
 
-    def __init__(self, cmd_line_args):
-        Protocol.__init__(self, cmd_line_args)
+    def __init__(self, args, src_files):
+        ok.Protocol.__init__(args, src_files)
+        self.called_start = 0
+        self.called_interact = 0
 
     def on_start(self, buf):
-        TestProtocol.called_start += 1
+        self.called_start += 1
 
     def on_interact(self, buf):
-        TestProtocol.called_interact += 1
+        self.called_interact += 1
 
-class FrameworkTest(unittest.TestCase): #pylint: disable=too-many-public-methods
-    def setUp(self):
-        self.args = argparse.ArgumentParser().parse_args()
-        del PROTOCOLS[:]
-        PROTOCOLS.append(TestProtocol)
+class OkTest(unittest.TestCase):
 
-    def test_parser(self): #pylint: disable=no-self-use
-        arguments = parse_input()
-        assert arguments.mode == None
+    def test_parse_input(self):
+        _ = ok.parse_input() # Does not crash and returns a value.
 
-    def test_ok_main_no_args(self):
-        initial_start = TestProtocol.called_start
-        initial_interact = TestProtocol.called_interact
-        self.args.mode = None
-        ok_main(self.args)
-        assert TestProtocol.called_start == initial_start + 1
-        assert TestProtocol.called_interact == initial_interact
+    def test_is_src_file(self):
+        self.assertTrue(ok.is_src_file('hw1.py'))
+        self.assertFalse(ok.is_src_file('hw1_tests.py'))
+        self.assertFalse(ok.is_src_file('hw1_tests'))
+        self.assertFalse(ok.is_src_file('hw1.html'))
+        self.assertFalse(ok.is_src_file('ok.py'))
 
-    def test_ok_main_mode_set(self):
-        initial_start = TestProtocol.called_start
-        initial_interact = TestProtocol.called_interact
-        self.args.mode = "test"
-        ok_main(self.args)
-        assert TestProtocol.called_start == initial_start + 1
-        assert TestProtocol.called_interact == initial_interact + 1
+    def test_get_assignment(self):
+        self.assertTrue(ok.get_assignment('demo_assignments/hw1.py') == 'hw1')
+        self.assertFalse(ok.get_assignment('demo_assignments/hw1_tests.py'))
+
+    def test_group_by_assignment(self):
+        paths = ['demo_assignments/hw1.py', 'demo_assignments/hw1_tests.py']
+        groups = ok.group_by_assignment(paths)
+        self.assertIn('hw1', groups)
+        self.assertEqual(groups['hw1'], paths[0:1])
+
+    def test_find_assignment(self):
+        assignment, src_files = ok.find_assignment(None, '.')
+        self.assertEqual(assignment, 'hw1')
+        self.assertEqual(src_files, ['./demo_assignments/hw1.py'])
+        self.assertRaises(Exception, ok.find_assignment, [None, 'tests'])
+        self.assertRaises(Exception, ok.find_assignment, ['hw2', '.'])
