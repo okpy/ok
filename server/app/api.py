@@ -132,7 +132,7 @@ class SubmitNDBImplementation:
     def lookup_assignments_by_name(self, name):
         """Look up all assignments of a given name."""
         by_name = models.Assignment.name == name
-        return models.Assignment.query().filter(by_name).fetch(2)
+        return list(models.Assignment.query().filter(by_name))
 
     def create_submission(self, user, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
