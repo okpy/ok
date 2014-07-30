@@ -19,6 +19,10 @@ class TestProtocol(ok.Protocol):
 
 class OkTest(unittest.TestCase):
 
+    def setUp(self):
+        self.hw1 = './demo_assignments/hw1.py'
+        self.hw1_tests = './demo_assignments/hw1_tests.py'
+
     def test_parse_input(self):
         _ = ok.parse_input() # Does not crash and returns a value.
 
@@ -30,11 +34,11 @@ class OkTest(unittest.TestCase):
         self.assertFalse(ok.is_src_file('ok.py'))
 
     def test_get_assignment(self):
-        self.assertTrue(ok.get_assignment('demo_assignments/hw1.py') == 'hw1')
-        self.assertFalse(ok.get_assignment('demo_assignments/hw1_tests.py'))
+        self.assertTrue(ok.get_assignment(self.hw1) == 'hw1')
+        self.assertFalse(ok.get_assignment(self.hw1_tests))
 
     def test_group_by_assignment(self):
-        paths = ['demo_assignments/hw1.py', 'demo_assignments/hw1_tests.py']
+        paths = [self.hw1, self.hw1_tests]
         groups = ok.group_by_assignment(paths)
         self.assertIn('hw1', groups)
         self.assertEqual(groups['hw1'], paths[0:1])
@@ -42,6 +46,6 @@ class OkTest(unittest.TestCase):
     def test_find_assignment(self):
         assignment, src_files = ok.find_assignment(None, '.')
         self.assertEqual(assignment, 'hw1')
-        self.assertEqual(src_files, ['./demo_assignments/hw1.py'])
+        self.assertEqual(src_files, [self.hw1])
         self.assertRaises(Exception, ok.find_assignment, [None, 'tests'])
         self.assertRaises(Exception, ok.find_assignment, ['hw2', '.'])
