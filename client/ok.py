@@ -12,7 +12,7 @@ ok.py appears in the same directory as the assignment you wish to test.
 """
 
 # TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
-"""DEVELOPER INSTRUCTIONS
+DEVELOPER_INSTRUCTIONS = """
 
 This multi-line string contains instructions for developers. It is removed
 when the client is distributed to students.
@@ -94,7 +94,6 @@ def parse_input():
                         help="unlock tests interactively")
     parser.add_argument('-v', '--verbose', type=int,
                         help="print more output")
-    # TODO(denero) Port -i for interactive mode from old autograder.py
     return parser.parse_args()
 
 
@@ -109,14 +108,24 @@ def get_assignment(path):
     We read the file directly rather than loading it to be robust to syntax
     errors that may appear in the files being examined.
     """
-    with open(path, 'r') as f:
-        for line in f:
+    with open(path, 'r') as lines:
+        for line in lines:
             if 'ASSIGNMENT' in line:
                 parts = line.split('ASSIGNMENT', 2)
                 if len(parts) == 2:
                     after = parts[1]
                     return after.strip(' =#\t')
     return None
+
+
+def group_by_assignment(paths):
+    """Build map from assignments to lists of source files."""
+    assignments = dict()
+    for path in paths:
+        assignment = get_assignment(path)
+        if assignment:
+            assignments.setdefault(assignment, []).append(path)
+    return assignments
 
 
 def find_assignment(assignment_hint, root, max_files=1000):
@@ -129,60 +138,54 @@ def find_assignment(assignment_hint, root, max_files=1000):
     files = itertools.islice(os.walk(root), 0, max_files)
     join = os.path.join
     paths = [join(d, f) for (d, _, fs) in files for f in fs if is_src_file(f)]
+    assignments = group_by_assignment(paths)
 
-    # Build map from assignments to lists of source files.
-    assignments = dict()
-    for path in paths:
-        a = get_assignment(path)
-        if a:
-            assignments.setdefault(a, []).append(path)
-
-    # Disambiguate assignment and return or exit.
+    ex = NameError
     if not assignments:
-        print('No assignment found in directory "{}".\n'.format(root) +
-              "Place ok.py with your assignment or use -r to specify a root.")
-        sys.exit(1)
+        raise ex('No assignment found in directory "{}".\n'.format(root) +
+                 'Put ok.py with your assignment or use -r to specify a root.')
     elif len(assignments) == 1 and not assignment_hint:
         return next(iter(assignments.items()))
     elif not assignment_hint:
-        print("Multiple assignments found: {}\n".format(list(assignments)) +
-              "Select one using -a followed by any unique substring of the "
-              "assignment you wish to select.")
-        sys.exit(1)
+        raise ex('Multiple assignments found: {}\n'.format(list(assignments)) +
+                 'Select one using -a followed by any unique substring of the '
+                 'assignment you wish to select.')
+    else:
         matches = [a for a in assignments if assignment_hint in a]
         if len(matches) == 1:
             match = matches[0]
             return match, assignments[match]
         elif len(matches) == 0:
-            print('Assignment name matching "{}" was not found.' )
-            sys.exit(1)
+            raise ex('Assignment name matching "{}" was not found.')
         elif len(matches) >= 1:
-            print('Multiple assignments matching "{}" found: {}'.format(
+            raise ex('Multiple assignments matching "{}" found: {}'.format(
                 assignment_hint, matches))
-            sys.exit(1)
 
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    ok_root = os.path.split(sys.argv[0])[0]
+    ok_root = os.path.abspath(os.path.split(sys.argv[0])[0])
     root = args.root if args.root else ok_root
-    assignment, src_files = find_assignment(args.assignment, root)
+    try:
+        assignment, src_files = find_assignment(args.assignment, root)
+    except NameError as ex:
+        print(ex)
+        sys.exit(1)
 
-    start_protocols = [FileContents]
-    interact_protocols = [RunTests]
+    start_protocols = [p(args, src_files) for p in [FileContents]]
+    interact_protocols = [p(args, src_files) for p in [RunTests]]
     messages = dict()
 
     for protocol in start_protocols:
-        p = protocol(args, src_files)
-        messages[p.name] = p.on_start()
+        messages[protocol.name] = protocol.on_start()
 
     # TODO(denero) Send and receive in a separate thread.
     send_to_server(messages, assignment)
 
     for protocol in interact_protocols:
-        protocol(args, src_files).on_interact()
+        protocol.on_interact()
 
-    # TODO(denero) Handle server response
+    # Handle server response
 
 if __name__ == '__main__':
     ok_main(parse_input())
