@@ -3,6 +3,7 @@
 import unittest
 import ok
 
+
 class TestProtocol(ok.Protocol):
     name = "test"
 
@@ -16,6 +17,7 @@ class TestProtocol(ok.Protocol):
 
     def on_interact(self, buf):
         self.called_interact += 1
+
 
 class OkTest(unittest.TestCase):
 
