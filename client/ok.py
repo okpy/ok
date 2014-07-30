@@ -116,7 +116,7 @@ def get_assignment(path):
                 parts = line.split('ASSIGNMENT', 2)
                 if len(parts) == 2:
                     after = parts[1]
-                    return after.strip(' =#\t')
+                    return after.strip(' =#\t\n)\'"')
     return None
 
 
@@ -158,7 +158,8 @@ def find_assignment(assignment_hint, root, max_files=1000):
             match = matches[0]
             return match, assignments[match]
         elif len(matches) == 0:
-            raise ex('Assignment name matching "{}" was not found.')
+            raise ex('Assignment matching "{}" was not found in: {}'.format(
+                assignment_hint, list(assignments)))
         elif len(matches) >= 1:
             raise ex('Multiple assignments matching "{}" found: {}'.format(
                 assignment_hint, matches))
