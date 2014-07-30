@@ -2,16 +2,18 @@
 
 """Data models."""
 
+import datetime
+
 from flask import Blueprint
 from app import constants
 
-model_blueprint = Blueprint('models', __name__)
+MODEL_BLUEPRINT = Blueprint('models', __name__)
 
 from app import app
 from flask import json
 from flask.json import JSONEncoder as old_json
 
-from google.appengine.ext import db,ndb
+from google.appengine.ext import db, ndb
 
 BadValueError = db.BadValueError
 
@@ -25,10 +27,12 @@ class JSONEncoder(old_json):
     def default(self, obj): #pylint: disable=E0202
         if isinstance(obj, ndb.Key):
             return obj.id()
-        try:
-            return obj.to_dict()
-        except AttributeError:
-            return json.JSONEncoder.default(self, obj)
+        elif isinstance(obj, datetime.datetime):
+            return str(obj)
+        if isinstance(obj, ndb.Model):
+            return obj.to_json()
+        return super(JSONEncoder, self).default(obj)
+
 
 app.json_encoder = JSONEncoder
 
@@ -40,13 +44,18 @@ class Base(ndb.Model):
     def from_dict(cls, values):
         """Creates an instance from the given values."""
         inst = cls()
-        inst.populate(**values)
+        inst.populate(**values) #pylint: disable=star-args
         return inst
 
-    def to_dict(self):
-        result = super(Base, self).to_dict()
-        if self.key:
-            result['key'] = self.key.id() # Add the key as a string
+    def to_json(self):
+        """Converts this model to a json dictionary."""
+        result = self.to_dict()
+        for key, value in result.items():
+            try:
+                new_value = app.json_encoder().default(value)
+                result[key] = new_value
+            except TypeError:
+                pass
         return result
 
 
@@ -63,6 +72,7 @@ class User(Base):
 
     @classmethod
     def user_from_key(cls, name=None):
+        """Helper to get a user from a given key."""
         return ndb.Key(cls, name or 'no user')
 
 
@@ -86,7 +96,7 @@ class Course(Base):
     creator = ndb.StructuredProperty(User)
 
 
-def validate_messages(property, messages):
+def validate_messages(_, messages):
     """Messages is a JSON string encoding a map from protocols to data."""
     if not messages:
         raise BadValueError('Empty messages')
@@ -99,8 +109,8 @@ def validate_messages(property, messages):
                 raise BadValueError('key %r is not a string' % k)
         # TODO(denero) Check that each key corresponds to a known protocol,
         #              and call protocol-specific validators on each value.
-    except Exception as e:
-        raise BadValueError(e)
+    except Exception as exc:
+        raise BadValueError(exc)
 
 
 class Submission(Base):
@@ -110,4 +120,5 @@ class Submission(Base):
     messages = ndb.StringProperty(validator=validate_messages)
     # TODO(denero) Test JSON formatter seems to have trouble with dates.
     #              Add back in created field when testing is resolved.
-    # created = ndb.DateTimeProperty(auto_now_add=True)
+    created = ndb.DateTimeProperty(auto_now_add=True)
+

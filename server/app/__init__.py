@@ -6,13 +6,13 @@ from flask import Flask
 import os
 from werkzeug.debug import DebuggedApplication
 
-app = Flask('app')
+app = Flask('app') #pylint: disable=invalid-name
 
-from app.models import model_blueprint
+from app.models import MODEL_BLUEPRINT
 from app import api
 from app import auth
 
-app.register_blueprint(model_blueprint)
+app.register_blueprint(MODEL_BLUEPRINT)
 
 if os.getenv('FLASK_CONF') == 'DEV':
     app.config.from_object('app.settings.Development')
