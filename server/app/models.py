@@ -118,7 +118,5 @@ class Submission(Base):
     submitter = ndb.UserProperty()
     assignment = ndb.StructuredProperty(Assignment)
     messages = ndb.StringProperty(validator=validate_messages)
-    # TODO(denero) Test JSON formatter seems to have trouble with dates.
-    #              Add back in created field when testing is resolved.
     created = ndb.DateTimeProperty(auto_now_add=True)
 
