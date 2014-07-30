@@ -90,6 +90,8 @@ def parse_input():
                         help="focus on a specific question")
     parser.add_argument('-r', '--root', type=str, default=None,
                         help="path to root directory of assignment")
+    parser.add_argument('-s', '--server', type=str, default='localhost:8000',
+                        help="server address")
     parser.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
     parser.add_argument('-v', '--verbose', type=int,
