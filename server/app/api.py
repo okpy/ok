@@ -6,7 +6,6 @@ from flask.views import MethodView
 from flask.app import request
 from flask import jsonify
 
-from google.appengine.ext.ndb import Key
 from google.appengine.api import users
 
 from app import app
@@ -25,7 +24,7 @@ def handle_error(func):
     def decorated(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except:
+        except Exception: #pylint: disable=broad-except
             error_message = traceback.format_exc()
             return create_api_response(500, 'internal server error:\n%s' %
                                        error_message)
@@ -105,7 +104,8 @@ class APIResource(object):
         """
         Index HTTP method thing.
         """
-        return create_api_response(200, "success", list(self.get_model().query()))
+        return create_api_response(
+            200, "success", list(self.get_model().query()))
 
 
 class UserAPI(MethodView, APIResource):
@@ -167,8 +167,8 @@ class SubmissionAPI(MethodView, APIResource):
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment, messages)
         return create_api_response(200, "success", {
-                'key': submission.key.id()
-            })
+            'key': submission.key.id()
+        })
 
     @handle_error
     def post(self):
@@ -184,7 +184,8 @@ class SubmissionAPI(MethodView, APIResource):
         #              and change to self.submit(**request.json)
         user = users.get_current_user()
         try:
-            return self.submit(user, request.json['assignment'], request.json['messages'])
+            return self.submit(user, request.json['assignment'], 
+                               request.json['messages'])
         except BadValueError as e:
             return create_api_response(400, e.message)
 
