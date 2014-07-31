@@ -38,7 +38,7 @@ import argparse
 import itertools
 import os
 import sys
-from urllib import request, error, parse
+from urllib import request, error
 import json
 
 
@@ -84,10 +84,10 @@ class RunTests(Protocol):
         # TODO(denero) Import all the existing autograder functionality here.
 
 
-def send_to_server(messages, assignment, server, endpoint='submit'):
+def send_to_server(messages, assignment, server, endpoint='submission/new'):
     """Send messages to server, along with user authentication."""
     data = {
-        'access_token': 'TODO',
+        'access_token': 'TODO', # TODO(denero) Add cached auth token.
         'assignment': assignment,
         'messages': messages,
     }
@@ -95,14 +95,18 @@ def send_to_server(messages, assignment, server, endpoint='submit'):
         # TODO(denero) Change to https.
         address = 'http://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
-        quoted = parse.quote_plus(serialized)
-        data = quoted.encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout.
-        response = request.urlopen(address, data)
-        return response.read().decode('utf-8')
-    except (error.URLError, error.HTTPError, UnicodeError) as ex:
+        req = request.Request(address)
+        req.add_header("Content-Type", "application/json")
+        response = request.urlopen(req, serialized)
+        return json.loads(response.read().decode('utf-8'))
+    except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
-        raise # TODO(denero) Figure out how we want to handle server errors.
+        response = ex.file.read().decode('utf-8')
+        message = json.loads(response)['message']
+        indented = '\n'.join('\t' + line for line in message.split('\n'))
+        print(indented)
+        return {}
 
 
 def parse_input():
