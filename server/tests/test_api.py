@@ -195,12 +195,12 @@ class APITest(object): #pylint: disable=no-init
         self.assertStatusCode(404)
 
     def test_get_bad_permissions(self):
-        """Tests that a get on an invalid ID errors."""
+        """Tests that a get with an invalid access token fails."""
         self.get('/{}'.format(self.name), access_token='will_fail')
         self.assertStatusCode(401)
 
     def test_get_non_admin(self):
-        """Tests that a get on an invalid ID errors."""
+        """Tests that a get with a student access token fails."""
         self.get('/{}'.format(self.name), access_token='dummy_access_token')
         self.assertStatusCode(401)
 
@@ -287,7 +287,7 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self.assertStatusCode(400)
 
     def test_get_non_admin(self):
-        """Tests that a get on an invalid ID errors."""
+        """Tests that a get with a student access token works."""
         self.get('/{}'.format(self.name), access_token=self.access_token)
         self.assertStatusCode(200)
 
