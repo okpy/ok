@@ -17,15 +17,15 @@ MC_NAMESPACE = "access-token"
 DUMMIES = {
     'dummy_access_token': models.User(
         email="dummy@dummy.com",
-        first_name="Soumya",
-        last_name="Basu",
-        login="soumya"
+        first_name="Dummy",
+        last_name="Jones",
+        login="some13413"
     ),
     'dummy_access_token_admin': models.User(
-        email="dummy_admin@dummy.com",
+        email="admin@dummy.com",
         first_name="Albert",
-        last_name="Wu",
-        login="albert",
+        last_name="Jones",
+        login="albert123123",
         role=ADMIN_ROLE,
     )
 }
