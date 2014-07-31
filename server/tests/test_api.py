@@ -8,24 +8,12 @@ tests.py
 """
 
 import unittest
-import json
+from flask import json
 
 from test_base import BaseTestCase #pylint: disable=relative-import
 
 from app.api import API_PREFIX #pylint: disable=import-error
 from app import models, constants #pylint: disable=import-error
-
-def _dict_unicode(obj):
-    """
-    Converts keys to unicode in a nested sequence of dictionaries.
-    """
-    if isinstance(obj, dict):
-        return {unicode(key): value for
-                key, value in obj.iteritems()}
-    elif hasattr(obj, '__iter__'):
-        return sorted([_dict_unicode(item) for item in obj])
-    raise TypeError(obj)
-
 
 class APITest(object): #pylint: disable=no-init
     """
@@ -43,6 +31,9 @@ class APITest(object): #pylint: disable=no-init
         raise NotImplementedError()
 
     def setUp(self): #pylint: disable=super-on-old-class, invalid-name
+        """Set up the API Test.
+
+        Creates the instance of the model you're API testing."""
         super(APITest, self).setUp()
         self.inst = self.get_basic_instance()
 
@@ -77,7 +68,8 @@ class APITest(object): #pylint: disable=no-init
         self.response = self.client.post(API_PREFIX + url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)
-            self.response_json = models.json.loads(json.dumps(response_json['data']))
+            self.response_json = models.json.loads(
+                json.dumps(response_json['data']))
         except ValueError:
             self.response_json = None
 
@@ -106,17 +98,21 @@ class APITest(object): #pylint: disable=no-init
                 inst.key = models.ndb.Key(self.model, self.response_json['key'])
         self.assertStatusCode(200)
 
+    def get_by_id(self, key):
+        return self.model.get_by_id(key)
+
     ## ASSERTS ##
 
     def assertStatusCode(self, code): #pylint: disable=invalid-name
         """Asserts the status code."""
+        response_json = json.loads(self.response.data)
         self.assertEqual(self.response.status_code, code,
-                         self.response.data)
+                         response_json['message'])
 
     def assertJson(self, correct_json): #pylint: disable=invalid-name
         """Asserts that the response is correct_json."""
         self.assertStatusCode(200)
-        self.assertEqual(_dict_unicode(self.response_json), _dict_unicode(correct_json))
+        self.assertItemsEqual(self.response_json, correct_json)
 
     ## INDEX ##
 
@@ -129,13 +125,13 @@ class APITest(object): #pylint: disable=no-init
         """Tests that the index method gives the added entity."""
         self.inst.put()
         self.get_index()
-        self.assertJson([self.inst.to_dict()])
+        self.assertJson([self.inst.to_json()])
 
     def test_index_one_removed(self):
         """Tests that removing an entity makes it disappear from the index."""
         self.inst.put()
         self.get_index()
-        self.assertJson([self.inst.to_dict()])
+        self.assertJson([self.inst.to_json()])
 
         self.inst.key.delete()
         self.get_index()
@@ -150,11 +146,11 @@ class APITest(object): #pylint: disable=no-init
         inst2 = self.get_basic_instance()
         inst2.put()
         self.get_index()
-        self.assertJson(sorted([self.inst.to_dict(), inst2.to_dict()]))
+        self.assertJson(sorted([self.inst.to_json(), inst2.to_json()]))
 
         inst2.key.delete()
         self.get_index()
-        self.assertJson([self.inst.to_dict()])
+        self.assertJson([self.inst.to_json()])
 
     ## ENTITY GET ##
 
@@ -162,7 +158,7 @@ class APITest(object): #pylint: disable=no-init
         """Tests that a basic get works."""
         self.inst.put()
         self.get_entity(self.inst)
-        self.assertJson(self.inst.to_dict())
+        self.assertJson(self.inst.to_json())
 
     def test_get_with_two_entities(self):
         """
@@ -173,7 +169,7 @@ class APITest(object): #pylint: disable=no-init
         inst2.put()
 
         self.get_entity(inst2)
-        self.assertJson(inst2.to_dict())
+        self.assertJson(inst2.to_json())
 
     def test_get_invalid_id_errors(self):
         """Tests that a get on an invalid ID errors."""
@@ -187,8 +183,8 @@ class APITest(object): #pylint: disable=no-init
         self.post_entity(self.inst)
         self.assertStatusCode(200)
 
-        gotten = self.model.get_by_id(self.response_json['key'])
-        self.assertEqual(gotten, self.inst)
+        gotten = self.get_by_id(self.response_json['key'])
+        self.assertEqual(gotten.key, self.inst.key)
 
     ## ENTITY PUT ##
 
@@ -223,36 +219,43 @@ class SubmissionAPITest(APITest, BaseTestCase):
     name = 'submission'
 
     num = 1
-    def setUp(self):
-        super(SubmissionAPITest, self).setUp()
-        self.project_name = u'test Project'
-        self.project = models.Assignment(name=self.project_name, points=3,
-                submissions=[self.inst])
-        self.project.put()
+    _assign = None
+
+    @classmethod
+    def get_assignment(cls):
+        if not cls._assign:
+            cls.assignment_name = u'test assignment'
+            cls._assign = models.Assignment(name=cls.assignment_name, points=3)
+            cls._assign.put()
+        return cls._assign
 
     def get_basic_instance(self):
-        rval = models.Submission(location='submission' + str(self.num))
+        rval = models.Submission(messages="{}", submitter=None,
+                                 assignment=self.get_assignment())
         self.num += 1
         return rval
 
     def post_entity(self, inst, *args, **kwds):
-        """
-        Posts an entity to the server.
-        """
+        """Posts an entity to the server."""
         data = inst.to_dict()
-        data['project_name'] = kwds.pop('project_name', self.project_name)
+        data['assignment'] = kwds.pop('assignment', self.assignment_name)
+        # TODO make this access token somewhat real
+        data['access_token'] = 'LETMEIN'
+        del data['created']
+
         self.post_json('/{}/new'.format(self.name), data=data, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:
                 self.assertEqual(inst.key.id(), self.response_json['key'])
             else:
-                inst.key = models.ndb.Key(self.model, self.response_json.get('key'))
+                inst.key = models.ndb.Key(self.model,
+                                          self.response_json.get('key'))
 
-    def test_invalid_student_submission(self):
-        self.project_name = 'project'
+    def test_invalid_assignment_name(self):
+        self.assignment_name = 'assignment'
         self.post_entity(self.inst)
-
         self.assertStatusCode(400)
 
 if __name__ == '__main__':
     unittest.main()
+
