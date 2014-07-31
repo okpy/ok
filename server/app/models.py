@@ -110,7 +110,7 @@ def validate_messages(_, messages):
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
-    submitter = ndb.UserProperty()
+    submitter = ndb.StructuredProperty(User)
     assignment = ndb.StructuredProperty(Assignment)
     messages = ndb.StringProperty(validator=validate_messages)
     created = ndb.DateTimeProperty(auto_now_add=True)
