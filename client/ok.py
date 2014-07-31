@@ -7,8 +7,9 @@ Common uses:
   python3 ok.py -u       Unlock new tests interactively.
   python3 ok.py -h       Display full help documentation.
 
-This script will search the current directory for assignments. Make sure that
+This script will search the current directory for test files. Make sure that
 ok.py appears in the same directory as the assignment you wish to test.
+Otherwise, use -t to specify a test file manually.
 """
 
 # TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
@@ -35,7 +36,7 @@ Such communications should be limited to the body of an on_interact method.
 """
 
 import argparse
-import itertools
+import importlib.machinery
 import os
 import sys
 from urllib import request, error
@@ -114,14 +115,12 @@ def parse_input():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-a', '--assignment', metavar='A', type=str,
-                        help="assignment name to check (partial names are ok)")
     parser.add_argument('-q', '--question', type=int,
                         help="focus on a specific question")
-    parser.add_argument('-r', '--root', type=str, default=None,
-                        help="path to root directory of assignment")
     parser.add_argument('-s', '--server', type=str, default='localhost:8080',
                         help="server address")
+    parser.add_argument('-t', '--tests', metavar='A', type=str,
+                        help="partial name or path to test file or directory")
     parser.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -129,82 +128,90 @@ def parse_input():
     return parser.parse_args()
 
 
-def is_src_file(filename):
-    """Return whether filename is an assignment source file."""
-    return filename.endswith('.py') and \
-        filename != 'ok.py' and \
-        not filename.endswith('_tests.py')
+def load_test_file(tests):
+    """Return (test_file, assignment) of the test file specified by tests.
 
-
-def get_assignment(path):
-    """Return the assignment name corresponding to a source file.
-
-    We read the file directly rather than loading it to be robust to syntax
-    errors that may appear in the files being examined.
+    test_file:   full path to the test file
+    assignment:  the value of the assignment attribute defined in test_file
     """
-    with open(path, 'r') as lines:
-        for line in lines:
-            if 'ASSIGNMENT' in line:
-                parts = line.split('ASSIGNMENT', 2)
-                if len(parts) == 2:
-                    after = parts[1]
-                    return after.strip(' =#\t\n)\'"')
-    return None
-
-
-def group_by_assignment(paths):
-    """Build map from assignments to lists of source files."""
-    assignments = dict()
-    for path in paths:
-        assignment = get_assignment(path)
+    if tests and os.path.exists(tests) and not os.path.isdir(tests):
+        assignment = get_assignment(tests)
         if assignment:
-            assignments.setdefault(assignment, []).append(path)
-    return assignments
+            return tests, assignment
+    if tests and os.path.isdir(tests):
+        return find_test_file(tests, None)
+
+    if tests and os.path.sep in tests:
+        if os.path.exists(tests):
+            raise Exception('File "{}" is not in ok.py format'.format(tests))
+        else:
+            raise Exception('File "{}" does not exist'.format(tests))
+    else:
+        return find_test_file(os.curdir, tests)
 
 
-def find_assignment(assignment_hint, root, max_files=1000):
-    """Return (assignment_name, src_files_list) pair. Exits on failure.
+def find_test_file(directory, test_file_hint=None):
+    """Return (test_file, assignment) of the ok test file in directory.
 
-    The assignment_hint parameter is supplied by the user to disambiguate among
+    The test_file_hint parameter is supplied by the user to disambiguate among
     candidates. In this way, a student can keep multiple assignments in the
     same directory.
     """
-    files = itertools.islice(os.walk(root), 0, max_files)
-    join = os.path.join
-    paths = [join(d, f) for (d, _, fs) in files for f in fs if is_src_file(f)]
-    assignments = group_by_assignment(paths)
+    files = os.listdir(directory)
+    make_path = lambda f: os.path.join(directory, f)
+    test_paths = [make_path(f) for f in files if f.endswith('_tests.py')]
+    test_contents = [(p, get_assignment(p)) for p in test_paths]
+    assignments = {p: a for (p, a) in test_contents if a}
 
     ex = Exception
     if not assignments:
-        raise ex('No assignment found in directory "{}".\n'.format(root) +
-                 'Put ok.py with your assignment or use -r to specify a root.')
-    elif len(assignments) == 1 and not assignment_hint:
+        abs_dir = os.path.abspath(directory)
+        raise ex('No test files found in directory "{}".\n'.format(abs_dir) +
+                 'Put ok.py with your assignment or use -t to specify tests.')
+    elif len(assignments) == 1 and not test_file_hint:
         return next(iter(assignments.items()))
-    elif not assignment_hint:
-        raise ex('Multiple assignments found: {}\n'.format(list(assignments)) +
-                 'Select one using -a followed by any unique substring of the '
-                 'assignment you wish to select.')
+    elif not test_file_hint:
+        raise ex('Multiple test files found: {}\n'.format(list(assignments)) +
+                 'Select one using -t followed by any substring contained '
+                 'only in the test file you wish to select.')
     else:
-        matches = [a for a in assignments if assignment_hint in a]
+        matches = [a for a in assignments if test_file_hint in a]
         if len(matches) == 1:
             match = matches[0]
             return match, assignments[match]
         elif len(matches) == 0:
-            raise ex('Assignment matching "{}" was not found in: {}'.format(
-                assignment_hint, list(assignments)))
+            raise ex('Test file matching "{}" was not found in: {}'.format(
+                test_file_hint, list(assignments)))
         elif len(matches) >= 1:
-            raise ex('Multiple assignments matching "{}" found: {}'.format(
-                assignment_hint, matches))
+            raise ex('Multiple test files matching "{}" found: {}'.format(
+                test_file_hint, matches))
+
+
+def get_assignment(path):
+    """Attempt to load the source file at path and return the value of its
+    assignment attribute. Returns None on failure.
+    """
+    try:
+        loader = importlib.machinery.SourceFileLoader(path, path)
+        test_module = loader.load_module()
+        return test_module.assignment
+    except Exception:
+        return None
+
+
+def get_src_paths(test_file, src_files):
+    """Return paths to src_files by prepending test_file enclosing dir."""
+    directory, _ = os.path.split(test_file)
+    return [os.path.join(directory, f) for f in src_files]
 
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    ok_root = os.path.abspath(os.path.split(sys.argv[0])[0])
-    root = args.root if args.root else ok_root
     try:
-        assignment, src_files = find_assignment(args.assignment, root)
+        test_file, assignment = load_test_file(args.tests)
+        src_files = get_src_paths(test_file, assignment['src_files'])
     except Exception as ex:
-        print(ex)
+        print('{}: {}'.format(type(ex).__name__, str(ex)))
         sys.exit(1)
 
     start_protocols = [p(args, src_files) for p in [FileContents]]

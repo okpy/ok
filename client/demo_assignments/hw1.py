@@ -1,7 +1,5 @@
 """Demo assignment with separate test files."""
 
-ASSIGNMENT = 'hw1'
-
 def square(x):
     """Return x squared.
 
