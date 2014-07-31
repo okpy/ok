@@ -4,31 +4,16 @@ The public API
 
 from flask.views import MethodView
 from flask.app import request
-from flask import jsonify
 
 from google.appengine.api import users
 
 from app import app
 from app import models
 from app.models import BadValueError
-
-from functools import wraps
-import traceback
-
-API_PREFIX = '/api/v1'
-
-
-def handle_error(func):
-    """Handles all errors that happen in an API request"""
-    @wraps(func)
-    def decorated(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception: #pylint: disable=broad-except
-            error_message = traceback.format_exc()
-            return create_api_response(500, 'internal server error:\n%s' %
-                                       error_message)
-    return decorated
+from app.constants import API_PREFIX
+from app.utils import create_api_response
+from app.auth import requires_authenticated_user
+from app.decorators import handle_error
 
 
 class APIResource(object):
@@ -184,7 +169,7 @@ class SubmissionAPI(MethodView, APIResource):
         #              and change to self.submit(**request.json)
         user = users.get_current_user()
         try:
-            return self.submit(user, request.json['assignment'], 
+            return self.submit(user, request.json['assignment'],
                                request.json['messages'])
         except BadValueError as e:
             return create_api_response(400, e.message)
@@ -201,18 +186,6 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
     app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST', ])
     app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
                      view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
-
-
-def create_api_response(status, message, data=None):
-    """Creates a JSON response that contains status code (HTTP),
-    an arbitrary message string, and a dictionary or list of data"""
-    response = jsonify(**{
-        'status': status,
-        'message': message,
-        'data': data
-    })
-    response.status_code = status
-    return response
 
 # TODO(denero) Add appropriate authentication requirements
 register_api(UserAPI, 'user_api', '/user')
