@@ -157,9 +157,9 @@ class SubmissionAPI(MethodView, APIResource):
         """Look up an assignment by name or raise a validation error."""
         assignments = self.db.lookup_assignments_by_name(name)
         if not assignments:
-            raise BadValueError('Assignment "%s" not found' % name)
+            raise BadValueError('Assignment \'%s\' not found' % name)
         if len(assignments) > 1:
-            raise BadValueError('Multiple assignments named "%s"' % name)
+            raise BadValueError('Multiple assignments named \'%s\'' % name)
         return assignments[0]
 
     def submit(self, user, assignment, messages):
@@ -183,7 +183,10 @@ class SubmissionAPI(MethodView, APIResource):
         # TODO(denero) Fix user plumbing using @requires_authenticated_user
         #              and change to self.submit(**request.json)
         user = users.get_current_user()
-        return self.submit(user, request.json['assignment'], request.json['messages'])
+        try:
+            return self.submit(user, request.json['assignment'], request.json['messages'])
+        except BadValueError as e:
+            return create_api_response(400, e.message)
 
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int'):

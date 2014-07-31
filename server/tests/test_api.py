@@ -237,12 +237,12 @@ class SubmissionAPITest(APITest, BaseTestCase):
 
     def post_entity(self, inst, *args, **kwds):
         """Posts an entity to the server."""
-        # TODO(denero) Unused because test_entity_create_basic disabled.
         data = inst.to_dict()
         data['assignment'] = kwds.pop('assignment', self.assignment_name)
         # TODO make this access token somewhat real
         data['access_token'] = 'LETMEIN'
         del data['created']
+
         self.post_json('/{}/new'.format(self.name), data=data, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:
@@ -253,9 +253,9 @@ class SubmissionAPITest(APITest, BaseTestCase):
 
     def test_invalid_assignment_name(self):
         self.assignment_name = 'assignment'
-        # TODO(denero) Implement
-        # self.post_entity(self.inst)
-        # self.assertStatusCode(400)
+        self.post_entity(self.inst)
+        self.assertStatusCode(400)
 
 if __name__ == '__main__':
     unittest.main()
+
