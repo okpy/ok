@@ -3,6 +3,7 @@ Initialize Flask app.
 """
 
 from flask import Flask
+
 import os
 from werkzeug.debug import DebuggedApplication
 
@@ -11,6 +12,7 @@ app = Flask('app') #pylint: disable=invalid-name
 from app.models import MODEL_BLUEPRINT
 from app import api
 from app import auth
+
 
 app.register_blueprint(MODEL_BLUEPRINT)
 

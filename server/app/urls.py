@@ -7,10 +7,6 @@ from flask import render_template
 from app import app
 from app import views
 
-@app.route("/")
-def index():
-    return "Hello world"
-
 ## Error handlers
 # Handle 404 errors
 @app.errorhandler(404)

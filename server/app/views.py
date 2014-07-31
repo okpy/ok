@@ -18,3 +18,8 @@ from decorators import login_required, admin_required
 
 # Flask-Cache (configured to use App Engine Memcache API)
 cache = Cache(app)
+
+@app.route("/")
+def index():
+    print 'hi'
+    return render_template("base.html")
