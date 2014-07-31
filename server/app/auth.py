@@ -41,8 +41,8 @@ def requires_authenticated_user(admin=False):
         def decorated(*args, **kwargs):  #pylint: disable=too-many-return-statements
             if 'access_token' not in request.args:
                 return create_api_response(401,
-                                           "access token required \
-                                           for this method")
+                                           "access token required "
+                                           "for this method")
             access_token = request.args['access_token']
             mc_key = "%s-%s" % (MC_NAMESPACE, access_token)
             email = memcache.get(mc_key) # pylint: disable=no-member
@@ -53,8 +53,8 @@ def requires_authenticated_user(admin=False):
                     dummy_user = DUMMIES[access_token]
                     if admin and dummy_user.role != ADMIN_ROLE:
                         return create_api_response(401,
-                                                   "user lacks permission \
-                                                   for this request")
+                                                   "user lacks permission "
+                                                   "for this request")
                     return func(*args, user=dummy_user, **kwargs)
                 response = requests.get(GOOGLE_API_URL, params={
                     "access_token": access_token
