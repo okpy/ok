@@ -8,6 +8,9 @@ tests.py
 """
 
 import unittest
+import urllib
+import urlparse
+
 from flask import json
 
 from test_base import BaseTestCase #pylint: disable=relative-import
@@ -22,6 +25,7 @@ class APITest(object): #pylint: disable=no-init
     model = None
     name = ""
     num = 1
+    access_token = 'dummy_access_token'
 
     @classmethod
     def get_basic_instance(cls):
@@ -37,11 +41,24 @@ class APITest(object): #pylint: disable=no-init
         super(APITest, self).setUp()
         self.inst = self.get_basic_instance()
 
+    def add_access_token(self, url, kwds):
+        access_token = kwds.pop('access_token', self.access_token)
+        params = {
+            'access_token': access_token
+        }
+        url_parts = list(urlparse.urlparse(url))
+        query = dict(urlparse.parse_qsl(url_parts[4]))
+        query.update(params)
+        url_parts[4] = urllib.urlencode(query)
+        url = urlparse.urlunparse(url_parts)
+        return url
+
     def get(self, url, *args, **kwds):
         """
         Makes a get request.
         """
-        self.response = self.client.get(API_PREFIX + url, *args, **kwds)
+        url = self.add_access_token(url, kwds)
+        self.response = self.client.get(API_PREFIX + url)
         try:
             response_json = json.loads(self.response.data)['data']
             self.response_json = models.json.loads(json.dumps(response_json))
@@ -64,6 +81,7 @@ class APITest(object): #pylint: disable=no-init
         """
         Makes a post request, with json.
         """
+        url = self.add_access_token(url, kwds)
         kwds.setdefault('content_type', 'application/json')
         self.response = self.client.post(API_PREFIX + url, *args, **kwds)
         try:
@@ -176,6 +194,16 @@ class APITest(object): #pylint: disable=no-init
         self.get('/{}/1'.format(self.name))
         self.assertStatusCode(404)
 
+    def test_get_bad_permissions(self):
+        """Tests that a get on an invalid ID errors."""
+        self.get('/{}'.format(self.name), access_token='will_fail')
+        self.assertStatusCode(401)
+
+    def test_get_non_admin(self):
+        """Tests that a get on an invalid ID errors."""
+        self.get('/{}'.format(self.name), access_token='dummy_access_token')
+        self.assertStatusCode(401)
+
     ## ENTITY POST ##
 
     def test_entity_create_basic(self):
@@ -194,6 +222,7 @@ class UserAPITest(APITest, BaseTestCase):
     model = models.User
     name = 'user'
     num = 1
+    access_token = 'dummy_access_token_admin'
 
     @classmethod
     def get_basic_instance(cls):
@@ -207,6 +236,7 @@ class AssignmentAPITest(APITest, BaseTestCase):
     model = models.Assignment
     name = 'assignment'
     num = 1
+    access_token = 'dummy_access_token_admin'
 
     @classmethod
     def get_basic_instance(cls):
@@ -255,6 +285,11 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self.assignment_name = 'assignment'
         self.post_entity(self.inst)
         self.assertStatusCode(400)
+
+    def test_get_non_admin(self):
+        """Tests that a get on an invalid ID errors."""
+        self.get('/{}'.format(self.name), access_token=self.access_token)
+        self.assertStatusCode(200)
 
 if __name__ == '__main__':
     unittest.main()
