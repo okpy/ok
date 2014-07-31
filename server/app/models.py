@@ -181,3 +181,5 @@ class Submission(Base):
 
     form = AssignmentForm
 
+    form = AssignmentForm
+
