@@ -97,7 +97,6 @@ class SubmissionForm(Form):
     def validate_project_name(self, field): #pylint: disable=no-self-use
         if not field.data:
             raise ValidationError('Invalid project name')
-        print field.data
 
 
 class Submission(Base): #pylint: disable=R0903
@@ -178,8 +177,6 @@ class Submission(Base):
     assignment = ndb.StructuredProperty(Assignment)
     messages = ndb.StringProperty(validator=validate_messages)
     created = ndb.DateTimeProperty(auto_now_add=True)
-
-    form = AssignmentForm
 
     form = AssignmentForm
 
