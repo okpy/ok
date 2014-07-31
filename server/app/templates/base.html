@@ -22,27 +22,15 @@
     {% block style_block %}{# page-specific CSS #}{% endblock %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/{{ modernizer_version }}/modernizr.min.js"></script>{# Modernizr must be here, above body tag. #}
     {% block head_script %}{# defer-incapable JS block #}{% endblock %}
+    <script type="text/javascript" src="static/js/react/react.js"></script>
+    <script type="text/javascript">
+      var HelloMessage = React.createClass({displayName: 'HelloMessage',
+        render: function() {
+          return React.DOM.div(null, "Hello ", this.props.name);
+        }
+      });
+
+      React.renderComponent(HelloMessage({name: "John"}), document.documentElement);
+    </script>
 </head>
-<body>
-
-        {% include 'includes/nav.html' %} {# pull in navbar #}
-
-    <div class="container" id="maincontent">
-        {% include 'includes/flash_message.html' %} {# page-level feedback notices #}
-        <div id="body_content">
-            {% block content %}{# main content area #}{% endblock %}
-        </div>
-    </div><!-- /container -->
-    <footer>
-        <div id="footer" class="container">
-            {% block footer %}{% endblock %}
-        </div><!-- /footer -->
-    </footer>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/{{ jquery_version }}/jquery.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/{{ bootstrap_version }}/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/parsley.js/{{ parsley_version }}/parsley-standalone.min.js"></script>
-    <script src="/static/js/main.js"></script>
-    {% block tail_script %}{# defer-capable JS block #}{% endblock %}
-    {{ profiler_includes|safe }}
-</body>
 </html>
