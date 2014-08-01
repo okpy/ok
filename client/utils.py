@@ -1,3 +1,7 @@
+import os
+import re
+import sys
+import traceback
 from threading import Thread
 
 ######################
@@ -29,6 +33,9 @@ class OutputLogger:
                log. If None, output is not logged.
         """
         self._log = log
+
+    def isOn(self):
+        return self._current_stream == self._stdout
 
     @property
     def log(self):
@@ -125,7 +132,7 @@ class ReturningThread(Thread):
             self.error = e
 
 TIMEOUT = 10
-def timed(fn, args=(), kargs={}, timeout=0):
+def timed(fn, args=(), kargs={}, timeout=TIMEOUT):
     """Evaluates expr in the given frame.
 
     PARAMETERS:
