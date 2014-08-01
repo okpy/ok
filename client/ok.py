@@ -88,7 +88,6 @@ class RunTests(Protocol):
 def send_to_server(messages, assignment, server, endpoint='submission/new'):
     """Send messages to server, along with user authentication."""
     data = {
-        'access_token': 'TODO', # TODO(denero) Add cached auth token.
         'assignment': assignment,
         'messages': messages,
     }
@@ -97,6 +96,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         address = 'http://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout.
+        # TODO(denero) Send access token
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
@@ -211,7 +211,7 @@ def ok_main(args):
         test_file, assignment = load_test_file(args.tests)
         src_files = get_src_paths(test_file, assignment['src_files'])
     except Exception as ex:
-        print('{}: {}'.format(type(ex).__name__, str(ex)))
+        print(ex)
         sys.exit(1)
 
     start_protocols = [p(args, src_files) for p in [FileContents]]
