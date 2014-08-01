@@ -115,7 +115,7 @@ def parse_input():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-q', '--question', type=int,
+    parser.add_argument('-q', '--question', type=str,
                         help="focus on a specific question")
     parser.add_argument('-s', '--server', type=str, default='localhost:8080',
                         help="server address")
