@@ -42,19 +42,15 @@ class TestCase(object):
 
     @property
     def is_graded(self):
-        # TODO(albert): fill in stub.
-        pass
+        return not self.is_locked and not self.is_conceptual
 
     @property
     def is_locked(self):
-        # TODO(albert): fill in stub.
-        pass
+        return self.status.get('lock', True)
 
     @property
     def is_conceptual(self):
-        # TODO(albert): fill in stub.
-        pass
-
+        return self.status.get('concept', False)
 
 #####################
 # Testing Mechanism #
@@ -75,7 +71,9 @@ def run(test, frame, console, interactive=False, verbose=False):
                    test case passes.
 
     RETURNS:
-    bool; True if all suites passed.
+    (passed, cases), where
+    passed -- int; number of TestCases passed
+    cases  -- int; total number of testable TestCases
     """
     underline('Test ' + test.name)
     if test.note:
@@ -94,6 +92,8 @@ def run(test, frame, console, interactive=False, verbose=False):
     for suite in test.suites:
         passed, abort = run_suite(suite, frame, console, total_cases,
                  verbose, interactive)
+        # TODO(albert): Have better counting -- total should be the
+        # number of cases run, not the number cases in a suite.
         total_passed += passed
         total_cases += sum(1 for case in suite if case.is_graded)
         if abort:
@@ -105,10 +105,10 @@ def run(test, frame, console, interactive=False, verbose=False):
     if total_passed == total_cases:
         print('All unlocked tests passed!')
     if locked_cases > 0:
-        print('-- NOTE: {} still has {} locked cases! --'.format(name,
-              locked_cases))
+        print('-- NOTE: {} still has {} locked cases! --'.format(
+            test.name, locked_cases))
     print()
-    return total_passed == total_cases
+    return total_passed, total_cases
 
 def run_suite(suite, frame, console, num_cases, verbose, interactive):
     """Runs tests for a single suite.
@@ -140,14 +140,13 @@ def run_suite(suite, frame, console, num_cases, verbose, interactive):
     (passed, errored), where
 
     passed  -- int; number of TestCases that passed
-    errored -- bool; True if one of the TestCases failed, False
+    errored -- bool; True if the entire Test should abort, False
                otherwise
     """
     passed = 0
-    case_num = cases
     for case in suite:
-        if not case.is_locked:
-            logger.on()
+        if case.is_locked:
+            console.logger.on()
             return passed, True  # students must unlock first
         elif case.is_conceptual and verbose:
             # TODO(albert): better printing format for concept
@@ -160,17 +159,17 @@ def run_suite(suite, frame, console, num_cases, verbose, interactive):
         if case.is_conceptual:
             continue
 
-        case_num += 1
+        num_cases += 1
         if not verbose:
-            logger.off()
-        underline('Case {}'.format(case_num), line='-')
+            console.logger.off()
+        underline('Case {}'.format(num_cases), line='-')
 
         code = case.lines
         error, log = console.run(case, frame)
 
         if error and not verbose:
-            logger.on()
-            underline('Case {} failed'.format(case_num), line='-')
+            console.logger.on()
+            underline('Case {} failed'.format(num_cases), line='-')
             print(''.join(log).strip())
         if error and interactive:
             console.interact(frame)
@@ -178,10 +177,10 @@ def run_suite(suite, frame, console, num_cases, verbose, interactive):
         console.exec(case.teardown, frame)
         print()
         if error:
-            logger.on()
+            console.logger.on()
             return passed, True
         passed += 1
-    logger.on()
+    console.logger.on()
     return passed, False
 
 class AutograderConsole:

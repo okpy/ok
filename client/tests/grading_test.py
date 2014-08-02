@@ -2,7 +2,7 @@ import sys
 import time
 import unittest
 from utils import OutputLogger, TIMEOUT
-from grading import AutograderConsole
+from grading import AutograderConsole, run
 
 class AutograderConsoleTest(unittest.TestCase):
     def setUp(self):
@@ -214,9 +214,258 @@ class AutograderConsoleTest(unittest.TestCase):
             '# Error: expected 7 got ZeroDivisionError', '\n',
         ], log)
 
+class RunTest(unittest.TestCase):
+    def setUp(self):
+        self.logger = OutputLogger()
+        self.console = AutograderConsole(self.logger)
+
+    def testRun_noSuites(self):
+        test = MockTest()
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(0, passed)
+        self.assertEqual(0, total)
+
+    def testRun_oneTestCasePass(self):
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 3 + 4',
+                ],
+                outputs=[
+                    '7'
+                ]),
+            ],
+        ])
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(1, passed)
+        self.assertEqual(1, total)
+
+    def testRun_multipleTestCaseOneSuitePass(self):
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 3 + 4',
+                ],
+                outputs=[
+                    '7'
+                ]),
+                MockTestCase(lines=[
+                    'def square(x):',
+                    '    return x * x',
+                    '$ square(4)',
+                ],
+                outputs=[
+                    '16'
+                ]),
+            ],
+        ])
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(2, passed)
+        self.assertEqual(2, total)
+
+    def testRun_multipleSuitesPass(self):
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 3 + 4',
+                ],
+                outputs=[
+                    '7'
+                ]),
+                MockTestCase(lines=[
+                    'def square(x):',
+                    '    return x * x',
+                    '$ square(4)',
+                ],
+                outputs=[
+                    '16'
+                ]),
+            ],
+            [
+                MockTestCase(lines=[
+                    '$ 5 + 2',
+                ],
+                outputs=[
+                    '7'
+                ]),
+                MockTestCase(lines=[
+                    '$ 1 / 0',
+                ],
+                outputs=[
+                    'ZeroDivisionError'
+                ]),
+            ],
+        ])
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(4, passed)
+        self.assertEqual(4, total)
+
+    def testRun_singleTestCaseFail(self):
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 1 / 0',
+                ],
+                outputs=[
+                    '7'
+                ]),
+            ],
+        ])
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(0, passed)
+        self.assertEqual(1, total)
+
+    def testRun_singleSuiteSecondTestCaseFail(self):
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 4 + 3',
+                ],
+                outputs=[
+                    '7'
+                ]),
+                MockTestCase(lines=[
+                    '$ 1 / 0',
+                ],
+                outputs=[
+                    '7'
+                ]),
+            ],
+        ])
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(1, passed)
+        self.assertEqual(2, total)
+
+    def testRun_multipleSuitesFirstSuiteFail(self):
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 1 / 0',
+                ],
+                outputs=[
+                    '7'
+                ]),
+            ],
+            [
+                MockTestCase(lines=[
+                    '$ 3 + 4',
+                ],
+                outputs=[
+                    '7'
+                ]),
+            ],
+        ])
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(0, passed)
+        self.assertEqual(1, total)
+
+    def testRun_teardownExecutionNoFailure(self):
+        lst = []
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 3 + 4',
+                ],
+                outputs=[
+                    '7'
+                ],
+                teardown="f()"),
+            ],
+        ])
+        passed, total = run(test, {'f': lambda: lst.append(1)},
+                self.console)
+        self.assertEqual(1, passed)
+        self.assertEqual(1, total)
+        self.assertEqual([1], lst)
+
+    def testRun_teardownExecutionWithFailure(self):
+        lst = []
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 1 / 0',
+                ],
+                outputs=[
+                    '7'
+                ],
+                teardown="f()"),
+            ],
+        ])
+        passed, total = run(test, {'f': lambda: lst.append(1)},
+                self.console)
+        self.assertEqual(0, passed)
+        self.assertEqual(1, total)
+        self.assertEqual([1], lst)
+
+    def testRun_abortLockedTests(self):
+        lst = []
+        test = MockTest(suites=[
+            [
+                MockTestCase(lines=[
+                    '$ 1 / 0',
+                ],
+                outputs=[
+                    '7'
+                ],
+                status = {
+                    'lock': True,
+                }),
+                # This TestCase should never be run.
+                MockTestCase(lines=[
+                    '$ 4 + 3',
+                ],
+                outputs=[
+                    '7'
+                ]),
+            ],
+        ])
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(0, passed)
+        self.assertEqual(1, total)  # The locked test is not counted.
+
+    def testRun_conceptTestCaseNotCounted(self):
+        lst = []
+        test = MockTest(suites=[
+            [
+                # This TestCase should not be included in score.
+                MockTestCase(lines=[
+                    'This is a concept question.',
+                ],
+                outputs=[
+                    '7'
+                ],
+                status = {
+                    'concept': True,
+                }),
+                MockTestCase(lines=[
+                    '$ 4 + 3',
+                ],
+                outputs=[
+                    '7'
+                ]),
+            ],
+        ])
+        passed, total = run(test, {}, self.console)
+        self.assertEqual(1, passed)
+        self.assertEqual(1, total)
+
+
 #########
 # Mocks #
 #########
+
+class MockTest:
+    def __init__(self, suites=None, names=None, points=0, note='',
+            cache=''):
+        self.suites = suites or []
+        self.names = names or ['MockTest']
+        self.points = points
+        self.note = note
+        self.cache = cache
+
+    @property
+    def name(self):
+        return self.names[0]
 
 class MockTestCase:
     def __init__(self, lines=None, outputs=None, status=None,
@@ -225,5 +474,19 @@ class MockTestCase:
         self.outputs = outputs or []
         self.status = status or {}
         self.type = q_type or ''
-        self.teardown = teardown or []
+        self.teardown = teardown or ''
+
+    @property
+    def is_graded(self):
+        return not self.is_locked and not self.is_conceptual
+
+    @property
+    def is_locked(self):
+        return self.status.get('lock', False)
+
+    @property
+    def is_conceptual(self):
+        return self.status.get('concept', False)
+
+
 
