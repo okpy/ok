@@ -5,6 +5,7 @@ from code import InteractiveConsole, compile_command
 from utils import underline, timed, TimeoutError, split
 
 class Test(object):
+    """Represents all suites for a single test in an assignment."""
     # TODO(albert): fill in stubs
 
     def __init__(self):
@@ -18,7 +19,7 @@ class Test(object):
 
     @property
     def name(self):
-        """Gets the "official" name of this test.
+        """Gets the canonical name of this test.
 
         RETURNS:
         str; the name of the test
@@ -26,6 +27,7 @@ class Test(object):
         return self.names[0]
 
 class TestCase(object):
+    """Represents a single test case."""
     # TODO(albert): fill in stubs.
     # Every test case should save all setup and teardown code upon
     # initialization.
@@ -95,12 +97,12 @@ def run(test, frame, console, interactive=False, verbose=False):
         # TODO(albert): Have better counting -- total should be the
         # number of cases run, not the number cases in a suite.
         total_passed += passed
-        total_cases += sum(1 for case in suite if case.is_graded)
+        total_cases += [case.is_graded for case in suite].count(True)
         if abort:
             break
 
-    locked_cases = sum(1 for suite in test.suites
-                         for case in suite if case.is_locked)
+    locked_cases = [case.is_locked for suite in test.suites
+                                   for case in suite].count(True)
 
     if total_passed == total_cases:
         print('All unlocked tests passed!')
@@ -356,7 +358,12 @@ class AutograderConsole:
 
     def interact(self, frame):
         """Starts an InteractiveConsole, using the variable bindings
-        defined in the given frame."""
+        defined in the given frame.
+
+        Calls to this method do not necessarily have to follow a call
+        to the run method. This method can be used to interact with
+        any frame.
+        """
         # TODO(albert): logger should fully implement output stream
         # interface so we can avoid doing this swap here.
         sys.stdout = sys.__stdout__
@@ -368,5 +375,7 @@ class AutograderConsole:
     @staticmethod
     def __incomplete(line):
         """Check if the given line can be a complete line of Python."""
-        return compile_command(line.replace('$ ', '')) is None
+        if line.startswith('$ '):
+            line = line[2:]
+        return compile_command(line) is None
 
