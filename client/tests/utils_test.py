@@ -2,7 +2,7 @@ import unittest
 import sys
 import time
 import utils
-from utils import OutputLogger, split, timed, TimeoutError, TIMEOUT
+from utils import OutputLogger, timed, TimeoutError, TIMEOUT
 
 class OutputLoggerTest(unittest.TestCase):
     """Tests the OutputLogger."""
@@ -57,56 +57,6 @@ class OutputLoggerTest(unittest.TestCase):
         # The following should not cause any errors.
         print("message 1")
         print("message 2")
-
-class SplitTest(unittest.TestCase):
-    """Tests the split function, which splits a string along newlines
-    and possibly joins them.
-    """
-
-    def testSingleLine_noIndentation(self):
-        text = "This is a single line."
-        lst = split(text)
-        self.assertEqual(["This is a single line."], lst)
-
-    def testSingleLine_indentation(self):
-        text = "    This is a single line."
-        lst = split(text)
-        self.assertEqual(["This is a single line."], lst)
-
-    def testMultiLine_noIndentation(self):
-        text = "Hello\nWorld\n!"
-        lst = split(text)
-        self.assertEqual(["Hello", "World", "!"], lst)
-
-    def testMultiLine_indentation(self):
-        text = """
-        Hello
-        World
-        !
-        """
-        lst = split(text)
-        self.assertEqual(["Hello", "World", "!"], lst)
-
-    def testMultiLine_varyingIndentation(self):
-        text = """
-        def hello(world):
-            return "A test"
-        """
-        lst = split(text)
-        self.assertEqual([
-            'def hello(world):',
-            '    return "A test"'
-        ], lst)
-
-    def testJoin_singleLine(self):
-        text = "This is a single line."
-        lst = split(text, join_str="\n")
-        self.assertEqual('This is a single line.', lst)
-
-    def testJoin_multiLine(self):
-        text = "Hello\nWorld\n!"
-        lst = split(text, join_str=" ")
-        self.assertEqual('Hello World !', lst)
 
 class TimedTest(unittest.TestCase):
     # TODO(albert): have a better way to test timeout rather than

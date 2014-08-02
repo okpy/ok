@@ -2,7 +2,7 @@ import readline
 import sys
 import traceback
 from code import InteractiveConsole, compile_command
-from utils import underline, timed, TimeoutError, split
+from utils import underline, timed, TimeoutError, indent, dedent
 
 class Test(object):
     """Represents all suites for a single test in an assignment."""
@@ -12,7 +12,9 @@ class Test(object):
         self.suites = []
         self.names = []
         self.points = 0
-        self.note = ''  # TODO(albert): should split and join
+        # TODO(albert): all string values should be dedented
+        self.note = ''
+        self.cache = ''
         # TODO(albert): setup and teardown are always initialized, for
         # convenience. The values are lists of lines -- some
         # processing is necessary.
@@ -83,7 +85,7 @@ def run(test, frame, console, interactive=False, verbose=False):
     if test.cache:
         # TODO(albert): cleanup cache evaluation
         try:
-            cache = compile(split(test.cache, join_str='\n'),
+            cache = compile(test.cache,
                             '{} cache'.format(name), 'exec')
             timed(exec, (cache, global_frame))
         except Exception as e:
@@ -154,8 +156,8 @@ def __run_suite(suite, frame, console, num_cases, verbose, interactive):
             # TODO(albert): better printing format for concept
             # question.
             underline('Concept question', line='-')
-            print('   ', split(case, join_str='\n    '))
-            print('\n    A:', split(outputs[0], join_str='\n    '))
+            print(indent('\n'.join(case.lines), '   '))
+            print(indent('A: ' + outputs[0], '    '))
             print()
 
         if case.is_conceptual:
@@ -322,9 +324,10 @@ class AutograderConsole:
                 expect = None
                 actual = timed(exec, (expr, frame))
         except RuntimeError:
-            stacktrace = traceback.format_exc()
+            stacktrace_length = 9
+            stacktrace = traceback.format_exc().split('\n')
             print('Traceback (most recent call last):\n  ...')
-            print('\n'.join(split(stacktrace)[-9:-1]))
+            print('\n'.join(stacktrace[-stacktrace_length:-1]))
             print('# Error: maximum recursion depth exceeded.')
             return True
         except TimeoutError as e:

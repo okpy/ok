@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import textwrap
 import traceback
 from threading import Thread
 
@@ -56,34 +57,10 @@ class OutputLogger:
     def flush(self):
         self._current_stream.flush()
 
-def split(src, join_str=None):
-    """Splits a (possibly multiline) string of Python input into
-    a list, adjusting for common indents based on the first line.
+def dedent(text):
+    return textwrap.dedent(text).lstrip('\n').rstrip()
 
-    PARAMETERS:
-    src      -- str; (possibly) multiline string of Python input
-    join_str -- str or None; if None, leave src as a list of strings.
-                If not None, concatenate into one string, using "join"
-                as the joining string
-
-    DESCRIPTION:
-    Indentation adjustment is determined by the first nonempty
-    line. The characters of indentation for that line will be
-    removed from the front of each subsequent line.
-
-    RETURNS:
-    list of strings; lines of Python input
-    str; all lines combined into one string if join is not None
-    """
-    if not src:
-        return [] if not join_str else ''
-    src = src.lstrip('\n').rstrip()
-    match = re.match('\s+', src)
-    length = len(match.group(0)) if match else 0
-    result = [line[length:] for line in src.split('\n')]
-    if join_str is not None:
-        result = join_str.join(result)
-    return result
+indent = textwrap.indent
 
 def underline(text, line='='):
     """Prints an underlined version of the given line with the
