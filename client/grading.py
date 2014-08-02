@@ -2,7 +2,7 @@ import readline
 import sys
 import traceback
 from code import InteractiveConsole, compile_command
-from utils import underline, timed, TimeoutError
+from utils import underline, timed, TimeoutError, split
 
 class Test(object):
     # TODO(albert): fill in stubs
@@ -32,6 +32,8 @@ class TestCase(object):
     def __init__(self):
         # TODO(albert): validate that the number of prompts in 
         # lines is equal to the number of outputs
+        # TODO(albert): scan lines for $; if no $ found, add one to
+        # the last line.
         self.lines = []     # Includes setup and code.
         self.outputs = []
         self.status = {}
@@ -182,7 +184,7 @@ def run_suite(suite, frame, console, num_cases, verbose, interactive):
     logger.on()
     return passed, False
 
-class AutograderConsole():
+class AutograderConsole:
     """Handles test evaluation and output formatting for a single
     TestCase.
 
@@ -221,20 +223,32 @@ class AutograderConsole():
         are executed are also stored in the readline history for use
         with interactive mode.
 
-        The TestCase's teardown code is always executed at the end,
-        regardless of whether the TestCase failed or not.
+        This method assumes the TestCase has correctly formatted lines
+        such that all prompts have a leading "$ ". In particular, the
+        TestCase should have added a "$ " for the "last line is prompt"
+        rule.
+
+        The TestCase's teardown code is not executed at the end. It
+        is up to the external application to call exec with teardown
+        code.
+
+        RETURNS:
+        (error, log), where
+        error -- bool; True if an error occurred, False otherwise.
+        log   -- list; a list of lines of output, as captured by the
+                 OutputLogger.
         """
         outputs = iter(case.outputs)
         frame = frame.copy() if frame else {}
 
         log = []
-        logger.register_log(log)
+        self.logger.register_log(log)
         # TODO(albert): Windows machines don't have a readline module.
         readline.clear_history()
 
         error = False
         current  = ''
-        for line in case.lines:
+        for line in case.lines + ['']:
             if line:
                 readline.add_history(line.replace('$ ', ''))
 
@@ -294,6 +308,10 @@ class AutograderConsole():
 
         All code execution occurs in the provided frame. Any changes to
         the frame (e.g. variable definitions) will be preserved.
+
+        RETURNS:
+        bool; True if an error occurred or the evaluated expression
+        does not equal the expected value, False otherwise.
         """
         try:
             if expected:
@@ -324,15 +342,15 @@ class AutograderConsole():
             print('Traceback (most recent call last):')
             print(stacktrace[index:])
             if expected is not None:
-                print('# Error: expected', repr(expect), "got",
-                      e.__class__.__name__)
+                print('# Error: expected {0} got {1}'.format(
+                    repr(expect), e.__class__.__name__))
             return True
         else:
             if expected:
                 print(repr(actual))
             if expected and expect != actual:
-                print('# Error: expected', repr(expect), 'got',
-                      repr(actual))
+                print('# Error: expected {0} got {1}'.format(
+                    repr(expect), repr(actual)))
                 return True
             else:
                 return False

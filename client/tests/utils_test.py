@@ -130,7 +130,7 @@ class TimedTest(unittest.TestCase):
         catastrophic = lambda: 1 / 0
         self.assertRaises(ZeroDivisionError, timed, catastrophic)
 
-    def testTimeout_defaulTimeout(self):
+    def testTimeout_defaultTimeout(self):
         def waits():
             time.sleep(2 * utils.TIMEOUT)
         self.assertRaises(TimeoutError, timed, waits)
