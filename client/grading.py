@@ -90,7 +90,7 @@ def run(test, frame, console, interactive=False, verbose=False):
     total_passed = 0
     total_cases = 0
     for suite in test.suites:
-        passed, abort = run_suite(suite, frame, console, total_cases,
+        passed, abort = __run_suite(suite, frame, console, total_cases,
                  verbose, interactive)
         # TODO(albert): Have better counting -- total should be the
         # number of cases run, not the number cases in a suite.
@@ -110,7 +110,7 @@ def run(test, frame, console, interactive=False, verbose=False):
     print()
     return total_passed, total_cases
 
-def run_suite(suite, frame, console, num_cases, verbose, interactive):
+def __run_suite(suite, frame, console, num_cases, verbose, interactive):
     """Runs tests for a single suite.
 
     PARAMETERS:
@@ -251,7 +251,7 @@ class AutograderConsole:
             if line:
                 readline.add_history(line.replace('$ ', ''))
 
-            if line.startswith(' ') or self.incomplete(current):
+            if line.startswith(' ') or self.__incomplete(current):
                 print(self.PS2 + line)
                 current += line + '\n'
                 continue
@@ -366,7 +366,7 @@ class AutograderConsole:
         sys.stdout = self.logger
 
     @staticmethod
-    def incomplete(line):
+    def __incomplete(line):
         """Check if the given line can be a complete line of Python."""
         return compile_command(line.replace('$ ', '')) is None
 

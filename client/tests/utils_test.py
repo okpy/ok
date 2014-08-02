@@ -141,7 +141,6 @@ class TimedTest(unittest.TestCase):
         self.assertRaises(TimeoutError, timed,
                 fn=waits, timeout=TIMEOUT // 4)
 
-
 #########
 # Mocks #
 #########

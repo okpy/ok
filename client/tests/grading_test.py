@@ -6,8 +6,6 @@ from grading import AutograderConsole, run
 
 class AutograderConsoleTest(unittest.TestCase):
     def setUp(self):
-        # TODO(albert): consider using an actual OutputLogger to
-        # better test run.
         self.logger = sys.stdout = OutputLogger()
         self.console = AutograderConsole(self.logger)
 

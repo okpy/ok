@@ -113,25 +113,8 @@ class TimeoutError(Exception):
         super().__init__(self)
         self.timeout = timeout
 
-class ReturningThread(Thread):
-    """Creates a daemon Thread with a result variable."""
-    def __init__(self, fn, args, kargs):
-        Thread.__init__(self)
-        self.daemon = True
-        self.result = None
-        self.error = None
-        self.fn = fn
-        self.args = args
-        self.kargs = kargs
-
-    def run(self):
-        try:
-            self.result = self.fn(*self.args, **self.kargs)
-        except Exception as e:
-            e._message = traceback.format_exc(limit=2)
-            self.error = e
-
 TIMEOUT = 10
+
 def timed(fn, args=(), kargs={}, timeout=TIMEOUT):
     """Evaluates expr in the given frame.
 
@@ -151,7 +134,7 @@ def timed(fn, args=(), kargs={}, timeout=TIMEOUT):
     """
     if not timeout:
         timeout = TIMEOUT
-    submission = ReturningThread(fn, args, kargs)
+    submission = __ReturningThread(fn, args, kargs)
     submission.start()
     submission.join(timeout)
     if submission.is_alive():
@@ -159,4 +142,23 @@ def timed(fn, args=(), kargs={}, timeout=TIMEOUT):
     if submission.error is not None:
         raise submission.error
     return submission.result
+
+class __ReturningThread(Thread):
+    """Creates a daemon Thread with a result variable."""
+    def __init__(self, fn, args, kargs):
+        Thread.__init__(self)
+        self.daemon = True
+        self.result = None
+        self.error = None
+        self.fn = fn
+        self.args = args
+        self.kargs = kargs
+
+    def run(self):
+        try:
+            self.result = self.fn(*self.args, **self.kargs)
+        except Exception as e:
+            e._message = traceback.format_exc(limit=2)
+            self.error = e
+
 
