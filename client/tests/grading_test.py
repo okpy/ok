@@ -16,48 +16,38 @@ class AutograderConsoleTest(unittest.TestCase):
     # Test exec #
     #############
 
+    def execTest(self, expr, frame, expected=None, should_error=False):
+        errored = self.console.exec(expr, frame, expected=expected)
+        if should_error:
+            self.assertTrue(errored)
+        else:
+            self.assertFalse(errored)
+
     def testExec_expectedWithNoErrors(self):
-        expr = "x + 4"
-        errored = self.console.exec(expr, {'x': 3}, expected='7')
-        self.assertFalse(errored)
+        self.execTest("x + 4", {'x': 3}, '7', False)
 
     def testExec_expectedWithNoEqualsError(self):
-        expr = "2 + 4"  # Equals 6, not 7.
-        errored = self.console.exec(expr, {}, expected='7')
-        self.assertTrue(errored)
+        self.execTest("2 + 4", {}, '7', True)
 
     def testExec_expectedExceptionWithNoError(self):
-        expr = "1 / 0"  # Causes ZeroDivisionError
-        errored = self.console.exec(expr, {},
-                expected='ZeroDivisionError')
-        self.assertFalse(errored)
+        self.execTest("1 / 0", {}, 'ZeroDivisionError', False)
 
     def testExec_expectedExceptionWithNotEqualsError(self):
-        expr = "1 + 2"
-        errored = self.console.exec(expr, {},
-                expected='ZeroDivisionError')
-        self.assertTrue(errored)
+        self.execTest("1 + 2", {}, 'ZeroDivisionError', True)
 
     def testExec_expectedExceptionWithWrongException(self):
-        expr = "1 / 0"
-        errored = self.console.exec(expr, {},
-                expected='TypeError')
-        self.assertTrue(errored)
+        self.execTest("1 / 0", {}, 'TypeError', True)
 
     def testExec_runtimeError(self):
-        expr = "f()"
         max_recursion = lambda: max_recursion()
-        errored = self.console.exec(expr, {'f': max_recursion})
-        self.assertTrue(errored)
+        self.execTest("f()", {'f': max_recursion}, should_error=True)
 
     def testExec_timeoutError(self):
         # TODO(albert): have a better way to test timeout than actually
         # waiting.
-        expr = "f()"
         def wait():
             time.sleep(TIMEOUT * 3 // 2)
-        errored = self.console.exec(expr, {'f': wait})
-        self.assertTrue(errored)
+        self.execTest("f()", {'f': wait}, should_error=True)
 
     ############
     # Test run #
