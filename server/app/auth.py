@@ -1,7 +1,6 @@
 from google.appengine.api import memcache
 
 from app import app
-from app import models
 from app.constants import API_PREFIX, ADMIN_ROLE
 from app.utils import create_api_response
 from app.decorators import handle_error
@@ -9,27 +8,9 @@ from app.authenticator import AuthenticationException
 
 from flask import request
 from functools import wraps
-import requests
 
 
 MC_NAMESPACE = "access-token"
-
-DUMMIES = {
-    'dummy_access_token': models.User(
-        email="dummy@dummy.com",
-        first_name="Dummy",
-        last_name="Jones",
-        login="some13413"
-    ),
-    'dummy_access_token_admin': models.User(
-        email="admin@dummy.com",
-        first_name="Albert",
-        last_name="Jones",
-        login="albert123123",
-        role=ADMIN_ROLE,
-    )
-}
-
 
 
 def requires_authenticated_user(admin=False):
