@@ -129,7 +129,7 @@ class SubmissionAPI(MethodView, APIResource):
     """The API resource for the Submission Object"""
     name = "Submission"
     db = SubmitNDBImplementation()
-    post_fields = ['access_token', 'assignment', 'messages', 'submitter']
+    post_fields = ['assignment', 'messages']
 
     @classmethod
     def get_model(cls):
@@ -168,6 +168,28 @@ class SubmissionAPI(MethodView, APIResource):
         except BadValueError as e:
             return create_api_response(400, e.message)
 
+    @handle_error
+    def get(self, key, user=None):
+        """
+        The GET HTTP method
+        """
+        if key is None:
+            return self.index(user)
+        obj = self.get_model().get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found"
+                                       .format(resource=self.name,
+                                               key=key))
+        if not obj.submitter:
+            return create_api_response(400, "user for submission doesn't exist")
+        return create_api_response(200, "", obj)
+
+    def index(self, user):
+        """
+        Index HTTP method thing.
+        """
+        return create_api_response(
+            200, "success", list(self.get_model().query(self.get_model().submitter.email == user.email)))
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int', admin=False):
     """

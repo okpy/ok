@@ -25,7 +25,7 @@ class APITest(object): #pylint: disable=no-init
     model = None
     name = ""
     num = 1
-    access_token = 'dummy_access_token'
+    access_token = 'dummy_student'
 
     @classmethod
     def get_basic_instance(cls):
@@ -196,12 +196,12 @@ class APITest(object): #pylint: disable=no-init
 
     def test_get_bad_permissions(self):
         """Tests that a get with an invalid access token fails."""
-        self.get('/{}'.format(self.name), access_token='will_fail')
+        self.get('/{}'.format(self.name), access_token='bad_access_token')
         self.assertStatusCode(401)
 
     def test_get_non_admin(self):
         """Tests that a get with a student access token fails."""
-        self.get('/{}'.format(self.name), access_token='dummy_access_token')
+        self.get('/{}'.format(self.name), access_token='dummy_student')
         self.assertStatusCode(401)
 
     ## ENTITY POST ##
@@ -222,7 +222,7 @@ class UserAPITest(APITest, BaseTestCase):
     model = models.User
     name = 'user'
     num = 1
-    access_token = 'dummy_access_token_admin'
+    access_token = 'dummy_admin'
 
     @classmethod
     def get_basic_instance(cls):
@@ -232,11 +232,55 @@ class UserAPITest(APITest, BaseTestCase):
         cls.num += 1
         return rval
 
+    def test_index_empty(self):
+        """Tests there are no entities when the db is created."""
+        self.get('/{}'.format(self.name))
+        self.assertStatusCode(200)
+        self.assertEqual(len(self.response_json), 1)
+
+    def test_get_invalid_id_errors(self):
+        """Tests that a get on an invalid ID errors."""
+        self.get('/{}/4'.format(self.name))
+        self.assertStatusCode(404)
+
+    def test_index_one_added(self):
+        """Tests that the index method gives the added entity."""
+        self.inst.put()
+        self.get_index()
+        self.assertTrue(self.inst.to_json() in self.response_json)
+
+
+    def test_index_one_removed(self):
+        """Tests that removing an entity makes it disappear from the index."""
+        self.test_index_one_added()
+
+        self.inst.key.delete()
+        self.get_index()
+        self.assertTrue(self.inst.to_json() not in self.response_json)
+
+
+    def test_index_one_removed_from_two(self):
+        """
+        Tests that removing one item out of two in the DB makes sure
+        the other item is still found.
+        """
+        self.inst.put()
+        inst2 = self.get_basic_instance()
+        inst2.put()
+        self.get_index()
+        self.assertTrue(self.inst.to_json() in self.response_json)
+        self.assertTrue(inst2.to_json() in self.response_json)
+
+        inst2.key.delete()
+        self.get_index()
+        self.assertTrue(self.inst.to_json() in self.response_json)
+        self.assertTrue(inst2.to_json() not in self.response_json)
+
 class AssignmentAPITest(APITest, BaseTestCase):
     model = models.Assignment
     name = 'assignment'
     num = 1
-    access_token = 'dummy_access_token_admin'
+    access_token = 'dummy_admin'
 
     @classmethod
     def get_basic_instance(cls):
@@ -247,6 +291,10 @@ class AssignmentAPITest(APITest, BaseTestCase):
 class SubmissionAPITest(APITest, BaseTestCase):
     model = models.Submission
     name = 'submission'
+    access_token = "submitter"
+    submitter = models.User(
+        email="submitter@gmail.com"
+    )
 
     num = 1
     _assign = None
@@ -257,10 +305,12 @@ class SubmissionAPITest(APITest, BaseTestCase):
             cls.assignment_name = u'test assignment'
             cls._assign = models.Assignment(name=cls.assignment_name, points=3)
             cls._assign.put()
+        if len(list(models.Assignment.query(models.Assignment.name == cls.assignment_name))) == 0:
+            cls._assign.put()
         return cls._assign
 
     def get_basic_instance(self):
-        rval = models.Submission(messages="{}", submitter=None,
+        rval = models.Submission(messages="{}", submitter=self.submitter,
                                  assignment=self.get_assignment())
         self.num += 1
         return rval
@@ -270,10 +320,12 @@ class SubmissionAPITest(APITest, BaseTestCase):
         data = inst.to_dict()
         data['assignment'] = kwds.pop('assignment', self.assignment_name)
         # TODO make this access token somewhat real
-        data['access_token'] = 'LETMEIN'
         del data['created']
+        del data['submitter']
 
-        self.post_json('/{}/new'.format(self.name), data=data, *args, **kwds)
+
+        self.post_json('/{}/new?access_token={}'.format(self.name, self.access_token),
+                       data=data, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:
                 self.assertEqual(inst.key.id(), self.response_json['key'])
@@ -285,11 +337,26 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self.assignment_name = 'assignment'
         self.post_entity(self.inst)
         self.assertStatusCode(400)
+        del self.assignment_name
 
     def test_get_non_admin(self):
         """Tests that a get with a student access token works."""
         self.get('/{}'.format(self.name), access_token=self.access_token)
         self.assertStatusCode(200)
+
+    def test_different_user(self):
+        """Tests that a get with a student access token
+        doesn't get another student's submissions."""
+        self.inst.put()
+        inst2 = models.Submission(messages="{}",
+                                  submitter=models.User(
+                                      email="gaga@gmail.com"
+                                  ),
+                                  assignment=self.get_assignment())
+        inst2.put()
+        self.get_index()
+        self.assertTrue(self.inst.to_json() in self.response_json)
+        self.assertTrue(inst2.to_json() not in self.response_json)
 
 if __name__ == '__main__':
     unittest.main()

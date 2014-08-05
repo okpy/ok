@@ -1,3 +1,3 @@
 #!/bin/sh
 
-dev_appserver.py .
+FLASK_CONF=DEV dev_appserver.py . --clear_datastore=yes
