@@ -16,7 +16,9 @@ class AutograderConsoleTest(unittest.TestCase):
     # Test exec #
     #############
 
-    def execTest(self, expr, frame, expected=None, should_error=False):
+    def execTest(self, expr, should_error, expected=None, frame=None):
+        if frame is None:
+            frame = {}
         errored = self.console.exec(expr, frame, expected=expected)
         if should_error:
             self.assertTrue(errored)
@@ -24,69 +26,73 @@ class AutograderConsoleTest(unittest.TestCase):
             self.assertFalse(errored)
 
     def testExec_expectedWithNoErrors(self):
-        self.execTest("x + 4", {'x': 3}, '7', False)
+        self.execTest("x + 4", False, '7', {'x': 3})
 
     def testExec_expectedWithNoEqualsError(self):
-        self.execTest("2 + 4", {}, '7', True)
+        self.execTest("2 + 4", True, '7')
 
     def testExec_expectedExceptionWithNoError(self):
-        self.execTest("1 / 0", {}, 'ZeroDivisionError', False)
+        self.execTest("1 / 0", False, 'ZeroDivisionError')
 
     def testExec_expectedExceptionWithNotEqualsError(self):
-        self.execTest("1 + 2", {}, 'ZeroDivisionError', True)
+        self.execTest("1 + 2", True, 'ZeroDivisionError')
 
     def testExec_expectedExceptionWithWrongException(self):
-        self.execTest("1 / 0", {}, 'TypeError', True)
+        self.execTest("1 / 0", True, 'TypeError')
 
     def testExec_runtimeError(self):
         max_recursion = lambda: max_recursion()
-        self.execTest("f()", {'f': max_recursion}, should_error=True)
+        self.execTest("f()", True, frame={'f': max_recursion})
 
     def testExec_timeoutError(self):
         # TODO(albert): have a better way to test timeout than actually
         # waiting.
         def wait():
             time.sleep(TIMEOUT * 3 // 2)
-        self.execTest("f()", {'f': wait}, should_error=True)
+        self.execTest("f()", True, frame={'f': wait})
 
     ############
     # Test run #
     ############
 
+    def runTest(self, test_case, expected_log, errored, frame=None):
+        if frame is None:
+            frame = {}
+        error, log = self.console.run(test_case, frame)
+        if errored:
+            self.assertTrue(error)
+        else:
+            self.assertFalse(error)
+        self.assertEqual(expected_log, log)
+
     def testRun_basicLog(self):
-        test_case = MockTestCase(
+        self.runTest(MockTestCase(
             lines=[
                 '$ x + 2',
             ],
             outputs=[
                 '4',
             ],
-        )
-        error, log = self.console.run(test_case, frame={'x': 2})
-        self.assertFalse(error)
-        self.assertEqual([
+        ), [
             '>>> x + 2', '\n',
             '4', '\n',
-        ], log)
+        ], False, frame={'x':2})
 
     def testRun_basicLogNoFrame(self):
-        test_case = MockTestCase(
+        self.runTest(MockTestCase(
             lines=[
                 '$ 2 + 2',
             ],
             outputs=[
                 '4',
             ],
-        )
-        error, log = self.console.run(test_case, frame={})
-        self.assertFalse(error)
-        self.assertEqual([
+        ), [
             '>>> 2 + 2', '\n',
             '4', '\n',
-        ], log)
+        ], False)
 
     def testRun_indentNoNewline(self):
-        test_case = MockTestCase(
+        self.runTest(MockTestCase(
             lines=[
                 'def square(x):',
                 '    return x * x',
@@ -95,18 +101,15 @@ class AutograderConsoleTest(unittest.TestCase):
             outputs=[
                 '16',
             ],
-        )
-        error, log = self.console.run(test_case, frame={})
-        self.assertFalse(error)
-        self.assertEqual([
+        ), [
             '>>> def square(x):', '\n',
             '...     return x * x', '\n',
             '>>> square(4)', '\n',
             '16', '\n',
-        ], log)
+        ], False)
 
     def testRun_indentWithNewline(self):
-        test_case = MockTestCase(
+        self.runTest(MockTestCase(
             lines=[
                 'def square(x):',
                 '    return x * x',
@@ -116,18 +119,15 @@ class AutograderConsoleTest(unittest.TestCase):
             outputs=[
                 '16',
             ],
-        )
-        error, log = self.console.run(test_case, frame={})
-        self.assertFalse(error)
-        self.assertEqual([
+        ), [
             '>>> def square(x):', '\n',
             '...     return x * x', '\n',
             '>>> square(4)', '\n',
             '16', '\n',
-        ], log)
+        ], False)
 
     def testRun_forLoop(self):
-        test_case = MockTestCase(
+        self.runTest(MockTestCase(
             lines=[
                 'for i in range(3):',
                 '    print(i)',
@@ -136,10 +136,7 @@ class AutograderConsoleTest(unittest.TestCase):
             outputs=[
                 '7',
             ],
-        )
-        error, log = self.console.run(test_case, frame={})
-        self.assertFalse(error)
-        self.assertEqual([
+        ), [
             '>>> for i in range(3):', '\n',
             '...     print(i)', '\n',
             '0', '\n',
@@ -147,27 +144,24 @@ class AutograderConsoleTest(unittest.TestCase):
             '2', '\n',
             '>>> 3 + 4', '\n',
             '7', '\n',
-        ], log)
+        ], False)
 
     def testRun_failedPrompt(self):
-        test_case = MockTestCase(
+        self.runTest(MockTestCase(
             lines=[
                 '$ 3 + 4',
             ],
             outputs=[
                 '2',
             ],
-        )
-        error, log = self.console.run(test_case, frame={})
-        self.assertTrue(error)
-        self.assertEqual([
+        ), [
             '>>> 3 + 4', '\n',
             '7', '\n',
             '# Error: expected 2 got 7', '\n',
-        ], log)
+        ], True)
 
     def testRun_failedNonPrompt(self):
-        test_case = MockTestCase(
+        self.runTest(MockTestCase(
             lines=[
                 '1 / 0',
                 '$ 3 + 4',
@@ -175,32 +169,26 @@ class AutograderConsoleTest(unittest.TestCase):
             outputs=[
                 '7',
             ],
-        )
-        error, log = self.console.run(test_case, frame={})
-        self.assertTrue(error)
-        self.assertEqual([
+        ), [
             '>>> 1 / 0', '\n',
             'Traceback (most recent call last):', '\n',
             'ZeroDivisionError: division by zero\n', '\n',
-        ], log)
+        ], True)
 
     def testRun_failedPromptWithException(self):
-        test_case = MockTestCase(
+        self.runTest(MockTestCase(
             lines=[
                 '$ 1 / 0',
             ],
             outputs=[
                 '7',
             ],
-        )
-        error, log = self.console.run(test_case, frame={})
-        self.assertTrue(error)
-        self.assertEqual([
+        ), [
             '>>> 1 / 0', '\n',
             'Traceback (most recent call last):', '\n',
             "ZeroDivisionError: division by zero\n", '\n',
             '# Error: expected 7 got ZeroDivisionError', '\n',
-        ], log)
+        ], True)
 
 class RunTest(unittest.TestCase):
     def setUp(self):
