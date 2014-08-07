@@ -29,10 +29,10 @@ Contributors should do the following to add a protocol to this autograder:
     3- If your protocol needs command line arguments, change parse_input.
 
 A standard protocol lifecycle has only one round-trip communication with the
-server, processed by on_start and on_response methods. If other interactions
-are required outside of this lifecycle, the send_to_server function can be used
-to send and receive information from the server outside of the default times.
-Such communications should be limited to the body of an on_interact method.
+server, processed by the on_start method. If other interactions are required
+outside of this lifecycle, the send_to_server function can be used to send and
+receive information from the server outside of the default times. Such
+communications should be limited to the body of an on_interact method.
 """
 
 import argparse
@@ -44,18 +44,15 @@ import json
 
 
 class Protocol(object):
-    """TODO(denero) Describe protocols, once we actually know what they do."""
-    name = None
+    """A Protocol encapsulates a single aspect of ok.py functionality."""
+    name = None # Override in sub-class.
 
     def __init__(self, cmd_line_args, src_files):
-        self.args = cmd_line_args  # A dictionary of parsed arguments
-        self.src_files = src_files # A list of paths
+        self.args = cmd_line_args  # A namespace of parsed arguments
+        self.src_files = src_files # A list of paths to student source files
 
     def on_start(self):
         """Called when ok.py starts. Returns an object to be sent to server."""
-
-    def on_response(self, response):
-        """Called when ok-server responds with the server response."""
 
     def on_interact(self):
         """Called to execute an interactive or output-intensive session."""
