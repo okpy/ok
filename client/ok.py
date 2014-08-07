@@ -79,7 +79,7 @@ class RunTests(Protocol):
 
     def on_interact(self):
         """Run unlocked tests and print results."""
-        # TODO(denero) Import all the existing autograder functionality here.
+        # TODO(denero) Merge functionality from pull request #51.
 
 
 def send_to_server(messages, assignment, server, endpoint='submission/new'):
@@ -92,8 +92,8 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         # TODO(denero) Change to https.
         address = 'http://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
-        # TODO(denero) Wrap in timeout.
-        # TODO(denero) Send access token
+        # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
+        # TODO(denero) Send access token with the request
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
@@ -218,13 +218,13 @@ def ok_main(args):
     for protocol in start_protocols:
         messages[protocol.name] = protocol.on_start()
 
-    # TODO(denero) Send and receive in a separate thread.
+    # TODO(denero) Send in a separate thread.
     send_to_server(messages, assignment, args.server)
 
     for protocol in interact_protocols:
         protocol.on_interact()
 
-    # Handle server response
+    # TODO(denero) Print server responses.
 
 if __name__ == '__main__':
     ok_main(parse_input())
