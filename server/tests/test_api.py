@@ -16,7 +16,8 @@ from flask import json
 from test_base import BaseTestCase #pylint: disable=relative-import
 
 from app.api import API_PREFIX #pylint: disable=import-error
-from app import models, constants #pylint: disable=import-error
+from app import models, constants, authenticator #pylint: disable=import-error
+from app import app
 
 class APITest(object): #pylint: disable=no-init
     """
@@ -40,6 +41,7 @@ class APITest(object): #pylint: disable=no-init
         Creates the instance of the model you're API testing."""
         super(APITest, self).setUp()
         self.inst = self.get_basic_instance()
+        app.config["AUTHENTICATOR"] = authenticator.DummyAuthenticator()
 
     def add_access_token(self, url, kwds):
         access_token = kwds.pop('access_token', self.access_token)
