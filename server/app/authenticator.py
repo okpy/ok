@@ -16,6 +16,7 @@ class Authenticator(object):
     def authenticate(self, access_token):
         raise NotImplementedError
 
+    #TODO(martinis) add tests
     def get_user(self, email, admin=False):
         return models.User.get_or_insert('<%s>' % email,
                 role=(ADMIN_ROLE if admin else STUDENT_ROLE),
