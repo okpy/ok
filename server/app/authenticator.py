@@ -17,16 +17,9 @@ class Authenticator(object):
         raise NotImplementedError
 
     def get_user(self, email, admin=False):
-        users = list(models.User.query().filter(email == models.User.email))
-        if len(users) == 0:
-            role = ADMIN_ROLE if admin else STUDENT_ROLE
-            user = models.User(
-                email=email,
-                role=role
-            )
-            user.put()
-            return user
-        return users[0]
+        return models.User.get_or_insert('<%s>' % email,
+                role=(ADMIN_ROLE if admin else STUDENT_ROLE),
+                email=email)
 
 
 class GoogleAuthenticator(Authenticator):
