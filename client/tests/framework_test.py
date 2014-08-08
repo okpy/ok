@@ -36,7 +36,6 @@ class OkTest(unittest.TestCase):
         self.assertIsNone(ok.get_assignment(self.hw1))
         self.assertIsNot(ok.get_assignment(self.hw1_tests), None)
 
-    def test_find_assignment(self):
-        self.assertRaises(Exception, ok.load_test_file, ['.', None])
-        self.assertTrue(ok.load_test_file('demo_assignments'))
-        self.assertTrue(ok.load_test_file('demo_assignments/hw1_tests.py'))
+    # TODO Before Merge: Update test script to run Python 3
+    # TODO Before Merge: Create tests for find_test_file, load_test_file, and get_src_paths
+
