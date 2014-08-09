@@ -6,6 +6,22 @@ from functools import wraps
 from google.appengine.api import users
 from flask import redirect, request, abort
 
+from app import utils
+
+import traceback
+
+
+def handle_error(func):
+    """Handles all errors that happen in an API request"""
+    @wraps(func)
+    def decorated(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception: #pylint: disable=broad-except
+            error_message = traceback.format_exc()
+            return utils.create_api_response(500, 'internal server error:\n%s' %
+                                             error_message)
+    return decorated
 
 def login_required(func):
     """Requires standard login credentials."""

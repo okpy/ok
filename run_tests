@@ -1,17 +1,26 @@
 #!/bin/sh
 
+if env | grep -q ^VIRTUAL_ENV=
+then
+    deactivate
+fi
+
+source env/client/bin/activate;
 cd client;
-nosetests -v
-cd ..
+nosetests;
 RESULT=$?
+cd ..;
+deactivate;
 
 if [ $RESULT -ne 0 ];
 then
   exit $RESULT
 fi
 
+source env/server/bin/activate
 cd server
 FLASK_CONF=TEST python apptest.py $1
-cd ..
 RESULT=$?
+cd ..
+deactivate
 exit $RESULT
