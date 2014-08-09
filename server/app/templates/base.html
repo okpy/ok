@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<html class="no-js" ng-app="okpy">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -16,9 +13,11 @@
                 padding-bottom: 20px;
             }
         </style>
-        <link href="static/js/bootstrap/dist/css/bootstrap.css" rel="stylesheet"></link>
-        <script src="static/js/modernizr/modernizr.js"></script>
-        <script src="static/js/angular/angular.js"></script>
+        <link href="static/vendor/bootstrap/dist/css/bootstrap.css" rel="stylesheet"></link>
+        <script src="static/vendor/modernizr/modernizr.js"></script>
+        <script src="static/vendor/angular/angular.js"></script>
+        <script src="static/vendor/angular-resource/angular-resource.js"></script>
+        <script src="static/vendor/angular-route/angular-route.js"></script>
     </head>
     <body>
         <!--[if lt IE 7]>
@@ -49,13 +48,12 @@
       </div>
     </div>
 
-    <div class="container">
-      <!-- Example row of columns -->
+    <div ng-view>
     </div> <!-- /container -->        
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="static/js/jquery/dist/jquery.js"><\/script>')</script>
+        <script>window.jQuery || document.write('<script src="static/vendor/jquery/dist/jquery.js"><\/script>')</script>
 
-        <script src="static/js/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="static/vendor/bootstrap/dist/js/bootstrap.js"></script>
 
         <script src="static/js/main.js"></script>
 

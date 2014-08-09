@@ -21,5 +21,4 @@ cache = Cache(app)
 
 @app.route("/")
 def index():
-    print 'hi'
     return render_template("base.html")
