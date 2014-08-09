@@ -1,0 +1,21 @@
+<div class="row">
+  <div class="span3">
+    <div class="pa-sidebar well well-small">
+      <ul class="nav nav-list">
+        <li class="nav-header" ui-sref="assignment.list">Assignments</li>
+
+        <!-- This <li> will only add the 'active' class if 'contacts.detail' or its descendants are active
+             AND if it is the link for the active contact (aka contactId) -->
+        <li ng-repeat="assignment in assignments" ui-sref-active="active">
+
+          <!-- Here's a ui-sref that is also providing necessary parameters -->
+          <a ui-sref="assignment.detail({assignmentId:assignment.id})">{{assignment.name}}</a>
+        </li>
+      </ul>
+      <hr>
+    </div>
+  </div>
+
+  <!-- Our unnamed main ui-view for this template -->
+  <div ui-view class="span9 slide"></div>
+</div>

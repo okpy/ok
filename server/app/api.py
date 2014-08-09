@@ -191,8 +191,12 @@ class SubmissionAPI(MethodView, APIResource):
         """
         Index HTTP method thing.
         """
+        if user:
+            all_subms = self.get_model().query(self.get_model().submitter == user)
+        else:
+            all_subms = self.get_model().query()
         return create_api_response(
-            200, "success", list(self.get_model().query(self.get_model().submitter == user.key)))
+            200, "success", list(all_subms))
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int', admin=False):
     """
@@ -200,6 +204,7 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int', admin=Fa
     """
     url = API_PREFIX + url
     view_func = requires_authenticated_user(admin=admin)(view.as_view(endpoint))
+    view_func = view.as_view(endpoint)
     app.add_url_rule(url, defaults={primary_key: None},
                      view_func=view_func, methods=['GET', ])
     app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST', ])
