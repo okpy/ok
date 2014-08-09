@@ -30,6 +30,7 @@ def requires_authenticated_user(admin=False):
             # mc_key = "%s-%s" % (MC_NAMESPACE, access_token)
             # email = memcache.get(mc_key) # pylint: disable=no-member
             email = "moowiz2020@gmail.com"
+            access_token = "A"
             if not email:
                 try:
                     email = authenticator.authenticate(access_token)

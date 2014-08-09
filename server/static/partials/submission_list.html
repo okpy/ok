@@ -1,0 +1,14 @@
+<div cg-busy="submissions">
+  <table class="table table-striped table-bordered table-responsive">
+    <tr>
+      <th>Submitter</th>
+      <th>Assignment</th>
+    </tr>
+    <tr ng-repeat="submission in submissions">
+      <td>{{submission.submitter}}</td>
+      <td>
+        <a ui-sref='assignment.detail({assignmentId:submission.assignment.name})'>{{submission.assignment.name}}
+      </td>
+    </tr>
+  </table>
+</div>

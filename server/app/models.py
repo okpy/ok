@@ -50,6 +50,7 @@ class Base(ndb.Model):
     def to_json(self):
         """Converts this model to a json dictionary."""
         result = self.to_dict()
+        result['id'] = self.key.id()
         for key, value in result.items():
             try:
                 new_value = app.json_encoder().default(value)
