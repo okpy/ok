@@ -10,6 +10,8 @@ from werkzeug.debug import DebuggedApplication
 app = Flask('app') #pylint: disable=invalid-name
 
 from app.models import MODEL_BLUEPRINT
+from app import constants
+from app import utils
 from app import api
 from app import auth
 
@@ -33,3 +35,5 @@ app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 # Pull in URL dispatch routes
 import urls
 
+# Import the authenticator. Central usage place. 
+import authenticator

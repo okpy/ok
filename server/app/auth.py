@@ -1,48 +1,51 @@
 from google.appengine.api import memcache
 
 from app import app
-from app import models
-from app.api import API_PREFIX, create_api_response, handle_error
+from app.constants import API_PREFIX, ADMIN_ROLE
+from app.utils import create_api_response
+from app.decorators import handle_error
+from app.authenticator import AuthenticationException
 
 from flask import request
 from functools import wraps
-import requests
 
-GOOGLE_API_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
 
 MC_NAMESPACE = "access-token"
 
-def requires_authenticated_user(func):
+
+def requires_authenticated_user(admin=False):
     """Decorator that determines which user made the request
     and passes it to the decorated function. The wrapped function
     is called with keyword arg called 'user' that is a user object."""
-    @wraps(func)
-    def decorated(*args, **kwargs):
-        if 'access_token' not in request.args:
-            return create_api_response(401,
-                                       "access token required for this method")
-        access_token = request.args['access_token']
-        mc_key = "%s-%s" % (MC_NAMESPACE, access_token)
-        email = memcache.get(mc_key) # pylint: disable=no-member
-        if not email:
-            response = requests.get(GOOGLE_API_URL, params={
-                "access_token": access_token
-            }).json()
-            if 'error' in response:
+    def requires_user_with_privileges(func):
+        """Higher order function that takes into account admin permissions"""
+        @wraps(func)
+        def decorated(*args, **kwargs):  #pylint: disable=too-many-return-statements
+            authenticator = app.config["AUTHENTICATOR"]
+            if 'access_token' not in request.args:
                 return create_api_response(401,
-                                           "invalid access token")
-            if 'email' not in response:
+                                           "access token required "
+                                           "for this method")
+            access_token = request.args['access_token']
+            mc_key = "%s-%s" % (MC_NAMESPACE, access_token)
+            email = memcache.get(mc_key) # pylint: disable=no-member
+            if not email:
+                try:
+                    email = authenticator.authenticate(access_token)
+                except AuthenticationException as e:
+                    return create_api_response(401, e.message)
+                memcache.set(mc_key, email,  # pylint: disable=no-member
+                             time=60)
+            try:
+                user = authenticator.get_user(email)
+            except AuthenticationException as e:
+                return create_api_response(401, e.message)
+            if admin and user.role != ADMIN_ROLE:
                 return create_api_response(401,
-                                           "email doesn't exist")
-            email = response['email']
-            memcache.set(mc_key, email, time=60) # pylint: disable=no-member
-        users = list(models.User.query().filter(models.User.email == email))
-        if len(users) == 0:
-            return create_api_response(401, "user with email(%s) doesn't exist"
-                                       % email)
-        user = users[0]
-        return func(*args, user=user, **kwargs)
-    return decorated
+                                           "user lacks permission for this request")
+            return func(*args, user=user, **kwargs)
+        return decorated
+    return requires_user_with_privileges
 
 
 @app.route("%s/me" % API_PREFIX)
