@@ -150,7 +150,7 @@ class SubmissionAPI(MethodView, APIResource):
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment, messages)
         return create_api_response(200, "success", {
-            'key': submission.key.id()
+            'key': submission.key()
         })
 
     @handle_error
