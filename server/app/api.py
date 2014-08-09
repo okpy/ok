@@ -58,6 +58,7 @@ class APIResource(object):
         The POST HTTP method
         """
         post_dict = request.json
+        assert request.json
         retval, new_mdl = self.new_entity(post_dict)
         if retval:
             return create_api_response(200, "success", {
