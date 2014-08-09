@@ -18,7 +18,9 @@ app.factory("Submission", function($resource) {
 
 app.controller("SubmissionListCtrl", function($scope, Submission) {
   Submission.query(function (data) {
-    $scope.submissions = data.data;
+    console.log(data);
+    console.log($scope);
+    $scope.submissions = data;
   });
 });
 
