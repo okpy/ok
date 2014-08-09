@@ -9,7 +9,7 @@ class Test(object):
     # TODO(albert): fill in stubs
 
     def __init__(self):
-        self.suites = []
+        self.suites = []    # TODO(albert): filter out empty suites
         self.names = []
         self.points = 0
         # TODO(albert): all string values should be dedented
@@ -18,6 +18,8 @@ class Test(object):
         # TODO(albert): setup and teardown are always initialized, for
         # convenience. The values are lists of lines -- some
         # processing is necessary.
+        self.setup = {}
+        self.teardown = {}
 
     @property
     def name(self):
@@ -38,11 +40,13 @@ class TestCase(object):
         # lines is equal to the number of outputs
         # TODO(albert): scan lines for $; if no $ found, add one to
         # the last line.
-        self.lines = []     # Includes setup and code.
+        self.__lines = []     # Does not include setup code
         self.outputs = []
         self.status = {}
         self.type = ''
-        self.teardown = ''  # Given by Test.
+        self.test = None    # The Test this case belongs to.
+        self.suite_num = 0  # The suite this TestCase belongs to.
+        self.num_prompts = 0 # Number of prompts in self.lines.
 
     @property
     def is_graded(self):
@@ -55,6 +59,16 @@ class TestCase(object):
     @property
     def is_conceptual(self):
         return self.status.get('concept', False)
+
+    @property
+    def lines(self):
+        """Returns lines of code for the setup and actual test case."""
+        # TODO(albert)
+
+    @property
+    def teardown(self):
+        """Returns the teardown code for this particular TestCase."""
+        # TODO(albert)
 
 #####################
 # Testing Mechanism #
