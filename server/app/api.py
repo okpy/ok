@@ -4,31 +4,14 @@ The public API
 
 from flask.views import MethodView
 from flask.app import request
-from flask import jsonify
-
-from google.appengine.api import users
 
 from app import app
 from app import models
 from app.models import BadValueError
-
-from functools import wraps
-import traceback
-
-API_PREFIX = '/api/v1'
-
-
-def handle_error(func):
-    """Handles all errors that happen in an API request"""
-    @wraps(func)
-    def decorated(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception: #pylint: disable=broad-except
-            error_message = traceback.format_exc()
-            return create_api_response(500, 'internal server error:\n%s' %
-                                       error_message)
-    return decorated
+from app.constants import API_PREFIX
+from app.utils import create_api_response
+from app.auth import requires_authenticated_user
+from app.decorators import handle_error
 
 
 class APIResource(object):
@@ -47,7 +30,7 @@ class APIResource(object):
         raise NotImplementedError
 
     @handle_error
-    def get(self, key):
+    def get(self, key, user=None):
         """
         The GET HTTP method
         """
@@ -61,7 +44,7 @@ class APIResource(object):
         return create_api_response(200, "", obj)
 
     @handle_error
-    def put(self):
+    def put(self, user=None):
         """
         The PUT HTTP method
         """
@@ -70,7 +53,7 @@ class APIResource(object):
         return create_api_response(200, "success")
 
     @handle_error
-    def post(self):
+    def post(self, user=None):
         """
         The POST HTTP method
         """
@@ -91,7 +74,7 @@ class APIResource(object):
         return True, new_mdl
 
     @handle_error
-    def delete(self, user_id):
+    def delete(self, user_id, user=None):
         """
         The DELETE HTTP method
         """
@@ -99,7 +82,6 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success")
 
-    @handle_error
     def index(self):
         """
         Index HTTP method thing.
@@ -147,7 +129,7 @@ class SubmissionAPI(MethodView, APIResource):
     """The API resource for the Submission Object"""
     name = "Submission"
     db = SubmitNDBImplementation()
-    post_fields = ['access_token', 'assignment', 'messages', 'submitter']
+    post_fields = ['assignment', 'messages']
 
     @classmethod
     def get_model(cls):
@@ -171,7 +153,7 @@ class SubmissionAPI(MethodView, APIResource):
         })
 
     @handle_error
-    def post(self):
+    def post(self, user=None):
         for key in request.json:
             if key not in self.post_fields:
                 return create_api_response(400, 'Unknown field %s' % key)
@@ -180,41 +162,48 @@ class SubmissionAPI(MethodView, APIResource):
                 return create_api_response(400,
                                            'Missing required field %s' % field)
 
-        # TODO(denero) Fix user plumbing using @requires_authenticated_user
-        #              and change to self.submit(**request.json)
-        user = users.get_current_user()
         try:
-            return self.submit(user, request.json['assignment'], 
+            return self.submit(user, request.json['assignment'],
                                request.json['messages'])
         except BadValueError as e:
             return create_api_response(400, e.message)
 
+    @handle_error
+    def get(self, key, user=None):
+        """
+        The GET HTTP method
+        """
+        if key is None:
+            return self.index(user)
+        obj = self.get_model().get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found"
+                                       .format(resource=self.name,
+                                               key=key))
+        if not obj.submitter:
+            return create_api_response(400, "user for submission doesn't exist")
+        return create_api_response(200, "", obj)
 
-def register_api(view, endpoint, url, primary_key='key', pk_type='int'):
+    def index(self, user):
+        """
+        Index HTTP method thing.
+        """
+        return create_api_response(
+            200, "success", list(self.get_model().query(self.get_model().submitter.email == user.email)))
+
+def register_api(view, endpoint, url, primary_key='key', pk_type='int', admin=False):
     """
     Registers the given view at the endpoint, accessible by the given url.
     """
     url = API_PREFIX + url
-    view_func = view.as_view(endpoint)
+    view_func = requires_authenticated_user(admin=admin)(view.as_view(endpoint))
     app.add_url_rule(url, defaults={primary_key: None},
                      view_func=view_func, methods=['GET', ])
     app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST', ])
     app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
                      view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
-
-def create_api_response(status, message, data=None):
-    """Creates a JSON response that contains status code (HTTP),
-    an arbitrary message string, and a dictionary or list of data"""
-    response = jsonify(**{
-        'status': status,
-        'message': message,
-        'data': data
-    })
-    response.status_code = status
-    return response
-
 # TODO(denero) Add appropriate authentication requirements
-register_api(UserAPI, 'user_api', '/user')
-register_api(AssignmentAPI, 'assignment_api', '/assignment')
+register_api(UserAPI, 'user_api', '/user', admin=True)
+register_api(AssignmentAPI, 'assignment_api', '/assignment', admin=True)
 register_api(SubmissionAPI, 'submission_api', '/submission')

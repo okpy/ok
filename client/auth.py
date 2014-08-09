@@ -12,10 +12,12 @@ import json
 
 from sanction import Client, transport_headers
 
-CLIENT_ID = '268270530197-0ulshcio7meobp6cdpje1a31ouhrcfde.apps.googleusercontent.com'
-CLIENT_SECRET = 'nbCCdqiKOFvJaSrTCmjtjGMe'
+CLIENT_ID = '931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
+CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
 REFRESH_FILE = '.refresh'
-REDIRECT_URI = "http://localhost:7777/"
+REDIRECT_HOST = "localhost"
+REDIRECT_PORT = 7777
+REDIRECT_URI = "http://%s:%u/" % (REDIRECT_HOST, REDIRECT_PORT)
 TIMEOUT = 10
 
 SUCCESS_HTML ="""
@@ -70,13 +72,13 @@ def authenticate(force=False):
 
     c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
                client_id=CLIENT_ID)
-    url = c.auth_uri(scope="profile email", access_type='offline', name='okpy-ucb',
+    url = c.auth_uri(scope="profile email", access_type='offline', name='ok-server',
                      redirect_uri=REDIRECT_URI)
 
     webbrowser.open(url)
 
-    HOST_NAME = 'localhost'
-    PORT_NUMBER = 7777
+    host_name = REDIRECT_HOST
+    port_number = REDIRECT_PORT
 
     done = False
     access_token = None
@@ -96,7 +98,7 @@ def authenticate(force=False):
             self.end_headers()
             self.wfile.write(bytes(SUCCESS_HTML, "utf-8"))
 
-    server_address = ('localhost', 7777)
+    server_address = (host_name, port_number)
     httpd = http.server.HTTPServer(server_address, CodeHandler)
     httpd.handle_request()
 

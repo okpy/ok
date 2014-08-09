@@ -12,6 +12,6 @@ fi
 
 cd server
 FLASK_CONF=TEST python apptest.py $1
-cd ..
 RESULT=$?
+cd ..
 exit $RESULT
