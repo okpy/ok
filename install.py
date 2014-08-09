@@ -20,6 +20,7 @@ def main():
     shell_with_env('client', 'pip install -r client_requirements.txt')
     shell_with_env('server', 'pip install -r server_requirements.txt')
     shell_with_env('server', 'server/app/generate_keys.py')
+    shell('')
 
 ENV_DIR = 'env'
 
@@ -36,9 +37,10 @@ def shell(*args):
     """Call shell command and return its stderr. args are space-separated."""
     cmd = ' '.join(args)
     print('$', cmd)
-    stdout = subprocess.check_output(cmd, shell=True).decode('utf-8').strip()
-    print(stdout)
-    return stdout
+    stdout = subprocess.check_output(cmd, shell=True, executable='/bin/bash')
+    stdout_str = stdout.decode('utf-8').strip()
+    print(stdout_str)
+    return stdout_str
 
 def which(exe):
     """Return the path to an executable or None."""
