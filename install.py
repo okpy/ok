@@ -20,7 +20,6 @@ def main():
     shell_with_env('client', 'pip install -r client_requirements.txt')
     shell_with_env('server', 'pip install -r server_requirements.txt')
     shell_with_env('server', 'server/app/generate_keys.py')
-    shell('')
 
 ENV_DIR = 'env'
 
