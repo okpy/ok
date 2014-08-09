@@ -1,11 +1,11 @@
 language: python
 env:
-  - CMD=server/apptest.py
+  - CMD=server/apptest.py $GAE_SDK
   - CMD=client/runtest.py
 python:
   - "2.7"
 install: "pip install -r server_requirements.txt"
-script: FLASK_CONF=TEST python $CMD $GAE_SDK
+script: FLASK_CONF=TEST python $CMD
 before_script:
   - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.8.zip -nv -O gae_sdk.zip
   - unzip -q gae_sdk.zip
