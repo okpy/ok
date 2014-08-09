@@ -3,6 +3,9 @@
 """Create virtualenvs, set up git hooks, install dependencies, etc.
 
 Run this script when you check out and whenever dependencies change.
+
+Individual zero-arg functions from this file can be called by passing their
+names as command-line arguments. E.g., 'python3 install.py check_pythons'.
 """
 
 import os
@@ -58,7 +61,8 @@ def check_pythons():
     for python, min_version in [('python', '2.7'), ('python3', '3.3')]:
         if which(python) is None:
             raise Exception('Command "{}" not found')
-        version = shell(python, '--version', '2>&1').split()[1]
+        redirect_err_to_out =  '2>&1'
+        version = shell(python, '--version', redirect_err_to_out).split()[1]
         if version_list(version) < version_list(min_version):
             raise Exception('"{}" version {} is older than minimum {}'.format(
                 python, version, min_version))
@@ -78,10 +82,12 @@ def setup_envs():
     print('Virtual environments are created')
 
 if __name__ == '__main__':
+    # If there are command-line arguments, call the named functions.
     if len(sys.argv) > 1:
         for fn_name in sys.argv[1:]:
             call(fn_name)
-    main()
+    else:
+        main()
 
 
 
