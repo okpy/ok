@@ -20,6 +20,7 @@ def main():
     shell_with_env('client', 'pip install -r client_requirements.txt')
     shell_with_env('server', 'pip install -r server_requirements.txt')
     shell_with_env('server', 'server/app/generate_keys.py')
+    linkenv()
 
 ENV_DIR = 'env'
 
@@ -81,6 +82,12 @@ def setup_envs():
         if not os.path.exists(os.path.join(env_path, 'bin')):
             shell('virtualenv', '-p', which(python), env_path)
     print('Virtual environments are created')
+
+def linkenv():
+    """Call linkenv to set up appengine dependencies."""
+    shell_with_env('server', 'linkenv',
+                   'env/server/lib/python2.7/site-packages',
+                   'server/gaenv', '1>/dev/null')
 
 if __name__ == '__main__':
     # If there are command-line arguments, call the named functions.
