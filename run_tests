@@ -8,9 +8,9 @@ fi
 source env/client/bin/activate;
 cd client;
 nosetests;
+RESULT=$?
 cd ..;
 deactivate;
-RESULT=$?
 
 if [ $RESULT -ne 0 ];
 then
@@ -20,7 +20,7 @@ fi
 source env/server/bin/activate
 cd server
 FLASK_CONF=TEST python apptest.py $1
-cd ..
 RESULT=$?
+cd ..
 deactivate
 exit $RESULT
