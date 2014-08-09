@@ -4,4 +4,4 @@ if env | grep -q ^VIRTUAL_ENV=
 then
     deactivate
 fi
-source envs/client/bin/activate
+source env/client/bin/activate
