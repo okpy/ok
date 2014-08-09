@@ -1,18 +1,25 @@
-var Utils = {
-    renderFieldErrorTooltip: function (selector, msg, placement) {
-        var elem;
-        if (typeof placement === 'undefined') {
-            placement = 'right'; // default to right-aligned tooltip
-        }
-        elem = $(selector);
-        elem.tooltip({'title': msg, 'trigger': 'manual', 'placement': placement});
-        elem.tooltip('show');
-        elem.addClass('error');
-        elem.on('focus click', function(e) {
-            elem.removeClass('error');
-            elem.tooltip('hide');
-        });
-    }
-};
+var app = angular.module('okpy', ['ngResource', 'ngRoute']);
 
-/* Your custom JavaScript here */
+app.config(['$routeProvider',
+  function($routeProvider) {
+    $routeProvider.
+      when('/', {
+        templateUrl: 'static/partials/submissions_list.html',
+        controller: 'SubmissionListCtrl'
+      }).
+      otherwise({
+        redirectTo: '/'
+      });
+  }]);
+
+app.factory("Submission", function($resource) {
+  return $resource("/api/v1/submission/:id", {format: "raw"});
+});
+
+app.controller("SubmissionListCtrl", function($scope, Submission) {
+  Submission.query(function (data) {
+    $scope.submissions = data.data;
+  });
+});
+
+
