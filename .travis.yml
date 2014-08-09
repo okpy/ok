@@ -1,7 +1,6 @@
 language: python
 env:
   - CMD=server/apptest.py $GAE_SDK
-  - CMD=client/runtest.py
 python:
   - "2.7"
 install: "pip install -r server_requirements.txt"
