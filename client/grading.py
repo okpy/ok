@@ -1,8 +1,7 @@
-import readline
 import sys
 import traceback
 from code import InteractiveConsole, compile_command
-from utils import underline, timed, TimeoutError, indent, dedent
+from utils import underline, timed, TimeoutError, indent, dedent, maybe_strip_prompt, OkConsole
 
 class Test(object):
     """Represents all suites for a single test in an assignment."""
@@ -41,7 +40,7 @@ class TestCase(object):
         # TODO(albert): scan lines for $; if no $ found, add one to
         # the last line.
         self.__lines = []     # Does not include setup code
-        self.outputs = []
+        self.__outputs = []
         self.status = {}
         self.type = ''
         self.test = None    # The Test this case belongs to.
@@ -69,6 +68,16 @@ class TestCase(object):
     def teardown(self):
         """Returns the teardown code for this particular TestCase."""
         # TODO(albert)
+
+    @property
+    def outputs(self):
+        return self.__outputs
+
+    def unlock(self):
+        self.status.setdefault('lock', False)
+
+    def set_outputs(self, new_outputs):
+        self.__outputs = new_outputs
 
 #####################
 # Testing Mechanism #
@@ -201,7 +210,7 @@ def __run_suite(suite, frame, console, num_cases, verbose, interactive):
     console.logger.on()
     return passed, False
 
-class AutograderConsole:
+class TestingConsole(OkConsole):
     """Handles test evaluation and output formatting for a single
     TestCase.
 
@@ -216,17 +225,12 @@ class AutograderConsole:
     that were executed by the run method are also saved to the
     readline history.
     """
-
     PS1 = '>>> '
     PS2 = '... '
 
-    def __init__(self, logger):
-        """Constructor.
-
-        PARAMETERS:
-        logger -- OutputLogger
-        """
-        self.logger = logger
+    ##################
+    # Public methods #
+    ##################
 
     def run(self, case, frame=None):
         """Executes lines of code in the provided frame.
@@ -258,22 +262,13 @@ class AutograderConsole:
         outputs = iter(case.outputs)
         frame = frame.copy() if frame else {}
 
-        log = []
-        self.logger.register_log(log)
-        # TODO(albert): Windows machines don't have a readline module.
-        readline.clear_history()
-
         error = False
         current  = ''
-        for line in case.lines + ['']:
-            if line:
-                readline.add_history(line.replace('$ ', ''))
-
+        for line in self._read_lines(case.lines + ['']):
             if line.startswith(' ') or self.__incomplete(current):
                 print(self.PS2 + line)
                 current += line + '\n'
                 continue
-
             elif current.startswith('$ '):
                 output = next(outputs)
                 if type(output) == list:
@@ -281,8 +276,8 @@ class AutograderConsole:
                     # the correct solution to a multiple choice
                     # question.
                     output = output[0]
-                error = self.exec(current.replace('$ ', ''), frame,
-                        output)
+                error = self.exec(maybe_strip_prompt(current),
+                        frame, expected=output)
                 if error:
                     break
             else:
@@ -291,9 +286,8 @@ class AutograderConsole:
                     break
             current = line + '\n'
             if line != '':
-                print(self.PS1 + line.replace('$ ', ''))
-        self.logger.register_log(None)
-        return error, log
+                print(self.PS1 + maybe_strip_prompt(line))
+        return error, self.log
 
     # TODO(albert): this method is useful outside of the context of
     # the AutograderConsole object. Consider moving it outside of this
@@ -381,18 +375,28 @@ class AutograderConsole:
         to the run method. This method can be used to interact with
         any frame.
         """
-        # TODO(albert): logger should fully implement output stream
-        # interface so we can avoid doing this swap here.
-        sys.stdout = sys.__stdout__
-        console = InteractiveConsole(locals=frame.copy())
-        console.interact('# Interactive console.'
-                         ' Type exit() to quit')
-        sys.stdout = self.logger
+        super().interact(frame=frame,
+                msg='# Interactive console. Type exit() to quit')
+
+    #########################
+    # Subclass-able methods #
+    #########################
+
+    def _add_line_to_history(self, line):
+        """Adds the given line to readline history, only if the line
+        is non-empty. If the line starts with a prompt symbol, the
+        prompt is stripped from the line.
+        """
+        if line:
+            super()._add_line_to_history(maybe_strip_prompt(line))
+
+    ###################
+    # Private methods #
+    ###################
 
     @staticmethod
     def __incomplete(line):
         """Check if the given line can be a complete line of Python."""
-        if line.startswith('$ '):
-            line = line[2:]
+        line = maybe_strip_prompt(line)
         return compile_command(line) is None
 

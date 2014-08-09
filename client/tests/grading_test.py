@@ -2,12 +2,12 @@ import sys
 import time
 import unittest
 from utils import OutputLogger, TIMEOUT
-from grading import AutograderConsole, run
+from grading import TestingConsole, run
 
-class AutograderConsoleTest(unittest.TestCase):
+class TestingConsoleTest(unittest.TestCase):
     def setUp(self):
         self.logger = sys.stdout = OutputLogger()
-        self.console = AutograderConsole(self.logger)
+        self.console = TestingConsole(self.logger)
 
     def tearDown(self):
         sys.stdout = sys.__stdout__
@@ -193,7 +193,7 @@ class AutograderConsoleTest(unittest.TestCase):
 class RunTest(unittest.TestCase):
     def setUp(self):
         self.logger = OutputLogger()
-        self.console = AutograderConsole(self.logger)
+        self.console = TestingConsole(self.logger)
 
     def testRun_noSuites(self):
         test = MockTest()

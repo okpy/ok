@@ -1,8 +1,10 @@
 import os
 import re
+import readline
 import sys
 import textwrap
 import traceback
+from code import InteractiveConsole, compile_command
 from threading import Thread
 
 ######################
@@ -73,6 +75,11 @@ def underline(text, line='='):
     """
     print(text + '\n' + line * len(text))
 
+def maybe_strip_prompt(text):
+    if text.startswith('$ '):
+        text = text[2:]
+    return text
+
 #####################
 # TIMEOUT MECHANISM #
 #####################
@@ -138,4 +145,86 @@ class __ReturningThread(Thread):
             e._message = traceback.format_exc(limit=2)
             self.error = e
 
+###########
+# Console #
+###########
 
+class OkConsole:
+    """An abstract class that handles console sessions for ok.py.
+
+    An instance of this class can be (and should be) reused for
+    multiple TestCases. Each instance of this class keeps an output
+    log that is registered with an OutputLogger object. External code
+    can access this log to replay output at a later time.
+    """
+    def __init__(self, logger):
+        """Constructor.
+
+        PARAMETERS:
+        logger -- OutputLogger
+        """
+        self.logger = logger
+        self.log = None
+
+    ##################
+    # Public methods #
+    ##################
+
+    def run(self, case):
+        """Runs a session of the Console for the given TestCase.
+
+        PARAMETERS:
+        case -- TestCase.
+
+        DESCRIPTION:
+        Subclasses that override this method should call the
+        _read_lines generator method, which handles output logging.
+        """
+        raise NotImplementedError
+
+    def interact(self, frame=None, msg=''):
+        """Starts an InteractiveConsole, using the variable bindings
+        defined in the given frame.
+
+        Calls to this method do not necessarily have to follow a call
+        to the run method. This method can be used to interact with
+        any frame.
+        """
+        # TODO(albert): logger should fully implement output stream
+        # interface so we can avoid doing this swap here.
+        sys.stdout = sys.__stdout__
+        if not frame:
+            frame = {}
+        else:
+            frame = frame.copy()
+        console = InteractiveConsole(frame)
+        console.interact(msg)
+        sys.stdout = self.logger
+
+    #########################
+    # Subclass-able methods #
+    #########################
+
+    def _read_lines(self, lines):
+        """A generator method that handles output logging and yields
+        a list of lines.
+
+        Subclasses should use this method to iterate over lines in the
+        run method.
+        """
+        self.log = []
+        self.logger.register_log(self.log)
+        # TODO(albert): Windows machines don't have a readline module.
+        readline.clear_history()
+        for line in lines:
+            self._add_line_to_history(line)
+            yield line
+        self.logger.register_log(None)
+
+    def _add_line_to_history(self, line):
+        """Adds the given line to readline history.
+
+        Subclasses can override this method to format the line before
+        adding to readline history.
+        """
+        readline.add_history(line)
