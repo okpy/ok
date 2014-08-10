@@ -2,15 +2,12 @@ import sys
 import time
 import unittest
 from utils import OutputLogger, TIMEOUT
-from grading import TestingConsole, run
+from grading import TestingConsole, run, TestCaseAnswer
 
 class TestingConsoleTest(unittest.TestCase):
     def setUp(self):
         self.logger = OutputLogger()
         self.console = TestingConsole(self.logger)
-
-    def tearDown(self):
-        sys.stdout = sys.__stdout__
 
     #############
     # Test exec #
@@ -447,7 +444,10 @@ class MockTestCase:
     def __init__(self, lines=None, outputs=None, status=None,
             q_type=None, teardown=None):
         self.lines = lines or []
-        self.outputs = outputs or []
+        if not outputs:
+            self.outputs = []
+        else:
+            self.outputs = [TestCaseAnswer(out) for out in outputs]
         self.status = status or {}
         self.type = q_type or ''
         self.teardown = teardown or ''
