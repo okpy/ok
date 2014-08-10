@@ -3,7 +3,6 @@ import re
 import sys
 import textwrap
 import traceback
-from code import InteractiveConsole, compile_command
 from threading import Thread
 
 ######################
@@ -183,22 +182,6 @@ class OkConsole:
         _read_lines generator method, which handles output logging.
         """
         raise NotImplementedError
-
-    def interact(self, frame=None, msg=''):
-        """Starts an InteractiveConsole, using the variable bindings
-        defined in the given frame.
-
-        Calls to this method do not necessarily have to follow a call
-        to the run method. This method can be used to interact with
-        any frame.
-        """
-        self._deactivate_logger()
-        if not frame:
-            frame = {}
-        else:
-            frame = frame.copy()
-        console = InteractiveConsole(frame)
-        console.interact(msg)
 
     @property
     def logger(self):

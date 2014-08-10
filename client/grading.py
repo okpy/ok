@@ -81,10 +81,16 @@ class TestCase(object):
         self.__outputs = new_outputs
 
 class TestCaseAnswer(object):
+    """Represents an answer for a single TestCase."""
     # TODO(albert): fill in stubs.
-    def __init__(self, answer):
+    def __init__(self, answer, choices=None):
         self.answer = answer
-        self.choices = []
+        self.choices = choices or []
+
+    def __eq__(self, other):
+        return isinstance(other, TestCaseAnswer) \
+                and other.answer == self.answer \
+                and other.choices == self.choices
 
 #####################
 # Testing Mechanism #
@@ -375,7 +381,7 @@ class TestingConsole(OkConsole):
             else:
                 return False
 
-    def interact(self, frame):
+    def interact(self, frame=None):
         """Starts an InteractiveConsole, using the variable bindings
         defined in the given frame.
 
@@ -383,8 +389,13 @@ class TestingConsole(OkConsole):
         to the run method. This method can be used to interact with
         any frame.
         """
-        super().interact(frame=frame,
-                msg='# Interactive console. Type exit() to quit')
+        self._deactivate_logger()
+        if not frame:
+            frame = {}
+        else:
+            frame = frame.copy()
+        console = InteractiveConsole(frame)
+        console.interact('# Interactive console. Type exit() to quit')
 
     ###################
     # Private methods #

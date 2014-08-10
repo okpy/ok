@@ -1,18 +1,20 @@
 import random
+import readline
+from grading import TestCaseAnswer
 from utils import underline, maybe_strip_prompt, OkConsole
 
 #######################
 # UNLOCKING MECHANISM #
 #######################
 
-def __make_hash_fn(hash_key, encoding='utf-8'):
-    def hash_fn(x):
-        return hmac.new(hash_key.encode(encoding),
-                        x.encode(encoding)).digest()
-    return hash_fn
-
-hash_key = tests['project_info']['hash_key']
-__make_hash_fn(hash_key)
+# def __make_hash_fn(hash_key, encoding='utf-8'):
+#     def hash_fn(x):
+#         return hmac.new(hash_key.encode(encoding),
+#                         x.encode(encoding)).digest()
+#     return hash_fn
+# 
+# hash_key = tests['project_info']['hash_key']
+# __make_hash_fn(hash_key)
 
 def unlock(test, console, hash_fn):
     """Unlocks TestCases for a given Test.
@@ -68,6 +70,17 @@ class UnlockConsole(OkConsole):
         self.verify = verification_fn
 
     def run(self, case):
+        """Runs an interactive session for unlocking a single TestCase.
+
+        PARAMETERS:
+        case -- TestCase
+
+        DESCRIPTION:
+        Upon successful completion, the provided TestCase will be
+        modified to contain the unlocked TestCaseAnswer, and the
+        TestCase will be marked as unlocked. If the user aborts before
+        successful completion, the TestCase will left untouched.
+        """
         self._activate_logger()
 
         try:
@@ -94,16 +107,16 @@ class UnlockConsole(OkConsole):
                 continue
             print(PS1 + maybe_strip_prompt(line))
             if line.startswith('$ '):
-                answer = self.interact(next(outputs))
+                answer = self.__interact(next(outputs))
                 answers.append(TestCaseAnswer(answer))
         return answers
 
     def __run_concept(self, case):
         print('\n'.join(case.lines))
-        answer = self.interact(case.outputs[0])
+        answer = self.__interact(case.outputs[0])
         return [TestCaseAnswer(answer)]
 
-    def interact(self, output):
+    def __interact(self, output):
         """Reads student input for unlocking tests.
 
         PARAMETERS:
@@ -128,9 +141,24 @@ class UnlockConsole(OkConsole):
         """
         correct = False
         while not correct:
+            # TODO(albert): this loop can potentially cause memory
+            # leaks.
             if output.choices:
-                choice_map = self.__display_choices(output.choices)
-            student_input = self.__get_input()
+                choice_map = self._display_choices(output.choices)
+
+            try:
+                student_input = self._input(self.PROMPT)
+            except (KeyboardInterrupt, EOFError):
+                try:
+                    # TODO(albert): When you use Ctrl+C in Windows, it
+                    # throws two exceptions, so you need to catch both
+                    # of them. Find a cleaner fix for this.
+                    print()
+                except (KeyboardInterrupt, EOFError):
+                    pass
+                raise UnlockException
+            if student_input in self.EXIT_INPUTS:
+                raise UnlockException
 
             self.__add_line_to_history(student_input)
 
@@ -141,29 +169,25 @@ class UnlockConsole(OkConsole):
                 print("-- Not quite. Try again! --")
         return student_input
 
-    def __get_input(self):
-        try:
-            student_input = input(self.PROMPT + ' ')
-        except (KeyboardInterrupt, EOFError):
-            try:
-                # TODO(albert): When you use Ctrl+C in Windows, it
-                # throws two exceptions, so you need to catch both
-                # of them. Find a cleaner fix for this.
-                print()
-            except (KeyboardInterrupt, EOFError):
-                pass
-            raise UnlockException
-        if student_input in self.EXIT_INPUTS:
-            raise UnlockException
-        return student_input
+    #######################
+    # Visible for testing #
+    #######################
 
-    def __display_choices(self, choices):
+    def _input(self, prompt):
+        return input(prompt)
+
+    def _display_choices(self, choices):
         print("Choose the number of the correct choice:")
         choice_map = {}
         for i, choice in enumerate(random.sample(choices, len(choices))):
-            print(str(i) + ') ' + choice)
+            i = str(i)
+            print(i + ') ' + choice)
             choice_map[i] = choice
         return choice_map
+
+    ###################
+    # Private methods #
+    ###################
 
     @staticmethod
     def __add_line_to_history(line):
