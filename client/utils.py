@@ -58,7 +58,6 @@ class OutputLogger:
     def flush(self):
         self._current_stream.flush()
 
-
 def dedent(text):
     return textwrap.dedent(text).lstrip('\n').rstrip()
 
@@ -79,6 +78,21 @@ def maybe_strip_prompt(text):
     if text.startswith('$ '):
         text = text[2:]
     return text
+
+class Counter(object):
+    def __init__(self):
+        self._count = 0
+
+    @property
+    def number(self):
+        return self._count
+
+    def increment(self):
+        self._count += 1
+        return self._count
+
+    def __repr__(self):
+        return str(self._count)
 
 #####################
 # TIMEOUT MECHANISM #

@@ -2,7 +2,7 @@ import readline
 import sys
 import traceback
 from code import InteractiveConsole, compile_command
-from utils import underline, timed, TimeoutError, indent, dedent, maybe_strip_prompt, OkConsole
+from utils import underline, timed, TimeoutError, indent, maybe_strip_prompt, OkConsole, Counter
 
 class Test(object):
     """Represents all suites for a single test in an assignment."""
@@ -29,6 +29,20 @@ class Test(object):
         str; the name of the test
         """
         return self.names[0]
+
+    @property
+    def total_cases(self):
+        return sum(len(suite) for suite in suites)
+
+    @property
+    def total_locked(self):
+        return [case.is_locked for suite in suites
+                               for case in suite].count(True)
+
+    @property
+    def total_concept(self):
+        return [case.is_conceptual for suite in suites
+                                   for case in suite].count(True)
 
 class TestCase(object):
     """Represents a single test case."""
@@ -127,41 +141,38 @@ def run(test, frame, console, interactive=False, verbose=False):
         except Exception as e:
             print('Cache for', name, 'errored:', e)
 
+    cases_tested = Counter()
     total_passed = 0
-    total_cases = 0
     for suite in test.suites:
-        passed, abort = __run_suite(suite, frame, console, total_cases,
+        passed, error = _run_suite(suite, frame, console, cases_tested,
                  verbose, interactive)
-        # TODO(albert): Have better counting -- total should be the
-        # number of cases run, not the number cases in a suite.
         total_passed += passed
-        total_cases += [case.is_graded for case in suite].count(True)
-        if abort:
+        if error:
             break
 
-    locked_cases = [case.is_locked for suite in test.suites
-                                   for case in suite].count(True)
+    # TODO(albert): Move stats printing outside of this function
+    # total_cases = test.total_cases
+    # if total_cases > 0:
+    #     print('Passed: {} ({}%)'.format(total_passed,
+    #                                     total_passed/total_cases))
+    #     print('Locked: {} ({}%)'.format(test.total_locked,
+    #                                     test.total_locked/total_cases))
+    # print()
+    return total_passed
 
-    if total_passed == total_cases:
-        print('All unlocked tests passed!')
-    if locked_cases > 0:
-        print('-- NOTE: {} still has {} locked cases! --'.format(
-            test.name, locked_cases))
-    print()
-    return total_passed, total_cases
-
-def __run_suite(suite, frame, console, num_cases, verbose, interactive):
+def _run_suite(suite, frame, console, cases_tested, verbose,
+        interactive):
     """Runs tests for a single suite.
 
     PARAMETERS:
-    suite       -- list; each element is a TestCase
-    frame       -- dict; global frame
-    console     -- AutograderConsole; the same console is used for
-                   for all cases in the suite.
-    num_cases   -- int; number of cases that preceded the current
-                   suite. This is used for numbering TestCases.
-    verbose     -- bool; True if verbose mode is toggled on
-    interactive -- bool; True if interactive mode is toggled on
+    suite        -- list; each element is a TestCase
+    frame        -- dict; global frame
+    console      -- AutograderConsole; the same console is used for
+                    for all cases in the suite.
+    cases_tested -- int; number of cases that preceded the current
+                    suite. This is used for numbering TestCases.
+    verbose      -- bool; True if verbose mode is toggled on
+    interactive  -- bool; True if interactive mode is toggled on
 
     DESCRIPTION:
     For each TestCase, a new frame is created and houses all bindings
@@ -188,26 +199,27 @@ def __run_suite(suite, frame, console, num_cases, verbose, interactive):
         if case.is_locked:
             console.logger.on()
             return passed, True  # students must unlock first
-        elif case.is_conceptual and verbose:
+        cases_tested.increment()
+
+        if case.is_conceptual and verbose:
             underline('Concept question', line='-')
             print(indent('\n'.join(case.lines), '   '))
             print(indent('A: ' + case.outputs[0].answer, '    '))
             print()
-
         if case.is_conceptual:
+            passed += 1
             continue
 
-        num_cases += 1
         if not verbose:
             console.logger.off()
-        underline('Case {}'.format(num_cases), line='-')
+        underline('Case {}'.format(cases_tested), line='-')
 
         code = case.lines
         error, log = console.run(case, frame)
 
         if error and not verbose:
             console.logger.on()
-            underline('Case {} failed'.format(num_cases), line='-')
+            underline('Case {} failed'.format(cases_tested), line='-')
             print(''.join(log).strip())
         if error and interactive:
             console.interact(frame)

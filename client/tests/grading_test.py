@@ -194,9 +194,8 @@ class RunTest(unittest.TestCase):
 
     def testRun_noSuites(self):
         test = MockTest()
-        passed, total = run(test, {}, self.console)
+        passed = run(test, {}, self.console)
         self.assertEqual(0, passed)
-        self.assertEqual(0, total)
 
     def testRun_oneTestCasePass(self):
         test = MockTest(suites=[
@@ -209,11 +208,10 @@ class RunTest(unittest.TestCase):
                 ]),
             ],
         ])
-        passed, total = run(test, {}, self.console)
+        passed = run(test, {}, self.console)
         self.assertEqual(1, passed)
-        self.assertEqual(1, total)
 
-    def testRun_multipleTestCaseOneSuitePass(self):
+    def testRun_multipleTestCaseOneSuite_pass(self):
         test = MockTest(suites=[
             [
                 MockTestCase(lines=[
@@ -232,11 +230,10 @@ class RunTest(unittest.TestCase):
                 ]),
             ],
         ])
-        passed, total = run(test, {}, self.console)
+        passed = run(test, {}, self.console)
         self.assertEqual(2, passed)
-        self.assertEqual(2, total)
 
-    def testRun_multipleSuitesPass(self):
+    def testRun_multipleSuites_pass(self):
         test = MockTest(suites=[
             [
                 MockTestCase(lines=[
@@ -269,11 +266,10 @@ class RunTest(unittest.TestCase):
                 ]),
             ],
         ])
-        passed, total = run(test, {}, self.console)
+        passed = run(test, {}, self.console)
         self.assertEqual(4, passed)
-        self.assertEqual(4, total)
 
-    def testRun_singleTestCaseFail(self):
+    def testRun_singleTestCase_fail(self):
         test = MockTest(suites=[
             [
                 MockTestCase(lines=[
@@ -284,11 +280,10 @@ class RunTest(unittest.TestCase):
                 ]),
             ],
         ])
-        passed, total = run(test, {}, self.console)
+        passed = run(test, {}, self.console)
         self.assertEqual(0, passed)
-        self.assertEqual(1, total)
 
-    def testRun_singleSuiteSecondTestCaseFail(self):
+    def testRun_singleSuiteSecondTestCase_fail(self):
         test = MockTest(suites=[
             [
                 MockTestCase(lines=[
@@ -305,11 +300,10 @@ class RunTest(unittest.TestCase):
                 ]),
             ],
         ])
-        passed, total = run(test, {}, self.console)
+        passed = run(test, {}, self.console)
         self.assertEqual(1, passed)
-        self.assertEqual(2, total)
 
-    def testRun_multipleSuitesFirstSuiteFail(self):
+    def testRun_multipleSuitesFirstSuite_fail(self):
         test = MockTest(suites=[
             [
                 MockTestCase(lines=[
@@ -328,9 +322,8 @@ class RunTest(unittest.TestCase):
                 ]),
             ],
         ])
-        passed, total = run(test, {}, self.console)
+        passed = run(test, {}, self.console)
         self.assertEqual(0, passed)
-        self.assertEqual(1, total)
 
     def testRun_teardownExecutionNoFailure(self):
         lst = []
@@ -345,10 +338,9 @@ class RunTest(unittest.TestCase):
                 teardown="f()"),
             ],
         ])
-        passed, total = run(test, {'f': lambda: lst.append(1)},
+        passed = run(test, {'f': lambda: lst.append(1)},
                 self.console)
         self.assertEqual(1, passed)
-        self.assertEqual(1, total)
         self.assertEqual([1], lst)
 
     def testRun_teardownExecutionWithFailure(self):
@@ -364,10 +356,9 @@ class RunTest(unittest.TestCase):
                 teardown="f()"),
             ],
         ])
-        passed, total = run(test, {'f': lambda: lst.append(1)},
+        passed = run(test, {'f': lambda: lst.append(1)},
                 self.console)
         self.assertEqual(0, passed)
-        self.assertEqual(1, total)
         self.assertEqual([1], lst)
 
     def testRun_abortLockedTests(self):
@@ -392,11 +383,10 @@ class RunTest(unittest.TestCase):
                 ]),
             ],
         ])
-        passed, total = run(test, {}, self.console)
+        passed = run(test, {}, self.console)
         self.assertEqual(0, passed)
-        self.assertEqual(1, total)  # The locked test is not counted.
 
-    def testRun_conceptTestCaseNotCounted(self):
+    def testRun_conceptTestCaseCounted(self):
         lst = []
         test = MockTest(suites=[
             [
@@ -418,10 +408,8 @@ class RunTest(unittest.TestCase):
                 ]),
             ],
         ])
-        passed, total = run(test, {}, self.console)
-        self.assertEqual(1, passed)
-        self.assertEqual(1, total)
-
+        passed = run(test, {}, self.console)
+        self.assertEqual(2, passed)
 
 #########
 # Mocks #

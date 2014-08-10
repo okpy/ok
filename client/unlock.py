@@ -16,46 +16,50 @@ from utils import underline, maybe_strip_prompt, OkConsole
 # hash_key = tests['project_info']['hash_key']
 # __make_hash_fn(hash_key)
 
-def unlock(test, console, hash_fn):
+def unlock(test, console):
     """Unlocks TestCases for a given Test.
 
     PARAMETERS:
-    test -- Test; the test to unlock.
+    test    -- Test; the test to unlock.
+    console -- UnlockConsole; a console for handling interactive
+               unlocking sessions.
 
     DESCRIPTION:
     This function incrementally unlocks all TestCases in a specified
     Test. Students must answer in the order that TestCases are
     written. Once a TestCase is unlocked, it will remain unlocked.
 
-    Persistant state is stored by rewriting the contents of
-    tests.pkl. Students should NOT manually change these files.
+    RETURN:
+    int; the number of unlocked cases for this Test after going through
+    an unlocking session.
     """
-    name = test.name
-
+    # TODO(albert): move printing outside of this function
     if not test.suites:
-        print('No tests to unlock for {}.'.format(name))
-        return
+        print('No tests to unlock for {}.'.format(test.name))
+        return 0
 
-    underline('Unlocking tests for {}'.format(name))
+    underline('Unlocking tests for {}'.format(test.name))
     print('At each "{}", type in what you would expect the output to '
           'be if you had implemented {}'.format(UnlockConsole.PROMPT,
-              name))
-    print('Type exit() to quit')
+              test.name))
+    print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
     print()
 
     cases = 0
+    cases_unlocked = 0
     for suite_num, suite in enumerate(test.suites):
         for case_num, case in enumerate(suite):
-            if not case.is_conceptual:
-                # TODO(albert): consider rethinking TestCase counting.
-                cases += 1
+            cases += 1
             if not case.is_locked:
                 continue
-            underline('Case {}'.format(cases), under='-')
-            console.run(case)
+            underline('Case {}'.format(cases), line='-')
+            if console.run(case):   # Abort unlocking.
+                return cases_unlocked
+            cases_unlocked += 1
     print("You are done unlocking tests for this question!")
+    return cases_unlocked
 
-class UnlockException(BaseException):
+class _UnlockException(BaseException):
     pass
 
 class UnlockConsole(OkConsole):
