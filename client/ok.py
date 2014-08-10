@@ -66,7 +66,7 @@ class FileContents(Protocol):
         """Find all source files and return their complete contents."""
         contents = {}
         for path in self.src_files:
-            key = os.path.normpath(path)
+            key = os.path.normpath(os.path.split(path)[1])
             with open(path, 'r', encoding='utf-8') as lines:
                 value = lines.read()
             contents[key] = value
@@ -79,7 +79,7 @@ class RunTests(Protocol):
 
     def on_interact(self):
         """Run unlocked tests and print results."""
-        # TODO(denero) Merge functionality from pull request #51.
+        # TODO(denero) Run all tests.
 
 
 def send_to_server(messages, assignment, server, endpoint='submission/new'):
@@ -155,7 +155,7 @@ def find_test_file(directory, test_file_hint=None):
     same directory.
     """
     files = os.listdir(directory)
-    make_path = lambda f: os.path.join(directory, f)
+    make_path = lambda f: os.path.normpath(os.path.join(directory, f))
     test_paths = [make_path(f) for f in files if f.endswith('_tests.py')]
     test_contents = [(p, get_assignment(p)) for p in test_paths]
     assignments = {p: a for (p, a) in test_contents if a}
