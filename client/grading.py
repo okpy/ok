@@ -41,7 +41,7 @@ class TestCase(object):
         # TODO(albert): scan lines for $; if no $ found, add one to
         # the last line.
         self.__lines = []     # Does not include setup code
-        self.__outputs = []
+        self.__outputs = []   # TestCaseAnswer objects
         self.status = {}
         self.type = ''
         self.test = None    # The Test this case belongs to.
@@ -79,6 +79,12 @@ class TestCase(object):
 
     def set_outputs(self, new_outputs):
         self.__outputs = new_outputs
+
+class TestCaseAnswer(object):
+    # TODO(albert): fill in stubs.
+    def __init__(self, answer):
+        self.answer = answer
+        self.choices = []
 
 #####################
 # Testing Mechanism #
@@ -276,12 +282,7 @@ class TestingConsole(OkConsole):
                 current += line + '\n'
                 continue
             elif current.startswith('$ '):
-                output = next(outputs)
-                if type(output) == list:
-                    # TODO(albert): have a better way to encode
-                    # the correct solution to a multiple choice
-                    # question.
-                    output = output[0]
+                output = next(outputs).answer
                 error = self.exec(maybe_strip_prompt(current),
                         frame, expected=output)
                 if error:

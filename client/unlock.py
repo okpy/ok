@@ -80,7 +80,7 @@ class UnlockConsole(OkConsole):
         else:
             case.set_outputs(answers)
             case.unlock()
-            print("-- Congratulations, you have unlocked this case! --")
+            print("-- Congratulations, you unlocked this case! --")
             print()
 
         self._deactivate_logger()
@@ -92,26 +92,22 @@ class UnlockConsole(OkConsole):
             if line.startswith(' '):  # Line is indented.
                 print(PS2 + line)
                 continue
-            line = maybe_strip_prompt(line)
-            print(PS1 + line)
-            # TODO(albert): handle choices.
-            answer = self.interact(next(outputs))
-            answers.append(answer)
+            print(PS1 + maybe_strip_prompt(line))
+            if line.startswith('$ '):
+                answer = self.interact(next(outputs))
+                answers.append(TestCaseAnswer(answer))
         return answers
 
     def __run_concept(self, case):
         print('\n'.join(case.lines))
-        # TODO(albert): handle choices.
-        answer = self.interact(case[1][0])
-        return [answer]
+        answer = self.interact(case.outputs[0])
+        return [TestCaseAnswer(answer)]
 
-    def interact(self, expected, choices=None):
+    def interact(self, output):
         """Reads student input for unlocking tests.
 
         PARAMETERS:
-        output  -- str; the hashed version of the correct output.
-        choices -- list; sequence of choices (strings) from which
-                   the student can choose
+        output  -- TestCaseAnswer; a locked test case answer.
 
         DESCRIPTION:
         Continually prompt the student for an answer to an unlocking
@@ -132,32 +128,42 @@ class UnlockConsole(OkConsole):
         """
         correct = False
         while not correct:
-            if choices:
-                # TODO(albert): have better format for multiple
-                # choice.
-                print("Choose the number of the correct choice:")
-                for i, choice in enumerate(random.sample(output, len(choices))):
-                    print('    ' + str(i) + ') ' + split(choice, join_str='\n       '))
-                    if choice == output[0]:
-                        answer = hash_fn(str(i))
-            try:
-                student_input = input(prompt + ' ')
-            except (KeyboardInterrupt, EOFError):
-                try:
-                    # TODO(albert): When you use Ctrl+C in Windows, it
-                    # throws two exceptions, so you need to catch both
-                    # of them. Find a cleaner fix for this.
-                except (KeyboardInterrupt, EOFError):
-                    pass
-                raise UnlockException
-            if student_input in EXIT_INPUTS:
-                raise UnlockException
+            if output.choices:
+                choice_map = self.__display_choices(output.choices)
+            student_input = self.__get_input()
 
             self.__add_line_to_history(student_input)
-            correct = self.verify(student_input, answer)
+
+            if output.choices:
+                student_input = choice_map[student_input]
+            correct = self.verify(student_input, output.answer)
             if not correct:
                 print("-- Not quite. Try again! --")
         return student_input
+
+    def __get_input(self):
+        try:
+            student_input = input(self.PROMPT + ' ')
+        except (KeyboardInterrupt, EOFError):
+            try:
+                # TODO(albert): When you use Ctrl+C in Windows, it
+                # throws two exceptions, so you need to catch both
+                # of them. Find a cleaner fix for this.
+                print()
+            except (KeyboardInterrupt, EOFError):
+                pass
+            raise UnlockException
+        if student_input in self.EXIT_INPUTS:
+            raise UnlockException
+        return student_input
+
+    def __display_choices(self, choices):
+        print("Choose the number of the correct choice:")
+        choice_map = {}
+        for i, choice in enumerate(random.sample(choices, len(choices))):
+            print(str(i) + ') ' + choice)
+            choice_map[i] = choice
+        return choice_map
 
     @staticmethod
     def __add_line_to_history(line):
