@@ -1,6 +1,5 @@
 import os
 import re
-import readline
 import sys
 import textwrap
 import traceback
@@ -13,6 +12,7 @@ from threading import Thread
 
 class OutputLogger:
     """Custom logger for capturing and suppressing standard output."""
+    # TODO(albert): logger should fully implement output stream.
 
     def __init__(self):
         self._current_stream = self._stdout = sys.stdout
@@ -37,7 +37,7 @@ class OutputLogger:
         """
         self._log = log
 
-    def isOn(self):
+    def is_on(self):
         return self._current_stream == self._stdout
 
     @property
@@ -58,6 +58,7 @@ class OutputLogger:
 
     def flush(self):
         self._current_stream.flush()
+
 
 def dedent(text):
     return textwrap.dedent(text).lstrip('\n').rstrip()
@@ -163,8 +164,9 @@ class OkConsole:
         PARAMETERS:
         logger -- OutputLogger
         """
-        self.logger = logger
         self.log = None
+        self._logger = logger
+        self._stdout = None
 
     ##################
     # Public methods #
@@ -190,41 +192,32 @@ class OkConsole:
         to the run method. This method can be used to interact with
         any frame.
         """
-        # TODO(albert): logger should fully implement output stream
-        # interface so we can avoid doing this swap here.
-        sys.stdout = sys.__stdout__
+        self._deactivate_logger()
         if not frame:
             frame = {}
         else:
             frame = frame.copy()
         console = InteractiveConsole(frame)
         console.interact(msg)
-        sys.stdout = self.logger
 
-    #########################
-    # Subclass-able methods #
-    #########################
+    @property
+    def logger(self):
+        return self._logger
 
-    def _read_lines(self, lines):
-        """A generator method that handles output logging and yields
-        a list of lines.
+    #######################################
+    # Subclass-accessible private methods #
+    #######################################
 
-        Subclasses should use this method to iterate over lines in the
-        run method.
-        """
-        self.log = []
-        self.logger.register_log(self.log)
-        # TODO(albert): Windows machines don't have a readline module.
-        readline.clear_history()
-        for line in lines:
-            self._add_line_to_history(line)
-            yield line
-        self.logger.register_log(None)
+    def _activate_logger(self):
+        if sys.stdout is not self._logger:
+            self.log = []
+            self._logger.register_log(self.log)
+            self._stdout = sys.stdout
+            sys.stdout = self._logger
 
-    def _add_line_to_history(self, line):
-        """Adds the given line to readline history.
+    def _deactivate_logger(self):
+        if self._stdout:
+            sys.stdout = self._stdout
+            self._stdout = None
+            self._logger.register_log(None)
 
-        Subclasses can override this method to format the line before
-        adding to readline history.
-        """
-        readline.add_history(line)

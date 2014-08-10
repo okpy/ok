@@ -20,14 +20,14 @@ class OutputLoggerTest(unittest.TestCase):
         self.logger.on()
         print("logger on 1")
         print("logger on 2")
-        self.assertTrue(self.logger.isOn())
+        self.assertTrue(self.logger.is_on())
         self.assertLess(0, self.mock_output.called('write'))
 
     def testLoggerOff(self):
         self.logger.off()
         print("logger off 1")
         print("logger off 2")
-        self.assertFalse(self.logger.isOn())
+        self.assertFalse(self.logger.is_on())
         self.assertEqual(0, self.mock_output.called('write'))
 
     def testRegisterLog_loggerOn(self):

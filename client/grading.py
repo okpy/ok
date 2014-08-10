@@ -1,3 +1,4 @@
+import readline
 import sys
 import traceback
 from code import InteractiveConsole, compile_command
@@ -259,12 +260,17 @@ class TestingConsole(OkConsole):
         log   -- list; a list of lines of output, as captured by the
                  OutputLogger.
         """
+        # TODO(albert): Windows machines don't have a readline module.
+        readline.clear_history()
+        self._activate_logger()
+
         outputs = iter(case.outputs)
         frame = frame.copy() if frame else {}
 
         error = False
         current  = ''
-        for line in self._read_lines(case.lines + ['']):
+        for line in case.lines + ['']:
+            self.__add_line_to_history(line)
             if line.startswith(' ') or self.__incomplete(current):
                 print(self.PS2 + line)
                 current += line + '\n'
@@ -287,6 +293,7 @@ class TestingConsole(OkConsole):
             current = line + '\n'
             if line != '':
                 print(self.PS1 + maybe_strip_prompt(line))
+        self._deactivate_logger()
         return error, self.log
 
     # TODO(albert): this method is useful outside of the context of
@@ -378,21 +385,18 @@ class TestingConsole(OkConsole):
         super().interact(frame=frame,
                 msg='# Interactive console. Type exit() to quit')
 
-    #########################
-    # Subclass-able methods #
-    #########################
+    ###################
+    # Private methods #
+    ###################
 
-    def _add_line_to_history(self, line):
+    @staticmethod
+    def __add_line_to_history(line):
         """Adds the given line to readline history, only if the line
         is non-empty. If the line starts with a prompt symbol, the
         prompt is stripped from the line.
         """
         if line:
-            super()._add_line_to_history(maybe_strip_prompt(line))
-
-    ###################
-    # Private methods #
-    ###################
+            readline.add_history(maybe_strip_prompt(line))
 
     @staticmethod
     def __incomplete(line):

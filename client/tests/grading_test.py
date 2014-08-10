@@ -6,7 +6,7 @@ from grading import TestingConsole, run
 
 class TestingConsoleTest(unittest.TestCase):
     def setUp(self):
-        self.logger = sys.stdout = OutputLogger()
+        self.logger = OutputLogger()
         self.console = TestingConsole(self.logger)
 
     def tearDown(self):
