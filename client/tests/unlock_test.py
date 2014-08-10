@@ -47,9 +47,9 @@ class UnlockConsoleTest(unittest.TestCase):
         self.console.run(input_case)    # Modifies input_case.
         self.assertCaseEqual(output_case, input_case)
 
-    def testRun_codeSinglePrompt(self):
-        self.register_input('7')
-        self.runTest(MockTestCase(inputs=[
+    def testRun_codeSinglePromptSuccess(self):
+        self.register_input('7', 'exit()')
+        self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
         ], outputs=[
             TestCaseAnswer(self.encode('7')),
@@ -58,8 +58,8 @@ class UnlockConsoleTest(unittest.TestCase):
         ], locked=False))
 
     def testRun_codeFailedFirstTry(self):
-        self.register_input('9', '7')
-        self.runTest(MockTestCase(inputs=[
+        self.register_input('9', '7', 'exit()')
+        self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
         ], outputs=[
             TestCaseAnswer(self.encode('7')),
@@ -69,7 +69,7 @@ class UnlockConsoleTest(unittest.TestCase):
 
     def testRun_codeAbort(self):
         self.register_input('exit()')
-        self.runTest(MockTestCase(inputs=[
+        self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
         ], outputs=[
             TestCaseAnswer(self.encode('7')),
@@ -79,7 +79,7 @@ class UnlockConsoleTest(unittest.TestCase):
 
     def testRun_codeEOFError(self):
         self.register_input(EOFError)
-        self.runTest(MockTestCase(inputs=[
+        self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
         ], outputs=[
             TestCaseAnswer(self.encode('7')),
@@ -89,7 +89,7 @@ class UnlockConsoleTest(unittest.TestCase):
 
     def testRun_codeKeyboardInterrupt(self):
         self.register_input(KeyboardInterrupt)
-        self.runTest(MockTestCase(inputs=[
+        self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
         ], outputs=[
             TestCaseAnswer(self.encode('7')),
@@ -99,7 +99,7 @@ class UnlockConsoleTest(unittest.TestCase):
 
     def testRun_codeMultiPromptCorrect(self):
         self.register_input('7', '6', 'exit()')
-        self.runTest(MockTestCase(inputs=[
+        self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
             '$ 2 + 4',
         ], outputs=[
@@ -112,7 +112,7 @@ class UnlockConsoleTest(unittest.TestCase):
 
     def testRun_codeMultiPromptHalfCorrect(self):
         self.register_input('7', '2', 'exit()')
-        self.runTest(MockTestCase(inputs=[
+        self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
             '$ 2 + 4',
         ], outputs=[
@@ -126,7 +126,7 @@ class UnlockConsoleTest(unittest.TestCase):
     def testRun_codeMultipleChoice(self):
         self.register_choices()
         self.register_input('1', 'exit()')
-        self.runTest(MockTestCase(inputs=[
+        self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
         ], outputs=[
             TestCaseAnswer(self.encode('7'),
@@ -138,7 +138,7 @@ class UnlockConsoleTest(unittest.TestCase):
     def testRun_concept(self):
         self.register_choices()
         self.register_input('1', 'exit()')
-        self.runTest(MockTestCase(inputs=[
+        self.runTest(MockTestCase(lines=[
             '$ These dollar signs',
             '$ should not be treated as prompts',
             '$ since this is a concept question',

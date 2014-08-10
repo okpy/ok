@@ -64,8 +64,19 @@ class UnlockConsole(OkConsole):
         'exit()',
         'quit()',
     )
+    PS1 = '>>> '
+    PS2 = '... '
 
     def __init__(self, logger, verification_fn):
+        """Constructor.
+
+        PARAMETERS:
+        logger          -- OutputLogger
+        verification_fn -- function; takes as arguments
+                           (student_input, locked_answer) and verifies
+                           that the student_input matches the
+                           locked_answer.
+        """
         super().__init__(logger)
         self.verify = verification_fn
 
@@ -84,7 +95,7 @@ class UnlockConsole(OkConsole):
         self._activate_logger()
 
         try:
-            if case.is_conceptual:
+            if not case.is_conceptual:
                 answers = self.__run_code(case)
             else:
                 answers = self.__run_concept(case)
@@ -99,19 +110,21 @@ class UnlockConsole(OkConsole):
         self._deactivate_logger()
 
     def __run_code(self, case):
+        """Runs an unlocking session for a code TestCase."""
         outputs = iter(case.outputs)
         answers = []
         for line in case.lines:
             if line.startswith(' '):  # Line is indented.
-                print(PS2 + line)
+                print(self.PS2 + line)
                 continue
-            print(PS1 + maybe_strip_prompt(line))
+            print(self.PS1 + maybe_strip_prompt(line))
             if line.startswith('$ '):
                 answer = self.__interact(next(outputs))
                 answers.append(TestCaseAnswer(answer))
         return answers
 
     def __run_concept(self, case):
+        """Runs an unlocking session for a conceptual TestCase."""
         print('\n'.join(case.lines))
         answer = self.__interact(case.outputs[0])
         return [TestCaseAnswer(answer)]
@@ -141,8 +154,6 @@ class UnlockConsole(OkConsole):
         """
         correct = False
         while not correct:
-            # TODO(albert): this loop can potentially cause memory
-            # leaks.
             if output.choices:
                 choice_map = self._display_choices(output.choices)
 
@@ -174,9 +185,13 @@ class UnlockConsole(OkConsole):
     #######################
 
     def _input(self, prompt):
+        """Retrieves user input from stdin."""
         return input(prompt)
 
     def _display_choices(self, choices):
+        """Prints a mapping of numbers to choices and returns the
+        mapping as a dictionary.
+        """
         print("Choose the number of the correct choice:")
         choice_map = {}
         for i, choice in enumerate(random.sample(choices, len(choices))):
