@@ -7,7 +7,7 @@
     <tr ng-repeat="submission in submissions">
       <td>{{submission.submitter}}</td>
       <td>
-        <a ui-sref='assignment.detail({assignmentId:submission.assignment.name})'>{{submission.assignment.name}}
+        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
       </td>
     </tr>
   </table>
