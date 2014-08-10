@@ -41,12 +41,12 @@ class TestingConsoleTest(unittest.TestCase):
         max_recursion = lambda: max_recursion()
         self.execTest("f()", True, frame={'f': max_recursion})
 
-    def testExec_timeoutError(self):
-        # TODO(albert): have a better way to test timeout than actually
-        # waiting.
-        def wait():
-            time.sleep(TIMEOUT * 3 // 2)
-        self.execTest("f()", True, frame={'f': wait})
+    # TODO(albert): have a better way to test timeout than actually
+    # waiting.
+    # def testExec_timeoutError(self):
+    #     def wait():
+    #         time.sleep(TIMEOUT * 3 // 2)
+    #     self.execTest("f()", True, frame={'f': wait})
 
     ############
     # Test run #
