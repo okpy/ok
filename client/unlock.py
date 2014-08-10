@@ -1,3 +1,6 @@
+import random
+from utils import underline, maybe_strip_prompt, OkConsole
+
 #######################
 # UNLOCKING MECHANISM #
 #######################
@@ -11,7 +14,7 @@ def __make_hash_fn(hash_key, encoding='utf-8'):
 hash_key = tests['project_info']['hash_key']
 __make_hash_fn(hash_key)
 
-def unlock(test, hash_fn):
+def unlock(test, console, hash_fn):
     """Unlocks TestCases for a given Test.
 
     PARAMETERS:
@@ -31,10 +34,10 @@ def unlock(test, hash_fn):
         print('No tests to unlock for {}.'.format(name))
         return
 
-    prompt = '?'
     underline('Unlocking tests for {}'.format(name))
     print('At each "{}", type in what you would expect the output to '
-          'be if you had implemented {}'.format(prompt, name))
+          'be if you had implemented {}'.format(UnlockConsole.PROMPT,
+              name))
     print('Type exit() to quit')
     print()
 
@@ -42,110 +45,124 @@ def unlock(test, hash_fn):
     for suite_num, suite in enumerate(test.suites):
         for case_num, case in enumerate(suite):
             if not case.is_conceptual:
-                # TODO(albert): what is this for?
+                # TODO(albert): consider rethinking TestCase counting.
                 cases += 1
             if not case.is_locked:
                 continue
             underline('Case {}'.format(cases), under='-')
-            if case.is_conceptual:
-                __unlock_concept(case)
-                continue
-            else:
-                __unlock_code(case)
+            console.run(case)
     print("You are done unlocking tests for this question!")
 
-def __unlock_code(case, hash_fn):
-    num_prompts = case.num_prompts
-    lines = case.lines
-    outputs = iter(case.outputs)
-    answers = []
-    for line in lines:
-        if len(lines) > 1 and not line.startswith('$'):
-            if line.startswith(' '): # indented
-                print(PS2 + line)
-            else:
-                print(PS1 + line)
-            continue
-        line = line.replace('$ ', '')
-        print(PS1 + line)
-        answer = handle_student_input(next(outputs), prompt, hash_fn)
-        if answer is None:
-            return
-        answers.append(answer)
-    case[1] = answers
-    case[2] += 'unlock'
-    print("-- Congratulations, you have unlocked this case! --")
-    print()
+class UnlockException(BaseException):
+    pass
 
-def __unlock_concept(case, hash_fn):
-    underline('Concept Question', under='-')
-    print(split(case[0], join_str='\n'))
-    answer = handle_student_input(case[1][0], prompt, hash_fn)
-    if answer is None:
-        return
-    case[1] = [answer]
-    case[2] += 'unlock'
-    print("-- Congratulations, you have unlocked this case! --")
-    print()
+class UnlockConsole(OkConsole):
+    PROMPT = '? '
+    EXIT_INPUTS = (
+        'exit()',
+        'quit()',
+    )
 
-def handle_student_input(output, prompt, hash_fn):
-    """Reads student input for unlocking tests.
+    def __init__(self, logger, verification_fn):
+        super().__init__(logger)
+        self.verify = verification_fn
 
-    PARAMETERS:
-    output  -- str or tuple; if str, represents the hashed version of
-               the correct output. If tuple, represents a sequence of
-               choices (strings) from which the student can choose
-    prompt  -- str; the prompt to display when asking for student input
-    hash_fn -- function; hash function
+    def run(self, case):
+        self._activate_logger()
 
-    DESCRIPTION:
-    Continually prompt the student for an answer to an unlocking
-    question until one of the folliwng happens:
-
-        `1. The student supplies the correct answer, in which case
-            the supplied answer is returned
-         2. The student aborts abnormally (either by typing 'exit()' or
-            using Ctrl-C/D. In this case, return None
-
-    Correctness is determined by hashing student input and comparing
-    to the parameter "output", which is a hashed version of the correct
-    answer. If the hashes are equal, the student answer is assumed to
-    be correct.
-
-    RETURNS:
-    str  -- the correct solution (that the student supplied)
-    None -- indicates an abnormal exit from input prompt
-    """
-    answer = output
-    correct = False
-    while not correct:
-        if type(output) == tuple:
-            print()
-            print("Choose the number of the correct choice:")
-            for i, choice in enumerate(random.sample(output, len(output))):
-                print('    ' + str(i) + ') ' + split(choice, join_str='\n       '))
-                if choice == output[0]:
-                    answer = hash_fn(str(i))
-        sys.stdout = sys.__stdout__
         try:
-            student_input = input(prompt + ' ')
-        except (KeyboardInterrupt, EOFError):
-            try:
-                print('\nExiting unlocker...')
-            # When you use Ctrl+C in Windows, it throws
-            # two exceptions, so you need to catch both of
-            # them.... aka Windows is terrible.
-            except (KeyboardInterrupt, EOFError):
-                pass
-            return
-        finally:
-            sys.stdout = logger
-        if student_input in ('exit()', 'quit()'):
+            if case.is_conceptual:
+                answers = self.__run_code(case)
+            else:
+                answers = self.__run_concept(case)
+        except UnlockException:
             print('\nExiting unlocker...')
-            return
-        correct = hash_fn(student_input) == answer
-        if not correct:
-            print("-- Not quite. Try again! --")
-    if type(output) == tuple:
-        student_input = output[0]
-    return student_input
+        else:
+            case.set_outputs(answers)
+            case.unlock()
+            print("-- Congratulations, you have unlocked this case! --")
+            print()
+
+        self._deactivate_logger()
+
+    def __run_code(self, case):
+        outputs = iter(case.outputs)
+        answers = []
+        for line in case.lines:
+            if line.startswith(' '):  # Line is indented.
+                print(PS2 + line)
+                continue
+            line = maybe_strip_prompt(line)
+            print(PS1 + line)
+            # TODO(albert): handle choices.
+            answer = self.interact(next(outputs))
+            answers.append(answer)
+        return answers
+
+    def __run_concept(self, case):
+        print('\n'.join(case.lines))
+        # TODO(albert): handle choices.
+        answer = self.interact(case[1][0])
+        return [answer]
+
+    def interact(self, expected, choices=None):
+        """Reads student input for unlocking tests.
+
+        PARAMETERS:
+        output  -- str; the hashed version of the correct output.
+        choices -- list; sequence of choices (strings) from which
+                   the student can choose
+
+        DESCRIPTION:
+        Continually prompt the student for an answer to an unlocking
+        question until one of the folliwng happens:
+
+            1. The student supplies the correct answer, in which case
+               the supplied answer is returned
+            2. The student aborts abnormally (either by typing 'exit()'
+               or using Ctrl-C/D. In this case, return None
+
+        Correctness is determined by hashing student input and
+        comparing to the parameter "output", which is a hashed version
+        of the correct answer. If the hashes are equal, the student
+        answer is assumed to be correct.
+
+        RETURNS:
+        str  -- the correct solution (that the student supplied)
+        """
+        correct = False
+        while not correct:
+            if choices:
+                # TODO(albert): have better format for multiple
+                # choice.
+                print("Choose the number of the correct choice:")
+                for i, choice in enumerate(random.sample(output, len(choices))):
+                    print('    ' + str(i) + ') ' + split(choice, join_str='\n       '))
+                    if choice == output[0]:
+                        answer = hash_fn(str(i))
+            try:
+                student_input = input(prompt + ' ')
+            except (KeyboardInterrupt, EOFError):
+                try:
+                    # TODO(albert): When you use Ctrl+C in Windows, it
+                    # throws two exceptions, so you need to catch both
+                    # of them. Find a cleaner fix for this.
+                except (KeyboardInterrupt, EOFError):
+                    pass
+                raise UnlockException
+            if student_input in EXIT_INPUTS:
+                raise UnlockException
+
+            self.__add_line_to_history(student_input)
+            correct = self.verify(student_input, answer)
+            if not correct:
+                print("-- Not quite. Try again! --")
+        return student_input
+
+    @staticmethod
+    def __add_line_to_history(line):
+        """Adds the given line to readline history, only if the line
+        is non-empty.
+        """
+        if line:
+            readline.add_history(line)
