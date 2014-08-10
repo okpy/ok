@@ -21,12 +21,6 @@ persistent=yes
 # usually to register additional checkers.
 load-plugins=
 
-# DEPRECATED
-include-ids=no
-
-# DEPRECATED
-symbols=no
-
 
 [MESSAGES CONTROL]
 
@@ -44,7 +38,7 @@ symbols=no
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=C,W,import-error,locally-disabled,cyclic-import,no-name-in-module,too-few-public-methods,too-many-public-methods
+disable=R,fixme,invalid-name,broad-except,import-error,missing-docstring,star-args,dangerous-default-value,protected-access,import-error,locally-disabled,cyclic-import,no-name-in-module
 
 
 [REPORTS]
@@ -60,7 +54,7 @@ output-format=text
 files-output=no
 
 # Tells whether to display a full report or only the messages
-reports=yes
+reports=no
 
 # Python expression which should return a note less than 10 (10 is the highest
 # note). You have access to the variables errors warning, statement which
