@@ -41,11 +41,15 @@ class UnlockConsoleTest(unittest.TestCase):
     # Test run method #
     ###################
 
-    def runTest(self, input_case, output_case=None):
-        if not output_case:
-            output_case = input_case.copy()
-        self.console.run(input_case)    # Modifies input_case.
-        self.assertCaseEqual(output_case, input_case)
+    def runTest(self, in_case, out_case=None, should_error=False):
+        if not out_case:
+            out_case = input_case.copy()
+        error = self.console.run(in_case)    # Modifies input_case.
+        if should_error:
+            self.assertTrue(error)
+        else:
+            self.assertFalse(error)
+        self.assertCaseEqual(out_case, in_case)
 
     def testRun_codeSinglePromptSuccess(self):
         self.register_input('7', 'exit()')
@@ -75,7 +79,7 @@ class UnlockConsoleTest(unittest.TestCase):
             TestCaseAnswer(self.encode('7')),
         ]), MockTestCase(outputs=[
             TestCaseAnswer(self.encode('7')),
-        ]))
+        ]), should_error=True)
 
     def testRun_codeEOFError(self):
         self.register_input(EOFError)
@@ -85,7 +89,7 @@ class UnlockConsoleTest(unittest.TestCase):
             TestCaseAnswer(self.encode('7')),
         ]), MockTestCase(outputs=[
             TestCaseAnswer(self.encode('7')),
-        ]))
+        ]), should_error=True)
 
     def testRun_codeKeyboardInterrupt(self):
         self.register_input(KeyboardInterrupt)
@@ -95,7 +99,7 @@ class UnlockConsoleTest(unittest.TestCase):
             TestCaseAnswer(self.encode('7')),
         ]), MockTestCase(outputs=[
             TestCaseAnswer(self.encode('7')),
-        ]))
+        ]), should_error=True)
 
     def testRun_codeMultiPromptCorrect(self):
         self.register_input('7', '6', 'exit()')
@@ -121,7 +125,8 @@ class UnlockConsoleTest(unittest.TestCase):
         ]), MockTestCase(outputs=[
             TestCaseAnswer(self.encode('7')),
             TestCaseAnswer(self.encode('6')),
-        ], locked=True))
+        ], locked=True),
+        should_error=True)
 
     def testRun_codeMultipleChoice(self):
         self.register_choices()
@@ -148,6 +153,78 @@ class UnlockConsoleTest(unittest.TestCase):
         ], concept=True), MockTestCase(outputs=[
             TestCaseAnswer('7'),
         ], locked=False, concept=True))
+
+class UnlockTest(unittest.TestCase):
+    def setUp(self):
+        self.console = MockUnlockConsole()
+
+    def unlockTest(self, test, expected_unlocked):
+        cases_unlocked = unlock(test, self.console)
+        self.assertEqual(expected_unlocked, cases_unlocked)
+
+    def testNoSuites(self):
+        test = MockTest()
+        self.unlockTest(test, 0)
+
+    def testOneSuite_success(self):
+        test = MockTest(suites=[
+            [MockTestCase(),
+             MockTestCase()]
+        ])
+        self.console.when_run_return(False)
+        self.unlockTest(test, 2)
+
+    def testOneSuite_onePassOneFail(self):
+        test = MockTest(suites=[
+            [MockTestCase(),
+             MockTestCase()]
+        ])
+        self.console.when_run_return(False, True)
+        self.unlockTest(test, 1)
+
+    def testOneSuite_allFail(self):
+        test = MockTest(suites=[
+            [MockTestCase(),
+             MockTestCase()]
+        ])
+        self.console.when_run_return(True)
+        self.unlockTest(test, 0)
+
+    def testTwoSuites_success(self):
+        test = MockTest(suites=[
+            [MockTestCase(),
+             MockTestCase()],
+            [MockTestCase()]
+        ])
+        self.console.when_run_return(False)
+        self.unlockTest(test, 3)
+
+    def testTwoSuites_halfSuccess(self):
+        test = MockTest(suites=[
+            [MockTestCase(),
+             MockTestCase()],
+            [MockTestCase()]
+        ])
+        self.console.when_run_return(False, False, True)
+        self.unlockTest(test, 2)
+
+    def testTwoSuites_fail(self):
+        test = MockTest(suites=[
+            [MockTestCase(),
+             MockTestCase()],
+            [MockTestCase()]
+        ])
+        self.console.when_run_return(True)
+        self.unlockTest(test, 0)
+
+    def testTwoSuites_withUnlockedTests(self):
+        test = MockTest(suites=[
+            [MockTestCase(locked=False),
+             MockTestCase()],
+            [MockTestCase()]
+        ])
+        self.console.when_run_return(False)
+        self.unlockTest(test, 2)
 
 #########
 # Mocks #
@@ -197,3 +274,19 @@ class MockTestCase:
                 or isinstance(other, TestCase)) \
                 and other.status == self.status \
                 and other.outputs == self.outputs
+
+class MockUnlockConsole:
+    def __init__(self):
+        self.errors = [False]
+        self.counter = 0
+
+    def when_run_return(self, *errors):
+        self.errors = errors
+        self.counter = 0
+
+    def run(self, case):
+        error = self.errors[self.counter]
+        if self.counter < len(self.errors) - 1:
+            self.counter += 1
+        return error
+

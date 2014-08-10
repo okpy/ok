@@ -7,6 +7,7 @@ from utils import underline, maybe_strip_prompt, OkConsole
 # UNLOCKING MECHANISM #
 #######################
 
+# TODO(albert): move this to locking mechanism
 # def __make_hash_fn(hash_key, encoding='utf-8'):
 #     def hash_fn(x):
 #         return hmac.new(hash_key.encode(encoding),
@@ -84,6 +85,10 @@ class UnlockConsole(OkConsole):
         super().__init__(logger)
         self.verify = verification_fn
 
+    ##################
+    # Public methods #
+    ##################
+
     def run(self, case):
         """Runs an interactive session for unlocking a single TestCase.
 
@@ -95,6 +100,10 @@ class UnlockConsole(OkConsole):
         modified to contain the unlocked TestCaseAnswer, and the
         TestCase will be marked as unlocked. If the user aborts before
         successful completion, the TestCase will left untouched.
+
+        RETURNS:
+        bool; True if an error/abort occurs, False if the TestCase is
+        unlocked successfully.
         """
         self._activate_logger()
 
@@ -103,15 +112,41 @@ class UnlockConsole(OkConsole):
                 answers = self.__run_code(case)
             else:
                 answers = self.__run_concept(case)
-        except UnlockException:
+        except _UnlockException:
             print('\nExiting unlocker...')
+            return True
         else:
             case.set_outputs(answers)
             case.unlock()
             print("-- Congratulations, you unlocked this case! --")
             print()
+            return False
+        finally:
+            self._deactivate_logger()
 
-        self._deactivate_logger()
+    #######################
+    # Visible for testing #
+    #######################
+
+    def _input(self, prompt):
+        """Retrieves user input from stdin."""
+        return input(prompt)
+
+    def _display_choices(self, choices):
+        """Prints a mapping of numbers to choices and returns the
+        mapping as a dictionary.
+        """
+        print("Choose the number of the correct choice:")
+        choice_map = {}
+        for i, choice in enumerate(random.sample(choices, len(choices))):
+            i = str(i)
+            print(i + ') ' + choice)
+            choice_map[i] = choice
+        return choice_map
+
+    ###################
+    # Private methods #
+    ###################
 
     def __run_code(self, case):
         """Runs an unlocking session for a code TestCase."""
@@ -148,10 +183,10 @@ class UnlockConsole(OkConsole):
             2. The student aborts abnormally (either by typing 'exit()'
                or using Ctrl-C/D. In this case, return None
 
-        Correctness is determined by hashing student input and
-        comparing to the parameter "output", which is a hashed version
-        of the correct answer. If the hashes are equal, the student
-        answer is assumed to be correct.
+        Correctness is determined by the verification function passed
+        into the constructor. The verification function returns True
+        if the student answer matches the locked answer. The student's
+        answer is then used as the new TestCaseAnswer of the TestCase.
 
         RETURNS:
         str  -- the correct solution (that the student supplied)
@@ -171,9 +206,9 @@ class UnlockConsole(OkConsole):
                     print()
                 except (KeyboardInterrupt, EOFError):
                     pass
-                raise UnlockException
+                raise _UnlockException
             if student_input in self.EXIT_INPUTS:
-                raise UnlockException
+                raise _UnlockException
 
             self.__add_line_to_history(student_input)
 
@@ -183,30 +218,6 @@ class UnlockConsole(OkConsole):
             if not correct:
                 print("-- Not quite. Try again! --")
         return student_input
-
-    #######################
-    # Visible for testing #
-    #######################
-
-    def _input(self, prompt):
-        """Retrieves user input from stdin."""
-        return input(prompt)
-
-    def _display_choices(self, choices):
-        """Prints a mapping of numbers to choices and returns the
-        mapping as a dictionary.
-        """
-        print("Choose the number of the correct choice:")
-        choice_map = {}
-        for i, choice in enumerate(random.sample(choices, len(choices))):
-            i = str(i)
-            print(i + ') ' + choice)
-            choice_map[i] = choice
-        return choice_map
-
-    ###################
-    # Private methods #
-    ###################
 
     @staticmethod
     def __add_line_to_history(line):
