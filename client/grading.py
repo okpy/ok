@@ -189,11 +189,9 @@ def __run_suite(suite, frame, console, num_cases, verbose, interactive):
             console.logger.on()
             return passed, True  # students must unlock first
         elif case.is_conceptual and verbose:
-            # TODO(albert): better printing format for concept
-            # question.
             underline('Concept question', line='-')
             print(indent('\n'.join(case.lines), '   '))
-            print(indent('A: ' + outputs[0], '    '))
+            print(indent('A: ' + case.outputs[0].answer, '    '))
             print()
 
         if case.is_conceptual:
@@ -303,9 +301,6 @@ class TestingConsole(OkConsole):
         self._deactivate_logger()
         return error, self.log
 
-    # TODO(albert): this method is useful outside of the context of
-    # the AutograderConsole object. Consider moving it outside of this
-    # class.
     @staticmethod
     def exec(expr, frame, expected=None):
         """Executes or evaluates a given expression in the provided
