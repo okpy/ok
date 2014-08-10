@@ -78,7 +78,7 @@ class Assignment(Base):
     name = ndb.StringProperty() # Must be unique to support submission.
     # TODO(denero) Validate uniqueness of name.
     points = ndb.FloatProperty()
-    creator = ndb.StructuredProperty(User)
+    creator = ndb.KeyProperty(User)
 
 
 class Course(Base):
@@ -86,7 +86,7 @@ class Course(Base):
     institution = ndb.StringProperty() # E.g., 'UC Berkeley'
     name = ndb.StringProperty() # E.g., 'CS 61A'
     offering = ndb.StringProperty()  # E.g., 'Fall 2014'
-    assignments = ndb.StructuredProperty(Assignment, repeated=True)
+    assignments = ndb.KeyProperty(Assignment, repeated=True)
     due_dates = ndb.DateTimeProperty(repeated=True)
     creator = ndb.StructuredProperty(User)
 
@@ -110,8 +110,8 @@ def validate_messages(_, messages):
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
-    submitter = ndb.StructuredProperty(User)
-    assignment = ndb.StructuredProperty(Assignment)
+    submitter = ndb.KeyProperty(User)
+    assignment = ndb.KeyProperty(Assignment)
     messages = ndb.StringProperty(validator=validate_messages)
     created = ndb.DateTimeProperty(auto_now_add=True)
 

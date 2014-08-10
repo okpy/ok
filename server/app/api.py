@@ -118,8 +118,8 @@ class SubmitNDBImplementation:
 
     def create_submission(self, user, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
-        submission =  models.Submission(submitter=user,
-                                        assignment=assignment,
+        submission =  models.Submission(submitter=user.key,
+                                        assignment=assignment.key,
                                         messages=messages)
         submission.put()
         return submission
@@ -154,6 +154,8 @@ class SubmissionAPI(MethodView, APIResource):
 
     @handle_error
     def post(self, user=None):
+        if 'submitter' in request.json:
+            del request.json['submitter']
         for key in request.json:
             if key not in self.post_fields:
                 return create_api_response(400, 'Unknown field %s' % key)
@@ -184,12 +186,12 @@ class SubmissionAPI(MethodView, APIResource):
             return create_api_response(400, "user for submission doesn't exist")
         return create_api_response(200, "", obj)
 
-    def index(self, user):
+    def index(self, user=None):
         """
         Index HTTP method thing.
         """
         return create_api_response(
-            200, "success", list(self.get_model().query(self.get_model().submitter.email == user.email)))
+            200, "success", list(self.get_model().query(self.get_model().submitter == user.key)))
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int', admin=False):
     """
