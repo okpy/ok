@@ -194,6 +194,7 @@ class SubmissionAPI(MethodView, APIResource):
         if user:
             all_subms = self.get_model().query(self.get_model().submitter == user)
         else:
+            # TODO(martinis) security issue, change this
             all_subms = self.get_model().query()
         return create_api_response(
             200, "success", list(all_subms))
