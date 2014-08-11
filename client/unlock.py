@@ -31,8 +31,8 @@ def unlock(test, console):
     written. Once a TestCase is unlocked, it will remain unlocked.
 
     RETURN:
-    int; the number of unlocked cases for this Test after going through
-    an unlocking session.
+    int; the number of cases that are newly unlocked for this Test
+    after going through an unlocking session.
     """
     # TODO(albert): move printing outside of this function
     if not test.suites:
@@ -64,8 +64,21 @@ class _UnlockException(BaseException):
     pass
 
 class UnlockConsole(OkConsole):
-    PROMPT = '? '
-    EXIT_INPUTS = (
+    """Handles an interactive session for unlocking a TestCase.
+
+    An instance of this class can be (and should be) reused for
+    multiple TestCases. This class keeps an output log that is
+    registered with the OutputLogger class, but is currently not
+    used.
+
+    The verification function that is passed into the constructor is
+    used to verify whether or not a student's attempt to unlock a
+    TestCase is correct. This function can be any arbitrary funcion
+    that takes two arguments -- (1) the student input, and (2) the
+    locked version of the correct TestCaseAnswer.
+    """
+    PROMPT = '? '       # Prompt that is used for user input.
+    EXIT_INPUTS = (     # Valid user inputs for aborting the session.
         'exit()',
         'quit()',
     )
@@ -169,7 +182,8 @@ class UnlockConsole(OkConsole):
         return [TestCaseAnswer(answer)]
 
     def __interact(self, output):
-        """Reads student input for unlocking tests.
+        """Reads student input for unlocking tests until the student
+        answers correctly.
 
         PARAMETERS:
         output  -- TestCaseAnswer; a locked test case answer.

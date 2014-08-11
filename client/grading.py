@@ -2,7 +2,15 @@ import readline
 import sys
 import traceback
 from code import InteractiveConsole, compile_command
-from utils import underline, timed, TimeoutError, indent, maybe_strip_prompt, OkConsole, Counter
+from utils import (
+    Counter,
+    OkConsole,
+    TimeoutError,
+    indent,
+    maybe_strip_prompt,
+    timed,
+    underline,
+)
 
 class Test(object):
     """Represents all suites for a single test in an assignment."""
@@ -169,8 +177,8 @@ def _run_suite(suite, frame, console, cases_tested, verbose,
     frame        -- dict; global frame
     console      -- AutograderConsole; the same console is used for
                     for all cases in the suite.
-    cases_tested -- int; number of cases that preceded the current
-                    suite. This is used for numbering TestCases.
+    cases_tested -- Counter; an object that keeps track of the
+                    number of cases that have been tested so far.
     verbose      -- bool; True if verbose mode is toggled on
     interactive  -- bool; True if interactive mode is toggled on
 
@@ -179,17 +187,13 @@ def _run_suite(suite, frame, console, cases_tested, verbose,
     made by the test. The TestCase's teardown code will always be
     executed after the primary code is done.
 
-    Expected output and actual output are tested on shallow equality
-    (==). If a test fails, the function will immediately exit.
-
-    The OutputLogger with which the AutograderConsole is registered
+    The OutputLogger with which the TestingConsole is registered
     should always be set to standard output before calling this
     function, and it will always be set to standard output after
     leaving this function.
 
     RETURNS:
     (passed, errored), where
-
     passed  -- int; number of TestCases that passed
     errored -- bool; True if the entire Test should abort, False
                otherwise
@@ -250,6 +254,13 @@ class TestingConsole(OkConsole):
     """
     PS1 = '>>> '
     PS2 = '... '
+
+    def __init__(self, logger, equal_fn=None):
+        super().__init__(logger)
+        if equal_fn:
+            self.equal = equal_fn
+        else:
+            self.equal = lambda x, y: x == y
 
     ##################
     # Public methods #
@@ -313,8 +324,7 @@ class TestingConsole(OkConsole):
         self._deactivate_logger()
         return error, self.log
 
-    @staticmethod
-    def exec(expr, frame, expected=None):
+    def exec(self, expr, frame, expected=None):
         """Executes or evaluates a given expression in the provided
         frame.
 
@@ -381,7 +391,7 @@ class TestingConsole(OkConsole):
         else:
             if expected:
                 print(repr(actual))
-            if expected and expect != actual:
+            if expected and not self.equal(expect, actual):
                 print('# Error: expected {0} got {1}'.format(
                     repr(expect), repr(actual)))
                 return True
