@@ -119,7 +119,7 @@ class SubmitNDBImplementation:
 
     def create_submission(self, user, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
-        submission =  models.Submission(submitter=user.key,
+        submission =  models.Submission(submitter=user.key if user else None,
                                         assignment=assignment.key,
                                         messages=messages)
         submission.put()
@@ -150,12 +150,12 @@ class SubmissionAPI(MethodView, APIResource):
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment, messages)
         return create_api_response(200, "success", {
-            'key': submission.key()
+            'key': submission.key.id()
         })
 
     @handle_error
     def post(self, user=None):
-        if 'submitter' in request.json:
+        if 'submitter' in request.json: # change this
             del request.json['submitter']
         for key in request.json:
             if key not in self.post_fields:

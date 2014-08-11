@@ -9,10 +9,8 @@ from flask import jsonify, request, Response, json
 def create_api_response(status, message, data=None):
     """Creates a JSON response that contains status code (HTTP),
     an arbitrary message string, and a dictionary or list of data"""
-    print data
     if request.args.get('format', 'default') == 'raw':
         response = Response(json.dumps(data))
-        print response.data
     else:
         response = jsonify(**{
             'status': status,

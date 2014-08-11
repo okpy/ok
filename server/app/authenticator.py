@@ -28,6 +28,7 @@ class GoogleAuthenticator(Authenticator):
     API_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
 
     def authenticate(self, access_token):
+        print 'heey'
         response = requests.get(self.API_URL, params={
             'access_token': access_token
         }).json()

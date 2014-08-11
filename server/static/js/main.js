@@ -1,5 +1,7 @@
 var app = angular.module('okpy', ['ngResource', 'ui.router']);
 // TODO https://github.com/chieffancypants/angular-loading-bar
+// http://ngmodules.org/modules/MacGyver
+// https://github.com/localytics/angular-chosen
 
 app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider',
   function($stateProvider, $urlRouterProvider, $locationProvider, Restangular) {
@@ -28,7 +30,7 @@ app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider',
       controller: "AssignmentListCtrl"
     }
 
-    var assignmentDetail = {
+    var assignmentList = {
       name: 'assignment.list',
       url: '',
       templateUrl: 'static/partials/assignment_list.html',
@@ -46,6 +48,7 @@ app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider',
       state(submissions).
       state(submissionsDetail).
       state(assignmentDetail).
+      state(assignmentList).
       state(assignments)
       ;
   }]);
@@ -58,7 +61,7 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-    $scope.submissions = Submission.query()
+    $scope.submissions = Submission.query();
   }]);
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
@@ -68,18 +71,55 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
 
 app.factory('Assignment', ['$resource',
     function($resource) {
-      return $resource('api/v1/assignment', {format: "raw"});
+      return $resource('api/v1/assignment/:id', {format: "raw"});
     }
   ]);
 
+function transformSubmission(data) {
+  var old_submitter = data.submitter;
+  data.submitter_s = function() {
+    return old_submitter || "anonymous";
+  }
+  return data;
+}
+app.config(['$httpProvider',
+    function($httpProvider) {
+      $httpProvider.interceptors.push(['$q',
+        function($q) {
+          return {
+            response: function (response, a) {
+              config = response.config;
+              if (! (/^api\/v1/).test(config.url)) {
+                return response;
+              }
+              url = config.url.slice(7);
+
+              if (url !== "submission") {
+                return response;
+              }
+              data = response.data;
+              if (angular.isArray(data)) {
+                console.log("hey");
+                angular.forEach(data, transformSubmission);
+              }
+              else {
+                data = transformSubmission(data);
+              }
+              response.data = data;
+              return response;
+            }
+          }
+        }]);
+  }]);
+
 app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
   function($scope, Assignment) {
-    $scope.assignments = Assignment.query()
+    $scope.assignments = Assignment.query();
   }]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
     function ($scope, $stateParams, Assignment) {
-      $scope.submission = Assignment.get({id: $stateParams.assignmentId});
+      $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
     }
   ]);
 
