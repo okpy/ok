@@ -10,6 +10,7 @@ from app import constants
 MODEL_BLUEPRINT = Blueprint('models', __name__)
 
 from app import app
+from app.permissions import Permission
 from flask import json
 from flask.json import JSONEncoder as old_json
 
@@ -58,6 +59,11 @@ class Base(ndb.Model):
                 pass
         return result
 
+class UserPermission(Permission):
+    name = "user"
+
+    def satisfies(self, user):
+        return user.key == self._obj.key
 
 class User(Base):
     """Users."""
@@ -70,6 +76,25 @@ class User(Base):
     def __repr__(self):
         return '<User %r>' % self.email
 
+    @classmethod
+    def get_or_insert(cls, email, **kwargs):
+        kwargs['email'] = email
+        return super(cls, User).get_or_insert('<%s>' % email, **kwargs)
+
+    def attempt_access(self, resource):
+        for permission in resource.permissions:
+            if not permission.satisfies(self):
+                return permission
+
+    @property
+    def permissions(self):
+        return [UserPermission(self)]
+
+class AssignmentPermission(Permission):
+    name = "assignment"
+
+    def satisfies(self, user):
+        return True
 
 class Assignment(Base):
     """
@@ -79,6 +104,10 @@ class Assignment(Base):
     # TODO(denero) Validate uniqueness of name.
     points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User)
+
+    @property
+    def permissions(self):
+        return [AssignmentPermission(self)]
 
 
 class Course(Base):
@@ -107,6 +136,11 @@ def validate_messages(_, messages):
     except Exception as exc:
         raise BadValueError(exc)
 
+class SubmissionPermission(Permission):
+    name = "submission"
+
+    def satisfies(self, user):
+        return self._obj.submitter == user.key # or user.is_admin
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
@@ -114,4 +148,8 @@ class Submission(Base):
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.StringProperty(validator=validate_messages)
     created = ndb.DateTimeProperty(auto_now_add=True)
+
+    @property
+    def permissions(self):
+        return [SubmissionPermission(self)]
 

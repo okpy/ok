@@ -207,7 +207,7 @@ class APITest(object): #pylint: disable=no-init
 
     def test_get_non_admin(self):
         """Tests that a get with a student access token fails."""
-        self.get('/{}'.format(self.name), access_token='dummy_student')
+        self.get('/{}/1'.format(self.name), access_token='dummy_student')
         self.assertStatusCode(401)
 
     ## ENTITY POST ##
@@ -312,8 +312,7 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self._assign = models.Assignment(name=self.assignment_name, points=3)
         self._assign.put()
         self._submitter = models.User.get_or_insert(
-            '<submitter@gmail.com>',
-            email="submitter@gmail.com"
+            'submitter@gmail.com',
         )
         self._submitter.put()
 

@@ -1,7 +1,8 @@
 from google.appengine.api import memcache
 
+from app import models
 from app import app
-from app.constants import API_PREFIX, ADMIN_ROLE
+from app.constants import API_PREFIX, ADMIN_ROLE, STUDENT_ROLE
 from app.utils import create_api_response
 from app.decorators import handle_error
 from app.authenticator import AuthenticationException
@@ -41,12 +42,14 @@ def requires_authenticated_user(admin=False, required=False):
                     memcache.set(mc_key, email,  # pylint: disable=no-member
                                  time=60)
                 try:
-                    user = authenticator.get_user(email)
+                    user = models.User.get_or_insert(email,
+                            role=(ADMIN_ROLE if admin else STUDENT_ROLE))
                 except AuthenticationException as e:
                     return create_api_response(401, e.message)
             if admin and (not user or (user.role != ADMIN_ROLE)):
                 return create_api_response(401,
                                            "user lacks permission for this request")
+
             return func(*args, user=user, **kwargs)
         return decorated
     return requires_user_with_privileges

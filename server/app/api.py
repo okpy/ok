@@ -8,7 +8,7 @@ from flask.app import request
 from app import app
 from app import models
 from app.models import BadValueError
-from app.constants import API_PREFIX
+from app.constants import API_PREFIX, STUDENT_ROLE
 from app.utils import create_api_response
 from app.auth import requires_authenticated_user
 from app.decorators import handle_error
@@ -29,18 +29,24 @@ class APIResource(object):
         """
         raise NotImplementedError
 
+    def check_permissions(self, method, role=STUDENT_ROLE):
+        return self.permissions[method].get(role, False)
+
     @handle_error
     def get(self, key, user=None):
         """
         The GET HTTP method
         """
         if key is None:
-            return self.index()
+            return self.index(user)
         obj = self.get_model().get_by_id(key)
         if not obj:
             return create_api_response(404, "{resource} {key} not found"
                                        .format(resource=self.name,
                                                key=key))
+        access_error = user.attempt_access(obj)
+        if access_error:
+            return create_api_response(401, "access denied. lacking " + str(access_error))
         return create_api_response(200, "", obj)
 
     @handle_error
@@ -82,7 +88,7 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success")
 
-    def index(self):
+    def index(self, user=None):
         """
         Index HTTP method thing.
         """
@@ -169,22 +175,6 @@ class SubmissionAPI(MethodView, APIResource):
                                request.json['messages'])
         except BadValueError as e:
             return create_api_response(400, e.message)
-
-    @handle_error
-    def get(self, key, user=None):
-        """
-        The GET HTTP method
-        """
-        if key is None:
-            return self.index(user)
-        obj = self.get_model().get_by_id(key)
-        if not obj:
-            return create_api_response(404, "{resource} {key} not found"
-                                       .format(resource=self.name,
-                                               key=key))
-        if not obj.submitter:
-            return create_api_response(400, "user for submission doesn't exist")
-        return create_api_response(200, "", obj)
 
     def index(self, user=None):
         """
