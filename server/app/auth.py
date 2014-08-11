@@ -13,7 +13,7 @@ from functools import wraps
 MC_NAMESPACE = "access-token"
 
 
-def requires_authenticated_user(admin=False):
+def requires_authenticated_user(admin=False, required=False):
     """Decorator that determines which user made the request
     and passes it to the decorated function. The wrapped function
     is called with keyword arg called 'user' that is a user object."""
@@ -23,24 +23,28 @@ def requires_authenticated_user(admin=False):
         def decorated(*args, **kwargs):  #pylint: disable=too-many-return-statements
             authenticator = app.config["AUTHENTICATOR"]
             if 'access_token' not in request.args:
-                return create_api_response(401,
-                                           "access token required "
-                                           "for this method")
-            access_token = request.args['access_token']
-            mc_key = "%s-%s" % (MC_NAMESPACE, access_token)
-            email = memcache.get(mc_key) # pylint: disable=no-member
-            if not email:
+                if required:
+                    return create_api_response(401,
+                                               "access token required "
+                                               "for this method")
+                else:
+                    user = None
+            else:
+                access_token = request.args['access_token']
+                mc_key = "%s-%s" % (MC_NAMESPACE, access_token)
+                email = memcache.get(mc_key) # pylint: disable=no-member
+                if not email:
+                    try:
+                        email = authenticator.authenticate(access_token)
+                    except AuthenticationException as e:
+                        return create_api_response(401, e.message)
+                    memcache.set(mc_key, email,  # pylint: disable=no-member
+                                 time=60)
                 try:
-                    email = authenticator.authenticate(access_token)
+                    user = authenticator.get_user(email)
                 except AuthenticationException as e:
                     return create_api_response(401, e.message)
-                memcache.set(mc_key, email,  # pylint: disable=no-member
-                             time=60)
-            try:
-                user = authenticator.get_user(email)
-            except AuthenticationException as e:
-                return create_api_response(401, e.message)
-            if admin and user.role != ADMIN_ROLE:
+            if admin and (not user or (user.role != ADMIN_ROLE)):
                 return create_api_response(401,
                                            "user lacks permission for this request")
             return func(*args, user=user, **kwargs)
