@@ -59,6 +59,15 @@ class Base(ndb.Model):
                 pass
         return result
 
+class LoggedInPermission(Permission):
+    name = "anon_user"
+
+    def __init__(self):
+        pass
+
+    def satisfies(self, user):
+        return True
+
 class UserPermission(Permission):
     name = "user"
 
@@ -76,19 +85,54 @@ class User(Base):
     def __repr__(self):
         return '<User %r>' % self.email
 
+    @property
+    def is_admin(self):
+        return self.role is not constants.STUDENT_ROLE
+
+    @classmethod
+    def from_dict(cls, values):
+        """Creates an instance from the given values."""
+        if 'email' not in values:
+            raise ValueError("Need to specify an email")
+        inst = cls(key=ndb.Key('User', values['email']))
+        inst.populate(**values) #pylint: disable=star-args
+        return inst
+
     @classmethod
     def get_or_insert(cls, email, **kwargs):
+        assert not isinstance(id, int), "Only string keys allowed for users"
         kwargs['email'] = email
-        return super(cls, User).get_or_insert('<%s>' % email, **kwargs)
+        return super(cls, User).get_or_insert(email, **kwargs)
 
-    def attempt_access(self, resource):
-        for permission in resource.permissions:
+    @classmethod
+    def get_by_id(cls, id, **kwargs):
+        assert not isinstance(id, int), "Only string keys allowed for users"
+        return super(cls, User).get_by_id(id, **kwargs)
+
+    def attempt_access(self, resource_model, resource):
+        for permission in getattr(resource_model, 'class_permissions', ()):
             if not permission.satisfies(self):
                 return permission
+        if resource:
+            for permission in getattr(resource, 'permissions', ()):
+                if not permission.satisfies(self):
+                    return permission
+
+    class_permissions = [LoggedInPermission()]
 
     @property
     def permissions(self):
         return [UserPermission(self)]
+
+class AnonymousUser(User):
+    def put(self, *args, **kwds):
+        return
+
+    @property
+    def permissions(self):
+        return [UserPermission(self)]
+
+AnonymousUser = AnonymousUser()
 
 class AssignmentPermission(Permission):
     name = "assignment"
@@ -140,7 +184,7 @@ class SubmissionPermission(Permission):
     name = "submission"
 
     def satisfies(self, user):
-        return self._obj.submitter == user.key # or user.is_admin
+        return user.is_admin or self._obj.submitter == user.key
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""

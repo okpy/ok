@@ -14,12 +14,12 @@ from functools import wraps
 MC_NAMESPACE = "access-token"
 
 
-def requires_authenticated_user(admin=False, required=False):
+def requires_authenticated_user(required=False):
     """Decorator that determines which user made the request
     and passes it to the decorated function. The wrapped function
     is called with keyword arg called 'user' that is a user object."""
     def requires_user_with_privileges(func):
-        """Higher order function that takes into account admin permissions"""
+        """Higher order function"""
         @wraps(func)
         def decorated(*args, **kwargs):  #pylint: disable=too-many-return-statements
             authenticator = app.config["AUTHENTICATOR"]
@@ -29,7 +29,7 @@ def requires_authenticated_user(admin=False, required=False):
                                                "access token required "
                                                "for this method")
                 else:
-                    user = None
+                    user = models.AnonymousUser
             else:
                 access_token = request.args['access_token']
                 mc_key = "%s-%s" % (MC_NAMESPACE, access_token)
@@ -41,15 +41,7 @@ def requires_authenticated_user(admin=False, required=False):
                         return create_api_response(401, e.message)
                     memcache.set(mc_key, email,  # pylint: disable=no-member
                                  time=60)
-                try:
-                    user = models.User.get_or_insert(email,
-                            role=(ADMIN_ROLE if admin else STUDENT_ROLE))
-                except AuthenticationException as e:
-                    return create_api_response(401, e.message)
-            if admin and (not user or (user.role != ADMIN_ROLE)):
-                return create_api_response(401,
-                                           "user lacks permission for this request")
-
+                user = models.User.get_by_id(email) or models.AnonymousUser
             return func(*args, user=user, **kwargs)
         return decorated
     return requires_user_with_privileges

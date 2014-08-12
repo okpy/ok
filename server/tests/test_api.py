@@ -15,9 +15,41 @@ from flask import json
 
 from test_base import BaseTestCase #pylint: disable=relative-import
 
-from app.api import API_PREFIX #pylint: disable=import-error
+from google.appengine.ext import ndb
+
+from app.constants import API_PREFIX, STUDENT_ROLE, ADMIN_ROLE #pylint: disable=import-error
 from app import models, constants, authenticator #pylint: disable=import-error
 from app import app
+from app.authenticator import Authenticator, AuthenticationException
+
+ACCOUNTS = {
+    "dummy_student": models.User(
+        key=ndb.Key('User', "dummy@student.com"),
+        email="dummy@student.com",
+        first_name="Dummy",
+        last_name="Jones",
+        login="some13413"
+    ),
+    "dummy_admin": models.User(
+        key=ndb.Key('User', "dummy@admin.com"),
+        email="dummy@admin.com",
+        first_name="Admin",
+        last_name="Jones",
+        login="albert",
+        role=ADMIN_ROLE
+    ),
+}
+
+class DummyAuthenticator(Authenticator):
+    def authenticate(self, access_token):
+        if access_token in ACCOUNTS:
+            return ACCOUNTS[access_token].email
+        if access_token == "bad_access_token":
+            raise AuthenticationException("access token invalid")
+        return "%s@gmail.com" % access_token
+
+    def get_user(self, email):
+        return super(DummyAuthenticator, self).get_user(email, "admin" in email)
 
 class APITest(object): #pylint: disable=no-init
     """
@@ -26,7 +58,6 @@ class APITest(object): #pylint: disable=no-init
     model = None
     name = ""
     num = 1
-    access_token = 'dummy_student'
 
     @classmethod
     def get_basic_instance(cls):
@@ -40,12 +71,22 @@ class APITest(object): #pylint: disable=no-init
 
         Creates the instance of the model you're API testing."""
         super(APITest, self).setUp()
-        app.config["AUTHENTICATOR"] = authenticator.DummyAuthenticator()
+        app.config["AUTHENTICATOR"] = DummyAuthenticator()
+        self.login('dummy_student')
+        for user in ACCOUNTS.values():
+            user.put()
 
-    def add_access_token(self, url, kwds):
-        access_token = kwds.pop('access_token', self.access_token)
+    def login(self, user):
+        self.user = user
+
+    def logout(self):
+        self.user = None
+
+    def add_access_token(self, url):
+        if not self.user:
+            return url
         params = {
-            'access_token': access_token
+            'access_token': self.user
         }
         url_parts = list(urlparse.urlparse(url))
         query = dict(urlparse.parse_qsl(url_parts[4]))
@@ -58,7 +99,7 @@ class APITest(object): #pylint: disable=no-init
         """
         Makes a get request.
         """
-        url = self.add_access_token(url, kwds)
+        url = self.add_access_token(url)
         self.response = self.client.get(API_PREFIX + url)
         try:
             response_json = json.loads(self.response.data)['data']
@@ -82,7 +123,7 @@ class APITest(object): #pylint: disable=no-init
         """
         Makes a post request, with json.
         """
-        url = self.add_access_token(url, kwds)
+        url = self.add_access_token(url)
         kwds.setdefault('content_type', 'application/json')
         self.response = self.client.post(API_PREFIX + url, *args, **kwds)
         try:
@@ -124,7 +165,10 @@ class APITest(object): #pylint: disable=no-init
 
     def assertStatusCode(self, code): #pylint: disable=invalid-name
         """Asserts the status code."""
-        response_json = json.loads(self.response.data)
+        try:
+            response_json = json.loads(self.response.data)
+        except Exception as e:
+            self.assertTrue(False, self.response.data)
         self.assertEqual(self.response.status_code, code,
                          response_json['message'])
 
@@ -165,14 +209,20 @@ class APITest(object): #pylint: disable=no-init
         """
         inst = self.get_basic_instance()
         inst.put()
-        inst2 = self.get_basic_instance()
+        inst2 = self.get_basic_instance(mutate=True)
         inst2.put()
         self.get_index()
-        self.assertJson(sorted([inst.to_json(), inst2.to_json()]))
+        self.assertTrue(inst.to_json() in self.response_json,
+                        self.response_json)
+        self.assertTrue(inst2.to_json() in self.response_json,
+                        self.response_json)
 
         inst2.key.delete()
         self.get_index()
-        self.assertJson([inst.to_json()])
+        self.assertTrue(inst.to_json() in self.response_json,
+                        self.response_json)
+        self.assertTrue(inst2.to_json() not in self.response_json,
+                        self.response_json)
 
     ## ENTITY GET ##
 
@@ -180,6 +230,8 @@ class APITest(object): #pylint: disable=no-init
         """Tests that a basic get works."""
         inst = self.get_basic_instance()
         inst.put()
+        import pdb
+        #pdb.set_trace()
         self.get_entity(inst)
         self.assertJson(inst.to_json())
 
@@ -200,15 +252,11 @@ class APITest(object): #pylint: disable=no-init
         self.get('/{}/1'.format(self.name))
         self.assertStatusCode(404)
 
-    def test_get_bad_permissions(self):
-        """Tests that a get with an invalid access token fails."""
-        self.get('/{}'.format(self.name), access_token='bad_access_token')
-        self.assertStatusCode(401)
-
     def test_get_non_admin(self):
         """Tests that a get with a student access token fails."""
-        self.get('/{}/1'.format(self.name), access_token='dummy_student')
-        self.assertStatusCode(401)
+        self.logout()
+        self.get('/{}/1'.format(self.name))
+        self.assertStatusCode(404)
 
     ## ENTITY POST ##
 
@@ -221,6 +269,20 @@ class APITest(object): #pylint: disable=no-init
         gotten = self.get_by_id(self.response_json['key'])
         self.assertEqual(gotten.key, inst.key)
 
+    def test_create_two_entities(self):
+        inst = self.get_basic_instance()
+        self.post_entity(inst)
+        self.assertStatusCode(200)
+        gotten = self.get_by_id(self.response_json['key'])
+
+        inst2 = self.get_basic_instance(mutate=True)
+        self.post_entity(inst2)
+        self.assertStatusCode(200)
+        gotten2 = self.get_by_id(self.response_json['key'])
+
+        self.assertEqual(gotten.key, inst.key)
+        self.assertEqual(gotten2.key, inst2.key)
+
     ## ENTITY PUT ##
 
     ## ENTITY DELETE ##
@@ -228,22 +290,23 @@ class APITest(object): #pylint: disable=no-init
 class UserAPITest(APITest, BaseTestCase):
     model = models.User
     name = 'user'
+    access_token = 'dummy_student'
     num = 1
-    access_token = 'dummy_admin'
 
     @classmethod
-    def get_basic_instance(cls):
-        rval = models.User(email=str(cls.num) + u'test@example.com',
-                           first_name=u'Joe', last_name=u'Schmoe',
-                           role=constants.STUDENT_ROLE)
-        cls.num += 1
-        return rval
-
-    def test_index_empty(self):
-        """Tests there are no entities when the db is created."""
-        self.get('/{}'.format(self.name))
-        self.assertStatusCode(200)
-        self.assertEqual(len(self.response_json), 1)
+    def get_basic_instance(cls, mutate=False):
+        if mutate:
+            email = str(cls.num) + "test@example.com"
+            cls.num += 1
+            return models.User(
+                key=ndb.Key('User', email),
+                email=email,
+                first_name="Test",
+                last_name="User",
+                login="aotnehu"
+            )
+        else:
+            return ACCOUNTS['dummy_student']
 
     def test_get_invalid_id_errors(self):
         """Tests that a get on an invalid ID errors."""
@@ -269,24 +332,6 @@ class UserAPITest(APITest, BaseTestCase):
         self.assertTrue(inst.to_json() not in self.response_json)
 
 
-    def test_index_one_removed_from_two(self):
-        """
-        Tests that removing one item out of two in the DB makes sure
-        the other item is still found.
-        """
-        inst = self.get_basic_instance()
-        inst.put()
-        inst2 = self.get_basic_instance()
-        inst2.put()
-        self.get_index()
-        self.assertTrue(inst.to_json() in self.response_json)
-        self.assertTrue(inst2.to_json() in self.response_json)
-
-        inst2.key.delete()
-        self.get_index()
-        self.assertTrue(inst.to_json() in self.response_json)
-        self.assertTrue(inst2.to_json() not in self.response_json)
-
 class AssignmentAPITest(APITest, BaseTestCase):
     model = models.Assignment
     name = 'assignment'
@@ -294,9 +339,12 @@ class AssignmentAPITest(APITest, BaseTestCase):
     access_token = 'dummy_admin'
 
     @classmethod
-    def get_basic_instance(cls):
-        rval = models.Assignment(name=u'proj' + str(cls.num), points=3)
-        cls.num += 1
+    def get_basic_instance(cls, mutate=True):
+        name = 'proj'
+        if mutate:
+            name += str(cls.num)
+            cls.num += 1
+        rval = models.Assignment(name=name, points=3)
         return rval
 
 class SubmissionAPITest(APITest, BaseTestCase):
@@ -311,15 +359,16 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self.assignment_name = u'test assignment'
         self._assign = models.Assignment(name=self.assignment_name, points=3)
         self._assign.put()
-        self._submitter = models.User.get_or_insert(
-            'submitter@gmail.com',
-        )
-        self._submitter.put()
+        self._submitter = ACCOUNTS['dummy_student']
+        self.login('dummy_student')
 
-    def get_basic_instance(self):
+    def get_basic_instance(self, mutate=True):
+        message = "{}"
+        if mutate:
+            message = "{" + str(self.num) + "}"
+            self.num += 1
         rval = models.Submission(messages="{}", submitter=self._submitter.key,
                                  assignment=self._assign.key)
-        self.num += 1
         return rval
 
     def post_entity(self, inst, *args, **kwds):
@@ -327,9 +376,8 @@ class SubmissionAPITest(APITest, BaseTestCase):
         data = inst.to_json()
         data['assignment'] = kwds.pop('assignment', self.assignment_name)
         del data['created']
-        del data['submitter']
 
-        self.post_json('/{}/new?access_token={}'.format(self.name, self.access_token),
+        self.post_json('/{}/new'.format(self.name),
                        data=data, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:

@@ -29,9 +29,6 @@ class APIResource(object):
         """
         raise NotImplementedError
 
-    def check_permissions(self, method, role=STUDENT_ROLE):
-        return self.permissions[method].get(role, False)
-
     @handle_error
     def get(self, key, user=None):
         """
@@ -40,13 +37,13 @@ class APIResource(object):
         if key is None:
             return self.index(user)
         obj = self.get_model().get_by_id(key)
+        access_error = user.attempt_access(self.get_model(), obj)
+        if access_error:
+            return create_api_response(401, access_error.get_message())
         if not obj:
             return create_api_response(404, "{resource} {key} not found"
                                        .format(resource=self.name,
                                                key=key))
-        access_error = user.attempt_access(obj)
-        if access_error:
-            return create_api_response(401, "access denied. lacking " + str(access_error))
         return create_api_response(200, "", obj)
 
     @handle_error
@@ -65,11 +62,11 @@ class APIResource(object):
         """
         post_dict = request.json
         retval, new_mdl = self.new_entity(post_dict)
-        if retval:
+        if not retval:
             return create_api_response(200, "success", {
-                'key': new_mdl.key
+                'key': new_mdl.key.id()
             })
-        return create_api_response(500, "could not create resource")
+        return retval
 
     def new_entity(self, attributes):
         """
@@ -77,7 +74,7 @@ class APIResource(object):
         """
         new_mdl = self.get_model().from_dict(attributes)
         new_mdl.put()
-        return True, new_mdl
+        return None, new_mdl
 
     @handle_error
     def delete(self, user_id, user=None):
@@ -103,6 +100,22 @@ class UserAPI(MethodView, APIResource):
     @classmethod
     def get_model(cls):
         return models.User
+
+    def new_entity(self, attributes):
+        """
+        Creates a new entity with given attributes.
+        """
+        try:
+            mdl = self.get_model().get_by_id(attributes['email'])
+        except ValueError:
+            return (create_api_response(400, 'Email required'), 
+                    None)
+        if mdl:
+            return (create_api_response(400, '%s already exists' % (
+                self.name.capitalize())), None)
+        new_mdl = self.get_model().from_dict(attributes)
+        new_mdl.put()
+        return None, new_mdl
 
 
 class AssignmentAPI(MethodView, APIResource):
@@ -183,19 +196,19 @@ class SubmissionAPI(MethodView, APIResource):
         return create_api_response(
             200, "success", list(self.get_model().query(self.get_model().submitter == user.key)))
 
-def register_api(view, endpoint, url, primary_key='key', pk_type='int', admin=False):
+def register_api(view, endpoint, url, primary_key='key', pk_type='int:', admin=False):
     """
     Registers the given view at the endpoint, accessible by the given url.
     """
     url = API_PREFIX + url
-    view_func = requires_authenticated_user(admin=admin)(view.as_view(endpoint))
+    view_func = requires_authenticated_user()(view.as_view(endpoint))
     app.add_url_rule(url, defaults={primary_key: None},
                      view_func=view_func, methods=['GET', ])
     app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST', ])
-    app.add_url_rule('%s/<%s:%s>' % (url, pk_type, primary_key),
+    app.add_url_rule('%s/<%s%s>' % (url, pk_type, primary_key),
                      view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
 # TODO(denero) Add appropriate authentication requirements
-register_api(UserAPI, 'user_api', '/user', admin=True)
+register_api(UserAPI, 'user_api', '/user', admin=True, pk_type='')
 register_api(AssignmentAPI, 'assignment_api', '/assignment', admin=True)
 register_api(SubmissionAPI, 'submission_api', '/submission')

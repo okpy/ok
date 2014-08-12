@@ -7,8 +7,8 @@ class Permission(object):
     def __init__(self, obj):
         self._obj = obj
 
-    def __str__(self):
-        return "Permission"
+    def get_message(self):
+        return "No permission to access " + str(self._obj.__class__.__name__)
 
 
 
