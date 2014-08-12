@@ -10,6 +10,7 @@ class UnlockConsoleTest(unittest.TestCase):
         self.logger = OutputLogger()
         verify = lambda x, y: self.encode(x) == y
         self.console = UnlockConsole(self.logger, verify)
+        self.register_choices()
 
     def register_input(self, *student_input):
         input_num = 0
@@ -129,7 +130,6 @@ class UnlockConsoleTest(unittest.TestCase):
         should_error=True)
 
     def testRun_codeMultipleChoice(self):
-        self.register_choices()
         self.register_input('1', 'exit()')
         self.runTest(MockTestCase(lines=[
             '$ 3 + 4',
@@ -141,7 +141,6 @@ class UnlockConsoleTest(unittest.TestCase):
         ], locked=False))
 
     def testRun_concept(self):
-        self.register_choices()
         self.register_input('1', 'exit()')
         self.runTest(MockTestCase(lines=[
             '$ These dollar signs',
