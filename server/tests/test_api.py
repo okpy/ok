@@ -17,7 +17,7 @@ from test_base import BaseTestCase #pylint: disable=relative-import
 
 from google.appengine.ext import ndb
 
-from app.constants import API_PREFIX, STUDENT_ROLE, ADMIN_ROLE #pylint: disable=import-error
+from app.constants import API_PREFIX, ADMIN_ROLE #pylint: disable=import-error
 from app import models, constants, authenticator #pylint: disable=import-error
 from app import app
 from app.authenticator import Authenticator, AuthenticationException
@@ -60,7 +60,7 @@ class APITest(object): #pylint: disable=no-init
     num = 1
 
     @classmethod
-    def get_basic_instance(cls):
+    def get_basic_instance(cls, mutate=False):
         """
         Gets a basic instance of the model class.
         """
@@ -73,11 +73,11 @@ class APITest(object): #pylint: disable=no-init
         super(APITest, self).setUp()
         app.config["AUTHENTICATOR"] = DummyAuthenticator()
         self.login('dummy_student')
-        for user in ACCOUNTS.values():
-            user.put()
 
     def login(self, user):
         self.user = user
+        if user in ACCOUNTS:
+            ACCOUNTS[user].put()
 
     def logout(self):
         self.user = None
@@ -167,7 +167,7 @@ class APITest(object): #pylint: disable=no-init
         """Asserts the status code."""
         try:
             response_json = json.loads(self.response.data)
-        except Exception as e:
+        except Exception:
             self.assertTrue(False, self.response.data)
         self.assertEqual(self.response.status_code, code,
                          response_json['message'])
@@ -230,8 +230,6 @@ class APITest(object): #pylint: disable=no-init
         """Tests that a basic get works."""
         inst = self.get_basic_instance()
         inst.put()
-        import pdb
-        #pdb.set_trace()
         self.get_entity(inst)
         self.assertJson(inst.to_json())
 
@@ -262,7 +260,7 @@ class APITest(object): #pylint: disable=no-init
 
     def test_entity_create_basic(self):
         """Tests creating an empty entity."""
-        inst = self.get_basic_instance()
+        inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
         self.assertStatusCode(200)
 
@@ -270,7 +268,7 @@ class APITest(object): #pylint: disable=no-init
         self.assertEqual(gotten.key, inst.key)
 
     def test_create_two_entities(self):
-        inst = self.get_basic_instance()
+        inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
         self.assertStatusCode(200)
         gotten = self.get_by_id(self.response_json['key'])
@@ -307,6 +305,14 @@ class UserAPITest(APITest, BaseTestCase):
             )
         else:
             return ACCOUNTS['dummy_student']
+
+    def test_index_empty(self):
+        """
+        You can't see any users unless you're logged in, so it doesn't make
+        sense to have this test for the User API
+        """
+        pass
+
 
     def test_get_invalid_id_errors(self):
         """Tests that a get on an invalid ID errors."""
@@ -367,8 +373,9 @@ class SubmissionAPITest(APITest, BaseTestCase):
         if mutate:
             message = "{" + str(self.num) + "}"
             self.num += 1
-        rval = models.Submission(messages="{}", submitter=self._submitter.key,
-                                 assignment=self._assign.key)
+        rval = models.Submission(
+                messages=message, submitter=self._submitter.key,
+                assignment=self._assign.key)
         return rval
 
     def post_entity(self, inst, *args, **kwds):
