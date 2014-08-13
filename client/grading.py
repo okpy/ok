@@ -2,14 +2,22 @@ import readline
 import sys
 import traceback
 from code import InteractiveConsole, compile_command
-from utils import underline, timed, TimeoutError, indent, dedent
+from utils import (
+    Counter,
+    OkConsole,
+    TimeoutError,
+    indent,
+    maybe_strip_prompt,
+    timed,
+    underline,
+)
 
 class Test(object):
     """Represents all suites for a single test in an assignment."""
     # TODO(albert): fill in stubs
 
     def __init__(self):
-        self.suites = []
+        self.suites = []    # TODO(albert): filter out empty suites
         self.names = []
         self.points = 0
         # TODO(albert): all string values should be dedented
@@ -18,6 +26,8 @@ class Test(object):
         # TODO(albert): setup and teardown are always initialized, for
         # convenience. The values are lists of lines -- some
         # processing is necessary.
+        self.setup = {}
+        self.teardown = {}
 
     @property
     def name(self):
@@ -27,6 +37,20 @@ class Test(object):
         str; the name of the test
         """
         return self.names[0]
+
+    @property
+    def total_cases(self):
+        return sum(len(suite) for suite in suites)
+
+    @property
+    def total_locked(self):
+        return [case.is_locked for suite in suites
+                               for case in suite].count(True)
+
+    @property
+    def total_concept(self):
+        return [case.is_conceptual for suite in suites
+                                   for case in suite].count(True)
 
 class TestCase(object):
     """Represents a single test case."""
@@ -38,11 +62,13 @@ class TestCase(object):
         # lines is equal to the number of outputs
         # TODO(albert): scan lines for $; if no $ found, add one to
         # the last line.
-        self.lines = []     # Includes setup and code.
-        self.outputs = []
+        self.__lines = []     # Does not include setup code
+        self.__outputs = []   # TestCaseAnswer objects
         self.status = {}
         self.type = ''
-        self.teardown = ''  # Given by Test.
+        self.test = None    # The Test this case belongs to.
+        self.suite_num = 0  # The suite this TestCase belongs to.
+        self.num_prompts = 0 # Number of prompts in self.lines.
 
     @property
     def is_graded(self):
@@ -55,6 +81,38 @@ class TestCase(object):
     @property
     def is_conceptual(self):
         return self.status.get('concept', False)
+
+    @property
+    def lines(self):
+        """Returns lines of code for the setup and actual test case."""
+        # TODO(albert)
+
+    @property
+    def teardown(self):
+        """Returns the teardown code for this particular TestCase."""
+        # TODO(albert)
+
+    @property
+    def outputs(self):
+        return self.__outputs
+
+    def unlock(self):
+        self.status.setdefault('lock', False)
+
+    def set_outputs(self, new_outputs):
+        self.__outputs = new_outputs
+
+class TestCaseAnswer(object):
+    """Represents an answer for a single TestCase."""
+    # TODO(albert): fill in stubs.
+    def __init__(self, answer, choices=None):
+        self.answer = answer
+        self.choices = choices or []
+
+    def __eq__(self, other):
+        return isinstance(other, TestCaseAnswer) \
+                and other.answer == self.answer \
+                and other.choices == self.choices
 
 #####################
 # Testing Mechanism #
@@ -91,58 +149,51 @@ def run(test, frame, console, interactive=False, verbose=False):
         except Exception as e:
             print('Cache for', name, 'errored:', e)
 
+    cases_tested = Counter()
     total_passed = 0
-    total_cases = 0
     for suite in test.suites:
-        passed, abort = __run_suite(suite, frame, console, total_cases,
+        passed, error = _run_suite(suite, frame, console, cases_tested,
                  verbose, interactive)
-        # TODO(albert): Have better counting -- total should be the
-        # number of cases run, not the number cases in a suite.
         total_passed += passed
-        total_cases += [case.is_graded for case in suite].count(True)
-        if abort:
+        if error:
             break
 
-    locked_cases = [case.is_locked for suite in test.suites
-                                   for case in suite].count(True)
+    # TODO(albert): Move stats printing outside of this function
+    # total_cases = test.total_cases
+    # if total_cases > 0:
+    #     print('Passed: {} ({}%)'.format(total_passed,
+    #                                     total_passed/total_cases))
+    #     print('Locked: {} ({}%)'.format(test.total_locked,
+    #                                     test.total_locked/total_cases))
+    # print()
+    return total_passed
 
-    if total_passed == total_cases:
-        print('All unlocked tests passed!')
-    if locked_cases > 0:
-        print('-- NOTE: {} still has {} locked cases! --'.format(
-            test.name, locked_cases))
-    print()
-    return total_passed, total_cases
-
-def __run_suite(suite, frame, console, num_cases, verbose, interactive):
+def _run_suite(suite, frame, console, cases_tested, verbose,
+        interactive):
     """Runs tests for a single suite.
 
     PARAMETERS:
-    suite       -- list; each element is a TestCase
-    frame       -- dict; global frame
-    console     -- AutograderConsole; the same console is used for
-                   for all cases in the suite.
-    num_cases   -- int; number of cases that preceded the current
-                   suite. This is used for numbering TestCases.
-    verbose     -- bool; True if verbose mode is toggled on
-    interactive -- bool; True if interactive mode is toggled on
+    suite        -- list; each element is a TestCase
+    frame        -- dict; global frame
+    console      -- AutograderConsole; the same console is used for
+                    for all cases in the suite.
+    cases_tested -- Counter; an object that keeps track of the
+                    number of cases that have been tested so far.
+    verbose      -- bool; True if verbose mode is toggled on
+    interactive  -- bool; True if interactive mode is toggled on
 
     DESCRIPTION:
     For each TestCase, a new frame is created and houses all bindings
     made by the test. The TestCase's teardown code will always be
     executed after the primary code is done.
 
-    Expected output and actual output are tested on shallow equality
-    (==). If a test fails, the function will immediately exit.
-
-    The OutputLogger with which the AutograderConsole is registered
+    The OutputLogger with which the TestingConsole is registered
     should always be set to standard output before calling this
     function, and it will always be set to standard output after
     leaving this function.
 
     RETURNS:
     (passed, errored), where
-
     passed  -- int; number of TestCases that passed
     errored -- bool; True if the entire Test should abort, False
                otherwise
@@ -152,28 +203,27 @@ def __run_suite(suite, frame, console, num_cases, verbose, interactive):
         if case.is_locked:
             console.logger.on()
             return passed, True  # students must unlock first
-        elif case.is_conceptual and verbose:
-            # TODO(albert): better printing format for concept
-            # question.
+        cases_tested.increment()
+
+        if case.is_conceptual and verbose:
             underline('Concept question', line='-')
             print(indent('\n'.join(case.lines), '   '))
-            print(indent('A: ' + outputs[0], '    '))
+            print(indent('A: ' + case.outputs[0].answer, '    '))
             print()
-
         if case.is_conceptual:
+            passed += 1
             continue
 
-        num_cases += 1
         if not verbose:
             console.logger.off()
-        underline('Case {}'.format(num_cases), line='-')
+        underline('Case {}'.format(cases_tested), line='-')
 
         code = case.lines
         error, log = console.run(case, frame)
 
         if error and not verbose:
             console.logger.on()
-            underline('Case {} failed'.format(num_cases), line='-')
+            underline('Case {} failed'.format(cases_tested), line='-')
             print(''.join(log).strip())
         if error and interactive:
             console.interact(frame)
@@ -187,7 +237,7 @@ def __run_suite(suite, frame, console, num_cases, verbose, interactive):
     console.logger.on()
     return passed, False
 
-class AutograderConsole:
+class TestingConsole(OkConsole):
     """Handles test evaluation and output formatting for a single
     TestCase.
 
@@ -202,17 +252,19 @@ class AutograderConsole:
     that were executed by the run method are also saved to the
     readline history.
     """
-
     PS1 = '>>> '
     PS2 = '... '
 
-    def __init__(self, logger):
-        """Constructor.
+    def __init__(self, logger, equal_fn=None):
+        super().__init__(logger)
+        if equal_fn:
+            self.equal = equal_fn
+        else:
+            self.equal = lambda x, y: x == y
 
-        PARAMETERS:
-        logger -- OutputLogger
-        """
-        self.logger = logger
+    ##################
+    # Public methods #
+    ##################
 
     def run(self, case, frame=None):
         """Executes lines of code in the provided frame.
@@ -241,34 +293,25 @@ class AutograderConsole:
         log   -- list; a list of lines of output, as captured by the
                  OutputLogger.
         """
-        outputs = iter(case.outputs)
-        frame = frame.copy() if frame else {}
-
-        log = []
-        self.logger.register_log(log)
         # TODO(albert): Windows machines don't have a readline module.
         readline.clear_history()
+        self._activate_logger()
+
+        outputs = iter(case.outputs)
+        frame = frame.copy() if frame else {}
 
         error = False
         current  = ''
         for line in case.lines + ['']:
-            if line:
-                readline.add_history(line.replace('$ ', ''))
-
+            self.__add_line_to_history(line)
             if line.startswith(' ') or self.__incomplete(current):
                 print(self.PS2 + line)
                 current += line + '\n'
                 continue
-
             elif current.startswith('$ '):
-                output = next(outputs)
-                if type(output) == list:
-                    # TODO(albert): have a better way to encode
-                    # the correct solution to a multiple choice
-                    # question.
-                    output = output[0]
-                error = self.exec(current.replace('$ ', ''), frame,
-                        output)
+                output = next(outputs).answer
+                error = self.exec(maybe_strip_prompt(current),
+                        frame, expected=output)
                 if error:
                     break
             else:
@@ -277,15 +320,11 @@ class AutograderConsole:
                     break
             current = line + '\n'
             if line != '':
-                print(self.PS1 + line.replace('$ ', ''))
-        self.logger.register_log(None)
-        return error, log
+                print(self.PS1 + maybe_strip_prompt(line))
+        self._deactivate_logger()
+        return error, self.log
 
-    # TODO(albert): this method is useful outside of the context of
-    # the AutograderConsole object. Consider moving it outside of this
-    # class.
-    @staticmethod
-    def exec(expr, frame, expected=None):
+    def exec(self, expr, frame, expected=None):
         """Executes or evaluates a given expression in the provided
         frame.
 
@@ -352,14 +391,14 @@ class AutograderConsole:
         else:
             if expected:
                 print(repr(actual))
-            if expected and expect != actual:
+            if expected and not self.equal(expect, actual):
                 print('# Error: expected {0} got {1}'.format(
                     repr(expect), repr(actual)))
                 return True
             else:
                 return False
 
-    def interact(self, frame):
+    def interact(self, frame=None):
         """Starts an InteractiveConsole, using the variable bindings
         defined in the given frame.
 
@@ -367,18 +406,30 @@ class AutograderConsole:
         to the run method. This method can be used to interact with
         any frame.
         """
-        # TODO(albert): logger should fully implement output stream
-        # interface so we can avoid doing this swap here.
-        sys.stdout = sys.__stdout__
-        console = InteractiveConsole(locals=frame.copy())
-        console.interact('# Interactive console.'
-                         ' Type exit() to quit')
-        sys.stdout = self.logger
+        self._deactivate_logger()
+        if not frame:
+            frame = {}
+        else:
+            frame = frame.copy()
+        console = InteractiveConsole(frame)
+        console.interact('# Interactive console. Type exit() to quit')
+
+    ###################
+    # Private methods #
+    ###################
+
+    @staticmethod
+    def __add_line_to_history(line):
+        """Adds the given line to readline history, only if the line
+        is non-empty. If the line starts with a prompt symbol, the
+        prompt is stripped from the line.
+        """
+        if line:
+            readline.add_history(maybe_strip_prompt(line))
 
     @staticmethod
     def __incomplete(line):
         """Check if the given line can be a complete line of Python."""
-        if line.startswith('$ '):
-            line = line[2:]
+        line = maybe_strip_prompt(line)
         return compile_command(line) is None
 

@@ -11,6 +11,7 @@ from threading import Thread
 
 class OutputLogger:
     """Custom logger for capturing and suppressing standard output."""
+    # TODO(albert): logger should fully implement output stream.
 
     def __init__(self):
         self._current_stream = self._stdout = sys.stdout
@@ -35,7 +36,7 @@ class OutputLogger:
         """
         self._log = log
 
-    def isOn(self):
+    def is_on(self):
         return self._current_stream == self._stdout
 
     @property
@@ -72,6 +73,26 @@ def underline(text, line='='):
              style
     """
     print(text + '\n' + line * len(text))
+
+def maybe_strip_prompt(text):
+    if text.startswith('$ '):
+        text = text[2:]
+    return text
+
+class Counter(object):
+    def __init__(self):
+        self._count = 0
+
+    @property
+    def number(self):
+        return self._count
+
+    def increment(self):
+        self._count += 1
+        return self._count
+
+    def __repr__(self):
+        return str(self._count)
 
 #####################
 # TIMEOUT MECHANISM #
@@ -138,4 +159,62 @@ class __ReturningThread(Thread):
             e._message = traceback.format_exc(limit=2)
             self.error = e
 
+###########
+# Console #
+###########
+
+class OkConsole:
+    """An abstract class that handles console sessions for ok.py.
+
+    An instance of this class can be (and should be) reused for
+    multiple TestCases. Each instance of this class keeps an output
+    log that is registered with an OutputLogger object. External code
+    can access this log to replay output at a later time.
+    """
+    def __init__(self, logger):
+        """Constructor.
+
+        PARAMETERS:
+        logger -- OutputLogger
+        """
+        self.log = None
+        self._logger = logger
+        self._stdout = None
+
+    ##################
+    # Public methods #
+    ##################
+
+    def run(self, case):
+        """Runs a session of the Console for the given TestCase.
+
+        PARAMETERS:
+        case -- TestCase.
+
+        DESCRIPTION:
+        Subclasses that override this method should call the
+        _read_lines generator method, which handles output logging.
+        """
+        raise NotImplementedError
+
+    @property
+    def logger(self):
+        return self._logger
+
+    #######################################
+    # Subclass-accessible private methods #
+    #######################################
+
+    def _activate_logger(self):
+        if sys.stdout is not self._logger:
+            self.log = []
+            self._logger.register_log(self.log)
+            self._stdout = sys.stdout
+            sys.stdout = self._logger
+
+    def _deactivate_logger(self):
+        if self._stdout:
+            sys.stdout = self._stdout
+            self._stdout = None
+            self._logger.register_log(None)
 
