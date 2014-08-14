@@ -11,6 +11,7 @@ MODEL_BLUEPRINT = Blueprint('models', __name__)
 
 from app import app
 from app.permissions import Permission
+from app.needs import Need
 from flask import json
 from flask.json import JSONEncoder as old_json
 
@@ -59,6 +60,7 @@ class Base(ndb.Model):
                 pass
         return result
 
+
 class LoggedInPermission(Permission):
     name = "anon_user"
 
@@ -67,12 +69,6 @@ class LoggedInPermission(Permission):
 
     def satisfies(self, user):
         return True
-
-class UserPermission(Permission):
-    name = "user"
-
-    def satisfies(self, user):
-        return user.key == self._obj.key
 
 class User(Base):
     """Users."""
@@ -109,28 +105,28 @@ class User(Base):
         assert not isinstance(id, int), "Only string keys allowed for users"
         return super(cls, User).get_by_id(id, **kwargs)
 
-    def attempt_access(self, resource_model, resource):
-        for permission in getattr(resource_model, 'class_permissions', ()):
-            if not permission.satisfies(self):
-                return permission
-        if resource:
-            for permission in getattr(resource, 'permissions', ()):
-                if not permission.satisfies(self):
-                    return permission
-
-    class_permissions = [LoggedInPermission()]
-
     @property
-    def permissions(self):
-        return [UserPermission(self)]
+    def logged_in(self):
+        return True
+
+    @staticmethod
+    def user_satisfies_static(user, need):
+        return user.logged_in
+
+    def user_satisfies(self, user, need):
+        action, key = need.items
+        if action == "get":
+            return user.is_admin or self.key == key
+        else:
+            return False
 
 class AnonymousUser(User):
+    @property
+    def logged_in(self):
+        return False
+
     def put(self, *args, **kwds):
         return
-
-    @property
-    def permissions(self):
-        return [UserPermission(self)]
 
 AnonymousUser = AnonymousUser()
 
@@ -149,9 +145,12 @@ class Assignment(Base):
     points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User)
 
-    @property
-    def permissions(self):
-        return [AssignmentPermission(self)]
+    @staticmethod
+    def user_satisfies_static(user, need):
+        return user.logged_in
+
+    def user_satisfies(self, user, need):
+        return True
 
 
 class Course(Base):
@@ -193,7 +192,15 @@ class Submission(Base):
     messages = ndb.StringProperty(validator=validate_messages)
     created = ndb.DateTimeProperty(auto_now_add=True)
 
-    @property
-    def permissions(self):
-        return [SubmissionPermission(self)]
+    @staticmethod
+    def user_satisfies_static(user, need):
+        return True
+
+    def user_satisfies(self, user, need):
+        #TODO(martinis) add check for number of items
+        action, key = need.items
+        if action == "get":
+            return user.is_admin or self.submitter == key
+        else:
+            return False
 

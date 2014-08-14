@@ -8,6 +8,7 @@ from flask.app import request
 from app import app
 from app import models
 from app.models import BadValueError
+from app.needs import Need
 from app.constants import API_PREFIX, STUDENT_ROLE
 from app.utils import create_api_response
 from app.auth import requires_authenticated_user
@@ -36,24 +37,34 @@ class APIResource(object):
         """
         if key is None:
             return self.index(user)
+
+        need = Need('get')
+        if not self.get_model().user_satisfies_static(user, need):
+            return need.make_api_error()
+
         obj = self.get_model().get_by_id(key)
-        access_error = user.attempt_access(self.get_model(), obj)
-        if access_error:
-            return create_api_response(401, access_error.get_message())
         if not obj:
             return create_api_response(404, "{resource} {key} not found"
                                        .format(resource=self.name,
                                                key=key))
+
+        need = Need('get', key)
+        if not obj.user_satisfies(user, need):
+            return need.make_api_error()
         return create_api_response(200, "", obj)
 
-    @handle_error
-    def put(self, user=None):
-        """
-        The PUT HTTP method
-        """
-        new_mdl = self.get_model()()
-        new_mdl.put()
-        return create_api_response(200, "success")
+    # Not implemented for now; not used by anything right now
+    # @handle_error
+    # def put(self, user=None):
+    #     """
+    #     The PUT HTTP method
+    #     """
+    #     new_mdl = self.get_model()()
+    #     new_mdl.put()
+    #     access_error = user.attempt_access(self.get_model(), obj)
+    #     if access_error:
+    #         return create_api_response(401, access_error.get_message())
+    #     return create_api_response(200, "success")
 
     @handle_error
     def post(self, user=None):
@@ -61,7 +72,12 @@ class APIResource(object):
         The POST HTTP method
         """
         post_dict = request.json
+        need = Need('create')
+        if not self.get_model().user_satisfies_static(user, need):
+            return need.make_api_error()
+
         retval, new_mdl = self.new_entity(post_dict)
+
         if not retval:
             return create_api_response(200, "success", {
                 'key': new_mdl.key.id()
@@ -82,6 +98,9 @@ class APIResource(object):
         The DELETE HTTP method
         """
         ent = self.get_model().query.get(user_id)
+        access_error = user.attempt_access(self.get_model(), obj)
+        if access_error:
+            return create_api_response(401, access_error.get_message())
         ent.key.delete()
         return create_api_response(200, "success")
 
@@ -89,6 +108,10 @@ class APIResource(object):
         """
         Index HTTP method thing.
         """
+        need = Need('get')
+        if not self.get_model().user_satisfies_static(user, need):
+            return need.make_api_error()
+
         return create_api_response(
             200, "success", list(self.get_model().query()))
 
