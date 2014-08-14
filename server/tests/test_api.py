@@ -85,6 +85,8 @@ class APITest(object): #pylint: disable=no-init
             self.accounts[user].put()
 
     def logout(self):
+        if self.user in self.accounts:
+            self.accounts[self.user].key.delete()
         self.user = None
 
     def add_access_token(self, url):
@@ -312,12 +314,8 @@ class UserAPITest(APITest, BaseTestCase):
             return cls.accounts['dummy_student']
 
     def test_index_empty(self):
-        """
-        You can't see any users unless you're logged in, so it doesn't make
-        sense to have this test for the User API
-        """
-        pass
-
+        self.logout()
+        super(UserAPITest, self).test_index_empty()
 
     def test_get_invalid_id_errors(self):
         """Tests that a get on an invalid ID errors."""
