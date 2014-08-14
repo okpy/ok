@@ -22,28 +22,14 @@ from app import models, constants, authenticator #pylint: disable=import-error
 from app import app
 from app.authenticator import Authenticator, AuthenticationException
 
-ACCOUNTS = {
-    "dummy_student": lambda: models.User(
-        key=ndb.Key("User", "dummy@student.com"),
-        email="dummy@student.com",
-        first_name="Dummy",
-        last_name="Jones",
-        login="some13413"
-    ),
-    "dummy_admin": lambda: models.User(
-        key=ndb.Key("User", "dummy@admin.com"),
-        email="dummy@admin.com",
-        first_name="Admin",
-        last_name="Jones",
-        login="albert",
-        role=ADMIN_ROLE
-    ),
-}
 
 class DummyAuthenticator(Authenticator):
+    def __init__(self, accounts):
+        self.accounts = accounts
+
     def authenticate(self, access_token):
-        if access_token in ACCOUNTS:
-            return ACCOUNTS[access_token].email
+        if access_token in self.accounts:
+            return self.accounts[access_token].email
         if access_token == "bad_access_token":
             raise AuthenticationException("access token invalid")
         return "%s@gmail.com" % access_token
@@ -69,18 +55,34 @@ class APITest(object): #pylint: disable=no-init
     def setUp(self): #pylint: disable=super-on-old-class, invalid-name
         """Set up the API Test.
 
-        Creates the instance of the model you're API testing."""
+        Sets up the authenticator stub, and logs you in as a student"""
         super(APITest, self).setUp()
-        app.config["AUTHENTICATOR"] = DummyAuthenticator()
+        APITest.accounts = {
+            "dummy_student": models.User(
+                key=ndb.Key("User", "dummy@student.com"),
+                email="dummy@student.com",
+                first_name="Dummy",
+                last_name="Jones",
+                login="some13413"
+            ),
+            "dummy_admin": models.User(
+                key=ndb.Key("User", "dummy@admin.com"),
+                email="dummy@admin.com",
+                first_name="Admin",
+                last_name="Jones",
+                login="albert",
+                role=ADMIN_ROLE
+            ),
+        }
+        app.config["AUTHENTICATOR"] = DummyAuthenticator(self.accounts)
         self.user = None
         self.login('dummy_student')
 
     def login(self, user):
         assert not self.user
         self.user = user
-        if user in ACCOUNTS:
-            ACCOUNTS[user] = ACCOUNTS[user]()
-            ACCOUNTS[user].put()
+        if user in self.accounts:
+            self.accounts[user].put()
 
     def logout(self):
         self.user = None
@@ -307,7 +309,7 @@ class UserAPITest(APITest, BaseTestCase):
                 login="aotnehu"
             )
         else:
-            return ACCOUNTS['dummy_student']
+            return cls.accounts['dummy_student']
 
     def test_index_empty(self):
         """
@@ -368,7 +370,7 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self.assignment_name = u'test assignment'
         self._assign = models.Assignment(name=self.assignment_name, points=3)
         self._assign.put()
-        self._submitter = ACCOUNTS['dummy_student']
+        self._submitter = self.accounts['dummy_student']
         self.logout()
         self.login('dummy_student')
 
