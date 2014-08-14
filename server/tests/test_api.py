@@ -23,15 +23,15 @@ from app import app
 from app.authenticator import Authenticator, AuthenticationException
 
 ACCOUNTS = {
-    "dummy_student": models.User(
-        key=ndb.Key('User', "dummy@student.com"),
+    "dummy_student": lambda: models.User(
+        key=ndb.Key("User", "dummy@student.com"),
         email="dummy@student.com",
         first_name="Dummy",
         last_name="Jones",
         login="some13413"
     ),
-    "dummy_admin": models.User(
-        key=ndb.Key('User', "dummy@admin.com"),
+    "dummy_admin": lambda: models.User(
+        key=ndb.Key("User", "dummy@admin.com"),
         email="dummy@admin.com",
         first_name="Admin",
         last_name="Jones",
@@ -72,11 +72,14 @@ class APITest(object): #pylint: disable=no-init
         Creates the instance of the model you're API testing."""
         super(APITest, self).setUp()
         app.config["AUTHENTICATOR"] = DummyAuthenticator()
+        self.user = None
         self.login('dummy_student')
 
     def login(self, user):
+        assert not self.user
         self.user = user
         if user in ACCOUNTS:
+            ACCOUNTS[user] = ACCOUNTS[user]()
             ACCOUNTS[user].put()
 
     def logout(self):
@@ -366,12 +369,13 @@ class SubmissionAPITest(APITest, BaseTestCase):
         self._assign = models.Assignment(name=self.assignment_name, points=3)
         self._assign.put()
         self._submitter = ACCOUNTS['dummy_student']
+        self.logout()
         self.login('dummy_student')
 
     def get_basic_instance(self, mutate=True):
         message = "{}"
         if mutate:
-            message = "{" + str(self.num) + "}"
+            message = '{"value":' + str(self.num) + '}'
             self.num += 1
         rval = models.Submission(
                 messages=message, submitter=self._submitter.key,
