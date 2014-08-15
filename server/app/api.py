@@ -39,8 +39,7 @@ class APIResource(object):
             return self.index(user)
 
         need = Need('get')
-        if not self.get_model().user_satisfies_static(user, need):
-            return need.make_api_error()
+        self.get_model().must_satisfy_static(user, need)
 
         obj = self.get_model().get_by_id(key)
         if not obj:
@@ -49,8 +48,8 @@ class APIResource(object):
                                                key=key))
 
         need = Need('get', key)
-        if not obj.user_satisfies(user, need):
-            return need.make_api_error()
+        obj.must_satisfy(user, need)
+
         return create_api_response(200, "", obj)
 
     # Not implemented for now; not used by anything right now
@@ -73,8 +72,7 @@ class APIResource(object):
         """
         post_dict = request.json
         need = Need('create')
-        if not self.get_model().user_satisfies_static(user, need):
-            return need.make_api_error()
+        self.get_model().must_satisfy_static(user, need)
 
         retval, new_mdl = self.new_entity(post_dict)
 
@@ -109,8 +107,7 @@ class APIResource(object):
         Index HTTP method thing.
         """
         need = Need('get')
-        if not self.get_model().user_satisfies_static(user, need):
-            return need.make_api_error()
+        self.get_model().must_satisfy_static(user, need)
 
         return create_api_response(
             200, "success", list(self.get_model().query()))

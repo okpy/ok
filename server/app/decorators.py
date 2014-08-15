@@ -7,6 +7,7 @@ from google.appengine.api import users
 from flask import redirect, request, abort
 
 from app import utils
+from app import needs
 
 import traceback
 
@@ -17,6 +18,9 @@ def handle_error(func):
     def decorated(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except needs.NeedException as need_exc:
+            return utils.create_api_response(
+                    401, str(need_exc))
         except Exception: #pylint: disable=broad-except
             error_message = traceback.format_exc()
             return utils.create_api_response(500, 'internal server error:\n%s' %

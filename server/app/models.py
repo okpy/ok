@@ -10,8 +10,7 @@ from app import constants
 MODEL_BLUEPRINT = Blueprint('models', __name__)
 
 from app import app
-from app.permissions import Permission
-from app.needs import Need
+from app.needs import Need, NeedException
 from flask import json
 from flask.json import JSONEncoder as old_json
 
@@ -61,15 +60,6 @@ class Base(ndb.Model):
         return result
 
 
-class LoggedInPermission(Permission):
-    name = "anon_user"
-
-    def __init__(self):
-        pass
-
-    def satisfies(self, user):
-        return True
-
 class User(Base):
     """Users."""
     email = ndb.StringProperty() # Must be associated with some OAuth login.
@@ -77,6 +67,8 @@ class User(Base):
     role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
+    #TODO(martinis) figure out how to actually use this data
+    courses = ndb.KeyProperty('Course', repeated=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -110,15 +102,15 @@ class User(Base):
         return True
 
     @staticmethod
-    def user_satisfies_static(user, need):
-        return user.logged_in
+    def must_satisfy_static(user, need):
+        if not user.logged_in:
+            raise NeedException(need)
 
-    def user_satisfies(self, user, need):
+    def must_satisfy(self, user, need):
         action, key = need.items
         if action == "get":
-            return user.is_admin or self.key == key
-        else:
-            return False
+            if not user.is_admin or self.key == key:
+                raise NeedException(need)
 
 class AnonymousUser(User):
     @property
@@ -130,11 +122,6 @@ class AnonymousUser(User):
 
 AnonymousUser = AnonymousUser()
 
-class AssignmentPermission(Permission):
-    name = "assignment"
-
-    def satisfies(self, user):
-        return True
 
 class Assignment(Base):
     """
@@ -144,12 +131,14 @@ class Assignment(Base):
     # TODO(denero) Validate uniqueness of name.
     points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User)
+    course = ndb.KeyProperty('Course')
 
     @staticmethod
-    def user_satisfies_static(user, need):
-        return user.logged_in
+    def must_satisfy_static(user, need):
+        if not user.logged_in:
+            raise NeedException(need)
 
-    def user_satisfies(self, user, need):
+    def must_satisfy(self, user, need):
         return True
 
 
@@ -158,9 +147,8 @@ class Course(Base):
     institution = ndb.StringProperty() # E.g., 'UC Berkeley'
     name = ndb.StringProperty() # E.g., 'CS 61A'
     offering = ndb.StringProperty()  # E.g., 'Fall 2014'
-    assignments = ndb.KeyProperty(Assignment, repeated=True)
-    due_dates = ndb.DateTimeProperty(repeated=True)
     creator = ndb.StructuredProperty(User)
+    staff = ndb.KeyProperty(User, repeated=True)
 
 
 def validate_messages(_, messages):
@@ -179,11 +167,6 @@ def validate_messages(_, messages):
     except Exception as exc:
         raise BadValueError(exc)
 
-class SubmissionPermission(Permission):
-    name = "submission"
-
-    def satisfies(self, user):
-        return user.is_admin or self._obj.submitter == user.key
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
@@ -193,14 +176,13 @@ class Submission(Base):
     created = ndb.DateTimeProperty(auto_now_add=True)
 
     @staticmethod
-    def user_satisfies_static(user, need):
-        return True
+    def must_satisfy_static(user, need):
+        pass
 
-    def user_satisfies(self, user, need):
+    def must_satisfy(self, user, need):
         #TODO(martinis) add check for number of items
         action, key = need.items
         if action == "get":
-            return user.is_admin or self.submitter == key
-        else:
-            return False
+            if not user.is_admin or self.submitter == key:
+                raise NeedException(need)
 
