@@ -71,6 +71,7 @@ class APIResource(object):
         The POST HTTP method
         """
         post_dict = request.json
+
         need = Need('create')
         self.get_model().must_satisfy_static(user, need)
 
@@ -96,9 +97,10 @@ class APIResource(object):
         The DELETE HTTP method
         """
         ent = self.get_model().query.get(user_id)
-        access_error = user.attempt_access(self.get_model(), obj)
-        if access_error:
-            return create_api_response(401, access_error.get_message())
+
+        need = Need('delete', ent.key)
+        self.get_model().must_satisfy_static(user, need)
+
         ent.key.delete()
         return create_api_response(200, "success")
 

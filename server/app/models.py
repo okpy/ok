@@ -118,7 +118,10 @@ class AnonymousUser(User):
         return False
 
     def put(self, *args, **kwds):
-        return
+        """
+        Disable puts for Anonymous Users
+        """
+        pass
 
 AnonymousUser = AnonymousUser()
 
