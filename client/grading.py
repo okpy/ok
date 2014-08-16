@@ -2,12 +2,25 @@ import readline
 import sys
 import traceback
 import utils
+from models import core
 
 #####################
 # Testing Mechanism #
 #####################
 
-def run(test, frame, interactive=False, verbose=False):
+class GradedTestCase(core.TestCase):
+    def on_grade(self, logger, verbose, interact):
+        """Subclasses that are used by the grading protocol should
+        implement this method.
+
+        RETURNS:
+        bool; True if the graded test case results in an error.
+        """
+        # TODO(albert): more documentation
+        raise NotImplementedError
+
+
+def run(test, frame, logger, interactive=False, verbose=False):
     """Runs all suites for the specified test, given the specified
     global frame.
 
@@ -41,7 +54,7 @@ def run(test, frame, interactive=False, verbose=False):
     cases_tested = utils.Counter()
     total_passed = 0
     for suite in test.suites:
-        passed, error = _run_suite(suite, frame, console, cases_tested,
+        passed, error = _run_suite(suite, frame, logger, cases_tested,
                  verbose, interactive)
         total_passed += passed
         if error:
@@ -57,7 +70,7 @@ def run(test, frame, interactive=False, verbose=False):
     # print()
     return total_passed
 
-def _run_suite(suite, logger, frame, cases_tested, verbose, interactive):
+def _run_suite(suite, frame, logger, cases_tested, verbose, interactive):
     """Runs tests for a single suite.
 
     PARAMETERS:
@@ -91,6 +104,10 @@ def _run_suite(suite, logger, frame, cases_tested, verbose, interactive):
         if case.is_locked:
             logger.on()
             return passed, True  # students must unlock first
+        elif not isinstance(case, GradedTestCase):
+            # TODO(albert): should non-GradedTestCases be counted as
+            # passing?
+            continue
         cases_tested.increment()
 
         utils.underline('Case {}'.format(cases_tested), line='-')
