@@ -1,8 +1,10 @@
 from models import core
+import grading
+import unlock
 import utils
 import code
 
-class PythonTestCase(core.TestCase):
+class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     PROMPT = '$ '
     PS1 = '>>> '
     PS2 = '... '
@@ -64,6 +66,7 @@ class PythonTestCase(core.TestCase):
                 continue
             print(self.PS1 + self.strip_prompt(line))
             if line.startswith(self.PROMPT):
+                # TODO(albert): needs verify_fn
                 answer = interact_fn(next(outputs))
                 answers.append(core.TestCaseAnswer(answer))
         return answers

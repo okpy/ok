@@ -27,7 +27,6 @@ class UnlockTestCase(core.TestCase):
         """
         raise NotImplementedError
 
-
 def unlock(test, logger):
     """Unlocks TestCases for a given Test.
 
@@ -156,13 +155,6 @@ class UnlockConsole(utils.OkConsole):
             print(i + ') ' + choice)
             choice_map[i] = choice
         return choice_map
-
-    # TODO(albert): move to ConceptTestCase
-    def __run_concept(self, case):
-        """Runs an unlocking session for a conceptual TestCase."""
-        print('\n'.join(case.lines))
-        answer = self.interact(case.outputs[0])
-        return [core.TestCaseAnswer(answer)]
 
     def interact(self, output, verify_fn):
         """Reads student input for unlocking tests until the student
