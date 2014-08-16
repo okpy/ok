@@ -1,6 +1,6 @@
 from models import core
-import grading
-import unlock
+from protocols import grading
+from protocols import unlock
 import utils
 
 class ConceptTestCase(grading.GradedTestCase, unlock.UnlockTestCase):

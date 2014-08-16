@@ -1,8 +1,8 @@
-import unittest
-import unlock
-import utils
 from models import core
+from protocols import unlock
 from unittest import mock
+import unittest
+import utils
 
 class InteractTest(unittest.TestCase):
     EXIT = unlock.UnlockConsole.EXIT_INPUTS[0]

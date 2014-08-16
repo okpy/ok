@@ -1,8 +1,8 @@
-import unittest
-import grading
+from models import core
+from protocols import grading
 from unittest import mock
 from utils import OutputLogger, TIMEOUT
-from models import core
+import unittest
 
 class RunTest(unittest.TestCase):
     def setUp(self):

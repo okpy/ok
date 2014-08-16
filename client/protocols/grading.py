@@ -1,8 +1,5 @@
-import readline
-import sys
-import traceback
-import utils
 from models import core
+import utils
 
 #####################
 # Testing Mechanism #
