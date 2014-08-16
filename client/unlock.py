@@ -82,8 +82,6 @@ class UnlockConsole(OkConsole):
         'exit()',
         'quit()',
     )
-    PS1 = '>>> '
-    PS2 = '... '
 
     def __init__(self, logger, verification_fn):
         """Constructor.
@@ -121,10 +119,7 @@ class UnlockConsole(OkConsole):
         self._activate_logger()
 
         try:
-            if not case.is_conceptual:
-                answers = self.__run_code(case)
-            else:
-                answers = self.__run_concept(case)
+            answers = case.on_unlock(self._interact)
         except _UnlockException:
             print('\nExiting unlocker...')
             return True
@@ -161,27 +156,13 @@ class UnlockConsole(OkConsole):
     # Private methods #
     ###################
 
-    def __run_code(self, case):
-        """Runs an unlocking session for a code TestCase."""
-        outputs = iter(case.outputs)
-        answers = []
-        for line in case.lines:
-            if line.startswith(' '):  # Line is indented.
-                print(self.PS2 + line)
-                continue
-            print(self.PS1 + maybe_strip_prompt(line))
-            if line.startswith('$ '):
-                answer = self.__interact(next(outputs))
-                answers.append(TestCaseAnswer(answer))
-        return answers
-
     def __run_concept(self, case):
         """Runs an unlocking session for a conceptual TestCase."""
         print('\n'.join(case.lines))
-        answer = self.__interact(case.outputs[0])
+        answer = self._interact(case.outputs[0])
         return [TestCaseAnswer(answer)]
 
-    def __interact(self, output):
+    def _interact(self, output):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
@@ -224,7 +205,7 @@ class UnlockConsole(OkConsole):
             if student_input in self.EXIT_INPUTS:
                 raise _UnlockException
 
-            self.__add_line_to_history(student_input)
+            self._add_line_to_history(student_input)
 
             if output.choices:
                 student_input = choice_map[student_input]
@@ -234,7 +215,7 @@ class UnlockConsole(OkConsole):
         return student_input
 
     @staticmethod
-    def __add_line_to_history(line):
+    def _add_line_to_history(line):
         """Adds the given line to readline history, only if the line
         is non-empty.
         """

@@ -35,30 +35,23 @@ class Test(object):
         return [case.is_locked for suite in suites
                                for case in suite].count(True)
 
-
 class TestCase(object):
     """Represents a single test case."""
 
     def __init__(self, test, input_str, outputs, **status):
-        # TODO(albert): validate that the number of prompts in 
-        # lines is equal to the number of outputs
-        # TODO(albert): scan lines for $; if no $ found, add one to
-        # the last line.
-        self._test = None      # The Test this case belongs to.
+        self._test = test  # The Test this case belongs to.
         self._input_str = utils.dedent(input_str)
         self._outputs = outputs
-        self.status = status
-        # TODO(albert): move this to subclass
-        self.num_prompts = 0  # Number of prompts in self.lines.
+        self._status = status
 
-    def on_grade(self):
+    def on_grade(self, logger, verbose, interact):
         """Subclasses that are used by the grading protocol should
         implement this method.
         """
         # TODO(albert): more documentation
         pass
 
-    def on_unlock(self):
+    def on_unlock(self, logger):
         """Subclasses that are used by the unlocking protocol should
         implement this method.
         """
@@ -79,14 +72,9 @@ class TestCase(object):
         self._outputs = new_outputs
 
     @property
-    def lines(self):
-        """Returns lines of code for the setup and actual test case."""
-        # TODO(albert)
-
-    @property
-    def teardown(self):
-        """Returns the teardown code for this particular TestCase."""
-        # TODO(albert)
+    def type(self):
+        """Subclasses should implement a type tag."""
+        return 'default'
 
 
 class TestCaseAnswer(object):

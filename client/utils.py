@@ -74,11 +74,6 @@ def underline(text, line='='):
     """
     print(text + '\n' + line * len(text))
 
-def maybe_strip_prompt(text):
-    if text.startswith('$ '):
-        text = text[2:]
-    return text
-
 class Counter(object):
     def __init__(self):
         self._count = 0
