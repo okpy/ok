@@ -12,108 +12,6 @@ from utils import (
     underline,
 )
 
-class Test(object):
-    """Represents all suites for a single test in an assignment."""
-    # TODO(albert): fill in stubs
-
-    def __init__(self):
-        self.suites = []    # TODO(albert): filter out empty suites
-        self.names = []
-        self.points = 0
-        # TODO(albert): all string values should be dedented
-        self.note = ''
-        self.cache = ''
-        # TODO(albert): setup and teardown are always initialized, for
-        # convenience. The values are lists of lines -- some
-        # processing is necessary.
-        self.setup = {}
-        self.teardown = {}
-
-    @property
-    def name(self):
-        """Gets the canonical name of this test.
-
-        RETURNS:
-        str; the name of the test
-        """
-        return self.names[0]
-
-    @property
-    def total_cases(self):
-        return sum(len(suite) for suite in suites)
-
-    @property
-    def total_locked(self):
-        return [case.is_locked for suite in suites
-                               for case in suite].count(True)
-
-    @property
-    def total_concept(self):
-        return [case.is_conceptual for suite in suites
-                                   for case in suite].count(True)
-
-class TestCase(object):
-    """Represents a single test case."""
-    # TODO(albert): fill in stubs.
-    # Every test case should save all setup and teardown code upon
-    # initialization.
-    def __init__(self):
-        # TODO(albert): validate that the number of prompts in 
-        # lines is equal to the number of outputs
-        # TODO(albert): scan lines for $; if no $ found, add one to
-        # the last line.
-        self.__lines = []     # Does not include setup code
-        self.__outputs = []   # TestCaseAnswer objects
-        self.status = {}
-        self.type = ''
-        self.test = None    # The Test this case belongs to.
-        self.suite_num = 0  # The suite this TestCase belongs to.
-        self.num_prompts = 0 # Number of prompts in self.lines.
-
-    @property
-    def is_graded(self):
-        return not self.is_locked and not self.is_conceptual
-
-    @property
-    def is_locked(self):
-        return self.status.get('lock', True)
-
-    @property
-    def is_conceptual(self):
-        return self.status.get('concept', False)
-
-    @property
-    def lines(self):
-        """Returns lines of code for the setup and actual test case."""
-        # TODO(albert)
-
-    @property
-    def teardown(self):
-        """Returns the teardown code for this particular TestCase."""
-        # TODO(albert)
-
-    @property
-    def outputs(self):
-        return self.__outputs
-
-    def unlock(self):
-        self.status.setdefault('lock', False)
-
-    def set_outputs(self, new_outputs):
-        self.__outputs = new_outputs
-
-class TestCaseAnswer(object):
-    """Represents an answer for a single TestCase."""
-    # TODO(albert): fill in stubs.
-    def __init__(self, answer, choices=None):
-        self.answer = answer
-        self.choices = choices or []
-
-    def __eq__(self, other):
-        return isinstance(other, TestCaseAnswer) \
-                and other.answer == self.answer \
-                and other.choices == self.choices
-
 #####################
 # Testing Mechanism #
 #####################
@@ -159,12 +57,12 @@ def run(test, frame, console, interactive=False, verbose=False):
             break
 
     # TODO(albert): Move stats printing outside of this function
-    # total_cases = test.total_cases
+    # total_cases = test.count_cases
     # if total_cases > 0:
     #     print('Passed: {} ({}%)'.format(total_passed,
     #                                     total_passed/total_cases))
-    #     print('Locked: {} ({}%)'.format(test.total_locked,
-    #                                     test.total_locked/total_cases))
+    #     print('Locked: {} ({}%)'.format(test.count_locked,
+    #                                     test.count_locked/total_cases))
     # print()
     return total_passed
 
