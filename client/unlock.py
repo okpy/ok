@@ -1,7 +1,7 @@
 import random
 import readline
-from grading import TestCaseAnswer
-from utils import underline, maybe_strip_prompt, OkConsole
+import utils
+from models import core
 
 #######################
 # UNLOCKING MECHANISM #
@@ -17,7 +17,18 @@ from utils import underline, maybe_strip_prompt, OkConsole
 # hash_key = tests['project_info']['hash_key']
 # __make_hash_fn(hash_key)
 
-def unlock(test, console):
+class UnlockTestCase(core.TestCase):
+    def on_unlock(self, logger):
+        """Subclasses that are used by the unlocking protocol should
+        implement this method.
+
+        RETURNS:
+        list; a list of unlocked answers for a TestCase.
+        """
+        raise NotImplementedError
+
+
+def unlock(test, logger):
     """Unlocks TestCases for a given Test.
 
     PARAMETERS:
@@ -39,13 +50,14 @@ def unlock(test, console):
         print('No tests to unlock for {}.'.format(test.name))
         return 0
 
-    underline('Unlocking tests for {}'.format(test.name))
+    utils.underline('Unlocking tests for {}'.format(test.name))
     print('At each "{}", type in what you would expect the output to '
           'be if you had implemented {}'.format(UnlockConsole.PROMPT,
               test.name))
     print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
     print()
 
+    console = UnlockConsole(logger)
     cases = 0
     cases_unlocked = 0
     for suite_num, suite in enumerate(test.suites):
@@ -53,29 +65,23 @@ def unlock(test, console):
             cases += 1
             if not case.is_locked:
                 continue
-            underline('Case {}'.format(cases), line='-')
+            utils.underline('Case {}'.format(cases), line='-')
             if console.run(case):   # Abort unlocking.
                 return cases_unlocked
             cases_unlocked += 1
     print("You are done unlocking tests for this question!")
     return cases_unlocked
 
-class _UnlockException(BaseException):
+class UnlockException(BaseException):
     pass
 
-class UnlockConsole(OkConsole):
+class UnlockConsole(utils.OkConsole):
     """Handles an interactive session for unlocking a TestCase.
 
     An instance of this class can be (and should be) reused for
     multiple TestCases. This class keeps an output log that is
     registered with the OutputLogger class, but is currently not
     used.
-
-    The verification function that is passed into the constructor is
-    used to verify whether or not a student's attempt to unlock a
-    TestCase is correct. This function can be any arbitrary funcion
-    that takes two arguments -- (1) the student input, and (2) the
-    locked version of the correct TestCaseAnswer.
     """
     PROMPT = '? '       # Prompt that is used for user input.
     EXIT_INPUTS = (     # Valid user inputs for aborting the session.
@@ -83,7 +89,7 @@ class UnlockConsole(OkConsole):
         'quit()',
     )
 
-    def __init__(self, logger, verification_fn):
+    def __init__(self, logger):
         """Constructor.
 
         PARAMETERS:
@@ -94,7 +100,6 @@ class UnlockConsole(OkConsole):
                            locked_answer.
         """
         super().__init__(logger)
-        self.verify = verification_fn
 
     ##################
     # Public methods #
@@ -119,22 +124,22 @@ class UnlockConsole(OkConsole):
         self._activate_logger()
 
         try:
-            answers = case.on_unlock(self._interact)
-        except _UnlockException:
+            answers = case.on_unlock(self.interact)
+        except UnlockException:
             print('\nExiting unlocker...')
             return True
         else:
             case.set_outputs(answers)
-            case.unlock()
+            case.set_locked(False)
             print("-- Congratulations, you unlocked this case! --")
             print()
             return False
         finally:
             self._deactivate_logger()
 
-    #######################
-    # Visible for testing #
-    #######################
+    ###################
+    # Private Methods #
+    ###################
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
@@ -152,17 +157,14 @@ class UnlockConsole(OkConsole):
             choice_map[i] = choice
         return choice_map
 
-    ###################
-    # Private methods #
-    ###################
-
+    # TODO(albert): move to ConceptTestCase
     def __run_concept(self, case):
         """Runs an unlocking session for a conceptual TestCase."""
         print('\n'.join(case.lines))
-        answer = self._interact(case.outputs[0])
-        return [TestCaseAnswer(answer)]
+        answer = self.interact(case.outputs[0])
+        return [core.TestCaseAnswer(answer)]
 
-    def _interact(self, output):
+    def interact(self, output, verify_fn):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
@@ -201,21 +203,20 @@ class UnlockConsole(OkConsole):
                     print()
                 except (KeyboardInterrupt, EOFError):
                     pass
-                raise _UnlockException
+                raise UnlockException
             if student_input in self.EXIT_INPUTS:
-                raise _UnlockException
+                raise UnlockException
 
             self._add_line_to_history(student_input)
 
             if output.choices:
                 student_input = choice_map[student_input]
-            correct = self.verify(student_input, output.answer)
+            correct = verify_fn(student_input, output.answer)
             if not correct:
                 print("-- Not quite. Try again! --")
         return student_input
 
-    @staticmethod
-    def _add_line_to_history(line):
+    def _add_line_to_history(self, line):
         """Adds the given line to readline history, only if the line
         is non-empty.
         """

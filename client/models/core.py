@@ -42,7 +42,6 @@ class Test(object):
         for test_case in suite:
             test_case.register_test(self)
 
-
 class TestCase(object):
     """Represents a single test case."""
 
@@ -54,12 +53,6 @@ class TestCase(object):
 
     def register_test(self, test):
         self._test = test
-
-    def on_unlock(self, logger):
-        """Subclasses that are used by the unlocking protocol should
-        implement this method.
-        """
-        pass
 
     @property
     def is_locked(self):
