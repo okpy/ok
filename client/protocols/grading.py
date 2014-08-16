@@ -19,7 +19,6 @@ class GradedTestCase(core.TestCase):
         # TODO(albert): more documentation
         raise NotImplementedError
 
-
 def run(test, frame, logger, interactive=False, verbose=False):
     """Runs all suites for the specified test, given the specified
     global frame.
