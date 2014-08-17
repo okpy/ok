@@ -10,7 +10,7 @@ except ImportError:
 
 def main():
     if USE_PYLINT:
-        result = commit_hook.check_repo(9, "pylint", ".pylintrc", "")
+        result = commit_hook.check_repo(9, "pylint", ".pylintrc", "-r y")
         if not result:
             sys.exit(1)
 
