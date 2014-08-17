@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 import sys
 
-from git_pylint_commit_hook import commit_hook
+USE_PYLINT = True
+
+try:
+    from git_pylint_commit_hook import commit_hook
+except ImportError:
+    USE_PYLINT = False
 
 def main():
-    result = commit_hook.check_repo(9, "pylint", ".pylintrc", "")
-    if result:
-        sys.exit(0)
-    sys.exit(1)
+    if USE_PYLINT:
+        result = commit_hook.check_repo(9, "pylint", ".pylintrc", "-r y")
+        if not result:
+            sys.exit(1)
 
 if __name__ == '__main__':
     main()
