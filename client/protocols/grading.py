@@ -57,20 +57,20 @@ def run(test, frame, logger, interactive=False, verbose=False):
     utils.underline('Test ' + test.name)
     if test.note:
         print(test.note)
-    if test.cache:
-        # TODO(albert): cleanup cache evaluation
-        try:
-            cache = compile(test.cache,
-                            '{} cache'.format(name), 'exec')
-            utils.timed(exec, (cache, global_frame))
-        except Exception as e:
-            print('Cache for', name, 'errored:', e)
+    # TODO(albert): cleanup cache evaluation
+    # if test.cache:
+    #     try:
+    #         cache = compile(test.cache,
+    #                         '{} cache'.format(name), 'exec')
+    #         utils.timed(exec, (cache, global_frame))
+    #     except Exception as e:
+    #         print('Cache for', name, 'errored:', e)
 
     cases_tested = utils.Counter()
     total_passed = 0
     for suite in test.suites:
         passed, error = _run_suite(suite, frame, logger, cases_tested,
-                 verbose, interactive)
+                                   verbose, interactive)
         total_passed += passed
         if error:
             break
@@ -102,6 +102,8 @@ def _run_suite(suite, frame, logger, cases_tested, verbose, interactive):
     passed  -- int; number of TestCases that passed
     errored -- bool; True if a TestCase resulted in error.
     """
+    # TODO(albert): frame should moved to GradedTestCases that need
+    # frames.
     passed = 0
     for case in suite:
         if case.is_locked:

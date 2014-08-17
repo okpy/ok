@@ -20,7 +20,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     PS2 = '... '
 
     def __init__(self, input_str, outputs, test=None, teardown='',
-            **status):
+                 **status):
         """Constructor.
 
         PARAMETERS:
@@ -35,6 +35,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         """
         super().__init__(input_str, outputs, test=test, **status)
         self.teardown = utils.dedent(teardown)
+        self._lines = self._input_str.splitlines()
         self._format_lines()
         # TODO(albert): check that the number of prompts in lines is
         # equal to the number of outputs
@@ -85,7 +86,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
             logger.on()
             print(''.join(log).strip())
         if error and interactive:
-            console.interact(frame)
+            interact(frame)
 
         console.exec(self.teardown, frame)
         print()
@@ -118,9 +119,9 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         """Splits the input string and adds an explicit prompt to the
         last line if there are zero prompts.
         """
-        self._lines = self._input_str.splitlines()
         if self._lines and self.num_prompts == 0:
             self._lines[-1] = self.PROMPT + self._lines[-1]
+        return self._lines
 
 
 class _PythonConsole(object):
@@ -180,7 +181,7 @@ class _PythonConsole(object):
         frame = frame.copy() if frame else {}
 
         error = False
-        current  = ''
+        current = ''
         for line in case.lines + ['']:
             self._add_line_to_history(line)
             if line.startswith(' ') or self._incomplete(current):
@@ -190,7 +191,7 @@ class _PythonConsole(object):
             elif current.startswith(self.PROMPT):
                 output = next(outputs).answer
                 error = self.exec(PythonTestCase.strip_prompt(current),
-                        frame, expected=output)
+                                  frame, expected=output)
                 if error:
                     break
             else:
@@ -221,7 +222,7 @@ class _PythonConsole(object):
         tested for equality as defined by the == operator.
 
         Errors are caught and printed. Special output messages are used
-        for RuntimeErrors (maximum recursion depth) and TimeoutErrors.
+        for RuntimeErrors (maximum recursion depth) and Timeouts.
         In addition, expected can be a subclass of Exception, in which
         case success occurs only when an instance of that exception is
         raised.
@@ -247,9 +248,8 @@ class _PythonConsole(object):
             print('\n'.join(stacktrace[-stacktrace_length:-1]))
             print('# Error: maximum recursion depth exceeded.')
             return True
-        except utils.TimeoutError as e:
-            print('# Error: evaluation exceeded {} seconds.'.format(
-                  e.timeout))
+        except utils.Timeout as e:
+            print('# Error: evaluation exceeded {} seconds.'.format(e.timeout))
             return True
         except Exception as e:
             if type(expect) == type and \
@@ -278,21 +278,6 @@ class _PythonConsole(object):
             else:
                 return False
 
-    def interact(self, frame=None):
-        """Starts an InteractiveConsole, using the variable bindings
-        defined in the given frame.
-
-        Calls to this method do not necessarily have to follow a call
-        to the run method. This method can be used to interact with
-        any frame.
-        """
-        if not frame:
-            frame = {}
-        else:
-            frame = frame.copy()
-        console = code.InteractiveConsole(frame)
-        console.interact('# Interactive console. Type exit() to quit')
-
     ###################
     # Private methods #
     ###################
@@ -311,4 +296,19 @@ class _PythonConsole(object):
         """Check if the given line can be a complete line of Python."""
         line = PythonTestCase.strip_prompt(line)
         return code.compile_command(line) is None
+
+def interact(frame=None):
+    """Starts an InteractiveConsole, using the variable bindings
+    defined in the given frame.
+
+    Calls to this method do not necessarily have to follow a call
+    to the run method. This method can be used to interact with
+    any frame.
+    """
+    if not frame:
+        frame = {}
+    else:
+        frame = frame.copy()
+    console = code.InteractiveConsole(frame)
+    console.interact('# Interactive console. Type exit() to quit')
 

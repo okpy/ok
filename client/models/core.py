@@ -25,8 +25,7 @@ import utils
 class Test(object):
     """Represents all suites for a single test in an assignment."""
 
-    def __init__(self, names=None, suites=None, points=0, note='',
-            cache=''):
+    def __init__(self, names=None, suites=None, points=0, note='', cache=''):
         self.names = names or []
         # Filter out empty suites.
         if suites:
@@ -54,12 +53,12 @@ class Test(object):
     @property
     def count_cases(self):
         """Returns the number of test cases in this test."""
-        return sum(len(suite) for suite in suites)
+        return sum(len(suite) for suite in self.suites)
 
     @property
     def count_locked(self):
         """Returns the number of locked test cases in this test."""
-        return [case.is_locked for suite in suites
+        return [case.is_locked for suite in self.suites
                                for case in suite].count(True)
 
     def add_suite(self, suite):
@@ -76,6 +75,15 @@ class TestCase(object):
     """Represents a single test case."""
 
     def __init__(self, input_str, outputs, test=None, **status):
+        """Constructor.
+
+        PARAMETERS:
+        input_str -- str; the TestCase's input.
+        outputs   -- list of TestCaseAnswers; the outputs associated
+                     with this TestCase.
+        test      -- Test; the test to which this TestCase belongs.
+        status    -- keyword arguments; the status of this TestCase.
+        """
         self._input_str = utils.dedent(input_str)
         self._outputs = outputs
         self.test = test
@@ -83,16 +91,22 @@ class TestCase(object):
 
     @property
     def is_locked(self):
+        """Returns True if the TestCase is locked."""
         return self._status.get('lock', True)
 
     def set_locked(self, locked):
+        """Sets the TestCase's locked status."""
         self._status['lock'] = locked
 
     @property
     def outputs(self):
+        """Returns a list of TestCaseAnswers associated with this
+        TestCase.
+        """
         return self._outputs
 
     def set_outputs(self, new_outputs):
+        """Sets this TestCase's list of TestCaseAnswers."""
         self._outputs = new_outputs
 
     @property
@@ -104,11 +118,20 @@ class TestCaseAnswer(object):
     """Represents an answer for a single TestCase."""
 
     def __init__(self, answer, choices=None, explanation=''):
-        self.answer = answer    # The correct answer, possibly encoded
+        """Constructor.
+
+        PARAMETERS:
+        answer      -- str; The correct answer, possibly encoded.
+        choices     -- list of strs; If not None, denotes a list of
+                       options for multiple choice.
+        explanation -- str; Optional explanation of the TestCaseAnswer.
+        """
+        self.answer = answer
         self.choices = choices or []
         self.explanation = explanation
 
     @property
     def is_multiple_choice(self):
+        """Returns True if the TestCaseAnswer is multiple choice."""
         return len(self.choices) > 0
 

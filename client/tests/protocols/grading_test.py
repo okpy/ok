@@ -3,12 +3,12 @@
 from models import core
 from protocols import grading
 from unittest import mock
-from utils import OutputLogger, TIMEOUT
 import unittest
+import utils
 
 class RunTest(unittest.TestCase):
     def setUp(self):
-        self.logger = OutputLogger()
+        self.logger = utils.OutputLogger()
 
     def makeGradedTestCase(self, error=False, lock=False, input_str='',
             outputs=None, **kargs):

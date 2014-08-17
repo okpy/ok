@@ -1,9 +1,9 @@
+from threading import Thread
 import os
 import re
 import sys
 import textwrap
 import traceback
-from threading import Thread
 
 # TODO(albert): split these utilities into different files in a utils/
 # directory

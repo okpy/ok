@@ -69,7 +69,7 @@ def unlock(test, logger):
     print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
     print()
 
-    console = UnlockConsole()
+    console = UnlockConsole(logger)
     cases = 0
     cases_unlocked = 0
     for suite in test.suites:
@@ -86,6 +86,7 @@ def unlock(test, logger):
     return cases_unlocked
 
 class UnlockException(BaseException):
+    """Exception raised by the UnlockConsole."""
     pass
 
 class UnlockConsole(object):
@@ -95,6 +96,9 @@ class UnlockConsole(object):
         'exit()',
         'quit()',
     )
+
+    def __init__(self, logger):
+        self._logger = logger
 
     ##################
     # Public methods #
@@ -117,7 +121,7 @@ class UnlockConsole(object):
         unlocked successfully.
         """
         try:
-            answers = case.on_unlock(self.interact)
+            answers = case.on_unlock(self._logger, self.interact)
         except UnlockException:
             print('\nExiting unlocker...')
             return True

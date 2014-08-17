@@ -12,7 +12,7 @@ class InteractTest(unittest.TestCase):
 
     def setUp(self):
         self.logger = utils.OutputLogger()
-        self.console = unlock.UnlockConsole()
+        self.console = unlock.UnlockConsole(self.logger)
         self.verify = lambda x, y: self.encode(x) == y
         self.register_choices()
 
