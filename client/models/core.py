@@ -3,8 +3,8 @@ import utils
 class Test(object):
     """Represents all suites for a single test in an assignment."""
 
-    def __init__(self, names=None, suites=None, points=0, setup=None,
-            teardown=None, note='', cache=''):
+    def __init__(self, names=None, suites=None, points=0, note='',
+            cache=''):
         self.names = names or []
         # Filter out empty suites.
         if suites:
@@ -14,8 +14,6 @@ class Test(object):
         self.points = points
         self.note = utils.dedent(note)
         self.cache = utils.dedent(cache)
-        self.setup = setup or {}
-        self.teardown = teardown or {}
 
     @property
     def name(self):
@@ -38,21 +36,24 @@ class Test(object):
                                for case in suite].count(True)
 
     def add_suite(self, suite):
-        self.suites.append(suite)
-        for test_case in suite:
-            test_case.register_test(self)
+        if suite:
+            self.suites.append(suite)
+            suite_num = len(self.suites) - 1
+            for test_case in suite:
+                test_case.test = self
+                test_case.suite_num = suite_num
+
+    def get_teardown(self, suite_num):
+        return self.teardown.get(suite_num, '')
 
 class TestCase(object):
     """Represents a single test case."""
 
     def __init__(self, input_str, outputs, test=None, **status):
-        self._test = test
         self._input_str = utils.dedent(input_str)
         self._outputs = outputs
+        self.test = test
         self._status = status
-
-    def register_test(self, test):
-        self._test = test
 
     @property
     def is_locked(self):

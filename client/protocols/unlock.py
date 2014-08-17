@@ -56,7 +56,7 @@ def unlock(test, logger):
     print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
     print()
 
-    console = UnlockConsole(logger)
+    console = UnlockConsole()
     cases = 0
     cases_unlocked = 0
     for suite_num, suite in enumerate(test.suites):
@@ -74,31 +74,13 @@ def unlock(test, logger):
 class UnlockException(BaseException):
     pass
 
-class UnlockConsole(utils.OkConsole):
-    """Handles an interactive session for unlocking a TestCase.
-
-    An instance of this class can be (and should be) reused for
-    multiple TestCases. This class keeps an output log that is
-    registered with the OutputLogger class, but is currently not
-    used.
-    """
+class UnlockConsole(object):
+    """Handles an interactive session for unlocking a TestCase."""
     PROMPT = '? '       # Prompt that is used for user input.
     EXIT_INPUTS = (     # Valid user inputs for aborting the session.
         'exit()',
         'quit()',
     )
-
-    def __init__(self, logger):
-        """Constructor.
-
-        PARAMETERS:
-        logger          -- OutputLogger
-        verification_fn -- function; takes as arguments
-                           (student_input, locked_answer) and verifies
-                           that the student_input matches the
-                           locked_answer.
-        """
-        super().__init__(logger)
 
     ##################
     # Public methods #
@@ -120,8 +102,6 @@ class UnlockConsole(utils.OkConsole):
         bool; True if an error/abort occurs, False if the TestCase is
         unlocked successfully.
         """
-        self._activate_logger()
-
         try:
             answers = case.on_unlock(self.interact)
         except UnlockException:
@@ -133,8 +113,6 @@ class UnlockConsole(utils.OkConsole):
             print("-- Congratulations, you unlocked this case! --")
             print()
             return False
-        finally:
-            self._deactivate_logger()
 
     ###################
     # Private Methods #

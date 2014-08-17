@@ -1,17 +1,20 @@
 from models import core
 from protocols import grading
 from protocols import unlock
-import utils
 import code
+import readline
+import utils
+import traceback
 
 class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     PROMPT = '$ '
     PS1 = '>>> '
     PS2 = '... '
 
-    def __init__(self, test, suite_num, input_str, outputs, **status):
-        super().__init__(test, input_str, outputs, **status)
-        self._suite_num = suite_num
+    def __init__(self, input_str, outputs, test=None, teardown='',
+            **status):
+        super().__init__(input_str, outputs, test=test, **status)
+        self.teardown = teardown
         self._format_lines()
         # TODO(albert): check that the number of prompts in lines is
         # equal to the number of outputs
@@ -28,33 +31,30 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     @property
     def lines(self):
-        """Returns lines of code for the setup and actual test case."""
-        setup = self._test.get_setup(self._suite_num)
-        return setup + self._lines
+        """Returns lines of code for the test case."""
+        return self._lines
 
-    @property
-    def teardown(self):
-        """Returns the teardown code for this particular TestCase."""
-        return self._test.get_teardown(self._suite_num)
-
-    def on_grade(self, logger, frame, verbose, interact):
+    def on_grade(self, logger, frame, verbose, interactive):
         if not verbose:
             logger.off()
+        log = []
+        logger.register_log(log)
 
-        console = _PythonConsole(logger)
-        error, log = console.run(self, frame)
+        console = _PythonConsole()
+        error = console.run(self, frame)
 
         if error and not verbose:
             logger.on()
-            utils.underline('Test case failed.', line='-')
             print(''.join(log).strip())
         if error and interactive:
             console.interact(frame)
 
         console.exec(self.teardown, frame)
         print()
+
         if error:
             logger.on()
+        logger.register_log(None)
         return error
 
     def on_unlock(self, interact_fn):
@@ -74,17 +74,12 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     @classmethod
     def strip_prompt(cls, text):
         if text.startswith(cls.PROMPT):
-            text = text[len(cls.PROMPT:]
+            text = text[len(cls.PROMPT):]
         return text
 
-class _PythonConsole(utils.OkConsole):
+class _PythonConsole(object):
     """Handles test evaluation and output formatting for a single
     PythonTestCase.
-
-    An instance of this class can be (and should be) reused for
-    multiple TestCases. Each instance of this class keeps an output
-    log that is registered with the OutputLogger class. External code
-    can access this log to replay output at a later time.
 
     This class also supports an interact method, which should only be
     called after calling the run method. interact will start an
@@ -96,8 +91,7 @@ class _PythonConsole(utils.OkConsole):
     PS1 = PythonTestCase.PS1
     PS2 = PythonTestCase.PS2
 
-    def __init__(self, logger, equal_fn=None):
-        super().__init__(logger)
+    def __init__(self, equal_fn=None):
         if equal_fn:
             self.equal = equal_fn
         else:
@@ -109,10 +103,6 @@ class _PythonConsole(utils.OkConsole):
 
     def run(self, case, frame=None):
         """Executes lines of code in the provided frame.
-
-        An output log is registered with the OutputLogger to capture
-        output. The log is returned once this method terminates. This
-        log can be replayed by external code at a later time.
 
         Formatting is designed to mimic a Python interpreter, with
         uses of PS1 and PS2 for each line of code. Lines of code that
@@ -129,14 +119,10 @@ class _PythonConsole(utils.OkConsole):
         code.
 
         RETURNS:
-        (error, log), where
-        error -- bool; True if an error occurred, False otherwise.
-        log   -- list; a list of lines of output, as captured by the
-                 OutputLogger.
+        bool; True if an error occurred, False otherwise.
         """
         # TODO(albert): Windows machines don't have a readline module.
         readline.clear_history()
-        self._activate_logger()
 
         outputs = iter(case.outputs)
         frame = frame.copy() if frame else {}
@@ -162,8 +148,7 @@ class _PythonConsole(utils.OkConsole):
             current = line + '\n'
             if line != '':
                 print(self.PS1 + PythonTestCase.strip_prompt(line))
-        self._deactivate_logger()
-        return error, self.log
+        return error
 
     def exec(self, expr, frame, expected=None):
         """Executes or evaluates a given expression in the provided
@@ -223,8 +208,10 @@ class _PythonConsole(utils.OkConsole):
             stacktrace = traceback.format_exc()
             token = '<module>\n'
             index = stacktrace.rfind(token) + len(token)
-            print('Traceback (most recent call last):')
-            print(stacktrace[index:])
+            stacktrace = stacktrace[index:].rstrip('\n')
+            if '\n' in stacktrace:
+                print('Traceback (most recent call last):')
+            print(stacktrace)
             if expected is not None:
                 print('# Error: expected {0} got {1}'.format(
                     repr(expect), e.__class__.__name__))
@@ -247,7 +234,6 @@ class _PythonConsole(utils.OkConsole):
         to the run method. This method can be used to interact with
         any frame.
         """
-        self._deactivate_logger()
         if not frame:
             frame = {}
         else:
