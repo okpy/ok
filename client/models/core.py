@@ -1,3 +1,25 @@
+"""Core test models.
+
+Ok.py assignments are organized in the following hierarchy:
+
+    * assignments: consist of a list of Test objects
+    * Test: consist of a list of suites
+    * suite: a list of TestCase objects
+    * TestCase (and its subclasses): consist of
+        * an input
+        * a list of TestCaseAnswers
+    * TestCaseAnswers: represents the answer to a specific TestCase
+
+The core models (Test, TestCase, TestCaseAnsweres) are implemented
+here.
+
+Developers can extend the TestCase class to create different types of
+TestCases (both interfaces and concrete subclasses of TestCase are
+encouraged). TestCase interfaces should be located with their
+respective Protocols (in the client/protocols/ directory), while
+concrete subclasses of TestCase should be located in client/models/.
+"""
+
 import utils
 
 class Test(object):

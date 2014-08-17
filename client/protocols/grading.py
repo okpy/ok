@@ -1,3 +1,10 @@
+"""Implements the GradingProtocol, which runs all specified tests
+associated with an assignment.
+
+The GradedTestCase interface can be implemented by TestCases that are
+compatible with the GradingProtocol.
+"""
+
 from models import core
 import utils
 

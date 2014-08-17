@@ -1,3 +1,5 @@
+"""Tests the PythonTestCase model."""
+
 from models import core
 from models import python
 from unittest import mock

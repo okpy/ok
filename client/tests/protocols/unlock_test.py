@@ -1,3 +1,5 @@
+"""Tests the UnlockProtocol."""
+
 from models import core
 from protocols import unlock
 from unittest import mock

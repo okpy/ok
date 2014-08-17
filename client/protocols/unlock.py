@@ -1,7 +1,14 @@
+"""Implements the UnlockProtocol, which unlocks all specified tests
+associated with an assignment.
+
+The UnlockTestCase interface can be implemented by TestCases that are
+compatible with the UnlockProtocol.
+"""
+
+from models import core
 import random
 import readline
 import utils
-from models import core
 
 #######################
 # UNLOCKING MECHANISM #

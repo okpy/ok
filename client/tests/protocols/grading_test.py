@@ -1,3 +1,5 @@
+"""Tests the GradingProtocol."""
+
 from models import core
 from protocols import grading
 from unittest import mock

@@ -1,10 +1,16 @@
+"""TestCase for doctest-style Python tests.
+
+PythonTestCases follow a line-by-line input format that is designed to
+mimic a Python interpreter.
+"""
+
 from models import core
 from protocols import grading
 from protocols import unlock
 import code
 import readline
-import utils
 import traceback
+import utils
 
 class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for doctest-style Python tests."""
@@ -33,13 +39,9 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         # TODO(albert): check that the number of prompts in lines is
         # equal to the number of outputs
 
-    def _format_lines(self):
-        """Splits the input string and adds an explicit prompt to the
-        last line if there are zero prompts.
-        """
-        self._lines = self._input_str.splitlines()
-        if self._lines and self.num_prompts == 0:
-            self._lines[-1] = self.PROMPT + self._lines[-1]
+    ##################
+    # Public Methods #
+    ##################
 
     @property
     def num_prompts(self):
@@ -51,6 +53,23 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     def lines(self):
         """Returns lines of code for the test case."""
         return self._lines
+
+    @property
+    def type(self):
+        return 'python'
+
+    @classmethod
+    def strip_prompt(cls, text):
+        """Removes a prompt from the start of the text, if it exists.
+        Otherwise, the text is left unchanged.
+        """
+        if text.startswith(cls.PROMPT):
+            text = text[len(cls.PROMPT):]
+        return text
+
+    ######################################
+    # Protocol interface implementations #
+    ######################################
 
     def on_grade(self, logger, frame, verbose, interactive):
         """Implements the GradedTestCase interface."""
@@ -91,14 +110,18 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
                 answers.append(core.TestCaseAnswer(answer))
         return answers
 
-    @classmethod
-    def strip_prompt(cls, text):
-        """Removes a prompt from the start of the text, if it exists.
-        Otherwise, the text is left unchanged.
+    ###################
+    # Private methods #
+    ###################
+
+    def _format_lines(self):
+        """Splits the input string and adds an explicit prompt to the
+        last line if there are zero prompts.
         """
-        if text.startswith(cls.PROMPT):
-            text = text[len(cls.PROMPT):]
-        return text
+        self._lines = self._input_str.splitlines()
+        if self._lines and self.num_prompts == 0:
+            self._lines[-1] = self.PROMPT + self._lines[-1]
+
 
 class _PythonConsole(object):
     """Handles test evaluation and output formatting for a single
