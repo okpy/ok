@@ -100,7 +100,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         logger.register_log(None)
         return error
 
-    def on_unlock(self, interact_fn):
+    def on_unlock(self, logger, interact_fn):
         """Implements the UnlockTestCase interface."""
         outputs = iter(self._outputs)
         answers = []
@@ -126,7 +126,6 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         if self._lines and self.num_prompts == 0:
             self._lines[-1] = self.PROMPT + self._lines[-1]
         return self._lines
-
 
 class _PythonConsole(object):
     """Handles test evaluation and output formatting for a single

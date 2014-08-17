@@ -29,12 +29,14 @@ class UnlockTestCase(core.TestCase):
     Subclasses must implement the on_unlock method.
     """
 
-    def on_unlock(self, logger):
+    def on_unlock(self, logger, interact_fn):
         """Subclasses that are used by the unlocking protocol must
         implement this method.
 
         PARAMETERS:
-        logger   -- OutputLogger.
+        logger      -- OutputLogger.
+        interact_fn -- function; a function that handles interactive
+                       input from students.
 
         RETURNS:
         list; a list of unlocked answers for a TestCase.

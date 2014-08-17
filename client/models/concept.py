@@ -38,7 +38,7 @@ class ConceptTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
             print()
         return False
 
-    def on_unlock(self, interact_fn):
+    def on_unlock(self, logger, interact_fn):
         """Implements the UnlockTestCase interface."""
         print(self._input_str)
         # TODO(albert): needs verify_fn.
