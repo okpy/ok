@@ -29,9 +29,8 @@ class ConceptTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     # Protocol interface implementations #
     ######################################
 
-    def on_grade(self, logger, frame, verbose, interact):
+    def on_grade(self, logger, verbose, interact):
         """Implements the GradedTestCase interface."""
-        # TODO(albert): concept questions should not require frames.
         if verbose:
             utils.underline('Concept question', line='-')
             print(self._input_str)

@@ -26,15 +26,16 @@ class OnGradeTest(unittest.TestCase):
     def tearDown(self):
         self.stdout = sys.__stdout__
 
-    def makeTestCase(self, input_, outputs, teardown='', **status):
-        outputs = [core.TestCaseAnswer(output) for output in outputs]
-        return python.PythonTestCase(input_, outputs, test=self.test,
-                teardown=teardown, **status)
-
-    def calls_onGrade(self, case, errors=False, frame=None,
-            verbose=False, interact=False):
+    def makeTestCase(self, input_, outputs, frame=None, teardown='',
+            **status):
         frame = frame or {}
-        error = case.on_grade(self.logger, frame, verbose, interact)
+        outputs = [core.TestCaseAnswer(output) for output in outputs]
+        return python.PythonTestCase(input_, outputs, frame=frame,
+                test=self.test, teardown=teardown, **status)
+
+    def calls_onGrade(self, case, errors=False, verbose=False,
+            interact=False):
+        error = case.on_grade(self.logger, verbose, interact)
         if errors:
             self.assertTrue(error)
         else:
@@ -81,9 +82,9 @@ class OnGradeTest(unittest.TestCase):
         mock_fn = mock.Mock()
         case = self.makeTestCase("""
         1 + 2
-        """, ['3'], teardown='f()')
+        """, ['3'], frame={'f': mock_fn}, teardown='f()')
 
-        self.calls_onGrade(case, frame={'f': mock_fn})
+        self.calls_onGrade(case)
         mock_fn.assert_called_with()
 
     def testError_notEqualError(self):
@@ -100,10 +101,9 @@ class OnGradeTest(unittest.TestCase):
 
     def testError_runtimeError(self):
         max_recursion = lambda: max_recursion()
-        case = self.makeTestCase('f()', ['3'])
-        self.calls_onGrade(case, errors=True, frame={
-            'f': max_recursion,
-        })
+        case = self.makeTestCase('f()', ['3'],
+                frame={'f': max_recursion})
+        self.calls_onGrade(case, errors=True)
 
     # TODO(albert): test timeout errors without actually having to wait
     # for timeouts.
@@ -111,9 +111,10 @@ class OnGradeTest(unittest.TestCase):
     def testError_teardown(self):
         mock_fn = mock.Mock()
         case = self.makeTestCase('1 + 2', ['ZeroDivisionError'],
+                frame={'f': mock_fn},
                 teardown='f()')
 
-        self.calls_onGrade(case, errors=True, frame={'f': mock_fn})
+        self.calls_onGrade(case, errors=True)
         mock_fn.assert_called_with()
 
     def testOutput_singleLine(self):

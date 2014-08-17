@@ -19,8 +19,8 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     PS1 = '>>> '
     PS2 = '... '
 
-    def __init__(self, input_str, outputs, test=None, teardown='',
-                 **status):
+    def __init__(self, input_str, outputs, frame=None, test=None,
+                 teardown='', **status):
         """Constructor.
 
         PARAMETERS:
@@ -29,11 +29,14 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         outputs   -- list of TestCaseAnswers
         test      -- Test or None; the test to which this test case
                      belongs.
+        frame     -- dict; the environment in which the test case will
+                     be executed.
         teardown  -- str; the teardown code. This code will be executed
                      regardless of errors.
         status    -- keyword arguments; statuses for the test case.
         """
         super().__init__(input_str, outputs, test=test, **status)
+        self._frame = frame or {}
         self.teardown = utils.dedent(teardown)
         self._lines = self._input_str.splitlines()
         self._format_lines()
@@ -72,7 +75,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     # Protocol interface implementations #
     ######################################
 
-    def on_grade(self, logger, frame, verbose, interactive):
+    def on_grade(self, logger, verbose, interactive):
         """Implements the GradedTestCase interface."""
         if not verbose:
             logger.off()
@@ -80,6 +83,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         logger.register_log(log)
 
         console = _PythonConsole()
+        frame = self._frame.copy()
         error = console.run(self, frame)
 
         if error and not verbose:
@@ -178,7 +182,7 @@ class _PythonConsole(object):
         readline.clear_history()
 
         outputs = iter(case.outputs)
-        frame = frame.copy() if frame else {}
+        frame = frame or {}
 
         error = False
         current = ''

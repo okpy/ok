@@ -17,7 +17,7 @@ class GradedTestCase(core.TestCase):
     Subclasses must implement the on_grade method.
     """
 
-    def on_grade(self, logger, frame, verbose, interact):
+    def on_grade(self, logger, verbose, interact):
         """Subclasses that are used by the grading protocol must
         implement this method.
 
@@ -31,17 +31,13 @@ class GradedTestCase(core.TestCase):
         RETURNS:
         bool; True if the graded test case results in an error.
         """
-        # TODO(albert): frames should not be passed as an argument
-        # here, since not all TestCases are code-based.
         raise NotImplementedError
 
-def run(test, frame, logger, interactive=False, verbose=False):
-    """Runs all suites for the specified test, given the specified
-    global frame.
+def run(test, logger, interactive=False, verbose=False):
+    """Runs all suites for the specified test.
 
     PARAMETERS:
     test        -- Test.
-    frame       -- dict; the namespace for a frame.
     logger      -- OutputLogger.
     interactive -- bool; if True, an interactive session will be
                    started upon test failure.
@@ -51,9 +47,6 @@ def run(test, frame, logger, interactive=False, verbose=False):
     RETURNS:
     int; number of TestCases that passed.
     """
-    # TODO(albert): the frame should not need to be provided to the
-    # run function, since frames are only applicable to
-    # PythonTestCases. Find a more suitable place to provide frames.
     utils.underline('Test ' + test.name)
     if test.note:
         print(test.note)
@@ -69,7 +62,7 @@ def run(test, frame, logger, interactive=False, verbose=False):
     cases_tested = utils.Counter()
     total_passed = 0
     for suite in test.suites:
-        passed, error = _run_suite(suite, frame, logger, cases_tested,
+        passed, error = _run_suite(suite, logger, cases_tested,
                                    verbose, interactive)
         total_passed += passed
         if error:
@@ -85,12 +78,11 @@ def run(test, frame, logger, interactive=False, verbose=False):
     # print()
     return total_passed
 
-def _run_suite(suite, frame, logger, cases_tested, verbose, interactive):
+def _run_suite(suite, logger, cases_tested, verbose, interactive):
     """Runs tests for a single suite.
 
     PARAMETERS:
     suite        -- list; each element is a TestCase
-    frame        -- dict; global frame
     logger       -- OutputLogger.
     cases_tested -- Counter; an object that keeps track of the
                     number of cases that have been tested so far.
@@ -102,8 +94,6 @@ def _run_suite(suite, frame, logger, cases_tested, verbose, interactive):
     passed  -- int; number of TestCases that passed
     errored -- bool; True if a TestCase resulted in error.
     """
-    # TODO(albert): frame should moved to GradedTestCases that need
-    # frames.
     passed = 0
     for case in suite:
         if case.is_locked:
@@ -116,7 +106,7 @@ def _run_suite(suite, frame, logger, cases_tested, verbose, interactive):
         cases_tested.increment()
 
         utils.underline('Case {}'.format(cases_tested), line='-')
-        error = case.on_grade(logger, frame, verbose, interactive)
+        error = case.on_grade(logger, verbose, interactive)
         if error:
             return passed, True
         passed += 1

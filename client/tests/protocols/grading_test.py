@@ -24,9 +24,8 @@ class RunTest(unittest.TestCase):
                 **kargs)
         return case
 
-    def calls_run(self, test, expect_passed, frame=None):
-        frame = frame or {}
-        passed = grading.run(test, frame, self.logger)
+    def calls_run(self, test, expect_passed):
+        passed = grading.run(test, self.logger)
         self.assertEqual(expect_passed, passed)
 
     def testNoSuites(self):
