@@ -98,7 +98,7 @@ class Counter(object):
 # TIMEOUT MECHANISM #
 #####################
 
-class TimeoutError(Exception):
+class Timeout(Exception):
     """Exception for timeouts."""
     _message = 'Evaluation timed out!'
 
@@ -127,7 +127,7 @@ def timed(fn, args=(), kargs={}, timeout=TIMEOUT):
     Result of calling fn(*args, **kargs).
 
     RAISES:
-    TimeoutError -- if thread takes longer than timemout to execute
+    Timeout -- if thread takes longer than timemout to execute
     Error        -- if calling fn raises an error, raise it
     """
     if not timeout:
@@ -136,7 +136,7 @@ def timed(fn, args=(), kargs={}, timeout=TIMEOUT):
     submission.start()
     submission.join(timeout)
     if submission.is_alive():
-        raise TimeoutError(timeout)
+        raise Timeout(timeout)
     if submission.error is not None:
         raise submission.error
     return submission.result

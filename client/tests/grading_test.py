@@ -43,7 +43,7 @@ class TestingConsoleTest(unittest.TestCase):
 
     # TODO(albert): have a better way to test timeout than actually
     # waiting.
-    # def testExec_timeoutError(self):
+    # def testExec_Timeout(self):
     #     def wait():
     #         time.sleep(TIMEOUT * 3 // 2)
     #     self.execTest("f()", True, frame={'f': wait})

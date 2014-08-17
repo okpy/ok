@@ -2,7 +2,7 @@ import unittest
 import sys
 import time
 import utils
-from utils import OutputLogger, timed, TimeoutError, TIMEOUT
+from utils import OutputLogger, timed, Timeout, TIMEOUT
 
 class OutputLoggerTest(unittest.TestCase):
     """Tests the OutputLogger."""
@@ -65,29 +65,29 @@ class OutputLoggerTest(unittest.TestCase):
 #         test_fn = lambda: 42
 #         result = timed(test_fn)
 #         self.assertEqual(42, result)
-# 
+#
 #     def testNoTimeout_withArgs(self):
 #         result = timed(eval, args=('4 + 2',))
 #         self.assertEqual(6, result)
-# 
+#
 #     def testNoTimeout_withKargs(self):
 #         square = lambda x: x * x
 #         result = timed(square, kargs={'x': 3})
 #         self.assertEqual(9, result)
-# 
+#
 #     def testNoTimeout_withException(self):
 #         catastrophic = lambda: 1 / 0
 #         self.assertRaises(ZeroDivisionError, timed, catastrophic)
-# 
+#
 #     def testTimeout_defaultTimeout(self):
 #         def waits():
 #             time.sleep(2 * utils.TIMEOUT)
-#         self.assertRaises(TimeoutError, timed, waits)
-# 
+#         self.assertRaises(Timeout, timed, waits)
+#
 #     def testTimeout_timeoutAsArgument(self):
 #         def waits():
 #             time.sleep(TIMEOUT // 2)
-#         self.assertRaises(TimeoutError, timed,
+#         self.assertRaises(Timeout, timed,
 #                 fn=waits, timeout=TIMEOUT // 4)
 
 #########

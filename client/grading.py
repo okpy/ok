@@ -1,11 +1,10 @@
 import readline
-import sys
 import traceback
 from code import InteractiveConsole, compile_command
 from utils import (
     Counter,
     OkConsole,
-    TimeoutError,
+    Timeout,
     indent,
     maybe_strip_prompt,
     timed,
@@ -40,17 +39,16 @@ class Test(object):
 
     @property
     def total_cases(self):
-        return sum(len(suite) for suite in suites)
+        return sum(len(suite) for suite in self.suites)
 
     @property
     def total_locked(self):
-        return [case.is_locked for suite in suites
-                               for case in suite].count(True)
+        return [case.is_locked for s in self.suites for case in s].count(True)
 
     @property
     def total_concept(self):
-        return [case.is_conceptual for suite in suites
-                                   for case in suite].count(True)
+        suites = self.suites
+        return [case.is_conceptual for s in suites for case in s].count(True)
 
 class TestCase(object):
     """Represents a single test case."""
@@ -58,7 +56,7 @@ class TestCase(object):
     # Every test case should save all setup and teardown code upon
     # initialization.
     def __init__(self):
-        # TODO(albert): validate that the number of prompts in 
+        # TODO(albert): validate that the number of prompts in
         # lines is equal to the number of outputs
         # TODO(albert): scan lines for $; if no $ found, add one to
         # the last line.
@@ -143,17 +141,17 @@ def run(test, frame, console, interactive=False, verbose=False):
     if test.cache:
         # TODO(albert): cleanup cache evaluation
         try:
-            cache = compile(test.cache,
-                            '{} cache'.format(name), 'exec')
+            cache = compile(test.cache, '{} cache'.format(test.name), 'exec')
+            # TODO(denero): What is global_frame?
             timed(exec, (cache, global_frame))
         except Exception as e:
-            print('Cache for', name, 'errored:', e)
+            print('Cache for', test.name, 'errored:', e)
 
     cases_tested = Counter()
     total_passed = 0
     for suite in test.suites:
         passed, error = _run_suite(suite, frame, console, cases_tested,
-                 verbose, interactive)
+                                   verbose, interactive)
         total_passed += passed
         if error:
             break
@@ -168,8 +166,7 @@ def run(test, frame, console, interactive=False, verbose=False):
     # print()
     return total_passed
 
-def _run_suite(suite, frame, console, cases_tested, verbose,
-        interactive):
+def _run_suite(suite, frame, console, cases_tested, verbose, interactive):
     """Runs tests for a single suite.
 
     PARAMETERS:
@@ -218,7 +215,6 @@ def _run_suite(suite, frame, console, cases_tested, verbose,
             console.logger.off()
         underline('Case {}'.format(cases_tested), line='-')
 
-        code = case.lines
         error, log = console.run(case, frame)
 
         if error and not verbose:
@@ -301,7 +297,7 @@ class TestingConsole(OkConsole):
         frame = frame.copy() if frame else {}
 
         error = False
-        current  = ''
+        current = ''
         for line in case.lines + ['']:
             self.__add_line_to_history(line)
             if line.startswith(' ') or self.__incomplete(current):
@@ -310,8 +306,8 @@ class TestingConsole(OkConsole):
                 continue
             elif current.startswith('$ '):
                 output = next(outputs).answer
-                error = self.exec(maybe_strip_prompt(current),
-                        frame, expected=output)
+                error = self.exec(maybe_strip_prompt(current), frame,
+                                  expected=output)
                 if error:
                     break
             else:
@@ -343,7 +339,7 @@ class TestingConsole(OkConsole):
         tested for equality as defined by the == operator.
 
         Errors are caught and printed. Special output messages are used
-        for RuntimeErrors (maximum recursion depth) and TimeoutErrors.
+        for RuntimeErrors (maximum recursion depth) and Timeouts.
         In addition, expected can be a subclass of Exception, in which
         case success occurs only when an instance of that exception is
         raised.
@@ -369,9 +365,8 @@ class TestingConsole(OkConsole):
             print('\n'.join(stacktrace[-stacktrace_length:-1]))
             print('# Error: maximum recursion depth exceeded.')
             return True
-        except TimeoutError as e:
-            print('# Error: evaluation exceeded {} seconds.'.format(
-                  e.timeout))
+        except Timeout as e:
+            print('# Error: evaluation exceeded {} seconds.'.format(e.timeout))
             return True
         except Exception as e:
             if type(expect) == type and \
