@@ -20,7 +20,7 @@ import utils
 #         return hmac.new(hash_key.encode(encoding),
 #                         x.encode(encoding)).digest()
 #     return hash_fn
-# 
+#
 # hash_key = tests['project_info']['hash_key']
 # __make_hash_fn(hash_key)
 
@@ -65,15 +65,15 @@ def unlock(test, logger):
     utils.underline('Unlocking tests for {}'.format(test.name))
     print('At each "{}", type in what you would expect the output to '
           'be if you had implemented {}'.format(UnlockConsole.PROMPT,
-              test.name))
+                                                test.name))
     print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
     print()
 
     console = UnlockConsole()
     cases = 0
     cases_unlocked = 0
-    for suite_num, suite in enumerate(test.suites):
-        for case_num, case in enumerate(suite):
+    for suite in test.suites:
+        for case in suite:
             cases += 1
             if not isinstance(case, UnlockTestCase) \
                     or not case.is_locked:
