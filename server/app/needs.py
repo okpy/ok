@@ -1,18 +1,21 @@
 from app.utils import create_api_response
 
 class Need(object):
-    def __init__(self, *needs):
-        self.items = needs
+    def __init__(self, action):
+        self.action = action
+        self.obj = None
 
-    def make_api_error_message(self):
-        return "Don't have permission to {}".format(' '.join(self.items))
+    def set_object(self, obj):
+        self.obj = obj
 
-class NeedException(Exception):
-    def __init__(self, need, message=None):
-        self.message = message
-        self.need = need
-
-    def __str__(self):
-        return self.message or self.need.make_api_error_message()
+    def api_response(self):
+        if self.obj:
+            obj_name = (self.obj.__name__ if isinstance(self.obj, type) else
+                        self.obj.__class__.__name__)
+        else:
+            obj_name = ""
+        return create_api_response(
+            400, "Don't have permission to {} {}".format(
+                self.action, obj_name))
 
 

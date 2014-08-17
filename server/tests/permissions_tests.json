@@ -1,0 +1,6 @@
+{
+  "a": ["dummy_student", ["User", "dummy_student"], "get", true],
+  "b": ["dummy_student", ["User", "other_student"], "get", false],
+  "c": ["dummy_student", ["Submission", "first"], "get", true],
+  "d": ["other_student", ["Submission", "first"], "get", false]
+ }

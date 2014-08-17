@@ -39,7 +39,8 @@ class APIResource(object):
             return self.index(user)
 
         need = Need('get')
-        self.get_model().must_satisfy_static(user, need)
+        if not self.get_model().can_static(user, need):
+            return need.api_response()
 
         obj = self.get_model().get_by_id(key)
         if not obj:
@@ -47,8 +48,9 @@ class APIResource(object):
                                        .format(resource=self.name,
                                                key=key))
 
-        need = Need('get', key)
-        obj.must_satisfy(user, need)
+        need = Need('get')
+        if not obj.can(user, need):
+            return need.api_response()
 
         return create_api_response(200, "", obj)
 
@@ -73,7 +75,8 @@ class APIResource(object):
         post_dict = request.json
 
         need = Need('create')
-        self.get_model().must_satisfy_static(user, need)
+        if not self.get_model().can_static(user, need):
+            return need.api_response()
 
         retval, new_mdl = self.new_entity(post_dict)
 
@@ -98,8 +101,9 @@ class APIResource(object):
         """
         ent = self.get_model().query.get(user_id)
 
-        need = Need('delete', ent.key)
-        self.get_model().must_satisfy_static(user, need)
+        need = Need('delete')
+        if not self.get_model().can_static(user, need):
+            return need.api_response()
 
         ent.key.delete()
         return create_api_response(200, "success")
@@ -109,7 +113,8 @@ class APIResource(object):
         Index HTTP method thing.
         """
         need = Need('get')
-        self.get_model().must_satisfy_static(user, need)
+        if not self.get_model().can_static(user, need):
+            return need.api_response()
 
         return create_api_response(
             200, "success", list(self.get_model().query()))

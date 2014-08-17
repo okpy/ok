@@ -10,7 +10,7 @@ from app import constants
 MODEL_BLUEPRINT = Blueprint('models', __name__)
 
 from app import app
-from app.needs import Need, NeedException
+from app.needs import Need
 from flask import json
 from flask.json import JSONEncoder as old_json
 
@@ -59,6 +59,25 @@ class Base(ndb.Model):
                 pass
         return result
 
+    @classmethod
+    def can_static(cls, user, need):
+        need.set_object(cls)
+        return cls._can_static(user, need)
+
+    @classmethod
+    def _can_static(cls, user, need):
+        return False
+
+    def can(self, user, need):
+        """
+        Tells you if the |user| satisfies the given |need| for this object.
+        """
+        need.set_object(self)
+        return self._can(user, need)
+
+    def _can(self, user, need):
+        return False
+
 
 class User(Base):
     """Users."""
@@ -101,16 +120,15 @@ class User(Base):
     def logged_in(self):
         return True
 
-    @staticmethod
-    def must_satisfy_static(user, need):
-        if not user.logged_in:
-            raise NeedException(need)
+    @classmethod
+    def _can_static(cls, user, need):
+        return user.logged_in
 
-    def must_satisfy(self, user, need):
-        action, key = need.items
+    def _can(self, user, need):
+        action = need.action
         if action == "get":
-            if not user.is_admin or self.key == key:
-                raise NeedException(need)
+            return user.is_admin or self.key == user.key
+        return False
 
 class AnonymousUser(User):
     @property
@@ -136,12 +154,11 @@ class Assignment(Base):
     creator = ndb.KeyProperty(User)
     course = ndb.KeyProperty('Course')
 
-    @staticmethod
-    def must_satisfy_static(user, need):
-        if not user.logged_in:
-            raise NeedException(need)
+    @classmethod
+    def _can_static(cls, user, need):
+        return user.logged_in
 
-    def must_satisfy(self, user, need):
+    def _can(self, user, need):
         return True
 
 
@@ -178,14 +195,10 @@ class Submission(Base):
     messages = ndb.StringProperty(validator=validate_messages)
     created = ndb.DateTimeProperty(auto_now_add=True)
 
-    @staticmethod
-    def must_satisfy_static(user, need):
-        pass
-
-    def must_satisfy(self, user, need):
+    def _can(self, user, need):
         #TODO(martinis) add check for number of items
-        action, key = need.items
+        action = need.action
         if action == "get":
-            if not user.is_admin or self.submitter == key:
-                raise NeedException(need)
+            return user.is_admin or self.submitter == user.key
+        return False
 
