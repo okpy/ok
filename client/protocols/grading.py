@@ -6,14 +6,26 @@ import utils
 #####################
 
 class GradedTestCase(core.TestCase):
-    def on_grade(self, logger, verbose, interact):
-        """Subclasses that are used by the grading protocol should
+    """Interface for tests that can be graded by the grading protocol.
+    Subclasses must implement the on_grade method.
+    """
+
+    def on_grade(self, logger, frame, verbose, interact):
+        """Subclasses that are used by the grading protocol must
         implement this method.
+
+        PARAMETERS:
+        logger   -- OutputLogger.
+        frame    -- dict; the environment in which the case will be
+                    evaluated.
+        verbose  -- bool; True if verbose mode is on.
+        interact -- bool; True if interact mode is on.
 
         RETURNS:
         bool; True if the graded test case results in an error.
         """
-        # TODO(albert): more documentation
+        # TODO(albert): frames should not be passed as an argument
+        # here, since not all TestCases are code-based.
         raise NotImplementedError
 
 def run(test, frame, logger, interactive=False, verbose=False):
@@ -23,18 +35,18 @@ def run(test, frame, logger, interactive=False, verbose=False):
     PARAMETERS:
     test        -- Test.
     frame       -- dict; the namespace for a frame.
-    console     -- AutograderConsole; this console is reused for all
-                   test cases for this Test.
+    logger      -- OutputLogger.
     interactive -- bool; if True, an interactive session will be
                    started upon test failure.
     verbose     -- bool; if True, print all test output, even if the
                    test case passes.
 
     RETURNS:
-    (passed, cases), where
-    passed -- int; number of TestCases passed
-    cases  -- int; total number of testable TestCases
+    int; number of TestCases that passed.
     """
+    # TODO(albert): the frame should not need to be provided to the
+    # run function, since frames are only applicable to
+    # PythonTestCases. Find a more suitable place to provide frames.
     utils.underline('Test ' + test.name)
     if test.note:
         print(test.note)
@@ -72,28 +84,16 @@ def _run_suite(suite, frame, logger, cases_tested, verbose, interactive):
     PARAMETERS:
     suite        -- list; each element is a TestCase
     frame        -- dict; global frame
-    console      -- AutograderConsole; the same console is used for
-                    for all cases in the suite.
+    logger       -- OutputLogger.
     cases_tested -- Counter; an object that keeps track of the
                     number of cases that have been tested so far.
     verbose      -- bool; True if verbose mode is toggled on
     interactive  -- bool; True if interactive mode is toggled on
 
-    DESCRIPTION:
-    For each TestCase, a new frame is created and houses all bindings
-    made by the test. The TestCase's teardown code will always be
-    executed after the primary code is done.
-
-    The OutputLogger with which the TestingConsole is registered
-    should always be set to standard output before calling this
-    function, and it will always be set to standard output after
-    leaving this function.
-
     RETURNS:
     (passed, errored), where
     passed  -- int; number of TestCases that passed
-    errored -- bool; True if the entire Test should abort, False
-               otherwise
+    errored -- bool; True if a TestCase resulted in error.
     """
     passed = 0
     for case in suite:

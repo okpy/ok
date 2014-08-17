@@ -18,9 +18,16 @@ from models import core
 # __make_hash_fn(hash_key)
 
 class UnlockTestCase(core.TestCase):
+    """Interface for tests that can be unlocked by the unlock protocol.
+    Subclasses must implement the on_unlock method.
+    """
+
     def on_unlock(self, logger):
-        """Subclasses that are used by the unlocking protocol should
+        """Subclasses that are used by the unlocking protocol must
         implement this method.
+
+        PARAMETERS:
+        logger   -- OutputLogger.
 
         RETURNS:
         list; a list of unlocked answers for a TestCase.
@@ -31,9 +38,8 @@ def unlock(test, logger):
     """Unlocks TestCases for a given Test.
 
     PARAMETERS:
-    test    -- Test; the test to unlock.
-    console -- UnlockConsole; a console for handling interactive
-               unlocking sessions.
+    test   -- Test; the test to unlock.
+    logger -- OutputLogger.
 
     DESCRIPTION:
     This function incrementally unlocks all TestCases in a specified
@@ -62,7 +68,8 @@ def unlock(test, logger):
     for suite_num, suite in enumerate(test.suites):
         for case_num, case in enumerate(suite):
             cases += 1
-            if not case.is_locked:
+            if not isinstance(case, UnlockTestCase) \
+                    or not case.is_locked:
                 continue
             utils.underline('Case {}'.format(cases), line='-')
             if console.run(case):   # Abort unlocking.
@@ -90,7 +97,7 @@ class UnlockConsole(object):
         """Runs an interactive session for unlocking a single TestCase.
 
         PARAMETERS:
-        case -- TestCase
+        case -- UnlockTestCase
 
         DESCRIPTION:
         Upon successful completion, the provided TestCase will be
@@ -139,7 +146,10 @@ class UnlockConsole(object):
         answers correctly.
 
         PARAMETERS:
-        output  -- TestCaseAnswer; a locked test case answer.
+        output    -- TestCaseAnswer; a locked test case answer.
+        verify_fn -- function; a function that verifies that a student
+                     answer is equal to an encoded version of the
+                     correct answer.
 
         DESCRIPTION:
         Continually prompt the student for an answer to an unlocking

@@ -4,12 +4,14 @@ from protocols import unlock
 import utils
 
 class ConceptTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
+    """TestCase for conceptual questions."""
 
     @property
     def answer(self):
         return self._outputs[0].answer
 
     def on_grade(self, logger, verbose, interact):
+        """Implements the GradedTestCase interface."""
         if verbose:
             utils.underline('Concept question', line='-')
             print(self._input_str)
@@ -18,7 +20,7 @@ class ConceptTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         return False
 
     def on_unlock(self, interact_fn):
-        """Runs an unlocking session for a conceptual TestCase."""
+        """Implements the UnlockTestCase interface."""
         print(self._input_str)
         # TODO(albert): needs verify_fn.
         answer = interact_fn(self.answer)

@@ -13,6 +13,9 @@ class Test(object):
             self.suites = []
         self.points = points
         self.note = utils.dedent(note)
+        # TODO(albert): the notion of a cache was originally designed
+        # only for code-based questions. Either generalize for other
+        # test types, or move to subclasses.
         self.cache = utils.dedent(cache)
 
     @property
@@ -28,23 +31,24 @@ class Test(object):
 
     @property
     def count_cases(self):
+        """Returns the number of test cases in this test."""
         return sum(len(suite) for suite in suites)
 
     @property
     def count_locked(self):
+        """Returns the number of locked test cases in this test."""
         return [case.is_locked for suite in suites
                                for case in suite].count(True)
 
     def add_suite(self, suite):
+        """Adds the given suite to this test's list of suites. If
+        suite is empty, do nothing."""
         if suite:
             self.suites.append(suite)
             suite_num = len(self.suites) - 1
             for test_case in suite:
                 test_case.test = self
                 test_case.suite_num = suite_num
-
-    def get_teardown(self, suite_num):
-        return self.teardown.get(suite_num, '')
 
 class TestCase(object):
     """Represents a single test case."""
@@ -78,7 +82,7 @@ class TestCaseAnswer(object):
     """Represents an answer for a single TestCase."""
 
     def __init__(self, answer, choices=None, explanation=''):
-        self.answer = answer
+        self.answer = answer    # The correct answer, possibly encoded
         self.choices = choices or []
         self.explanation = explanation
 

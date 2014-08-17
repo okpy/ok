@@ -7,25 +7,43 @@ import utils
 import traceback
 
 class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
+    """TestCase for doctest-style Python tests."""
+
     PROMPT = '$ '
     PS1 = '>>> '
     PS2 = '... '
 
     def __init__(self, input_str, outputs, test=None, teardown='',
             **status):
+        """Constructor.
+
+        PARAMETERS:
+        input_str -- str; the input string, which will be dedented and
+                     split along newlines.
+        outputs   -- list of TestCaseAnswers
+        test      -- Test or None; the test to which this test case
+                     belongs.
+        teardown  -- str; the teardown code. This code will be executed
+                     regardless of errors.
+        status    -- keyword arguments; statuses for the test case.
+        """
         super().__init__(input_str, outputs, test=test, **status)
-        self.teardown = teardown
+        self.teardown = utils.dedent(teardown)
         self._format_lines()
         # TODO(albert): check that the number of prompts in lines is
         # equal to the number of outputs
 
     def _format_lines(self):
+        """Splits the input string and adds an explicit prompt to the
+        last line if there are zero prompts.
+        """
         self._lines = self._input_str.splitlines()
         if self._lines and self.num_prompts == 0:
             self._lines[-1] = self.PROMPT + self._lines[-1]
 
     @property
     def num_prompts(self):
+        """Returns the number of prompts for this test case."""
         return [line.startswith(self.PROMPT)
                 for line in self._lines].count(True)
 
@@ -35,6 +53,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         return self._lines
 
     def on_grade(self, logger, frame, verbose, interactive):
+        """Implements the GradedTestCase interface."""
         if not verbose:
             logger.off()
         log = []
@@ -58,6 +77,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         return error
 
     def on_unlock(self, interact_fn):
+        """Implements the UnlockTestCase interface."""
         outputs = iter(self._outputs)
         answers = []
         for line in self.lines:
@@ -73,6 +93,9 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     @classmethod
     def strip_prompt(cls, text):
+        """Removes a prompt from the start of the text, if it exists.
+        Otherwise, the text is left unchanged.
+        """
         if text.startswith(cls.PROMPT):
             text = text[len(cls.PROMPT):]
         return text
@@ -92,6 +115,12 @@ class _PythonConsole(object):
     PS2 = PythonTestCase.PS2
 
     def __init__(self, equal_fn=None):
+        """Constructor.
+
+        PARAMETERS:
+        equal_fn -- function; a function that determines if expected
+                    output is equal to actual output.
+        """
         if equal_fn:
             self.equal = equal_fn
         else:
@@ -110,9 +139,9 @@ class _PythonConsole(object):
         with interactive mode.
 
         This method assumes the TestCase has correctly formatted lines
-        such that all prompts have a leading "$ ". In particular, the
-        TestCase should have added a "$ " for the "last line is prompt"
-        rule.
+        such that all prompts have a leading prompt. Implicit prompts
+        are expected to have been converted to explicit prompts
+        beforehand.
 
         The TestCase's teardown code is not executed at the end. It
         is up to the external application to call exec with teardown
