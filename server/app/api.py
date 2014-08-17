@@ -39,7 +39,7 @@ class APIResource(object):
             return self.index(user)
 
         need = Need('get')
-        if not self.get_model().can_static(user, need):
+        if not self.get_model().can(user, need):
             return need.api_response()
 
         obj = self.get_model().get_by_id(key)
@@ -49,7 +49,7 @@ class APIResource(object):
                                                key=key))
 
         need = Need('get')
-        if not obj.can(user, need):
+        if not obj.can(user, need, obj):
             return need.api_response()
 
         return create_api_response(200, "", obj)

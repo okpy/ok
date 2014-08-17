@@ -60,22 +60,15 @@ class Base(ndb.Model):
         return result
 
     @classmethod
-    def can_static(cls, user, need):
-        need.set_object(cls)
-        return cls._can_static(user, need)
-
-    @classmethod
-    def _can_static(cls, user, need):
-        return False
-
-    def can(self, user, need):
+    def can(cls, user, need, obj=None):
         """
         Tells you if the |user| satisfies the given |need| for this object.
         """
-        need.set_object(self)
-        return self._can(user, need)
+        need.set_object(obj or cls)
+        return cls._can(user, need, obj)
 
-    def _can(self, user, need):
+    @classmethod
+    def _can(cls, user, need, obj=None):
         return False
 
 
@@ -94,7 +87,15 @@ class User(Base):
 
     @property
     def is_admin(self):
-        return self.role is not constants.STUDENT_ROLE
+        return self.role is constants.ADMIN_ROLE
+
+    @property
+    def is_staff(self):
+        return self.role is constants.STAFF_ROLE
+
+    @property
+    def staffed_courses(self):
+        return Course.query(Course.staff == self.key)
 
     @classmethod
     def from_dict(cls, values):
@@ -121,13 +122,24 @@ class User(Base):
         return True
 
     @classmethod
-    def _can_static(cls, user, need):
-        return user.logged_in
-
-    def _can(self, user, need):
+    def _can(cls, user, need, obj=None):
+        if not user.logged_in:
+            return False
+        
+        if user.is_admin:
+            return True
         action = need.action
         if action == "get":
-            return user.is_admin or self.key == user.key
+            if not obj:
+                raise ValueError("Need instance for get action.")
+            if obj.key == user.key:
+                return True
+
+            if user.is_staff:
+                for course in user.staffed_courses:
+                    if course.key in obj.courses:
+                        return True
+                return False
         return False
 
 class AnonymousUser(User):
@@ -155,11 +167,13 @@ class Assignment(Base):
     course = ndb.KeyProperty('Course')
 
     @classmethod
-    def _can_static(cls, user, need):
-        return user.logged_in
-
-    def _can(self, user, need):
-        return True
+    def _can(cls, user, need, obj=None):
+        action = need.action
+        if action == "get":
+            return True
+        elif action == "create":
+            return user.is_admin
+        return False
 
 
 class Course(Base):
@@ -169,6 +183,19 @@ class Course(Base):
     offering = ndb.StringProperty()  # E.g., 'Fall 2014'
     creator = ndb.StructuredProperty(User)
     staff = ndb.KeyProperty(User, repeated=True)
+
+    @classmethod
+    def _can(cls, user, need, obj=None):
+        action = need.action
+        if action == "get":
+            return True
+        elif action in ("create", "delete"):
+            return user.is_admin
+        elif action == "modify":
+            if not obj:
+                raise ValueError("Need instance for get action.")
+            return user.key in obj.staff
+        return False
 
 
 def validate_messages(_, messages):
@@ -195,10 +222,17 @@ class Submission(Base):
     messages = ndb.StringProperty(validator=validate_messages)
     created = ndb.DateTimeProperty(auto_now_add=True)
 
-    def _can(self, user, need):
-        #TODO(martinis) add check for number of items
+    @classmethod
+    def _can(cls, user, need, obj=None):
         action = need.action
         if action == "get":
-            return user.is_admin or self.submitter == user.key
+            if not obj:
+                raise ValueError("Need instance for get action.")
+            if user.is_admin or obj.submitter == user.key:
+                return True
+            if user.is_staff:
+                for course in user.staffed_courses:
+                    if course.key in obj.submitter.get().courses:
+                        return True
         return False
 
