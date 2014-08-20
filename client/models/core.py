@@ -10,7 +10,7 @@ Ok.py assignments are organized in the following hierarchy:
         * a list of TestCaseAnswers
     * TestCaseAnswers: represents the answer to a specific TestCase
 
-The core models (Test, TestCase, TestCaseAnsweres) are implemented
+The core models (Test, TestCase, TestCaseAnswers) are implemented
 here.
 
 Developers can extend the TestCase class to create different types of
@@ -28,10 +28,9 @@ class Test(object):
     def __init__(self, names=None, suites=None, points=0, note='', cache=''):
         self.names = names or []
         # Filter out empty suites.
-        if suites:
-            self.suites = [suite for suite in suites if suite]
-        else:
-            self.suites = []
+        suites = suites or []
+        self.suites = list(filter(lambda suite: suite != [], suites))
+
         self.points = points
         self.note = utils.dedent(note)
         # TODO(albert): the notion of a cache was originally designed
