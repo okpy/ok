@@ -1,7 +1,14 @@
+"""Implements the UnlockProtocol, which unlocks all specified tests
+associated with an assignment.
+
+The UnlockTestCase interface can be implemented by TestCases that are
+compatible with the UnlockProtocol.
+"""
+
+from models import core
 import random
 import readline
-from grading import TestCaseAnswer
-from utils import underline, maybe_strip_prompt, OkConsole
+import utils
 
 #######################
 # UNLOCKING MECHANISM #
@@ -17,13 +24,31 @@ from utils import underline, maybe_strip_prompt, OkConsole
 # hash_key = tests['project_info']['hash_key']
 # __make_hash_fn(hash_key)
 
-def unlock(test, console):
+class UnlockTestCase(core.TestCase):
+    """Interface for tests that can be unlocked by the unlock protocol.
+    Subclasses must implement the on_unlock method.
+    """
+
+    def on_unlock(self, logger, interact_fn):
+        """Subclasses that are used by the unlocking protocol must
+        implement this method.
+
+        PARAMETERS:
+        logger      -- OutputLogger.
+        interact_fn -- function; a function that handles interactive
+                       input from students.
+
+        RETURNS:
+        list; a list of unlocked answers for a TestCase.
+        """
+        raise NotImplementedError
+
+def unlock(test, logger):
     """Unlocks TestCases for a given Test.
 
     PARAMETERS:
-    test    -- Test; the test to unlock.
-    console -- UnlockConsole; a console for handling interactive
-               unlocking sessions.
+    test   -- Test; the test to unlock.
+    logger -- OutputLogger.
 
     DESCRIPTION:
     This function incrementally unlocks all TestCases in a specified
@@ -39,64 +64,43 @@ def unlock(test, console):
         print('No tests to unlock for {}.'.format(test.name))
         return 0
 
-    underline('Unlocking tests for {}'.format(test.name))
+    utils.underline('Unlocking tests for {}'.format(test.name))
     print('At each "{}", type in what you would expect the output to '
           'be if you had implemented {}'.format(UnlockConsole.PROMPT,
                                                 test.name))
     print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
     print()
 
+    console = UnlockConsole(logger)
     cases = 0
     cases_unlocked = 0
     for suite in test.suites:
         for case in suite:
             cases += 1
-            if not case.is_locked:
+            if not isinstance(case, UnlockTestCase) \
+                    or not case.is_locked:
                 continue
-            underline('Case {}'.format(cases), line='-')
+            utils.underline('Case {}'.format(cases), line='-')
             if console.run(case):   # Abort unlocking.
                 return cases_unlocked
             cases_unlocked += 1
     print("You are done unlocking tests for this question!")
     return cases_unlocked
 
-class _UnlockException(BaseException):
+class UnlockException(BaseException):
+    """Exception raised by the UnlockConsole."""
     pass
 
-class UnlockConsole(OkConsole):
-    """Handles an interactive session for unlocking a TestCase.
-
-    An instance of this class can be (and should be) reused for
-    multiple TestCases. This class keeps an output log that is
-    registered with the OutputLogger class, but is currently not
-    used.
-
-    The verification function that is passed into the constructor is
-    used to verify whether or not a student's attempt to unlock a
-    TestCase is correct. This function can be any arbitrary funcion
-    that takes two arguments -- (1) the student input, and (2) the
-    locked version of the correct TestCaseAnswer.
-    """
+class UnlockConsole(object):
+    """Handles an interactive session for unlocking a TestCase."""
     PROMPT = '? '       # Prompt that is used for user input.
     EXIT_INPUTS = (     # Valid user inputs for aborting the session.
         'exit()',
         'quit()',
     )
-    PS1 = '>>> '
-    PS2 = '... '
 
-    def __init__(self, logger, verification_fn):
-        """Constructor.
-
-        PARAMETERS:
-        logger          -- OutputLogger
-        verification_fn -- function; takes as arguments
-                           (student_input, locked_answer) and verifies
-                           that the student_input matches the
-                           locked_answer.
-        """
-        super().__init__(logger)
-        self.verify = verification_fn
+    def __init__(self, logger):
+        self._logger = logger
 
     ##################
     # Public methods #
@@ -106,7 +110,7 @@ class UnlockConsole(OkConsole):
         """Runs an interactive session for unlocking a single TestCase.
 
         PARAMETERS:
-        case -- TestCase
+        case -- UnlockTestCase
 
         DESCRIPTION:
         Upon successful completion, the provided TestCase will be
@@ -118,28 +122,21 @@ class UnlockConsole(OkConsole):
         bool; True if an error/abort occurs, False if the TestCase is
         unlocked successfully.
         """
-        self._activate_logger()
-
         try:
-            if not case.is_conceptual:
-                answers = self.__run_code(case)
-            else:
-                answers = self.__run_concept(case)
-        except _UnlockException:
+            answers = case.on_unlock(self._logger, self.interact)
+        except UnlockException:
             print('\nExiting unlocker...')
             return True
         else:
             case.set_outputs(answers)
-            case.unlock()
+            case.set_locked(False)
             print("-- Congratulations, you unlocked this case! --")
             print()
             return False
-        finally:
-            self._deactivate_logger()
 
-    #######################
-    # Visible for testing #
-    #######################
+    ###################
+    # Private Methods #
+    ###################
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
@@ -157,36 +154,15 @@ class UnlockConsole(OkConsole):
             choice_map[i] = choice
         return choice_map
 
-    ###################
-    # Private methods #
-    ###################
-
-    def __run_code(self, case):
-        """Runs an unlocking session for a code TestCase."""
-        outputs = iter(case.outputs)
-        answers = []
-        for line in case.lines:
-            if line.startswith(' '):  # Line is indented.
-                print(self.PS2 + line)
-                continue
-            print(self.PS1 + maybe_strip_prompt(line))
-            if line.startswith('$ '):
-                answer = self.__interact(next(outputs))
-                answers.append(TestCaseAnswer(answer))
-        return answers
-
-    def __run_concept(self, case):
-        """Runs an unlocking session for a conceptual TestCase."""
-        print('\n'.join(case.lines))
-        answer = self.__interact(case.outputs[0])
-        return [TestCaseAnswer(answer)]
-
-    def __interact(self, output):
+    def interact(self, output, verify_fn):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
         PARAMETERS:
-        output  -- TestCaseAnswer; a locked test case answer.
+        output    -- TestCaseAnswer; a locked test case answer.
+        verify_fn -- function; a function that verifies that a student
+                     answer is equal to an encoded version of the
+                     correct answer.
 
         DESCRIPTION:
         Continually prompt the student for an answer to an unlocking
@@ -220,21 +196,20 @@ class UnlockConsole(OkConsole):
                     print()
                 except (KeyboardInterrupt, EOFError):
                     pass
-                raise _UnlockException
+                raise UnlockException
             if student_input in self.EXIT_INPUTS:
-                raise _UnlockException
+                raise UnlockException
 
-            self.__add_line_to_history(student_input)
+            self._add_line_to_history(student_input)
 
             if output.choices:
                 student_input = choice_map[student_input]
-            correct = self.verify(student_input, output.answer)
+            correct = verify_fn(student_input, output.answer)
             if not correct:
                 print("-- Not quite. Try again! --")
         return student_input
 
-    @staticmethod
-    def __add_line_to_history(line):
+    def _add_line_to_history(self, line):
         """Adds the given line to readline history, only if the line
         is non-empty.
         """
