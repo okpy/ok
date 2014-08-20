@@ -21,7 +21,7 @@ Installation
 
 Testing the Installation
 ------------------------
-* Run `./run_tests`. For a successful installation, all tests should pass (55 for client, 32 for server).
+* Run `./run_tests`. For a successful installation, all tests should pass.
 
 Starting the Server
 -------------
