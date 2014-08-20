@@ -8,47 +8,21 @@ from app.decorators import handle_error
 from app.authenticator import AuthenticationException
 
 from flask import request
-from functools import wraps
-
 
 MC_NAMESPACE = "access-token"
 
+def authenticate():
+    """Returns the user which made this request."""
+    authenticator = app.config["AUTHENTICATOR"]
+    if 'access_token' not in request.args:
+        user = models.AnonymousUser
+    else:
+        access_token = request.args['access_token']
 
-def requires_authenticated_user(required=False):
-    """Decorator that determines which user made the request
-    and passes it to the decorated function. The wrapped function
-    is called with keyword arg called 'user' that is a user object."""
-    def requires_user_with_privileges(func):
-        """Higher order function"""
-        @wraps(func)
-        def decorated(*args, **kwargs):  #pylint: disable=too-many-return-statements
-            authenticator = app.config["AUTHENTICATOR"]
-            if 'access_token' not in request.args:
-                if required:
-                    return create_api_response(401,
-                                               "access token required "
-                                               "for this method")
-                else:
-                    user = models.AnonymousUser
-            else:
-                access_token = request.args['access_token']
-                mc_key = "%s-%s" % (MC_NAMESPACE, access_token)
-                email = memcache.get(mc_key) # pylint: disable=no-member
-                if not email:
-                    try:
-                        email = authenticator.authenticate(access_token)
-                    except AuthenticationException as e:
-                        return create_api_response(401, e.message)
-                    memcache.set(mc_key, email,  # pylint: disable=no-member
-                                 time=60)
-                user = models.User.get_by_id(email) or models.AnonymousUser
-            return func(*args, user=user, **kwargs)
-        return decorated
-    return requires_user_with_privileges
-
-
-@app.route("%s/me" % API_PREFIX)
-@handle_error
-@requires_authenticated_user
-def authenticate(user=None):
-    return create_api_response(200, "success", user)
+        # For now, no memcache usage, so it can be simpler.
+        try:
+            email = authenticator.authenticate(access_token)
+        except AuthenticationException as e:
+            return create_api_response(401, e.message)
+        user = models.User.get_or_insert(email)
+    return user

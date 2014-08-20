@@ -27,25 +27,9 @@ from google.appengine.ext import ndb
 
 import app
 from app import models
+from app import auth
 from app.constants import API_PREFIX, ADMIN_ROLE #pylint: disable=import-error
 from app.authenticator import Authenticator, AuthenticationException
-
-class DummyAuthenticator(Authenticator):
-    """
-    A dummy authenticator. This mocks out the real authenticator.
-    """
-    def __init__(self, accounts):
-        self.accounts = accounts
-
-    def authenticate(self, access_token):
-        if access_token in self.accounts:
-            return self.accounts[access_token].email
-        if access_token == "bad_access_token":
-            raise AuthenticationException("access token invalid")
-        return "%s@gmail.com" % access_token
-
-    def get_user(self, email):
-        return super(DummyAuthenticator, self).get_user(email, "admin" in email)
 
 class BaseTestCase(unittest.TestCase): #pylint: disable=no-init
     """
@@ -85,40 +69,29 @@ class APIBaseTestCase(BaseTestCase):
     def setUp(self):
         super(APIBaseTestCase, self).setUp()
         APIBaseTestCase.accounts = self.get_accounts()
-        app.app.config["AUTHENTICATOR"] = DummyAuthenticator(self.accounts)
         self.user = None
+        auth.authenticate = self.authenticate
+        
+    def authenticate(self):
+        return self.user
 
     def login(self, user):
         """ Logs in the user. """
-        assert not self.user
+        assert not self.user and user in self.accounts
+        user = self.accounts[user]
         self.user = user
-        if user in self.accounts:
-            self.accounts[user].put()
+        user.put()
 
     def logout(self):
         """ Logs out the user. """
-        if self.user in self.accounts:
-            self.accounts[self.user].key.delete()
+        if self.user in self.accounts.values():
+            self.user.key.delete()
         self.user = None
-
-    def add_access_token(self, url):
-        if not self.user:
-            return url
-        params = {
-            'access_token': self.user
-        }
-        url_parts = list(urlparse.urlparse(url))
-        query = dict(urlparse.parse_qsl(url_parts[4]))
-        query.update(params)
-        url_parts[4] = urllib.urlencode(query)
-        url = urlparse.urlunparse(url_parts)
-        return url
 
     def get(self, url, *args, **kwds):
         """
         Makes a get request.
         """
-        url = self.add_access_token(url)
         self.response = self.client.get(API_PREFIX + url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)['data']
@@ -142,7 +115,6 @@ class APIBaseTestCase(BaseTestCase):
         """
         Makes a post request, with json.
         """
-        url = self.add_access_token(url)
         kwds.setdefault('content_type', 'application/json')
         self.response = self.client.post(API_PREFIX + url, *args, **kwds)
         try:

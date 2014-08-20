@@ -87,11 +87,11 @@ class User(Base):
 
     @property
     def is_admin(self):
-        return self.role is constants.ADMIN_ROLE
+        return self.role == constants.ADMIN_ROLE
 
     @property
     def is_staff(self):
-        return self.role is constants.STAFF_ROLE
+        return self.role == constants.STAFF_ROLE
 
     @property
     def staffed_courses(self):
@@ -129,17 +129,15 @@ class User(Base):
         if user.is_admin:
             return True
         action = need.action
-        if action == "get":
-            if not obj:
-                raise ValueError("Need instance for get action.")
-            if obj.key == user.key:
-                return True
+        if action in ("get", "index"):
+            if obj:
+                if obj.key == user.key:
+                    return True
 
             if user.is_staff:
                 for course in user.staffed_courses:
                     if course.key in obj.courses:
                         return True
-                return False
         return False
 
 class AnonymousUser(User):
@@ -169,7 +167,7 @@ class Assignment(Base):
     @classmethod
     def _can(cls, user, need, obj=None):
         action = need.action
-        if action == "get":
+        if action in ("get", "index"):
             return True
         elif action == "create":
             return user.is_admin

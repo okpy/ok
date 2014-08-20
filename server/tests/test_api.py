@@ -31,7 +31,7 @@ class APITest(object): #pylint: disable=no-init
     def setUp(self): #pylint: disable=super-on-old-class, invalid-name
         """Set up the API Test.
 
-        Sets up the authenticator stub, and logs you in as a student"""
+        Sets up the authenticator stub, and logs you in as an admin."""
         super(APITest, self).setUp()
         self.login('dummy_admin')
 
@@ -185,8 +185,7 @@ class UserAPITest(APITest, APIBaseTestCase):
             return cls.accounts['dummy_student']
 
     def test_index_empty(self):
-        self.logout()
-        super(UserAPITest, self).test_index_empty()
+        """This test doesn't make sense for the user API."""
 
     def test_get_invalid_id_errors(self):
         """Tests that a get on an invalid ID errors."""

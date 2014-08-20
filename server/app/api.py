@@ -4,15 +4,15 @@ The public API
 
 from flask.views import MethodView
 from flask.app import request
+from flask import session
 
 from app import app
 from app import models
 from app.models import BadValueError
 from app.needs import Need
 from app.constants import API_PREFIX, STUDENT_ROLE
-from app.utils import create_api_response
-from app.auth import requires_authenticated_user
 from app.decorators import handle_error
+from app.utils import create_api_response
 
 
 class APIResource(object):
@@ -31,25 +31,20 @@ class APIResource(object):
         raise NotImplementedError
 
     @handle_error
-    def get(self, key, user=None):
+    def get(self, key):
         """
         The GET HTTP method
         """
         if key is None:
-            return self.index(user)
-
-        need = Need('get')
-        if not self.get_model().can(user, need):
-            return need.api_response()
+            return self.index()
 
         obj = self.get_model().get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found"
-                                       .format(resource=self.name,
-                                               key=key))
+            return create_api_response(404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
 
         need = Need('get')
-        if not obj.can(user, need, obj):
+        if not obj.can(session['user'], need, obj):
             return need.api_response()
 
         return create_api_response(200, "", obj)
@@ -68,14 +63,14 @@ class APIResource(object):
     #     return create_api_response(200, "success")
 
     @handle_error
-    def post(self, user=None):
+    def post(self):
         """
         The POST HTTP method
         """
         post_dict = request.json
 
         need = Need('create')
-        if not self.get_model().can_static(user, need):
+        if not self.get_model().can(session['user'], need):
             return need.api_response()
 
         retval, new_mdl = self.new_entity(post_dict)
@@ -95,25 +90,25 @@ class APIResource(object):
         return None, new_mdl
 
     @handle_error
-    def delete(self, user_id, user=None):
+    def delete(self, user_id):
         """
         The DELETE HTTP method
         """
         ent = self.get_model().query.get(user_id)
 
         need = Need('delete')
-        if not self.get_model().can_static(user, need):
+        if not self.get_model().can_static(session['user'], need):
             return need.api_response()
 
         ent.key.delete()
-        return create_api_response(200, "success")
+        return create_api_response(200, "success", {})
 
-    def index(self, user=None):
+    def index(self):
         """
         Index HTTP method thing.
         """
-        need = Need('get')
-        if not self.get_model().can_static(user, need):
+        need = Need('index')
+        if not self.get_model().can(session['user'], need):
             return need.api_response()
 
         return create_api_response(
@@ -135,10 +130,9 @@ class UserAPI(MethodView, APIResource):
         try:
             mdl = self.get_model().get_by_id(attributes['email'])
         except ValueError:
-            return (create_api_response(400, 'Email required'), 
-                    None)
+            return create_api_response(400, 'Email required'), None
         if mdl:
-            return (create_api_response(400, '%s already exists' % (
+            return create_api_response((400, '%s already exists' % (
                 self.name.capitalize())), None)
         new_mdl = self.get_model().from_dict(attributes)
         new_mdl.put()
@@ -199,7 +193,7 @@ class SubmissionAPI(MethodView, APIResource):
         })
 
     @handle_error
-    def post(self, user=None):
+    def post(self):
         if 'submitter' in request.json:
             del request.json['submitter']
         for key in request.json:
@@ -207,35 +201,21 @@ class SubmissionAPI(MethodView, APIResource):
                 return create_api_response(400, 'Unknown field %s' % key)
         for field in self.post_fields:
             if field not in request.json:
-                return create_api_response(400,
-                                           'Missing required field %s' % field)
+                return create_api_response(
+                    400, 'Missing required field %s' % field)
 
         try:
-            return self.submit(user, request.json['assignment'],
+            return self.submit(session['user'], request.json['assignment'],
                                request.json['messages'])
         except BadValueError as e:
-            return create_api_response(400, e.message)
+            return create_api_response(400, e.message, {})
 
-    def index(self, user=None):
+    def index(self):
         """
         Index HTTP method thing.
         """
         return create_api_response(
-            200, "success", list(self.get_model().query(self.get_model().submitter == user.key)))
+            200, "success", list(
+                self.get_model().query(
+                    self.get_model().submitter == session['user'].key)))
 
-def register_api(view, endpoint, url, primary_key='key', pk_type='int:', admin=False):
-    """
-    Registers the given view at the endpoint, accessible by the given url.
-    """
-    url = API_PREFIX + url
-    view_func = requires_authenticated_user()(view.as_view(endpoint))
-    app.add_url_rule(url, defaults={primary_key: None},
-                     view_func=view_func, methods=['GET', ])
-    app.add_url_rule('%s/new' % url, view_func=view_func, methods=['POST', ])
-    app.add_url_rule('%s/<%s%s>' % (url, pk_type, primary_key),
-                     view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
-
-# TODO(denero) Add appropriate authentication requirements
-register_api(UserAPI, 'user_api', '/user', admin=True, pk_type='')
-register_api(AssignmentAPI, 'assignment_api', '/assignment', admin=True)
-register_api(SubmissionAPI, 'submission_api', '/submission')
