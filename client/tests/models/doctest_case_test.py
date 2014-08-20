@@ -1,7 +1,7 @@
 """Tests the PythonTestCase model."""
 
 from models import core
-from models import python
+from models import doctest_case
 from unittest import mock
 import sys
 import unittest
@@ -30,7 +30,7 @@ class OnGradeTest(unittest.TestCase):
             **status):
         frame = frame or {}
         outputs = [core.TestCaseAnswer(output) for output in outputs]
-        return python.PythonTestCase(input_, outputs, frame=frame,
+        return doctest_case.PythonTestCase(input_, outputs, frame=frame,
                 test=self.test, teardown=teardown, **status)
 
     def calls_onGrade(self, case, errors=False, verbose=False,
