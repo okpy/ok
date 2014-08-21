@@ -1,45 +1,86 @@
 #!/usr/bin/python3
 
+import ok
+
+import os
+import sys
 import unittest
-import argparse
-from ok import PROTOCOLS, Protocol, parse_input, ok_main
 
-class TestProtocol(Protocol):
-    name = "test"
-    called_start = 0
-    called_interact = 0
 
-    def __init__(self, cmd_line_args):
-        Protocol.__init__(self, cmd_line_args)
+class TestProtocol(ok.Protocol):
+    def __init__(self, args, src_files):
+        ok.Protocol.__init__(args, src_files)
+        self.called_start = 0
+        self.called_interact = 0
 
-    def on_start(self, buf):
-        TestProtocol.called_start += 1
+    def on_start(self):
+        self.called_start += 1
 
-    def on_interact(self, buf):
-        TestProtocol.called_interact += 1
+    def on_interact(self):
+        self.called_interact += 1
 
-class FrameworkTest(unittest.TestCase): #pylint: disable=too-many-public-methods
+
+class TestOK(unittest.TestCase):
+    def test_parse_input(self):
+        old_sys_argv = sys.argv[1:]
+        sys.argv[1:] = []
+        _ = ok.parse_input() # Does not crash and returns a value.
+        sys.argv[1:] = old_sys_argv
+
+
+class TestLoadTests(unittest.TestCase):
     def setUp(self):
-        self.args = argparse.ArgumentParser().parse_args()
-        del PROTOCOLS[:]
-        PROTOCOLS.append(TestProtocol)
+        self.hw1_dir = 'demo_assignments'
+        self.hw1_tests = os.path.join(self.hw1_dir, 'hw1_tests.py')
 
-    def test_parser(self): #pylint: disable=no-self-use
-        arguments = parse_input()
-        assert arguments.mode == None
+    def test_load_test_file(self):
+        for path in [self.hw1_dir, self.hw1_tests]:
+            filename, _ = ok.load_test_file(path)
+            self.assertEqual(self.hw1_tests, filename)
 
-    def test_ok_main_no_args(self):
-        initial_start = TestProtocol.called_start
-        initial_interact = TestProtocol.called_interact
-        self.args.mode = None
-        ok_main(self.args)
-        assert TestProtocol.called_start == initial_start + 1
-        assert TestProtocol.called_interact == initial_interact
+    def test_load_test_file_with_hint(self):
+        curdir = os.curdir
+        os.chdir(self.hw1_dir)
+        filename, _ = ok.load_test_file('1') # Interpreted as a hint
+        self.assertEqual('hw1_tests.py', filename)
+        os.chdir(curdir)
 
-    def test_ok_main_mode_set(self):
-        initial_start = TestProtocol.called_start
-        initial_interact = TestProtocol.called_interact
-        self.args.mode = "test"
-        ok_main(self.args)
-        assert TestProtocol.called_start == initial_start + 1
-        assert TestProtocol.called_interact == initial_interact + 1
+    def test_find_test_file_no_hint(self):
+        filename, _ = ok.find_test_file(self.hw1_dir)
+        self.assertEqual(self.hw1_tests, filename)
+
+    def test_find_test_file_not_found(self):
+        self.assertRaises(Exception, ok.find_test_file, ['.'])
+
+    def test_find_test_file_with_hints(self):
+        good, bad = '1', '2'
+        filename, _ = ok.find_test_file(self.hw1_dir, good)
+        self.assertEqual(self.hw1_tests, filename)
+        self.assertRaises(Exception, ok.find_test_file, [self.hw1_dir, bad])
+
+    def test_get_assignment(self):
+        self.assertIsNone(ok.get_assignment(self.hw1_dir))
+        assignment = ok.get_assignment(self.hw1_tests)
+        self.assertIn('name', assignment)
+        self.assertEqual('hw1', assignment['name'])
+        self.assertIn('hw1.py', assignment['src_files'])
+
+
+class DummyArgs:
+    """Placeholder for parsed command-line arguments."""
+
+
+class TestFileContentsProtocol(unittest.TestCase):
+    def setUp(self):
+        self.hw1 = 'demo_assignments/hw1.py'
+        cmd_line_args = DummyArgs()
+        self.proto = ok.FileContents(cmd_line_args, [self.hw1])
+
+    def test_on_start(self):
+        contents = self.proto.on_start()
+        self.assertEqual(1, len(contents))
+        self.assertIn('hw1.py', contents)
+        self.assertIn('def square(x):', contents['hw1.py'])
+
+
+

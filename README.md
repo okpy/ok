@@ -14,10 +14,14 @@ Installation
 * Clone this repo
 * Install [Google App Engine SDK](https://developers.google.com/appengine/downloads) and add it to your `$PATH`. You can do `brew install google-app-engine` on a mac.
 * `export GAE_SDK=<location of unzipped GAE SDK>`
-* Install `virtualenv`. You can do `brew install virtualenv` on a mac.
-* `virtualenv .` from the repo root directory to create a new virtual environment.
-* Run `install.sh`
+  - For brew, this location should be in /usr/local/Cellar/google-app-engine/1.9.8/share/google-app-engine.
+  - Some files that should be present when running `ls $GAE_SDK` are `dev_appserver.py` and `api_server.py`.
+* Install `virtualenv`. You can do `brew install virtualenv` on a mac or `pip install virtualenv`.
+* Run `install.py`
 
+Testing the Installation
+------------------------
+* Run `./run_tests`. For a successful installation, all tests should pass.
 
 Starting the Server
 -------------

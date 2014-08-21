@@ -34,7 +34,7 @@ def main(sdk_path, test_path):
 
 
 if __name__ == '__main__':
-    #See: http://code.google.com/appengine/docs/python/tools/localunittesting.html
+    #See: code.google.com/appengine/docs/python/tools/localunittesting.html
     try:
         #Path to the SDK installation
         if 'GAE_SDK' in os.environ:
@@ -42,7 +42,8 @@ if __name__ == '__main__':
         else:
             SDK_PATH = sys.argv[1] # ...or hardcoded path
         #Path to tests folder
-        TEST_PATH = os.path.join(os.path.dirname(os.path.abspath(__name__)),'tests')
+        dir_of_file = os.path.dirname(os.path.abspath(__file__))
+        TEST_PATH = os.path.join(dir_of_file, 'tests')
         main(SDK_PATH, TEST_PATH)
     except IndexError:
         # you probably forgot about path as first argument

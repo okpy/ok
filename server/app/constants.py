@@ -1,6 +1,6 @@
 """App constants"""
-
-STUDENT_ROLE = 0
-STAFF_ROLE = 1
-ADMIN_ROLE = 2
+API_PREFIX = "/api/v1"
+STUDENT_ROLE = 'student'
+STAFF_ROLE = 'staff'
+ADMIN_ROLE = 'admin'
 VALID_ROLES = [STUDENT_ROLE, STAFF_ROLE, ADMIN_ROLE]
