@@ -29,6 +29,19 @@ Starting the Server
 $ cd server
 $ ./start_server
 ```
+
+Server Development
+------------------
+
+The server is developed in Python 2.7+ using the Google App Engine framework.
+
+To start making changes to the server, first change to its virtual enviroment.
+
+``source activate-server.sh``
+
+In most environments, your prompt will change to start with ``(server)``.
+To exit this environment, type ``deactivate``.
+
 Core Features
 -------------
 
