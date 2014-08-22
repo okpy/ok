@@ -2,7 +2,7 @@
 
 """Create virtualenvs, set up git hooks, install dependencies, etc.
 
-Run this script when you check out and whenever dependencies change.
+Run this script with no arguments initially and whenever dependencies change.
 
 Individual zero-arg functions from this file can be called by passing their
 names as command-line arguments. E.g., 'python3 install.py check_pythons'.
@@ -20,11 +20,13 @@ def main():
     shell_with_env('client', 'pip install -r client_requirements.txt')
     shell_with_env('server', 'pip install -r server_requirements.txt')
     shell_with_env('server', 'server/app/generate_keys.py')
+    run_linkenv()
+    symlink_git_hooks()
 
 ENV_DIR = 'env'
 
 def call(fn_name):
-    """Call fn_name with no arguments."""
+    """Call fn with fn_name (str) using no arguments."""
     if fn_name not in globals():
         raise Exception('No function named "{}"'.format(fn_name))
     fn = globals()[fn_name]
@@ -62,7 +64,7 @@ def check_pythons():
     for python, min_version in [('python', '2.7'), ('python3', '3.3')]:
         if which(python) is None:
             raise Exception('Command "{}" not found')
-        redirect_err_to_out =  '2>&1'
+        redirect_err_to_out = '2>&1'
         version = shell(python, '--version', redirect_err_to_out).split()[1]
         if version_list(version) < version_list(min_version):
             raise Exception('"{}" version {} is older than minimum {}'.format(
@@ -81,6 +83,17 @@ def setup_envs():
         if not os.path.exists(os.path.join(env_path, 'bin')):
             shell('virtualenv', '-p', which(python), env_path)
     print('Virtual environments are created')
+
+def run_linkenv():
+    """Call linkenv to set up appengine dependencies."""
+    shell_with_env('server', 'python', '-m', 'linkenv.linkenv',
+                   'env/server/lib/python2.7/site-packages',
+                   'server/gaenv', '1>/dev/null')
+
+def symlink_git_hooks():
+    """Add symlink to hooks in .git."""
+    if not os.path.exists('.git/hooks/pre-commit'):
+        os.symlink('../../hooks/pre-commit.py', '.git/hooks/pre-commit')
 
 if __name__ == '__main__':
     # If there are command-line arguments, call the named functions.
