@@ -1,10 +1,8 @@
-from google.appengine.api import memcache
+"""Convert access tokens to user records."""
 
 from app import models
 from app import app
-from app.constants import API_PREFIX, ADMIN_ROLE, STUDENT_ROLE
 from app.utils import create_api_response
-from app.decorators import handle_error
 from app.authenticator import AuthenticationException
 
 from flask import request
@@ -19,7 +17,9 @@ def authenticate():
     else:
         access_token = request.args['access_token']
 
-        # For now, no memcache usage, so it can be simpler.
+        # TODO(denero) Use memcache to speed up user lookup.
+        # See: https://github.com/Cal-CS-61A-Staff/ok/blob/
+        #          994144a99881d21f5aefbde8689b388fffa9bd81/server/app/auth.py
         try:
             email = authenticator.authenticate(access_token)
         except AuthenticationException as e:
