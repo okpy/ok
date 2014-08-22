@@ -30,7 +30,8 @@ forms.py
 
 models.py
 ---------
-Implements the models described in ()[] and their permissions.
+Implements the models described on the Wiki and their permissions.
+TODO(denero): Add links to Wiki or external documentation here.
 
 urls.py
 -------
