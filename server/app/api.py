@@ -49,18 +49,12 @@ class APIResource(object):
 
         return create_api_response(200, "", obj)
 
-    # Not implemented for now; not used by anything right now
-    # @handle_error
-    # def put(self, user=None):
-    #     """
-    #     The PUT HTTP method
-    #     """
-    #     new_mdl = self.get_model()()
-    #     new_mdl.put()
-    #     access_error = user.attempt_access(self.get_model(), obj)
-    #     if access_error:
-    #         return create_api_response(401, access_error.get_message())
-    #     return create_api_response(200, "success")
+    @handle_error
+    def put(self, user=None):
+        """
+        The PUT HTTP method
+        """
+        raise NotImplementedError()
 
     @handle_error
     def post(self):
