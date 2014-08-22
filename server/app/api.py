@@ -6,11 +6,9 @@ from flask.views import MethodView
 from flask.app import request
 from flask import session
 
-from app import app
 from app import models
 from app.models import BadValueError
 from app.needs import Need
-from app.constants import API_PREFIX, STUDENT_ROLE
 from app.decorators import handle_error
 from app.utils import create_api_response
 
@@ -142,7 +140,7 @@ class AssignmentAPI(MethodView, APIResource):
         return models.Assignment
 
 
-class SubmitNDBImplementation:
+class SubmitNDBImplementation(object):
     """Implementation of DB calls required by submission using Google NDB"""
 
     def lookup_assignments_by_name(self, name):
@@ -152,9 +150,9 @@ class SubmitNDBImplementation:
 
     def create_submission(self, user, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
-        submission =  models.Submission(submitter=user.key,
-                                        assignment=assignment.key,
-                                        messages=messages)
+        submission = models.Submission(submitter=user.key,
+                                       assignment=assignment.key,
+                                       messages=messages)
         submission.put()
         return submission
 
