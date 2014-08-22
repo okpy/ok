@@ -32,10 +32,6 @@ models.py
 ---------
 Implements the models described in ()[] and their permissions.
 
-permissions.py
---------------
-The permissions.py class is not used elsewhere in the code.
-
 urls.py
 -------
 Dispatches to different handlers based on URL.
