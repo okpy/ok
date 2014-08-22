@@ -48,11 +48,11 @@ class APIResource(object):
         return create_api_response(200, "", obj)
 
     @handle_error
-    def put(self, user=None):
+    def put(self):
         """
         The PUT HTTP method
         """
-        raise NotImplementedError()
+        return create_api_response(401, "PUT request not permitted")
 
     @handle_error
     def post(self):
