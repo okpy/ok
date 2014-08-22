@@ -65,21 +65,24 @@ class APIResource(object):
         if not self.get_model().can(session['user'], need):
             return need.api_response()
 
-        retval, new_mdl = self.new_entity(post_dict)
+        entity, error_response = self.new_entity(post_dict)
 
-        if not retval:
+        if not error_response:
             return create_api_response(200, "success", {
-                'key': new_mdl.key.id()
+                'key': entity.key.id()
             })
-        return retval
+        else:
+            return error_response
 
     def new_entity(self, attributes):
         """
         Creates a new entity with given attributes.
+        Returns (entity, error_response) should be ignored if error_response
+        is a True value.
         """
-        new_mdl = self.get_model().from_dict(attributes)
-        new_mdl.put()
-        return None, new_mdl
+        entity = self.get_model().from_dict(attributes)
+        entity.put()
+        return entity, None
 
     @handle_error
     def delete(self, user_id):
@@ -119,16 +122,15 @@ class UserAPI(MethodView, APIResource):
         """
         Creates a new entity with given attributes.
         """
-        try:
-            mdl = self.get_model().get_by_id(attributes['email'])
-        except ValueError:
-            return create_api_response(400, 'Email required'), None
-        if mdl:
-            return create_api_response((400, '%s already exists' % (
-                self.name.capitalize())), None)
-        new_mdl = self.get_model().from_dict(attributes)
-        new_mdl.put()
-        return None, new_mdl
+        if 'email' not in attributes:
+            return None, create_api_response(400, 'Email required')
+        entity = self.get_model().get_by_id(attributes['email'])
+        if entity:
+            return None, create_api_response(400,
+                                             '%s already exists' % self.name)
+        entity = self.get_model().from_dict(attributes)
+        entity.put()
+        return entity, None
 
 
 class AssignmentAPI(MethodView, APIResource):
