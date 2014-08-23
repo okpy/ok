@@ -173,17 +173,15 @@ class DummyArgs:
     """Placeholder for parsed command-line arguments."""
 
 
-class TestFileContentsProtocol(unittest.TestCase):
-    def setUp(self):
-        self.hw1 = 'demo_assignments/hw1.py'
-        cmd_line_args = DummyArgs()
-        self.proto = ok.FileContents(cmd_line_args, [self.hw1])
-
-    def test_on_start(self):
-        contents = self.proto.on_start()
-        self.assertEqual(1, len(contents))
-        self.assertIn('hw1.py', contents)
-        self.assertIn('def square(x):', contents['hw1.py'])
-
-
-
+# TODO(albert): rewrite these tests to use a mock filesystem.
+# class TestFileContentsProtocol(unittest.TestCase):
+#     def setUp(self):
+#         self.hw1 = 'demo_assignments/hw1.py'
+#         cmd_line_args = DummyArgs()
+#         self.proto = ok.FileContents(cmd_line_args, [self.hw1])
+#
+#     def test_on_start(self):
+#         contents = self.proto.on_start()
+#         self.assertEqual(1, len(contents))
+#         self.assertIn('hw1.py', contents)
+#         self.assertIn('def square(x):', contents['hw1.py'])

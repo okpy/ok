@@ -217,7 +217,8 @@ def _import_module(path):
         test_module = loader.load_module()
         return test_module
     except Exception:
-        # TODO(albert): should probably fail fast.
+        # TODO(albert): should probably fail fast, but with helpful
+        # error messages.
         return None
 
 ##########################
@@ -226,6 +227,9 @@ def _import_module(path):
 
 def parse_input():
     """Parses command line input."""
+    # TODO(albert): rethink these command line arguments. One edit is
+    # to change the --tests flag to --assignment, a relative path to
+    # the assignment directory.
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -244,6 +248,9 @@ def parse_input():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
+    # TODO(albert): rewrite this function to use load_assignment to
+    # read test files. Also modify the Protocol constructor's
+    # parameters.
     try:
         test_file, assignment = load_test_file(args.tests)
         src_files = get_src_paths(test_file, assignment['src_files'])
