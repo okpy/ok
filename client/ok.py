@@ -35,12 +35,13 @@ receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
 
+from models import core
+from urllib import request, error
 import argparse
 import importlib.machinery
+import json
 import os
 import sys
-from urllib import request, error
-import json
 
 
 class Protocol(object):
@@ -107,6 +108,122 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         return {}
 
 
+class OkException(BaseException):
+    pass
+
+######################
+# Assignment loading #
+######################
+
+TEST_DIR = 'tests'
+INFO_FILE = 'info.py'
+
+def load_assignment(assignment):
+    """Loads information and tests for the given assignment.
+
+    PARAMETERS:
+    assignment -- str; a filepath to an assignment. An assignment is
+                  defined as a directory that contains a subdirectory
+                  called "tests". This subdirectory must contain a file
+                  called "info". The assignment filepath should be
+                  specified relative to ok.py.
+
+    RETURNS:
+    (info, tests), where
+    info  -- dict; information related to the assignment
+    tests -- list of Tests; all the tests related to the assignment.
+    """
+    if not _isdir(assignment):
+        raise OkException('Assignment "{}" must be a directory'.format(
+            assignment))
+    test_dir = os.path.join(assignment, TEST_DIR)
+    if not _isdir(test_dir):
+        raise OkException('Assignment "{}" must have a {} directory'.format(
+            assignment, TEST_DIR))
+    info_file = os.path.join(test_dir, INFO_FILE)
+    if not _isfile(info_file):
+        raise OkException('Directory {} must have a file called {}'.format(
+            test_dir, INFO_FILE))
+    info = _get_info(info_file)
+    tests = _get_tests(test_dir, info)
+    return info, tests
+
+
+def _get_info(filepath):
+    """Loads information from an INFO file, given by the filepath.
+
+    PARAMETERS:
+    filepath -- str; filepath to an INFO file.
+
+    RETURNS:
+    dict; information contained in the INFO file.
+    """
+    # TODO(albert): add error handling in case no attribute test is
+    # found.
+    return _import_module(filepath).info
+
+
+def _get_tests(directory, info):
+    """Loads all tests in a tests directory.
+
+    PARAMETER:
+    directory -- str; filepath to a directory that contains tests.
+    info      -- dict; top-level information about the assignment,
+                 extracted from info.py
+
+    RETURNS:
+    list of Tests; each file in the tests/ directory is turned into a
+    Test object.
+    """
+    test_files = _listdir(directory)
+    tests = []
+    for file in test_files:
+        if file == INFO_FILE:
+            continue
+        path = os.path.normpath(os.path.join(directory, file))
+        if _isfile(path):
+            # TODO(albert): add error handling in case no attribute
+            # test is found.
+            test = _import_module(path).test
+            tests.append(core.Test.serialize(test, info))
+        elif _isdir(file):
+            # TODO(albert): recursively load tests?
+            pass
+    return tests
+
+
+def get_src_paths(test_file, src_files):
+    """Return paths to src_files by prepending test_file enclosing dir."""
+    directory, _ = os.path.split(test_file)
+    return [os.path.join(directory, f) for f in src_files]
+
+###############################################
+# These functions are for overriding in tests #
+###############################################
+
+def _isdir(path):
+    return os.path.isdir(path)
+
+def _isfile(path):
+    return os.path.isfile(path)
+
+def _listdir(path):
+    return os.listdir(path)
+
+def _import_module(path):
+    """Attempt to load the source file at path. Returns None on failure."""
+    try:
+        loader = importlib.machinery.SourceFileLoader(path, path)
+        test_module = loader.load_module()
+        return test_module
+    except Exception:
+        # TODO(albert): should probably fail fast.
+        return None
+
+##########################
+# Command-line Interface #
+##########################
+
 def parse_input():
     """Parses command line input."""
     parser = argparse.ArgumentParser(
@@ -123,83 +240,6 @@ def parse_input():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
     return parser.parse_args()
-
-
-def load_test_file(tests):
-    """Return (test_file, assignment) of the test file specified by tests.
-
-    test_file:   full path to the test file
-    assignment:  the value of the assignment attribute defined in test_file
-    """
-    if tests and os.path.exists(tests) and not os.path.isdir(tests):
-        assignment = get_assignment(tests)
-        if assignment:
-            return tests, assignment
-    if tests and os.path.isdir(tests):
-        return find_test_file(tests, None)
-
-    if tests and os.path.sep in tests:
-        if os.path.exists(tests):
-            raise Exception('File "{}" is not in ok.py format'.format(tests))
-        else:
-            raise Exception('File "{}" does not exist'.format(tests))
-    else:
-        return find_test_file(os.curdir, tests)
-
-
-def find_test_file(directory, test_file_hint=None):
-    """Return (test_file, assignment) of the ok test file in directory.
-
-    The test_file_hint parameter is supplied by the user to disambiguate among
-    candidates. In this way, a student can keep multiple assignments in the
-    same directory.
-    """
-    files = os.listdir(directory)
-    make_path = lambda f: os.path.normpath(os.path.join(directory, f))
-    test_paths = [make_path(f) for f in files if f.endswith('_tests.py')]
-    test_contents = [(p, get_assignment(p)) for p in test_paths]
-    assignments = {p: a for (p, a) in test_contents if a}
-
-    ex = Exception
-    if not assignments:
-        abs_dir = os.path.abspath(directory)
-        raise ex('No test files found in directory "{}".\n'.format(abs_dir) +
-                 'Put ok.py with your assignment or use -t to specify tests.')
-    elif len(assignments) == 1 and not test_file_hint:
-        return next(iter(assignments.items()))
-    elif not test_file_hint:
-        raise ex('Multiple test files found: {}\n'.format(list(assignments)) +
-                 'Select one using -t followed by any substring contained '
-                 'only in the test file you wish to select.')
-    else:
-        matches = [a for a in assignments if test_file_hint in a]
-        if len(matches) == 1:
-            match = matches[0]
-            return match, assignments[match]
-        elif len(matches) == 0:
-            raise ex('Test file matching "{}" was not found in: {}'.format(
-                test_file_hint, list(assignments)))
-        elif len(matches) >= 1:
-            raise ex('Multiple test files matching "{}" found: {}'.format(
-                test_file_hint, matches))
-
-
-def get_assignment(path):
-    """Attempt to load the source file at path and return the value of its
-    assignment attribute. Returns None on failure.
-    """
-    try:
-        loader = importlib.machinery.SourceFileLoader(path, path)
-        test_module = loader.load_module()
-        return test_module.assignment
-    except Exception:
-        return None
-
-
-def get_src_paths(test_file, src_files):
-    """Return paths to src_files by prepending test_file enclosing dir."""
-    directory, _ = os.path.split(test_file)
-    return [os.path.join(directory, f) for f in src_files]
 
 
 def ok_main(args):
