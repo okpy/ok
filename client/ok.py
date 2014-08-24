@@ -109,6 +109,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
 
 
 class OkException(BaseException):
+    """Exception class for ok.py"""
     pass
 
 ######################
@@ -133,15 +134,15 @@ def load_assignment(assignment):
     info  -- dict; information related to the assignment
     tests -- list of Tests; all the tests related to the assignment.
     """
-    if not _isdir(assignment):
+    if not os.path.isdir(assignment):
         raise OkException('Assignment "{}" must be a directory'.format(
             assignment))
     test_dir = os.path.join(assignment, TEST_DIR)
-    if not _isdir(test_dir):
+    if not os.path.isdir(test_dir):
         raise OkException('Assignment "{}" must have a {} directory'.format(
             assignment, TEST_DIR))
     info_file = os.path.join(test_dir, INFO_FILE)
-    if not _isfile(info_file):
+    if not os.path.isfile(info_file):
         raise OkException('Directory {} must have a file called {}'.format(
             test_dir, INFO_FILE))
     info = _get_info(info_file)
@@ -175,37 +176,19 @@ def _get_tests(directory, info):
     list of Tests; each file in the tests/ directory is turned into a
     Test object.
     """
-    test_files = _listdir(directory)
+    test_files = os.listdir(directory)
     tests = []
     for file in test_files:
         if file == INFO_FILE or not file.endswith('.py'):
             continue
         path = os.path.normpath(os.path.join(directory, file))
-        if _isfile(path):
+        if os.path.isfile(path):
             # TODO(albert): add error handling in case no attribute
             # test is found.
             test = _import_module(path).test
             tests.append(core.Test.serialize(test, info))
     return tests
 
-
-def get_src_paths(test_file, src_files):
-    """Return paths to src_files by prepending test_file enclosing dir."""
-    directory, _ = os.path.split(test_file)
-    return [os.path.join(directory, f) for f in src_files]
-
-###############################################
-# These functions are for overriding in tests #
-###############################################
-
-def _isdir(path):
-    return os.path.isdir(path)
-
-def _isfile(path):
-    return os.path.isfile(path)
-
-def _listdir(path):
-    return os.listdir(path)
 
 def _import_module(path):
     """Attempt to load the source file at path. Returns None on failure."""
@@ -217,6 +200,12 @@ def _import_module(path):
         # TODO(albert): should probably fail fast, but with helpful
         # error messages.
         return None
+
+
+def get_src_paths(test_file, src_files):
+    """Return paths to src_files by prepending test_file enclosing dir."""
+    directory, _ = os.path.split(test_file)
+    return [os.path.join(directory, f) for f in src_files]
 
 ##########################
 # Command-line Interface #
