@@ -158,7 +158,7 @@ def _get_info(filepath):
     RETURNS:
     dict; information contained in the INFO file.
     """
-    # TODO(albert): add error handling in case no attribute test is
+    # TODO(albert): add error handling in case no attribute info is
     # found.
     return _import_module(filepath).info
 
@@ -178,7 +178,7 @@ def _get_tests(directory, info):
     test_files = _listdir(directory)
     tests = []
     for file in test_files:
-        if file == INFO_FILE:
+        if file == INFO_FILE or not file.endswith('.py'):
             continue
         path = os.path.normpath(os.path.join(directory, file))
         if _isfile(path):
@@ -186,9 +186,6 @@ def _get_tests(directory, info):
             # test is found.
             test = _import_module(path).test
             tests.append(core.Test.serialize(test, info))
-        elif _isdir(file):
-            # TODO(albert): recursively load tests?
-            pass
     return tests
 
 
