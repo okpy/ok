@@ -48,9 +48,22 @@ class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
     name = None # Override in sub-class.
 
-    def __init__(self, cmd_line_args, src_files):
-        self.args = cmd_line_args  # A namespace of parsed arguments
-        self.src_files = src_files # A list of paths to student source files
+    def __init__(self, cmd_line_args, info, tests, logger):
+        """Constructor.
+
+        PARAMETERS:
+        cmd_line_args -- Namespace; parsed command line arguments.
+                         command line, as parsed by argparse.
+        info          -- dict; general information about the assignment.
+        tests         -- list of Tests
+        logger        -- OutputLogger; used to control output
+                         destination, as well as capturing output from
+                         an autograder session.
+        """
+        self.args = cmd_line_args
+        self.info = info
+        self.tests = tests
+        self.logger = logger
 
     def on_start(self):
         """Called when ok.py starts. Returns an object to be sent to server."""
