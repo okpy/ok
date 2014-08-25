@@ -79,7 +79,7 @@ class FileContents(Protocol):
     def on_start(self):
         """Find all source files and return their complete contents."""
         contents = {}
-        for path in self.src_files:
+        for path in self.info['src_files']:
             key = os.path.normpath(os.path.split(path)[1])
             with open(path, 'r', encoding='utf-8') as lines:
                 value = lines.read()
