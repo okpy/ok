@@ -10,6 +10,10 @@ from app import api
 from app import auth
 from app.constants import API_PREFIX
 
+@app.route("/")
+def index():
+    return render_template("base.html")
+
 ## Error handlers
 # Handle 404 errors
 @app.errorhandler(404)

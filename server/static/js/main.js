@@ -75,9 +75,8 @@ app.factory('Assignment', ['$resource',
   ]);
 
 function transformSubmission(data) {
-  var old_submitter = data.submitter;
   data.submitter_s = function() {
-    return old_submitter || "anonymous";
+    return data.submitter || "Anonymous";
   }
   return data;
 }
@@ -98,7 +97,6 @@ app.config(['$httpProvider',
               }
               data = response.data;
               if (angular.isArray(data)) {
-                console.log("hey");
                 angular.forEach(data, transformSubmission);
               }
               else {
