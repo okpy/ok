@@ -14,12 +14,12 @@ from app.constants import API_PREFIX
 # Handle 404 errors
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html', error=e), 404
+    return render_template('base.html', error=e), 404
 
 # Handle 500 errors
 @app.errorhandler(500)
 def server_error(e):
-    return render_template('500.html', error=e), 500
+    return render_template('base.html', error=e), 500
 
 def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
     """

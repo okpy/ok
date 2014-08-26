@@ -3,8 +3,8 @@ var app = angular.module('okpy', ['ngResource', 'ui.router']);
 // http://ngmodules.org/modules/MacGyver
 // https://github.com/localytics/angular-chosen
 
-app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider',
-  function($stateProvider, $urlRouterProvider, $locationProvider, Restangular) {
+app.config(['$stateProvider', '$urlRouterProvider',
+  function($stateProvider, $urlRouterProvider, $locationProvider) {
     $urlRouterProvider.otherwise("/submission");
     
     var submissions = { 
@@ -23,7 +23,6 @@ app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider',
     }
 
     var assignments = {
-      abstract: true,
       name: 'assignment',
       url: '/assignment',
       templateUrl: 'static/partials/assignment_base.html',

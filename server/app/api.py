@@ -208,7 +208,8 @@ class SubmissionAPI(MethodView, APIResource):
         """
         Index HTTP method thing.
         """
-        if user:
+        user = session['user']
+        if user and user.logged_in:
             all_subms = self.get_model().query(self.get_model().submitter == user)
         else:
             # TODO(martinis) security issue, change this

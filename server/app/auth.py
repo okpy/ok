@@ -7,13 +7,19 @@ from app.authenticator import AuthenticationException
 
 from flask import request
 
+from google.appengine.api import users
+
 MC_NAMESPACE = "access-token"
 
 def authenticate():
     """Returns the user which made this request."""
     authenticator = app.config["AUTHENTICATOR"]
+    user = users.get_current_user()
+    if user:
+        return models.User.get_or_insert(user.email())
+
     if 'access_token' not in request.args:
-        user = models.AnonymousUser
+        return models.AnonymousUser
     else:
         access_token = request.args['access_token']
 
@@ -24,5 +30,4 @@ def authenticate():
             email = authenticator.authenticate(access_token)
         except AuthenticationException as e:
             return create_api_response(401, e.message)
-        user = models.User.get_or_insert(email)
-    return user
+        return models.User.get_or_insert(email)
