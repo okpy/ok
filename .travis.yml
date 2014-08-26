@@ -1,8 +1,7 @@
 language: python
 
 env:
-  - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then CMD=server/apptest.py $GAE_SDK; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then CMD=nosetests; fi
+  - CMD=server/apptest.py $GAE_SDK
 
 python:
   - "2.7"
@@ -15,7 +14,7 @@ install:
 script: 
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then FLASK_CONF=TEST python $CMD; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then cd client; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then $CMD; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then nosetests; fi
 
 before_script:
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.8.zip -nv -O gae_sdk.zip; fi
