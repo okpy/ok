@@ -1,9 +1,12 @@
+from threading import Thread
 import os
 import re
 import sys
 import textwrap
 import traceback
-from threading import Thread
+
+# TODO(albert): split these utilities into different files in a utils/
+# directory
 
 ######################
 # PRINTING UTILITIES #
@@ -11,6 +14,7 @@ from threading import Thread
 
 class OutputLogger:
     """Custom logger for capturing and suppressing standard output."""
+    # TODO(albert): logger should fully implement output stream.
 
     def __init__(self):
         self._current_stream = self._stdout = sys.stdout
@@ -35,7 +39,7 @@ class OutputLogger:
         """
         self._log = log
 
-    def isOn(self):
+    def is_on(self):
         return self._current_stream == self._stdout
 
     @property
@@ -73,11 +77,38 @@ def underline(text, line='='):
     """
     print(text + '\n' + line * len(text))
 
+class Counter(object):
+    def __init__(self):
+        self._count = 0
+
+    @property
+    def number(self):
+        return self._count
+
+    def increment(self):
+        self._count += 1
+        return self._count
+
+    def __repr__(self):
+        return str(self._count)
+
+def dedent_dict_values(dictionary):
+    for key, value in dictionary.items():
+        if isinstance(value, str):
+            dictionary[key] = utils.dedent(value)
+    return dictionary
+
+def split_dict_values(self, dictionary):
+    for key, value in dictionary.items():
+        if isinstance(value, str):
+            dictionary[key] = value.split()
+    return dictionary
+
 #####################
 # TIMEOUT MECHANISM #
 #####################
 
-class TimeoutError(Exception):
+class Timeout(Exception):
     """Exception for timeouts."""
     _message = 'Evaluation timed out!'
 
@@ -106,7 +137,7 @@ def timed(fn, args=(), kargs={}, timeout=TIMEOUT):
     Result of calling fn(*args, **kargs).
 
     RAISES:
-    TimeoutError -- if thread takes longer than timemout to execute
+    Timeout -- if thread takes longer than timemout to execute
     Error        -- if calling fn raises an error, raise it
     """
     if not timeout:
@@ -115,7 +146,7 @@ def timed(fn, args=(), kargs={}, timeout=TIMEOUT):
     submission.start()
     submission.join(timeout)
     if submission.is_alive():
-        raise TimeoutError(timeout)
+        raise Timeout(timeout)
     if submission.error is not None:
         raise submission.error
     return submission.result
@@ -137,5 +168,4 @@ class __ReturningThread(Thread):
         except Exception as e:
             e._message = traceback.format_exc(limit=2)
             self.error = e
-
 
