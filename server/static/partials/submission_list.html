@@ -3,11 +3,15 @@
     <tr>
       <th>Submitter</th>
       <th>Assignment</th>
+      <th>Submission Time</th>
     </tr>
     <tr ng-repeat="submission in submissions">
       <td>{{submission.submitter_s()}}</td>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
+      </td>
+      <td>
+        {{submission.created | prettyDate}}
       </td>
     </tr>
   </table>

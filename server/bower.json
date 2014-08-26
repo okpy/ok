@@ -26,7 +26,8 @@
     "angular-resource": "~1.2.21",
     "angular-route": "~1.2.21",
     "angular-busy": "~4.1.0",
-    "underscore": "~1.6.0"
+    "underscore": "~1.6.0",
+    "moment": "~2.8.2"
   },
   "directory": "js"
 }

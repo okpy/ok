@@ -123,3 +123,8 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   ]);
 
 
+app.filter('prettyDate', function() {
+  return function(date) {
+    return moment(date).format('MMMM Do YYYY, h:mm:ss a');
+  }
+});
