@@ -6,7 +6,7 @@ from unittest import mock
 import unittest
 import utils
 
-class RunTest(unittest.TestCase):
+class GradeTest(unittest.TestCase):
     def setUp(self):
         self.logger = utils.OutputLogger()
 
@@ -24,34 +24,34 @@ class RunTest(unittest.TestCase):
                 **kargs)
         return case
 
-    def calls_run(self, test, expect_passed):
-        passed = grading.run(test, self.logger)
+    def calls_grade(self, test, expect_passed):
+        passed = grading.grade(test, self.logger)
         self.assertEqual(expect_passed, passed)
 
     def testNoSuites(self):
         test = core.Test()
-        self.calls_run(test, 0)
+        self.calls_grade(test, 0)
 
     def testOneSuite_noGradedTestCase(self):
         test = core.Test()
         test.add_suite([
             self.makeTestCase(test=test),
         ])
-        self.calls_run(test, 0)
+        self.calls_grade(test, 0)
 
     def testOneSuite_oneCasePass(self):
         test = core.Test()
         test.add_suite([
             self.makeGradedTestCase(),
         ])
-        self.calls_run(test, 1)
+        self.calls_grade(test, 1)
 
     def testOneSuite_oneCaseFail(self):
         test = core.Test()
         test.add_suite([
             self.makeGradedTestCase(error=True),
         ])
-        self.calls_run(test, 0)
+        self.calls_grade(test, 0)
 
     def testOneSuite_multipleCasePass(self):
         test = core.Test()
@@ -60,7 +60,7 @@ class RunTest(unittest.TestCase):
             self.makeGradedTestCase(),
             self.makeGradedTestCase(),
         ])
-        self.calls_run(test, 3)
+        self.calls_grade(test, 3)
 
     def testOneSuite_secondCaseFail(self):
         test = core.Test()
@@ -68,7 +68,7 @@ class RunTest(unittest.TestCase):
             self.makeGradedTestCase(error=False),
             self.makeGradedTestCase(error=True),
         ])
-        self.calls_run(test, 1)
+        self.calls_grade(test, 1)
 
     def testOneSuite_abortLockedTest(self):
         test = core.Test()
@@ -76,7 +76,7 @@ class RunTest(unittest.TestCase):
             self.makeGradedTestCase(lock=True),
             self.makeGradedTestCase(),
         ])
-        self.calls_run(test, 0)
+        self.calls_grade(test, 0)
 
     def testMultipleSuites_pass(self):
         test = core.Test()
@@ -88,7 +88,7 @@ class RunTest(unittest.TestCase):
             self.makeGradedTestCase(),
             self.makeGradedTestCase(),
         ])
-        self.calls_run(test, 4)
+        self.calls_grade(test, 4)
 
     def testMultipleSuites_firstSuiteFail(self):
         test = core.Test()
@@ -98,5 +98,5 @@ class RunTest(unittest.TestCase):
         test.add_suite([
             self.makeGradedTestCase(error=False),
         ])
-        self.calls_run(test, 0)
+        self.calls_grade(test, 0)
 
