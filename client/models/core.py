@@ -70,6 +70,31 @@ class Test(object):
                 test_case.test = self
                 test_case.suite_num = suite_num
 
+    @classmethod
+    def serialize(cls, test_json, assignment_info):
+        """Serializes a JSON object into a Test object, given a
+        particular set of assignment_info.
+
+        PARAMETERS:
+        test_json       -- JSON; the JSON representation of the test.
+        assignment_info -- JSON; information about the assignment,
+                           may be used by TestCases.
+
+        RETURNS:
+        Test
+        """
+        # TODO(albert): implement stub.
+        pass
+
+    def deserialize(self):
+        """Deserializes this Test object into JSON format.
+
+        RETURNS:
+        JSON as a plain-old-Python-object.
+        """
+        # TODO(albert): implement stub.
+        pass
+
 class TestCase(object):
     """Represents a single test case."""
 
