@@ -7,10 +7,9 @@ Important: Place your keys in the secret_keys.py module,
 """
 
 from app import secret_keys
-from app.authenticator import DummyAuthenticator, GoogleAuthenticator
+from app.authenticator import GoogleAuthenticator
 
 GOOGLE_AUTHENTICATOR = GoogleAuthenticator()
-DUMMY_AUTHENTICATOR = DummyAuthenticator()
 
 class Config: #pylint: disable=R0903
     """
@@ -21,8 +20,7 @@ class Config: #pylint: disable=R0903
     CSRF_SESSION_KEY = secret_keys.SESSION_KEY
     # Flask-Cache settings
     CACHE_TYPE = 'gaememcached'
-    GOOGLE_AUTHENTICATOR = GOOGLE_AUTHENTICATOR
-    DUMMY_AUTHENTICATOR = DUMMY_AUTHENTICATOR
+    AUTHENTICATOR = GOOGLE_AUTHENTICATOR
 
 class Development(Config): #pylint: disable=R0903
     """
@@ -30,7 +28,6 @@ class Development(Config): #pylint: disable=R0903
     """
     DEBUG = True
     CSRF_ENABLED = True
-    AUTHENTICATOR = DUMMY_AUTHENTICATOR
 
 class Testing(Config): #pylint: disable=R0903
     """
@@ -39,7 +36,6 @@ class Testing(Config): #pylint: disable=R0903
     TESTING = True
     DEBUG = True
     CSRF_ENABLED = False
-    AUTHENTICATOR = DUMMY_AUTHENTICATOR
 
 class Production(Config): #pylint: disable=R0903
     """
@@ -47,4 +43,3 @@ class Production(Config): #pylint: disable=R0903
     """
     DEBUG = False
     CSRF_ENABLED = True
-    AUTHENTICATOR = GOOGLE_AUTHENTICATOR
