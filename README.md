@@ -16,7 +16,7 @@ Installation
 * `export GAE_SDK=<location of unzipped GAE SDK>`
   - For brew, this location should be in /usr/local/Cellar/google-app-engine/1.9.8/share/google-app-engine.
   - Some files that should be present when running `ls $GAE_SDK` are `dev_appserver.py` and `api_server.py`.
-* Install `virtualenv`. You can do `brew install virtualenv` on a mac or `pip install virtualenv`.
+* Install `virtualenv`. You can do `brew install virtualenv` on a mac or `pip install virtualenv` or `apt-get install python-virtualenv`
 * Run `install.py`
 
 Testing the Installation
