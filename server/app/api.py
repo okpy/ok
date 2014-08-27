@@ -11,7 +11,7 @@ from app.models import BadValueError
 from app.needs import Need
 from app.decorators import handle_error
 from app.utils import create_api_response
-from app.paginate import Paginator
+from app.paginate import paginate
 
 
 class APIResource(object):
@@ -30,12 +30,12 @@ class APIResource(object):
         raise NotImplementedError
 
     @handle_error
-    def get(self, key=None, cursor=None):
+    def get(self, key):
         """
         The GET HTTP method
         """
         if key is None:
-            return self.index(cursor)
+            return self.index()
 
         obj = self.get_model().get_by_id(key)
         if not obj:
@@ -99,24 +99,22 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success", {})
 
-    def index(self, cursor=None):
+    def index(self):
         """
-        Index HTTP method thing. Includes a cursor for pagination support.
+        Index HTTP method. Should be called from GET when no key is provided.
+        
+        Processes cursor and num_page URL arguments for pagination support.
         """
         need = Need('index')
         if not self.get_model().can(session['user'], need):
             return need.api_response()
 
-        query_results = self.make_query(cursor)
-        """
-        if not query_results[0]:
-            return create_api_response(404, "{resource} not found".format(
-                resource=self.name))
-        """
-        return create_api_response(200, "success", self.make_query(cursor))
+        cursor = request.args.get('cursor', None)
+        num_page = request.args.get('num_page', None)
+        query_results = paginate(self.make_query(), cursor, num_page)
+        return create_api_response(200, "success", query_results)
 
-    @Paginator(30)
-    def make_query(self, cursor):
+    def make_query(self):
         """
         make_query returns a query object
         Changes to what gets filtered should be included when overriding this method.
@@ -218,7 +216,6 @@ class SubmissionAPI(MethodView, APIResource):
         except BadValueError as e:
             return create_api_response(400, e.message, {})
 
-    @Paginator(30)
-    def make_query(self, cursor):
+    def make_query(self):
         query = self.get_model().query()
         return query.filter(self.get_model().submitter == session['user'].key)

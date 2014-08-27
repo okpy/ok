@@ -92,7 +92,6 @@ class APIBaseTestCase(BaseTestCase):
         """
         Makes a get request.
         """
-        print(API_PREFIX + url)
         self.response = self.client.get(API_PREFIX + url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)['data']
@@ -100,16 +99,19 @@ class APIBaseTestCase(BaseTestCase):
         except ValueError:
             self.response_json = None
 
-    def get_index(self, cursor=None, *args, **kwds):
+    def get_index(self, *args, **kwds):
         """
-        Makes a get request on the index.
+        Makes a get request on the index. Properly creates URL arguments for pagination.
         """
-        if not cursor:
-            self.get('/{}/index'.format(self.name), *args, **kwds)
-        elif cursor:
-            self.get('/{0}/index/{1}'.format(self.name, cursor), *args, **kwds)
+        if 'num_page' not in kwds:
+            self.get('/{}'.format(self.name), *args, **kwds)
+        elif 'cursor' not in kwds:
+            self.get('/{0}?num_page={1}'.format(self.name, kwds['num_page']))
+        else:
+            self.get('/{0}?cursor={1}&num_page={2}'
+                    .format(self.name, kwds['cursor'], kwds['num_page']))
         if self.response_json:
-            self.response_json, self.cursor, self.more = self.response_json
+            self.response_json, self.forward_cursor, self.backward_cursor, self.more = self.response_json
 
     def get_entity(self, inst, *args, **kwds):
         """

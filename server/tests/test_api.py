@@ -102,25 +102,38 @@ class APITest(object): #pylint: disable=no-init
         self.assertTrue(inst2.to_json() not in self.response_json,
                         self.response_json)
 
-    def test_pagination(self, objects=50):
+    def test_pagination(self, total_objects=50, num_page=30):
         """
-        Tests that pagination works by making 2 requests
+        Tests that pagination works by making 2 requests.
         """
         insts = []
-        for _ in range(50):
-            inst = self.get_basic_instance()
+        for _ in range(total_objects):
+            inst = self.get_basic_instance(mutate=True)
             insts.append(inst)
             inst.put()
-        self.get_index()
-        num_instances = len(self.response_json)
-        self.assertTrue(num_instances <= 30, 
-                "There are too many instances returned. There are " + str(num_instances) + " instances")
-        if num_instances == 30:
-            self.get_index(cursor=self.cursor)
+        while total_objects > 0:
+            if hasattr(self, 'forward_cursor'):
+                self.get_index(cursor=self.forward_cursor, num_page=num_page)
+            else:
+                self.get_index(num_page=num_page)
             num_instances = len(self.response_json)
-            self.assertTrue(num_instances == 20, "Not right number returned: " + str(num_instances) + str(self.response_json))
+            self.assertTrue(num_instances <= num_page,
+                "There are too many instances returned. There are " + str(num_instances) + " instances")
+            self.assertTrue(num_instances == min(total_objects, num_page), 
+                    "Not right number returned: " + str(num_instances) + str(self.response_json))
+            total_objects -= num_page
 
-        
+    def test_pagination_single_page(self):
+        """
+        Tests that pagination works for a single page.
+        """
+        self.test_pagination(30, 30)
+    
+    def test_pagination_multiple(self):
+        """
+        Tests that pagination works for more than 2 pages.
+        """
+        self.test_pagination(30, 10)
 
     ## ENTITY GET ##
 
