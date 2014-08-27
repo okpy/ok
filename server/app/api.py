@@ -11,6 +11,7 @@ from app.models import BadValueError
 from app.needs import Need
 from app.decorators import handle_error
 from app.utils import create_api_response
+from app.paginate import Paginator
 
 
 class APIResource(object):
@@ -98,16 +99,24 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success", {})
 
-    def index(self):
+    def index(self, cursor=None):
         """
-        Index HTTP method thing.
+        Index HTTP method thing. Includes a cursor for pagination support.
         """
         need = Need('index')
         if not self.get_model().can(session['user'], need):
             return need.api_response()
 
         return create_api_response(
-            200, "success", list(self.get_model().query()))
+            200, "success", self.make_query(cursor))
+
+    @Paginator(30)
+    def make_query(self, cursor):
+        """
+        make_query returns a query object
+        Changes to what gets filtered should be included when overriding this method.
+        """
+        return self.get_model().query()
 
 
 class UserAPI(MethodView, APIResource):
@@ -204,12 +213,19 @@ class SubmissionAPI(MethodView, APIResource):
         except BadValueError as e:
             return create_api_response(400, e.message, {})
 
-    def index(self):
+    def index(self, cursor=None):
         """
         Index HTTP method thing.
+        """
         """
         return create_api_response(
             200, "success", list(
                 self.get_model().query(
                     self.get_model().submitter == session['user'].key)))
+        """
+        return create_api_response(200, "success", self.make_query(cursor))
 
+    @Paginator(30)
+    def make_query(self, cursor):
+        query = self.get_model().query()
+        return query.filter(self.get_model().submitter == session['user'].key)
