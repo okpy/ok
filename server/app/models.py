@@ -51,7 +51,8 @@ class Base(ndb.Model):
     def to_json(self):
         """Converts this model to a json dictionary."""
         result = self.to_dict()
-        result['id'] = self.key.id()
+        if self.key:
+            result['id'] = self.key.id()
         for key, value in result.items():
             try:
                 new_value = app.json_encoder().default(value)
@@ -159,19 +160,6 @@ class AnonymousUser(User):
     @property
     def is_staff(self):
         return True
-
-    def to_json(self):
-        """Converts this model to a json dictionary."""
-        result = self.to_dict()
-        for key, value in result.items():
-            try:
-                new_value = app.json_encoder().default(value)
-                result[key] = new_value
-            except TypeError:
-                pass
-        import pdb
-        #pdb.set_trace()
-        return result
 
 AnonymousUser = AnonymousUser()
 
