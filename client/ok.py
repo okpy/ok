@@ -254,7 +254,7 @@ def ok_main(args):
         sys.exit(1)
 
     logger = OutputLogger()
-    #TODO: albert do stuff
+    #TODO(albert): change sys.stdout to logger.
 
     start_protocols = [p(args, assignment, tests, logger) for p in [FileContents]]
     interact_protocols = [p(args, assignment, tests, logger) for p in [RunTests]]
