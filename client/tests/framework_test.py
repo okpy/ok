@@ -30,12 +30,10 @@ class TestOK(unittest.TestCase):
         sys.argv[1:] = old_sys_argv
 
 
-class TestLoadAssignment(unittest.TestCase):
+class TestLoadTests(unittest.TestCase):
 
-    VALID_ASSIGN = os.path.join(VALID, 'hw1')
-    ASSIGN_NO_TESTS = os.path.join(INVALID, 'no_tests')
-    ASSIGN_NO_INFO = os.path.join(INVALID, 'no_info')
-    NONEXISTENT_ASSIGN = 'bogus'
+    VALID_ASSIGN = os.path.join(VALID, 'hw1', 'tests')
+    ASSIGN_NO_INFO = os.path.join(INVALID, 'no_info', 'tests')
 
     def setUp(self):
         self.sample_test = core.Test()
@@ -45,20 +43,12 @@ class TestLoadAssignment(unittest.TestCase):
     # Tests #
     #########
 
-    def testNonExistentAssignment(self):
-        self.assertRaises(ok.OkException, ok.load_assignment,
-                          self.NONEXISTENT_ASSIGN)
-
-    def testMissingTestDirectory(self):
-        self.assertRaises(ok.OkException, ok.load_assignment,
-                          self.ASSIGN_NO_TESTS)
-
     def testMissingInfo(self):
-        self.assertRaises(ok.OkException, ok.load_assignment,
+        self.assertRaises(ok.OkException, ok.load_tests,
                           self.ASSIGN_NO_INFO)
 
     def testLoadValidAssignment_info(self):
-        info, _ = ok.load_assignment(self.VALID_ASSIGN)
+        info, _ = ok.load_tests(self.VALID_ASSIGN)
         # TODO(albert): After the "required fields" of the test format
         # are determined, this test should check for those fields.
         self.assertIsInstance(info, dict)
@@ -66,7 +56,7 @@ class TestLoadAssignment(unittest.TestCase):
         self.assertIn('src_files', info)
 
     def testLoadValidAssignment_tests(self):
-        _, tests = ok.load_assignment(self.VALID_ASSIGN)
+        _, tests = ok.load_tests(self.VALID_ASSIGN)
         self.assertEqual([self.sample_test, self.sample_test], tests)
         self.assertEqual(2, len(core.Test.serialize.mock_calls))
 
