@@ -5,14 +5,26 @@ from functools import wraps
 
 from flask import render_template, session
 
+from google.appengine.api import users
+
 from app import app
 from app import api
 from app import auth
+from app import models
 from app.constants import API_PREFIX
 
 @app.route("/")
 def index():
-    return render_template("base.html")
+    user = session['user']
+    print user
+    params = {}
+    if user is not None:
+        params['users_link'] = users.create_login_url('/')
+        params['users_title'] = "Sign In"
+    else:
+        params['users_link'] = users.create_logout_url('/')
+        params['users_title'] = "Log Out"
+    return render_template("base.html", **params)
 
 ## Error handlers
 # Handle 404 errors
@@ -34,7 +46,10 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
 
     @wraps(view)
     def wrapped(*args, **kwds):
-        session['user'] = auth.authenticate()
+        user = auth.authenticate()
+        if not isinstance(user, models.User):
+            return user
+        session['user'] = user
         return view(*args, **kwds)
 
     app.add_url_rule(url, defaults={primary_key: None},
