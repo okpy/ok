@@ -102,6 +102,26 @@ class APITest(object): #pylint: disable=no-init
         self.assertTrue(inst2.to_json() not in self.response_json,
                         self.response_json)
 
+    def test_pagination(self, objects=50):
+        """
+        Tests that pagination works by making 2 requests
+        """
+        insts = []
+        for _ in range(50):
+            inst = self.get_basic_instance()
+            insts.append(inst)
+            inst.put()
+        self.get_index()
+        num_instances = len(self.response_json)
+        self.assertTrue(num_instances <= 30, 
+                "There are too many instances returned. There are " + str(num_instances) + " instances")
+        if num_instances == 30:
+            self.get_index(cursor=self.cursor)
+            num_instances = len(self.response_json)
+            self.assertTrue(num_instances == 20, "Not right number returned: " + str(num_instances) + str(self.response_json))
+
+        
+
     ## ENTITY GET ##
 
     def test_get_basic(self):

@@ -43,9 +43,9 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
     app.add_url_rule('%s/<%s%s>' % (url, pk_type, primary_key),
                      view_func=wrapped, methods=['GET', 'PUT', 'DELETE'])
     app.add_url_rule('%s/index' % url, defaults={'cursor': None}, 
-                     view_func=wrapped, methods=['INDEX', ])
+                     view_func=wrapped, methods=['GET', ])
     app.add_url_rule('%s/index/<cursor>' % url, 
-                     view_func=wrapped, methods=['INDEX', ])
+                     view_func=wrapped, methods=['GET', ])
 
     #TODO: Add index url rule to accept page as argument
     # Something like /index/

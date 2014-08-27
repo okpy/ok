@@ -92,6 +92,7 @@ class APIBaseTestCase(BaseTestCase):
         """
         Makes a get request.
         """
+        print(API_PREFIX + url)
         self.response = self.client.get(API_PREFIX + url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)['data']
@@ -99,13 +100,16 @@ class APIBaseTestCase(BaseTestCase):
         except ValueError:
             self.response_json = None
 
-    def get_index(self, *args, **kwds):
+    def get_index(self, cursor=None, *args, **kwds):
         """
         Makes a get request on the index.
         """
-        self.get('/{}'.format(self.name), *args, **kwds)
+        if not cursor:
+            self.get('/{}/index'.format(self.name), *args, **kwds)
+        elif cursor:
+            self.get('/{0}/index/{1}'.format(self.name, cursor), *args, **kwds)
         if self.response_json:
-            self.response_json = self.response_json[0]
+            self.response_json, self.cursor, self.more = self.response_json
 
     def get_entity(self, inst, *args, **kwds):
         """

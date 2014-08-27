@@ -30,12 +30,12 @@ class APIResource(object):
         raise NotImplementedError
 
     @handle_error
-    def get(self, key):
+    def get(self, key=None, cursor=None):
         """
         The GET HTTP method
         """
         if key is None:
-            return self.index()
+            return self.index(cursor)
 
         obj = self.get_model().get_by_id(key)
         if not obj:
