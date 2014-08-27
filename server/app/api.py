@@ -210,7 +210,7 @@ class SubmissionAPI(MethodView, APIResource):
         """
         user = session['user']
         if user and user.logged_in:
-            all_subms = self.get_model().query(self.get_model().submitter == user)
+            all_subms = self.get_model().query(self.get_model().submitter == user.key)
         else:
             # TODO(martinis) security issue, change this
             all_subms = self.get_model().query()
