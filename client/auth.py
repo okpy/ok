@@ -59,7 +59,7 @@ def update_storage(access_token, expires_in, refresh_token):
     with open(REFRESH_FILE, 'w') as fp:
         fp.write(str({
             'access_token': access_token,
-            'expires_at': cur_time + expires_in * 1000,
+            'expires_at': cur_time + expires_in,
             'refresh_token': refresh_token
         }))
 
@@ -71,7 +71,7 @@ def authenticate(force=False):
         try:
             cur_time = int(time.time())
             access_token, expires_at, refresh_token = get_storage()
-            if cur_time < expires_at - 10000:
+            if cur_time < expires_at - 10:
                 return access_token
             access_token, expires_in = make_refresh_post(refresh_token)
             update_storage(access_token, expires_in, refresh_token)
