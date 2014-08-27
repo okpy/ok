@@ -105,7 +105,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         'messages': messages,
     }
     try:
-        address = 'http://' + server + '/api/v1/' + endpoint
+        address = 'https://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
@@ -254,7 +254,7 @@ def ok_main(args):
         sys.exit(1)
 
     logger = OutputLogger()
-    #TODO: albert replace sys.stdout with the logger
+    #TODO(albert): change sys.stdout to logger.
 
     start_protocols = \
         [p(args, assignment, tests, logger) for p in [FileContents]]
