@@ -117,23 +117,31 @@ class APITest(object): #pylint: disable=no-init
             else:
                 self.get_index(num_page=num_page)
             num_instances = len(self.response_json)
+            if self.name == 'user' and num_instances < num_page:
+                total_objects += 1 # To take care of the dummy already there
             self.assertTrue(num_instances <= num_page,
                 "There are too many instances returned. There are " + str(num_instances) + " instances")
             self.assertTrue(num_instances == min(total_objects, num_page), 
-                    "Not right number returned: " + str(num_instances) + str(self.response_json))
+                    "Not right number returned: " + str(total_objects) + " vs. " +str(num_instances) + str(self.response_json))
             total_objects -= num_page
 
     def test_pagination_single_page(self):
         """
         Tests that pagination works for a single page.
         """
-        self.test_pagination(30, 30)
+        self.test_pagination(11, 10)
     
     def test_pagination_multiple(self):
         """
         Tests that pagination works for more than 2 pages.
         """
-        self.test_pagination(30, 10)
+        self.test_pagination(32, 10)
+
+    def test_pagination_exact(self):
+        """
+        Tests that pagination works for exactly # of entries per page as max.
+        """
+        self.test_pagination(10, 10)
 
     ## ENTITY GET ##
 
