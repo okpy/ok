@@ -36,6 +36,7 @@ communications should be limited to the body of an on_interact method.
 """
 
 from models import core
+from utils import OutputLogger
 from urllib import request, error
 import argparse
 import importlib.machinery
@@ -43,6 +44,7 @@ import json
 import os
 import sys
 
+from auth import authenticate
 
 class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
@@ -99,7 +101,7 @@ class RunTests(Protocol):
 def send_to_server(messages, assignment, server, endpoint='submission/new'):
     """Send messages to server, along with user authentication."""
     data = {
-        'assignment': assignment,
+        'assignment': assignment['name'],
         'messages': messages,
     }
     try:
@@ -107,13 +109,15 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
+        access_token = authenticate()
+        address += "?access_token=%s" % access_token
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
-        response = ex.file.read().decode('utf-8')
+        response = ex.read().decode('utf-8')
         message = json.loads(response)['message']
         indented = '\n'.join('\t' + line for line in message.split('\n'))
         print(indented)
@@ -128,31 +132,26 @@ class OkException(BaseException):
 # Assignment loading #
 ######################
 
-TEST_DIR = 'tests'
 INFO_FILE = 'info.py'
 
-def load_assignment(assignment):
-    """Loads information and tests for the given assignment.
+def load_tests(test_dir):
+    """Loads information and tests for the current assignment.
 
     PARAMETERS:
-    assignment -- str; a filepath to an assignment. An assignment is
-                  defined as a directory that contains a subdirectory
-                  called "tests". This subdirectory must contain a file
-                  called "info". The assignment filepath should be
-                  specified relative to ok.py.
+    test_dir -- str; a filepath to the test directory, 'tests' by default.
+                  An assignment is defined as a directory that contains
+                  a subdirectory called "tests". This subdirectory must
+                  contain a file called "info.py". The filepath
+                  should be specified relative to ok.py.
 
     RETURNS:
     (info, tests), where
     info  -- dict; information related to the assignment
     tests -- list of Tests; all the tests related to the assignment.
     """
-    if not os.path.isdir(assignment):
-        raise OkException('Assignment "{}" must be a directory'.format(
-            assignment))
-    test_dir = os.path.join(assignment, TEST_DIR)
     if not os.path.isdir(test_dir):
-        raise OkException('Assignment "{}" must have a {} directory'.format(
-            assignment, TEST_DIR))
+        raise OkException('Assignment must have a {} directory'.format(
+            test_dir))
     info_file = os.path.join(test_dir, INFO_FILE)
     if not os.path.isfile(info_file):
         raise OkException('Directory {} must have a file called {}'.format(
@@ -214,10 +213,9 @@ def _import_module(path):
         return None
 
 
-def get_src_paths(test_file, src_files):
+def get_src_paths(assignment):
     """Return paths to src_files by prepending test_file enclosing dir."""
-    directory, _ = os.path.split(test_file)
-    return [os.path.join(directory, f) for f in src_files]
+    return assignment['src_files']
 
 ##########################
 # Command-line Interface #
@@ -235,7 +233,7 @@ def parse_input():
                         help="focus on a specific question")
     parser.add_argument('-s', '--server', type=str, default='localhost:8080',
                         help="server address")
-    parser.add_argument('-t', '--tests', metavar='A', type=str,
+    parser.add_argument('-t', '--tests', metavar='A', default='tests', type=str,
                         help="partial name or path to test file or directory")
     parser.add_argument('-u', '--unlock', action='store_true',
                         help="unlock tests interactively")
@@ -250,14 +248,18 @@ def ok_main(args):
     # read test files. Also modify the Protocol constructor's
     # parameters.
     try:
-        test_file, assignment = load_test_file(args.tests)
-        src_files = get_src_paths(test_file, assignment['src_files'])
+        assignment, tests = load_tests(args.tests)
     except Exception as ex:
         print(ex)
         sys.exit(1)
 
-    start_protocols = [p(args, src_files) for p in [FileContents]]
-    interact_protocols = [p(args, src_files) for p in [RunTests]]
+    logger = OutputLogger()
+    #TODO(albert): change sys.stdout to logger.
+
+    start_protocols = \
+        [p(args, assignment, tests, logger) for p in [FileContents]]
+    interact_protocols = \
+        [p(args, assignment, tests, logger) for p in [RunTests]]
 
     messages = dict()
     for protocol in start_protocols:

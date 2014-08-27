@@ -66,6 +66,7 @@ def check_pythons():
             raise Exception('Command "{}" not found')
         redirect_err_to_out = '2>&1'
         version = shell(python, '--version', redirect_err_to_out).split()[1]
+        version = version.replace('+', '')
         if version_list(version) < version_list(min_version):
             raise Exception('"{}" version {} is older than minimum {}'.format(
                 python, version, min_version))

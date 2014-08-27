@@ -5,6 +5,8 @@ sys.path.insert(0, './.lib/sanction.zip')
 from sanction import Client
 
 import http.server
+import pickle
+import time
 from urllib.parse import urlparse, parse_qs
 import webbrowser
 
@@ -13,7 +15,7 @@ CLIENT_ID = \
 # The client secret in an installed application isn't a secret.
 # See: https://developers.google.com/accounts/docs/OAuth2InstalledApp
 CLIENT_SECRET = 'zGY9okExIBnompFTWcBmOZo4'
-REFRESH_FILE = '.refresh'
+REFRESH_FILE = '.ok_refresh'
 REDIRECT_HOST = "localhost"
 REDIRECT_PORT = 7777
 REDIRECT_URI = "http://%s:%u/" % (REDIRECT_HOST, REDIRECT_PORT)
@@ -25,7 +27,7 @@ SUCCESS_HTML = """
 <title>Authentication Success</title>
 </head>
 <body>
-<b>You have successfully authenticated into ok.py!</b>
+<b>Ok! You have successfully authenticated.</b>
 </body>
 </html>
 """
@@ -37,7 +39,7 @@ def _make_code_post(code):
         client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
     params = {"redirect_uri": REDIRECT_URI}
     client.request_token(code=code, **params)
-    return client.access_token, client.refresh_token
+    return client.access_token, client.refresh_token, client.expires_in
 
 def make_refresh_post(refresh_token):
     client = Client(
@@ -46,7 +48,21 @@ def make_refresh_post(refresh_token):
         client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
     params = {"grant_type": "refresh_token"}
     client.request_token(refresh_token=refresh_token, **params)
-    return client.access_token
+    return client.access_token, client.expires_in
+
+def get_storage():
+    with open(REFRESH_FILE, 'rb') as fp:
+        storage = pickle.load(fp)
+    return storage['access_token'], storage['expires_at'], storage['refresh_token']
+
+def update_storage(access_token, expires_in, refresh_token):
+    cur_time = int(time.time())
+    with open(REFRESH_FILE, 'wb') as fp:
+        pickle.dump({
+            'access_token': access_token,
+            'expires_at': cur_time + expires_in,
+            'refresh_token': refresh_token
+        }, fp)
 
 def authenticate(force=False):
     """
@@ -54,10 +70,13 @@ def authenticate(force=False):
     """
     if not force:
         try:
-            with open(REFRESH_FILE) as refresh_file:
-                refresh_token = refresh_file.read()
-            auth_token = make_refresh_post(refresh_token)
-            return auth_token
+            cur_time = int(time.time())
+            access_token, expires_at, refresh_token = get_storage()
+            if cur_time < expires_at - 10:
+                return access_token
+            access_token, expires_in = make_refresh_post(refresh_token)
+            update_storage(access_token, expires_in, refresh_token)
+            return access_token
         except IOError as _:
             print('Performing authentication')
         except Exception as _:
@@ -76,14 +95,16 @@ def authenticate(force=False):
     done = False
     access_token = None
     refresh_token = None
+    expires_in = None
+
     class CodeHandler(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
             """Respond to the GET request made by the OAuth"""
             path = urlparse(self.path)
-            nonlocal access_token, refresh_token, done
+            nonlocal access_token, refresh_token, expires_in, done
             qs = parse_qs(path.query)
             code = qs['code'][0]
-            access_token, refresh_token = _make_code_post(code)
+            access_token, refresh_token, expires_in = _make_code_post(code)
 
             done = True
             self.send_response(200)
@@ -95,9 +116,7 @@ def authenticate(force=False):
     httpd = http.server.HTTPServer(server_address, CodeHandler)
     httpd.handle_request()
 
-    with open(REFRESH_FILE, 'w') as fp:
-        fp.write(refresh_token)
-
+    update_storage(access_token, expires_in, refresh_token)
     return access_token
 
 if __name__ == "__main__":
