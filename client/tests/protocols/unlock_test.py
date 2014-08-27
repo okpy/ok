@@ -184,8 +184,3 @@ class UnlockTest(unittest.TestCase):
             self.makeUnlockTestCase()
         ])
         self.calls_unlock(test, 2)
-
-class UnlockProtocolTest(unittest.TestCase):
-    def setUp(self):
-        self.unlock_protocol = unlock.UnlockProtocol()
-
