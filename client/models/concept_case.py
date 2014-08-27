@@ -41,7 +41,8 @@ class ConceptTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     def on_unlock(self, logger, interact_fn):
         """Implements the UnlockTestCase interface."""
         print(self._input_str)
-        # TODO(albert): needs verify_fn.
-        answer = interact_fn(self.answer)
+        hash_key = self.info['hash_key'].encode('utf-8')
+        verify_fn = lambda x, y: hmac.new(hash_key, x.encode('utf-8')).digest() == y
+        answer = interact_fn(self.answer, self.verify_fn)
         return [core.TestCaseAnswer(answer)]
 

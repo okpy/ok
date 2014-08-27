@@ -1,6 +1,7 @@
 """
 The public API
 """
+import json
 
 from flask.views import MethodView
 from flask.app import request

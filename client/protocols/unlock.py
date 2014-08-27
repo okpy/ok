@@ -6,9 +6,37 @@ compatible with the UnlockProtocol.
 """
 
 from models import core
+import ok
 import random
 import readline
 import utils
+
+######################
+# UNLOCKING PROTOCOL #
+######################
+
+class UnlockProtocol(ok.Protocol):
+    """
+    Unlocking protocol that wraps that mechanism.
+    """
+    name = 'unlock'
+
+    def on_interact(self):
+        """
+        Responsible for unlocking each test.
+        """
+        for test in self._filter_tests():
+            unlock(test, self.logger)
+
+    def _filter_tests(self):
+        """
+        Filter out tests based on command line options passed in by the
+        student.
+        """
+        if self.args.question:
+            return [test for test in self.tests 
+                    if test.name == self.args.question]
+        return self.tests
 
 #######################
 # UNLOCKING MECHANISM #

@@ -60,7 +60,6 @@ class Base(ndb.Model):
             except TypeError:
                 pass
         return result
-
     @classmethod
     def can(cls, user, need, obj=None):
         """
@@ -127,7 +126,7 @@ class User(Base):
     def _can(cls, user, need, obj=None):
         if not user.logged_in:
             return False
-        
+
         if user.is_admin:
             return True
         action = need.action
@@ -227,7 +226,7 @@ class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
     assignment = ndb.KeyProperty(Assignment)
-    messages = ndb.StringProperty(validator=validate_messages)
+    messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
 
     @classmethod

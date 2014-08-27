@@ -184,4 +184,3 @@ class UnlockTest(unittest.TestCase):
             self.makeUnlockTestCase()
         ])
         self.calls_unlock(test, 2)
-
