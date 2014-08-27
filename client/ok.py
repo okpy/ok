@@ -43,6 +43,7 @@ import json
 import os
 import sys
 
+from auth import authenticate
 
 class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
@@ -107,6 +108,9 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
+        access_token = authenticate()
+        address += "?access_token=%s" % access_token
+        print address
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
