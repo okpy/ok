@@ -21,6 +21,8 @@ concrete subclasses of TestCase should be located in client/models/.
 """
 
 import utils
+# TODO(albert): use a try/except in case config.py doesn't exist.
+import config
 
 class Test(object):
     """Represents all suites for a single test in an assignment."""
@@ -71,8 +73,8 @@ class Test(object):
                 test_case.suite_num = suite_num
 
     @classmethod
-    def serialize(cls, test_json, assignment_info):
-        """Serializes a JSON object into a Test object, given a
+    def deserialize(cls, test_json, assignment_info):
+        """Deserializes a JSON object into a Test object, given a
         particular set of assignment_info.
 
         PARAMETERS:
@@ -83,17 +85,34 @@ class Test(object):
         RETURNS:
         Test
         """
-        # TODO(albert): implement stub.
-        pass
+        test = Test(names=test_json.get('names', None),
+                points=test_json.get('points', 0),
+                note=test_json.get('note', ''),
+                )
+        # TODO(albert): setup code?
+        for suite in test_json['suites']:
+            new_suite = []
+            for case in suite:
+                case_type = case['type']
+                test_case = config.cases[case_type].deserialize(case,
+                        assignment_info)
+                new_suite.append(test_case)
+            test.add_suite(new_suite)
+        return test
 
-    def deserialize(self):
-        """Deserializes this Test object into JSON format.
+    def serialize(self):
+        """Serializes this Test object into JSON format.
 
         RETURNS:
         JSON as a plain-old-Python-object.
         """
-        # TODO(albert): implement stub.
-        pass
+        return {
+            'names': self.names,
+            'points': self.points,
+            'note': self.note,
+            'suites': [[case.serialize() for case in suite]
+                       for suite in self.suites],
+        }
 
 class TestCase(object):
     """Represents a single test case."""
@@ -137,6 +156,13 @@ class TestCase(object):
     def type(self):
         """Subclasses should implement a type tag."""
         return 'default'
+
+    @classmethod
+    def deserialize(self, case_json, info):
+        raise NotImplementedError
+
+    def serialize(self):
+        raise NotImplementedError
 
 class TestCaseAnswer(object):
     """Represents an answer for a single TestCase."""

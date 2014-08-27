@@ -9,7 +9,7 @@ test = {
     # run once, before any of the testcases are evaluated.
     """,
   },
-  'cases': [
+  'suites': [
     {
       'type': 'concept',
       'question': """

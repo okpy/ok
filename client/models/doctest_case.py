@@ -8,6 +8,7 @@ from models import core
 from protocols import grading
 from protocols import unlock
 import code
+import re
 import readline
 import traceback
 import utils
@@ -115,9 +116,80 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
                 answers.append(core.TestCaseAnswer(answer))
         return answers
 
+    #################
+    # Serialization #
+    #################
+
+    @classmethod
+    def deserialize(cls, case_json, assignment_info):
+        """Deserializes a JSON object into a Test object, given a
+        particular set of assignment_info.
+
+        PARAMETERS:
+        case_json       -- JSON; the JSON representation of the case.
+        assignment_info -- JSON; information about the assignment,
+                           may be used by TestCases.
+
+        RETURNS:
+        Test
+        """
+        input_lines = []
+        outputs = []
+        output = None
+        for line in utils.dedent(case_json['test']).split('\n'):
+            if line.startswith(self.PS1) or line.startswith(self.PS2):
+                input_lines.append(line[4:])
+                outputs.append(output)
+                output = None
+            elif line.startswith('# '):
+                self._update_answer(output, line)
+            else:
+                assert output is None
+                output = TestCaseAnswer(line)
+        return cls('\n'.join(input_lines), outputs,
+                   **case_json.get('status', {}))
+
+    def serialize(self):
+        """Serializes this Test object into JSON format.
+
+        RETURNS:
+        JSON as a plain-old-Python-object.
+        """
+        test = []
+        outputs = iter(self._outputs)
+        for line in self._lines:
+            if line.startswith(' '):
+                # If the line is indented.
+                test.append(self.PS2 + line)
+            elif line.startswith(self.PROMPT):
+                test.append(self.PS1 + line[2:])
+                output = next(outputs)
+                test.append(output.answer)
+                if output.explanation:
+                    test.append('# explanation: ' + output)
+                for choice in output.choices:
+                    test.append('# choice: ' + choice)
+            else:
+                test.append(self.PS1 + line)
+        return {
+            'type': self.type,
+            'test': '\n'.join(test),
+        }
+
+
     ###################
     # Private methods #
     ###################
+
+    def _update_answer(self, output, line):
+        assert isinstance(output, TestCaseAnswer)
+        answer_re = re.compile('#\s*(.+):\s*(.*)')
+        match = answer_re.match(line)
+        if match:
+            if match.group(1) == 'explanation':
+                output.explanation = match.group(2)
+            elif match.group(1) == 'choice':
+                output.choices.append(match.group(2))
 
     def _format_lines(self):
         """Splits the input string and adds an explicit prompt to the

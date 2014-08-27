@@ -45,3 +45,41 @@ class ConceptTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         answer = interact_fn(self.answer)
         return [core.TestCaseAnswer(answer)]
 
+    #################
+    # Serialization #
+    #################
+
+    @classmethod
+    def deserialize(cls, case_json, assignment_info):
+        """Deserializes a JSON object into a Test object, given a
+        particular set of assignment_info.
+
+        PARAMETERS:
+        case_json       -- JSON; the JSON representation of the case.
+        assignment_info -- JSON; information about the assignment,
+                           may be used by TestCases.
+
+        RETURNS:
+        Test
+        """
+        output = core.TestCaseAnswer(case_json['answer'],
+                                     case_json.get('choices', None))
+        return cls(case_json['question'], [output],
+                   **case_json['status'])
+
+    def serialize(self):
+        """Serializes this Test object into JSON format.
+
+        RETURNS:
+        JSON as a plain-old-Python-object.
+        """
+        json = {
+            'type': self.type,
+            'question': self._input_str,
+            'answer': self.answer,
+            'status': self._status
+        }
+        if self.outputs[0].is_multiple_choice:
+            json['choices'] = self._outputs[0].choices
+        return json
+
