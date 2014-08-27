@@ -150,7 +150,8 @@ def load_tests(test_dir):
     tests -- list of Tests; all the tests related to the assignment.
     """
     if not os.path.isdir(test_dir):
-        raise OkException('Assignment must have a {} directory'.format(test_dir))
+        raise OkException('Assignment must have a {} directory'.format(
+            test_dir))
     info_file = os.path.join(test_dir, INFO_FILE)
     if not os.path.isfile(info_file):
         raise OkException('Directory {} must have a file called {}'.format(
@@ -249,15 +250,16 @@ def ok_main(args):
     try:
         assignment, tests = load_tests(args.tests)
     except Exception as ex:
-        raise ex
         print(ex)
         sys.exit(1)
 
     logger = OutputLogger()
-    #TODO: albert do stuff
+    #TODO: albert replace sys.stdout with the logger
 
-    start_protocols = [p(args, assignment, tests, logger) for p in [FileContents]]
-    interact_protocols = [p(args, assignment, tests, logger) for p in [RunTests]]
+    start_protocols = \
+        [p(args, assignment, tests, logger) for p in [FileContents]]
+    interact_protocols = \
+        [p(args, assignment, tests, logger) for p in [RunTests]]
 
     messages = dict()
     for protocol in start_protocols:
