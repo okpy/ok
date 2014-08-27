@@ -104,6 +104,8 @@ class APIBaseTestCase(BaseTestCase):
         Makes a get request on the index.
         """
         self.get('/{}'.format(self.name), *args, **kwds)
+        if self.response_json:
+            self.response_json = self.response_json[0]
 
     def get_entity(self, inst, *args, **kwds):
         """

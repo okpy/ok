@@ -29,6 +29,10 @@ class Paginator():
                 results, new_curs, more = query_maker(api, cursor).fetch_page(self.num_pages, start_cursor=cursor)
             else:
                 results, new_curs, more = query_maker(api, cursor).fetch_page(self.num_pages)
-            return results, new_curs.urlsafe(), more
+            if not results:
+                return results, new_curs, more
+            if new_curs:
+                new_curs = new_curs.urlsafe()
+            return results, new_curs, more
         return wrapped
 

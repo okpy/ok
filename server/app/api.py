@@ -107,8 +107,13 @@ class APIResource(object):
         if not self.get_model().can(session['user'], need):
             return need.api_response()
 
-        return create_api_response(
-            200, "success", self.make_query(cursor))
+        query_results = self.make_query(cursor)
+        """
+        if not query_results[0]:
+            return create_api_response(404, "{resource} not found".format(
+                resource=self.name))
+        """
+        return create_api_response(200, "success", self.make_query(cursor))
 
     @Paginator(30)
     def make_query(self, cursor):
@@ -212,18 +217,6 @@ class SubmissionAPI(MethodView, APIResource):
                                request.json['messages'])
         except BadValueError as e:
             return create_api_response(400, e.message, {})
-
-    def index(self, cursor=None):
-        """
-        Index HTTP method thing.
-        """
-        """
-        return create_api_response(
-            200, "success", list(
-                self.get_model().query(
-                    self.get_model().submitter == session['user'].key)))
-        """
-        return create_api_response(200, "success", self.make_query(cursor))
 
     @Paginator(30)
     def make_query(self, cursor):
