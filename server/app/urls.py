@@ -15,10 +15,9 @@ from app.constants import API_PREFIX
 
 @app.route("/")
 def index():
-    user = session['user']
-    print user
+    user = users.get_current_user()
     params = {}
-    if user is not None:
+    if user is None:
         params['users_link'] = users.create_login_url('/')
         params['users_title'] = "Sign In"
     else:
