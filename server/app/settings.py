@@ -23,21 +23,13 @@ class Config(object): #pylint: disable=R0903
     CACHE_TYPE = 'gaememcached'
     AUTHENTICATOR = GOOGLE_AUTHENTICATOR
 
-class Development(Config): #pylint: disable=R0903
+class Debug(Config): #pylint: disable=R0903
     """
     Development config
     """
     DEBUG = True
     CSRF_ENABLED = True
     AUTHENTICATOR = TESTING_AUTHENTICATOR
-
-class Testing(Config): #pylint: disable=R0903
-    """
-    Testing config
-    """
-    TESTING = True
-    DEBUG = True
-    CSRF_ENABLED = True
 
 class Production(Config): #pylint: disable=R0903
     """
