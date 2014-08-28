@@ -70,6 +70,9 @@ class Test(object):
                 test_case.test = self
                 test_case.suite_num = suite_num
 
+    def has_name(self, name):
+        return name in self.names
+
     @classmethod
     def serialize(cls, test_json, assignment_info):
         """Serializes a JSON object into a Test object, given a

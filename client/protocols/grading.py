@@ -45,9 +45,7 @@ class GradingProtocol(ok.Protocol):
         # TODO(albert): figure out how to run assignment/test-wide
         # setup code for doctest_case only once (i.e. cache it).
         for test in self.tests:
-            # TODO(albert): after figuring out the command line
-            # arguments, rewrite the filtering here.
-            if test in self.args.questions:
+            if not self.args.question or test.has_name(self.args.question):
                 self._grade_test(test)
 
     def _grade_test(self, test):
