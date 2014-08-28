@@ -231,5 +231,8 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
+        #TODO: Assign correct permissions for index here
+        if action == "index":
+            return True
         return False
 
