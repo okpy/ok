@@ -89,15 +89,6 @@ class FileContents(Protocol):
         return contents
 
 
-class RunTests(Protocol):
-    """Runs tests, formats results, and sends results to the server."""
-    name = 'run_tests'
-
-    def on_interact(self):
-        """Run unlocked tests and print results."""
-        # TODO(denero) Run all tests.
-
-
 def send_to_server(messages, assignment, server, endpoint='submission/new'):
     """Send messages to server, along with user authentication."""
     data = {
