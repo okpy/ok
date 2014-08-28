@@ -106,21 +106,18 @@ class APIResource(object):
         
         Processes cursor and num_page URL arguments for pagination support.
         """
+        query = self.get_model().query()
         need = Need('index')
-        if not self.get_model().can(session['user'], need):
+
+        result = self.get_model().can(session['user'], need, query=query)
+        if not result:
             return need.api_response()
+        query = result
 
         cursor = request.args.get('cursor', None)
         num_page = request.args.get('num_page', None)
-        query_results = paginate(self.make_query(), cursor, num_page)
+        query_results = paginate(query, cursor, num_page)
         return create_api_response(200, "success", query_results)
-
-    def make_query(self):
-        """
-        make_query returns a query object
-        Changes to what gets filtered should be included when overriding this method.
-        """
-        return self.get_model().query()
 
 
 class UserAPI(MethodView, APIResource):
@@ -216,7 +213,3 @@ class SubmissionAPI(MethodView, APIResource):
                                request.json['messages'])
         except BadValueError as e:
             return create_api_response(400, e.message, {})
-
-    def make_query(self):
-        query = self.get_model().query()
-        return query.filter(self.get_model().submitter == session['user'].key)

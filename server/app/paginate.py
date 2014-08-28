@@ -20,13 +20,21 @@ def paginate(entries, cursor, num_per_page):
     For more information about the return value:
     https://developers.google.com/appengine/docs/python/ndb/queryclass#Query_fetch_page
     """
-    if num_per_page is None:
-        return entries.fetch(), None, None, False
-    if cursor is not None:
-        cursor = Cursor(urlsafe=cursor)
-        results, forward_curs, more = entries.fetch_page(int(num_per_page), start_cursor=cursor)
-    else:
-        results, forward_curs, more = entries.fetch_page(int(num_per_page))
-    if forward_curs is not None:
-        return results, forward_curs.urlsafe(), forward_curs.reversed().urlsafe(), more
-    return results, None, None, more
+    def helper():
+        if num_per_page is None:
+            return entries.fetch(), None, False
+        if cursor is not None:
+            cursor = Cursor(urlsafe=cursor)
+            results, forward_curs, more = entries.fetch_page(
+                    int(num_per_page), start_cursor=cursor)
+        else:
+            results, forward_curs, more = entries.fetch_page(int(num_per_page))
+        if forward_curs is not None:
+            return (results, forward_curs.urlsafe(), more)
+        return results, None, more
+    results, urlsafe, more = helper()
+    return {
+        'results': results,
+        'cursor': urlsafe,
+        'more': more
+    }
