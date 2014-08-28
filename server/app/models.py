@@ -125,10 +125,10 @@ class User(Base):
         if not user.logged_in:
             return False
 
-        if user.is_admin:
-            return True
         action = need.action
-        if action in ("get", "index"):
+        if action == "get":
+            if user.is_admin:
+                return True
             if obj:
                 if obj.key == user.key:
                     return True
@@ -137,6 +137,24 @@ class User(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.courses:
                         return True
+        elif action == "index":
+            if user.is_admin:
+                return query
+
+            filters = []
+            for course in user.courses:
+                if user.key in course.staff:
+                    filters.append(User.query().filter(
+                        User.courses == course.key))
+
+            filters.append(User.key == user.key)
+
+            if len(filters) > 1:
+                return query.filter(ndb.OR(*filters))
+            else:
+                return query.filter(filters[0])
+        elif action == "create":
+            return user.is_admin
         return False
 
 class AnonymousUser(User):
@@ -166,8 +184,10 @@ class Assignment(Base):
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
         action = need.action
-        if action in ("get", "index"):
+        if action == "get":
             return True
+        elif action == "index":
+            return query
         elif action == "create":
             return user.is_admin
         return False
@@ -234,7 +254,6 @@ class Submission(Base):
         if action == "create":
             return user.logged_in
 
-        #TODO: Assign correct permissions for index here
         if action == "index":
             if not query:
                 raise ValueError(

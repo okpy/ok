@@ -1,11 +1,10 @@
 from google.appengine.datastore.datastore_query import Cursor
-from app.decorators import wraps
 
 def paginate(entries, cursor, num_per_page):
     """
     Support pagination for an NDB query.
-    
-    The arguments for the parameters cursor and num_per_page 
+
+    The arguments for the parameters cursor and num_per_page
     should come from the URL.
 
     The return value will be different from a regular query:
@@ -20,19 +19,20 @@ def paginate(entries, cursor, num_per_page):
     For more information about the return value:
     https://developers.google.com/appengine/docs/python/ndb/queryclass#Query_fetch_page
     """
-    def helper():
-        if num_per_page is None:
-            return entries.fetch(), None, False
+    if num_per_page is None:
+        result = entries.fetch(), None, False
+    else:
         if cursor is not None:
             cursor = Cursor(urlsafe=cursor)
             results, forward_curs, more = entries.fetch_page(
-                    int(num_per_page), start_cursor=cursor)
+                int(num_per_page), start_cursor=cursor)
         else:
             results, forward_curs, more = entries.fetch_page(int(num_per_page))
         if forward_curs is not None:
-            return (results, forward_curs.urlsafe(), more)
-        return results, None, more
-    results, urlsafe, more = helper()
+            result = results, forward_curs.urlsafe(), more
+        else:
+            result = results, None, more
+    results, urlsafe, more = result
     return {
         'results': results,
         'cursor': urlsafe,

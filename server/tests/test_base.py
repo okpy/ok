@@ -28,7 +28,7 @@ from google.appengine.ext import ndb
 import app
 from app import models
 from app import auth
-from app.constants import API_PREFIX, ADMIN_ROLE #pylint: disable=import-error
+from app.constants import API_PREFIX #pylint: disable=import-error
 from app.authenticator import Authenticator, AuthenticationException
 
 class BaseTestCase(unittest.TestCase): #pylint: disable=no-init
@@ -101,7 +101,8 @@ class APIBaseTestCase(BaseTestCase):
 
     def get_index(self, *args, **kwds):
         """
-        Makes a get request on the index. Properly creates URL arguments for pagination.
+        Makes a get request on the index.
+        Properly creates URL arguments for pagination.
         """
         if 'num_page' not in kwds:
             self.get('/{}'.format(self.name), *args, **kwds)
@@ -109,9 +110,11 @@ class APIBaseTestCase(BaseTestCase):
             self.get('/{0}?num_page={1}'.format(self.name, kwds['num_page']))
         else:
             self.get('/{0}?cursor={1}&num_page={2}'
-                    .format(self.name, kwds['cursor'], kwds['num_page']))
+                .format(self.name, kwds['cursor'], kwds['num_page']))
         if self.response_json:
-            self.response_json, self.forward_cursor, self.backward_cursor, self.more = self.response_json
+            self.forward_cursor = self.response_json['cursor']
+            self.more = self.response_json['more']
+            self.response_json = self.response_json['results']
 
     def get_entity(self, inst, *args, **kwds):
         """
