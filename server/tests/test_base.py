@@ -37,7 +37,7 @@ class BaseTestCase(unittest.TestCase): #pylint: disable=no-init
     """
     def setUp(self): #pylint: disable=invalid-name, missing-docstring
         # Flask apps testing. See: http://flask.pocoo.org/docs/testing/
-        app.app.config.from_object('app.settings.Testing')
+        app.app.config.from_object('app.settings.Debug')
         self.app = app.app
         self.client = self.app.test_client()
 
