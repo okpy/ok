@@ -18,6 +18,12 @@ from google.appengine.ext import db, ndb
 
 BadValueError = db.BadValueError
 
+from flask_wtf import Form
+from wtforms import Field
+from wtforms import TextField, IntegerField
+from wtforms import validators
+from wtforms.validators import ValidationError
+from wtforms import widgets
 
 class JSONEncoder(old_json):
     """
@@ -70,14 +76,65 @@ class Base(ndb.Model):
     def _can(cls, user, need, obj=None):
         return False
 
+    @classmethod
+    def new_form(cls):
+        return cls.form(csrf_enabled=app.config['CSRF_ENABLED'])
+
+
+def invalid_project_name(name):
+    gotten = Assignment.query(Assignment.name == name).count()
+    return not gotten == 1
+
+
+class SubmissionField(Field):
+    # Internal data is stored as actual Assignment object
+    widget = widgets.TextInput
+
+    def _value(self):
+        return self.data
+
+    def process_formdata(self, valuelist):
+        name = valuelist[0]
+        gotten = Assignment.query(Assignment.name == name).fetch(2)
+        if not gotten or len(gotten) > 1:
+            self.data = None
+            return
+
+        self.data = gotten[0]
+
+
+class SubmissionForm(Form):
+    project_name = SubmissionField('project_name', validators=[validators.DataRequired()])
+    location = TextField()
+
+    def validate_project_name(self, field): #pylint: disable=no-self-use
+        if not field.data:
+            raise ValidationError('Invalid project name')
+
+
+class Submission(Base): #pylint: disable=R0903
+    """
+    The Submission Model
+    """
+    location = ndb.StringProperty()
+    form = SubmissionForm
+
+
+class UserForm(Form):
+    email = TextField(validators=[validators.Email()])
+    role = IntegerField()
+    first_name = TextField()
+    last_name = TextField()
+    login = TextField()
 
 class User(Base):
     """Users."""
     email = ndb.StringProperty() # Must be associated with some OAuth login.
     login = ndb.StringProperty() # TODO(denero) Legacy of glookup system
-    role = ndb.StringProperty(default=constants.STUDENT_ROLE)
+    role = ndb.IntegerProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
+    form = UserForm
     #TODO(martinis) figure out how to actually use this data
     courses = ndb.KeyProperty('Course', repeated=True)
 
@@ -153,7 +210,12 @@ class AnonymousUser(User):
 AnonymousUser = AnonymousUser()
 
 
-class Assignment(Base):
+class AssignmentForm(Form):
+    name = TextField()
+    points = TextField()
+
+
+class Assignment(Base): #pylint: disable=R0903
     """
     The Assignment Model
     """
@@ -161,6 +223,7 @@ class Assignment(Base):
     # TODO(denero) Validate uniqueness of name.
     points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User)
+    form = AssignmentForm
     course = ndb.KeyProperty('Course')
 
     @classmethod
@@ -218,6 +281,8 @@ class Submission(Base):
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
+
+    form = AssignmentForm
 
     @classmethod
     def _can(cls, user, need, obj=None):

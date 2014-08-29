@@ -3,7 +3,10 @@ The public API
 """
 import json
 
+from google.appengine.api import users
+
 from flask.views import MethodView
+from flask import jsonify, request
 from flask.app import request
 from flask import session
 
@@ -19,7 +22,7 @@ class APIResource(object):
 
     Set the name and get_model for each subclass.
     """
-    name = None
+    name = "BASE API RESOURCE"
 
     @classmethod
     def get_model(cls):
@@ -75,15 +78,16 @@ class APIResource(object):
         else:
             return error_response
 
-    def new_entity(self, attributes):
+    def new_entity(self, form):
         """
         Creates a new entity with given attributes.
         Returns (entity, error_response) should be ignored if error_response
         is a True value.
         """
-        entity = self.get_model().from_dict(attributes)
-        entity.put()
-        return entity, None
+        new_mdl = self.get_model()()
+        form.populate_obj(new_mdl)
+        new_mdl.put()
+        return new_mdl, None
 
     @handle_error
     def delete(self, user_id):

@@ -1,10 +1,12 @@
 Flask==0.10.1
 Flask-Cache==0.13.1
+Flask-WTF==0.10.0
 Jinja2==2.7.3
 MarkupSafe==0.23
 PyYAML==3.11
 Pygments==1.6
 Sphinx==1.2.2
+WTForms==2.0.1
 Werkzeug==0.9.6
 argparse==1.2.1
 astroid==1.1.1

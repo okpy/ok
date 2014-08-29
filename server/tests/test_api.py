@@ -6,16 +6,18 @@
 # you can understand what the test is doing from the method name.
 #pylint: disable=missing-docstring
 """
-tests.py
-
+API tests
 """
 
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 
 from google.appengine.ext import ndb
 
-from app import models
-from app.constants import ADMIN_ROLE
+from test_base import BaseTestCase #pylint: disable=relative-import
+
+from app.constants import API_PREFIX #pylint: disable=import-error
+from app import models, constants, authenticator #pylint: disable=import-error
+from app import app
 
 class APITest(object): #pylint: disable=no-init
     """
@@ -54,7 +56,6 @@ class APITest(object): #pylint: disable=no-init
             )
 
         }
-
     ## INDEX ##
 
     def test_index_empty(self):
