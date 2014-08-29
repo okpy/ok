@@ -14,16 +14,14 @@ import utils
 class ConceptTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for conceptual questions."""
 
+    type = 'concept'
+
     @property
     def answer(self):
         """Returns the answer of the test case. If the test case has
         not been unlocked, the answer will remain in locked form.
         """
         return self._outputs[0].answer
-
-    @property
-    def type(self):
-        return 'concept'
 
     ######################################
     # Protocol interface implementations #

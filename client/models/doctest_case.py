@@ -16,6 +16,8 @@ import utils
 class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for doctest-style Python tests."""
 
+    type = 'doctest'
+
     PROMPT = '$ '
     PS1 = '>>> '
     PS2 = '... '
@@ -59,10 +61,6 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         """Returns lines of code for the test case."""
         return self._lines
 
-    @property
-    def type(self):
-        return 'python'
-
     @classmethod
     def strip_prompt(cls, text):
         """Removes a prompt from the start of the text, if it exists.
@@ -91,7 +89,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
             logger.on()
             print(''.join(log).strip())
         if error and interactive:
-            interact(frame)
+            _interact(frame)
 
         console.exec(self.teardown, frame)
         print()
@@ -133,19 +131,25 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         RETURNS:
         Test
         """
+        cls.assert_correct_type(case_json)
         input_lines = []
         outputs = []
         output = None
         for line in utils.dedent(case_json['test']).split('\n'):
-            if line.startswith(self.PS1) or line.startswith(self.PS2):
+            if line.startswith(cls.PS1) or line.startswith(cls.PS2):
                 input_lines.append(line[4:])
-                outputs.append(output)
-                output = None
+                if output:
+                    outputs.append(output)
+                    output = None
             elif line.startswith('# '):
-                self._update_answer(output, line)
+                cls._update_answer(output, line)
             else:
                 assert output is None
-                output = TestCaseAnswer(line)
+                # Add a prompt to the previous line
+                input_lines[-1] = cls.PROMPT + input_lines[-1]
+                output = core.TestCaseAnswer(line)
+        if output:
+            outputs.append(output)
         return cls('\n'.join(input_lines), outputs,
                    **case_json.get('status', {}))
 
@@ -166,7 +170,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
                 output = next(outputs)
                 test.append(output.answer)
                 if output.explanation:
-                    test.append('# explanation: ' + output)
+                    test.append('# explanation: ' + output.explanation)
                 for choice in output.choices:
                     test.append('# choice: ' + choice)
             else:
@@ -181,8 +185,9 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     # Private methods #
     ###################
 
-    def _update_answer(self, output, line):
-        assert isinstance(output, TestCaseAnswer)
+    @classmethod
+    def _update_answer(cls, output, line):
+        assert isinstance(output, core.TestCaseAnswer)
         answer_re = re.compile('#\s*(.+):\s*(.*)')
         match = answer_re.match(line)
         if match:
@@ -202,12 +207,6 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 class _PythonConsole(object):
     """Handles test evaluation and output formatting for a single
     PythonTestCase.
-
-    This class also supports an interact method, which should only be
-    called after calling the run method. interact will start an
-    InteractiveConsole with the current state of the namespace. Lines
-    that were executed by the run method are also saved to the
-    readline history.
     """
     PROMPT = PythonTestCase.PROMPT
     PS1 = PythonTestCase.PS1
@@ -372,13 +371,9 @@ class _PythonConsole(object):
         line = PythonTestCase.strip_prompt(line)
         return code.compile_command(line) is None
 
-def interact(frame=None):
+def _interact(frame=None):
     """Starts an InteractiveConsole, using the variable bindings
     defined in the given frame.
-
-    Calls to this method do not necessarily have to follow a call
-    to the run method. This method can be used to interact with
-    any frame.
     """
     if not frame:
         frame = {}

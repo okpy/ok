@@ -3,6 +3,7 @@
 from models import core
 from models import doctest_case
 from unittest import mock
+import ok
 import sys
 import unittest
 import utils
@@ -202,3 +203,94 @@ class OnGradeTest(unittest.TestCase):
             '# Error: expected 1 got ZeroDivisionError'
         ])
 
+class SerializationTest(unittest.TestCase):
+    ASSIGN_NAME = 'dummy'
+
+    def setUp(self):
+        self.assignment = {'name': self.ASSIGN_NAME}
+
+    def deserialize(self, json, assignment=None):
+        assignment = assignment or self.assignment
+        return doctest_case.PythonTestCase.deserialize(json, assignment)
+
+    def testIncorrectType(self):
+        case_json = {'type': 'foo'}
+        self.assertRaises(core.SerializationError, self.deserialize,
+                          case_json)
+
+    def testSimplePrompt(self):
+        case_json = {
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            4
+            """),
+        }
+        case = self.deserialize(case_json)
+        self.assertEqual(['$ square(-2)'], case.lines)
+        self.assertEqual(1, len(case.outputs))
+        self.assertEqual('4', case.outputs[0].answer)
+
+        self.assertEqual(case_json, case.serialize())
+
+    def testExplanation(self):
+        case_json = {
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            4
+            # explanation: Squares a negative number
+            """),
+        }
+        case = self.deserialize(case_json)
+        self.assertEqual(['$ square(-2)'], case.lines)
+        self.assertEqual(1, len(case.outputs))
+        self.assertEqual('4', case.outputs[0].answer)
+        self.assertEqual('Squares a negative number',
+                         case.outputs[0].explanation)
+
+        self.assertEqual(case_json, case.serialize())
+
+    def testMultipleChoice(self):
+        case_json = {
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            4
+            # choice: 0
+            # choice: 2
+            # choice: -4
+            """),
+        }
+        case = self.deserialize(case_json)
+        self.assertEqual(['$ square(-2)'], case.lines)
+        self.assertEqual(1, len(case.outputs))
+        self.assertEqual('4', case.outputs[0].answer)
+        self.assertEqual(['0', '2', '-4'], case.outputs[0].choices)
+
+        self.assertEqual(case_json, case.serialize())
+
+    def testMultiplePrompts(self):
+        case_json = {
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            4
+            >>> x = 4
+            >>> square(x)
+            16
+            """),
+        }
+        case = self.deserialize(case_json)
+        self.assertEqual([
+            '$ square(-2)',
+            'x = 4',
+            '$ square(x)',
+        ], case.lines)
+        self.assertEqual(2, len(case.outputs))
+        self.assertEqual('4', case.outputs[0].answer)
+        self.assertEqual('16', case.outputs[1].answer)
+
+        self.assertEqual(case_json, case.serialize())
+
+    # TODO(albert): test locked cases.

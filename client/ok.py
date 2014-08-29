@@ -190,7 +190,8 @@ def _get_tests(directory, info):
             # TODO(albert): add error handling in case no attribute
             # test is found.
             test = _import_module(path).test
-            tests.append(core.Test.serialize(test, info))
+            # TODO(albert): deserialize requires a case_map.
+            tests.append(core.Test.deserialize(test, info))
     return tests
 
 

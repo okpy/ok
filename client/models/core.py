@@ -21,20 +21,22 @@ concrete subclasses of TestCase should be located in client/models/.
 """
 
 import utils
-# TODO(albert): use a try/except in case config.py doesn't exist.
-import config
+
+class SerializationError(BaseException):
+    pass
 
 class Test(object):
     """Represents all suites for a single test in an assignment."""
 
-    def __init__(self, names=None, suites=None, points=0, note='', cache=''):
+    def __init__(self, names=None, suites=None, points=None, note='', cache=''):
         self.names = names or []
         # Filter out empty suites.
         suites = suites or []
         self.suites = list(filter(lambda suite: suite != [], suites))
 
-        self.points = points
+        self._points = points
         self.note = utils.dedent(note)
+        # TODO(albert): add extra credit option.
         # TODO(albert): the notion of a cache was originally designed
         # only for code-based questions. Either generalize for other
         # test types, or move to subclasses.
@@ -50,6 +52,13 @@ class Test(object):
         if not self.names:
             return repr(self)
         return self.names[0]
+
+    @property
+    def points(self):
+        """Gets the number of points this test is worth."""
+        if self._points is None:
+            return len(self.suites)
+        return self._points
 
     @property
     def count_cases(self):
@@ -73,7 +82,7 @@ class Test(object):
                 test_case.suite_num = suite_num
 
     @classmethod
-    def deserialize(cls, test_json, assignment_info):
+    def deserialize(cls, test_json, assignment_info, case_map):
         """Deserializes a JSON object into a Test object, given a
         particular set of assignment_info.
 
@@ -81,20 +90,22 @@ class Test(object):
         test_json       -- JSON; the JSON representation of the test.
         assignment_info -- JSON; information about the assignment,
                            may be used by TestCases.
+        case_map        -- dict; maps case tags (strings) to TestCase
+                           classes.
 
         RETURNS:
         Test
         """
         test = Test(names=test_json.get('names', None),
-                points=test_json.get('points', 0),
+                points=test_json.get('points', None),
                 note=test_json.get('note', ''),
                 )
         # TODO(albert): setup code?
-        for suite in test_json['suites']:
+        for suite in test_json.get('suites', []):
             new_suite = []
             for case in suite:
                 case_type = case['type']
-                test_case = config.cases[case_type].deserialize(case,
+                test_case = case_map[case_type].deserialize(case,
                         assignment_info)
                 new_suite.append(test_case)
             test.add_suite(new_suite)
@@ -106,16 +117,23 @@ class Test(object):
         RETURNS:
         JSON as a plain-old-Python-object.
         """
-        return {
+        json = {
             'names': self.names,
-            'points': self.points,
-            'note': self.note,
-            'suites': [[case.serialize() for case in suite]
-                       for suite in self.suites],
         }
+        suites = [[case.serialize() for case in suite]
+                                    for suite in self.suites]
+        if self.count_cases > 0:
+            json['suites'] = suites
+        if self._points is not None:
+            json['points'] = self._points
+        if self.note:
+            json['note'] = self.note
+        return json
 
 class TestCase(object):
     """Represents a single test case."""
+
+    type = 'default'
 
     def __init__(self, input_str, outputs, test=None, **status):
         """Constructor.
@@ -152,10 +170,15 @@ class TestCase(object):
         """Sets this TestCase's list of TestCaseAnswers."""
         self._outputs = new_outputs
 
-    @property
-    def type(self):
-        """Subclasses should implement a type tag."""
-        return 'default'
+    @classmethod
+    def assert_correct_type(cls, case_json):
+        if 'type' not in case_json:
+            raise SerializationError('JSON is missing type {}'.format(cls.type))
+        elif case_json['type'] != cls.type:
+            raise SerializationError(
+                    'JSON type {} does not match TestCase type {}'.format(
+                        case_json['type'], cls.type))
+
 
     @classmethod
     def deserialize(self, case_json, info):
