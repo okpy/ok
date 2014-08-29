@@ -39,6 +39,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var assignmentDetail = {
       name: 'assignment.detail',
       url: '/:assignmentId',
+      parent: assignments,
       templateUrl: 'static/partials/assignment_detail.html',
       controller: "AssignmentDetailCtrl"
     }
