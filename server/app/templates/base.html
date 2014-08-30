@@ -26,7 +26,7 @@
         <script src="static/vendor/moment/moment.js"></script>
         <base href="/">
     </head>
-    <body>
+    <body ng-cloak class="ng-cloak">
         <!--[if lt IE 7]>
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
@@ -42,8 +42,8 @@
           <a class="navbar-brand" ui-sref="submission">Ok.py Server</a>
         </div>
         <div class="navbar-collapse collapse">
-          <a id="submissions-button" type="button" class="btn btn-default navbar-btn" ui-sref=submission>Submissions</a>
-          <a id="assignments-button" type="button" class="btn btn-default navbar-btn" ui-sref=assignment>Assignments</a>
+          <a id="submissions-button" type="button" class="btn btn-default navbar-btn" ui-sref="submission.list">Submissions</a>
+          <a id="assignments-button" type="button" class="btn btn-default navbar-btn" ui-sref="assignment.list">Assignments</a>
           <a id="login-button" type="button" class="btn btn-default navbar-btn pull-right" href={{users_link}}>{{users_title}}</a>
         </div><!--/.navbar-collapse -->
       </div>

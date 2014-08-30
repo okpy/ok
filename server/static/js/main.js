@@ -9,47 +9,53 @@ app.config(['$stateProvider', '$urlRouterProvider',
     
     var submissions = { 
       name: 'submission',
+      abstract: true,
       url: '/submission',
-      templateUrl: 'static/partials/submission_list.html',
+      templateUrl: 'static/partials/submission.base.html',
+    }
+
+    var submissionList = {
+      name: 'submission.list',
+      url: '/',
+      templateUrl: 'static/partials/submission.list.html',
       controller: "SubmissionListCtrl"
     }
 
-    var submissionsDetail = { 
+    var submissionDetail = { 
       name: 'submission.detail', 
-      url: '/submission/{submissionId}',
-      parent: submissions,
-      templateUrl: 'static/partials/submission_detail.html',
+      url: '/:submissionId',
+      templateUrl: 'static/partials/submission.detail.html',
       controller: "SubmissionDetailCtrl"
     }
 
     var assignments = {
       name: 'assignment',
+      abstract: true,
       url: '/assignment',
-      templateUrl: 'static/partials/assignment_base.html',
-      controller: "AssignmentListCtrl"
+      templateUrl: 'static/partials/assignment.base.html',
     }
 
     var assignmentList = {
       name: 'assignment.list',
-      url: '',
-      templateUrl: 'static/partials/assignment_list.html',
-      controller: "AssignmentDetailCtrl"
+      url: '/',
+      templateUrl: 'static/partials/assignment.list.html',
+      controller: "AssignmentListCtrl"
     }
 
     var assignmentDetail = {
       name: 'assignment.detail',
       url: '/:assignmentId',
-      parent: assignments,
-      templateUrl: 'static/partials/assignment_detail.html',
+      templateUrl: 'static/partials/assignment.detail.html',
       controller: "AssignmentDetailCtrl"
     }
 
     $stateProvider.
       state(submissions).
-      state(submissionsDetail).
-      state(assignmentDetail).
+      state(submissionList).
+      state(submissionDetail).
+      state(assignments).
       state(assignmentList).
-      state(assignments)
+      state(assignmentDetail)
       ;
   }]);
 
