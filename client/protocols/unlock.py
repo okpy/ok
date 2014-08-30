@@ -34,9 +34,9 @@ class UnlockProtocol(ok.Protocol):
         student.
         """
         if self.args.question:
-            return [test for test in self.tests 
+            return [test for test in self.assignment['tests']
                     if test.name == self.args.question]
-        return self.tests
+        return self.assignment['tests']
 
 #######################
 # UNLOCKING MECHANISM #

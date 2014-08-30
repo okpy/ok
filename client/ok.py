@@ -50,21 +50,19 @@ class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
     name = None # Override in sub-class.
 
-    def __init__(self, cmd_line_args, info, tests, logger):
+    def __init__(self, cmd_line_args, assignment, logger):
         """Constructor.
 
         PARAMETERS:
         cmd_line_args -- Namespace; parsed command line arguments.
                          command line, as parsed by argparse.
-        info          -- dict; general information about the assignment.
-        tests         -- list of Tests
+        assignment    -- dict; general information about the assignment.
         logger        -- OutputLogger; used to control output
                          destination, as well as capturing output from
                          an autograder session.
         """
         self.args = cmd_line_args
-        self.info = info
-        self.tests = tests
+        self.assignment = assignment
         self.logger = logger
 
     def on_start(self):
@@ -81,7 +79,7 @@ class FileContents(Protocol):
     def on_start(self):
         """Find all source files and return their complete contents."""
         contents = {}
-        for path in self.info['src_files']:
+        for path in self.assignment['src_files']:
             key = os.path.normpath(os.path.split(path)[1])
             with open(path, 'r', encoding='utf-8') as lines:
                 value = lines.read()
@@ -136,9 +134,8 @@ def load_tests(test_dir):
                   should be specified relative to ok.py.
 
     RETURNS:
-    (info, tests), where
-    info  -- dict; information related to the assignment
-    tests -- list of Tests; all the tests related to the assignment.
+    assignment -- dict; contains information related to the assignment,
+    as well as a key 'tests' which is a list of Test objects.
     """
     if not os.path.isdir(test_dir):
         raise OkException('Assignment must have a {} directory'.format(
@@ -147,9 +144,9 @@ def load_tests(test_dir):
     if not os.path.isfile(info_file):
         raise OkException('Directory {} must have a file called {}'.format(
             test_dir, INFO_FILE))
-    info = _get_info(info_file)
-    tests = _get_tests(test_dir, info)
-    return info, tests
+    assignment = _get_info(info_file)
+    assignment['tests'] = _get_tests(test_dir, info)
+    return assignment
 
 
 def _get_info(filepath):
@@ -204,11 +201,6 @@ def _import_module(path):
         # error messages.
         return None
 
-
-def get_src_paths(assignment):
-    """Return paths to src_files by prepending test_file enclosing dir."""
-    return assignment['src_files']
-
 ##########################
 # Command-line Interface #
 ##########################
@@ -240,7 +232,7 @@ def ok_main(args):
     # read test files. Also modify the Protocol constructor's
     # parameters.
     try:
-        assignment, tests = load_tests(args.tests)
+        assignment = load_tests(args.tests)
     except Exception as ex:
         print(ex)
         sys.exit(1)
@@ -249,9 +241,9 @@ def ok_main(args):
     #TODO(albert): change sys.stdout to logger.
 
     start_protocols = \
-        [p(args, assignment, tests, logger) for p in [FileContents]]
+        [p(args, assignment, logger) for p in [FileContents]]
     interact_protocols = \
-        [p(args, assignment, tests, logger) for p in [RunTests]]
+        [p(args, assignment, logger) for p in [RunTests]]
 
     messages = dict()
     for protocol in start_protocols:

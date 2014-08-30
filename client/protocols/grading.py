@@ -44,7 +44,7 @@ class GradingProtocol(ok.Protocol):
         """Run unlocked tests and print results."""
         # TODO(albert): figure out how to run assignment/test-wide
         # setup code for doctest_case only once (i.e. cache it).
-        for test in self.tests:
+        for test in self.assignments['tests']:
             if not self.args.question or test.has_name(self.args.question):
                 self._grade_test(test)
 
@@ -56,7 +56,7 @@ class GradingProtocol(ok.Protocol):
         total_passed = grade(test, self.logger, self.args.interactive,
                              self.args.verbose)
 
-        total_cases = self.tests.count_cases
+        total_cases = test.count_cases
         if total_cases > 0:
             print('Passed: {} ({}%)'.format(total_passed,
                                             total_passed / total_cases))

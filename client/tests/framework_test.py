@@ -47,16 +47,16 @@ class TestLoadTests(unittest.TestCase):
         self.assertRaises(ok.OkException, ok.load_tests,
                           self.ASSIGN_NO_INFO)
 
-    def testLoadValidAssignment_info(self):
-        info, _ = ok.load_tests(self.VALID_ASSIGN)
+    def testLoadValidAssignment(self):
+        assignment = ok.load_tests(self.VALID_ASSIGN)
         # TODO(albert): After the "required fields" of the test format
         # are determined, this test should check for those fields.
-        self.assertIsInstance(info, dict)
-        self.assertIn('name', info)
-        self.assertIn('src_files', info)
+        self.assertIsInstance(assignment, dict)
+        self.assertIn('name', assignment)
+        self.assertIn('src_files', assignment)
+        self.assertIn('tests', assignment)
 
-    def testLoadValidAssignment_tests(self):
-        _, tests = ok.load_tests(self.VALID_ASSIGN)
+        tests = assignment['tests']
         self.assertEqual([self.sample_test, self.sample_test], tests)
         self.assertEqual(2, len(core.Test.serialize.mock_calls))
 
