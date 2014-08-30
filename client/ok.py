@@ -212,9 +212,9 @@ def dump_tests(test_dir, assignment):
     assignment -- dict; contains information, including Test objects,
                   for an assignment.
     """
-    tests = assignment['tests']
-    assign_copy = assignment
-    del assign_copy['tests']
+    assign_copy = assignment.copy()
+    if 'tests' in assign_copy:
+        del assign_copy['tests']
 
     # TODO(albert): prettyify string formatting by using triple quotes.
     # TODO(albert): verify that assign_copy is serializable into json.
@@ -222,11 +222,14 @@ def dump_tests(test_dir, assignment):
     with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
         f.write('info = ' + info)
 
+    # TODO(albert): writing causes an error halfway, the tests
+    # directory may be left in a corrupted state.
     # TODO(albert): might need to delete obsolete test files too.
     # TODO(albert): verify that test_json is serializable into json.
+    tests = assignment.get('tests', [])
     for test in tests:
         test_json = json.dumps(test.serialize(), indent=2)
-        with open(os.path.join(test_dir, test.name), 'w') as f:
+        with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
             f.write('test = ' + test_json)
 
 ##########################

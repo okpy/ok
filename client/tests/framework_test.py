@@ -4,10 +4,12 @@ import ok
 import os
 import sys
 import unittest
+import shutil
 
 DEMO = 'demo_assignments'
 INVALID = os.path.join(DEMO, 'invalid')
 VALID = os.path.join(DEMO, 'valid')
+TMP = os.path.join(DEMO, 'tmp')
 
 class TestProtocol(ok.Protocol):
     def __init__(self, args, src_files):
@@ -58,7 +60,7 @@ class TestLoadTests(unittest.TestCase):
 
         tests = assignment['tests']
         self.assertEqual([self.sample_test, self.sample_test], tests)
-        self.assertEqual(2, len(core.Test.serialize.mock_calls))
+        self.assertEqual(2, len(core.Test.deserialize.mock_calls))
 
     #############
     # Utilities #
@@ -66,16 +68,83 @@ class TestLoadTests(unittest.TestCase):
 
     def applyPatches(self):
         """Applies unittest patches (temporary mocks)."""
-        # Patch Test.serialize to always return self.sample_test
-        serialize_patcher = mock.patch('models.core.Test.serialize',
-                                       autospec=core.Test.serialize)
-        serialize = serialize_patcher.start()
-        serialize.return_value = self.sample_test
-        self.addCleanup(serialize_patcher.stop)
+        # Patch Test.deserialize to always return self.sample_test
+        deserialize_patcher = mock.patch('models.core.Test.deserialize',
+                                       autospec=core.Test.deserialize)
+        deserialize = deserialize_patcher.start()
+        deserialize.return_value = self.sample_test
+        self.addCleanup(deserialize_patcher.stop)
 
 class TestDumpTests(unittest.TestCase):
-    # TODO(albert)
-    pass
+
+    ASSIGN_NAME = 'dummy'
+
+    # Note(albert): I'm not a big fan of using the actual filesystem
+    # for tests, but it does allow us to catch odd bugs. I'll leave it
+    # like this for the time being.
+    def setUp(self):
+        self.makeTestDirectory()
+        self.assignment = self.makeAssignment()
+        self.mock_test = mock.Mock()
+        self.applyPatches()
+
+    #########
+    # Tests #
+    #########
+
+    def testNoTests(self):
+        ok.dump_tests(TMP, self.assignment)
+        self.assertEqual([ok.INFO_FILE], self.listTestDir())
+
+        assignment = ok.load_tests(TMP)
+        self.assertEqual(self.assignment, assignment)
+
+    def testSingleTest(self):
+        test_json = {'names': ['q1']}
+        self.mock_test.serialize.return_value = test_json
+        self.mock_test.name = 'q1'
+        self.assignment['tests'].append(self.mock_test)
+
+        ok.dump_tests(TMP, self.assignment)
+        self.assertEqual([ok.INFO_FILE, 'q1.py'], self.listTestDir())
+
+        ok.load_tests(TMP)
+        # TODO(albert): give correct arguments to deserialize
+        self.mock_deserialize.assert_called_with(test_json)
+
+    #############
+    # Utilities #
+    #############
+
+    def makeTestDirectory(self):
+        if os.path.exists(TMP):
+            shutil.rmtree(TMP)
+        os.makedirs(TMP)
+
+    def makeAssignment(self):
+        return {
+            'name': self.ASSIGN_NAME,
+            'src_files': [],
+            'version': '1.0',
+            'tests': [],
+        }
+
+    def makeTestJson(self, names=None):
+        return {
+            'names': names or ['q1'],
+        }
+
+    def listTestDir(self):
+        return [f for f in os.listdir(TMP) if f != '__pycache__']
+
+
+    def applyPatches(self):
+        """Applies unittest patches (temporary mocks)."""
+        # Patch Test.deserialize to always return self.sample_test
+        deserialize_patcher = mock.patch('models.core.Test.deserialize',
+                                       autospec=core.Test.deserialize)
+        self.mock_deserialize = deserialize_patcher.start()
+        self.addCleanup(deserialize_patcher.stop)
 
 class DummyArgs:
     """Placeholder for parsed command-line arguments."""
