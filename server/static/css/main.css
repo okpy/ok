@@ -6,3 +6,7 @@
 .nowrap { white-space: nowrap; }
 
 /* Your customizations here */
+
+.menu-button {
+  float: left;
+}

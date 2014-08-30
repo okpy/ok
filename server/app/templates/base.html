@@ -14,6 +14,7 @@
         </style>
         <link href="static/vendor/bootstrap/dist/css/bootstrap.css" rel="stylesheet"></link>
         <link href="static/vendor/angular-busy/dist/angular-busy.css" rel="stylesheet"></link>
+        <link href="static/css/main.css" rel="stylesheet"></link>
 
         <script src="static/vendor/modernizr/modernizr.js"></script>
         <script src="static/vendor/angular/angular.js"></script>
@@ -41,15 +42,9 @@
           <a class="navbar-brand" ui-sref="submission">Ok.py Server</a>
         </div>
         <div class="navbar-collapse collapse">
-          <button type="button" class="btn btn-default navbar-btn">
-            <a ui-sref=submission>Submissions</a>
-          </button>
-          <button type="button" class="btn btn-default navbar-btn">
-            <a ui-sref=assignment>Assignments</a>
-          </button>
-          <button type="button" class="btn btn-default navbar-btn pull-right">
-            <a href={{users_link}}>{{users_title}}</a>
-          </button>
+          <a type="button" class="btn btn-default navbar-btn" ui-sref=submission>Submissions</a>
+          <a type="button" class="btn btn-default navbar-btn" ui-sref=assignment>Assignments</a>
+          <a type="button" class="btn btn-default navbar-btn pull-right" href={{users_link}}>{{users_title}}</a>
         </div><!--/.navbar-collapse -->
       </div>
     </div>
