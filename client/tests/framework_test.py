@@ -73,6 +73,10 @@ class TestLoadTests(unittest.TestCase):
         serialize.return_value = self.sample_test
         self.addCleanup(serialize_patcher.stop)
 
+class TestDumpTests(unittest.TestCase):
+    # TODO(albert)
+    pass
+
 class DummyArgs:
     """Placeholder for parsed command-line arguments."""
 

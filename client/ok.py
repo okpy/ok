@@ -35,16 +35,15 @@ receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
 
+from auth import authenticate
 from models import core
-from utils import OutputLogger
 from urllib import request, error
 import argparse
 import importlib.machinery
 import json
 import os
 import sys
-
-from auth import authenticate
+import utils
 
 class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
@@ -145,7 +144,7 @@ def load_tests(test_dir):
         raise OkException('Directory {} must have a file called {}'.format(
             test_dir, INFO_FILE))
     assignment = _get_info(info_file)
-    assignment['tests'] = _get_tests(test_dir, info)
+    assignment['tests'] = _get_tests(test_dir, assignment)
     return assignment
 
 
@@ -201,6 +200,35 @@ def _import_module(path):
         # error messages.
         return None
 
+######################
+# Assignment dumping #
+######################
+
+def dump_tests(test_dir, assignment):
+    """Writes an assignment into the given test directory.
+
+    PARAMETERS:
+    test_dir   -- str; filepath to the assignment's test directory.
+    assignment -- dict; contains information, including Test objects,
+                  for an assignment.
+    """
+    tests = assignment['tests']
+    assign_copy = assignment
+    del assign_copy['tests']
+
+    # TODO(albert): prettyify string formatting by using triple quotes.
+    # TODO(albert): verify that assign_copy is serializable into json.
+    info = json.dumps(assign_copy, indent=2)
+    with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
+        f.write('info = ' + info)
+
+    # TODO(albert): might need to delete obsolete test files too.
+    # TODO(albert): verify that test_json is serializable into json.
+    for test in tests:
+        test_json = json.dumps(test.serialize(), indent=2)
+        with open(os.path.join(test_dir, test.name), 'w') as f:
+            f.write('test = ' + test_json)
+
 ##########################
 # Command-line Interface #
 ##########################
@@ -237,8 +265,8 @@ def ok_main(args):
         print(ex)
         sys.exit(1)
 
-    logger = OutputLogger()
     #TODO(albert): change sys.stdout to logger.
+    logger = utils.OutputLogger()
 
     start_protocols = \
         [p(args, assignment, logger) for p in [FileContents]]
@@ -256,6 +284,10 @@ def ok_main(args):
         protocol.on_interact()
 
     # TODO(denero) Print server responses.
+
+    # TODO(albert): a premature error might prevent tests from being
+    # dumped. Perhaps add this in a "finally" clause.
+    dump_tests(args.tests, assignment)
 
 if __name__ == '__main__':
     ok_main(parse_input())
