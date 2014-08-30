@@ -109,8 +109,9 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
                 continue
             print(self.PS1 + self.strip_prompt(line))
             if line.startswith(self.PROMPT):
-                # TODO(albert): needs verify_fn
-                answer = interact_fn(next(outputs))
+                hash_key = self.info['hash_key'].encode('utf-8')
+                verify_fn = lambda x, y: hmac.new(hash_key, x.encode('utf-8')).digest() == y
+                answer = interact_fn(next(outputs), verify_fn)
                 answers.append(core.TestCaseAnswer(answer))
         return answers
 
