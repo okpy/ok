@@ -1,11 +1,12 @@
 """Implements the GradingProtocol, which runs all specified tests
 associated with an assignment.
 
-The GradedTestCase interface can be implemented by TestCases that are
-compatible with the GradingProtocol.
+The GradedTestCase interface should be implemented by TestCases that
+are compatible with the GradingProtocol.
 """
 
 from models import core
+import ok
 import utils
 
 #####################
@@ -33,8 +34,38 @@ class GradedTestCase(core.TestCase):
         """
         raise NotImplementedError
 
-def run(test, logger, interactive=False, verbose=False):
-    """Runs all suites for the specified test.
+class GradingProtocol(ok.Protocol):
+    """A Protocol that runs tests, formats results, and sends results
+    to the server.
+    """
+    name = 'grading'
+
+    def on_interact(self):
+        """Run unlocked tests and print results."""
+        # TODO(albert): figure out how to run assignment/test-wide
+        # setup code for doctest_case only once (i.e. cache it).
+        for test in self.tests:
+            if not self.args.question or test.has_name(self.args.question):
+                self._grade_test(test)
+
+    def _grade_test(self, test):
+        """Grades a single Test."""
+        utils.underline('Test ' + test.name)
+        if test.note:
+            print(test.note)
+        total_passed = grade(test, self.logger, self.args.interactive,
+                             self.args.verbose)
+
+        total_cases = self.tests.count_cases
+        if total_cases > 0:
+            print('Passed: {} ({}%)'.format(total_passed,
+                                            total_passed / total_cases))
+            print('Locked: {} ({}%)'.format(test.count_locked,
+                                            test.count_locked / total_cases))
+        print()
+
+def grade(test, logger, interactive=False, verbose=False):
+    """Grades all suites for the specified test.
 
     PARAMETERS:
     test        -- Test.
@@ -47,18 +78,6 @@ def run(test, logger, interactive=False, verbose=False):
     RETURNS:
     int; number of TestCases that passed.
     """
-    utils.underline('Test ' + test.name)
-    if test.note:
-        print(test.note)
-    # TODO(albert): cleanup cache evaluation
-    # if test.cache:
-    #     try:
-    #         cache = compile(test.cache,
-    #                         '{} cache'.format(name), 'exec')
-    #         utils.timed(exec, (cache, global_frame))
-    #     except Exception as e:
-    #         print('Cache for', name, 'errored:', e)
-
     cases_tested = utils.Counter()
     total_passed = 0
     for suite in test.suites:
@@ -67,15 +86,6 @@ def run(test, logger, interactive=False, verbose=False):
         total_passed += passed
         if error:
             break
-
-    # TODO(albert): Move stats printing outside of this function
-    # total_cases = test.count_cases
-    # if total_cases > 0:
-    #     print('Passed: {} ({}%)'.format(total_passed,
-    #                                     total_passed/total_cases))
-    #     print('Locked: {} ({}%)'.format(test.count_locked,
-    #                                     test.count_locked/total_cases))
-    # print()
     return total_passed
 
 def _run_suite(suite, logger, cases_tested, verbose, interactive):
