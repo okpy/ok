@@ -104,7 +104,7 @@ class TestDumpTests(unittest.TestCase):
 
     def testNoTests(self):
         ok.dump_tests(TMP, self.assignment)
-        self.assertEqual([ok.INFO_FILE], self.listTestDir())
+        self.assertEqual({ok.INFO_FILE}, self.listTestDir())
 
         assignment = ok.load_tests(TMP, self.case_map)
         self.assertEqual(self.assignment.serialize(),
@@ -117,7 +117,7 @@ class TestDumpTests(unittest.TestCase):
         self.assignment.add_test(self.mock_test)
 
         ok.dump_tests(TMP, self.assignment)
-        self.assertEqual([ok.INFO_FILE, 'q1.py'], self.listTestDir())
+        self.assertEqual({ok.INFO_FILE, 'q1.py'}, self.listTestDir())
 
         assignment = ok.load_tests(TMP, self.case_map)
         self.assertEqual([self.mock_test], assignment.tests)
@@ -143,7 +143,7 @@ class TestDumpTests(unittest.TestCase):
         }
 
     def listTestDir(self):
-        return [f for f in os.listdir(TMP) if f != '__pycache__']
+        return {f for f in os.listdir(TMP) if f != '__pycache__'}
 
 
     def applyPatches(self):
