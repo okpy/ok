@@ -29,4 +29,4 @@ class DeserializeError(core.OkException):
     @classmethod
     def unexpected_type(self, field, expect, actual):
         return DeserializeError(
-            'Field "{}" expected type {}, got {}'.format(field, expect, actual))
+            'Field "{}" expected type {}, got {}'.format(field, expect, repr(actual)))

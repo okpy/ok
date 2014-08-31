@@ -25,36 +25,30 @@ class DeserializationTest(unittest.TestCase):
         self.case_map = {self.MOCK_TYPE: self.mock_case}
 
     def testNoCases(self):
-        test_json = {'names': [self.TEST_NAME]}
+        test_json = {'names': [self.TEST_NAME], 'points': 2}
         test = core.Test.deserialize(test_json, self.assignment,
                                      self.case_map)
 
         self.assertEqual(self.TEST_NAME, test.name)
-        self.assertEqual(0, test.count_cases)
-
-        self.assertEqual(test_json, test.serialize())
-
-    def testPoints(self):
-        test_json = {'names': [self.TEST_NAME], 'points': 2}
-        test = core.Test.deserialize(test_json, self.assignment,
-                                     self.case_map)
-        self.assertEqual(2, test.points)
+        self.assertEqual(0, test.num_cases)
+        self.assertEqual(2, test['points'])
 
         self.assertEqual(test_json, test.serialize())
 
     def testMultipleNames(self):
         test_names = ['a', 'b', 'c']
-        test_json = {'names': test_names}
+        test_json = {'names': test_names, 'points': 1}
         test = core.Test.deserialize(test_json, self.assignment,
                                      self.case_map)
 
-        self.assertEqual(test_names, test.names)
+        self.assertEqual(test_names, test['names'])
 
         self.assertEqual(test_json, test.serialize())
 
     def testSingleSuite(self):
         test_json = {
-            'names': self.TEST_NAME,
+            'names': [self.TEST_NAME],
+            'points': 1,
             'suites': [
                 [self.MOCK_CASE_JSON, self.MOCK_CASE_JSON],
             ]
@@ -63,14 +57,15 @@ class DeserializationTest(unittest.TestCase):
                                      self.case_map)
 
         self.assertEqual(2, len(self.mock_case.deserialize.mock_calls))
-        self.assertEqual([[self.mock_case_instance] * 2], test.suites)
-        self.assertEqual(1, test.points)
+        self.assertEqual([[self.mock_case_instance] * 2], test['suites'])
+        self.assertEqual(1, test['points'])
 
         self.assertEqual(test_json, test.serialize())
 
     def testMultipleSuites(self):
         test_json = {
-            'names': self.TEST_NAME,
+            'names': [self.TEST_NAME],
+            'points': 2,
             'suites': [
                 [self.MOCK_CASE_JSON, self.MOCK_CASE_JSON],
                 [self.MOCK_CASE_JSON, self.MOCK_CASE_JSON],
@@ -80,7 +75,7 @@ class DeserializationTest(unittest.TestCase):
                                      self.case_map)
 
         self.assertEqual(4, len(self.mock_case.deserialize.mock_calls))
-        self.assertEqual([[self.mock_case_instance] * 2] * 2, test.suites)
-        self.assertEqual(2, test.points)
+        self.assertEqual([[self.mock_case_instance] * 2] * 2, test['suites'])
+        self.assertEqual(2, test['points'])
 
         self.assertEqual(test_json, test.serialize())

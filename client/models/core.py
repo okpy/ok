@@ -20,27 +20,53 @@ respective Protocols (in the client/protocols/ directory), while
 concrete subclasses of TestCase should be located in client/models/.
 """
 
-import utils
+from utils import serialize
+from utils import utils
+from exceptions.serialize import DeserializeError
 
-class SerializationError(BaseException):
-    pass
+class Assignment(serialize.Serializable):
+    """A representation of an assignment."""
 
-class Test(object):
+    REQUIRED = {
+        'name': serialize.STR,
+        'version': serialize.STR,
+    }
+    OPTIONAL = {
+        'src_files': serialize.LIST,
+    }
+
+    def __init__(self, **fields):
+        super().__init__(**fields)
+        self._tests = []
+
+    def add_test(self, test):
+        assert isinstance(test, Test), '{} must be a Test'.format(test)
+        self._tests.append(test)
+
+    @property
+    def tests(self):
+        """Returns the tests for this assignment. The returned list
+        is a copy, so that the original list can remain immutable.
+        """
+        return self._tests.copy()
+
+    @property
+    def num_tests(self):
+        return len(self._tests)
+
+class Test(serialize.Serializable):
     """Represents all suites for a single test in an assignment."""
 
-    def __init__(self, names=None, suites=None, points=None, note='', cache=''):
-        self.names = names or []
-        # Filter out empty suites.
-        suites = suites or []
-        self.suites = list(filter(lambda suite: suite != [], suites))
-
-        self._points = points
-        self.note = utils.dedent(note)
-        # TODO(albert): add extra credit option.
-        # TODO(albert): the notion of a cache was originally designed
-        # only for code-based questions. Either generalize for other
-        # test types, or move to subclasses.
-        self.cache = utils.dedent(cache)
+    REQUIRED = {
+        'names': serialize.SerializeArray(serialize.STR),
+        'points': serialize.FLOAT,
+    }
+    OPTIONAL = {
+        'suites': serialize.SerializeArray(serialize.LIST),
+        'note': serialize.STR,
+        'extra': serialize.BOOL_FALSE,
+        # TODO(albert): Add a field for setup info.
+    }
 
     @property
     def name(self):
@@ -49,69 +75,57 @@ class Test(object):
         RETURNS:
         str; the name of the test
         """
-        if not self.names:
+        if not self['names']:
             return repr(self)
-        return self.names[0]
+        return self['names'][0]
 
     @property
-    def points(self):
-        """Gets the number of points this test is worth."""
-        if self._points is None:
-            return len(self.suites)
-        return self._points
-
-    @property
-    def count_cases(self):
+    def num_cases(self):
         """Returns the number of test cases in this test."""
-        return sum(len(suite) for suite in self.suites)
+        return sum(len(suite) for suite in self['suites'])
 
     @property
-    def count_locked(self):
+    def num_locked(self):
         """Returns the number of locked test cases in this test."""
-        return [case.is_locked for suite in self.suites
+        return [case['locked'] for suite in self['suites']
                                for case in suite].count(True)
 
     def add_suite(self, suite):
         """Adds the given suite to this test's list of suites. If
         suite is empty, do nothing."""
         if suite:
-            self.suites.append(suite)
-            suite_num = len(self.suites) - 1
-            for test_case in suite:
-                test_case.test = self
-                test_case.suite_num = suite_num
-
-    def has_name(self, name):
-        return name in self.names
+            self['suites'].append(suite)
 
     @classmethod
-    def deserialize(cls, test_json, assignment_info, case_map):
+    def deserialize(cls, test_json, assignment, case_map):
         """Deserializes a JSON object into a Test object, given a
         particular set of assignment_info.
 
         PARAMETERS:
-        test_json       -- JSON; the JSON representation of the test.
-        assignment_info -- JSON; information about the assignment,
-                           may be used by TestCases.
-        case_map        -- dict; maps case tags (strings) to TestCase
-                           classes.
+        test_json  -- JSON; the JSON representation of the test.
+        assignment -- Assignment; information about the assignment,
+                      may be used by TestCases.
+        case_map   -- dict; maps case tags (strings) to TestCase
+                      classes.
 
         RETURNS:
         Test
         """
-        test = Test(names=test_json.get('names', None),
-                points=test_json.get('points', None),
-                note=test_json.get('note', ''),
-                )
-        # TODO(albert): setup code?
-        for suite in test_json.get('suites', []):
+        test = Test(**test_json)
+        new_suites = []
+        for suite in test['suites']:
+            if not suite:
+                continue
             new_suite = []
-            for case in suite:
-                case_type = case['type']
-                test_case = case_map[case_type].deserialize(case,
-                        assignment_info)
+            for case_json in suite:
+                if 'type' not in case_json:
+                    raise DeserializeError.missing_fields(('type'))
+                case_type = case_json['type']
+                test_case = case_map[case_type].deserialize(case_json,
+                        assignment, test)
                 new_suite.append(test_case)
-            test.add_suite(new_suite)
+            new_suites.append(new_suite)
+        test['suites'] = new_suites
         return test
 
     def serialize(self):
@@ -120,71 +134,33 @@ class Test(object):
         RETURNS:
         JSON as a plain-old-Python-object.
         """
-        json = {
-            'names': self.names,
-        }
+        json = super().serialize()
         suites = [[case.serialize() for case in suite]
-                                    for suite in self.suites]
-        if self.count_cases > 0:
+                                    for suite in self['suites']]
+        if suites:
             json['suites'] = suites
-        if self._points is not None:
-            json['points'] = self._points
-        if self.note:
-            json['note'] = self.note
         return json
 
-class TestCase(object):
+class TestCase(serialize.Serializable):
     """Represents a single test case."""
 
     type = 'default'
 
-    def __init__(self, input_str, outputs, test=None, **status):
-        """Constructor.
-
-        PARAMETERS:
-        input_str -- str; the TestCase's input.
-        outputs   -- list of TestCaseAnswers; the outputs associated
-                     with this TestCase.
-        test      -- Test; the test to which this TestCase belongs.
-        status    -- keyword arguments; the status of this TestCase.
-        """
-        self._input_str = utils.dedent(input_str)
-        self._outputs = outputs
-        self.test = test
-        self._status = status
-
-    @property
-    def is_locked(self):
-        """Returns True if the TestCase is locked."""
-        return self._status.get('lock', True)
-
-    def set_locked(self, locked):
-        """Sets the TestCase's locked status."""
-        self._status['lock'] = locked
-
-    @property
-    def outputs(self):
-        """Returns a list of TestCaseAnswers associated with this
-        TestCase.
-        """
-        return self._outputs
-
-    def set_outputs(self, new_outputs):
-        """Sets this TestCase's list of TestCaseAnswers."""
-        self._outputs = new_outputs
+    # Fields
+    OPTIONAL = {
+        'locked': serialize.BOOL_TRUE,
+    }
 
     @classmethod
-    def assert_correct_type(cls, case_json):
-        if 'type' not in case_json:
-            raise SerializationError('JSON is missing type {}'.format(cls.type))
-        elif case_json['type'] != cls.type:
-            raise SerializationError(
-                    'JSON type {} does not match TestCase type {}'.format(
-                        case_json['type'], cls.type))
-
+    def assert_correct_type(cls, json):
+        if 'type' not in json:
+            raise serialize.DeserializeError.missing_field('type')
+        elif json['type'] != cls.type:
+            raise serialize.DeserializationError.unexpected_value(
+                    'type', cls.type, json['type'])
 
     @classmethod
-    def deserialize(self, case_json, info):
+    def deserialize(self, json, assignment, test):
         raise NotImplementedError
 
     def serialize(self):

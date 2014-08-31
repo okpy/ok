@@ -40,7 +40,11 @@ class Serializable(object):
         """Serializes this object into JSON format. The default
         behavior simply returns a copy a of all the fields.
         """
-        return self._fields.copy()
+        json = {}
+        for field, value in self._fields.items():
+            if value != self._field_type(field).default:
+                json[field] = value
+        return json
 
     #############################
     # Getitem/Setitem interface #
@@ -115,7 +119,6 @@ class SerializePrimitive(SerializeType):
     def __str__(self):
         return self._valid_types[0].__name__
 
-
 class SerializeObject(SerializeType):
     """A serializable non-primitive object."""
     def __init__(self, type, *args):
@@ -157,6 +160,9 @@ class SerializeArray(SerializeType):
         return (type(obj) in (list, tuple)
                 and all(self._type.validate(elem) for elem in obj))
 
+    def __str__(self):
+        return 'list of ' + str(self._type)
+
 class SerializeMap(SerializeType):
     """Represents an array whose elements are of homogeneous type."""
 
@@ -178,6 +184,8 @@ class SerializeMap(SerializeType):
                 and set(obj) == set(self._fields)
                 and all(self._fields[k].validate(obj[k]) for k in obj))
 
+    def __str__(self):
+        return 'dictionary'
 
 BOOL_FALSE = SerializePrimitive(False, bool)
 BOOL_TRUE = SerializePrimitive(True, bool)
