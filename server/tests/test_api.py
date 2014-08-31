@@ -17,6 +17,9 @@ from google.appengine.ext import ndb
 from app import models
 from app.constants import ADMIN_ROLE
 
+from ddt import ddt, data, unpack
+
+@ddt
 class APITest(object): #pylint: disable=no-init
     """
     Simple test case for the API
@@ -102,14 +105,28 @@ class APITest(object): #pylint: disable=no-init
         self.assertTrue(inst2.to_json() not in self.response_json,
                         self.response_json)
 
-    def test_pagination(self, total_objects=50, num_page=30):
+    pagination_tests = [
+        (11, 10),
+        (32, 10),
+        (6, 10),
+        (10, 10)
+    ]
+    
+    @data(*pagination_tests)
+    @unpack
+    def test_pagination(self, total_objects, num_page):
         """
-        Tests that pagination works by making 2 requests.
+        Tests pagination by creating a specified number of entities, and checking if
+        the number of entities retrieved are less than the specified max per page.
+
+        total_objects - the number of entities to be created
+        num_page - the maximum number of entities per page
+
+        To create more copies of this test, just add a tuple to the pagination_tests list.
+        @unpack allows the ddt package to work with the `pagination_tests` list of tuples.
         """
-        insts = []
         for _ in range(total_objects):
             inst = self.get_basic_instance(mutate=True)
-            insts.append(inst)
             inst.put()
         while total_objects > 0:
             if hasattr(self, 'forward_cursor'):
@@ -125,23 +142,6 @@ class APITest(object): #pylint: disable=no-init
                     "Not right number returned: " + str(total_objects) + " vs. " +str(num_instances) + str(self.response_json))
             total_objects -= num_page
 
-    def test_pagination_single_page(self):
-        """
-        Tests that pagination works for a single page.
-        """
-        self.test_pagination(11, 10)
-    
-    def test_pagination_multiple(self):
-        """
-        Tests that pagination works for more than 2 pages.
-        """
-        self.test_pagination(32, 10)
-
-    def test_pagination_exact(self):
-        """
-        Tests that pagination works for exactly # of entries per page as max.
-        """
-        self.test_pagination(10, 10)
 
     ## ENTITY GET ##
 
