@@ -7,7 +7,7 @@ Ok.py assignments are organized in the following hierarchy:
     * suite: a list of TestCase objects
     * TestCase (and its subclasses)
 
-The core models (Test, TestCase) are implemented here.
+The core models (Assignment, Test, TestCase) are implemented here.
 
 Developers can extend the TestCase class to create different types of
 TestCases (both interfaces and concrete subclasses of TestCase are
@@ -117,6 +117,9 @@ class Test(serialize.Serializable):
                 if 'type' not in case_json:
                     raise exceptions.DeserializeError.missing_fields(('type'))
                 case_type = case_json['type']
+                if case_type not in case_map:
+                    raise exceptions.DeserializeError.unknown_type(
+                            case_type, case_map)
                 test_case = case_map[case_type].deserialize(
                         case_json, assignment, test)
                 new_suite.append(test_case)
@@ -149,7 +152,7 @@ class TestCase(serialize.Serializable):
     @classmethod
     def deserialize(cls, json, assignment, test):
         result = super().deserialize(json)
-        result.assertType()
+        result._assertType()
         return result
 
     def _assertType(self):

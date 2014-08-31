@@ -32,3 +32,10 @@ class DeserializeError(OkException):
     def unexpected_type(self, field, expect, actual):
         return DeserializeError(
             'Field "{}" expected type {}, got {}'.format(field, expect, repr(actual)))
+
+    @classmethod
+    def unknown_type(self, type, case_map):
+        return DeserializeError(
+            'TestCase type "{}" is unknown in case map {}'.format(type,
+                case_map))
+
