@@ -59,6 +59,7 @@ class Test(serialize.Serializable):
     }
     OPTIONAL = {
         'suites': serialize.SerializeArray(serialize.LIST),
+        'params': serialize.DICT,
         'note': serialize.STR,
         'extra': serialize.BOOL_FALSE,
         # TODO(albert): Add a field for setup info.

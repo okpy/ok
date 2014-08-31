@@ -5,25 +5,34 @@ mimic a Python interpreter.
 """
 
 from models import core
+from models import serialize
 from protocols import grading
 from protocols import unlock
+from utils import utils
 import code
 import re
 import readline
 import traceback
-import utils
 
-class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
+class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for doctest-style Python tests."""
 
     type = 'doctest'
 
-    PROMPT = '$ '
+    # Fields.
+    REQUIRED = {
+        'type': serialize.STR,
+    }
+    OPTIONAL = {
+        'test': serialize.STR,
+        'locked': serialize.BOOL_TRUE,
+        'teardown': serialize.STR,
+    }
+
     PS1 = '>>> '
     PS2 = '... '
 
-    def __init__(self, input_str, outputs, frame=None, test=None,
-                 teardown='', **status):
+    def __init__(self, **fields):
         """Constructor.
 
         PARAMETERS:
@@ -38,13 +47,10 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
                      regardless of errors.
         status    -- keyword arguments; statuses for the test case.
         """
-        super().__init__(input_str, outputs, test=test, **status)
-        self._frame = frame or {}
-        self.teardown = utils.dedent(teardown)
-        self._lines = self._input_str.splitlines()
-        self._format_lines()
-        # TODO(albert): check that the number of prompts in lines is
-        # equal to the number of outputs
+        super().__init__(**fields)
+        self._lines = []
+        self._frame = {}
+        self._params = _DoctestParams()
 
     ##################
     # Public Methods #
@@ -83,6 +89,8 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
         console = _PythonConsole()
         frame = self._frame.copy()
+        console.exec(self._params['setup'], frame)
+
         error = console.run(self, frame)
 
         if error and not verbose:
@@ -91,7 +99,7 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         if error and interactive:
             _interact(frame)
 
-        console.exec(self.teardown, frame)
+        console.exec(self._params['teardown'], frame)
         print()
 
         if error:
@@ -99,28 +107,28 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         logger.register_log(None)
         return error
 
+    def should_grade(self):
+        return not self['locked']
+
     def on_unlock(self, logger, interact_fn):
         """Implements the UnlockTestCase interface."""
-        outputs = iter(self._outputs)
-        answers = []
-        for line in self.lines:
-            if line.startswith(' '):  # Line is indented.
-                print(self.PS2 + line)
-                continue
-            print(self.PS1 + self.strip_prompt(line))
-            if line.startswith(self.PROMPT):
-                hash_key = self.info['hash_key'].encode('utf-8')
-                verify_fn = lambda x, y: hmac.new(hash_key, x.encode('utf-8')).digest() == y
-                answer = interact_fn(next(outputs), verify_fn)
-                answers.append(core.TestCaseAnswer(answer))
-        return answers
+        for i, line in enumerate(self.lines):
+            if isinstance(line, str):
+                print(line)
+            elif isinstance(line, _Answer):
+                if not line.locked:
+                    print(line.output)
+                    continue
+                line.output = interact_fn(line.output, line.choices)
+                line.locked = False
+        self['locked'] = False
 
     #################
     # Serialization #
     #################
 
     @classmethod
-    def deserialize(cls, case_json, assignment_info):
+    def deserialize(cls, case_json, assignment, test):
         """Deserializes a JSON object into a Test object, given a
         particular set of assignment_info.
 
@@ -132,27 +140,13 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         RETURNS:
         Test
         """
-        cls.assert_correct_type(case_json)
-        input_lines = []
-        outputs = []
-        output = None
-        for line in utils.dedent(case_json['test']).split('\n'):
-            if line.startswith(cls.PS1) or line.startswith(cls.PS2):
-                input_lines.append(line[4:])
-                if output:
-                    outputs.append(output)
-                    output = None
-            elif line.startswith('# '):
-                cls._update_answer(output, line)
-            else:
-                assert output is None
-                # Add a prompt to the previous line
-                input_lines[-1] = cls.PROMPT + input_lines[-1]
-                output = core.TestCaseAnswer(line)
-        if output:
-            outputs.append(output)
-        return cls('\n'.join(input_lines), outputs,
-                   **case_json.get('status', {}))
+        case = super().deserialize(case_json, assignment, test)
+        case._format_lines()
+        # TODO(albert): handle assignment-level params as well.
+        if cls.type in test['params']:
+            case._params = test['params'][cls.type]
+        exec(case._params['cache'], case._frame)
+        return case
 
     def serialize(self):
         """Serializes this Test object into JSON format.
@@ -160,59 +154,93 @@ class PythonTestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         RETURNS:
         JSON as a plain-old-Python-object.
         """
-        test = []
-        outputs = iter(self._outputs)
+        case = []
         for line in self._lines:
-            if line.startswith(' '):
-                # If the line is indented.
-                test.append(self.PS2 + line)
-            elif line.startswith(self.PROMPT):
-                test.append(self.PS1 + line[2:])
-                output = next(outputs)
-                test.append(output.answer)
-                if output.explanation:
-                    test.append('# explanation: ' + output.explanation)
-                for choice in output.choices:
-                    test.append('# choice: ' + choice)
+            if isinstance(line, _Answer):
+                case.append(line.dump())
             else:
-                test.append(self.PS1 + line)
-        return {
-            'type': self.type,
-            'test': '\n'.join(test),
-        }
-
+                case.append(line)
+        self['test'] = '\n'.join(case)
+        return super().serialize()
 
     ###################
     # Private methods #
     ###################
 
-    @classmethod
-    def _update_answer(cls, output, line):
-        assert isinstance(output, core.TestCaseAnswer)
-        answer_re = re.compile('#\s*(.+):\s*(.*)')
-        match = answer_re.match(line)
-        if match:
-            if match.group(1) == 'explanation':
-                output.explanation = match.group(2)
-            elif match.group(1) == 'choice':
-                output.choices.append(match.group(2))
-
     def _format_lines(self):
-        """Splits the input string and adds an explicit prompt to the
-        last line if there are zero prompts.
+        """Splits the test string and adds _Answer objects to denote
+        prompts.
         """
-        if self._lines and self.num_prompts == 0:
-            self._lines[-1] = self.PROMPT + self._lines[-1]
-        return self._lines
+        self._lines = []
+        for line in utils.dedent(self['test']).splitlines():
+            if not line:
+                continue
+            elif line.startswith(self.PS1) or line.startswith(self.PS2):
+                self._lines.append(line)
+            elif line.startswith('#'):
+                # Assume the last object in lines is an _Answer.
+                self._lines[-1].update(line)
+            else:
+                # Wrap the doctest answer in an object.
+                self._lines.append(_Answer(line))
+
+class _Answer(object):
+    status_re = re.compile('#\s*(.+):\s*(.*)')
+    locked_re = re.compile('#\s*locked')
+
+    def __init__(self, output, choices=None, explanation='',
+                 locked=False):
+        self.output = output
+        self.choices = choices or []
+        self.explanation = explanation
+        self.locked = locked
+
+    def dump(self):
+        result = [self.output]
+        if self.locked:
+            result.append('# locked')
+        if self.explanation:
+            result.append('# explanation: ' + self.explanation)
+        if self.choices:
+            for choice in self.choices:
+                result.append('# choice: ' + choice)
+        return '\n'.join(result)
+
+    def update(self, line):
+        if self.locked_re.match(line):
+            self.locked = True
+            return
+        match = self.status_re.match(line)
+        if not match:
+            return
+        elif match.group(1) == 'locked':
+            self.locked = True
+        elif match.group(1) == 'explanation':
+            self.explanation = match.group(2)
+        elif match.group(1) == 'choice':
+            self.choices.append(match.group(2))
+
+# TODO(albert): Test.deserialize should handle this.
+class _DoctestParams(serialize.Serializable):
+    OPTIONAL = {
+        'setup': serialize.STR,
+        'teardown': serialize.STR,
+        'cache': serialize.STR,
+    }
+
+    def __init__(self, **fields):
+        super().__init__(**fields)
+        self['setup'] = utils.dedent(self['setup'])
+        self['teardown'] = utils.dedent(self['teardown'])
+        self['cache'] = utils.dedent(self['cache'])
 
 class _PythonConsole(object):
     """Handles test evaluation and output formatting for a single
     PythonTestCase.
     """
-    PROMPT = PythonTestCase.PROMPT
-    PS1 = PythonTestCase.PS1
-    PS2 = PythonTestCase.PS2
 
+    PS1 = DoctestCase.PS1
+    PS2 = DoctestCase.PS2
     def __init__(self, equal_fn=None):
         """Constructor.
 
@@ -252,30 +280,29 @@ class _PythonConsole(object):
         # TODO(albert): Windows machines don't have a readline module.
         readline.clear_history()
 
-        outputs = iter(case.outputs)
         frame = frame or {}
 
         error = False
-        current = ''
+        current = []
         for line in case.lines + ['']:
-            self._add_line_to_history(line)
-            if line.startswith(' ') or self._incomplete(current):
-                print(self.PS2 + line)
-                current += line + '\n'
-                continue
-            elif current.startswith(self.PROMPT):
-                output = next(outputs).answer
-                error = self.exec(PythonTestCase.strip_prompt(current),
-                                  frame, expected=output)
+            if isinstance(line, str):
+                if current and line.startswith(self.PS1):
+                    error = self.exec('\n'.join(current), frame)
+                    if error:
+                        break
+                    current = []
+                print(line)
+                self._add_line_to_history(line)
+                line = self._strip_prompt(line)
+                self._add_line_to_history(line)
+                current.append(line)
+            elif isinstance(line, _Answer):
+                assert len(current) > 0, 'Answer without a prompt'
+                error = self.exec('\n'.join(current), frame,
+                                  expected=line.output)
                 if error:
                     break
-            else:
-                error = self.exec(current, frame)
-                if error:
-                    break
-            current = line + '\n'
-            if line != '':
-                print(self.PS1 + PythonTestCase.strip_prompt(line))
+                current = []
         return error
 
     def exec(self, expr, frame, expected=None):
@@ -357,20 +384,24 @@ class _PythonConsole(object):
     # Private methods #
     ###################
 
-    @staticmethod
-    def _add_line_to_history(line):
+    def _add_line_to_history(self, line):
         """Adds the given line to readline history, only if the line
         is non-empty. If the line starts with a prompt symbol, the
         prompt is stripped from the line.
         """
         if line:
-            readline.add_history(PythonTestCase.strip_prompt(line))
+            readline.add_history(line)
 
-    @staticmethod
-    def _incomplete(line):
-        """Check if the given line can be a complete line of Python."""
-        line = PythonTestCase.strip_prompt(line)
-        return code.compile_command(line) is None
+    def _strip_prompt(self, line):
+        """Removes a PS1 or PS2 prompt from the front of the line. If
+        the line does not contain a prompt, return it unchanged.
+        """
+        if line.startswith(self.PS1):
+            return line[len(self.PS1):]
+        elif line.startswith(self.PS2):
+            return line[len(self.PS2):]
+        else:
+            return line
 
 def _interact(frame=None):
     """Starts an InteractiveConsole, using the variable bindings
@@ -382,4 +413,5 @@ def _interact(frame=None):
         frame = frame.copy()
     console = code.InteractiveConsole(frame)
     console.interact('# Interactive console. Type exit() to quit')
+
 

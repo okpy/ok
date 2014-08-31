@@ -3,11 +3,21 @@
 test = {
   # Optional information for each type of test case to set up, specific
   # to this test (q1)
-  'setup': {
-    'doctest': """
-    # Setup code for doctest-style TestCases. This setup code is only
-    # run once, before any of the testcases are evaluated.
-    """,
+  'params': {
+    'doctest': {
+      'setup': """
+      # Setup code for doctest-style TestCases. This setup code is
+      # evaluated before every doctest testcase.
+      """,
+      'teardown': """
+      # Teardown code for doctest-style TestCases. This code is
+      # evaluated after every doctest testcase, even ones that fail.
+      """,
+      'cache': """
+      # Cache code for doctest-style TestCases. This code is only
+      # evaluated once, before any test cases are evaluated.
+      """,
+    },
   },
   'suites': [
     [
