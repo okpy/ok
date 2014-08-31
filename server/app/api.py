@@ -6,13 +6,13 @@ import json
 from flask.views import MethodView
 from flask.app import request
 from flask import session
+from webargs import Arg
 
 from app import models
 from app.models import BadValueError
 from app.needs import Need
 from app.decorators import handle_error
-from app.utils import create_api_response
-from app.paginate import paginate
+from app.utils import create_api_response, paginate, filter_query
 
 
 class APIResource(object):
@@ -100,10 +100,19 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success", {})
 
+    @property
+    def known_filters(self):
+        """
+        Returns the fields we can filter on.
+        """
+        import pdb
+        pdb.set_trace()
+        return set(self.get_model()._properties.keys())
+
     def index(self):
         """
         Index HTTP method. Should be called from GET when no key is provided.
-        
+
         Processes cursor and num_page URL arguments for pagination support.
         """
         query = self.get_model().query()
@@ -112,12 +121,18 @@ class APIResource(object):
         result = self.get_model().can(session['user'], need, query=query)
         if not result:
             return need.api_response()
-        query = result
+        query = filter_query(result, request.args, 
+                             self.get_model(), self.known_filters)
 
         cursor = request.args.get('cursor', None)
         num_page = request.args.get('num_page', None)
         query_results = paginate(query, cursor, num_page)
         return create_api_response(200, "success", query_results)
+
+index_args = {
+    'cursor': Arg(default=None),
+    'num_page': Arg(int, default=None),
+}
 
 
 class UserAPI(MethodView, APIResource):
