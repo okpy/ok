@@ -5,13 +5,9 @@ Ok.py assignments are organized in the following hierarchy:
     * assignments: consist of a list of Test objects
     * Test: consist of a list of suites
     * suite: a list of TestCase objects
-    * TestCase (and its subclasses): consist of
-        * an input
-        * a list of TestCaseAnswers
-    * TestCaseAnswers: represents the answer to a specific TestCase
+    * TestCase (and its subclasses)
 
-The core models (Test, TestCase, TestCaseAnswers) are implemented
-here.
+The core models (Test, TestCase) are implemented here.
 
 Developers can extend the TestCase class to create different types of
 TestCases (both interfaces and concrete subclasses of TestCase are
@@ -121,8 +117,8 @@ class Test(serialize.Serializable):
                 if 'type' not in case_json:
                     raise DeserializeError.missing_fields(('type'))
                 case_type = case_json['type']
-                test_case = case_map[case_type].deserialize(case_json,
-                        assignment, test)
+                test_case = case_map[case_type].deserialize(
+                        case_json, assignment, test)
                 new_suite.append(test_case)
             new_suites.append(new_suite)
         test['suites'] = new_suites
@@ -145,6 +141,7 @@ class TestCase(serialize.Serializable):
     """Represents a single test case."""
 
     type = 'default'
+    # TODO(albert): add 'type' as a required field.
 
     @classmethod
     def assert_correct_type(cls, json):
@@ -160,25 +157,3 @@ class TestCase(serialize.Serializable):
 
     def serialize(self):
         raise NotImplementedError
-
-class TestCaseAnswer(object):
-    """Represents an answer for a single TestCase."""
-
-    def __init__(self, answer, choices=None, explanation=''):
-        """Constructor.
-
-        PARAMETERS:
-        answer      -- str; The correct answer, possibly encoded.
-        choices     -- list of strs; If not None, denotes a list of
-                       options for multiple choice.
-        explanation -- str; Optional explanation of the TestCaseAnswer.
-        """
-        self.answer = answer
-        self.choices = choices or []
-        self.explanation = explanation
-
-    @property
-    def is_multiple_choice(self):
-        """Returns True if the TestCaseAnswer is multiple choice."""
-        return len(self.choices) > 0
-

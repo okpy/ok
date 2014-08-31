@@ -11,21 +11,19 @@ class InteractTest(unittest.TestCase):
     ANSWER = '42'
 
     def setUp(self):
+        mock_verify = lambda x, y: self.encode(x) == y
         self.logger = utils.OutputLogger()
-        self.console = unlock.UnlockConsole(self.logger)
-        self.verify = lambda x, y: self.encode(x) == y
+        self.console = unlock.UnlockConsole(self.logger, '')
+        self.console._verify = mock.Mock(side_effect=mock_verify)
         self.register_choices()
 
     def calls_interact(self, expect_answer, locked_answer,
-            choices=None, aborts=False, verify_fn=None):
-        verify_fn = verify_fn or self.verify
-        output = core.TestCaseAnswer(locked_answer, choices)
-
+            choices=None, aborts=False):
         if aborts:
             self.assertRaises(unlock.UnlockException,
-                    self.console.interact, output, verify_fn)
+                    self.console._interact, locked_answer, choices)
         else:
-            answer = self.console.interact(output, verify_fn)
+            answer = self.console._interact(locked_answer, choices)
             self.assertEqual(expect_answer, answer)
 
     def register_input(self, *student_input):
@@ -98,7 +96,7 @@ class UnlockTest(unittest.TestCase):
         return case
 
     def calls_unlock(self, test, expected_unlocked):
-        cases_unlocked = unlock.unlock(test, self.logger)
+        cases_unlocked = unlock.unlock(test, self.logger, '')
         self.assertEqual(expected_unlocked, cases_unlocked)
 
     def testNoSuites(self):

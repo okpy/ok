@@ -69,7 +69,7 @@ class UnlockProtocol(ok.Protocol):
                 # TODO(albert): the unlock function returns the number
                 # of unlocked test cases. This can be a useful metric
                 # for analytics in the future.
-                unlock(test, self.logger)
+                unlock(test, self.logger, self.assignment['hash_key'])
 
     def _filter_tests(self):
         """
@@ -81,7 +81,7 @@ class UnlockProtocol(ok.Protocol):
                     if test.name == self.args.question]
         return self.assignment['tests']
 
-def unlock(test, logger):
+def unlock(test, logger, hash_key):
     """Unlocks TestCases for a given Test.
 
     PARAMETERS:
@@ -97,7 +97,7 @@ def unlock(test, logger):
     int; the number of cases that are newly unlocked for this Test
     after going through an unlocking session.
     """
-    console = UnlockConsole(logger)
+    console = UnlockConsole(logger, hash_key)
     cases = 0
     cases_unlocked = 0
     for suite in test['suites']:
@@ -125,8 +125,9 @@ class UnlockConsole(object):
         'quit()',
     )
 
-    def __init__(self, logger):
+    def __init__(self, logger, hash_key):
         self._logger = logger
+        self._hash_key = hash_key
 
     ##################
     # Public methods #
@@ -140,16 +141,15 @@ class UnlockConsole(object):
 
         DESCRIPTION:
         Upon successful completion, the provided TestCase will be
-        modified to contain the unlocked TestCaseAnswer, and the
-        TestCase will be marked as unlocked. If the user aborts before
-        successful completion, the TestCase will left untouched.
+        marked as unlocked. If the user aborts before successful
+        completion, the TestCase will left untouched.
 
         RETURNS:
         bool; True if an error/abort occurs, False if the TestCase is
         unlocked successfully.
         """
         try:
-            case.on_unlock(self._logger, self.interact)
+            case.on_unlock(self._logger, self._interact)
         except UnlockException:
             print('\nExiting unlocker...')
             return True
@@ -162,6 +162,9 @@ class UnlockConsole(object):
     ###################
     # Private Methods #
     ###################
+
+    def _verify(self, guess, lock):
+        return hmac.new(self._hash_key, guess.encode('utf-8')).digest() == lock
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
@@ -179,17 +182,15 @@ class UnlockConsole(object):
             choice_map[i] = choice
         return choice_map
 
-    # TODO(albert): verify_fn can be moved to Protocols, not
-    # TestCases.
-    def interact(self, output, verify_fn):
+    def _interact(self, answer, choices=None):
         """Reads student input for unlocking tests until the student
         answers correctly.
 
         PARAMETERS:
-        output    -- TestCaseAnswer; a locked test case answer.
-        verify_fn -- function; a function that verifies that a student
-                     answer is equal to an encoded version of the
-                     correct answer.
+        answer    -- str; a locked test case answer.
+        choices   -- list or None; a list of choices. If None or an
+                     empty list, signifies the question is not multiple
+                     choice.
 
         DESCRIPTION:
         Continually prompt the student for an answer to an unlocking
@@ -200,18 +201,15 @@ class UnlockConsole(object):
             2. The student aborts abnormally (either by typing 'exit()'
                or using Ctrl-C/D. In this case, return None
 
-        Correctness is determined by the verification function passed
-        into the constructor. The verification function returns True
-        if the student answer matches the locked answer. The student's
-        answer is then used as the new TestCaseAnswer of the TestCase.
+        Correctness is determined by the verify method.
 
         RETURNS:
         str  -- the correct solution (that the student supplied)
         """
         correct = False
         while not correct:
-            if output.choices:
-                choice_map = self._display_choices(output.choices)
+            if choices:
+                choice_map = self._display_choices(choices)
 
             try:
                 student_input = self._input(self.PROMPT)
@@ -229,9 +227,9 @@ class UnlockConsole(object):
 
             self._add_line_to_history(student_input)
 
-            if output.choices:
+            if choices:
                 student_input = choice_map[student_input]
-            correct = verify_fn(student_input, output.answer)
+            correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
         return student_input
