@@ -6,7 +6,7 @@ compatible with the UnlockProtocol.
 """
 
 from models import core
-from utils import serialize
+from models import serialize
 from utils import utils
 import ok
 import random

@@ -16,9 +16,9 @@ respective Protocols (in the client/protocols/ directory), while
 concrete subclasses of TestCase should be located in client/models/.
 """
 
-from utils import serialize
-from utils import utils
 from exceptions.serialize import DeserializeError
+from models import serialize
+from utils import utils
 
 class Assignment(serialize.Serializable):
     """A representation of an assignment."""

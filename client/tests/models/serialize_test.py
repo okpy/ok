@@ -1,6 +1,6 @@
 from exceptions.serialize import DeserializeError
+from models import serialize
 from unittest import mock
-from utils import serialize
 import unittest
 
 class MockSerializable(serialize.Serializable):
