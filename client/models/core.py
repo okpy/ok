@@ -141,19 +141,19 @@ class TestCase(serialize.Serializable):
     """Represents a single test case."""
 
     type = 'default'
-    # TODO(albert): add 'type' as a required field.
+
+    REQUIRED = {
+        'type': serialize.STR,
+    }
 
     @classmethod
-    def assert_correct_type(cls, json):
-        if 'type' not in json:
-            raise serialize.DeserializeError.missing_field('type')
-        elif json['type'] != cls.type:
-            raise serialize.DeserializationError.unexpected_value(
-                    'type', cls.type, json['type'])
+    def deserialize(cls, json, assignment, test):
+        result = super().deserialize(json)
+        result.assertType()
+        return result
 
-    @classmethod
-    def deserialize(self, json, assignment, test):
-        raise NotImplementedError
+    def _assertType(self):
+        if self['type'] != self.type:
+            raise serialize.DeserializeError.unexpected_value('type',
+                    self.type, self['type'])
 
-    def serialize(self):
-        raise NotImplementedError

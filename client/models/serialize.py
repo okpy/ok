@@ -7,6 +7,9 @@ class Serializable(object):
     # optional fields.
     REQUIRED = dict()
     OPTIONAL = dict()
+    # TODO(albert): right now, subclasses must explicitly list
+    # the superclass's REQUIRED and OPTIONAL fields, since multiple
+    # intheritance makes attribute lookup complicated.
 
     def __init__(self, **fields):
         self._fields = {}
@@ -88,7 +91,6 @@ class Serializable(object):
         if not field_type.validate(value):
             raise serialize.DeserializeError.unexpected_type(
                     field, field_type, value)
-
 
 ######################
 # Serializable Types #

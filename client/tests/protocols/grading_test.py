@@ -12,7 +12,7 @@ class GradeTest(unittest.TestCase):
         self.mock_test = core.Test(names=['dummy'], points=1)
 
     def makeGradedTestCase(self, error=False, should_grade=True):
-        case = grading.GradedTestCase()
+        case = grading.GradedTestCase(type=grading.GradedTestCase.type)
         case.on_grade = mock.Mock(return_value=error)
         case.should_grade = mock.Mock(return_value=should_grade)
         return case
@@ -26,7 +26,7 @@ class GradeTest(unittest.TestCase):
 
     def testOneSuite_noGradedTestCase(self):
         self.mock_test.add_suite([
-            core.TestCase(),
+            core.TestCase(type=core.TestCase.type),
         ])
         self.calls_grade(self.mock_test, 0)
 

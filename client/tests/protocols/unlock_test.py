@@ -87,7 +87,8 @@ class UnlockTest(unittest.TestCase):
         self.mock_test = core.Test(names=['dummy'], points=1)
 
     def makeUnlockTestCase(self, lock=True, abort=False):
-        case = unlock.UnlockTestCase(locked=lock)
+        case = unlock.UnlockTestCase(type=unlock.UnlockTestCase.type,
+                                     locked=lock)
         if abort:
             case.on_unlock = mock.Mock(
                     side_effect=unlock.UnlockException)
@@ -104,7 +105,7 @@ class UnlockTest(unittest.TestCase):
 
     def testOneSuite_noUnlockTestCase(self):
         self.mock_test.add_suite([
-            core.TestCase()
+            core.TestCase(type=core.TestCase.type)
         ])
         self.calls_unlock(self.mock_test, 0)
 
