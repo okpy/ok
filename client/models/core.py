@@ -146,11 +146,6 @@ class TestCase(serialize.Serializable):
 
     type = 'default'
 
-    # Fields
-    OPTIONAL = {
-        'locked': serialize.BOOL_TRUE,
-    }
-
     @classmethod
     def assert_correct_type(cls, json):
         if 'type' not in json:
