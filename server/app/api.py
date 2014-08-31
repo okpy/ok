@@ -105,8 +105,6 @@ class APIResource(object):
         """
         Returns the fields we can filter on.
         """
-        import pdb
-        pdb.set_trace()
         return set(self.get_model()._properties.keys())
 
     def index(self):
