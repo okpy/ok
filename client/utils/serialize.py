@@ -80,7 +80,7 @@ class Serializable(object):
         try:
             field_type = self._field_type(field)
         except AttributeError:
-            raise serialize.DeserializeError.unexpected_field()
+            raise serialize.DeserializeError.unexpected_field(field)
         if not field_type.validate(value):
             raise serialize.DeserializeError.unexpected_type(
                     field, field_type, value)
@@ -90,7 +90,16 @@ class Serializable(object):
 # Serializable Types #
 ######################
 
-class SerializePrimitive(object):
+class SerializeType(object):
+    """An interface for serializable types."""
+    @property
+    def default(self):
+        raise NotImplementedError
+
+    def validate(self, obj):
+        raise NotImplementedError
+
+class SerializePrimitive(SerializeType):
     def __init__(self, default, *valid_types):
         self._default = default
         assert len(valid_types) > 0, 'Needs at least one valid type'
@@ -107,8 +116,8 @@ class SerializePrimitive(object):
         return self._valid_types[0].__name__
 
 
-class SerializeType(object):
-    """A serializable type."""
+class SerializeObject(SerializeType):
+    """A serializable non-primitive object."""
     def __init__(self, type, *args):
         self._type = type
         self._args = args
@@ -123,10 +132,57 @@ class SerializeType(object):
     def __str__(self):
         return self._type.__name__
 
+class SerializeArray(SerializeType):
+    """Represents an array whose elements are of homogeneous type."""
 
-BOOL = SerializePrimitive(False, bool)
+    def __init__(self, type):
+        """Constructor.
+
+        PARAMETERS:
+        type -- SerializeType; for example, to create an array of
+                an Object, the type should be SerializeObject(Object)
+        """
+        self._type = type
+
+    @property
+    def type(self):
+        """The type of object represented by this array."""
+        return self._type
+
+    @property
+    def default(self):
+        return []
+
+    def validate(self, obj):
+        return (type(obj) in (list, tuple)
+                and all(self._type.validate(elem) for elem in obj))
+
+class SerializeMap(SerializeType):
+    """Represents an array whose elements are of homogeneous type."""
+
+    def __init__(self, fields):
+        """Constructor.
+
+        PARAMETERS:
+        fields -- dict; keys are valid dictionary values, values are
+                  SerializeTypes.
+        """
+        self._fields = fields
+
+    @property
+    def default(self):
+        return {k: v.default for k, v in self._fields.items()}
+
+    def validate(self, obj):
+        return (type(obj) == dict
+                and set(obj) == set(self._fields)
+                and all(self._fields[k].validate(obj[k]) for k in obj))
+
+
+BOOL_FALSE = SerializePrimitive(False, bool)
+BOOL_TRUE = SerializePrimitive(True, bool)
 INT = SerializePrimitive(0, int)
 FLOAT = SerializePrimitive(0, float, int)
 STR = SerializePrimitive('', str)
-DICT = SerializeType(dict)
-LIST = SerializeType(list)
+DICT = SerializeObject(dict)
+LIST = SerializeObject(list)
