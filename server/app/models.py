@@ -152,13 +152,6 @@ class AnonymousUser(User):
         """
         pass
 
-    @property
-    def is_admin(self):
-        return True
-
-    @property
-    def is_staff(self):
-        return True
 
 AnonymousUser = AnonymousUser()
 
