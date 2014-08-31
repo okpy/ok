@@ -2,6 +2,7 @@
 
 from models import core
 from models import doctest_case
+from protocols import unlock
 from unittest import mock
 from utils import utils
 import exceptions
@@ -235,14 +236,14 @@ class OnGradeTest(unittest.TestCase):
             """,
         }, errors=True)
         self.assertCorrectLog([
-            '>>> 1 / 0',
+            '>>> x = 1 / 0',
             'ZeroDivisionError: division by zero'
         ])
 
     def testOutput_errorOnPromptWithException(self):
         self.calls_onGrade({
             'test': """
-            >>> 1/ 0
+            >>> 1 / 0
             1
             """,
         }, errors=True)
@@ -253,8 +254,77 @@ class OnGradeTest(unittest.TestCase):
         ])
 
 class OnUnlockTest(unittest.TestCase):
-    # TODO(albert):
-    pass
+    ASSIGN_NAME = 'dummy'
+
+    def setUp(self):
+        self.assignment = core.Assignment.deserialize({
+            'name': self.ASSIGN_NAME,
+            'version': '1.0',
+        })
+        self.test = core.Test.deserialize({
+            'names': ['q1'],
+            'points': 1,
+        }, self.assignment, {})
+        self.logger = mock.Mock()
+        self.mock_answer = mock.Mock()
+        self.interact_fn = mock.Mock(return_value=self.mock_answer)
+
+    def makeTestCase(self, case_json):
+        case_json['type'] = doctest_case.DoctestCase.type
+        return doctest_case.DoctestCase.deserialize(case_json,
+                self.assignment, self.test)
+
+    def calls_onUnlock(self, case_json, expect, errors=False):
+        case = self.makeTestCase(case_json)
+        if errors:
+            self.assertRaises(unlock.UnlockException, case.on_unlock,
+                              self.logger, self.interact_fn)
+            return
+        case.on_unlock(self.logger, self.interact_fn)
+        self.assertFalse(case['locked'])
+
+        answers = [line for line in case.lines
+                        if isinstance(line, doctest_case._Answer)]
+        self.assertEqual(expect,
+                         [answer.output for answer in answers])
+        self.assertEqual([False] * len(answers),
+                         [answer.locked for answer in answers])
+
+    def testUnlockAll(self):
+        self.calls_onUnlock({
+            'test': """
+            >>> 3 + 4
+            <hash>
+            # locked
+            >>> 3 + 1
+            <hash>
+            # locked
+            >>> 1 / 0
+            <hash>
+            # locked
+            """,
+        }, [self.mock_answer] * 3)
+
+    def testNoLockedAnswers(self):
+        self.calls_onUnlock({
+            'test': """
+            >>> 3 + 4
+            7
+            >>> 'foo'
+            'foo'
+            """,
+        }, ['7', "'foo'"])
+
+    def testPartiallyLockedAnswers(self):
+        self.calls_onUnlock({
+            'test': """
+            >>> 3 + 4
+            7
+            >>> 'foo'
+            <hash>
+            # locked
+            """,
+        }, ['7', self.mock_answer])
 
 class SerializationTest(unittest.TestCase):
     ASSIGN_NAME = 'dummy'
