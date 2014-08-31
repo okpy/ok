@@ -1,4 +1,4 @@
-from exceptions import serialize
+import exceptions
 
 class Serializable(object):
     """An abstract class for serializable objects."""
@@ -20,7 +20,7 @@ class Serializable(object):
         # Error if any required fields are missing.
         missing_fields = set(self.REQUIRED) - set(self._fields)
         if missing_fields:
-            raise serialize.DeserializeError.missing_fields(
+            raise exceptions.DeserializeError.missing_fields(
                     missing_fields)
 
         # Set defaults for missing optional fields.
@@ -87,9 +87,9 @@ class Serializable(object):
         try:
             field_type = self._field_type(field)
         except AttributeError:
-            raise serialize.DeserializeError.unexpected_field(field)
+            raise exceptions.DeserializeError.unexpected_field(field)
         if not field_type.validate(value):
-            raise serialize.DeserializeError.unexpected_type(
+            raise exceptions.DeserializeError.unexpected_type(
                     field, field_type, value)
 
 ######################

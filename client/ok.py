@@ -112,10 +112,6 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         return {}
 
 
-class OkException(BaseException):
-    """Exception class for ok.py"""
-    pass
-
 ######################
 # Assignment loading #
 ######################

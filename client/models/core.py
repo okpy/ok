@@ -16,9 +16,9 @@ respective Protocols (in the client/protocols/ directory), while
 concrete subclasses of TestCase should be located in client/models/.
 """
 
-from exceptions.serialize import DeserializeError
 from models import serialize
 from utils import utils
+import exceptions
 
 class Assignment(serialize.Serializable):
     """A representation of an assignment."""
@@ -115,7 +115,7 @@ class Test(serialize.Serializable):
             new_suite = []
             for case_json in suite:
                 if 'type' not in case_json:
-                    raise DeserializeError.missing_fields(('type'))
+                    raise exceptions.DeserializeError.missing_fields(('type'))
                 case_type = case_json['type']
                 test_case = case_map[case_type].deserialize(
                         case_json, assignment, test)
@@ -154,6 +154,6 @@ class TestCase(serialize.Serializable):
 
     def _assertType(self):
         if self['type'] != self.type:
-            raise serialize.DeserializeError.unexpected_value('type',
+            raise exceptions.DeserializeError.unexpected_value('type',
                     self.type, self['type'])
 

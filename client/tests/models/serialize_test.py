@@ -1,6 +1,6 @@
-from exceptions.serialize import DeserializeError
 from models import serialize
 from unittest import mock
+import exceptions
 import unittest
 
 class MockSerializable(serialize.Serializable):
@@ -15,18 +15,18 @@ class MockSerializable(serialize.Serializable):
 
 class SerializableTest(unittest.TestCase):
     def testConstructor_missingRequiredFields(self):
-        self.assertRaises(DeserializeError, MockSerializable)
+        self.assertRaises(exceptions.DeserializeError, MockSerializable)
 
     def testConstructor_incorrectRequiredFields(self):
-        self.assertRaises(DeserializeError, MockSerializable,
+        self.assertRaises(exceptions.DeserializeError, MockSerializable,
                           bool=0, int=False)
 
     def testConstructor_incorrectOptionalFields(self):
-        self.assertRaises(DeserializeError, MockSerializable,
+        self.assertRaises(exceptions.DeserializeError, MockSerializable,
                           bool=0, int=False, string=0)
 
     def testConstructor_unexpectedFields(self):
-        self.assertRaises(DeserializeError, MockSerializable,
+        self.assertRaises(exceptions.DeserializeError, MockSerializable,
                           bool=0, int=False, foo=0)
 
     def testGetItem(self):
@@ -45,7 +45,7 @@ class SerializableTest(unittest.TestCase):
 
     def testSetItem_invalidtype(self):
         serializable = MockSerializable(bool=True, int=9001)
-        self.assertRaises(DeserializeError, serializable.__setitem__,
+        self.assertRaises(exceptions.DeserializeError, serializable.__setitem__,
                           'int', False)
 
 class SerializeArrayTest(unittest.TestCase):

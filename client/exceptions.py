@@ -1,6 +1,8 @@
-from exceptions import core
+class OkException(BaseException):
+    """Base exception for ok.py."""
+    pass
 
-class DeserializeError(core.OkException):
+class DeserializeError(OkException):
 
     @classmethod
     def expect_dict(self, json):
