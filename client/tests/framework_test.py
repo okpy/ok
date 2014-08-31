@@ -1,10 +1,11 @@
 from models import core
 from unittest import mock
+import exceptions
 import ok
 import os
+import shutil
 import sys
 import unittest
-import shutil
 
 DEMO = 'demo_assignments'
 INVALID = os.path.join(DEMO, 'invalid')
@@ -34,32 +35,40 @@ class TestOK(unittest.TestCase):
 
 class TestLoadTests(unittest.TestCase):
 
-    VALID_ASSIGN = os.path.join(VALID, 'hw1', 'tests')
     ASSIGN_NO_INFO = os.path.join(INVALID, 'no_info', 'tests')
+    ASSIGN_NO_TESTS = 'bogus'
+
+    VALID_ASSIGN = os.path.join(VALID, 'hw1', 'tests')
+    VALID_NAME = 'hw1'
+    VALID_VERSION = '1.0'
+    VALID_SRC_FILES = ['hw1.py']
 
     def setUp(self):
-        self.sample_test = core.Test()
+        self.sample_test = mock.Mock(spec=core.Test)
         self.applyPatches()
+        self.case_map = {}
 
     #########
     # Tests #
     #########
 
+    def testMissingTests(self):
+        self.assertRaises(exceptions.OkException, ok.load_tests,
+                          self.ASSIGN_NO_TESTS, self.case_map)
+
     def testMissingInfo(self):
-        self.assertRaises(ok.OkException, ok.load_tests,
-                          self.ASSIGN_NO_INFO)
+        self.assertRaises(exceptions.OkException, ok.load_tests,
+                          self.ASSIGN_NO_INFO, self.case_map)
 
     def testLoadValidAssignment(self):
-        assignment = ok.load_tests(self.VALID_ASSIGN)
-        # TODO(albert): After the "required fields" of the test format
-        # are determined, this test should check for those fields.
-        self.assertIsInstance(assignment, dict)
-        self.assertIn('name', assignment)
-        self.assertIn('src_files', assignment)
-        self.assertIn('tests', assignment)
+        assignment = ok.load_tests(self.VALID_ASSIGN, self.case_map)
+        self.assertIsInstance(assignment, core.Assignment)
+        self.assertEqual(self.VALID_NAME, assignment['name'])
+        self.assertEqual(self.VALID_VERSION, assignment['version'])
+        self.assertEqual(self.VALID_SRC_FILES, assignment['src_files'])
 
-        tests = assignment['tests']
-        self.assertEqual([self.sample_test, self.sample_test], tests)
+        self.assertEqual([self.sample_test, self.sample_test],
+                         assignment.tests)
         self.assertEqual(2, len(core.Test.deserialize.mock_calls))
 
     #############
@@ -85,8 +94,9 @@ class TestDumpTests(unittest.TestCase):
     def setUp(self):
         self.makeTestDirectory()
         self.assignment = self.makeAssignment()
-        self.mock_test = mock.Mock()
+        self.mock_test = mock.Mock(spec=core.Test)
         self.applyPatches()
+        self.case_map = {}
 
     #########
     # Tests #
@@ -96,21 +106,21 @@ class TestDumpTests(unittest.TestCase):
         ok.dump_tests(TMP, self.assignment)
         self.assertEqual([ok.INFO_FILE], self.listTestDir())
 
-        assignment = ok.load_tests(TMP)
-        self.assertEqual(self.assignment, assignment)
+        assignment = ok.load_tests(TMP, self.case_map)
+        self.assertEqual(self.assignment.serialize(),
+                         assignment.serialize())
 
     def testSingleTest(self):
-        test_json = {'names': ['q1']}
+        test_json = {'names': ['q1'], 'points': 1}
         self.mock_test.serialize.return_value = test_json
         self.mock_test.name = 'q1'
-        self.assignment['tests'].append(self.mock_test)
+        self.assignment.add_test(self.mock_test)
 
         ok.dump_tests(TMP, self.assignment)
         self.assertEqual([ok.INFO_FILE, 'q1.py'], self.listTestDir())
 
-        ok.load_tests(TMP)
-        # TODO(albert): give correct arguments to deserialize
-        self.mock_deserialize.assert_called_with(test_json)
+        assignment = ok.load_tests(TMP, self.case_map)
+        self.assertEqual([self.mock_test], assignment.tests)
 
     #############
     # Utilities #
@@ -122,12 +132,10 @@ class TestDumpTests(unittest.TestCase):
         os.makedirs(TMP)
 
     def makeAssignment(self):
-        return {
+        return core.Assignment.deserialize({
             'name': self.ASSIGN_NAME,
-            'src_files': [],
             'version': '1.0',
-            'tests': [],
-        }
+        })
 
     def makeTestJson(self, names=None):
         return {
@@ -144,6 +152,7 @@ class TestDumpTests(unittest.TestCase):
         deserialize_patcher = mock.patch('models.core.Test.deserialize',
                                        autospec=core.Test.deserialize)
         self.mock_deserialize = deserialize_patcher.start()
+        self.mock_deserialize.return_value = self.mock_test
         self.addCleanup(deserialize_patcher.stop)
 
 class DummyArgs:

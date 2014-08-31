@@ -39,6 +39,7 @@ from auth import authenticate
 from models import core
 from urllib import request, error
 import argparse
+import exceptions
 import importlib.machinery
 import json
 import os
@@ -118,29 +119,27 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
 
 INFO_FILE = 'info.py'
 
-def load_tests(test_dir):
+def load_tests(test_dir, case_map):
     """Loads information and tests for the current assignment.
 
     PARAMETERS:
     test_dir -- str; a filepath to the test directory, 'tests' by default.
-                  An assignment is defined as a directory that contains
-                  a subdirectory called "tests". This subdirectory must
-                  contain a file called "info.py". The filepath
-                  should be specified relative to ok.py.
+    case_map -- dict; a mapping of TestCase tags to TestCase classes
 
     RETURNS:
-    assignment -- dict; contains information related to the assignment,
-    as well as a key 'tests' which is a list of Test objects.
+    assignment -- Assignment; contains information related to the
+    assignment and its tests.
     """
     if not os.path.isdir(test_dir):
-        raise OkException('Assignment must have a {} directory'.format(
-            test_dir))
+        raise exceptions.OkException(
+                'Assignment must have a {} directory'.format(test_dir))
     info_file = os.path.join(test_dir, INFO_FILE)
     if not os.path.isfile(info_file):
-        raise OkException('Directory {} must have a file called {}'.format(
-            test_dir, INFO_FILE))
+        raise exceptions.OkException(
+                'Directory {} must have a file called {}'.format(
+                    test_dir, INFO_FILE))
     assignment = _get_info(info_file)
-    assignment['tests'] = _get_tests(test_dir, assignment)
+    _get_tests(test_dir, assignment, case_map)
     return assignment
 
 
@@ -155,23 +154,20 @@ def _get_info(filepath):
     """
     # TODO(albert): add error handling in case no attribute info is
     # found.
-    return _import_module(filepath).info
+    info_json = _import_module(filepath).info
+    return core.Assignment.deserialize(info_json)
 
 
-def _get_tests(directory, info):
-    """Loads all tests in a tests directory.
+def _get_tests(directory, assignment, case_map):
+    """Loads all tests in a tests directory and adds them to the given
+    Assignment object.
 
     PARAMETER:
-    directory -- str; filepath to a directory that contains tests.
-    info      -- dict; top-level information about the assignment,
-                 extracted from info.py
-
-    RETURNS:
-    list of Tests; each file in the tests/ directory is turned into a
-    Test object.
+    directory  -- str; filepath to a directory that contains tests.
+    assignment -- Assignment; top-level information about the
+                  assignment, extracted from the info file.
     """
     test_files = os.listdir(directory)
-    tests = []
     for file in test_files:
         if file == INFO_FILE or not file.endswith('.py'):
             continue
@@ -179,10 +175,9 @@ def _get_tests(directory, info):
         if os.path.isfile(path):
             # TODO(albert): add error handling in case no attribute
             # test is found.
-            test = _import_module(path).test
-            # TODO(albert): deserialize requires a case_map.
-            tests.append(core.Test.deserialize(test, info))
-    return tests
+            test_json = _import_module(path).test
+            test = core.Test.deserialize(test_json, assignment, case_map)
+            assignment.add_test(test)
 
 
 def _import_module(path):
@@ -208,13 +203,9 @@ def dump_tests(test_dir, assignment):
     assignment -- dict; contains information, including Test objects,
                   for an assignment.
     """
-    assign_copy = assignment.copy()
-    if 'tests' in assign_copy:
-        del assign_copy['tests']
-
     # TODO(albert): prettyify string formatting by using triple quotes.
     # TODO(albert): verify that assign_copy is serializable into json.
-    info = json.dumps(assign_copy, indent=2)
+    info = json.dumps(assignment.serialize(), indent=2)
     with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
         f.write('info = ' + info)
 
@@ -222,8 +213,7 @@ def dump_tests(test_dir, assignment):
     # directory may be left in a corrupted state.
     # TODO(albert): might need to delete obsolete test files too.
     # TODO(albert): verify that test_json is serializable into json.
-    tests = assignment.get('tests', [])
-    for test in tests:
+    for test in assignment.tests:
         test_json = json.dumps(test.serialize(), indent=2)
         with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
             f.write('test = ' + test_json)

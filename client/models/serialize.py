@@ -37,7 +37,7 @@ class Serializable(object):
         given fields. Subclasses can override this method to change
         deserialization behavior.
         """
-        return cls(**json)
+        return cls(**fields)
 
     def serialize(self):
         """Serializes this object into JSON format. The default
