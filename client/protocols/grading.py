@@ -34,6 +34,12 @@ class GradedTestCase(core.TestCase):
         """
         raise NotImplementedError
 
+    def should_grade(self):
+        """Returns True if this GradedTestCase instance should be
+        graded, False otherwise.
+        """
+        raise NotImplementedError
+
 class GradingProtocol(ok.Protocol):
     """A Protocol that runs tests, formats results, and sends results
     to the server.
@@ -41,10 +47,8 @@ class GradingProtocol(ok.Protocol):
     name = 'grading'
 
     def on_interact(self):
-        """Run unlocked tests and print results."""
-        # TODO(albert): figure out how to run assignment/test-wide
-        # setup code for doctest_case only once (i.e. cache it).
-        for test in self.tests:
+        """Run gradeable tests and print results."""
+        for test in self.assignments['tests']:
             if not self.args.question or test.has_name(self.args.question):
                 self._grade_test(test)
 
@@ -56,7 +60,7 @@ class GradingProtocol(ok.Protocol):
         total_passed = grade(test, self.logger, self.args.interactive,
                              self.args.verbose)
 
-        total_cases = self.tests.count_cases
+        total_cases = test.count_cases
         if total_cases > 0:
             print('Passed: {} ({}%)'.format(total_passed,
                                             total_passed / total_cases))
@@ -80,7 +84,7 @@ def grade(test, logger, interactive=False, verbose=False):
     """
     cases_tested = utils.Counter()
     total_passed = 0
-    for suite in test.suites:
+    for suite in test['suites']:
         passed, error = _run_suite(suite, logger, cases_tested,
                                    verbose, interactive)
         total_passed += passed
@@ -106,13 +110,13 @@ def _run_suite(suite, logger, cases_tested, verbose, interactive):
     """
     passed = 0
     for case in suite:
-        if case.is_locked:
-            logger.on()
-            return passed, True  # students must unlock first
-        elif not isinstance(case, GradedTestCase):
+        if not isinstance(case, GradedTestCase):
             # TODO(albert): should non-GradedTestCases be counted as
             # passing?
             continue
+        elif not case.should_grade():
+            logger.on()
+            return passed, True  # students must unlock first
         cases_tested.increment()
 
         utils.underline('Case {}'.format(cases_tested), line='-')

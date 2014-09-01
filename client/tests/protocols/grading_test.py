@@ -9,19 +9,12 @@ import utils
 class GradeTest(unittest.TestCase):
     def setUp(self):
         self.logger = utils.OutputLogger()
+        self.mock_test = core.Test(names=['dummy'], points=1)
 
-    def makeGradedTestCase(self, error=False, lock=False, input_str='',
-            outputs=None, **kargs):
-        outputs = outputs or []
-        case = grading.GradedTestCase(input_str, outputs, lock=lock,
-                **kargs)
+    def makeGradedTestCase(self, error=False, should_grade=True):
+        case = grading.GradedTestCase(type=grading.GradedTestCase.type)
         case.on_grade = mock.Mock(return_value=error)
-        return case
-
-    def makeTestCase(self, input_str='', outputs=None, lock=False,
-            **kargs):
-        case = core.TestCase(input_str, outputs or [], lock=lock,
-                **kargs)
+        case.should_grade = mock.Mock(return_value=should_grade)
         return case
 
     def calls_grade(self, test, expect_passed):
@@ -29,74 +22,65 @@ class GradeTest(unittest.TestCase):
         self.assertEqual(expect_passed, passed)
 
     def testNoSuites(self):
-        test = core.Test()
-        self.calls_grade(test, 0)
+        self.calls_grade(self.mock_test, 0)
 
     def testOneSuite_noGradedTestCase(self):
-        test = core.Test()
-        test.add_suite([
-            self.makeTestCase(test=test),
+        self.mock_test.add_suite([
+            core.TestCase(type=core.TestCase.type),
         ])
-        self.calls_grade(test, 0)
+        self.calls_grade(self.mock_test, 0)
 
     def testOneSuite_oneCasePass(self):
-        test = core.Test()
-        test.add_suite([
+        self.mock_test.add_suite([
             self.makeGradedTestCase(),
         ])
-        self.calls_grade(test, 1)
+        self.calls_grade(self.mock_test, 1)
 
     def testOneSuite_oneCaseFail(self):
-        test = core.Test()
-        test.add_suite([
+        self.mock_test.add_suite([
             self.makeGradedTestCase(error=True),
         ])
-        self.calls_grade(test, 0)
+        self.calls_grade(self.mock_test, 0)
 
     def testOneSuite_multipleCasePass(self):
-        test = core.Test()
-        test.add_suite([
+        self.mock_test.add_suite([
             self.makeGradedTestCase(),
             self.makeGradedTestCase(),
             self.makeGradedTestCase(),
         ])
-        self.calls_grade(test, 3)
+        self.calls_grade(self.mock_test, 3)
 
     def testOneSuite_secondCaseFail(self):
-        test = core.Test()
-        test.add_suite([
+        self.mock_test.add_suite([
             self.makeGradedTestCase(error=False),
             self.makeGradedTestCase(error=True),
         ])
-        self.calls_grade(test, 1)
+        self.calls_grade(self.mock_test, 1)
 
-    def testOneSuite_abortLockedTest(self):
-        test = core.Test()
-        test.add_suite([
-            self.makeGradedTestCase(lock=True),
+    def testOneSuite_shouldNotGrade(self):
+        self.mock_test.add_suite([
+            self.makeGradedTestCase(should_grade=False),
             self.makeGradedTestCase(),
         ])
-        self.calls_grade(test, 0)
+        self.calls_grade(self.mock_test, 0)
 
     def testMultipleSuites_pass(self):
-        test = core.Test()
-        test.add_suite([
+        self.mock_test.add_suite([
             self.makeGradedTestCase(),
             self.makeGradedTestCase(),
         ])
-        test.add_suite([
+        self.mock_test.add_suite([
             self.makeGradedTestCase(),
             self.makeGradedTestCase(),
         ])
-        self.calls_grade(test, 4)
+        self.calls_grade(self.mock_test, 4)
 
     def testMultipleSuites_firstSuiteFail(self):
-        test = core.Test()
-        test.add_suite([
+        self.mock_test.add_suite([
             self.makeGradedTestCase(error=True),
         ])
-        test.add_suite([
+        self.mock_test.add_suite([
             self.makeGradedTestCase(error=False),
         ])
-        self.calls_grade(test, 0)
+        self.calls_grade(self.mock_test, 0)
 
