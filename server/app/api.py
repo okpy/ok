@@ -7,12 +7,15 @@ from flask.views import MethodView
 from flask.app import request
 from flask import session
 from webargs import Arg
+from webargs.flaskparser import FlaskParser
 
 from app import models
 from app.models import BadValueError
 from app.needs import Need
 from app.decorators import handle_error
 from app.utils import create_api_response, paginate, filter_query
+
+from google.appengine.ext import db, ndb
 
 
 class APIResource(object):
@@ -100,12 +103,11 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success", {})
 
-    @property
-    def known_filters(self):
+    def filter_index_args(self, args):
         """
         Returns the fields we can filter on.
         """
-        return set(self.get_model()._properties.keys())
+        raise NotImplementedError
 
     def index(self):
         """
@@ -119,18 +121,16 @@ class APIResource(object):
         result = self.get_model().can(session['user'], need, query=query)
         if not result:
             return need.api_response()
-        query = filter_query(result, request.args, 
-                             self.get_model(), self.known_filters)
+        args = self.filter_index_args(request.args)
+        query = filter_query(result, args, self.get_model())
 
         cursor = request.args.get('cursor', None)
         num_page = request.args.get('num_page', None)
         query_results = paginate(query, cursor, num_page)
         return create_api_response(200, "success", query_results)
 
-index_args = {
-    'cursor': Arg(default=None),
-    'num_page': Arg(int, default=None),
-}
+
+parser = FlaskParser()
 
 
 class UserAPI(MethodView, APIResource):
@@ -155,6 +155,17 @@ class UserAPI(MethodView, APIResource):
         entity.put()
         return entity, None
 
+    user_args = {
+        'first_name': Arg(str),
+        'last_name': Arg(str),
+        'email': Arg(str),
+        'login': Arg(str),
+        'course': Arg(str, use=lambda c: ndb.Key('User', c)),
+    }
+
+    def filter_index_args(self, args):
+        return parser.parse(self.user_args, args)
+
 
 class AssignmentAPI(MethodView, APIResource):
     """The API resource for the Assignment Object"""
@@ -163,6 +174,16 @@ class AssignmentAPI(MethodView, APIResource):
     @classmethod
     def get_model(cls):
         return models.Assignment
+
+    assignment_args = {
+        'name': Arg(str),
+        'points': Arg(float),
+        'creator': Arg(str, use=lambda c: ndb.Key('User', c)),
+        'course': Arg(str, use=lambda c: ndb.Key('Course', c)),
+    }
+
+    def filter_index_args(self, args):
+        return parser.parse(self.assignment_args, args)
 
 
 class SubmitNDBImplementation(object):
@@ -226,3 +247,14 @@ class SubmissionAPI(MethodView, APIResource):
                                request.json['messages'])
         except BadValueError as e:
             return create_api_response(400, e.message, {})
+
+    submission_args = {
+        'first_name': Arg(str),
+        'last_name': Arg(str),
+        'email': Arg(str),
+        'login': Arg(str),
+        'course': Arg(str, use=lambda c: ndb.Key('User', c)),
+    }
+
+    def filter_index_args(self, args):
+        return parser.parse(self.submission_args, args)
