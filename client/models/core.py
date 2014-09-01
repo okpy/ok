@@ -29,6 +29,7 @@ class Assignment(serialize.Serializable):
     }
     OPTIONAL = {
         'src_files': serialize.LIST,
+        'params': serialize.DICT,
     }
 
     def __init__(self, **fields):
@@ -62,7 +63,6 @@ class Test(serialize.Serializable):
         'params': serialize.DICT,
         'note': serialize.STR,
         'extra': serialize.BOOL_FALSE,
-        # TODO(albert): Add a field for setup info.
     }
 
     @property

@@ -104,6 +104,42 @@ class OnGradeTest(unittest.TestCase):
             """,
         })
 
+    def testPass_assignmentParams(self):
+        self.assignment['params'] = {
+            'doctest': {
+                'cache': 'x = 3',
+                'setup': 'y = 1',
+            }
+        }
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(x)
+            9
+            >>> square(y)
+            1
+            """,
+        })
+
+    def testPass_testParams(self):
+        self.test['params'] = {
+            'doctest': {
+                'cache': 'x = 3',
+                'setup': 'y = 1',
+            }
+        }
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(x)
+            9
+            >>> square(y)
+            1
+            """,
+        })
+
     def testPass_teardown(self):
         # TODO(albert)
         pass
@@ -401,4 +437,36 @@ class SerializationTest(unittest.TestCase):
             >>> square(x)
             16
             """),
+        })
+
+    def testAssignmentParams(self):
+        self.assignment['params'] = {
+            'doctest': {
+                'setup': 'x = 1',
+                'teardown': 'x = 2',
+                'cache': 'x = 3',
+            }
+        }
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(2)
+            4
+            """)
+        })
+
+    def testTestParams(self):
+        self.test['params'] = {
+            'doctest': {
+                'setup': 'x = 1',
+                'teardown': 'x = 2',
+                'cache': 'x = 3',
+            }
+        }
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(2)
+            4
+            """)
         })

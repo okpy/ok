@@ -50,7 +50,9 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         super().__init__(**fields)
         self._lines = []
         self._frame = {}
-        self._params = _DoctestParams()
+        # TODO(albert): consolidate these parameters.
+        self._assignment_params = _DoctestParams()
+        self._test_params = _DoctestParams()
 
     ##################
     # Public Methods #
@@ -89,7 +91,8 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
         console = _PythonConsole()
         frame = self._frame.copy()
-        console.exec(self._params['setup'], frame)
+        console.exec(self._assignment_params['setup'], frame)
+        console.exec(self._test_params['setup'], frame)
 
         error = console.run(self, frame)
 
@@ -99,7 +102,8 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         if error and interactive:
             _interact(frame)
 
-        console.exec(self._params['teardown'], frame)
+        console.exec(self._assignment_params['teardown'], frame)
+        console.exec(self._test_params['teardown'], frame)
         print()
 
         if error:
@@ -142,10 +146,14 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         """
         case = super().deserialize(case_json, assignment, test)
         case._format_lines()
-        # TODO(albert): handle assignment-level params as well.
+        if cls.type in assignment['params']:
+            case._assignment_params = _DoctestParams.deserialize(
+                    assignment['params'][cls.type])
         if cls.type in test['params']:
-            case._params = test['params'][cls.type]
-        exec(case._params['cache'], case._frame)
+            case._test_params = _DoctestParams.deserialize(
+                    test['params'][cls.type])
+        exec(case._assignment_params['cache'], case._frame)
+        exec(case._test_params['cache'], case._frame)
         return case
 
     def serialize(self):
@@ -220,7 +228,6 @@ class _Answer(object):
         elif match.group(1) == 'choice':
             self.choices.append(match.group(2))
 
-# TODO(albert): Test.deserialize should handle this.
 class _DoctestParams(serialize.Serializable):
     OPTIONAL = {
         'setup': serialize.STR,
