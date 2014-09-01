@@ -155,20 +155,18 @@ class TestDumpTests(unittest.TestCase):
         self.mock_deserialize.return_value = self.mock_test
         self.addCleanup(deserialize_patcher.stop)
 
-class DummyArgs:
-    """Placeholder for parsed command-line arguments."""
+class TestFileContentsProtocol(unittest.TestCase):
+    SRC_FILE = os.path.join(VALID, 'hw1', 'hw1.py')
 
+    def setUp(self):
+        cmd_line_args = mock.Mock()
+        self.assignment = mock.MagicMock()
+        self.assignment.__getitem__.return_value =  [self.SRC_FILE]
+        self.logger = mock.Mock()
+        self.proto = ok.FileContents(cmd_line_args, self.assignment, self.logger)
 
-# TODO(albert): rewrite this test after redefining Protocol interface.
-# class TestFileContentsProtocol(unittest.TestCase):
-#     VALID_ASSIGN = os.path.join(VALID, 'hw1')
-#
-#     def setUp(self):
-#         cmd_line_args = DummyArgs()
-#         self.proto = ok.FileContents(cmd_line_args, [self.VALID_ASSIGN])
-#
-#     def test_on_start(self):
-#         contents = self.proto.on_start()
-#         self.assertEqual(1, len(contents))
-#         self.assertIn('hw1.py', contents)
-#         self.assertIn('def square(x):', contents['hw1.py'])
+    def test_on_start(self):
+        contents = self.proto.on_start()
+        self.assertEqual(1, len(contents))
+        self.assertIn('hw1.py', contents)
+        self.assertIn('def square(x):', contents['hw1.py'])

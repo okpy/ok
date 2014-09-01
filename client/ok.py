@@ -224,9 +224,6 @@ def dump_tests(test_dir, assignment):
 
 def parse_input():
     """Parses command line input."""
-    # TODO(albert): rethink these command line arguments. One edit is
-    # to change the --tests flag to --assignment, a relative path to
-    # the assignment directory.
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -245,18 +242,17 @@ def parse_input():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    # TODO(albert): rewrite this function to use load_assignment to
-    # read test files. Also modify the Protocol constructor's
-    # parameters.
     try:
-        assignment = load_tests(args.tests)
+        # TODO(soumya): extract map of tags to TestCase classes from
+        # config.
+        assignment = load_tests(args.tests, {})
     except Exception as ex:
         print(ex)
         sys.exit(1)
 
-    #TODO(albert): change sys.stdout to logger.
-    logger = utils.OutputLogger()
+    logger = sys.stdout = utils.OutputLogger()
 
+    # TODO(soumya): extract list of protocols from config.
     start_protocols = \
         [p(args, assignment, logger) for p in [FileContents]]
     interact_protocols = \
