@@ -1,6 +1,11 @@
 """
 Utility functions used by API and other services
 """
+try:
+    from cStringIO import StringIO
+except:
+    from StringIO import StringIO
+import zipfile as zf
 from flask import jsonify, request, Response, json
 
 
@@ -19,3 +24,11 @@ def create_api_response(status, message, data=None):
         })
     response.status_code = status
     return response
+
+def create_zip(obj):
+    zipfile_str = StringIO()
+    with zf.ZipFile(zipfile_str, 'w') as zipfile:
+        for filename, contents in obj.items():
+            zipfile.writestr(filename, contents)
+    zip_string = zipfile_str.getvalue()
+    return zip_string
