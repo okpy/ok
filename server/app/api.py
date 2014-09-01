@@ -230,9 +230,6 @@ class SubmissionAPI(MethodView, APIResource):
         except BadValueError as e:
             return create_api_response(400, e.message, {})
 
-    def contents(self):
-        pass
-
     def index(self):
         """
         Index HTTP method thing.
