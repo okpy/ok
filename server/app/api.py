@@ -183,7 +183,8 @@ class SubmissionAPI(MethodView, APIResource):
         if not obj.can(session['user'], need, obj):
             return need.api_response()
 
-        if request.args.get('download') and 'file_contents' in obj.messages:
+        if request.args.get('download') == True \
+                and 'file_contents' in obj.messages:
             response = make_response(create_zip(obj.messages['file_contents']))
             response.headers["Content-Disposition"] = "attachment; filename=submission-%s.zip" % str(obj.created)
             return response
