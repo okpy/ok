@@ -71,7 +71,7 @@ class APIBaseTestCase(BaseTestCase):
         APIBaseTestCase.accounts = self.get_accounts()
         self.user = None
         auth.authenticate = self.authenticate
-        
+
     def authenticate(self):
         return self.user
 
@@ -150,6 +150,9 @@ class APIBaseTestCase(BaseTestCase):
         self.assertStatusCode(200)
 
     ## ASSERTS ##
+    def assertHeader(self, header, value): #pylint: disable=invalid-name
+        """Asserts a particular header."""
+        self.assertEqual(self.response.headers[header], value)
 
     def assertStatusCode(self, code): #pylint: disable=invalid-name
         """Asserts the status code."""

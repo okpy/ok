@@ -187,6 +187,7 @@ class SubmissionAPI(MethodView, APIResource):
                 and 'file_contents' in obj.messages:
             response = make_response(create_zip(obj.messages['file_contents']))
             response.headers["Content-Disposition"] = "attachment; filename=submission-%s.zip" % str(obj.created)
+            response.headers["Content-Type"] = "application/zip"
             return response
         return create_api_response(200, "", obj)
 

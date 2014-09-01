@@ -274,6 +274,14 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         self.assertStatusCode(400)
         del self.assignment_name
 
+    def test_download_submission(self):
+        inst = self.get_basic_instance()
+
+        self.post_entity(inst, download='true')
+        self.assertStatusCode(200)
+        self.assertHeader('Content-Type', 'application/zip')
+
+
 
 if __name__ == '__main__':
     unittest.main()
