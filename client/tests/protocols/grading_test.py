@@ -3,8 +3,8 @@
 from models import core
 from protocols import grading
 from unittest import mock
-from utils import utils
 import unittest
+import utils
 
 class GradeTest(unittest.TestCase):
     def setUp(self):

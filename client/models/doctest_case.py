@@ -8,11 +8,11 @@ from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock
-from utils import utils
 import code
 import re
 import readline
 import traceback
+import utils
 
 class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for doctest-style Python tests."""

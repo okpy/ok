@@ -10,7 +10,7 @@ from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock
-from utils import utils
+import utils
 
 class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for conceptual questions."""

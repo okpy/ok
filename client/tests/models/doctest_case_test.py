@@ -4,11 +4,11 @@ from models import core
 from models import doctest_case
 from protocols import unlock
 from unittest import mock
-from utils import utils
 import exceptions
 import ok
 import sys
 import unittest
+import utils
 
 class OnGradeTest(unittest.TestCase):
     ASSIGN_NAME = 'dummy'

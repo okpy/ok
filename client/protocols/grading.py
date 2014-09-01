@@ -6,8 +6,8 @@ are compatible with the GradingProtocol.
 """
 
 from models import core
-from utils import utils
 import ok
+import utils
 
 #####################
 # Testing Mechanism #
@@ -48,8 +48,6 @@ class GradingProtocol(ok.Protocol):
 
     def on_interact(self):
         """Run gradeable tests and print results."""
-        # TODO(albert): figure out how to run assignment/test-wide
-        # setup code for doctest_case only once (i.e. cache it).
         for test in self.assignments['tests']:
             if not self.args.question or test.has_name(self.args.question):
                 self._grade_test(test)

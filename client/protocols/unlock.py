@@ -7,10 +7,10 @@ compatible with the UnlockProtocol.
 
 from models import core
 from models import serialize
-from utils import utils
 import ok
 import random
 import readline
+import utils
 
 
 # TODO(albert): move this to locking mechanism

@@ -3,8 +3,8 @@
 from models import core
 from protocols import unlock
 from unittest import mock
-from utils import utils
 import unittest
+import utils
 
 class InteractTest(unittest.TestCase):
     EXIT = unlock.UnlockConsole.EXIT_INPUTS[0]
