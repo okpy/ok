@@ -214,3 +214,11 @@ class SubmissionAPI(MethodView, APIResource):
                 self.get_model().query(
                     self.get_model().submitter == session['user'].key)))
 
+
+class VersionAPI(APIResource, MethodView):
+    name = "Version"
+
+    @classmethod
+    def get_model(cls):
+        return models.Version
+
