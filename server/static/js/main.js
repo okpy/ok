@@ -6,8 +6,8 @@ var app = angular.module('okpy', ['ngResource', 'ui.router']);
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider, $locationProvider) {
     $urlRouterProvider.otherwise("/submission");
-    
-    var submissions = { 
+
+    var submissions = {
       name: 'submission',
       abstract: true,
       url: '/submission',
@@ -21,8 +21,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "SubmissionListCtrl"
     }
 
-    var submissionDetail = { 
-      name: 'submission.detail', 
+    var submissionDetail = {
+      name: 'submission.detail',
       url: '/:submissionId',
       templateUrl: 'static/partials/submission.detail.html',
       controller: "SubmissionDetailCtrl"
@@ -61,7 +61,20 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission', {format: "raw"});
+      return $resource('api/v1/submission', {format: "json"}, {
+        query: {
+          isArray: true,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        }
+      });
     }
   ]);
 
@@ -77,7 +90,22 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
 
 app.factory('Assignment', ['$resource',
     function($resource) {
-      return $resource('api/v1/assignment/:id', {format: "raw"});
+      return $resource('api/v1/assignment/:id', {
+        format: "json",
+      }, {
+        query: {
+          isArray: true,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        }
+      });
     }
   ]);
 
