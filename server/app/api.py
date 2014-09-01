@@ -17,6 +17,9 @@ from app.utils import create_api_response, paginate, filter_query
 
 from google.appengine.ext import db, ndb
 
+def KeyArg(klass):
+    return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]})
+
 
 class APIResource(object):
     """The base class for API resources.
@@ -24,6 +27,7 @@ class APIResource(object):
     Set the name and get_model for each subclass.
     """
     name = None
+    index_args = {}
 
     @classmethod
     def get_model(cls):
@@ -103,11 +107,6 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success", {})
 
-    def filter_index_args(self, args):
-        """
-        Returns the fields we can filter on.
-        """
-        raise NotImplementedError
 
     def index(self):
         """
@@ -121,7 +120,9 @@ class APIResource(object):
         result = self.get_model().can(session['user'], need, query=query)
         if not result:
             return need.api_response()
-        args = self.filter_index_args(request.args)
+
+        args = parser.parse(self.index_args)
+        args = {k:v for k,v in args.iteritems() if v}
         query = filter_query(result, args, self.get_model())
 
         cursor = request.args.get('cursor', None)
@@ -155,16 +156,13 @@ class UserAPI(MethodView, APIResource):
         entity.put()
         return entity, None
 
-    user_args = {
+    index_args = {
         'first_name': Arg(str),
         'last_name': Arg(str),
         'email': Arg(str),
         'login': Arg(str),
-        'course': Arg(str, use=lambda c: ndb.Key('User', c)),
+        'course': KeyArg('User'),
     }
-
-    def filter_index_args(self, args):
-        return parser.parse(self.user_args, args)
 
 
 class AssignmentAPI(MethodView, APIResource):
@@ -175,15 +173,12 @@ class AssignmentAPI(MethodView, APIResource):
     def get_model(cls):
         return models.Assignment
 
-    assignment_args = {
+    index_args = {
         'name': Arg(str),
         'points': Arg(float),
-        'creator': Arg(str, use=lambda c: ndb.Key('User', c)),
-        'course': Arg(str, use=lambda c: ndb.Key('Course', c)),
+        'creator': KeyArg('User'),
+        'course': KeyArg('Course'),
     }
-
-    def filter_index_args(self, args):
-        return parser.parse(self.assignment_args, args)
 
 
 class SubmitNDBImplementation(object):
@@ -248,13 +243,7 @@ class SubmissionAPI(MethodView, APIResource):
         except BadValueError as e:
             return create_api_response(400, e.message, {})
 
-    submission_args = {
-        'first_name': Arg(str),
-        'last_name': Arg(str),
-        'email': Arg(str),
-        'login': Arg(str),
-        'course': Arg(str, use=lambda c: ndb.Key('User', c)),
+    index_args = {
+        'assignment': KeyArg('Assignment'),
+        'submitter': KeyArg('User'),
     }
-
-    def filter_index_args(self, args):
-        return parser.parse(self.submission_args, args)
