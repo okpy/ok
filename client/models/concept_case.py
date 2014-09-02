@@ -23,7 +23,7 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
         'answer': serialize.STR,
     }
     OPTIONAL = {
-        'locked': serialize.BOOL_TRUE,
+        'locked': serialize.BOOL_FALSE,
         'choices': serialize.SerializeArray(serialize.STR),
     }
 

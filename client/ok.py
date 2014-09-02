@@ -173,6 +173,33 @@ def dump_tests(test_dir, assignment):
         with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
             f.write('test = ' + test_json)
 
+#####################
+# Software Updating #
+#####################
+
+def get_latest_version(server, test_dir):
+    """Check for the latest version of ok and update this file accordingly.
+    """
+    my_version = _get_info(os.path.join(test_dir, INFO_FILE)).version
+
+    print("You are running version {0} of ok.py".format(my_version))
+
+    # Get server version
+    address = "https://" + server + "/api/v1" + "/version?name=okpy"
+
+    req = request.Request(address)
+    response = request.urlopen(req)
+
+    full_response = json.loads(response.read())
+
+    server_version = full_response['version']
+
+    if server_version != my_version:
+        print("A new version exists! Downloading now...")
+        file_contents = full_response['file_data']
+        new_file = open('ok')
+        new_file.write(file_contents)
+
 ##########################
 # Command-line Interface #
 ##########################
@@ -220,7 +247,11 @@ def ok_main(args):
         messages[protocol.name] = protocol.on_start()
 
     # TODO(denero) Send in a separate thread.
-    send_to_server(messages, assignment, args.server)
+    try:
+        send_to_server(messages, assignment, args.server)
+    except error.URLError as ex:
+        # TODO(soumya) Make a better error message
+        print("Nothing was sent to the server!")
 
     for protocol in interact_protocols:
         protocol.on_interact()
