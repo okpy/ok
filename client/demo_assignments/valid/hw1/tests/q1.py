@@ -48,6 +48,7 @@ test = {
         4
         # explanation: Squaring a negative number
         # choice: -4
+        # choice: 4
         # choice: 2
         # choice: None
         """,

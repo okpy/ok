@@ -51,6 +51,9 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
         print(self['question'])
         answer = interact_fn(self['answer'], self['choices'])
         self['answer'] = answer
+        self['locked'] = False
 
     def on_lock(self, hash_fn):
         self['answer'] = hash_fn(self['answer'])
+        self['locked'] = True
+
