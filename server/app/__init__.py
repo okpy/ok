@@ -3,6 +3,7 @@ Initialize Flask app.
 """
 
 from flask import Flask
+
 import os
 from werkzeug.debug import DebuggedApplication
 
@@ -14,16 +15,18 @@ from app import utils
 from app import api
 from app import auth
 
-app.register_blueprint(MODEL_BLUEPRINT)
 
-if os.getenv('FLASK_CONF') == 'DEV':
-    app.config.from_object('app.settings.Development')
+app.register_blueprint(MODEL_BLUEPRINT)
+DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
+            if 'SERVER_SOFTWARE' in os.environ
+            else True)
+
+if DEBUG:
+    app.config.from_object('app.settings.Debug')
 
     # Google app engine mini profiler
     # https://github.com/kamens/gae_mini_profiler
     app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
-elif os.getenv('FLASK_CONF') == 'TEST':
-    app.config.from_object('app.settings.Testing')
 else:
     app.config.from_object('app.settings.Production')
 

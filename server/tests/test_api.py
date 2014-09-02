@@ -17,6 +17,9 @@ from google.appengine.ext import ndb
 from app import models
 from app.constants import ADMIN_ROLE
 
+from ddt import ddt, data, unpack
+
+@ddt
 class APITest(object): #pylint: disable=no-init
     """
     Simple test case for the API
@@ -102,6 +105,44 @@ class APITest(object): #pylint: disable=no-init
         self.assertTrue(inst2.to_json() not in self.response_json,
                         self.response_json)
 
+    pagination_tests = [
+        (11, 10),
+        (32, 10),
+        (6, 10),
+        (10, 10)
+    ]
+    
+    @data(*pagination_tests)
+    @unpack
+    def test_pagination(self, total_objects, num_page):
+        """
+        Tests pagination by creating a specified number of entities, and checking if
+        the number of entities retrieved are less than the specified max per page.
+
+        total_objects - the number of entities to be created
+        num_page - the maximum number of entities per page
+
+        To create more copies of this test, just add a tuple to the pagination_tests list.
+        @unpack allows the ddt package to work with the `pagination_tests` list of tuples.
+        """
+        for _ in range(total_objects):
+            inst = self.get_basic_instance(mutate=True)
+            inst.put()
+        while total_objects > 0:
+            if hasattr(self, 'forward_cursor'):
+                self.get_index(cursor=self.forward_cursor, num_page=num_page)
+            else:
+                self.get_index(num_page=num_page)
+            num_instances = len(self.response_json)
+            if self.name == 'user' and num_instances < num_page:
+                total_objects += 1 # To take care of the dummy already there
+            self.assertTrue(num_instances <= num_page,
+                "There are too many instances returned. There are " + str(num_instances) + " instances")
+            self.assertTrue(num_instances == min(total_objects, num_page), 
+                    "Not right number returned: " + str(total_objects) + " vs. " +str(num_instances) + str(self.response_json))
+            total_objects -= num_page
+
+
     ## ENTITY GET ##
 
     def test_get_basic(self):
@@ -125,12 +166,6 @@ class APITest(object): #pylint: disable=no-init
 
     def test_get_invalid_id_errors(self):
         """Tests that a get on an invalid ID errors."""
-        self.get('/{}/1'.format(self.name))
-        self.assertStatusCode(404)
-
-    def test_get_non_admin(self):
-        """Tests that a get with a student access token fails."""
-        self.logout()
         self.get('/{}/1'.format(self.name))
         self.assertStatusCode(404)
 

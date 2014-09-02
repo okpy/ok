@@ -39,53 +39,13 @@ from auth import authenticate
 from models import core
 from urllib import request, error
 import argparse
+import config
 import exceptions
 import importlib.machinery
 import json
 import os
 import sys
 import utils
-
-class Protocol(object):
-    """A Protocol encapsulates a single aspect of ok.py functionality."""
-    name = None # Override in sub-class.
-
-    def __init__(self, cmd_line_args, assignment, logger):
-        """Constructor.
-
-        PARAMETERS:
-        cmd_line_args -- Namespace; parsed command line arguments.
-                         command line, as parsed by argparse.
-        assignment    -- dict; general information about the assignment.
-        logger        -- OutputLogger; used to control output
-                         destination, as well as capturing output from
-                         an autograder session.
-        """
-        self.args = cmd_line_args
-        self.assignment = assignment
-        self.logger = logger
-
-    def on_start(self):
-        """Called when ok.py starts. Returns an object to be sent to server."""
-
-    def on_interact(self):
-        """Called to execute an interactive or output-intensive session."""
-
-
-class FileContents(Protocol):
-    """The contents of changed source files are sent to the server."""
-    name = 'file_contents'
-
-    def on_start(self):
-        """Find all source files and return their complete contents."""
-        contents = {}
-        for path in self.assignment['src_files']:
-            key = os.path.normpath(os.path.split(path)[1])
-            with open(path, 'r', encoding='utf-8') as lines:
-                value = lines.read()
-            contents[key] = value
-        return contents
-
 
 def send_to_server(messages, assignment, server, endpoint='submission/new'):
     """Send messages to server, along with user authentication."""
@@ -94,7 +54,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         'messages': messages,
     }
     try:
-        address = 'https://' + server + '/api/v1/' + endpoint
+        address = 'http://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
@@ -237,26 +197,27 @@ def parse_input():
                         help="unlock tests interactively")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
+    parser.add_argument('-i', '--interactive', action='store_true',
+                        help="toggles interactive mode")
+    parser.add_argument('-l', '--lock', default='tests', type=str,
+                        help="partial name or path to test file or directory to lock")
     return parser.parse_args()
 
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
     try:
-        # TODO(soumya): extract map of tags to TestCase classes from
-        # config.
-        assignment = load_tests(args.tests, {})
+        assignment = load_tests(args.tests, config.cases)
     except Exception as ex:
         print(ex)
         sys.exit(1)
 
     logger = sys.stdout = utils.OutputLogger()
 
-    # TODO(soumya): extract list of protocols from config.
     start_protocols = \
-        [p(args, assignment, logger) for p in [FileContents]]
+        [p(args, assignment, logger) for p in config.protocols.values()]
     interact_protocols = \
-        [p(args, assignment, logger) for p in [RunTests]]
+        [p(args, assignment, logger) for p in config.protocols.values()]
 
     messages = dict()
     for protocol in start_protocols:

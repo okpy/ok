@@ -5,13 +5,20 @@ import json
 
 from flask.views import MethodView
 from flask.app import request
-from flask import session
+from flask import session, make_response
+from webargs import Arg
+from webargs.flaskparser import FlaskParser
 
 from app import models
 from app.models import BadValueError
 from app.needs import Need
 from app.decorators import handle_error
-from app.utils import create_api_response
+from app.utils import create_api_response, paginate, filter_query, create_zip
+
+from google.appengine.ext import db, ndb
+
+def KeyArg(klass):
+    return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]})
 
 
 class APIResource(object):
@@ -25,6 +32,7 @@ class APIResource(object):
         return request.json
 
     name = None
+    index_args = {}
 
     @classmethod
     def get_model(cls):
@@ -130,16 +138,31 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success", {})
 
+
     def index(self):
         """
-        Index HTTP method thing.
+        Index HTTP method. Should be called from GET when no key is provided.
+
+        Processes cursor and num_page URL arguments for pagination support.
         """
+        query = self.get_model().query()
         need = Need('index')
-        if not self.get_model().can(session['user'], need):
+
+        result = self.get_model().can(session['user'], need, query=query)
+        if not result:
             return need.api_response()
 
-        return create_api_response(
-            200, "success", list(self.get_model().query()))
+        args = parser.parse(self.index_args)
+        args = {k:v for k,v in args.iteritems() if v}
+        query = filter_query(result, args, self.get_model())
+
+        cursor = request.args.get('cursor', None)
+        num_page = request.args.get('num_page', None)
+        query_results = paginate(query, cursor, num_page)
+        return create_api_response(200, "success", query_results)
+
+
+parser = FlaskParser()
 
 
 class UserAPI(MethodView, APIResource):
@@ -164,6 +187,14 @@ class UserAPI(MethodView, APIResource):
         entity.put()
         return entity, None
 
+    index_args = {
+        'first_name': Arg(str),
+        'last_name': Arg(str),
+        'email': Arg(str),
+        'login': Arg(str),
+        'course': KeyArg('User'),
+    }
+
 
 class AssignmentAPI(MethodView, APIResource):
     """The API resource for the Assignment Object"""
@@ -172,6 +203,13 @@ class AssignmentAPI(MethodView, APIResource):
     @classmethod
     def get_model(cls):
         return models.Assignment
+
+    index_args = {
+        'name': Arg(str),
+        'points': Arg(float),
+        'creator': KeyArg('User'),
+        'course': KeyArg('Course'),
+    }
 
 
 class SubmitNDBImplementation(object):
@@ -196,6 +234,31 @@ class SubmissionAPI(MethodView, APIResource):
     name = "Submission"
     db = SubmitNDBImplementation()
     post_fields = ['assignment', 'messages']
+
+    @handle_error
+    def get(self, key):
+        """
+        The GET HTTP method
+        """
+        if key is None:
+            return self.index()
+
+        obj = self.get_model().get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        if request.args.get('download') == 'true' \
+                and 'file_contents' in obj.messages:
+            response = make_response(create_zip(obj.messages['file_contents']))
+            response.headers["Content-Disposition"] = "attachment; filename=submission-%s.zip" % str(obj.created)
+            response.headers["Content-Type"] = "application/zip"
+            return response
+        return create_api_response(200, "", obj)
 
     @classmethod
     def get_model(cls):
@@ -236,14 +299,10 @@ class SubmissionAPI(MethodView, APIResource):
         except BadValueError as e:
             return create_api_response(400, e.message, {})
 
-    def index(self):
-        """
-        Index HTTP method thing.
-        """
-        return create_api_response(
-            200, "success", list(
-                self.get_model().query(
-                    self.get_model().submitter == session['user'].key)))
+    index_args = {
+        'assignment': KeyArg('Assignment'),
+        'submitter': KeyArg('User'),
+    }
 
 
 class VersionAPI(APIResource, MethodView):
