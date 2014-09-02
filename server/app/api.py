@@ -49,11 +49,37 @@ class APIResource(object):
         return create_api_response(200, "", obj)
 
     @handle_error
-    def put(self):
+    def put(self, key):
         """
         The PUT HTTP method
         """
-        return create_api_response(401, "PUT request not permitted")
+        obj = self.get_model().get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        need = Need('put')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        blank_val = object()
+        changed = False
+        for key, value in request.json.iteritems():
+            old_val = getattr(obj, key, blank_val)
+            if old_val == blank_val:
+                return create_api_response(400, "{} is not a valid field.".format(key))
+
+            setattr(obj, key, value)
+            changed = True
+
+        if changed:
+            obj.put()
+
+        return create_api_response(200, "", obj)
 
     @handle_error
     def post(self):

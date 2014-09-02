@@ -51,6 +51,8 @@ class Base(ndb.Model):
     def to_json(self):
         """Converts this model to a json dictionary."""
         result = self.to_dict()
+        if self.key:
+            result['id'] = self.key.id()
         for key, value in result.items():
             try:
                 new_value = app.json_encoder().default(value)
@@ -241,5 +243,9 @@ class Version(Base):
 
     @classmethod
     def _can(cls, user, need, obj=None):
+        action = need.action 
+
+        if action == "delete":
+            return False
         return True
 
