@@ -1,14 +1,17 @@
-"""Tests the PythonTestCase model."""
+"""Tests the DoctestCase model."""
 
 from models import core
 from models import doctest_case
+from protocols import unlock
 from unittest import mock
+import exceptions
+import ok
 import sys
 import unittest
 import utils
 
 class OnGradeTest(unittest.TestCase):
-    SUITE_NUM = 0
+    ASSIGN_NAME = 'dummy'
 
     def setUp(self):
         # This logger captures output and is used by the unittest,
@@ -21,20 +24,29 @@ class OnGradeTest(unittest.TestCase):
 
         # This logger is used by on_grade.
         self.logger = utils.OutputLogger()
-        self.test = core.Test()
+
+        self.assignment = core.Assignment.deserialize({
+            'name': self.ASSIGN_NAME,
+            'version': '1.0',
+        })
+        self.test = core.Test.deserialize({
+            'names': ['q1'],
+            'points': 1,
+        }, self.assignment, {})
 
     def tearDown(self):
         self.stdout = sys.__stdout__
 
-    def makeTestCase(self, input_, outputs, frame=None, teardown='',
-            **status):
-        frame = frame or {}
-        outputs = [core.TestCaseAnswer(output) for output in outputs]
-        return doctest_case.PythonTestCase(input_, outputs, frame=frame,
-                test=self.test, teardown=teardown, **status)
+    def makeTestCase(self, case_json):
+        case_json['type'] = doctest_case.DoctestCase.type
+        if 'locked' not in case_json:
+            case_json['locked'] = False
+        return doctest_case.DoctestCase.deserialize(case_json,
+                self.assignment, self.test)
 
-    def calls_onGrade(self, case, errors=False, verbose=False,
+    def calls_onGrade(self, case_json, errors=False, verbose=False,
             interact=False):
+        case = self.makeTestCase(case_json)
         error = case.on_grade(self.logger, verbose, interact)
         if errors:
             self.assertTrue(error)
@@ -47,91 +59,154 @@ class OnGradeTest(unittest.TestCase):
         self.assertEqual(expected_log, log)
 
     def testPass_equals(self):
-        case = self.makeTestCase('3 + 4', ['7'])
-        self.calls_onGrade(case)
+        self.calls_onGrade({
+            'test': """
+            >>> 3 + 4
+            7
+            """,
+        })
 
     def testPass_expectException(self):
-        case = self.makeTestCase('1 / 0', ['ZeroDivisionError'])
-        self.calls_onGrade(case)
+        self.calls_onGrade({
+            'test': """
+            >>> 1 / 0
+            ZeroDivisionError
+            """,
+        })
 
-    def testPass_multilineImplicitPrompt(self):
-        case = self.makeTestCase("""
-        x = 5
-        x + 4
-        """, ['9'])
-        self.calls_onGrade(case)
+    def testPass_multilineSinglePrompt(self):
+        self.calls_onGrade({
+            'test': """
+            >>> x = 5
+            >>> x + 4
+            9
+            """,
+        })
 
     def testPass_multiplePrompts(self):
-        case = self.makeTestCase("""
-        x = 5
-        $ x + 4
-        foo = 'bar'
-        $ 1 / 0
-        """, ['9', 'ZeroDivisionError'])
-        self.calls_onGrade(case)
+        self.calls_onGrade({
+            'test': """
+            >>> x = 5
+            >>> x + 4
+            9
+            >>> 1 / 0
+            ZeroDivisionError
+            """,
+        })
 
     def testPass_multilineWithIndentation(self):
-        case = self.makeTestCase("""
-        def square(x):
-            return x * x
-        square(4)
-        """, ['16'])
-        self.calls_onGrade(case)
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(4)
+            16
+            """,
+        })
+
+    def testPass_assignmentParams(self):
+        self.assignment['params'] = {
+            'doctest': {
+                'cache': 'x = 3',
+                'setup': 'y = 1',
+            }
+        }
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(x)
+            9
+            >>> square(y)
+            1
+            """,
+        })
+
+    def testPass_testParams(self):
+        self.test['params'] = {
+            'doctest': {
+                'cache': 'x = 3',
+                'setup': 'y = 1',
+            }
+        }
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(x)
+            9
+            >>> square(y)
+            1
+            """,
+        })
 
     def testPass_teardown(self):
-        mock_fn = mock.Mock()
-        case = self.makeTestCase("""
-        1 + 2
-        """, ['3'], frame={'f': mock_fn}, teardown='f()')
-
-        self.calls_onGrade(case)
-        mock_fn.assert_called_with()
+        # TODO(albert)
+        pass
 
     def testError_notEqualError(self):
-        case = self.makeTestCase('2 + 4', ['7'])
-        self.calls_onGrade(case, errors=True)
+        self.calls_onGrade({
+            'test': """
+            >>> 2 + 4
+            7
+            """,
+        }, errors=True)
 
     def testError_expectedException(self):
-        case = self.makeTestCase('1 + 2', ['ZeroDivisionError'])
-        self.calls_onGrade(case, errors=True)
+        self.calls_onGrade({
+            'test': """
+            >>> 1 + 2
+            ZeroDivisionError
+            """,
+        }, errors=True)
 
     def testError_wrongException(self):
-        case = self.makeTestCase('1 / 0', ['TypeError'])
-        self.calls_onGrade(case, errors=True)
+        self.calls_onGrade({
+            'test': """
+            >>> 1 / 0
+            TypeError
+            """,
+        }, errors=True)
 
     def testError_runtimeError(self):
-        max_recursion = lambda: max_recursion()
-        case = self.makeTestCase('f()', ['3'],
-                frame={'f': max_recursion})
-        self.calls_onGrade(case, errors=True)
+        self.calls_onGrade({
+            'test': """
+            >>> f = lambda: f()
+            >>> f()
+            4
+            """,
+        }, errors=True)
 
-    # TODO(albert): test timeout errors without actually having to wait
-    # for timeouts.
+    def testError_timeoutError(self):
+        # TODO(albert): test timeout errors without actually waiting
+        # for timeouts.
+        pass
 
     def testError_teardown(self):
-        mock_fn = mock.Mock()
-        case = self.makeTestCase('1 + 2', ['ZeroDivisionError'],
-                frame={'f': mock_fn},
-                teardown='f()')
-
-        self.calls_onGrade(case, errors=True)
-        mock_fn.assert_called_with()
+        # TODO(albert):
+        pass
 
     def testOutput_singleLine(self):
-        case = self.makeTestCase('1 + 2', ['3'])
-        self.calls_onGrade(case)
+        self.calls_onGrade({
+            'test': """
+            >>> 1 + 2
+            3
+            """
+        })
         self.assertCorrectLog([
             '>>> 1 + 2',
             '3'
         ])
 
     def testOutput_multiLineIndentNoNewline(self):
-        case = self.makeTestCase("""
-        def square(x):
-            return x * x
-        square(4)
-        """, ['16'])
-        self.calls_onGrade(case)
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(4)
+            16
+            """,
+        })
         self.assertCorrectLog([
             '>>> def square(x):',
             '...     return x * x',
@@ -140,13 +215,15 @@ class OnGradeTest(unittest.TestCase):
         ])
 
     def testOutput_multiLineIndentWithNewLine(self):
-        case = self.makeTestCase("""
-        def square(x):
-            return x * x
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
 
-        square(4)
-        """, ['16'])
-        self.calls_onGrade(case)
+            >>> square(4)
+            16
+            """,
+        })
         self.assertCorrectLog([
             '>>> def square(x):',
             '...     return x * x',
@@ -155,12 +232,14 @@ class OnGradeTest(unittest.TestCase):
         ])
 
     def testOutput_forLoop(self):
-        case = self.makeTestCase("""
-        for i in range(3):
-            print(i)
-        3 + 4
-        """, ['7'])
-        self.calls_onGrade(case)
+        self.calls_onGrade({
+            'test': """
+            >>> for i in range(3):
+            ...     print(i)
+            >>> 3 + 4
+            7
+            """
+        })
         self.assertCorrectLog([
             '>>> for i in range(3):',
             '...     print(i)',
@@ -172,8 +251,12 @@ class OnGradeTest(unittest.TestCase):
         ])
 
     def testOutput_errorNotEqual(self):
-        case = self.makeTestCase("3 + 4", ['1'])
-        self.calls_onGrade(case, errors=True)
+        self.calls_onGrade({
+            'test': """
+            >>> 3 + 4
+            1
+            """,
+        }, errors=True)
         self.assertCorrectLog([
             '>>> 3 + 4',
             '7',
@@ -181,24 +264,209 @@ class OnGradeTest(unittest.TestCase):
         ])
 
     def testOutput_errorOnNonPrompt(self):
-        case = self.makeTestCase("""
-        1 / 0
-        3 + 4
-        """, ['7'])
-        self.calls_onGrade(case, errors=True)
+        self.calls_onGrade({
+            'test': """
+            >>> x = 1 / 0
+            >>> 3 + 4
+            7
+            """,
+        }, errors=True)
         self.assertCorrectLog([
-            '>>> 1 / 0',
+            '>>> x = 1 / 0',
             'ZeroDivisionError: division by zero'
         ])
 
     def testOutput_errorOnPromptWithException(self):
-        case = self.makeTestCase("""
-        1 / 0
-        """, ['1'])
-        self.calls_onGrade(case, errors=True)
+        self.calls_onGrade({
+            'test': """
+            >>> 1 / 0
+            1
+            """,
+        }, errors=True)
         self.assertCorrectLog([
             '>>> 1 / 0',
             'ZeroDivisionError: division by zero',
             '# Error: expected 1 got ZeroDivisionError'
         ])
 
+class OnUnlockTest(unittest.TestCase):
+    ASSIGN_NAME = 'dummy'
+
+    def setUp(self):
+        self.assignment = core.Assignment.deserialize({
+            'name': self.ASSIGN_NAME,
+            'version': '1.0',
+        })
+        self.test = core.Test.deserialize({
+            'names': ['q1'],
+            'points': 1,
+        }, self.assignment, {})
+        self.logger = mock.Mock()
+        self.mock_answer = mock.Mock()
+        self.interact_fn = mock.Mock(return_value=self.mock_answer)
+
+    def makeTestCase(self, case_json):
+        case_json['type'] = doctest_case.DoctestCase.type
+        return doctest_case.DoctestCase.deserialize(case_json,
+                self.assignment, self.test)
+
+    def calls_onUnlock(self, case_json, expect, errors=False):
+        case = self.makeTestCase(case_json)
+        if errors:
+            self.assertRaises(unlock.UnlockException, case.on_unlock,
+                              self.logger, self.interact_fn)
+            return
+        case.on_unlock(self.logger, self.interact_fn)
+        self.assertFalse(case['locked'])
+
+        answers = [line for line in case.lines
+                        if isinstance(line, doctest_case._Answer)]
+        self.assertEqual(expect,
+                         [answer.output for answer in answers])
+        self.assertEqual([False] * len(answers),
+                         [answer.locked for answer in answers])
+
+    def testUnlockAll(self):
+        self.calls_onUnlock({
+            'test': """
+            >>> 3 + 4
+            <hash>
+            # locked
+            >>> 3 + 1
+            <hash>
+            # locked
+            >>> 1 / 0
+            <hash>
+            # locked
+            """,
+        }, [self.mock_answer] * 3)
+
+    def testNoLockedAnswers(self):
+        self.calls_onUnlock({
+            'test': """
+            >>> 3 + 4
+            7
+            >>> 'foo'
+            'foo'
+            """,
+        }, ['7', "'foo'"])
+
+    def testPartiallyLockedAnswers(self):
+        self.calls_onUnlock({
+            'test': """
+            >>> 3 + 4
+            7
+            >>> 'foo'
+            <hash>
+            # locked
+            """,
+        }, ['7', self.mock_answer])
+
+class SerializationTest(unittest.TestCase):
+    ASSIGN_NAME = 'dummy'
+
+    def setUp(self):
+        self.assignment = core.Assignment.deserialize({
+            'name': self.ASSIGN_NAME,
+            'version': '1.0',
+        })
+        self.test = core.Test.deserialize({
+            'names': ['q1'],
+            'points': 1,
+        }, self.assignment, {})
+
+    def assertSerialize(self, json):
+        case = doctest_case.DoctestCase.deserialize(
+                json, self.assignment, self.test)
+        self.assertEqual(json, case.serialize())
+
+    def testIncorrectType(self):
+        case_json = {'type': 'foo'}
+        self.assertRaises(exceptions.DeserializeError,
+                          doctest_case.DoctestCase.deserialize,
+                          case_json, self.assignment, self.test)
+
+    def testSimplePrompt(self):
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            4
+            """),
+        })
+
+    def testExplanation(self):
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            4
+            # explanation: Squares a negative number
+            """),
+        })
+
+    def testMultipleChoice(self):
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            4
+            # choice: 0
+            # choice: 2
+            # choice: -4
+            """),
+        })
+
+    def testLocked(self):
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            5
+            # locked
+            """),
+        })
+
+    def testMultiplePrompts(self):
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(-2)
+            4
+            >>> x = 4
+            >>> square(x)
+            16
+            """),
+        })
+
+    def testAssignmentParams(self):
+        self.assignment['params'] = {
+            'doctest': {
+                'setup': 'x = 1',
+                'teardown': 'x = 2',
+                'cache': 'x = 3',
+            }
+        }
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(2)
+            4
+            """)
+        })
+
+    def testTestParams(self):
+        self.test['params'] = {
+            'doctest': {
+                'setup': 'x = 1',
+                'teardown': 'x = 2',
+                'cache': 'x = 3',
+            }
+        }
+        self.assertSerialize({
+            'type': 'doctest',
+            'test': utils.dedent("""
+            >>> square(2)
+            4
+            """)
+        })

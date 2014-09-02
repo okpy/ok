@@ -92,18 +92,6 @@ class Counter(object):
     def __repr__(self):
         return str(self._count)
 
-def dedent_dict_values(dictionary):
-    for key, value in dictionary.items():
-        if isinstance(value, str):
-            dictionary[key] = utils.dedent(value)
-    return dictionary
-
-def split_dict_values(self, dictionary):
-    for key, value in dictionary.items():
-        if isinstance(value, str):
-            dictionary[key] = value.split()
-    return dictionary
-
 #####################
 # TIMEOUT MECHANISM #
 #####################

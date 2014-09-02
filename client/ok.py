@@ -35,36 +35,34 @@ receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
 
+from auth import authenticate
 from models import core
-from utils import OutputLogger
 from urllib import request, error
 import argparse
+import exceptions
 import importlib.machinery
 import json
 import os
 import sys
-
-from auth import authenticate
+import utils
 
 class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
     name = None # Override in sub-class.
 
-    def __init__(self, cmd_line_args, info, tests, logger):
+    def __init__(self, cmd_line_args, assignment, logger):
         """Constructor.
 
         PARAMETERS:
         cmd_line_args -- Namespace; parsed command line arguments.
                          command line, as parsed by argparse.
-        info          -- dict; general information about the assignment.
-        tests         -- list of Tests
+        assignment    -- dict; general information about the assignment.
         logger        -- OutputLogger; used to control output
                          destination, as well as capturing output from
                          an autograder session.
         """
         self.args = cmd_line_args
-        self.info = info
-        self.tests = tests
+        self.assignment = assignment
         self.logger = logger
 
     def on_start(self):
@@ -81,7 +79,7 @@ class FileContents(Protocol):
     def on_start(self):
         """Find all source files and return their complete contents."""
         contents = {}
-        for path in self.info['src_files']:
+        for path in self.assignment['src_files']:
             key = os.path.normpath(os.path.split(path)[1])
             with open(path, 'r', encoding='utf-8') as lines:
                 value = lines.read()
@@ -115,41 +113,34 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         return {}
 
 
-class OkException(BaseException):
-    """Exception class for ok.py"""
-    pass
-
 ######################
 # Assignment loading #
 ######################
 
 INFO_FILE = 'info.py'
 
-def load_tests(test_dir):
+def load_tests(test_dir, case_map):
     """Loads information and tests for the current assignment.
 
     PARAMETERS:
     test_dir -- str; a filepath to the test directory, 'tests' by default.
-                  An assignment is defined as a directory that contains
-                  a subdirectory called "tests". This subdirectory must
-                  contain a file called "info.py". The filepath
-                  should be specified relative to ok.py.
+    case_map -- dict; a mapping of TestCase tags to TestCase classes
 
     RETURNS:
-    (info, tests), where
-    info  -- dict; information related to the assignment
-    tests -- list of Tests; all the tests related to the assignment.
+    assignment -- Assignment; contains information related to the
+    assignment and its tests.
     """
     if not os.path.isdir(test_dir):
-        raise OkException('Assignment must have a {} directory'.format(
-            test_dir))
+        raise exceptions.OkException(
+                'Assignment must have a {} directory'.format(test_dir))
     info_file = os.path.join(test_dir, INFO_FILE)
     if not os.path.isfile(info_file):
-        raise OkException('Directory {} must have a file called {}'.format(
-            test_dir, INFO_FILE))
-    info = _get_info(info_file)
-    tests = _get_tests(test_dir, info)
-    return info, tests
+        raise exceptions.OkException(
+                'Directory {} must have a file called {}'.format(
+                    test_dir, INFO_FILE))
+    assignment = _get_info(info_file)
+    _get_tests(test_dir, assignment, case_map)
+    return assignment
 
 
 def _get_info(filepath):
@@ -163,23 +154,20 @@ def _get_info(filepath):
     """
     # TODO(albert): add error handling in case no attribute info is
     # found.
-    return _import_module(filepath).info
+    info_json = _import_module(filepath).info
+    return core.Assignment.deserialize(info_json)
 
 
-def _get_tests(directory, info):
-    """Loads all tests in a tests directory.
+def _get_tests(directory, assignment, case_map):
+    """Loads all tests in a tests directory and adds them to the given
+    Assignment object.
 
     PARAMETER:
-    directory -- str; filepath to a directory that contains tests.
-    info      -- dict; top-level information about the assignment,
-                 extracted from info.py
-
-    RETURNS:
-    list of Tests; each file in the tests/ directory is turned into a
-    Test object.
+    directory  -- str; filepath to a directory that contains tests.
+    assignment -- Assignment; top-level information about the
+                  assignment, extracted from the info file.
     """
     test_files = os.listdir(directory)
-    tests = []
     for file in test_files:
         if file == INFO_FILE or not file.endswith('.py'):
             continue
@@ -187,9 +175,9 @@ def _get_tests(directory, info):
         if os.path.isfile(path):
             # TODO(albert): add error handling in case no attribute
             # test is found.
-            test = _import_module(path).test
-            tests.append(core.Test.serialize(test, info))
-    return tests
+            test_json = _import_module(path).test
+            test = core.Test.deserialize(test_json, assignment, case_map)
+            assignment.add_test(test)
 
 
 def _import_module(path):
@@ -203,10 +191,32 @@ def _import_module(path):
         # error messages.
         return None
 
+######################
+# Assignment dumping #
+######################
 
-def get_src_paths(assignment):
-    """Return paths to src_files by prepending test_file enclosing dir."""
-    return assignment['src_files']
+def dump_tests(test_dir, assignment):
+    """Writes an assignment into the given test directory.
+
+    PARAMETERS:
+    test_dir   -- str; filepath to the assignment's test directory.
+    assignment -- dict; contains information, including Test objects,
+                  for an assignment.
+    """
+    # TODO(albert): prettyify string formatting by using triple quotes.
+    # TODO(albert): verify that assign_copy is serializable into json.
+    info = json.dumps(assignment.serialize(), indent=2)
+    with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
+        f.write('info = ' + info)
+
+    # TODO(albert): writing causes an error halfway, the tests
+    # directory may be left in a corrupted state.
+    # TODO(albert): might need to delete obsolete test files too.
+    # TODO(albert): verify that test_json is serializable into json.
+    for test in assignment.tests:
+        test_json = json.dumps(test.serialize(), indent=2)
+        with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
+            f.write('test = ' + test_json)
 
 ##########################
 # Command-line Interface #
@@ -214,9 +224,6 @@ def get_src_paths(assignment):
 
 def parse_input():
     """Parses command line input."""
-    # TODO(albert): rethink these command line arguments. One edit is
-    # to change the --tests flag to --assignment, a relative path to
-    # the assignment directory.
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -235,22 +242,21 @@ def parse_input():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    # TODO(albert): rewrite this function to use load_assignment to
-    # read test files. Also modify the Protocol constructor's
-    # parameters.
     try:
-        assignment, tests = load_tests(args.tests)
+        # TODO(soumya): extract map of tags to TestCase classes from
+        # config.
+        assignment = load_tests(args.tests, {})
     except Exception as ex:
         print(ex)
         sys.exit(1)
 
-    logger = OutputLogger()
-    #TODO(albert): change sys.stdout to logger.
+    logger = sys.stdout = utils.OutputLogger()
 
+    # TODO(soumya): extract list of protocols from config.
     start_protocols = \
-        [p(args, assignment, tests, logger) for p in [FileContents]]
+        [p(args, assignment, logger) for p in [FileContents]]
     interact_protocols = \
-        [p(args, assignment, tests, logger) for p in [RunTests]]
+        [p(args, assignment, logger) for p in [RunTests]]
 
     messages = dict()
     for protocol in start_protocols:
@@ -263,6 +269,10 @@ def ok_main(args):
         protocol.on_interact()
 
     # TODO(denero) Print server responses.
+
+    # TODO(albert): a premature error might prevent tests from being
+    # dumped. Perhaps add this in a "finally" clause.
+    dump_tests(args.tests, assignment)
 
 if __name__ == '__main__':
     ok_main(parse_input())

@@ -27,10 +27,6 @@ def authenticate():
         user = mc.get("%s-%s" % (MC_NAMESPACE, access_token))
         if user:
             return user
-
-        # TODO(denero) Use memcache to speed up user lookup.
-        # See: https://github.com/Cal-CS-61A-Staff/ok/blob/
-        #          994144a99881d21f5aefbde8689b388fffa9bd81/server/app/auth.py
         try:
             email = authenticator.authenticate(access_token)
         except AuthenticationException:
