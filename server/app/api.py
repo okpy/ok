@@ -19,6 +19,11 @@ class APIResource(object):
 
     Set the name and get_model for each subclass.
     """
+
+    @property
+    def request_json(self):
+        return request.json
+
     name = None
 
     @classmethod
@@ -68,7 +73,7 @@ class APIResource(object):
 
         blank_val = object()
         changed = False
-        for key, value in request.json.iteritems():
+        for key, value in self.request_json.iteritems():
             old_val = getattr(obj, key, blank_val)
             if old_val == blank_val:
                 return create_api_response(400, "{} is not a valid field.".format(key))
@@ -86,7 +91,7 @@ class APIResource(object):
         """
         The POST HTTP method
         """
-        post_dict = request.json
+        post_dict = self.request_json
 
         need = Need('create')
         if not self.get_model().can(session['user'], need):
@@ -248,20 +253,8 @@ class VersionAPI(APIResource, MethodView):
     def get_model(cls):
         return models.Version
 
-    @handle_error
-    def post(self):
+    @property
+    def request_json(self):
         post_dict = request.json
         post_dict['file_data'] = bytes(post_dict['file_data'])
-
-        need = Need('create')
-        if not self.get_model().can(session['user'], need):
-            return need.api_response()
-
-        entity, error_response = self.new_entity(post_dict)
-
-        if not error_response:
-            return create_api_response(200, "success", {
-                'key': entity.key.id()
-            })
-        else:
-            return error_response
+        return post_dict

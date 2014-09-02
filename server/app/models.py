@@ -240,6 +240,7 @@ class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
     name = ndb.StringProperty()
     file_data = ndb.BlobProperty()
+    version = ndb.StringProperty()
 
     @classmethod
     def _can(cls, user, need, obj=None):
