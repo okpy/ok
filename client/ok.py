@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+VERSION = '1.0.0'
 
 """The ok.py script runs tests, checks for updates, and saves your work.
 
@@ -59,7 +60,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
         access_token = authenticate()
-        address += "?access_token=%s" % access_token
+        address += "?access_token=%s&client_version=%s" % (access_token, VERSION)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
