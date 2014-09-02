@@ -26,7 +26,10 @@ class JSONEncoder(old_json):
 
     def default(self, obj): #pylint: disable=E0202
         if isinstance(obj, ndb.Key):
-            return obj.get().to_json() # TODO(martinis) make this async
+            got = obj.get()
+            if not got:
+                return None
+            return got.to_json() # TODO(martinis) make this async
         elif isinstance(obj, datetime.datetime):
             obj = convert_timezone(obj)
             return str(obj)
