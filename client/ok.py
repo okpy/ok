@@ -54,7 +54,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         'messages': messages,
     }
     try:
-        address = 'http://' + server + '/api/v1/' + endpoint
+        address = 'https://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
@@ -189,7 +189,7 @@ def parse_input():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-q', '--question', type=str,
                         help="focus on a specific question")
-    parser.add_argument('-s', '--server', type=str, default='localhost:8080',
+    parser.add_argument('-s', '--server', type=str, default='ok-server.appspot.com',
                         help="server address")
     parser.add_argument('-t', '--tests', metavar='A', default='tests', type=str,
                         help="partial name or path to test file or directory")
