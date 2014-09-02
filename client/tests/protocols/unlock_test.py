@@ -187,16 +187,28 @@ class LockTest(unittest.TestCase):
         self.assignment.add_test(self.test)
 
     def testWithNoHashKey(self):
+        # TestCase starts as unlocked.
+        self.mock_case.__getitem__.return_value = False
         self.proto.on_start()
         self.assertTrue(self.mock_case.on_lock.called)
         self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
         self.assertNotEqual('', self.assignment['hash_key'])
 
     def testWithHashKey(self):
+        # TestCase starts as unlocked.
+        self.mock_case.__getitem__.return_value = False
         hash_key = self.proto._gen_hash_key()
         self.assignment['hash_key'] = hash_key
         self.proto.on_start()
         self.assertTrue(self.mock_case.on_lock.called)
         self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
+        self.assertEqual(hash_key, self.assignment['hash_key'])
+
+    def testAlreadyLocked(self):
+        self.mock_case.__getitem__.return_value = True
+        hash_key = self.proto._gen_hash_key()
+        self.assignment['hash_key'] = hash_key
+        self.proto.on_start()
+        self.assertFalse(self.mock_case.on_lock.called)
         self.assertEqual(hash_key, self.assignment['hash_key'])
 

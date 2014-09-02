@@ -160,7 +160,7 @@ def dump_tests(test_dir, assignment):
     """
     # TODO(albert): prettyify string formatting by using triple quotes.
     # TODO(albert): verify that assign_copy is serializable into json.
-    info = json.dumps(assignment.serialize(), indent=2)
+    info = utils.prettyformat(assignment.serialize())
     with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
         f.write('info = ' + info)
 
@@ -221,7 +221,7 @@ def parse_input():
                         help="print more output")
     parser.add_argument('-i', '--interactive', action='store_true',
                         help="toggles interactive mode")
-    parser.add_argument('-l', '--lock', default='tests', type=str,
+    parser.add_argument('-l', '--lock', type=str,
                         help="partial name or path to test file or directory to lock")
     return parser.parse_args()
 
