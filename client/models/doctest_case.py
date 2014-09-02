@@ -127,6 +127,15 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
                 line.locked = False
         self['locked'] = False
 
+    def on_lock(self, hash_fn):
+        """Implements the UnlockTestCase interface."""
+        for i, line in enumerate(self.lines):
+            if isinstance(line, _Answer):
+                if not line.locked:
+                    line.output = hash_fn(line.output)
+                    line.locked = True
+        self['locked'] = True
+
     #################
     # Serialization #
     #################
