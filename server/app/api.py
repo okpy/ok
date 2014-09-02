@@ -334,7 +334,7 @@ class SubmissionAPI(MethodView, APIResource):
 
     web_args = {
         'assignment': Arg(str),
-        'messages': Arg(str),
+        'messages': Arg(None),
     }
 
 
