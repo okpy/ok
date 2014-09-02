@@ -1,4 +1,6 @@
 from models import core
+from protocols import file_contents
+from protocols import protocol
 from unittest import mock
 import exceptions
 import ok
@@ -12,9 +14,9 @@ INVALID = os.path.join(DEMO, 'invalid')
 VALID = os.path.join(DEMO, 'valid')
 TMP = os.path.join(DEMO, 'tmp')
 
-class TestProtocol(ok.Protocol):
+class TestProtocol(protocol.Protocol):
     def __init__(self, args, src_files):
-        ok.Protocol.__init__(args, src_files)
+        protocol.Protocol.__init__(args, src_files)
         self.called_start = 0
         self.called_interact = 0
 
@@ -163,7 +165,7 @@ class TestFileContentsProtocol(unittest.TestCase):
         self.assignment = mock.MagicMock()
         self.assignment.__getitem__.return_value =  [self.SRC_FILE]
         self.logger = mock.Mock()
-        self.proto = ok.FileContents(cmd_line_args, self.assignment, self.logger)
+        self.proto = file_contents.FileContents(cmd_line_args, self.assignment, self.logger)
 
     def test_on_start(self):
         contents = self.proto.on_start()

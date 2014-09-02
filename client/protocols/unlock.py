@@ -7,10 +7,10 @@ compatible with the UnlockProtocol.
 
 from models import core
 from models import serialize
-import hmac
-import ok
+from protocols import protocol
 import random
 import readline
+import hmac
 import string
 import utils
 
@@ -55,7 +55,7 @@ class UnlockTestCase(core.TestCase):
 # Locking Protocol #
 ####################
 
-class LockProtocol(ok.Protocol):
+class LockProtocol(protocol.Protocol):
     """Locking protocol that wraps that mechanism."""
 
     name = 'lock'
@@ -78,6 +78,7 @@ class LockProtocol(ok.Protocol):
     def _hash_fn(self, x):
         return hmac.new(self.assignment['hash_key'].encode('utf-8'),
                         x.encode('utf-8')).digest()
+
 def lock(test, hash_fn):
     for suite in test['suites']:
         for case in suite:
@@ -88,7 +89,7 @@ def lock(test, hash_fn):
 # UNLOCKING PROTOCOL #
 ######################
 
-class UnlockProtocol(ok.Protocol):
+class UnlockProtocol(protocol.Protocol):
     """Unlocking protocol that wraps that mechanism."""
 
     name = 'unlock'
@@ -97,6 +98,8 @@ class UnlockProtocol(ok.Protocol):
         """
         Responsible for unlocking each test.
         """
+        if not self.args.unlock:
+            return
         print('At each "{}",'.format(UnlockConsole.PROMPT)
               + ' type in what you would expect the output to be.')
         print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))

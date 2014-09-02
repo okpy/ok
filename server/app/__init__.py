@@ -3,6 +3,7 @@ Initialize Flask app.
 """
 
 from flask import Flask
+
 import os
 from werkzeug.debug import DebuggedApplication
 
@@ -13,6 +14,7 @@ from app import constants
 from app import utils
 from app import api
 from app import auth
+
 
 app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')

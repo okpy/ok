@@ -13,14 +13,13 @@ import zipfile
 import os
 import shutil
 
-REQUIRED_FILES = ["auth", "config", "utils"]
-REQUIRED_FOLDERS = ["models"]
+REQUIRED_FILES = ["__main__", "ok", "auth", "config", "utils", "exceptions"]
+REQUIRED_FOLDERS = ["models", "sanction"]
 
 # Make the staging_dir
 os.mkdir(STAGING_DIR)
 
-# Move ok.py and call it __main__.py
-shutil.copyfile("ok.py", os.path.join(STAGING_DIR ,"__main__.py"))
+shutil.copyfile("ok.py", os.path.join(STAGING_DIR ,"ok.py"))
 
 # Move all required files/folders in client/
 
