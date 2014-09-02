@@ -59,12 +59,13 @@ def _apply_filter(query, model, arg, value):
     field = getattr(model, arg, None)
     if not field:
         # Silently swallow for now
+        # TODO(martinis) cause an error
         return query
 
     # Only equals for now
     return query.filter(field == value)
 
-def filter_query(query, args, model, allowed=None):
+def filter_query(query, args, model):
     """
     Applies the filters in |args| to |query|.
     |args| is a dictionary of key to value, to be used to filter the query.
@@ -73,7 +74,6 @@ def filter_query(query, args, model, allowed=None):
     Returns a modified query with the appropriate filters.
     """
     for arg, value in args.iteritems():
-        if not allowed or arg in allowed:
-            query = _apply_filter(query, model, arg, value)
+        query = _apply_filter(query, model, arg, value)
 
     return query
