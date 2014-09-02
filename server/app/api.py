@@ -19,20 +19,21 @@ from app.utils import create_api_response, paginate, filter_query, create_zip
 
 from google.appengine.ext import db, ndb
 
-def KeyArg(klass):
-    return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]})
+def KeyArg(klass, **kwds):
+    return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]}, **kwds)
 
-def check_version(func):
-    @wraps(func)
-    def wrapped(*args, **kwargs):
-        if 'client_version' in request.args:
-            if request.args['client_version'] != app.config['CLIENT_VERSION']:
-                return create_api_response(403, "incorrect client version", {
-                    'supplied_version': request.args['client_version'],
-                    'correct_version': app.config['CLIENT_VERSION']
-                })
-        return func(*args, **kwargs)
-    return wrapped
+def KeyRepeatedArg(klass, **kwds):
+    def parse_list(key_list):
+        staff_lst = None
+        if isinstance(key_list, list):
+            staff_lst = key_list
+        else:
+            if ',' in key_list:
+                staff_lst = key_list.split(',')
+            else:
+                staff_lst = [key_list]
+        return [ndb.Key(klass, x) for x in staff_lst]
+    return Arg(None, use=parse_list, **kwds)
 
 class APIResource(object):
     """The base class for API resources.
@@ -40,12 +41,8 @@ class APIResource(object):
     Set the name and get_model for each subclass.
     """
 
-    @property
-    def request_json(self):
-        return request.json
-
     name = None
-    index_args = {}
+    web_args = {}
 
     @classmethod
     def get_model(cls):
@@ -56,7 +53,6 @@ class APIResource(object):
         raise NotImplementedError
 
     @handle_error
-    @check_version
     def get(self, key):
         """
         The GET HTTP method
@@ -76,7 +72,6 @@ class APIResource(object):
         return create_api_response(200, "", obj)
 
     @handle_error
-    @check_version
     def put(self, key):
         """
         The PUT HTTP method
@@ -96,7 +91,7 @@ class APIResource(object):
 
         blank_val = object()
         changed = False
-        for key, value in self.request_json.iteritems():
+        for key, value in self.parse_args(False).iteritems():
             old_val = getattr(obj, key, blank_val)
             if old_val == blank_val:
                 return create_api_response(400, "{} is not a valid field.".format(key))
@@ -110,18 +105,17 @@ class APIResource(object):
         return create_api_response(200, "", obj)
 
     @handle_error
-    @check_version
     def post(self):
         """
         The POST HTTP method
         """
-        post_dict = self.request_json
+        data = self.parse_args(False)
 
         need = Need('create')
         if not self.get_model().can(session['user'], need):
             return need.api_response()
 
-        entity, error_response = self.new_entity(post_dict)
+        entity, error_response = self.new_entity(data)
 
         if not error_response:
             return create_api_response(200, "success", {
@@ -141,7 +135,6 @@ class APIResource(object):
         return entity, None
 
     @handle_error
-    @check_version
     def delete(self, user_id):
         """
         The DELETE HTTP method
@@ -155,6 +148,12 @@ class APIResource(object):
         ent.key.delete()
         return create_api_response(200, "success", {})
 
+    def parse_args(self, index):
+        """
+        Parses the arguments to this API call.
+        |index| is whether or not this is an index call.
+        """
+        return {k:v for k,v in parser.parse(self.web_args).iteritems() if v}
 
     def index(self):
         """
@@ -169,9 +168,11 @@ class APIResource(object):
         if not result:
             return need.api_response()
 
-        args = parser.parse(self.index_args)
-        args = {k:v for k,v in args.iteritems() if v}
+        args = self.parse_args(True)
         query = filter_query(result, args, self.get_model())
+        created_prop = getattr(self.get_model(), 'created', None)
+        if not query.orders and created_prop:
+            query = query.order(created_prop)
 
         cursor = request.args.get('cursor', None)
         num_page = request.args.get('num_page', None)
@@ -204,7 +205,7 @@ class UserAPI(MethodView, APIResource):
         entity.put()
         return entity, None
 
-    index_args = {
+    web_args = {
         'first_name': Arg(str),
         'last_name': Arg(str),
         'email': Arg(str),
@@ -221,12 +222,17 @@ class AssignmentAPI(MethodView, APIResource):
     def get_model(cls):
         return models.Assignment
 
-    index_args = {
+    web_args = {
         'name': Arg(str),
         'points': Arg(float),
-        'creator': KeyArg('User'),
         'course': KeyArg('Course'),
     }
+
+    def parse_args(self, is_index):
+        data = super(AssignmentAPI, self).parse_args(is_index)
+        if not is_index:
+            data['creator'] = session['user'].key
+        return data
 
 
 class SubmitNDBImplementation(object):
@@ -253,7 +259,6 @@ class SubmissionAPI(MethodView, APIResource):
     post_fields = ['assignment', 'messages']
 
     @handle_error
-    @check_version
     def get(self, key):
         """
         The GET HTTP method
@@ -300,27 +305,18 @@ class SubmissionAPI(MethodView, APIResource):
         })
 
     @handle_error
-    @check_version
     def post(self):
-        if 'submitter' in request.json:
-            del request.json['submitter']
-        for key in request.json:
-            if key not in self.post_fields:
-                return create_api_response(400, 'Unknown field %s' % key)
-        for field in self.post_fields:
-            if field not in request.json:
-                return create_api_response(
-                    400, 'Missing required field %s' % field)
+        data = self.parse_args(False)
 
         try:
-            return self.submit(session['user'], request.json['assignment'],
-                               request.json['messages'])
+            return self.submit(session['user'], data['assignment'],
+                               data['messages'])
         except BadValueError as e:
             return create_api_response(400, e.message, {})
 
-    index_args = {
-        'assignment': KeyArg('Assignment'),
-        'submitter': KeyArg('User'),
+    web_args = {
+        'assignment': Arg(str),
+        'messages': Arg(None),
     }
 
 
@@ -331,8 +327,28 @@ class VersionAPI(APIResource, MethodView):
     def get_model(cls):
         return models.Version
 
-    @property
-    def request_json(self):
-        post_dict = request.json
-        post_dict['file_data'] = bytes(post_dict['file_data'])
-        return post_dict
+    web_args = {
+        'file_data': Arg(bytes),
+        'name': Arg(str),
+        'version': Arg(str),
+    }
+
+class CourseAPI(APIResource, MethodView):
+    name = "Course"
+
+    @classmethod
+    def get_model(cls):
+        return models.Course
+
+    def parse_args(self, is_index):
+        data = super(CourseAPI, self).parse_args(is_index)
+        if not is_index:
+            data['creator'] = session['user'].key
+        return data
+
+    web_args = {
+        'staff': KeyRepeatedArg('User'),
+        'name': Arg(str),
+        'offering': Arg(str),
+        'institution': Arg(str),
+    }

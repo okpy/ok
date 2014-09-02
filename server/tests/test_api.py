@@ -252,13 +252,16 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
     num = 1
     access_token = 'dummy_admin'
 
-    @classmethod
-    def get_basic_instance(cls, mutate=True):
+    def setUp(self):
+        super(AssignmentAPITest, self).setUp()
+        self.course = models.Course(name="test")
+
+    def get_basic_instance(self, mutate=True):
         name = 'proj'
         if mutate:
-            name += str(cls.num)
-            cls.num += 1
-        rval = models.Assignment(name=name, points=3)
+            name += str(self.num)
+            self.num += 1
+        rval = models.Assignment(name=name, points=3, course=self.course.key)
         return rval
 
 class SubmissionAPITest(APITest, APIBaseTestCase):
@@ -292,7 +295,7 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         data['assignment'] = kwds.pop('assignment', self.assignment_name)
         del data['created']
 
-        self.post_json('/{}/new'.format(self.name),
+        self.post_json('/{}'.format(self.name),
                        data=data, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:
@@ -308,6 +311,33 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         self.post_entity(inst)
         self.assertStatusCode(400)
         del self.assignment_name
+
+class CourseAPITest(APITest, APIBaseTestCase):
+    model = models.Course
+    name = 'course'
+    num = 1
+    access_token = 'dummy_admin'
+
+    def get_basic_instance(self, mutate=True):
+        name = 'testcourse'
+        if mutate:
+            name += str(self.num)
+            self.num += 1
+        rval = self.model(name=name)
+        return rval
+
+class VersionAPITest(APITest, APIBaseTestCase):
+    model = models.Version
+    name = 'version'
+    num = 1
+    access_token = 'dummy_admin'
+
+    def get_basic_instance(self, mutate=True):
+        name = 'testversion'
+        if mutate:
+            name += str(self.num)
+            self.num += 1
+        return self.model(name=name, file_data=b'aaabb', version='1.0.0')
 
 
 if __name__ == '__main__':

@@ -26,7 +26,10 @@ class JSONEncoder(old_json):
 
     def default(self, obj): #pylint: disable=E0202
         if isinstance(obj, ndb.Key):
-            return obj.get().to_json() # TODO(martinis) make this async
+            got = obj.get()
+            if not got:
+                return None
+            return got.to_json() # TODO(martinis) make this async
         elif isinstance(obj, datetime.datetime):
             obj = convert_timezone(obj)
             return str(obj)
@@ -205,7 +208,7 @@ class Course(Base):
     institution = ndb.StringProperty() # E.g., 'UC Berkeley'
     name = ndb.StringProperty() # E.g., 'CS 61A'
     offering = ndb.StringProperty()  # E.g., 'Fall 2014'
-    creator = ndb.StructuredProperty(User)
+    creator = ndb.KeyProperty(User)
     staff = ndb.KeyProperty(User, repeated=True)
 
     @classmethod
@@ -213,6 +216,8 @@ class Course(Base):
         action = need.action
         if action == "get":
             return True
+        elif action == "index":
+            return query
         elif action in ("create", "delete"):
             return user.is_admin
         elif action == "modify":
@@ -294,10 +299,12 @@ class Version(Base):
     version = ndb.StringProperty()
 
     @classmethod
-    def _can(cls, user, need, obj=None):
+    def _can(cls, user, need, obj=None, query=None):
         action = need.action 
 
         if action == "delete":
             return False
-        return True
+        if action == "index":
+            return query
+        return user.is_admin
 

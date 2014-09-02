@@ -44,7 +44,15 @@
         <div class="navbar-collapse collapse">
           <a id="submissions-button" type="button" class="btn btn-default navbar-btn" ui-sref="submission.list">Submissions</a>
           <a id="assignments-button" type="button" class="btn btn-default navbar-btn" ui-sref="assignment.list">Assignments</a>
-          <a id="login-button" type="button" class="btn btn-default navbar-btn pull-right" href={{users_link}}>{{users_title}}</a>
+          <a id="courses-button" type="button" class="btn btn-default navbar-btn" ui-sref="course.list">Courses</a>
+          <div class="pull-right">
+            {% if user %}
+              <span class="navbar-text">
+                Welcome {{user.first_name | default(user.email, true)}}
+              </span>
+            {% endif %}
+            <a id="login-button" type="button" class="btn btn-default navbar-btn" href={{users_link}}>{{users_title}}</a>
+          </div>
         </div><!--/.navbar-collapse -->
       </div>
     </div>
