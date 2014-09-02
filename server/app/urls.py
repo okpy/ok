@@ -23,7 +23,7 @@ def index():
         params['users_link'] = users.create_login_url('/')
         params['users_title'] = "Sign In"
     else:
-        logging.info("User is %s. Admin is %s." % (user, user.is_admin))
+        logging.info("User is %s." % user.email())
         params["user"] = {'email': user.email()}
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
