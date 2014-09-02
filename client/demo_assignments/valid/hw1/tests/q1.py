@@ -1,12 +1,11 @@
-"""Tests for Q1: square"""
-
 test = {
-  # Optional information for each type of test case to set up, specific
-  # to this test (q1)
-  'names': ['q1'],
-  'points': 3,
+  'name': 'q1',
   'params': {
     'doctest': {
+      'cache': """
+      # Cache code for doctest-style TestCases. This code is only
+      # evaluated once, before any test cases are evaluated.
+      """,
       'setup': """
       # Setup code for doctest-style TestCases. This setup code is
       # evaluated before every doctest testcase.
@@ -14,41 +13,36 @@ test = {
       'teardown': """
       # Teardown code for doctest-style TestCases. This code is
       # evaluated after every doctest testcase, even ones that fail.
-      """,
-      'cache': """
-      # Cache code for doctest-style TestCases. This code is only
-      # evaluated once, before any test cases are evaluated.
-      """,
-    },
+      """
+    }
   },
+  'points': 3,
   'suites': [
     [
       {
-        'type': 'concept',
-        'question': """
-        What is the domain and range of the square function?
-        """,
-        'answer': """
-        Domain is numbers. Range is numbers
-        """,
+        'answer': 'Domain is numbers. Range is numbers',
         'choices': [
           'Domain is numbers. Range is numbers',
           'Domain is numbers. Range is strings',
           'Domain is strings. Range is numbers',
-          'Domain is strings. Range is strings',
+          'Domain is strings. Range is strings'
         ],
+        'locked': False,
+        'question': 'What is the domain and range of the square function?',
+        'type': 'concept'
       },
       {
-        'type': 'doctest',
+        'locked': False,
         'test': """
         >>> square(3)
         9
         """,
-      },
+        'type': 'doctest'
+      }
     ],
     [
       {
-        'type': 'doctest',
+        'locked': False,
         'test': """
         >>> square(-2)
         4
@@ -57,18 +51,20 @@ test = {
         # choice: 2
         # choice: None
         """,
+        'type': 'doctest'
       },
       {
-        'type': 'doctest',
+        'locked': False,
+        'teardown': """
+        print('Optional Teardown code for the testcase goes here')
+        """,
         'test': """
         >>> square(0)
         0
         # explanation: Squaring zero
         """,
-        'teardown': """
-        print('Optional Teardown code for the testcase goes here')
-        """
-      },
-    ],
-  ],
+        'type': 'doctest'
+      }
+    ]
+  ]
 }

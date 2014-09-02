@@ -32,7 +32,6 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
         self['question'] = utils.dedent(self['question'])
         self['answer'] = utils.dedent(self['answer'])
 
-
     ######################################
     # Protocol interface implementations #
     ######################################
