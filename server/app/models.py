@@ -18,7 +18,6 @@ from google.appengine.ext import db, ndb
 
 BadValueError = db.BadValueError
 
-
 class JSONEncoder(old_json):
     """
     Wrapper class to try calling an object's to_dict() method. This allows
@@ -29,6 +28,7 @@ class JSONEncoder(old_json):
         if isinstance(obj, ndb.Key):
             return obj.get().to_json() # TODO(martinis) make this async
         elif isinstance(obj, datetime.datetime):
+            obj = convert_timezone(obj)
             return str(obj)
         if isinstance(obj, ndb.Model):
             return obj.to_json()
@@ -36,6 +36,10 @@ class JSONEncoder(old_json):
 
 
 app.json_encoder = JSONEncoder
+
+def convert_timezone(utc_dt):
+    delta = datetime.timedelta(hours = -7)
+    return (datetime.datetime.combine(utc_dt.date(),utc_dt.time()) + delta)
 
 
 class Base(ndb.Model):
