@@ -24,6 +24,7 @@
     "modernizr": "~2.8.3",
     "bootstrap": "~3.2.0",
     "angular-resource": "~1.2.21",
+    "angular-ui-router": "~0.2.11",
     "angular-route": "~1.2.21",
     "angular-busy": "~4.1.0",
     "underscore": "~1.6.0",
