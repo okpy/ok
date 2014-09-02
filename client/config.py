@@ -17,5 +17,6 @@ protocols = OrderedDict([
     ('protocol', protocols.protocol.Protocol),
     ('file_contents', protocols.file_contents.FileContents),
     ('unlock', protocols.unlock.UnlockProtocol),
+    ('lock', protocols.unlock.LockProtocol),
     ('grading', protocols.grading.GradingProtocol),
 ])

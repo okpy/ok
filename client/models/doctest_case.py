@@ -32,7 +32,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     }
     OPTIONAL = {
         'test': serialize.STR,
-        'locked': serialize.BOOL_TRUE,
+        'locked': serialize.BOOL_FALSE,
         'teardown': serialize.STR,
     }
 
