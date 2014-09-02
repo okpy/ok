@@ -38,11 +38,9 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def on_grade(self, logger, verbose, interact):
         """Implements the GradedTestCase interface."""
-        if verbose:
-            utils.underline('Concept question', line='-')
-            print(self['question'])
-            print('A: ' + self['answer'])
-            print()
+        print('Q: ' + self['question'])
+        print('A: ' + self['answer'])
+        print()
         return False
 
     def should_grade(self):

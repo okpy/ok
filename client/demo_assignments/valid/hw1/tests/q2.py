@@ -11,12 +11,14 @@ test = {
           'Domain is strings. Range is numbers',
           'Domain is strings. Range is strings'
         ],
+        'locked': False,
         'question': 'What is the domain and range of the double function?',
         'type': 'concept'
       }
     ],
     [
       {
+        'locked': False,
         'test': """
         >>> double(3)
         6

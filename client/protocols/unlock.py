@@ -31,7 +31,7 @@ class UnlockTestCase(core.TestCase):
     """
 
     OPTIONAL = {
-        'locked': serialize.BOOL_TRUE,
+        'locked': serialize.BOOL_FALSE,
     }
 
     def on_unlock(self, logger, interact_fn):

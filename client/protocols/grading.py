@@ -63,9 +63,9 @@ class GradingProtocol(protocol.Protocol):
         total_cases = test.num_cases
         if total_cases > 0:
             print('Passed: {} ({}%)'.format(total_passed,
-                                            total_passed / total_cases))
+                                            100 * total_passed / total_cases))
             print('Locked: {} ({}%)'.format(test.num_locked,
-                                            test.num_locked / total_cases))
+                                            100 * test.num_locked / total_cases))
         print()
 
 def grade(test, logger, interactive=False, verbose=False):
