@@ -94,7 +94,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         'messages': messages,
     }
     try:
-        address = 'https://' + server + '/api/v1/' + endpoint
+        address = 'http://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
