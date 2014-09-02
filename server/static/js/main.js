@@ -65,7 +65,7 @@ app.factory('Submission', ['$resource',
         query: {
           isArray: true,
           transformResponse: function(data) {
-            return JSON.parse(data).data;
+            return JSON.parse(data).data.results;
           }
         },
         get: {
@@ -96,7 +96,7 @@ app.factory('Assignment', ['$resource',
         query: {
           isArray: true,
           transformResponse: function(data) {
-            return JSON.parse(data).data;
+            return JSON.parse(data).data.results;
           }
         },
         get: {
