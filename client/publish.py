@@ -1,55 +1,59 @@
 #! /usr/bin/env python3
 
+"""
+This module is responsible for publishing ok. This will put all of the
+required files (as determined by config.py) into a separate directory
+and then make a zipfile called "ok" that can be distributed to students.
+"""
+
 STAGING_DIR = "./staging"
 
 from config import protocols
-import subprocess
 import zipfile
 import os
+import shutil
 
-cmd = "mkdir " + STAGING_DIR
-
-required_files = ["ok", "auth", "config", "utils"]
-required_folders = ["models"]
-
-def run_cmd(cmd):
-    """
-    Runs a shell command in the current bash environment
-    """
-    print(cmd)
-    return subprocess.Popen(cmd.split())
+REQUIRED_FILES = ["auth", "config", "utils"]
+REQUIRED_FOLDERS = ["models"]
 
 # Make the staging_dir
-run_cmd(cmd)
+os.mkdir(STAGING_DIR)
+
+# Move ok.py and call it __main__.py
+shutil.copyfile("ok.py", STAGING_DIR + "/__main__.py")
 
 # Move all required files/folders in client/
 
-for filename in required_files:
-    cp_cmd = "cp {0}.py {1}".format(filename, STAGING_DIR)
-    run_cmd(cp_cmd)
+for filename in REQUIRED_FILES:
+    fullname = filename + ".py"
+    shutil.copyfile(fullname, STAGING_DIR + "/" + fullname)
 
-for folder in required_folders:
-    cp_cmd = "cp -r {0} {1}".format(folder, STAGING_DIR)
-    run_cmd(cp_cmd)
+for folder in REQUIRED_FOLDERS:
+    shutil.copytree(folder, STAGING_DIR + "/" + folder)
 
 # Move all required protocols in client/protocols
 
-run_cmd("mkdir {0}/protocols".format(STAGING_DIR))
-run_cmd("cp protocols/__init__.py {0}/protocols/".format(STAGING_DIR))
+os.mkdir(STAGING_DIR + "/protocols")
+shutil.copyfile("protocols/__init__.py", STAGING_DIR + "/protocols/__init__.py")
 
 for protocol in protocols:
-    cp_cmd = "cp protocols/{0}.py {1}/protocols/".format(protocol, STAGING_DIR)
-    run_cmd(cp_cmd)
+    src = "protocols/{0}.py".format(protocol)
+    dst = "{0}/protocols/{1}.py".format(STAGING_DIR, protocol)
+    shutil.copyfile(src, dst)
 
 # Zip up the files
 
-# zipdir function taken from:
-# https://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory-in-python
-def zipdir(path, zipf):
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            zipf.write(os.path.join(root, file))
-
 zipf = zipfile.ZipFile('ok', 'w')
-zipdir(STAGING_DIR, zipf)
+
+for root, dirs, files in os.walk(STAGING_DIR):
+    os.chdir(STAGING_DIR)
+    for filename in files:
+        fullname = os.path.join(root, filename)
+        fullname = fullname.replace(STAGING_DIR[1:], "")
+        zipf.write(fullname)
+    os.chdir("..")
+
 zipf.close()
+
+# Clean up staging dir
+shutil.rmtree(STAGING_DIR)
