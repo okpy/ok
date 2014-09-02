@@ -53,18 +53,6 @@ def check_version(func):
     def wrapped(*args, **kwargs):
         if 'client_version' in request.args:
             if request.args['client_version'] != app.config['CLIENT_VERSION']:
-                return create_api_response(403, "incorrect client version", {
-                    'supplied_version': request.args['client_version'],
-                    'correct_version': app.config['CLIENT_VERSION']
-                })
-        return func(*args, **kwargs)
-    return wrapped
-
-def check_version(func):
-    @wraps(func)
-    def wrapped(*args, **kwargs):
-        if 'client_version' in request.args:
-            if request.args['client_version'] != app.config['CLIENT_VERSION']:
                 return utils.create_api_response(403, "incorrect client version", {
                     'supplied_version': request.args['client_version'],
                     'correct_version': app.config['CLIENT_VERSION']
