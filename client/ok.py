@@ -169,7 +169,7 @@ def dump_tests(test_dir, assignment):
     # TODO(albert): might need to delete obsolete test files too.
     # TODO(albert): verify that test_json is serializable into json.
     for test in assignment.tests:
-        test_json = json.dumps(test.serialize(), indent=2)
+        test_json = utils.prettyformat(test.serialize())
         with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
             f.write('test = ' + test_json)
 
