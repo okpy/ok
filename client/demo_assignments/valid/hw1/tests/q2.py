@@ -3,12 +3,8 @@
 test = {
   # Optional information for each type of test case to set up, specific
   # to this test (q2)
-  'setup': {
-    'doctest': """
-    # Setup code for doctest-style TestCases. This setup code is only
-    # run once, before any of the testcases are evaluated.
-    """,
-  },
+  'names': ['q2'],
+  'points': 1,
   'suites': [
     [
       {
@@ -20,6 +16,7 @@ test = {
         Domain is numbers. Range is numbers
         """,
         'choices': [
+          'Domain is numbers. Range is numbers',
           'Domain is numbers. Range is strings',
           'Domain is strings. Range is numbers',
           'Domain is strings. Range is strings',

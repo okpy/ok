@@ -3,6 +3,8 @@
 test = {
   # Optional information for each type of test case to set up, specific
   # to this test (q1)
+  'names': ['q1'],
+  'points': 3,
   'params': {
     'doctest': {
       'setup': """
@@ -30,6 +32,7 @@ test = {
         Domain is numbers. Range is numbers
         """,
         'choices': [
+          'Domain is numbers. Range is numbers',
           'Domain is numbers. Range is strings',
           'Domain is strings. Range is numbers',
           'Domain is strings. Range is strings',
