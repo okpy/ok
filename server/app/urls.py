@@ -65,4 +65,5 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
 register_api(api.UserAPI, 'user_api', '/user', pk_type='')
 register_api(api.AssignmentAPI, 'assignment_api', '/assignment')
 register_api(api.SubmissionAPI, 'submission_api', '/submission')
+register_api(api.VersionAPI, 'version_api', '/version')
 
