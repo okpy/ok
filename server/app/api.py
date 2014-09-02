@@ -35,18 +35,6 @@ def KeyRepeatedArg(klass, **kwds):
         return [ndb.Key(klass, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
 
-def check_version(func):
-    @wraps(func)
-    def wrapped(*args, **kwargs):
-        if 'client_version' in request.args:
-            if request.args['client_version'] != app.config['CLIENT_VERSION']:
-                return create_api_response(403, "incorrect client version", {
-                    'supplied_version': request.args['client_version'],
-                    'correct_version': app.config['CLIENT_VERSION']
-                })
-        return func(*args, **kwargs)
-    return wrapped
-
 class APIResource(object):
     """The base class for API resources.
 
@@ -65,7 +53,6 @@ class APIResource(object):
         raise NotImplementedError
 
     @handle_error
-    @check_version
     def get(self, key):
         """
         The GET HTTP method
@@ -85,7 +72,6 @@ class APIResource(object):
         return create_api_response(200, "", obj)
 
     @handle_error
-    @check_version
     def put(self, key):
         """
         The PUT HTTP method
@@ -119,7 +105,6 @@ class APIResource(object):
         return create_api_response(200, "", obj)
 
     @handle_error
-    @check_version
     def post(self):
         """
         The POST HTTP method
@@ -150,7 +135,6 @@ class APIResource(object):
         return entity, None
 
     @handle_error
-    @check_version
     def delete(self, user_id):
         """
         The DELETE HTTP method
@@ -275,7 +259,6 @@ class SubmissionAPI(MethodView, APIResource):
     post_fields = ['assignment', 'messages']
 
     @handle_error
-    @check_version
     def get(self, key):
         """
         The GET HTTP method
@@ -322,7 +305,6 @@ class SubmissionAPI(MethodView, APIResource):
         })
 
     @handle_error
-    @check_version
     def post(self):
         data = self.parse_args(False)
 

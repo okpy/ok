@@ -7,6 +7,7 @@ from google.appengine.api import users
 from flask import redirect, request, abort
 
 from app import utils
+from app import app
 
 import traceback
 
@@ -46,3 +47,16 @@ def admin_required(func):
     decorated.login_required = True
     decorated.admin_required = True
     return decorated
+
+def check_version(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if 'client_version' in request.args:
+            if request.args['client_version'] != app.config['CLIENT_VERSION']:
+                return utils.create_api_response(403, "incorrect client version", {
+                    'supplied_version': request.args['client_version'],
+                    'correct_version': app.config['CLIENT_VERSION']
+                })
+        return func(*args, **kwargs)
+    return wrapped
+

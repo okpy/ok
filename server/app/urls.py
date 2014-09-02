@@ -13,6 +13,7 @@ from app import api
 from app import auth
 from app import models
 from app.constants import API_PREFIX
+from app.decorators import check_version
 
 @app.route("/")
 def index():
@@ -47,6 +48,7 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
     view = view.as_view(endpoint)
 
     @wraps(view)
+    @check_version
     def wrapped(*args, **kwds):
         user = auth.authenticate()
         if not isinstance(user, models.User):
