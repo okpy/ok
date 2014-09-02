@@ -48,6 +48,7 @@ import os
 import sys
 import utils
 
+
 def send_to_server(messages, assignment, server, endpoint='submission/new'):
     """Send messages to server, along with user authentication."""
     data = {
@@ -55,7 +56,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         'messages': messages,
     }
     try:
-        address = 'https://' + server + '/api/v1/' + endpoint
+        address = 'http://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
@@ -68,7 +69,11 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
     except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
         response = ex.read().decode('utf-8')
-        message = json.loads(response)['message']
+        response_json = json.loads(response)
+        if response_json['status'] == 403:
+            version = response_json['data']['correct_version']
+            #TODO: handle updating client here
+        message = response_json['message']
         indented = '\n'.join('\t' + line for line in message.split('\n'))
         print(indented)
         return {}
