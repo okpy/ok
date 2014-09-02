@@ -18,7 +18,6 @@ from google.appengine.ext import db, ndb
 
 BadValueError = db.BadValueError
 
-
 class JSONEncoder(old_json):
     """
     Wrapper class to try calling an object's to_dict() method. This allows
@@ -27,8 +26,9 @@ class JSONEncoder(old_json):
 
     def default(self, obj): #pylint: disable=E0202
         if isinstance(obj, ndb.Key):
-            return obj.id()
+            return obj.get().to_json() # TODO(martinis) make this async
         elif isinstance(obj, datetime.datetime):
+            obj = convert_timezone(obj)
             return str(obj)
         if isinstance(obj, ndb.Model):
             return obj.to_json()
@@ -36,6 +36,10 @@ class JSONEncoder(old_json):
 
 
 app.json_encoder = JSONEncoder
+
+def convert_timezone(utc_dt):
+    delta = datetime.timedelta(hours = -7)
+    return (datetime.datetime.combine(utc_dt.date(),utc_dt.time()) + delta)
 
 
 class Base(ndb.Model):
@@ -51,6 +55,8 @@ class Base(ndb.Model):
     def to_json(self):
         """Converts this model to a json dictionary."""
         result = self.to_dict()
+        if self.key:
+            result['id'] = self.key.id()
         for key, value in result.items():
             try:
                 new_value = app.json_encoder().default(value)
@@ -167,6 +173,7 @@ class AnonymousUser(User):
         Disable puts for Anonymous Users
         """
         pass
+
 
 AnonymousUser = AnonymousUser()
 

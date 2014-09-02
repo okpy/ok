@@ -1,48 +1,70 @@
 <!DOCTYPE html>
-<html lang="en" class="no-js">
-{% set bootstrap_version = '3.0.0' %}
-{% set modernizer_version = '2.6.2' %}
-{% set jquery_version = '1.9.1' %}
-{% set parsley_version = '1.1.16' %}
-{% set awesome_version = '4.0.1' %}
-{% set bootswatch_version = '3.0.0' %}
-{% set bootswatch_theme = 'cyborg' %}
+<html class="no-js" ng-app="okpy">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                padding-top: 50px;
+                padding-bottom: 20px;
+            }
+        </style>
+        <link href="static/vendor/bootstrap/dist/css/bootstrap.css" rel="stylesheet"></link>
+        <link href="static/vendor/angular-busy/dist/angular-busy.css" rel="stylesheet"></link>
+        <link href="static/css/main.css" rel="stylesheet"></link>
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
-    <title>{% block title%}Flask on App Engine{% endblock %}</title>
-    <link href="//netdna.bootstrapcdn.com/bootstrap/{{ bootstrap_version }}/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="//netdna.bootstrapcdn.com/font-awesome/{{ awesome_version }}/css/font-awesome.min.css" rel="stylesheet" >
-    <link href="//netdna.bootstrapcdn.com/bootswatch/{{ bootswatch_version }}/{{ bootswatch_theme }}/bootstrap.min.css" rel="stylesheet" >
-    <style>  </style> <!-- Bootstrap -->
-    <link href="/static/css/main.css" rel="stylesheet" />
-    <link rel="shortcut icon" href="/static/img/favicon.ico" />
-    {% block style_block %}{# page-specific CSS #}{% endblock %}
-    <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/{{ modernizer_version }}/modernizr.min.js"></script>{# Modernizr must be here, above body tag. #}
-    {% block head_script %}{# defer-incapable JS block #}{% endblock %}
-</head>
-<body>
-
-        {% include 'includes/nav.html' %} {# pull in navbar #}
-
-    <div class="container" id="maincontent">
-        {% include 'includes/flash_message.html' %} {# page-level feedback notices #}
-        <div id="body_content">
-            {% block content %}{# main content area #}{% endblock %}
+        <script src="static/vendor/modernizr/modernizr.js"></script>
+        <script src="static/vendor/angular/angular.js"></script>
+        <script src="static/vendor/angular-resource/angular-resource.js"></script>
+        <script src="static/vendor/underscore/underscore.js"></script>
+        <script src="static/vendor/angular-ui-router/release/angular-ui-router.js"></script>
+        <script src="static/vendor/angular-busy/dist/angular-busy.js"></script>
+        <script src="static/vendor/angular-animate/angular-animate.js"></script>
+        <script src="static/vendor/moment/moment.js"></script>
+        <base href="/">
+    </head>
+    <body ng-cloak class="ng-cloak">
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" ui-sref="submission">ok.py</a>
         </div>
-    </div><!-- /container -->
-    <footer>
-        <div id="footer" class="container">
-            {% block footer %}{% endblock %}
-        </div><!-- /footer -->
-    </footer>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/{{ jquery_version }}/jquery.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/{{ bootstrap_version }}/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/parsley.js/{{ parsley_version }}/parsley-standalone.min.js"></script>
-    <script src="/static/js/main.js"></script>
-    {% block tail_script %}{# defer-capable JS block #}{% endblock %}
-    {{ profiler_includes|safe }}
-</body>
+        <div class="navbar-collapse collapse">
+          <a id="submissions-button" type="button" class="btn btn-default navbar-btn" ui-sref="submission.list">Submissions</a>
+          <a id="assignments-button" type="button" class="btn btn-default navbar-btn" ui-sref="assignment.list">Assignments</a>
+          <a id="login-button" type="button" class="btn btn-default navbar-btn pull-right" href={{users_link}}>{{users_title}}</a>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </div>
+    <div ui-view class="container navbar-bottom">
+    </div> <!-- /container -->        
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="static/vendor/jquery/dist/jquery.js"><\/script>')</script>
+
+        <script src="static/vendor/bootstrap/dist/js/bootstrap.js"></script>
+
+        <script src="static/js/main.js"></script>
+
+        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+        <script>
+            (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+            function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+            e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+            e.src='//www.google-analytics.com/analytics.js';
+            r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+            ga('create','UA-XXXXX-X');ga('send','pageview');
+        </script>
+    </body>
 </html>

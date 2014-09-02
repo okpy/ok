@@ -169,12 +169,6 @@ class APITest(object): #pylint: disable=no-init
         self.get('/{}/1'.format(self.name))
         self.assertStatusCode(404)
 
-    def test_get_non_admin(self):
-        """Tests that a get with a student access token fails."""
-        self.logout()
-        self.get('/{}/1'.format(self.name))
-        self.assertStatusCode(404)
-
     ## ENTITY POST ##
 
     def test_entity_create_basic(self):

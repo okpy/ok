@@ -6,3 +6,15 @@
 .nowrap { white-space: nowrap; }
 
 /* Your customizations here */
+
+.menu-button {
+  float: left;
+}
+
+.navbar-bottom {
+  margin-top: 20px;
+}
+
+h2 {
+  margin-top: 0px;
+}
