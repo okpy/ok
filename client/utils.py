@@ -61,6 +61,10 @@ class OutputLogger:
     def flush(self):
         self._current_stream.flush()
 
+    # TODO(albert): rewrite this to be cleaner.
+    def __getattr__(self, attr):
+        return getattr(self._current_stream, attr)
+
 def dedent(text):
     return textwrap.dedent(text).lstrip('\n').rstrip()
 

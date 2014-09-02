@@ -168,3 +168,35 @@ class UnlockTest(unittest.TestCase):
             self.makeUnlockTestCase()
         ])
         self.calls_unlock(self.mock_test, 2)
+
+class LockTest(unittest.TestCase):
+    def setUp(self):
+        self.args = mock.Mock()
+        self.args.lock = True
+        self.assignment = core.Assignment.deserialize({
+            'name': 'dummy',
+            'version': '1.0',
+        })
+        self.logger = mock.Mock()
+        self.proto = unlock.LockProtocol(self.args, self.assignment,
+                                         self.logger)
+
+        self.test = core.Test(names=['dummy'], points=1)
+        self.mock_case = mock.MagicMock(spec=unlock.UnlockTestCase)
+        self.test.add_suite([self.mock_case])
+        self.assignment.add_test(self.test)
+
+    def testWithNoHashKey(self):
+        self.proto.on_start()
+        self.assertTrue(self.mock_case.on_lock.called)
+        self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
+        self.assertNotEqual('', self.assignment['hash_key'])
+
+    def testWithHashKey(self):
+        hash_key = self.proto._gen_hash_key()
+        self.assignment['hash_key'] = hash_key
+        self.proto.on_start()
+        self.assertTrue(self.mock_case.on_lock.called)
+        self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
+        self.assertEqual(hash_key, self.assignment['hash_key'])
+
