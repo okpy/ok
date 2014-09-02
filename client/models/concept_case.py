@@ -27,6 +27,12 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
         'choices': serialize.SerializeArray(serialize.STR),
     }
 
+    def __init__(self, **fields):
+        super().__init__(**fields)
+        self['question'] = utils.dedent(self['question'])
+        self['answer'] = utils.dedent(self['answer'])
+
+
     ######################################
     # Protocol interface implementations #
     ######################################

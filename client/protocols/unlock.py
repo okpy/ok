@@ -208,7 +208,8 @@ class UnlockConsole(object):
     ###################
 
     def _verify(self, guess, lock):
-        return hmac.new(self._hash_key, guess.encode('utf-8')).digest() == lock
+        return hmac.new(self._hash_key.encode('utf-8'),
+                        guess.encode('utf-8')).digest() == lock
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
@@ -266,6 +267,7 @@ class UnlockConsole(object):
                 except (KeyboardInterrupt, EOFError):
                     pass
                 raise UnlockException
+            student_input.strip()
             if student_input in self.EXIT_INPUTS:
                 raise UnlockException
 

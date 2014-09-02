@@ -142,14 +142,9 @@ def _get_tests(directory, assignment, case_map):
 
 def _import_module(path):
     """Attempt to load the source file at path. Returns None on failure."""
-    try:
-        loader = importlib.machinery.SourceFileLoader(path, path)
-        test_module = loader.load_module()
-        return test_module
-    except Exception:
-        # TODO(albert): should probably fail fast, but with helpful
-        # error messages.
-        return None
+    loader = importlib.machinery.SourceFileLoader(path, path)
+    test_module = loader.load_module()
+    return test_module
 
 ######################
 # Assignment dumping #
@@ -206,11 +201,12 @@ def parse_input():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    try:
-        assignment = load_tests(args.tests, config.cases)
-    except Exception as ex:
-        print(ex)
-        sys.exit(1)
+    assignment = load_tests(args.tests, config.cases)
+    # try:
+    #     assignment = load_tests(args.tests, config.cases)
+    # except Exception as ex:
+    #     print(ex)
+    #     sys.exit(1)
 
     logger = sys.stdout = utils.OutputLogger()
 
