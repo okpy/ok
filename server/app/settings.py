@@ -7,11 +7,12 @@ Important: Place your keys in the secret_keys.py module,
 """
 
 from app import secret_keys
-from app.authenticator import GoogleAuthenticator
+from app.authenticator import GoogleAuthenticator, TestingAuthenticator
 
 GOOGLE_AUTHENTICATOR = GoogleAuthenticator()
+TESTING_AUTHENTICATOR = TestingAuthenticator()
 
-class Config: #pylint: disable=R0903
+class Config(object): #pylint: disable=R0903
     """
     Base config
     """
@@ -22,20 +23,13 @@ class Config: #pylint: disable=R0903
     CACHE_TYPE = 'gaememcached'
     AUTHENTICATOR = GOOGLE_AUTHENTICATOR
 
-class Development(Config): #pylint: disable=R0903
+class Debug(Config): #pylint: disable=R0903
     """
     Development config
     """
     DEBUG = True
     CSRF_ENABLED = True
-
-class Testing(Config): #pylint: disable=R0903
-    """
-    Testing config
-    """
-    TESTING = True
-    DEBUG = True
-    CSRF_ENABLED = True
+    AUTHENTICATOR = TESTING_AUTHENTICATOR
 
 class Production(Config): #pylint: disable=R0903
     """

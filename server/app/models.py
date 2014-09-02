@@ -59,15 +59,15 @@ class Base(ndb.Model):
                 pass
         return result
     @classmethod
-    def can(cls, user, need, obj=None):
+    def can(cls, user, need, obj=None, query=None):
         """
         Tells you if the |user| satisfies the given |need| for this object.
         """
         need.set_object(obj or cls)
-        return cls._can(user, need, obj)
+        return cls._can(user, need, obj, query)
 
     @classmethod
-    def _can(cls, user, need, obj=None):
+    def _can(cls, user, need, obj=None, query=None):
         return False
 
 
@@ -121,14 +121,14 @@ class User(Base):
         return True
 
     @classmethod
-    def _can(cls, user, need, obj=None):
+    def _can(cls, user, need, obj=None, query=None):
         if not user.logged_in:
             return False
 
-        if user.is_admin:
-            return True
         action = need.action
-        if action in ("get", "index"):
+        if action == "get":
+            if user.is_admin:
+                return True
             if obj:
                 if obj.key == user.key:
                     return True
@@ -137,6 +137,24 @@ class User(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.courses:
                         return True
+        elif action == "index":
+            if user.is_admin:
+                return query
+
+            filters = []
+            for course in user.courses:
+                if user.key in course.staff:
+                    filters.append(User.query().filter(
+                        User.courses == course.key))
+
+            filters.append(User.key == user.key)
+
+            if len(filters) > 1:
+                return query.filter(ndb.OR(*filters))
+            else:
+                return query.filter(filters[0])
+        elif action == "create":
+            return user.is_admin
         return False
 
 class AnonymousUser(User):
@@ -164,10 +182,12 @@ class Assignment(Base):
     course = ndb.KeyProperty('Course')
 
     @classmethod
-    def _can(cls, user, need, obj=None):
+    def _can(cls, user, need, obj=None, query=None):
         action = need.action
-        if action in ("get", "index"):
+        if action == "get":
             return True
+        elif action == "index":
+            return query
         elif action == "create":
             return user.is_admin
         return False
@@ -182,7 +202,7 @@ class Course(Base):
     staff = ndb.KeyProperty(User, repeated=True)
 
     @classmethod
-    def _can(cls, user, need, obj=None):
+    def _can(cls, user, need, obj=None, query=None):
         action = need.action
         if action == "get":
             return True
@@ -220,7 +240,7 @@ class Submission(Base):
     created = ndb.DateTimeProperty(auto_now_add=True)
 
     @classmethod
-    def _can(cls, user, need, obj=None):
+    def _can(cls, user, need, obj=None, query=None):
         action = need.action
         if action == "get":
             if not obj:
@@ -231,5 +251,31 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
+        if action == "create":
+            return user.logged_in
+
+        if action == "index":
+            if not query:
+                raise ValueError(
+                        "Need query instance for Submission index action")
+
+            if user.is_admin:
+                return query
+
+            courses = user.courses
+            filters = []
+            for course in courses:
+                if user.key in course.staff:
+                    assignments = Assignment.query().filter(
+                        Assignment.course == course.key)
+                    filters.append(Submission.assignment.IN(
+                        assignments.get()))
+
+            filters.append(Submission.submitter == user.key)
+
+            if len(filters) > 1:
+                return query.filter(ndb.OR(*filters))
+            else:
+                return query.filter(filters[0])
         return False
 
