@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+VERSION = '1.0.0'
 
 """The ok.py script runs tests, checks for updates, and saves your work.
 
@@ -47,6 +48,7 @@ import os
 import sys
 import utils
 
+
 def send_to_server(messages, assignment, server, endpoint='submission/new'):
     """Send messages to server, along with user authentication."""
     data = {
@@ -59,7 +61,7 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
         access_token = authenticate()
-        address += "?access_token=%s" % access_token
+        address += "?access_token=%s&client_version=%s" % (access_token, VERSION)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
@@ -67,7 +69,11 @@ def send_to_server(messages, assignment, server, endpoint='submission/new'):
     except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
         response = ex.read().decode('utf-8')
-        message = json.loads(response)['message']
+        response_json = json.loads(response)
+        if response_json['status'] == 403:
+            version = response_json['data']['correct_version']
+            #TODO: handle updating client here
+        message = response_json['message']
         indented = '\n'.join('\t' + line for line in message.split('\n'))
         print(indented)
         return {}

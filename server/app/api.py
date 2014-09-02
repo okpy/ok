@@ -2,6 +2,7 @@
 The public API
 """
 import json
+from functools import wraps
 
 from flask.views import MethodView
 from flask.app import request
@@ -10,6 +11,7 @@ from webargs import Arg
 from webargs.flaskparser import FlaskParser
 
 from app import models
+from app import app
 from app.models import BadValueError
 from app.needs import Need
 from app.decorators import handle_error
@@ -20,12 +22,28 @@ from google.appengine.ext import db, ndb
 def KeyArg(klass):
     return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]})
 
+def check_version(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if 'client_version' in request.args:
+            if request.args['client_version'] != app.config['CLIENT_VERSION']:
+                return create_api_response(403, "incorrect client version", {
+                    'supplied_version': request.args['client_version'],
+                    'correct_version': app.config['CLIENT_VERSION']
+                })
+        return func(*args, **kwargs)
+    return wrapped
 
 class APIResource(object):
     """The base class for API resources.
 
     Set the name and get_model for each subclass.
     """
+
+    @property
+    def request_json(self):
+        return request.json
+
     name = None
     index_args = {}
 
@@ -38,6 +56,7 @@ class APIResource(object):
         raise NotImplementedError
 
     @handle_error
+    @check_version
     def get(self, key):
         """
         The GET HTTP method
@@ -57,18 +76,46 @@ class APIResource(object):
         return create_api_response(200, "", obj)
 
     @handle_error
-    def put(self):
+    @check_version
+    def put(self, key):
         """
         The PUT HTTP method
         """
-        return create_api_response(401, "PUT request not permitted")
+        obj = self.get_model().get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        need = Need('put')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        blank_val = object()
+        changed = False
+        for key, value in self.request_json.iteritems():
+            old_val = getattr(obj, key, blank_val)
+            if old_val == blank_val:
+                return create_api_response(400, "{} is not a valid field.".format(key))
+
+            setattr(obj, key, value)
+            changed = True
+
+        if changed:
+            obj.put()
+
+        return create_api_response(200, "", obj)
 
     @handle_error
+    @check_version
     def post(self):
         """
         The POST HTTP method
         """
-        post_dict = request.json
+        post_dict = self.request_json
 
         need = Need('create')
         if not self.get_model().can(session['user'], need):
@@ -94,6 +141,7 @@ class APIResource(object):
         return entity, None
 
     @handle_error
+    @check_version
     def delete(self, user_id):
         """
         The DELETE HTTP method
@@ -205,6 +253,7 @@ class SubmissionAPI(MethodView, APIResource):
     post_fields = ['assignment', 'messages']
 
     @handle_error
+    @check_version
     def get(self, key):
         """
         The GET HTTP method
@@ -251,6 +300,7 @@ class SubmissionAPI(MethodView, APIResource):
         })
 
     @handle_error
+    @check_version
     def post(self):
         if 'submitter' in request.json:
             del request.json['submitter']
@@ -272,3 +322,17 @@ class SubmissionAPI(MethodView, APIResource):
         'assignment': KeyArg('Assignment'),
         'submitter': KeyArg('User'),
     }
+
+
+class VersionAPI(APIResource, MethodView):
+    name = "Version"
+
+    @classmethod
+    def get_model(cls):
+        return models.Version
+
+    @property
+    def request_json(self):
+        post_dict = request.json
+        post_dict['file_data'] = bytes(post_dict['file_data'])
+        return post_dict
