@@ -55,7 +55,7 @@ class UnlockTestCase(core.TestCase):
 # Locking Protocol #
 ####################
 
-class LockProtocol(ok.Protocol):
+class LockProtocol(protocol.Protocol):
     """Locking protocol that wraps that mechanism."""
 
     name = 'lock'
@@ -78,6 +78,7 @@ class LockProtocol(ok.Protocol):
     def _hash_fn(self, x):
         return hmac.new(self.assignment['hash_key'].encode('utf-8'),
                         x.encode('utf-8')).digest()
+
 def lock(test, hash_fn):
     for suite in test['suites']:
         for case in suite:

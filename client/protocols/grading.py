@@ -49,7 +49,7 @@ class GradingProtocol(protocol.Protocol):
     def on_interact(self):
         """Run gradeable tests and print results."""
         for test in self.assignment.tests:
-            if not self.args.question or test.has_name(self.args.question):
+            if not self.args.question or test.name == self.args.question:
                 self._grade_test(test)
 
     def _grade_test(self, test):
