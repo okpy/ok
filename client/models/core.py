@@ -5,13 +5,9 @@ Ok.py assignments are organized in the following hierarchy:
     * assignments: consist of a list of Test objects
     * Test: consist of a list of suites
     * suite: a list of TestCase objects
-    * TestCase (and its subclasses): consist of
-        * an input
-        * a list of TestCaseAnswers
-    * TestCaseAnswers: represents the answer to a specific TestCase
+    * TestCase (and its subclasses)
 
-The core models (Test, TestCase, TestCaseAnswers) are implemented
-here.
+The core models (Assignment, Test, TestCase) are implemented here.
 
 Developers can extend the TestCase class to create different types of
 TestCases (both interfaces and concrete subclasses of TestCase are
@@ -20,23 +16,54 @@ respective Protocols (in the client/protocols/ directory), while
 concrete subclasses of TestCase should be located in client/models/.
 """
 
+from models import serialize
+import exceptions
 import utils
 
-class Test(object):
+class Assignment(serialize.Serializable):
+    """A representation of an assignment."""
+
+    REQUIRED = {
+        'name': serialize.STR,
+        'version': serialize.STR,
+    }
+    OPTIONAL = {
+        'src_files': serialize.LIST,
+        'params': serialize.DICT,
+    }
+
+    def __init__(self, **fields):
+        super().__init__(**fields)
+        self._tests = []
+
+    def add_test(self, test):
+        assert isinstance(test, Test), '{} must be a Test'.format(test)
+        self._tests.append(test)
+
+    @property
+    def tests(self):
+        """Returns the tests for this assignment. The returned list
+        is a copy, so that the original list can remain immutable.
+        """
+        return self._tests.copy()
+
+    @property
+    def num_tests(self):
+        return len(self._tests)
+
+class Test(serialize.Serializable):
     """Represents all suites for a single test in an assignment."""
 
-    def __init__(self, names=None, suites=None, points=0, note='', cache=''):
-        self.names = names or []
-        # Filter out empty suites.
-        suites = suites or []
-        self.suites = list(filter(lambda suite: suite != [], suites))
-
-        self.points = points
-        self.note = utils.dedent(note)
-        # TODO(albert): the notion of a cache was originally designed
-        # only for code-based questions. Either generalize for other
-        # test types, or move to subclasses.
-        self.cache = utils.dedent(cache)
+    REQUIRED = {
+        'names': serialize.SerializeArray(serialize.STR),
+        'points': serialize.FLOAT,
+    }
+    OPTIONAL = {
+        'suites': serialize.SerializeArray(serialize.LIST),
+        'params': serialize.DICT,
+        'note': serialize.STR,
+        'extra': serialize.BOOL_FALSE,
+    }
 
     @property
     def name(self):
@@ -45,120 +72,92 @@ class Test(object):
         RETURNS:
         str; the name of the test
         """
-        if not self.names:
+        if not self['names']:
             return repr(self)
-        return self.names[0]
+        return self['names'][0]
 
     @property
-    def count_cases(self):
+    def num_cases(self):
         """Returns the number of test cases in this test."""
-        return sum(len(suite) for suite in self.suites)
+        return sum(len(suite) for suite in self['suites'])
 
     @property
-    def count_locked(self):
+    def num_locked(self):
         """Returns the number of locked test cases in this test."""
-        return [case.is_locked for suite in self.suites
+        return [case['locked'] for suite in self['suites']
                                for case in suite].count(True)
 
     def add_suite(self, suite):
         """Adds the given suite to this test's list of suites. If
         suite is empty, do nothing."""
         if suite:
-            self.suites.append(suite)
-            suite_num = len(self.suites) - 1
-            for test_case in suite:
-                test_case.test = self
-                test_case.suite_num = suite_num
-
-    def has_name(self, name):
-        return name in self.names
+            self['suites'].append(suite)
 
     @classmethod
-    def serialize(cls, test_json, assignment_info):
-        """Serializes a JSON object into a Test object, given a
+    def deserialize(cls, test_json, assignment, case_map):
+        """Deserializes a JSON object into a Test object, given a
         particular set of assignment_info.
 
         PARAMETERS:
-        test_json       -- JSON; the JSON representation of the test.
-        assignment_info -- JSON; information about the assignment,
-                           may be used by TestCases.
+        test_json  -- JSON; the JSON representation of the test.
+        assignment -- Assignment; information about the assignment,
+                      may be used by TestCases.
+        case_map   -- dict; maps case tags (strings) to TestCase
+                      classes.
 
         RETURNS:
         Test
         """
-        # TODO(albert): implement stub.
-        pass
+        test = Test(**test_json)
+        new_suites = []
+        for suite in test['suites']:
+            if not suite:
+                continue
+            new_suite = []
+            for case_json in suite:
+                if 'type' not in case_json:
+                    raise exceptions.DeserializeError.missing_fields(('type'))
+                case_type = case_json['type']
+                if case_type not in case_map:
+                    raise exceptions.DeserializeError.unknown_type(
+                            case_type, case_map)
+                test_case = case_map[case_type].deserialize(
+                        case_json, assignment, test)
+                new_suite.append(test_case)
+            new_suites.append(new_suite)
+        test['suites'] = new_suites
+        return test
 
-    def deserialize(self):
-        """Deserializes this Test object into JSON format.
+    def serialize(self):
+        """Serializes this Test object into JSON format.
 
         RETURNS:
         JSON as a plain-old-Python-object.
         """
-        # TODO(albert): implement stub.
-        pass
+        json = super().serialize()
+        suites = [[case.serialize() for case in suite]
+                                    for suite in self['suites']]
+        if suites:
+            json['suites'] = suites
+        return json
 
-class TestCase(object):
+class TestCase(serialize.Serializable):
     """Represents a single test case."""
 
-    def __init__(self, input_str, outputs, test=None, **status):
-        """Constructor.
+    type = 'default'
 
-        PARAMETERS:
-        input_str -- str; the TestCase's input.
-        outputs   -- list of TestCaseAnswers; the outputs associated
-                     with this TestCase.
-        test      -- Test; the test to which this TestCase belongs.
-        status    -- keyword arguments; the status of this TestCase.
-        """
-        self._input_str = utils.dedent(input_str)
-        self._outputs = outputs
-        self.test = test
-        self._status = status
+    REQUIRED = {
+        'type': serialize.STR,
+    }
 
-    @property
-    def is_locked(self):
-        """Returns True if the TestCase is locked."""
-        return self._status.get('lock', True)
+    @classmethod
+    def deserialize(cls, json, assignment, test):
+        result = super().deserialize(json)
+        result._assertType()
+        return result
 
-    def set_locked(self, locked):
-        """Sets the TestCase's locked status."""
-        self._status['lock'] = locked
-
-    @property
-    def outputs(self):
-        """Returns a list of TestCaseAnswers associated with this
-        TestCase.
-        """
-        return self._outputs
-
-    def set_outputs(self, new_outputs):
-        """Sets this TestCase's list of TestCaseAnswers."""
-        self._outputs = new_outputs
-
-    @property
-    def type(self):
-        """Subclasses should implement a type tag."""
-        return 'default'
-
-class TestCaseAnswer(object):
-    """Represents an answer for a single TestCase."""
-
-    def __init__(self, answer, choices=None, explanation=''):
-        """Constructor.
-
-        PARAMETERS:
-        answer      -- str; The correct answer, possibly encoded.
-        choices     -- list of strs; If not None, denotes a list of
-                       options for multiple choice.
-        explanation -- str; Optional explanation of the TestCaseAnswer.
-        """
-        self.answer = answer
-        self.choices = choices or []
-        self.explanation = explanation
-
-    @property
-    def is_multiple_choice(self):
-        """Returns True if the TestCaseAnswer is multiple choice."""
-        return len(self.choices) > 0
+    def _assertType(self):
+        if self['type'] != self.type:
+            raise exceptions.DeserializeError.unexpected_value('type',
+                    self.type, self['type'])
 
