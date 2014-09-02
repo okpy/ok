@@ -303,5 +303,5 @@ class Version(Base):
             return False
         if action == "index":
             return query
-        return True
+        return user.is_admin
 
