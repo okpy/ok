@@ -7,7 +7,7 @@ compatible with the UnlockProtocol.
 
 from models import core
 from models import serialize
-import ok
+from protocols import protocol
 import random
 import readline
 import utils
@@ -47,7 +47,7 @@ class UnlockTestCase(core.TestCase):
 # UNLOCKING PROTOCOL #
 ######################
 
-class UnlockProtocol(ok.Protocol):
+class UnlockProtocol(protocol.Protocol):
     """Unlocking protocol that wraps that mechanism."""
 
     name = 'unlock'

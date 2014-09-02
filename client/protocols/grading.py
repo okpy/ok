@@ -6,7 +6,7 @@ are compatible with the GradingProtocol.
 """
 
 from models import core
-import ok
+from protocols import protocol
 import utils
 
 #####################
@@ -40,7 +40,7 @@ class GradedTestCase(core.TestCase):
         """
         raise NotImplementedError
 
-class GradingProtocol(ok.Protocol):
+class GradingProtocol(protocol.Protocol):
     """A Protocol that runs tests, formats results, and sends results
     to the server.
     """
