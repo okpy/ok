@@ -49,7 +49,7 @@ import sys
 import utils
 
 
-def send_to_server(messages, assignment, server, endpoint='submission/new'):
+def send_to_server(messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
     data = {
         'assignment': assignment['name'],
@@ -235,6 +235,8 @@ def parse_input():
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
     assignment = load_tests(args.tests, config.cases)
+    # TODO(soumya): uncomment this once ok.py is ready to ship, to hide
+    # error messages.
     # try:
     #     assignment = load_tests(args.tests, config.cases)
     # except Exception as ex:

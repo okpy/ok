@@ -61,14 +61,12 @@ class GradingProtocol(protocol.Protocol):
                              self.args.verbose)
 
         total_cases = test.num_cases
-        total_failed = test.num_graded - total_passed
         if total_cases > 0:
             print('Passed: {} ({}%)'.format(total_passed,
                                             100 * total_passed / total_cases))
-            print('Failed: {} ({}%)'.format(total_failed,
-                                            100 * total_failed / total_cases))
-            print('Locked: {} ({}%)'.format(test.num_locked,
-                                            100 * test.num_locked / total_cases))
+        if test.num_locked > 0:
+            print('-- There are still {} locked test cases.'.format(test.num_locked) + \
+            'Use the -u flag to unlock them.')
         print()
 
 def grade(test, logger, interactive=False, verbose=False):
