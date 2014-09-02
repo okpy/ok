@@ -20,25 +20,26 @@ REQUIRED_FOLDERS = ["models"]
 os.mkdir(STAGING_DIR)
 
 # Move ok.py and call it __main__.py
-shutil.copyfile("ok.py", STAGING_DIR + "/__main__.py")
+shutil.copyfile("ok.py", os.path.join(STAGING_DIR ,"__main__.py"))
 
 # Move all required files/folders in client/
 
 for filename in REQUIRED_FILES:
     fullname = filename + ".py"
-    shutil.copyfile(fullname, STAGING_DIR + "/" + fullname)
+    shutil.copyfile(fullname, os.path.join(STAGING_DIR, fullname))
 
 for folder in REQUIRED_FOLDERS:
-    shutil.copytree(folder, STAGING_DIR + "/" + folder)
+    shutil.copytree(folder, os.path.join(STAGING_DIR, folder))
 
 # Move all required protocols in client/protocols
 
-os.mkdir(STAGING_DIR + "/protocols")
-shutil.copyfile("protocols/__init__.py", STAGING_DIR + "/protocols/__init__.py")
+os.mkdir(os.path.join(STAGING_DIR, "protocols"))
+shutil.copyfile(os.path.join("protocols", "__init__.py"), os.path.join(STAGING_DIR, "protocols", "__init__.py"))
 
 for protocol in protocols:
-    src = "protocols/{0}.py".format(protocol)
-    dst = "{0}/protocols/{1}.py".format(STAGING_DIR, protocol)
+    filename = "{0}.py".format(protocol)
+    src = os.path.join("protocols", filename)
+    dst = os.path.join(STAGING_DIR, "protocols", filename)
     shutil.copyfile(src, dst)
 
 # Zip up the files
