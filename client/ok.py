@@ -237,6 +237,8 @@ def parse_input():
                         help="unlock tests interactively")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
+    parser.add_argument('-l', '--lock', default='tests', type=str,
+                        help="partial name or path to test file or directory to lock")
     return parser.parse_args()
 
 

@@ -362,6 +362,74 @@ class OnUnlockTest(unittest.TestCase):
             """,
         }, ['7', self.mock_answer])
 
+class OnLockTest(unittest.TestCase):
+    ASSIGN_NAME = 'dummy'
+    ANSWER = 42
+
+    def setUp(self):
+        self.assignment = core.Assignment.deserialize({
+            'name': self.ASSIGN_NAME,
+            'version': '1.0',
+        })
+        self.test = core.Test.deserialize({
+            'names': ['q1'],
+            'points': 1,
+        }, self.assignment, {})
+        self.hash_fn = mock.Mock(return_value=self.ANSWER)
+
+    def makeTestCase(self, case_json):
+        case_json['type'] = doctest_case.DoctestCase.type
+        case_json['locked'] = True
+        return doctest_case.DoctestCase.deserialize(case_json,
+                self.assignment, self.test)
+
+    def calls_onLock(self, case_json, expect):
+        case = self.makeTestCase(case_json)
+        case.on_lock(self.hash_fn)
+        self.assertTrue(case['locked'])
+
+        answers = [line for line in case.lines
+                        if isinstance(line, doctest_case._Answer)]
+        self.assertEqual(expect,
+                         [answer.output for answer in answers])
+        self.assertEqual([True] * len(answers),
+                         [answer.locked for answer in answers])
+
+    def testLockAll(self):
+        self.calls_onLock({
+            'test': """
+            >>> 3 + 4
+            7
+            >>> 3 + 1
+            4
+            >>> 1 / 0
+            ZeroDivisionError
+            """,
+        }, [self.ANSWER] * 3)
+
+    def testLockNone(self):
+        self.calls_onLock({
+            'test': """
+            >>> 3 + 4
+            7
+            # locked
+            >>> 'foo'
+            'foo'
+            # locked
+            """,
+        }, ['7', "'foo'"])
+
+    def testPartiallyLockedAnswers(self):
+        self.calls_onLock({
+            'test': """
+            >>> 3 + 4
+            7
+            >>> 9
+            9
+            # locked
+            """,
+        }, [self.ANSWER, '9'])
+
 class SerializationTest(unittest.TestCase):
     ASSIGN_NAME = 'dummy'
 
