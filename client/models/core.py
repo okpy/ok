@@ -89,6 +89,11 @@ class Test(serialize.Serializable):
         return [case['locked'] for suite in self['suites']
                                for case in suite].count(True)
 
+    @property
+    def num_graded(self):
+        return [case.should_grade() for suite in self['suites']
+                                    for case in suite].count(True)
+
     def add_suite(self, suite):
         """Adds the given suite to this test's list of suites. If
         suite is empty, do nothing."""
