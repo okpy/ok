@@ -165,6 +165,10 @@ class APIResource(object):
         return create_api_response(200, "success", {})
 
     def parse_args(self, index):
+        """
+        Parses the arguments to this API call.
+        |index| is whether or not this is an index call.
+        """
         return {k:v for k,v in parser.parse(self.web_args).iteritems() if v}
 
     def index(self):
