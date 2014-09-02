@@ -186,6 +186,9 @@ class APIResource(object):
 
         args = self.parse_args(True)
         query = filter_query(result, args, self.get_model())
+        created_prop = getattr(self.get_model(), 'created', None)
+        if not query.orders and created_prop:
+            query = query.order(created_prop)
 
         cursor = request.args.get('cursor', None)
         num_page = request.args.get('num_page', None)
