@@ -42,7 +42,7 @@ def admin_required(func):
         if users.get_current_user():
             if not users.is_current_user_admin():
                 abort(401)  # Unauthorized
-                return func(*args, **kwargs)
+            return func(*args, **kwargs)
         return redirect(users.create_login_url(request.url))
     decorated.login_required = True
     decorated.admin_required = True
