@@ -11,6 +11,7 @@ from protocols import protocol
 import random
 import readline
 import hmac
+import string
 import utils
 
 
@@ -43,6 +44,45 @@ class UnlockTestCase(core.TestCase):
                        input from students.
         """
         raise NotImplementedError
+
+    def on_lock(self, hash_fn):
+        """Subclasses that are used by the unlocking protocol must
+        implement this method.
+        """
+        raise NotImplementedError
+
+####################
+# Locking Protocol #
+####################
+
+class LockProtocol(ok.Protocol):
+    """Locking protocol that wraps that mechanism."""
+
+    name = 'lock'
+
+    def on_start(self):
+        """Responsible for locking each test."""
+        if self.args.lock:
+            if not self.assignment['hash_key']:
+                self.assignment['hash_key'] = self._gen_hash_key()
+            for test in self.assignment.tests:
+                lock(test, self._hash_fn)
+
+    @property
+    def _alphabet(self):
+        return string.ascii_lowercase + string.digits
+
+    def _gen_hash_key(self):
+        return ''.join(random.choice(self._alphabet) for _ in range(128))
+
+    def _hash_fn(self, x):
+        return hmac.new(self.assignment['hash_key'].encode('utf-8'),
+                        x.encode('utf-8')).digest()
+def lock(test, hash_fn):
+    for suite in test['suites']:
+        for case in suite:
+            if case['locked']:
+                case.on_lock(hash_fn)
 
 ######################
 # UNLOCKING PROTOCOL #
