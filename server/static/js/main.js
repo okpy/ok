@@ -5,7 +5,7 @@ var app = angular.module('okpy', ['ngResource', 'ui.router']);
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider, $locationProvider) {
-    $urlRouterProvider.otherwise("/submission");
+    $urlRouterProvider.otherwise("/submission/");
 
     var submissions = {
       name: 'submission',
