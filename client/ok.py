@@ -197,6 +197,8 @@ def parse_input():
                         help="unlock tests interactively")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
+    parser.add_argument('-i', '--interactive', action='store_true',
+                        help="toggles interactive mode")
     return parser.parse_args()
 
 

@@ -10,6 +10,7 @@ from models import serialize
 from protocols import protocol
 import random
 import readline
+import hmac
 import utils
 
 
@@ -56,6 +57,8 @@ class UnlockProtocol(protocol.Protocol):
         """
         Responsible for unlocking each test.
         """
+        if not self.args.unlock:
+            return
         print('At each "{}",'.format(UnlockConsole.PROMPT)
               + ' type in what you would expect the output to be.')
         print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
@@ -77,9 +80,9 @@ class UnlockProtocol(protocol.Protocol):
         student.
         """
         if self.args.question:
-            return [test for test in self.assignment['tests']
+            return [test for test in self.assignment.tests
                     if test.name == self.args.question]
-        return self.assignment['tests']
+        return self.assignment.tests
 
 def unlock(test, logger, hash_key):
     """Unlocks TestCases for a given Test.
