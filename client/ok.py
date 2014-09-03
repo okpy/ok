@@ -48,6 +48,7 @@ import os
 import sys
 import utils
 import threading
+import base64
 
 def send_to_server(messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
@@ -70,13 +71,12 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
     except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
         try:
-            response_json = json.loads(response)
-            if response_json['status'] == 403:
-                version = response_json['data']['correct_version']
+            #response_json = json.loads(response)
+            if ex.code == 403:
                 get_latest_version(server)
-            message = response_json['message']
-            indented = '\n'.join('\t' + line for line in message.split('\n'))
-            print(indented)
+            #message = response_json['message']
+            #indented = '\n'.join('\t' + line for line in message.split('\n'))
+            #print(indented)
             return {}
         except Exception as e:
             print(e)
@@ -201,10 +201,11 @@ def get_latest_version(server):
         req = request.Request(address)
         response = request.urlopen(req)
 
-        full_response = json.loads(response.read())
+        full_response = json.loads(response.read().decode('utf-8'))
 
-        file_contents = full_response['file_data'].decode('base64')
-        new_file = open('ok')
+        file_contents = full_response['data']['results'][0]['file_data']
+        print(type(file_contents))
+        new_file = open('ok.zip', 'w')
         new_file.write(file_contents)
         new_file.close()
     except error.HTTPError as ex:
