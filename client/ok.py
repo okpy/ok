@@ -58,7 +58,6 @@ def send_to_server(access_token, messages, assignment, server, endpoint='submiss
         'messages': messages,
     }
     try:
-        print("Sending stuff to server...")
         address = 'https://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
@@ -194,12 +193,13 @@ def dump_tests(test_dir, assignment):
 def get_latest_version(server):
     """Check for the latest version of ok and update this file accordingly.
     """
-    print("You are running version {0} of ok.py".format(VERSION))
+    print("We detected that you are running an old version of ok.py: {0}".format(VERSION))
 
     # Get server version
     address = "https://" + server + "/api/v1" + "/version?name=okpy"
 
     try:
+        print("Updating now...")
         req = request.Request(address)
         response = request.urlopen(req)
 
@@ -209,6 +209,7 @@ def get_latest_version(server):
         new_file = open('ok', 'wb')
         new_file.write(file_contents)
         new_file.close()
+        print("Done updating!")
     except error.HTTPError as ex:
         # print("Error when downloading new version")
         pass
