@@ -203,9 +203,8 @@ def get_latest_version(server):
 
         full_response = json.loads(response.read().decode('utf-8'))
 
-        file_contents = full_response['data']['results'][0]['file_data']
-        print(type(file_contents))
-        new_file = open('ok.zip', 'w')
+        file_contents = base64.b64decode(full_response['data']['results'][0]['file_data'])
+        new_file = open('ok.zip', 'wb')
         new_file.write(file_contents)
         new_file.close()
     except error.HTTPError as ex:
