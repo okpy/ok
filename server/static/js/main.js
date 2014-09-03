@@ -159,9 +159,6 @@ function transformSubmission(data) {
   data.submitter_s = function() {
     return data.submitter || "Anonymous";
   }
-  if (data.messages.hasOwnProperty('file_contents')) {
-    data.messages.file_contents = JSON.parse(data.messages.file_contents)
-  }
   return data;
 }
 app.config(['$httpProvider',
