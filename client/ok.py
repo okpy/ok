@@ -58,7 +58,6 @@ def send_to_server(access_token, messages, assignment, server, endpoint='submiss
         'messages': messages,
     }
     try:
-        print("Sending stuff to server...")
         address = 'https://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
@@ -194,8 +193,6 @@ def dump_tests(test_dir, assignment):
 def get_latest_version(server):
     """Check for the latest version of ok and update this file accordingly.
     """
-    print("You are running version {0} of ok.py".format(VERSION))
-
     # Get server version
     address = "https://" + server + "/api/v1" + "/version?name=okpy"
 
@@ -244,7 +241,7 @@ def parse_input():
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
     timer_thread = multiprocessing.Process(target=lambda: time.sleep(0.8), args=())
-    print("You are running autograder version {0}".format(VERSION))
+    print("You are running version {0} of ok.py".format(VERSION))
     timer_thread.start()
     assignment = load_tests(args.tests, config.cases)
 
