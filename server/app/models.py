@@ -295,7 +295,7 @@ class Submission(Base):
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
     name = ndb.StringProperty()
-    file_data = ndb.BlobProperty()
+    file_data = ndb.TextProperty()
     version = ndb.StringProperty()
 
     @classmethod
