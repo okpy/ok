@@ -47,7 +47,8 @@ import json
 import os
 import sys
 import utils
-
+import threading
+import base64
 
 def send_to_server(messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
@@ -56,6 +57,7 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
         'messages': messages,
     }
     try:
+        print("Sending stuff to server...")
         address = 'https://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
@@ -68,17 +70,16 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
-        response = ex.read().decode('utf-8')
         try:
-            response_json = json.loads(response)
-            if response_json['status'] == 403:
-                version = response_json['data']['correct_version']
-                #TODO: handle updating client here
-            message = response_json['message']
-            indented = '\n'.join('\t' + line for line in message.split('\n'))
-            print(indented)
+            #response_json = json.loads(response)
+            if ex.code == 403:
+                get_latest_version(server)
+            #message = response_json['message']
+            #indented = '\n'.join('\t' + line for line in message.split('\n'))
+            #print(indented)
             return {}
         except Exception as e:
+            print(e)
             print("Couldn't connect to server")
 
 
@@ -142,11 +143,13 @@ def _get_tests(directory, assignment, case_map):
             continue
         path = os.path.normpath(os.path.join(directory, file))
         if os.path.isfile(path):
-            # TODO(albert): add error handling in case no attribute
-            # test is found.
-            test_json = _import_module(path).test
-            test = core.Test.deserialize(test_json, assignment, case_map)
-            assignment.add_test(test)
+            try:
+                test_json = _import_module(path).test
+                test = core.Test.deserialize(test_json, assignment, case_map)
+                assignment.add_test(test)
+            except AttributeError as ex:
+                # TODO(soumya): Do something here, but only for staff protocols.
+                pass
 
 
 def _import_module(path):
@@ -186,28 +189,26 @@ def dump_tests(test_dir, assignment):
 # Software Updating #
 #####################
 
-def get_latest_version(server, test_dir):
+def get_latest_version(server):
     """Check for the latest version of ok and update this file accordingly.
     """
-    my_version = _get_info(os.path.join(test_dir, INFO_FILE)).version
-
-    print("You are running version {0} of ok.py".format(my_version))
+    print("You are running version {0} of ok.py".format(VERSION))
 
     # Get server version
     address = "https://" + server + "/api/v1" + "/version?name=okpy"
 
-    req = request.Request(address)
-    response = request.urlopen(req)
+    try:
+        req = request.Request(address)
+        response = request.urlopen(req)
 
-    full_response = json.loads(response.read())
+        full_response = json.loads(response.read().decode('utf-8'))
 
-    server_version = full_response['version']
-
-    if server_version != my_version:
-        print("A new version exists! Downloading now...")
-        file_contents = full_response['file_data']
-        new_file = open('ok')
+        file_contents = base64.b64decode(full_response['data']['results'][0]['file_data'])
+        new_file = open('ok.zip', 'wb')
         new_file.write(file_contents)
+        new_file.close()
+    except error.HTTPError as ex:
+        print("Error when downloading new version")
 
 ##########################
 # Command-line Interface #
@@ -257,9 +258,9 @@ def ok_main(args):
     for protocol in start_protocols:
         messages[protocol.name] = protocol.on_start()
 
-    # TODO(denero) Send in a separate thread.
     try:
-        send_to_server(messages, assignment, args.server)
+        server_thread = threading.Thread(target=send_to_server, args=(messages, assignment, args.server))
+        server_thread.start()
     except error.URLError as ex:
         # TODO(soumya) Make a better error message
         print("Nothing was sent to the server!")
