@@ -1,6 +1,6 @@
 from protocols import protocol
 import os
-import json
+
 
 class FileContents(protocol.Protocol):
     """The contents of changed source files are sent to the server."""
@@ -14,5 +14,5 @@ class FileContents(protocol.Protocol):
             with open(path, 'r', encoding='utf-8') as lines:
                 value = lines.read()
             contents[key] = value
-        return json.dumps(contents)
+        return contents
 
