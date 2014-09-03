@@ -278,7 +278,10 @@ class UnlockConsole(object):
             self._add_line_to_history(student_input)
 
             if choices:
-                student_input = choice_map[student_input]
+                if student_input not in choice_map:
+                    student_input = ''
+                else:
+                    student_input = choice_map[student_input]
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
