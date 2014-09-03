@@ -251,12 +251,6 @@ class Submission(Base):
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
 
-    def to_json(self):
-        """Converts this model to a json dictionary."""
-        result = super(Submission, self).to_json()
-        result['messages'] = eval(result['messages'])
-        return result
-
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
         action = need.action
