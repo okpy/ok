@@ -300,7 +300,7 @@ class Version(Base):
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
-        action = need.action 
+        action = need.action
 
         if action == "delete":
             return False

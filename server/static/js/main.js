@@ -1,7 +1,22 @@
 var app = angular.module('okpy', ['ngResource', 'ui.router']);
+
 // TODO https://github.com/chieffancypants/angular-loading-bar
 // http://ngmodules.org/modules/MacGyver
 // https://github.com/localytics/angular-chosen
+
+app.directive('snippet', ['$timeout', '$interpolate', function ($timeout, $interpolate) {
+        "use strict";
+        return {
+            restrict: 'E',
+            template: '<pre><code ng-transclude></code></pre>',
+            replace: true,
+            transclude: true,
+            link: function (scope, elm) {
+                var tmp = $interpolate(elm.find('code').text())(scope);
+                elm.find('code').html(hljs.highlightAuto(tmp).value);
+            }
+        };
+    }]);
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider, $locationProvider) {
@@ -92,7 +107,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission', {format: "json"}, {
+      return $resource('api/v1/submission/:id', {format: "json"}, {
         query: {
           isArray: true,
           transformResponse: function(data) {
@@ -158,7 +173,7 @@ app.config(['$httpProvider',
               }
               url = config.url.slice(7);
 
-              if (url !== "submission") {
+              if (url.split('/')[0] !== "submission") {
                 return response;
               }
               data = response.data;

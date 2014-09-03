@@ -69,14 +69,17 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
     except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
         response = ex.read().decode('utf-8')
-        response_json = json.loads(response)
-        if response_json['status'] == 403:
-            version = response_json['data']['correct_version']
-            #TODO: handle updating client here
-        message = response_json['message']
-        indented = '\n'.join('\t' + line for line in message.split('\n'))
-        print(indented)
-        return {}
+        try:
+            response_json = json.loads(response)
+            if response_json['status'] == 403:
+                version = response_json['data']['correct_version']
+                #TODO: handle updating client here
+            message = response_json['message']
+            indented = '\n'.join('\t' + line for line in message.split('\n'))
+            print(indented)
+            return {}
+        except Exception as e:
+            print("Couldn't connect to server")
 
 
 ######################
