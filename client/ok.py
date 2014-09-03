@@ -67,6 +67,7 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
         response = request.urlopen(req, serialized)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
+        print("Error while sending to server: {}".format(ex))
         response = ex.read().decode('utf-8')
         try:
             response_json = json.loads(response)
