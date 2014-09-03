@@ -11,18 +11,24 @@
       <th>Assignment</th>
       <th>Submission Time</th>
       <th>Download Link</th>
+      <th>View Submission</th>
     </tr>
     <tr ng-repeat="submission in submissions">
       <td>{{submission.submitter_s().email}}</td>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
-      </td>
-      <td>
-        {{submission.created | prettyDate}}
-      </td>
-      <td>
-        <a href='/api/v1/submission/{{submission.id}}?download=true'>link</a>
-      </td>
-    </tr>
-  </table>
-</div>
+        </td>
+        <td>
+          {{submission.created | prettyDate}}
+        </td>
+        <td>
+          <a href='/api/v1/submission/{{submission.id}}?download=true'>link</a>
+        </td>
+        <td>
+          <a ui-sref='submission.detail({submissionId:submission.id})'>
+            View
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
