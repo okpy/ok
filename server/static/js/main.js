@@ -249,6 +249,6 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
 
 app.filter('prettyDate', function() {
   return function(date) {
-    return moment(date).format('MMMM Do YYYY, h:mm:ss a');
+    return moment(date).calendar();
   }
 });
