@@ -47,7 +47,7 @@ import json
 import os
 import sys
 import utils
-
+import threading
 
 def send_to_server(messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
@@ -56,6 +56,7 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
         'messages': messages,
     }
     try:
+        print("Sending stuff to server...")
         address = 'https://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
@@ -72,12 +73,13 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
             response_json = json.loads(response)
             if response_json['status'] == 403:
                 version = response_json['data']['correct_version']
-                #TODO: handle updating client here
+                get_latest_version(server)
             message = response_json['message']
             indented = '\n'.join('\t' + line for line in message.split('\n'))
             print(indented)
             return {}
         except Exception as e:
+            print(e)
             print("Couldn't connect to server")
 
 
@@ -187,28 +189,26 @@ def dump_tests(test_dir, assignment):
 # Software Updating #
 #####################
 
-def get_latest_version(server, test_dir):
+def get_latest_version(server):
     """Check for the latest version of ok and update this file accordingly.
     """
-    my_version = _get_info(os.path.join(test_dir, INFO_FILE)).version
-
-    print("You are running version {0} of ok.py".format(my_version))
+    print("You are running version {0} of ok.py".format(VERSION))
 
     # Get server version
     address = "https://" + server + "/api/v1" + "/version?name=okpy"
 
-    req = request.Request(address)
-    response = request.urlopen(req)
+    try:
+        req = request.Request(address)
+        response = request.urlopen(req)
 
-    full_response = json.loads(response.read())
+        full_response = json.loads(response.read())
 
-    server_version = full_response['version']
-
-    if server_version != my_version:
-        print("A new version exists! Downloading now...")
-        file_contents = full_response['file_data']
+        file_contents = full_response['file_data'].decode('base64')
         new_file = open('ok')
         new_file.write(file_contents)
+        new_file.close()
+    except error.HTTPError as ex:
+        print("Error when downloading new version")
 
 ##########################
 # Command-line Interface #
@@ -258,9 +258,9 @@ def ok_main(args):
     for protocol in start_protocols:
         messages[protocol.name] = protocol.on_start()
 
-    # TODO(denero) Send in a separate thread.
     try:
-        send_to_server(messages, assignment, args.server)
+        server_thread = threading.Thread(target=send_to_server, args=(messages, assignment, args.server))
+        server_thread.start()
     except error.URLError as ex:
         # TODO(soumya) Make a better error message
         print("Nothing was sent to the server!")
