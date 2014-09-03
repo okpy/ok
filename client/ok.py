@@ -68,7 +68,6 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
-        response = ex.read().decode('utf-8')
         try:
             response_json = json.loads(response)
             if response_json['status'] == 403:
@@ -142,11 +141,13 @@ def _get_tests(directory, assignment, case_map):
             continue
         path = os.path.normpath(os.path.join(directory, file))
         if os.path.isfile(path):
-            # TODO(albert): add error handling in case no attribute
-            # test is found.
-            test_json = _import_module(path).test
-            test = core.Test.deserialize(test_json, assignment, case_map)
-            assignment.add_test(test)
+            try:
+                test_json = _import_module(path).test
+                test = core.Test.deserialize(test_json, assignment, case_map)
+                assignment.add_test(test)
+            except AttributeError as ex:
+                # TODO(soumya): Do something here, but only for staff protocols.
+                pass
 
 
 def _import_module(path):
