@@ -328,7 +328,7 @@ class VersionAPI(APIResource, MethodView):
         return models.Version
 
     web_args = {
-        'file_data': Arg(bytes),
+        'file_data': Arg(str),
         'name': Arg(str),
         'version': Arg(str),
     }

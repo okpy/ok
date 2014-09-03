@@ -2,6 +2,7 @@
 Decorators for URL handlers
 """
 
+import logging
 from functools import wraps
 from google.appengine.api import users
 from flask import redirect, request, abort
@@ -20,6 +21,7 @@ def handle_error(func):
             return func(*args, **kwargs)
         except Exception: #pylint: disable=broad-except
             error_message = traceback.format_exc()
+            logging.error(error_message)
             return utils.create_api_response(500, 'internal server error:\n%s' %
                                              error_message)
     return decorated
