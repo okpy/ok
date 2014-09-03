@@ -47,8 +47,9 @@ import json
 import os
 import sys
 import utils
-import threading
+import multiprocessing
 import base64
+import time
 
 def send_to_server(messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
@@ -238,7 +239,10 @@ def parse_input():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
+    timer_thread = multiprocessing.Process(target=lambda: time.sleep(0.8), args=())
+    timer_thread.start()
     assignment = load_tests(args.tests, config.cases)
+    
     # TODO(soumya): uncomment this once ok.py is ready to ship, to hide
     # error messages.
     # try:
@@ -260,11 +264,12 @@ def ok_main(args):
         messages[protocol.name] = protocol.on_start()
 
     try:
-        server_thread = threading.Thread(target=send_to_server, args=(messages, assignment, args.server))
+        server_thread = multiprocessing.Process(target=send_to_server, args=(messages, assignment, args.server))
         server_thread.start()
     except error.URLError as ex:
         # TODO(soumya) Make a better error message
-        print("Nothing was sent to the server!")
+        # print("Nothing was sent to the server!")
+        pass
 
     for protocol in interact_protocols:
         protocol.on_interact()
@@ -274,6 +279,11 @@ def ok_main(args):
     # TODO(albert): a premature error might prevent tests from being
     # dumped. Perhaps add this in a "finally" clause.
     dump_tests(args.tests, assignment)
+
+    while timer_thread.is_alive():
+        pass
+
+    server_thread.terminate()
 
 if __name__ == '__main__':
     ok_main(parse_input())
