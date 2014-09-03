@@ -70,7 +70,7 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
         response = request.urlopen(req, serialized)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
-        print("Error while sending to server: {}".format(ex))
+        # print("Error while sending to server: {}".format(ex))
         try:
             #response_json = json.loads(response)
             if ex.code == 403:
@@ -80,8 +80,9 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
             #print(indented)
             return {}
         except Exception as e:
-            print(e)
-            print("Couldn't connect to server")
+            # print(e)
+            # print("Couldn't connect to server")
+            pass
 
 
 ######################
@@ -210,7 +211,8 @@ def get_latest_version(server):
         new_file.write(file_contents)
         new_file.close()
     except error.HTTPError as ex:
-        print("Error when downloading new version")
+        # print("Error when downloading new version")
+        pass
 
 ##########################
 # Command-line Interface #
@@ -235,12 +237,15 @@ def parse_input():
                         help="toggles interactive mode")
     parser.add_argument('-l', '--lock', type=str,
                         help="partial name or path to test file or directory to lock")
+    parser.add_argument('-f', '--force', action='store_true',
+                        help="Forces a server response regardless of how long it takes")
     return parser.parse_args()
 
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
     timer_thread = multiprocessing.Process(target=lambda: time.sleep(0.8), args=())
+    print("You are running autograder version {0}".format(VERSION))
     timer_thread.start()
     assignment = load_tests(args.tests, config.cases)
     
@@ -284,7 +289,8 @@ def ok_main(args):
     while timer_thread.is_alive():
         pass
 
-    server_thread.terminate()
+    if not args.force:
+        server_thread.terminate()
 
 if __name__ == '__main__':
     ok_main(parse_input())
