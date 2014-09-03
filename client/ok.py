@@ -51,7 +51,7 @@ import multiprocessing
 import base64
 import time
 
-def send_to_server(messages, assignment, server, endpoint='submission'):
+def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
     data = {
         'assignment': assignment['name'],
@@ -63,7 +63,6 @@ def send_to_server(messages, assignment, server, endpoint='submission'):
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
-        access_token = authenticate()
         address += "?access_token=%s&client_version=%s" % (access_token, VERSION)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
@@ -243,7 +242,7 @@ def ok_main(args):
     timer_thread = multiprocessing.Process(target=lambda: time.sleep(0.8), args=())
     timer_thread.start()
     assignment = load_tests(args.tests, config.cases)
-    
+
     # TODO(soumya): uncomment this once ok.py is ready to ship, to hide
     # error messages.
     # try:
@@ -265,7 +264,8 @@ def ok_main(args):
         messages[protocol.name] = protocol.on_start()
 
     try:
-        server_thread = multiprocessing.Process(target=send_to_server, args=(messages, assignment, args.server))
+        access_token = authenticate()
+        server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment, args.server))
         server_thread.start()
     except error.URLError as ex:
         # TODO(soumya) Make a better error message
