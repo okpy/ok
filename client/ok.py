@@ -138,7 +138,8 @@ def _get_tests(directory, assignment, case_map):
                   assignment, extracted from the info file.
     """
     test_files = os.listdir(directory)
-    for file in test_files:
+    # TODO(albert): have a better way to sort tests.
+    for file in sorted(test_files):
         if file == INFO_FILE or not file.endswith('.py'):
             continue
         path = os.path.normpath(os.path.join(directory, file))
