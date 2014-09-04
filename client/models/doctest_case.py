@@ -8,7 +8,6 @@ from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock
-from unittest import mock
 import code
 import re
 import traceback
