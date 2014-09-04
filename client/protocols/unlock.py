@@ -107,11 +107,7 @@ class UnlockProtocol(protocol.Protocol):
         """
         if not self.args.unlock:
             return
-        title = '# Unlocking tests for {} #'.format(self.assignment['name'])
-        print('#' * len(title))
-        print(title)
-        print('#' * len(title))
-        print()
+        utils.print_title('# Unlocking tests for {}'.format(self.assignment['name']))
 
         print('At each "{}",'.format(UnlockConsole.PROMPT)
               + ' type in what you would expect the output to be.')

@@ -48,11 +48,7 @@ class GradingProtocol(protocol.Protocol):
 
     def on_interact(self):
         """Run gradeable tests and print results."""
-        title = '# Running tests for {} #'.format(self.assignment['name'])
-        print('#' * len(title))
-        print(title)
-        print('#' * len(title))
-        print()
+        utils.print_title('Running tests for {}'.format(self.assignment['name']))
 
         for test in self.assignment.tests:
             if not self.args.question or test.name == self.args.question:
@@ -69,7 +65,7 @@ class GradingProtocol(protocol.Protocol):
 
         total_cases = test.num_cases
         if total_cases > 0:
-            print('Summary: {} ({}%) cases passed for {}'.format(total_passed,
+            print('== {} ({}%) cases passed for {} =='.format(total_passed,
                                             round(100 * total_passed / total_cases, 2),
                                             test['name']))
         if test.num_locked > 0:

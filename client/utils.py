@@ -82,6 +82,13 @@ def underline(text, line='='):
     """
     print(text + '\n' + line * len(text))
 
+def print_title(text):
+    text = '# ' + text + ' #'
+    print('#'* len(text))
+    print(text)
+    print('#'* len(text))
+    print()
+
 class Counter(object):
     def __init__(self):
         self._count = 0
