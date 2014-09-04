@@ -9,7 +9,11 @@ from models import core
 from models import serialize
 from protocols import protocol
 import random
-import readline
+try:
+    import readline
+except:
+    from unittest import mock
+    readline = mock.Mock()
 import hmac
 import string
 import utils
