@@ -9,6 +9,7 @@ from flask import render_template, session, request
 
 from google.appengine.api import users
 from google.appengine.ext.db import BadValueError
+from google.appengine.ext import ndb
 
 from app import app
 from app import api
@@ -29,6 +30,7 @@ def index():
         params["user"] = {'email': user.email()}
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
+    params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
 
 ## Error handlers
@@ -56,6 +58,7 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
     url = API_PREFIX + url
     view = view.as_view(endpoint)
 
+    @ndb.toplevel
     @wraps(view)
     def wrapped(*args, **kwds):
         #TODO(martinis) add tests
