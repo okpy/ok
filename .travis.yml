@@ -5,14 +5,18 @@ env:
 
 python:
   - "2.7"
+  - "3.2"
   - "3.3"
 
 install: 
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then pip install -r server_requirements.txt; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == "3.2" ]]; then pip install -r client_requirements.txt; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then pip install -r client_requirements.txt; fi
 
 script: 
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then FLASK_CONF=TEST python $CMD; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == "3.2" ]]; then cd client; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == "3.2" ]]; then nosetests; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then cd client; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then nosetests; fi
 
