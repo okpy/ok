@@ -136,9 +136,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
 
 app.factory('Assignment', ['$resource',
     function($resource) {
-      return $resource('api/v1/assignment/:id', {
-        format: "json",
-      }, {
+      return $resource('api/v1/assignment/:id', {format: "json"}, {
         query: {
           isArray: true,
           transformResponse: function(data) {
