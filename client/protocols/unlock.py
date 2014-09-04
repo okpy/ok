@@ -107,6 +107,12 @@ class UnlockProtocol(protocol.Protocol):
         """
         if not self.args.unlock:
             return
+        title = '# Unlocking tests for {} #'.format(self.assignment['name'])
+        print('#' * len(title))
+        print(title)
+        print('#' * len(title))
+        print()
+
         print('At each "{}",'.format(UnlockConsole.PROMPT)
               + ' type in what you would expect the output to be.')
         print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))

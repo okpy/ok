@@ -48,13 +48,20 @@ class GradingProtocol(protocol.Protocol):
 
     def on_interact(self):
         """Run gradeable tests and print results."""
+        title = '# Running tests for {} #'.format(self.assignment['name'])
+        print('#' * len(title))
+        print(title)
+        print('#' * len(title))
+        print()
+
         for test in self.assignment.tests:
             if not self.args.question or test.name == self.args.question:
                 self._grade_test(test)
 
     def _grade_test(self, test):
         """Grades a single Test."""
-        utils.underline('Test ' + test.name)
+        utils.underline('Running tests for ' + test.name)
+        print()
         if test['note']:
             print(test['note'])
         total_passed = grade(test, self.logger, self.args.interactive,
@@ -62,11 +69,12 @@ class GradingProtocol(protocol.Protocol):
 
         total_cases = test.num_cases
         if total_cases > 0:
-            print('Passed: {} ({}%)'.format(total_passed,
-                                            round(100 * total_passed / total_cases, 2)))
+            print('Summary: {} ({}%) cases passed for {}'.format(total_passed,
+                                            round(100 * total_passed / total_cases, 2),
+                                            test['name']))
         if test.num_locked > 0:
             print('-- There are still {} locked test cases.'.format(test.num_locked) + \
-            'Use the -u flag to unlock them.')
+            ' Use the -u flag to unlock them. --')
         print()
 
 def grade(test, logger, interactive=False, verbose=False):
