@@ -68,7 +68,8 @@ class OutputLogger:
 def dedent(text):
     return textwrap.dedent(text).lstrip('\n').rstrip()
 
-indent = textwrap.indent
+def indent(text, indentation):
+    return '\n'.join([indentation + line for line in text.splitlines()])
 
 def underline(text, line='='):
     """Prints an underlined version of the given line with the
