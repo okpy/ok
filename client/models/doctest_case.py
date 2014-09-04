@@ -18,8 +18,9 @@ import utils
 # (preferably one that is cross-platform).
 try:
     import readline
+    HAS_READLINE = True
 except ImportError:
-    readline = mock.MagicMock()
+    HAS_READLINE = False
 
 class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for doctest-style Python tests."""
@@ -307,7 +308,8 @@ class _PythonConsole(object):
         bool; True if an error occurred, False otherwise.
         """
         # TODO(albert): Windows machines don't have a readline module.
-        readline.clear_history()
+        if HAS_READLINE:
+            readline.clear_history()
 
         frame = frame or {}
 
@@ -418,7 +420,7 @@ class _PythonConsole(object):
         is non-empty. If the line starts with a prompt symbol, the
         prompt is stripped from the line.
         """
-        if line:
+        if line and HAS_READLINE:
             readline.add_history(line)
 
     def _strip_prompt(self, line):

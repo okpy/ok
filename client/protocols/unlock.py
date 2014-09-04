@@ -11,9 +11,9 @@ from protocols import protocol
 import random
 try:
     import readline
+    HAS_READLINE = True
 except:
-    from unittest import mock
-    readline = mock.Mock()
+    HAS_READLINE = False
 import hmac
 import string
 import utils
@@ -295,5 +295,5 @@ class UnlockConsole(object):
         """Adds the given line to readline history, only if the line
         is non-empty.
         """
-        if line:
+        if line and HAS_READLINE:
             readline.add_history(line)
