@@ -18,15 +18,15 @@ from app.utils import create_api_response, paginate, filter_query, create_zip
 
 from google.appengine.ext import db, ndb
 
+parser = FlaskParser()
+
 def KeyArg(klass, **kwds):
     return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]}, **kwds)
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
         staff_lst = None
-        if isinstance(key_list, list):
-            staff_lst = key_list
-        else:
+        if not isinstance(key_list, list):
             if ',' in key_list:
                 staff_lst = key_list.split(',')
             else:
@@ -169,9 +169,6 @@ class APIResource(object):
         num_page = request.args.get('num_page', None)
         query_results = paginate(query, cursor, num_page)
         return create_api_response(200, "success", query_results)
-
-
-parser = FlaskParser()
 
 
 class UserAPI(MethodView, APIResource):
