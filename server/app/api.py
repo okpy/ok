@@ -3,7 +3,7 @@ The public API
 """
 
 from flask.views import MethodView
-from flask.app import request
+from flask.app import request, json
 from flask import session, make_response
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
@@ -142,6 +142,16 @@ class APIResource(object):
         Parses the arguments to this API call.
         |index| is whether or not this is an index call.
         """
+        def use_fields(field):
+            if not field[0] == '{':
+                return field
+            return json.loads(field)
+
+        fields = parser.parse({
+            'fields': Arg(None, use=use_fields)
+        })
+        request.fields = fields
+
         return {k:v for k, v in parser.parse(self.web_args).iteritems() if v}
 
     def index(self):

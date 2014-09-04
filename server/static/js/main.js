@@ -126,7 +126,19 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-    $scope.submissions = Submission.query();
+    $scope.submissions = Submission.query({
+      fields: {
+        'created': true,
+        'id': true,
+        'submitter': {
+          'id': true
+        },
+        'assignment': {
+          'name': true,
+          'id': true,
+        }
+      }
+    });
   }]);
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',

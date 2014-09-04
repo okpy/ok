@@ -14,7 +14,7 @@
       <th>View Submission</th>
     </tr>
     <tr ng-repeat="submission in submissions">
-      <td>{{submission.submitter_s().email}}</td>
+      <td>{{submission.submitter.id}}</td>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
         </td>

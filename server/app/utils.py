@@ -10,11 +10,27 @@ from flask import jsonify, request, Response, json
 
 from google.appengine.datastore.datastore_query import Cursor
 
+def coerce_to_json(data, fields):
+    if hasattr(data, 'to_json'):
+        return data.to_json(fields)
+    elif isinstance(data, list):
+        return [mdl.to_json(fields) if hasattr(data, 'to_json')
+                else coerce_to_json(mdl, fields) for mdl in data]
+    elif isinstance(data, dict):
+        return {k: (mdl.to_json(fields.get(k, {})) if hasattr(data, 'to_json')
+            else coerce_to_json(mdl, fields.get(k, {}))) for k, mdl in data.iteritems()}
+    else:
+        return data
+
 #TODO(martinis) somehow having data be an empty list doesn't make it
 # return an empty list, but an empty object.
 def create_api_response(status, message, data=None):
     """Creates a JSON response that contains status code (HTTP),
     an arbitrary message string, and a dictionary or list of data"""
+    if isinstance(data, dict) and 'results' in data:
+        data['results'] = (
+                coerce_to_json(data['results'], request.fields.get('fields', {})))
+
     if request.args.get('format', 'default') == 'raw':
         response = Response(json.dumps(data))
     else:

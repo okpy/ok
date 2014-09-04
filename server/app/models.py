@@ -29,7 +29,7 @@ class JSONEncoder(old_json):
             got = obj.get()
             if not got:
                 return None
-            return got.to_json() # TODO(martinis) make this async
+            return got.to_json()
         elif isinstance(obj, datetime.datetime):
             obj = convert_timezone(obj)
             return str(obj)
@@ -55,17 +55,28 @@ class Base(ndb.Model):
         inst.populate(**values) #pylint: disable=star-args
         return inst
 
-    def to_json(self):
+    def to_json(self, fields=None):
         """Converts this model to a json dictionary."""
-        result = self.to_dict()
-        if self.key:
+        if not fields:
+            fields = {}
+
+        if fields:
+            result = self.to_dict(include=fields.keys())
+        else:
+            result = self.to_dict()
+
+        if self.key and (not fields or 'id' in fields):
             result['id'] = self.key.id()
+
         for key, value in result.items():
-            try:
-                new_value = app.json_encoder().default(value)
-                result[key] = new_value
-            except TypeError:
-                pass
+            if isinstance(value, ndb.Key):
+                result[key] = value.get().to_json(fields.get(key))
+            else:
+                try:
+                    new_value = app.json_encoder().default(value)
+                    result[key] = new_value
+                except TypeError:
+                    pass
         return result
     @classmethod
     def can(cls, user, need, obj=None, query=None):
