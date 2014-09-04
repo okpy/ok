@@ -14,7 +14,6 @@ from app import models
 from app import app
 from app.models import BadValueError
 from app.needs import Need
-from app.decorators import handle_error
 from app.utils import create_api_response, paginate, filter_query, create_zip
 
 from google.appengine.ext import db, ndb
@@ -38,30 +37,24 @@ def KeyRepeatedArg(klass, **kwds):
 class APIResource(object):
     """The base class for API resources.
 
-    Set the name and get_model for each subclass.
+    Set the model for each subclass.
     """
 
-    name = None
+    model = None
     web_args = {}
 
-    @classmethod
-    def get_model(cls):
-        """
-        Get the model this API resource is associated with.
-        Needs to be overridden by a subclass.
-        """
-        raise NotImplementedError
+    @property
+    def name(self):
+        return self.model.__name__
 
-    @handle_error
     def get(self, key):
         """
         The GET HTTP method
         """
-        return
         if key is None:
             return self.index()
 
-        obj = self.get_model().get_by_id(key)
+        obj = self.model.get_by_id(key)
         if not obj:
             return create_api_response(404, "{resource} {key} not found".format(
                 resource=self.name, key=key))
@@ -72,12 +65,11 @@ class APIResource(object):
 
         return create_api_response(200, "", obj)
 
-    @handle_error
     def put(self, key):
         """
         The PUT HTTP method
         """
-        obj = self.get_model().get_by_id(key)
+        obj = self.model.get_by_id(key)
         if not obj:
             return create_api_response(404, "{resource} {key} not found".format(
                 resource=self.name, key=key))
@@ -105,7 +97,6 @@ class APIResource(object):
 
         return create_api_response(200, "", obj)
 
-    @handle_error
     def post(self):
         """
         The POST HTTP method
@@ -113,7 +104,7 @@ class APIResource(object):
         data = self.parse_args(False)
 
         need = Need('create')
-        if not self.get_model().can(session['user'], need):
+        if not self.model.can(session['user'], need):
             return need.api_response()
 
         entity, error_response = self.new_entity(data)
@@ -131,19 +122,18 @@ class APIResource(object):
         Returns (entity, error_response) should be ignored if error_response
         is a True value.
         """
-        entity = self.get_model().from_dict(attributes)
+        entity = self.model.from_dict(attributes)
         entity.put()
         return entity, None
 
-    @handle_error
     def delete(self, user_id):
         """
         The DELETE HTTP method
         """
-        ent = self.get_model().query.get(user_id)
+        ent = self.model.query.get(user_id)
 
         need = Need('delete')
-        if not self.get_model().can_static(session['user'], need):
+        if not self.model.can_static(session['user'], need):
             return need.api_response()
 
         ent.key.delete()
@@ -162,16 +152,16 @@ class APIResource(object):
 
         Processes cursor and num_page URL arguments for pagination support.
         """
-        query = self.get_model().query()
+        query = self.model.query()
         need = Need('index')
 
-        result = self.get_model().can(session['user'], need, query=query)
+        result = self.model.can(session['user'], need, query=query)
         if not result:
             return need.api_response()
 
         args = self.parse_args(True)
-        query = filter_query(result, args, self.get_model())
-        created_prop = getattr(self.get_model(), 'created', None)
+        query = filter_query(result, args, self.model)
+        created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
             query = query.order(-created_prop)
 
@@ -186,11 +176,7 @@ parser = FlaskParser()
 
 class UserAPI(MethodView, APIResource):
     """The API resource for the User Object"""
-    name = "User"
-
-    @classmethod
-    def get_model(cls):
-        return models.User
+    model = models.User
 
     def new_entity(self, attributes):
         """
@@ -198,11 +184,11 @@ class UserAPI(MethodView, APIResource):
         """
         if 'email' not in attributes:
             return None, create_api_response(400, 'Email required')
-        entity = self.get_model().get_by_id(attributes['email'])
+        entity = self.model.get_by_id(attributes['email'])
         if entity:
             return None, create_api_response(400,
                                              '%s already exists' % self.name)
-        entity = self.get_model().from_dict(attributes)
+        entity = self.model.from_dict(attributes)
         entity.put()
         return entity, None
 
@@ -217,11 +203,7 @@ class UserAPI(MethodView, APIResource):
 
 class AssignmentAPI(MethodView, APIResource):
     """The API resource for the Assignment Object"""
-    name = "Assignment"
-
-    @classmethod
-    def get_model(cls):
-        return models.Assignment
+    model = models.Assignment
 
     web_args = {
         'name': Arg(str),
@@ -255,11 +237,10 @@ class SubmitNDBImplementation(object):
 
 class SubmissionAPI(MethodView, APIResource):
     """The API resource for the Submission Object"""
-    name = "Submission"
-    db = SubmitNDBImplementation()
-    post_fields = ['assignment', 'messages']
+    model = models.Submission
 
-    @handle_error
+    db = SubmitNDBImplementation()
+
     def get(self, key):
         """
         The GET HTTP method
@@ -267,7 +248,7 @@ class SubmissionAPI(MethodView, APIResource):
         if key is None:
             return self.index()
 
-        obj = self.get_model().get_by_id(key)
+        obj = self.model.get_by_id(key)
         if not obj:
             return create_api_response(404, "{resource} {key} not found".format(
                 resource=self.name, key=key))
@@ -283,10 +264,6 @@ class SubmissionAPI(MethodView, APIResource):
             response.headers["Content-Type"] = "application/zip"
             return response
         return create_api_response(200, "", obj)
-
-    @classmethod
-    def get_model(cls):
-        return models.Submission
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -305,7 +282,6 @@ class SubmissionAPI(MethodView, APIResource):
             'key': submission.key.id()
         })
 
-    @handle_error
     def post(self):
         data = self.parse_args(False)
 
@@ -322,11 +298,7 @@ class SubmissionAPI(MethodView, APIResource):
 
 
 class VersionAPI(APIResource, MethodView):
-    name = "Version"
-
-    @classmethod
-    def get_model(cls):
-        return models.Version
+    model = models.Version
 
     web_args = {
         'file_data': Arg(str),
@@ -335,11 +307,7 @@ class VersionAPI(APIResource, MethodView):
     }
 
 class CourseAPI(APIResource, MethodView):
-    name = "Course"
-
-    @classmethod
-    def get_model(cls):
-        return models.Course
+    model = models.Course
 
     def parse_args(self, is_index):
         data = super(CourseAPI, self).parse_args(is_index)
