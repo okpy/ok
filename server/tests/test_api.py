@@ -55,7 +55,6 @@ class APITest(object): #pylint: disable=no-init
                 last_name="Jones",
                 login="billy",
             )
-
         }
 
     ## INDEX ##
@@ -111,19 +110,22 @@ class APITest(object): #pylint: disable=no-init
         (6, 10),
         (10, 10)
     ]
-    
+
     @data(*pagination_tests)
     @unpack
     def test_pagination(self, total_objects, num_page):
         """
-        Tests pagination by creating a specified number of entities, and checking if
-        the number of entities retrieved are less than the specified max per page.
+        Tests pagination by creating a specified number of entities, and
+        checking if the number of entities retrieved are less than the
+        specified max per page.
 
         total_objects - the number of entities to be created
         num_page - the maximum number of entities per page
 
-        To create more copies of this test, just add a tuple to the pagination_tests list.
-        @unpack allows the ddt package to work with the `pagination_tests` list of tuples.
+        To create more copies of this test, just add a tuple to the
+        pagination_tests list.
+        @unpack allows the ddt package to work with the `pagination_tests`
+        list of tuples.
         """
         for _ in range(total_objects):
             inst = self.get_basic_instance(mutate=True)
@@ -133,13 +135,17 @@ class APITest(object): #pylint: disable=no-init
                 self.get_index(cursor=self.forward_cursor, num_page=num_page)
             else:
                 self.get_index(num_page=num_page)
+
             num_instances = len(self.response_json)
             if self.name == 'user' and num_instances < num_page:
                 total_objects += 1 # To take care of the dummy already there
+
             self.assertTrue(num_instances <= num_page,
-                "There are too many instances returned. There are " + str(num_instances) + " instances")
+                "There are too many instances returned. There are " +
+                str(num_instances) + " instances")
             self.assertTrue(num_instances == min(total_objects, num_page), 
-                    "Not right number returned: " + str(total_objects) + " vs. " +str(num_instances) + str(self.response_json))
+                "Not right number returned: " + str(total_objects) +
+                " vs. " +str(num_instances) + str(self.response_json))
             total_objects -= num_page
 
 
@@ -221,6 +227,7 @@ class UserAPITest(APITest, APIBaseTestCase):
 
     def test_index_empty(self):
         """This test doesn't make sense for the user API."""
+        pass
 
     def test_get_invalid_id_errors(self):
         """Tests that a get on an invalid ID errors."""
@@ -236,10 +243,10 @@ class UserAPITest(APITest, APIBaseTestCase):
         self.assertTrue(inst.to_json() in self.response_json)
         return inst
 
-
     def test_index_one_removed(self):
         """Tests that removing an entity makes it disappear from the index."""
-        inst = self.test_index_one_added()
+        inst = self.get_basic_instance()
+        inst.put()
 
         inst.key.delete()
         self.get_index()
@@ -292,7 +299,7 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
     def post_entity(self, inst, *args, **kwds):
         """Posts an entity to the server."""
         data = inst.to_json()
-        data['assignment'] = kwds.pop('assignment', self.assignment_name)
+        data['assignment'] = self.assignment_name
         del data['created']
 
         self.post_json('/{}'.format(self.name),
@@ -310,7 +317,6 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
 
         self.post_entity(inst)
         self.assertStatusCode(400)
-        del self.assignment_name
 
 class CourseAPITest(APITest, APIBaseTestCase):
     model = models.Course
@@ -337,7 +343,7 @@ class VersionAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        return self.model(name=name, file_data=b'aaabb', version='1.0.0')
+        return self.model(name=name, file_data='aaabb', version='1.0.0')
 
 
 if __name__ == '__main__':

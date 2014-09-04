@@ -1,8 +1,6 @@
 """
 The public API
 """
-import json
-from functools import wraps
 
 from flask.views import MethodView
 from flask.app import request
@@ -11,12 +9,11 @@ from webargs import Arg
 from webargs.flaskparser import FlaskParser
 
 from app import models
-from app import app
 from app.models import BadValueError
 from app.needs import Need
 from app.utils import create_api_response, paginate, filter_query, create_zip
 
-from google.appengine.ext import db, ndb
+from google.appengine.ext import ndb
 
 parser = FlaskParser()
 
@@ -87,7 +84,8 @@ class APIResource(object):
         for key, value in self.parse_args(False).iteritems():
             old_val = getattr(obj, key, blank_val)
             if old_val == blank_val:
-                return create_api_response(400, "{} is not a valid field.".format(key))
+                return create_api_response(
+                    400, "{} is not a valid field.".format(key))
 
             setattr(obj, key, value)
             changed = True
@@ -144,7 +142,7 @@ class APIResource(object):
         Parses the arguments to this API call.
         |index| is whether or not this is an index call.
         """
-        return {k:v for k,v in parser.parse(self.web_args).iteritems() if v}
+        return {k:v for k, v in parser.parse(self.web_args).iteritems() if v}
 
     def index(self):
         """
@@ -257,7 +255,8 @@ class SubmissionAPI(MethodView, APIResource):
         if request.args.get('download') == 'true' \
                 and 'file_contents' in obj.messages:
             response = make_response(create_zip(obj.messages['file_contents']))
-            response.headers["Content-Disposition"] = "attachment; filename=submission-%s.zip" % str(obj.created)
+            response.headers["Content-Disposition"] = (
+                "attachment; filename=submission-%s.zip" % str(obj.created))
             response.headers["Content-Type"] = "application/zip"
             return response
         return create_api_response(200, "", obj)
@@ -285,8 +284,8 @@ class SubmissionAPI(MethodView, APIResource):
         try:
             return self.submit(session['user'], data['assignment'],
                                data['messages'])
-        except BadValueError as e:
-            return create_api_response(400, e.message, {})
+        except BadValueError as exc:
+            return create_api_response(400, exc.message, {})
 
     web_args = {
         'assignment': Arg(str),
