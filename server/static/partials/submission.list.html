@@ -1,9 +1,10 @@
-<div cg-busy="submissions">
-  <div class="center-block" ng-if="submissions.length == 0">
-    <h2>No submissions found...</h2>
+<h2>Submissions</h2>
+<div>
+  <div class="center-block" ng-if="!submissions.$resolved">
+    Loading...
   </div>
-  <div class="center-block" ng-if="submissions.length != 0">
-    <h2>Submissions</h2>
+  <div class="center-block" ng-if="submissions.$resolved && submissions.length == 0">
+    No Submissions
   </div>
   <table ng-if="submissions.length > 0" class="table table-striped table-bordered table-responsive">
     <tr>
@@ -17,18 +18,18 @@
       <td>{{submission.submitter_s().email}}</td>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
-        </td>
-        <td>
-          {{submission.created | prettyDate}}
-        </td>
-        <td>
-          <a href='/api/v1/submission/{{submission.id}}?download=true'>link</a>
-        </td>
-        <td>
-          <a ui-sref='submission.detail({submissionId:submission.id})'>
-            View
-          </a>
-        </td>
-      </tr>
-    </table>
-  </div>
+      </td>
+      <td>
+        {{submission.created | prettyDate}}
+      </td>
+      <td>
+        <a href='/api/v1/submission/{{submission.id}}?download=true'>link</a>
+      </td>
+      <td>
+        <a ui-sref='submission.detail({submissionId:submission.id})'>
+          View
+        </a>
+      </td>
+    </tr>
+  </table>
+</div>
