@@ -1,4 +1,4 @@
-var app = angular.module('okpy', ['ngResource', 'ui.router']);
+var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar']);
 
 // TODO https://github.com/chieffancypants/angular-loading-bar
 // http://ngmodules.org/modules/MacGyver

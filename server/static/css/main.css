@@ -19,3 +19,17 @@ h2 {
   margin-top: 0px;
 }
 
+#loading-bar .bar {
+  top: 51px;
+  height: 4px;
+}
+
+#loading-bar-spinner {
+  top: 13.5px;
+}
+
+#loading-bar-spinner .spinner-icon {
+  width: 20px;
+  height: 20px;
+}
+
