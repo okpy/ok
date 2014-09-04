@@ -1,6 +1,7 @@
 from protocols import protocol
 import os
 
+
 class FileContents(protocol.Protocol):
     """The contents of changed source files are sent to the server."""
     name = 'file_contents'

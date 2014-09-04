@@ -152,7 +152,7 @@ class APIBaseTestCase(BaseTestCase):
         """
         Posts an entity to the server.
         """
-        self.post_json('/{}/new'.format(self.name), data=inst, *args, **kwds)
+        self.post_json('/{}'.format(self.name), data=inst, *args, **kwds)
         if self.response_json and 'key' in self.response_json:
             if inst.key:
                 self.assertEqual(inst.key.id(), self.response_json['key'])

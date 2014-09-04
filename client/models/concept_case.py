@@ -23,9 +23,14 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
         'answer': serialize.STR,
     }
     OPTIONAL = {
-        'locked': serialize.BOOL_TRUE,
+        'locked': serialize.BOOL_FALSE,
         'choices': serialize.SerializeArray(serialize.STR),
     }
+
+    def __init__(self, **fields):
+        super().__init__(**fields)
+        self['question'] = utils.dedent(self['question'])
+        self['answer'] = utils.dedent(self['answer'])
 
     ######################################
     # Protocol interface implementations #
@@ -33,11 +38,9 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def on_grade(self, logger, verbose, interact):
         """Implements the GradedTestCase interface."""
-        if verbose:
-            utils.underline('Concept question', line='-')
-            print(self['question'])
-            print('A: ' + self['answer'])
-            print()
+        print('Q: ' + self['question'])
+        print('A: ' + self['answer'])
+        print()
         return False
 
     def should_grade(self):
@@ -48,6 +51,9 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
         print(self['question'])
         answer = interact_fn(self['answer'], self['choices'])
         self['answer'] = answer
+        self['locked'] = False
 
     def on_lock(self, hash_fn):
         self['answer'] = hash_fn(self['answer'])
+        self['locked'] = True
+

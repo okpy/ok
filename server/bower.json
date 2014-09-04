@@ -28,7 +28,8 @@
     "angular-route": "~1.2.21",
     "angular-busy": "~4.1.0",
     "underscore": "~1.6.0",
-    "moment": "~2.8.2"
+    "moment": "~2.8.2",
+    "highlightjs": "~8.0.0"
   },
   "directory": "js"
 }

@@ -9,7 +9,7 @@ import utils
 class GradeTest(unittest.TestCase):
     def setUp(self):
         self.logger = utils.OutputLogger()
-        self.mock_test = core.Test(names=['dummy'], points=1)
+        self.mock_test = core.Test(name='dummy', points=1)
 
     def makeGradedTestCase(self, error=False, should_grade=True):
         case = grading.GradedTestCase(type=grading.GradedTestCase.type)

@@ -1,7 +1,22 @@
 var app = angular.module('okpy', ['ngResource', 'ui.router']);
+
 // TODO https://github.com/chieffancypants/angular-loading-bar
 // http://ngmodules.org/modules/MacGyver
 // https://github.com/localytics/angular-chosen
+
+app.directive('snippet', ['$timeout', '$interpolate', function ($timeout, $interpolate) {
+        "use strict";
+        return {
+            restrict: 'E',
+            template: '<pre><code ng-transclude></code></pre>',
+            replace: true,
+            transclude: true,
+            link: function (scope, elm) {
+                var tmp = $interpolate(elm.find('code').text())(scope);
+                elm.find('code').html(hljs.highlightAuto(tmp).value);
+            }
+        };
+    }]);
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider, $locationProvider) {
@@ -49,19 +64,50 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "AssignmentDetailCtrl"
     }
 
+    var courses = {
+      name: 'course',
+      abstract: true,
+      url: '/course',
+      templateUrl: 'static/partials/course.base.html',
+    }
+
+    var courseList = {
+      name: 'course.list',
+      url: '/',
+      templateUrl: 'static/partials/course.list.html',
+      controller: "CourseListCtrl"
+    }
+
+    var courseDetail = {
+      name: 'course.detail',
+      url: '/:courseId',
+      templateUrl: 'static/partials/course.detail.html',
+      controller: "CourseDetailCtrl"
+    }
+
+    var courseNew = {
+      name: 'course.new',
+      url: '/new',
+      templateUrl: 'static/partials/course.new.html',
+      controller: "CourseNewCtrl"
+    }
+
     $stateProvider.
       state(submissions).
       state(submissionList).
       state(submissionDetail).
       state(assignments).
       state(assignmentList).
-      state(assignmentDetail)
+      state(assignmentDetail).
+      state(courses).
+      state(courseList).
+      state(courseNew)
       ;
   }]);
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission', {format: "json"}, {
+      return $resource('api/v1/submission/:id', {format: "json"}, {
         query: {
           isArray: true,
           transformResponse: function(data) {
@@ -127,7 +173,7 @@ app.config(['$httpProvider',
               }
               url = config.url.slice(7);
 
-              if (url !== "submission") {
+              if (url.split('/')[0] !== "submission") {
                 return response;
               }
               data = response.data;
@@ -155,9 +201,54 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
     }
   ]);
 
+app.factory('Course', ['$resource',
+    function($resource) {
+      return $resource('api/v1/course/:id', {
+        format: "json",
+      }, {
+        query: {
+          isArray: true,
+          transformResponse: function(data) {
+            return JSON.parse(data).data.results;
+          }
+        },
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+      });
+    }
+  ]);
+
+app.controller("CourseListCtrl", ['$scope', 'Course',
+  function($scope, Course) {
+    $scope.courses = Course.query();
+  }]);
+
+app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
+    function ($scope, $stateParams, Course) {
+      $scope.course = Course.get({id: $stateParams.courseId});
+    }
+  ]);
+
+// NOT WORKING RIGHT NOW
+app.controller("CourseNewCtrl", ["$scope", "Course",
+    function ($scope, Course) {
+      $scope.course = {};
+      $scope.test = {'test':3};
+
+      $scope.save = function() {
+        var course = new Course($scope.course);
+        course.$save();
+      };
+    }
+  ]);
+
 
 app.filter('prettyDate', function() {
   return function(date) {
-    return moment(date).format('MMMM Do YYYY, h:mm:ss a');
+    return moment(date).calendar();
   }
 });
