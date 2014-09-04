@@ -25,7 +25,7 @@ def KeyArg(klass, **kwds):
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
-        staff_lst = None
+        staff_lst = []
         if not isinstance(key_list, list):
             if ',' in key_list:
                 staff_lst = key_list.split(',')

@@ -8,6 +8,7 @@ import traceback
 from flask import render_template, session, request
 
 from google.appengine.api import users
+from google.appengine.ext.db import BadValueError
 
 from app import app
 from app import api
@@ -41,6 +42,13 @@ def page_not_found(e):
 def server_error(e):
     return render_template('base.html', error=e), 500
 
+class WebArgsException(Exception):
+    pass
+
+@api.parser.error_handler
+def args_error(error):
+    raise WebArgsException(error)
+
 def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
     """
     Registers the given view at the endpoint, accessible by the given url.
@@ -65,7 +73,11 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
 
         try:
             return view(*args, **kwds)
-        except Exception: #pylint: disable=broad-except
+        except (WebArgsException, BadValueError) as e:
+            message = "Invalid arguments: %s" % e.message
+            logging.warning(message)
+            return utils.create_api_response(400, message)
+        except Exception as e: #pylint: disable=broad-except
             #TODO(martinis) add tests
             error_message = traceback.format_exc()
             logging.error(error_message)
