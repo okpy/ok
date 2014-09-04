@@ -57,6 +57,7 @@ class APIResource(object):
         """
         The GET HTTP method
         """
+        return
         if key is None:
             return self.index()
 
