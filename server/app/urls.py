@@ -3,17 +3,19 @@ URL dispatch route mappings and error handlers
 """
 from functools import wraps
 import logging
+import traceback
 
-from flask import render_template, session
+from flask import render_template, session, request
 
 from google.appengine.api import users
+from google.appengine.ext.db import BadValueError
 
 from app import app
 from app import api
 from app import auth
 from app import models
+from app import utils
 from app.constants import API_PREFIX
-from app.decorators import check_version
 
 @app.route("/")
 def index():
@@ -40,6 +42,13 @@ def page_not_found(e):
 def server_error(e):
     return render_template('base.html', error=e), 500
 
+class WebArgsException(Exception):
+    pass
+
+@api.parser.error_handler
+def args_error(error):
+    raise WebArgsException(error)
+
 def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
     """
     Registers the given view at the endpoint, accessible by the given url.
@@ -48,13 +57,32 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
     view = view.as_view(endpoint)
 
     @wraps(view)
-    @check_version
     def wrapped(*args, **kwds):
+        #TODO(martinis) add tests
+        if 'client_version' in request.args:
+            if request.args['client_version'] != app.config['CLIENT_VERSION']:
+                return utils.create_api_response(403, "incorrect client version", {
+                    'supplied_version': request.args['client_version'],
+                    'correct_version': app.config['CLIENT_VERSION']
+                })
+
         user = auth.authenticate()
         if not isinstance(user, models.User):
             return user
         session['user'] = user
-        return view(*args, **kwds)
+
+        try:
+            return view(*args, **kwds)
+        except (WebArgsException, BadValueError) as e:
+            message = "Invalid arguments: %s" % e.message
+            logging.warning(message)
+            return utils.create_api_response(400, message)
+        except Exception as e: #pylint: disable=broad-except
+            #TODO(martinis) add tests
+            error_message = traceback.format_exc()
+            logging.error(error_message)
+            return utils.create_api_response(500, 'internal server error:\n%s' %
+                                             error_message)
 
     # To get all objects
     app.add_url_rule(url, defaults={primary_key: None},
