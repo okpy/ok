@@ -31,7 +31,7 @@ class UnlockTestCase(core.TestCase):
     """
 
     OPTIONAL = {
-        'locked': serialize.BOOL_TRUE,
+        'locked': serialize.BOOL_FALSE,
     }
 
     def on_unlock(self, logger, interact_fn):
@@ -66,7 +66,10 @@ class LockProtocol(protocol.Protocol):
             if not self.assignment['hash_key']:
                 self.assignment['hash_key'] = self._gen_hash_key()
             for test in self.assignment.tests:
+                print('Locking cases for Test ' + test['name'])
                 lock(test, self._hash_fn)
+            print('Completed locking {}.'.format(self.assignment['name']))
+            print()
 
     @property
     def _alphabet(self):
@@ -77,12 +80,12 @@ class LockProtocol(protocol.Protocol):
 
     def _hash_fn(self, x):
         return hmac.new(self.assignment['hash_key'].encode('utf-8'),
-                        x.encode('utf-8')).digest()
+                        x.encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
     for suite in test['suites']:
         for case in suite:
-            if case['locked']:
+            if not case['locked']:
                 case.on_lock(hash_fn)
 
 ######################
@@ -114,6 +117,7 @@ class UnlockProtocol(protocol.Protocol):
                 # of unlocked test cases. This can be a useful metric
                 # for analytics in the future.
                 unlock(test, self.logger, self.assignment['hash_key'])
+                print()
 
     def _filter_tests(self):
         """
@@ -208,7 +212,8 @@ class UnlockConsole(object):
     ###################
 
     def _verify(self, guess, lock):
-        return hmac.new(self._hash_key, guess.encode('utf-8')).digest() == lock
+        return hmac.new(self._hash_key.encode('utf-8'),
+                        guess.encode('utf-8')).hexdigest() == lock
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
@@ -266,13 +271,17 @@ class UnlockConsole(object):
                 except (KeyboardInterrupt, EOFError):
                     pass
                 raise UnlockException
+            student_input.strip()
             if student_input in self.EXIT_INPUTS:
                 raise UnlockException
 
             self._add_line_to_history(student_input)
 
             if choices:
-                student_input = choice_map[student_input]
+                if student_input not in choice_map:
+                    student_input = ''
+                else:
+                    student_input = choice_map[student_input]
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")

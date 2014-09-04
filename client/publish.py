@@ -39,7 +39,8 @@ for protocol in protocols:
     filename = "{0}.py".format(protocol)
     src = os.path.join("protocols", filename)
     dst = os.path.join(STAGING_DIR, "protocols", filename)
-    shutil.copyfile(src, dst)
+    if os.path.isfile(src):
+        shutil.copyfile(src, dst)
 
 # Zip up the files
 

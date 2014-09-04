@@ -8,11 +8,18 @@ from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock
+from unittest import mock
 import code
 import re
-import readline
 import traceback
 import utils
+
+# TODO(albert): After v1 is released, come up with a better solution
+# (preferably one that is cross-platform).
+try:
+    import readline
+except ImportError:
+    readline = mock.MagicMock()
 
 class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for doctest-style Python tests."""
@@ -25,7 +32,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     }
     OPTIONAL = {
         'test': serialize.STR,
-        'locked': serialize.BOOL_TRUE,
+        'locked': serialize.BOOL_FALSE,
         'teardown': serialize.STR,
     }
 
@@ -84,6 +91,12 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def on_grade(self, logger, verbose, interactive):
         """Implements the GradedTestCase interface."""
+        # TODO(albert): For now, all output is displayed, even if
+        # verbosity is toggled off (effectively, the verbosity flag
+        # is a nop). This is just to get v1 ready ASAP -- fix this
+        # later.
+        verbose = True
+
         if not verbose:
             logger.off()
         log = []
@@ -307,8 +320,8 @@ class _PythonConsole(object):
                     if error:
                         break
                     current = []
-                print(line)
-                self._add_line_to_history(line)
+                if line:
+                    print(line)
                 line = self._strip_prompt(line)
                 self._add_line_to_history(line)
                 current.append(line)

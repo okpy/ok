@@ -56,7 +56,7 @@ class Test(serialize.Serializable):
     """Represents all suites for a single test in an assignment."""
 
     REQUIRED = {
-        'names': serialize.SerializeArray(serialize.STR),
+        'name': serialize.STR,
         'points': serialize.FLOAT,
     }
     OPTIONAL = {
@@ -66,6 +66,7 @@ class Test(serialize.Serializable):
         'extra': serialize.BOOL_FALSE,
     }
 
+    # Deprecated
     @property
     def name(self):
         """Gets the canonical name of this test.
@@ -73,9 +74,9 @@ class Test(serialize.Serializable):
         RETURNS:
         str; the name of the test
         """
-        if not self['names']:
-            return repr(self)
-        return self['names'][0]
+        # TODO(albert): remove references to this method: use
+        # self['names'] instead.
+        return self['name']
 
     @property
     def num_cases(self):
@@ -87,6 +88,11 @@ class Test(serialize.Serializable):
         """Returns the number of locked test cases in this test."""
         return [case['locked'] for suite in self['suites']
                                for case in suite].count(True)
+
+    @property
+    def num_graded(self):
+        return [case.should_grade() for suite in self['suites']
+                                    for case in suite].count(True)
 
     def add_suite(self, suite):
         """Adds the given suite to this test's list of suites. If

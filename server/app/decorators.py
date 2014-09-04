@@ -2,11 +2,13 @@
 Decorators for URL handlers
 """
 
+import logging
 from functools import wraps
 from google.appengine.api import users
 from flask import redirect, request, abort
 
 from app import utils
+from app import app
 
 import traceback
 
@@ -19,6 +21,7 @@ def handle_error(func):
             return func(*args, **kwargs)
         except Exception: #pylint: disable=broad-except
             error_message = traceback.format_exc()
+            logging.error(error_message)
             return utils.create_api_response(500, 'internal server error:\n%s' %
                                              error_message)
     return decorated
@@ -46,3 +49,16 @@ def admin_required(func):
     decorated.login_required = True
     decorated.admin_required = True
     return decorated
+
+def check_version(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if 'client_version' in request.args:
+            if request.args['client_version'] != app.config['CLIENT_VERSION']:
+                return utils.create_api_response(403, "incorrect client version", {
+                    'supplied_version': request.args['client_version'],
+                    'correct_version': app.config['CLIENT_VERSION']
+                })
+        return func(*args, **kwargs)
+    return wrapped
+

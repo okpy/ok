@@ -96,6 +96,37 @@ class Counter(object):
     def __repr__(self):
         return str(self._count)
 
+def prettyformat(json, indentation='  '):
+    """Formats a Python-object into a string in a JSON like way, but
+    uses triple quotes for multiline strings.
+
+    PARAMETERS:
+    json        -- Python object that is serializable into json.
+    indentation -- str; represents one level of indentation
+
+    RETURNS:
+    str; the formatted json-like string.
+    """
+    if isinstance(json, int) or isinstance(json, float):
+        return str(json)
+    elif isinstance(json, str):
+        if '\n' in json:
+            return '"""\n' + dedent(json) + '\n"""'
+        return repr(json)
+    elif isinstance(json, list):
+        lst = [indent(prettyformat(elem, indentation), indentation)
+                        for elem in json]
+        return '[\n' + ',\n'.join(lst) + '\n]'
+    elif isinstance(json, dict):
+        pairs = []
+        for k, v in sorted(json.items()):
+            k = prettyformat(k, indentation)
+            v = prettyformat(v, indentation)
+            pairs.append(indent(k + ': ' + v, indentation))
+        return '{\n' + ',\n'.join(pairs) + '\n}'
+    else:
+        raise exceptions.DeserializeError('Invalid json type: {}'.format(json))
+
 #####################
 # TIMEOUT MECHANISM #
 #####################

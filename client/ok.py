@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+VERSION = '1.0.0'
 
 """The ok.py script runs tests, checks for updates, and saves your work.
 
@@ -46,31 +47,40 @@ import json
 import os
 import sys
 import utils
+import multiprocessing
+import base64
+import time
 
-def send_to_server(messages, assignment, server, endpoint='submission/new'):
+def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
     data = {
         'assignment': assignment['name'],
         'messages': messages,
     }
     try:
-        address = 'http://' + server + '/api/v1/' + endpoint
+        print("Sending stuff to server...")
+        address = 'https://' + server + '/api/v1/' + endpoint
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
-        access_token = authenticate()
-        address += "?access_token=%s" % access_token
+        address += "?access_token=%s&client_version=%s" % (access_token, VERSION)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         print("Error while sending to server: {}".format(ex))
-        response = ex.read().decode('utf-8')
-        message = json.loads(response)['message']
-        indented = '\n'.join('\t' + line for line in message.split('\n'))
-        print(indented)
-        return {}
+        try:
+            #response_json = json.loads(response)
+            if ex.code == 403:
+                get_latest_version(server)
+            #message = response_json['message']
+            #indented = '\n'.join('\t' + line for line in message.split('\n'))
+            #print(indented)
+            return {}
+        except Exception as e:
+            print(e)
+            print("Couldn't connect to server")
 
 
 ######################
@@ -128,28 +138,26 @@ def _get_tests(directory, assignment, case_map):
                   assignment, extracted from the info file.
     """
     test_files = os.listdir(directory)
-    for file in test_files:
+    # TODO(albert): have a better way to sort tests.
+    for file in sorted(test_files):
         if file == INFO_FILE or not file.endswith('.py'):
             continue
         path = os.path.normpath(os.path.join(directory, file))
         if os.path.isfile(path):
-            # TODO(albert): add error handling in case no attribute
-            # test is found.
-            test_json = _import_module(path).test
-            test = core.Test.deserialize(test_json, assignment, case_map)
-            assignment.add_test(test)
+            try:
+                test_json = _import_module(path).test
+                test = core.Test.deserialize(test_json, assignment, case_map)
+                assignment.add_test(test)
+            except AttributeError as ex:
+                # TODO(soumya): Do something here, but only for staff protocols.
+                pass
 
 
 def _import_module(path):
     """Attempt to load the source file at path. Returns None on failure."""
-    try:
-        loader = importlib.machinery.SourceFileLoader(path, path)
-        test_module = loader.load_module()
-        return test_module
-    except Exception:
-        # TODO(albert): should probably fail fast, but with helpful
-        # error messages.
-        return None
+    loader = importlib.machinery.SourceFileLoader(path, path)
+    test_module = loader.load_module()
+    return test_module
 
 ######################
 # Assignment dumping #
@@ -165,7 +173,7 @@ def dump_tests(test_dir, assignment):
     """
     # TODO(albert): prettyify string formatting by using triple quotes.
     # TODO(albert): verify that assign_copy is serializable into json.
-    info = json.dumps(assignment.serialize(), indent=2)
+    info = utils.prettyformat(assignment.serialize())
     with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
         f.write('info = ' + info)
 
@@ -174,9 +182,34 @@ def dump_tests(test_dir, assignment):
     # TODO(albert): might need to delete obsolete test files too.
     # TODO(albert): verify that test_json is serializable into json.
     for test in assignment.tests:
-        test_json = json.dumps(test.serialize(), indent=2)
+        test_json = utils.prettyformat(test.serialize())
         with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
             f.write('test = ' + test_json)
+
+#####################
+# Software Updating #
+#####################
+
+def get_latest_version(server):
+    """Check for the latest version of ok and update this file accordingly.
+    """
+    print("You are running version {0} of ok.py".format(VERSION))
+
+    # Get server version
+    address = "https://" + server + "/api/v1" + "/version?name=okpy"
+
+    try:
+        req = request.Request(address)
+        response = request.urlopen(req)
+
+        full_response = json.loads(response.read().decode('utf-8'))
+
+        file_contents = base64.b64decode(full_response['data']['results'][0]['file_data'])
+        new_file = open('ok', 'wb')
+        new_file.write(file_contents)
+        new_file.close()
+    except error.HTTPError as ex:
+        print("Error when downloading new version")
 
 ##########################
 # Command-line Interface #
@@ -189,7 +222,7 @@ def parse_input():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-q', '--question', type=str,
                         help="focus on a specific question")
-    parser.add_argument('-s', '--server', type=str, default='localhost:8080',
+    parser.add_argument('-s', '--server', type=str, default='ok-server.appspot.com',
                         help="server address")
     parser.add_argument('-t', '--tests', metavar='A', default='tests', type=str,
                         help="partial name or path to test file or directory")
@@ -199,18 +232,24 @@ def parse_input():
                         help="print more output")
     parser.add_argument('-i', '--interactive', action='store_true',
                         help="toggles interactive mode")
-    parser.add_argument('-l', '--lock', default='tests', type=str,
+    parser.add_argument('-l', '--lock', type=str,
                         help="partial name or path to test file or directory to lock")
     return parser.parse_args()
 
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    try:
-        assignment = load_tests(args.tests, config.cases)
-    except Exception as ex:
-        print(ex)
-        sys.exit(1)
+    timer_thread = multiprocessing.Process(target=lambda: time.sleep(0.8), args=())
+    timer_thread.start()
+    assignment = load_tests(args.tests, config.cases)
+
+    # TODO(soumya): uncomment this once ok.py is ready to ship, to hide
+    # error messages.
+    # try:
+    #     assignment = load_tests(args.tests, config.cases)
+    # except Exception as ex:
+    #     print(ex)
+    #     sys.exit(1)
 
     logger = sys.stdout = utils.OutputLogger()
 
@@ -220,11 +259,18 @@ def ok_main(args):
         [p(args, assignment, logger) for p in config.protocols.values()]
 
     messages = dict()
+
     for protocol in start_protocols:
         messages[protocol.name] = protocol.on_start()
 
-    # TODO(denero) Send in a separate thread.
-    send_to_server(messages, assignment, args.server)
+    try:
+        access_token = authenticate()
+        server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment, args.server))
+        server_thread.start()
+    except error.URLError as ex:
+        # TODO(soumya) Make a better error message
+        # print("Nothing was sent to the server!")
+        pass
 
     for protocol in interact_protocols:
         protocol.on_interact()
@@ -234,6 +280,11 @@ def ok_main(args):
     # TODO(albert): a premature error might prevent tests from being
     # dumped. Perhaps add this in a "finally" clause.
     dump_tests(args.tests, assignment)
+
+    while timer_thread.is_alive():
+        pass
+
+    server_thread.terminate()
 
 if __name__ == '__main__':
     ok_main(parse_input())

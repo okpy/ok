@@ -84,7 +84,7 @@ class InteractTest(unittest.TestCase):
 class UnlockTest(unittest.TestCase):
     def setUp(self):
         self.logger = utils.OutputLogger()
-        self.mock_test = core.Test(names=['dummy'], points=1)
+        self.mock_test = core.Test(name='dummy', points=1)
 
     def makeUnlockTestCase(self, lock=True, abort=False):
         case = unlock.UnlockTestCase(type=unlock.UnlockTestCase.type,
@@ -181,22 +181,34 @@ class LockTest(unittest.TestCase):
         self.proto = unlock.LockProtocol(self.args, self.assignment,
                                          self.logger)
 
-        self.test = core.Test(names=['dummy'], points=1)
+        self.test = core.Test(name='dummy', points=1)
         self.mock_case = mock.MagicMock(spec=unlock.UnlockTestCase)
         self.test.add_suite([self.mock_case])
         self.assignment.add_test(self.test)
 
     def testWithNoHashKey(self):
+        # TestCase starts as unlocked.
+        self.mock_case.__getitem__.return_value = False
         self.proto.on_start()
         self.assertTrue(self.mock_case.on_lock.called)
         self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
         self.assertNotEqual('', self.assignment['hash_key'])
 
     def testWithHashKey(self):
+        # TestCase starts as unlocked.
+        self.mock_case.__getitem__.return_value = False
         hash_key = self.proto._gen_hash_key()
         self.assignment['hash_key'] = hash_key
         self.proto.on_start()
         self.assertTrue(self.mock_case.on_lock.called)
         self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
+        self.assertEqual(hash_key, self.assignment['hash_key'])
+
+    def testAlreadyLocked(self):
+        self.mock_case.__getitem__.return_value = True
+        hash_key = self.proto._gen_hash_key()
+        self.assignment['hash_key'] = hash_key
+        self.proto.on_start()
+        self.assertFalse(self.mock_case.on_lock.called)
         self.assertEqual(hash_key, self.assignment['hash_key'])
 
