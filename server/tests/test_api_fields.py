@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 # encoding: utf-8
-#pylint: disable=no-member, no-init, too-many-public-methods
-#pylint: disable=attribute-defined-outside-init
-# This disable is because the tests need to be name such that
-# you can understand what the test is doing from the method name.
-#pylint: disable=missing-docstring
 """
 Tests api field filtering.
 """
@@ -12,8 +7,6 @@ from app.utils import coerce_to_json
 from test_base import BaseTestCase, unittest
 
 class FakeModel(object):
-    # Disabling because it's just a test object
-    #pylint: disable=too-few-public-methods
     """
     Test class that fakes out to_json
     """
@@ -91,8 +84,6 @@ class FieldsTest(BaseTestCase):
         """
         test_self = self
         class TestModel(object):
-            # Disabling because it's just a test object
-            #pylint: disable=too-few-public-methods
             def to_json(self, fields):
                 test_self.assertEqual(fields, ['foo'])
 
