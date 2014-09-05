@@ -1,19 +1,9 @@
-"""Implements the GradingProtocol, which runs all specified tests
-associated with an assignment.
-
-The GradedTestCase interface should be implemented by TestCases that
-are compatible with the GradingProtocol.
+"""Implements the AnalyticsProtocol, which keeps track of configuration
+for the ok grading session.
 """
 
-from models import core
 from protocols import protocol
-import utils
 from datetime import datetime
-
-#####################
-# Testing Mechanism #
-#####################
-
 
 class AnalyticsProtocol(protocol.Protocol):
     """A Protocol that analyzes how much students are using the autograder.
@@ -26,14 +16,9 @@ class AnalyticsProtocol(protocol.Protocol):
         """
         statistics = {}
         statistics['time'] = datetime.now()
-        statistics['unlock'] = False
+        statistics['unlock'] = self.args.unlock is not None
 
         if self.args.question:
             statistics['question'] = self.args.question
-
-        if self.args.unlock:
-            statistics['unlock'] = True
-
-        statistics['log'] = self.logger.log
 
         return statistics
