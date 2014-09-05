@@ -292,6 +292,7 @@ class UnlockConsole(object):
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
+                print()
         return student_input
 
     def _add_line_to_history(self, line):
