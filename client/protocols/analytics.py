@@ -10,7 +10,7 @@ class AnalyticsProtocol(protocol.Protocol):
     """
     name = 'analytics'
 
-    def on_start():
+    def on_start(self):
         """
         Returns some analytics about this autograder run.
         """
