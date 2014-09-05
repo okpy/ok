@@ -15,7 +15,7 @@ class AnalyticsProtocol(protocol.Protocol):
         Returns some analytics about this autograder run.
         """
         statistics = {}
-        statistics['time'] = datetime.now()
+        statistics['time'] = str(datetime.now())
         statistics['unlock'] = self.args.unlock is not None
 
         if self.args.question:
