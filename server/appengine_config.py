@@ -3,6 +3,8 @@ App Engine config
 
 """
 
+appstats_MAX_STACK = 20
+
 def gae_mini_profiler_should_profile_production():
     """Uncomment the first two lines to enable GAE
     Mini Profiler on production for admin accounts"""

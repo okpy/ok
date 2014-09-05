@@ -25,6 +25,7 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
     OPTIONAL = {
         'locked': serialize.BOOL_FALSE,
         'choices': serialize.SerializeArray(serialize.STR),
+        'never_lock': serialize.BOOL_FALSE,
     }
 
     def __init__(self, **fields):

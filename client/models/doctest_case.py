@@ -34,6 +34,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         'test': serialize.STR,
         'locked': serialize.BOOL_FALSE,
         'teardown': serialize.STR,
+        'never_lock': serialize.BOOL_FALSE,
     }
 
     PS1 = '>>> '
@@ -104,8 +105,10 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
         console = _PythonConsole()
         frame = self._frame.copy()
-        console.exec(self._assignment_params['setup'], frame)
-        console.exec(self._test_params['setup'], frame)
+        if console.exec(self._assignment_params['setup'], frame) \
+                or console.exec(self._test_params['setup'], frame):
+            # If any of the setup code errors.
+            return True
 
         error = console.run(self, frame)
 

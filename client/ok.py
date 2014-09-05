@@ -108,12 +108,13 @@ def load_tests(test_dir, case_map):
         raise exceptions.OkException(
                 'Directory {} must have a file called {}'.format(
                     test_dir, INFO_FILE))
-    assignment = _get_info(info_file)
+    sys.path.insert(0, os.path.abspath(test_dir))
+    assignment = _get_info()
     _get_tests(test_dir, assignment, case_map)
     return assignment
 
 
-def _get_info(filepath):
+def _get_info():
     """Loads information from an INFO file, given by the filepath.
 
     PARAMETERS:
@@ -124,7 +125,8 @@ def _get_info(filepath):
     """
     # TODO(albert): add error handling in case no attribute info is
     # found.
-    info_json = _import_module(filepath).info
+    module_name, _ = os.path.splitext(INFO_FILE)
+    info_json = _import_module(module_name).info
     return core.Assignment.deserialize(info_json)
 
 
@@ -143,9 +145,10 @@ def _get_tests(directory, assignment, case_map):
         if file == INFO_FILE or not file.endswith('.py'):
             continue
         path = os.path.normpath(os.path.join(directory, file))
+        module_name, _ = os.path.splitext(file)
         if os.path.isfile(path):
             try:
-                test_json = _import_module(path).test
+                test_json = _import_module(module_name).test
                 test = core.Test.deserialize(test_json, assignment, case_map)
                 assignment.add_test(test)
             except AttributeError as ex:
@@ -153,11 +156,9 @@ def _get_tests(directory, assignment, case_map):
                 pass
 
 
-def _import_module(path):
+def _import_module(module):
     """Attempt to load the source file at path. Returns None on failure."""
-    loader = importlib.machinery.SourceFileLoader(path, path)
-    test_module = loader.load_module()
-    return test_module
+    return importlib.import_module(module)
 
 ######################
 # Assignment dumping #

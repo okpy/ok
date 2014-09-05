@@ -46,7 +46,7 @@ class Assignment(serialize.Serializable):
         """Returns the tests for this assignment. The returned list
         is a copy, so that the original list can remain immutable.
         """
-        return self._tests.copy()
+        return self._tests[:]
 
     @property
     def num_tests(self):

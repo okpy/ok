@@ -29,7 +29,8 @@
     "angular-busy": "~4.1.0",
     "underscore": "~1.6.0",
     "moment": "~2.8.2",
-    "highlightjs": "~8.0.0"
+    "highlightjs": "~8.0.0",
+    "angular-loading-bar": "~0.5.1"
   },
   "directory": "js"
 }

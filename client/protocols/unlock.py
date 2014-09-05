@@ -36,6 +36,7 @@ class UnlockTestCase(core.TestCase):
 
     OPTIONAL = {
         'locked': serialize.BOOL_FALSE,
+        'never_lock': serialize.BOOL_FALSE,
     }
 
     def on_unlock(self, logger, interact_fn):
@@ -90,7 +91,7 @@ def lock(test, hash_fn):
     print('Locking cases for Test ' + test['name'])
     for suite in test['suites']:
         for case in suite:
-            if not case['locked']:
+            if not case['never_lock'] and not case['locked']:
                 case.on_lock(hash_fn)
 
 ######################
@@ -292,6 +293,7 @@ class UnlockConsole(object):
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
+                print()
         return student_input
 
     def _add_line_to_history(self, line):

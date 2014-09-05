@@ -182,13 +182,15 @@ class LockTest(unittest.TestCase):
                                          self.logger)
 
         self.test = core.Test(name='dummy', points=1)
-        self.mock_case = mock.MagicMock(spec=unlock.UnlockTestCase)
+        self.mock_case = MockUnlockCase(type='dummy')
+        self.mock_case.on_unlock = mock.Mock()
+        self.mock_case.on_lock = mock.Mock()
         self.test.add_suite([self.mock_case])
         self.assignment.add_test(self.test)
 
     def testWithNoHashKey(self):
         # TestCase starts as unlocked.
-        self.mock_case.__getitem__.return_value = False
+        self.mock_case['locked'] = False
         self.proto.on_start()
         self.assertTrue(self.mock_case.on_lock.called)
         self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
@@ -196,7 +198,7 @@ class LockTest(unittest.TestCase):
 
     def testWithHashKey(self):
         # TestCase starts as unlocked.
-        self.mock_case.__getitem__.return_value = False
+        self.mock_case['locked'] = False
         hash_key = self.proto._gen_hash_key()
         self.assignment['hash_key'] = hash_key
         self.proto.on_start()
@@ -205,10 +207,21 @@ class LockTest(unittest.TestCase):
         self.assertEqual(hash_key, self.assignment['hash_key'])
 
     def testAlreadyLocked(self):
-        self.mock_case.__getitem__.return_value = True
+        self.mock_case['locked'] = True
         hash_key = self.proto._gen_hash_key()
         self.assignment['hash_key'] = hash_key
         self.proto.on_start()
         self.assertFalse(self.mock_case.on_lock.called)
         self.assertEqual(hash_key, self.assignment['hash_key'])
 
+    def testNeverLock(self):
+        self.mock_case['never_lock'] = True
+        self.proto.on_start()
+        self.assertFalse(self.mock_case.on_lock.called)
+
+class MockUnlockCase(unlock.UnlockTestCase):
+    def on_onlock(self, logger, interact_fn):
+        pass
+
+    def on_lock(self, hash_fn):
+        pass

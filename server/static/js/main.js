@@ -1,4 +1,4 @@
-var app = angular.module('okpy', ['ngResource', 'ui.router']);
+var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar']);
 
 // TODO https://github.com/chieffancypants/angular-loading-bar
 // http://ngmodules.org/modules/MacGyver
@@ -126,7 +126,19 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-    $scope.submissions = Submission.query();
+    $scope.submissions = Submission.query({
+      fields: {
+        'created': true,
+        'id': true,
+        'submitter': {
+          'id': true
+        },
+        'assignment': {
+          'name': true,
+          'id': true,
+        }
+      }
+    });
   }]);
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
@@ -136,9 +148,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
 
 app.factory('Assignment', ['$resource',
     function($resource) {
-      return $resource('api/v1/assignment/:id', {
-        format: "json",
-      }, {
+      return $resource('api/v1/assignment/:id', {format: "json"}, {
         query: {
           isArray: true,
           transformResponse: function(data) {
