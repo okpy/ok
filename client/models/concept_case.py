@@ -48,7 +48,8 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def on_unlock(self, logger, interact_fn):
         """Implements the UnlockTestCase interface."""
-        print(self['question'])
+        print('Q: ' + self['question'])
+        print()
         answer = interact_fn(self['answer'], self['choices'])
         self['answer'] = answer
         self['locked'] = False

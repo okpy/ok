@@ -68,10 +68,10 @@ class LockProtocol(protocol.Protocol):
     def on_start(self):
         """Responsible for locking each test."""
         if self.args.lock:
+            utils.print_title('Locking tests for {}'.format(self.assignment['name']))
             if not self.assignment['hash_key']:
                 self.assignment['hash_key'] = self._gen_hash_key()
             for test in self.assignment.tests:
-                print('Locking cases for Test ' + test['name'])
                 lock(test, self._hash_fn)
             print('Completed locking {}.'.format(self.assignment['name']))
             print()
@@ -88,6 +88,7 @@ class LockProtocol(protocol.Protocol):
                         x.encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
+    print('Locking cases for Test ' + test['name'])
     for suite in test['suites']:
         for case in suite:
             if not case['never_lock'] and not case['locked']:
@@ -108,6 +109,8 @@ class UnlockProtocol(protocol.Protocol):
         """
         if not self.args.unlock:
             return
+        utils.print_title('Unlocking tests for {}'.format(self.assignment['name']))
+
         print('At each "{}",'.format(UnlockConsole.PROMPT)
               + ' type in what you would expect the output to be.')
         print('Type {} to quit'.format(UnlockConsole.EXIT_INPUTS[0]))
@@ -290,6 +293,7 @@ class UnlockConsole(object):
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
+                print()
         return student_input
 
     def _add_line_to_history(self, line):
