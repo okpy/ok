@@ -4,6 +4,7 @@ import protocols.grading
 import protocols.unlock
 import protocols.protocol
 import protocols.file_contents
+import protocols.analytics
 
 from collections import OrderedDict
 
@@ -19,4 +20,5 @@ protocols = OrderedDict([
     ('unlock', protocols.unlock.UnlockProtocol),
     ('lock', protocols.unlock.LockProtocol),
     ('grading', protocols.grading.GradingProtocol),
+    ('analytics', protocols.analytics.AnalyticsProtocol)
 ])

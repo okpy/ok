@@ -258,6 +258,7 @@ def ok_main(args):
     #     sys.exit(1)
 
     logger = sys.stdout = utils.OutputLogger()
+    logger.register_log([])
 
     start_protocols = \
         [p(args, assignment, logger) for p in config.protocols.values()]
