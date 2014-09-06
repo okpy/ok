@@ -54,7 +54,7 @@ class GradingProtocol(protocol.Protocol):
         # recognized.
         any_graded = False
         for test in self.assignment.tests:
-            if not self.args.question or test.name == self.args.question:
+            if not self.args.question or self.args.question in test['names']:
                 self._grade_test(test)
                 any_graded = True
         if not any_graded and self.args.question:
