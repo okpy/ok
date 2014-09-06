@@ -240,6 +240,8 @@ def parse_input():
                         help="partial name or path to test file or directory to lock")
     parser.add_argument('-f', '--force', action='store_true',
                         help="Forces a server response regardless of how long it takes")
+    parser.add_argument('-a', '--authenticate', action='store_true',
+                        help="Authenticate, ignoring previous authentication")
     return parser.parse_args()
 
 
@@ -271,7 +273,7 @@ def ok_main(args):
         messages[protocol.name] = protocol.on_start()
 
     try:
-        access_token = authenticate()
+        access_token = authenticate(args.authenticate)
         server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment, args.server))
         server_thread.start()
     except error.URLError as ex:
