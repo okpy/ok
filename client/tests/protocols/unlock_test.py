@@ -84,7 +84,7 @@ class InteractTest(unittest.TestCase):
 class UnlockTest(unittest.TestCase):
     def setUp(self):
         self.logger = utils.OutputLogger()
-        self.mock_test = core.Test(name='dummy', points=1)
+        self.mock_test = core.Test(names=['dummy'], points=1)
 
     def makeUnlockTestCase(self, lock=True, abort=False):
         case = unlock.UnlockTestCase(type=unlock.UnlockTestCase.type,
@@ -97,7 +97,7 @@ class UnlockTest(unittest.TestCase):
         return case
 
     def calls_unlock(self, test, expected_unlocked):
-        cases_unlocked = unlock.unlock(test, self.logger, '')
+        cases_unlocked = unlock.unlock(test, self.logger, '')[0]
         self.assertEqual(expected_unlocked, cases_unlocked)
 
     def testNoSuites(self):
@@ -181,7 +181,7 @@ class LockTest(unittest.TestCase):
         self.proto = unlock.LockProtocol(self.args, self.assignment,
                                          self.logger)
 
-        self.test = core.Test(name='dummy', points=1)
+        self.test = core.Test(names=['dummy'], points=1)
         self.mock_case = MockUnlockCase(type='dummy')
         self.mock_case.on_unlock = mock.Mock()
         self.mock_case.on_lock = mock.Mock()

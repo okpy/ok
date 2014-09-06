@@ -88,7 +88,7 @@ class LockProtocol(protocol.Protocol):
                         x.encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
-    print('Locking cases for Test ' + test['name'])
+    print('Locking cases for Test ' + test.name)
     for suite in test['suites']:
         for case in suite:
             if not case['never_lock'] and not case['locked']:
@@ -124,7 +124,9 @@ class UnlockProtocol(protocol.Protocol):
                 # TODO(albert): the unlock function returns the number
                 # of unlocked test cases. This can be a useful metric
                 # for analytics in the future.
-                unlock(test, self.logger, self.assignment['hash_key'])
+                cases_unlocked, end_session = unlock(test, self.logger, self.assignment['hash_key'])
+                if end_session:
+                    break
                 print()
 
     def _filter_tests(self):
@@ -150,8 +152,9 @@ def unlock(test, logger, hash_key):
     written. Once a TestCase is unlocked, it will remain unlocked.
 
     RETURN:
-    int; the number of cases that are newly unlocked for this Test
-    after going through an unlocking session.
+    int, bool; the number of cases that are newly unlocked for this Test
+    after going through an unlocking session and whether the student wanted
+    to exit the unlocker or not.
     """
     console = UnlockConsole(logger, hash_key)
     cases = 0
@@ -164,10 +167,10 @@ def unlock(test, logger, hash_key):
                 continue
             utils.underline('Case {}'.format(cases), line='-')
             if console.run(case):   # Abort unlocking.
-                return cases_unlocked
+                return cases_unlocked, True
             cases_unlocked += 1
     print("You are done unlocking tests for this question!")
-    return cases_unlocked
+    return cases_unlocked, False
 
 class UnlockException(BaseException):
     """Exception raised by the UnlockConsole."""

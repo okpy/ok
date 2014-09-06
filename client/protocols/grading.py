@@ -50,9 +50,16 @@ class GradingProtocol(protocol.Protocol):
         """Run gradeable tests and print results."""
         utils.print_title('Running tests for {}'.format(self.assignment['name']))
 
+        # TODO(albert): clean up the case where the test is not
+        # recognized.
+        any_graded = False
         for test in self.assignment.tests:
             if not self.args.question or test.name == self.args.question:
                 self._grade_test(test)
+                any_graded = True
+        if not any_graded and self.args.question:
+            print('Test {} does not exist. Try one of the following:'.format(self.args.question))
+            print(' '.join(sorted(test.name for test in self.assignment.tests)))
 
     def _grade_test(self, test):
         """Grades a single Test."""
