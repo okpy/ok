@@ -1,15 +1,25 @@
+"""Tests for Q2: double"""
+
 test = {
-  'name': 'q2',
+  # Optional information for each type of test case to set up, specific
+  # to this test (q2)
+  'names': ['q2'],
   'points': 1,
   'suites': [
     [
       {
-        'answer': 'Domain is numbers. Range is numbers',
+        'type': 'concept',
+        'question': """
+        What is the domain and range of the double function?
+        """,
+        'answer': """
+        Domain is numbers. Range is numbers
+        """,
         'choices': [
           'Domain is numbers. Range is numbers',
           'Domain is numbers. Range is strings',
           'Domain is strings. Range is numbers',
-          'Domain is strings. Range is strings'
+          'Domain is strings. Range is strings',
         ],
         'locked': False,
         'question': 'What is the domain and range of the double function?',
@@ -19,13 +29,14 @@ test = {
     [
       {
         'locked': False,
+        'type': 'doctest',
         'test': """
         >>> double(3)
         6
         """,
-        'type': 'doctest'
       },
       {
+        'type': 'doctest',
         'test': """
         >>> double(-2)
         -4
@@ -34,19 +45,18 @@ test = {
         # choice: 2
         # choice: None
         """,
-        'type': 'doctest'
       },
       {
-        'teardown': """
-        print('Optional Teardown code for the testcase goes here')
-        """,
+        'type': 'doctest',
         'test': """
         >>> double(0)
         0
         # explanation: Doubling zero
         """,
-        'type': 'doctest'
-      }
-    ]
+        'teardown': """
+        print('Optional Teardown code for the testcase goes here')
+        """
+      },
+    ],
   ]
 }

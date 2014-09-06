@@ -40,7 +40,7 @@ class SerializationTest(unittest.TestCase):
         self.case_map = {MockCase.type: MockCase}
 
     def testNoCases(self):
-        test_json = {'name': self.TEST_NAME, 'points': 2}
+        test_json = {'names': [self.TEST_NAME], 'points': 2}
         test = core.Test.deserialize(test_json, self.assignment,
                                      self.case_map)
 
@@ -50,9 +50,18 @@ class SerializationTest(unittest.TestCase):
 
         self.assertEqual(test_json, test.serialize())
 
+    def testMultipleNames(self):
+        test_names = ['a', 'b', 'c']
+        test_json = {'names': test_names, 'points': 1}
+        test = core.Test.deserialize(test_json, self.assignment,
+                                     self.case_map)
+        self.assertEqual(test_names, test['names'])
+
+        self.assertEqual(test_json, test.serialize())
+
     def testSingleSuite(self):
         test_json = {
-            'name': self.TEST_NAME,
+            'names': [self.TEST_NAME],
             'points': 1,
             'suites': [
                 [self.GOOD_JSON, self.GOOD_JSON],
@@ -73,7 +82,7 @@ class SerializationTest(unittest.TestCase):
 
     def testMultipleSuites(self):
         test_json = {
-            'name': self.TEST_NAME,
+            'names': [self.TEST_NAME],
             'points': 2,
             'suites': [
                 [self.GOOD_JSON],
@@ -97,7 +106,7 @@ class SerializationTest(unittest.TestCase):
 
     def testUnknownType(self):
         test_json = {
-            'name': self.TEST_NAME,
+            'names': [self.TEST_NAME],
             'points': 2,
             'suites': [
                 [self.GOOD_JSON],
@@ -109,7 +118,7 @@ class SerializationTest(unittest.TestCase):
 
     def testMissingType(self):
         test_json = {
-            'name': self.TEST_NAME,
+            'names': [self.TEST_NAME],
             'points': 2,
             'suites': [
                 [self.MALFORMED_JSON],
