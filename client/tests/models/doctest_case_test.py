@@ -30,7 +30,7 @@ class OnGradeTest(unittest.TestCase):
             'version': '1.0',
         })
         self.test = core.Test.deserialize({
-            'name': 'q1',
+            'names': ['q1'],
             'points': 1,
         }, self.assignment, {})
 
@@ -298,7 +298,7 @@ class OnUnlockTest(unittest.TestCase):
             'version': '1.0',
         })
         self.test = core.Test.deserialize({
-            'name': 'q1',
+            'names': ['q1'],
             'points': 1,
         }, self.assignment, {})
         self.logger = mock.Mock()
@@ -372,7 +372,7 @@ class OnLockTest(unittest.TestCase):
             'version': '1.0',
         })
         self.test = core.Test.deserialize({
-            'name': 'q1',
+            'names': ['q1'],
             'points': 1,
         }, self.assignment, {})
         self.hash_fn = mock.Mock(return_value=self.ANSWER)
@@ -439,7 +439,7 @@ class SerializationTest(unittest.TestCase):
             'version': '1.0',
         })
         self.test = core.Test.deserialize({
-            'name': 'q1',
+            'names': ['q1'],
             'points': 1,
         }, self.assignment, {})
 
