@@ -45,8 +45,7 @@ class Serializable(object):
         """
         json = {}
         for field, value in self._fields.items():
-            if value != self._field_type(field).default:
-                json[field] = value
+            json[field] = value
         return json
 
     #############################
