@@ -29,6 +29,13 @@ import utils
 # hash_key = tests['project_info']['hash_key']
 # __make_hash_fn(hash_key)
 
+def normalize(x):
+    """
+    Takes an input, removes all whitespace and converts it to lowercase.
+    This is so that whitespace and case sensitivity doesn't matter on inputs.
+    """
+    return "".join(x.split()).lower()
+
 class UnlockTestCase(core.TestCase):
     """Interface for tests that can be unlocked by the unlock protocol.
     Subclasses must implement the on_unlock method.
@@ -85,7 +92,7 @@ class LockProtocol(protocol.Protocol):
 
     def _hash_fn(self, x):
         return hmac.new(self.assignment['hash_key'].encode('utf-8'),
-                        x.encode('utf-8')).hexdigest()
+                        normalize(x).encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
     print('Locking cases for Test ' + test.name)
@@ -224,7 +231,7 @@ class UnlockConsole(object):
 
     def _verify(self, guess, lock):
         return hmac.new(self._hash_key.encode('utf-8'),
-                        guess.encode('utf-8')).hexdigest() == lock
+                        normalize(guess).encode('utf-8')).hexdigest() == lock
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""

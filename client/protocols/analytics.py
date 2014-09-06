@@ -16,7 +16,7 @@ class AnalyticsProtocol(protocol.Protocol):
         """
         statistics = {}
         statistics['time'] = str(datetime.now())
-        statistics['unlock'] = self.args.unlock is not None
+        statistics['unlock'] = self.args.unlock
 
         if self.args.question:
             statistics['question'] = self.args.question
