@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-sys.path.insert(0, './.lib/sanction.zip')
+import os
 
 from sanction import Client
 
@@ -82,12 +82,17 @@ def authenticate(force=False):
         except Exception as _:
             print('Performing authentication')
 
+    email = ""
+    print("Please enter your CalNet ID.")
+    calnet_id = input("CalNet ID: ")
+
     c = Client(auth_endpoint='https://accounts.google.com/o/oauth2/auth',
                client_id=CLIENT_ID)
     url = c.auth_uri(scope="profile email", access_type='offline',
-                     name='ok-server', redirect_uri=REDIRECT_URI)
+                     name='ok-server', redirect_uri=REDIRECT_URI,
+                     login_hint='%s@berkeley.edu' % (calnet_id))
 
-    webbrowser.open(url)
+    webbrowser.open_new(url)
 
     host_name = REDIRECT_HOST
     port_number = REDIRECT_PORT
