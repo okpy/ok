@@ -81,7 +81,6 @@ def authenticate(force=False):
         except Exception as _:
             print('Performing authentication')
 
-    email = ""
     print("Please enter your CalNet ID.")
     calnet_id = input("CalNet ID: ")
 
