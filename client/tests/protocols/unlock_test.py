@@ -97,7 +97,7 @@ class UnlockTest(unittest.TestCase):
         return case
 
     def calls_unlock(self, test, expected_unlocked):
-        cases_unlocked = unlock.unlock(test, self.logger, '')
+        cases_unlocked = unlock.unlock(test, self.logger, '')[0]
         self.assertEqual(expected_unlocked, cases_unlocked)
 
     def testNoSuites(self):

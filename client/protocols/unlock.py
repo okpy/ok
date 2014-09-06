@@ -88,7 +88,7 @@ class LockProtocol(protocol.Protocol):
                         x.encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
-    print('Locking cases for Test ' + test['name'])
+    print('Locking cases for Test ' + test.name)
     for suite in test['suites']:
         for case in suite:
             if not case['never_lock'] and not case['locked']:
