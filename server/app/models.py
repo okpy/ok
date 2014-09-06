@@ -173,7 +173,7 @@ class User(Base):
                 return query.filter(ndb.OR(*filters))
             else:
                 return query.filter(filters[0])
-        elif action == "create":
+        elif action in ("create", "put"):
             return user.is_admin
         return False
 
@@ -209,7 +209,7 @@ class Assignment(Base):
             return True
         elif action == "index":
             return query
-        elif action == "create":
+        elif action in ("create", "put"):
             return user.is_admin
         return False
 
@@ -229,7 +229,7 @@ class Course(Base):
             return True
         elif action == "index":
             return query
-        elif action in ("create", "delete"):
+        elif action in ("create", "delete", "put"):
             return user.is_admin
         elif action == "modify":
             if not obj:
@@ -274,7 +274,7 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
-        if action == "create":
+        if action in ("create", "put"):
             return user.logged_in
 
         if action == "index":
