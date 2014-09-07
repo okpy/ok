@@ -143,7 +143,7 @@ class UnlockProtocol(protocol.Protocol):
         """
         if self.args.question:
             return [test for test in self.assignment.tests
-                    if test.name == self.args.question]
+                    if self.args.question in test['names']]
         return self.assignment.tests
 
 def unlock(test, logger, hash_key):

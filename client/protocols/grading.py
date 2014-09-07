@@ -54,7 +54,7 @@ class GradingProtocol(protocol.Protocol):
         # recognized.
         any_graded = False
         for test in self.assignment.tests:
-            if not self.args.question or test.name == self.args.question:
+            if not self.args.question or self.args.question in test['names']:
                 self._grade_test(test)
                 any_graded = True
         if not any_graded and self.args.question:
@@ -74,7 +74,7 @@ class GradingProtocol(protocol.Protocol):
         if total_cases > 0:
             print('== {} ({}%) cases passed for {} =='.format(total_passed,
                                             round(100 * total_passed / total_cases, 2),
-                                            test['name']))
+                                            test.name))
         if test.num_locked > 0:
             print('-- There are still {} locked test cases.'.format(test.num_locked) + \
             ' Use the -u flag to unlock them. --')
