@@ -47,7 +47,7 @@ import json
 import os
 import sys
 import utils
-import multiprocessing
+import threading
 import base64
 import time
 
@@ -250,7 +250,7 @@ def server_timer():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    timer_thread = multiprocessing.Process(target=server_timer, args=())
+    timer_thread = threading.Thread(target=server_timer, args=())
     print("You are running version {0} of ok.py".format(VERSION))
     timer_thread.start()
     assignment = load_tests(args.tests, config.cases)
@@ -277,7 +277,7 @@ def ok_main(args):
 
     try:
         access_token = authenticate(args.authenticate)
-        server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment, args.server))
+        server_thread = threading.Thread(target=send_to_server, args=(access_token, messages, assignment, args.server))
         server_thread.start()
     except error.URLError as ex:
         # TODO(soumya) Make a better error message
