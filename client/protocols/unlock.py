@@ -34,7 +34,7 @@ def normalize(x):
     Takes an input, removes all whitespace and converts it to lowercase.
     This is so that whitespace and case sensitivity doesn't matter on inputs.
     """
-    return "".join(x.split()).lower()
+    return "".join(x.split())
 
 class UnlockTestCase(core.TestCase):
     """Interface for tests that can be unlocked by the unlock protocol.
@@ -92,7 +92,7 @@ class LockProtocol(protocol.Protocol):
 
     def _hash_fn(self, x):
         return hmac.new(self.assignment['hash_key'].encode('utf-8'),
-                        normalize(x).encode('utf-8')).hexdigest()
+                        x.encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
     print('Locking cases for Test ' + test.name)
@@ -231,7 +231,7 @@ class UnlockConsole(object):
 
     def _verify(self, guess, lock):
         return hmac.new(self._hash_key.encode('utf-8'),
-                        normalize(guess).encode('utf-8')).hexdigest() == lock
+                        guess.encode('utf-8')).hexdigest() == lock
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""
@@ -299,7 +299,7 @@ class UnlockConsole(object):
                 if student_input not in choice_map:
                     student_input = ''
                 else:
-                    student_input = choice_map[student_input]
+                    student_input = normalize(choice_map[student_input])
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
