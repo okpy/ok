@@ -47,7 +47,7 @@ import json
 import os
 import sys
 import utils
-import multiprocessing
+import threading
 import base64
 import time
 
@@ -216,6 +216,33 @@ def get_latest_version(server):
         pass
 
 ##########################
+# Threads a stop method  #
+##########################
+# Source: http://stackoverflow.com/a/25670684
+
+class StopThread(StopIteration): pass
+
+threading.SystemExit = SystemExit, StopThread
+
+class Thread2(threading.Thread):
+
+    def stop(self):
+        self.__stop = True
+
+    def _bootstrap(self):
+        if threading._trace_hook is not None:
+            raise ValueError('Cannot run thread with tracing!')
+        self.__stop = False
+        sys.settrace(self.__trace)
+        super()._bootstrap()
+
+    def __trace(self, frame, event, arg):
+        if self.__stop:
+            raise StopThread()
+        return self.__trace
+
+
+##########################
 # Command-line Interface #
 ##########################
 
@@ -245,9 +272,12 @@ def parse_input():
     return parser.parse_args()
 
 
+def server_timer():
+    time.sleep(0.8)
+
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    timer_thread = multiprocessing.Process(target=lambda: time.sleep(0.8), args=())
+    timer_thread = threading.Thread(target=server_timer, args=())
     print("You are running version {0} of ok.py".format(VERSION))
     timer_thread.start()
     assignment = load_tests(args.tests, config.cases)
@@ -274,7 +304,7 @@ def ok_main(args):
 
     try:
         access_token = authenticate(args.authenticate)
-        server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment, args.server))
+        server_thread = Thread2(target=send_to_server, args=(access_token, messages, assignment, args.server))
         server_thread.start()
     except error.URLError as ex:
         # TODO(soumya) Make a better error message
@@ -294,7 +324,7 @@ def ok_main(args):
         pass
 
     if not args.force:
-        server_thread.terminate()
+        server_thread.stop()
 
 if __name__ == '__main__':
     ok_main(parse_input())
