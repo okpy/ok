@@ -247,7 +247,9 @@ def parse_input():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    timer_thread = multiprocessing.Process(target=lambda: time.sleep(0.8), args=())
+    def timer():
+        time.sleep(0.8)
+    timer_thread = multiprocessing.Process(target=timer, args=())
     print("You are running version {0} of ok.py".format(VERSION))
     timer_thread.start()
     assignment = load_tests(args.tests, config.cases)
