@@ -19,6 +19,7 @@ class AnalyticsProtocol(protocol.Protocol):
         statistics['unlock'] = self.args.unlock
 
         if self.args.question:
+            # TODO(denero) Get the canonical name of the question
             statistics['question'] = self.args.question
 
         return statistics
