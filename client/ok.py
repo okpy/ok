@@ -216,6 +216,33 @@ def get_latest_version(server):
         pass
 
 ##########################
+# Threads a stop method  #
+##########################
+# Source: http://stackoverflow.com/a/25670684
+
+class StopThread(StopIteration): pass
+
+threading.SystemExit = SystemExit, StopThread
+
+class Thread2(threading.Thread):
+
+    def stop(self):
+        self.__stop = True
+
+    def _bootstrap(self):
+        if threading._trace_hook is not None:
+            raise ValueError('Cannot run thread with tracing!')
+        self.__stop = False
+        sys.settrace(self.__trace)
+        super()._bootstrap()
+
+    def __trace(self, frame, event, arg):
+        if self.__stop:
+            raise StopThread()
+        return self.__trace
+
+
+##########################
 # Command-line Interface #
 ##########################
 
@@ -277,7 +304,7 @@ def ok_main(args):
 
     try:
         access_token = authenticate(args.authenticate)
-        server_thread = threading.Thread(target=send_to_server, args=(access_token, messages, assignment, args.server))
+        server_thread = Thread2(target=send_to_server, args=(access_token, messages, assignment, args.server))
         server_thread.start()
     except error.URLError as ex:
         # TODO(soumya) Make a better error message
@@ -297,7 +324,7 @@ def ok_main(args):
         pass
 
     if not args.force:
-        server_thread.terminate()
+        server_thread.stop()
 
 if __name__ == '__main__':
     ok_main(parse_input())
