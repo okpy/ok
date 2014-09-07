@@ -22,7 +22,7 @@ class Config(object): #pylint: disable=R0903
     # Flask-Cache settings
     CACHE_TYPE = 'gaememcached'
     AUTHENTICATOR = GOOGLE_AUTHENTICATOR
-    CLIENT_VERSION = '1.0.1'
+    CLIENT_VERSION = '1.0.2'
 
 class Debug(Config): #pylint: disable=R0903
     """
