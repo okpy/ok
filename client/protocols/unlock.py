@@ -91,6 +91,7 @@ class LockProtocol(protocol.Protocol):
         return ''.join(random.choice(self._alphabet) for _ in range(128))
 
     def _hash_fn(self, x):
+        print(x)
         return hmac.new(self.assignment['hash_key'].encode('utf-8'),
                         x.encode('utf-8')).hexdigest()
 
@@ -230,6 +231,7 @@ class UnlockConsole(object):
     ###################
 
     def _verify(self, guess, lock):
+        print(guess)
         return hmac.new(self._hash_key.encode('utf-8'),
                         guess.encode('utf-8')).hexdigest() == lock
 
@@ -299,7 +301,7 @@ class UnlockConsole(object):
                 if student_input not in choice_map:
                     student_input = ''
                 else:
-                    student_input = normalize(choice_map[student_input])
+                    student_input = choice_map[student_input]
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
