@@ -91,8 +91,6 @@ class LockProtocol(protocol.Protocol):
         return ''.join(random.choice(self._alphabet) for _ in range(128))
 
     def _hash_fn(self, x):
-        print(len(x))
-        print(x)
         return hmac.new(self.assignment['hash_key'].encode('utf-8'),
                         x.encode('utf-8')).hexdigest()
 
@@ -232,8 +230,6 @@ class UnlockConsole(object):
     ###################
 
     def _verify(self, guess, lock):
-        print(guess)
-        print(len(guess))
         return hmac.new(self._hash_key.encode('utf-8'),
                         guess.encode('utf-8')).hexdigest() == lock
 
@@ -306,7 +302,6 @@ class UnlockConsole(object):
                     student_input = choice_map[student_input].strip()
                     input_array = student_input.split('\n')
                     if len(input_array) > 1:
-                        print(input_array)
                         student_input = input_array[0].strip() + '\n' + input_array[1].strip()
             correct = self._verify(student_input, answer)
             if not correct:
