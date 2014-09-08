@@ -8,7 +8,7 @@ except:
 import zipfile as zf
 from flask import jsonify, request, Response, json
 
-from google.appengine.datastore.datastore_query import Cursor
+from google.appengine.api import memcache
 
 def coerce_to_json(data, fields):
     if hasattr(data, 'to_json'):
@@ -18,7 +18,7 @@ def coerce_to_json(data, fields):
                 else coerce_to_json(mdl, fields) for mdl in data]
     elif isinstance(data, dict):
         return {k: (mdl.to_json(fields.get(k, {})) if hasattr(data, 'to_json')
-            else coerce_to_json(mdl, fields.get(k, {}))) for k, mdl in data.iteritems()}
+                else coerce_to_json(mdl, fields.get(k, {}))) for k, mdl in data.iteritems()}
     else:
         return data
 
@@ -29,7 +29,7 @@ def create_api_response(status, message, data=None):
     an arbitrary message string, and a dictionary or list of data"""
     if isinstance(data, dict) and 'results' in data:
         data['results'] = (
-                coerce_to_json(data['results'], request.fields.get('fields', {})))
+            coerce_to_json(data['results'], request.fields.get('fields', {})))
 
     if request.args.get('format', 'default') == 'raw':
         response = Response(json.dumps(data))
@@ -50,8 +50,12 @@ def create_zip(obj):
     zip_string = zipfile_str.getvalue()
     return zip_string
 
-def paginate(entries, cursor, num_per_page):
+def paginate(entries, page, num_per_page):
     """
+    Added stuff from
+    https://p.ota.to/blog/2013/4/pagination-with-cursors-
+        in-the-app-engine-datastore/
+
     Support pagination for an NDB query.
     Arguments:
       |entries| - a query which returns the items to paginate over.
@@ -69,22 +73,31 @@ def paginate(entries, cursor, num_per_page):
     https://developers.google.com/appengine/docs/python/ndb/queryclass#Query_fetch_page
     """
     if num_per_page is None:
-        result = entries.fetch(), None, False
+        return {
+            'results': entries.fetch(),
+            'page': 1,
+            'more': False
+        }
+
+    this_page_cursor_key = "cursor_page_%s" % page
+    next_page_cursor_key = "cursor_page_%s" % (page + 1)
+    cursor = None
+    if page > 1:
+        cursor = memcache.get(this_page_cursor_key) # pylint: disable=no-member
+        if not cursor:
+            page = 1 # Reset to the front, since memcached failed
+
+    if cursor is not None:
+        results, forward_cursor, more = entries.fetch_page(
+            int(num_per_page), start_cursor=cursor)
     else:
-        if cursor is not None:
-            cursor = Cursor(urlsafe=cursor)
-            results, forward_curs, more = entries.fetch_page(
-                int(num_per_page), start_cursor=cursor)
-        else:
-            results, forward_curs, more = entries.fetch_page(int(num_per_page))
-        if forward_curs is not None:
-            result = results, forward_curs.urlsafe(), more
-        else:
-            result = results, None, more
-    results, urlsafe, more = result
+        results, forward_cursor, more = entries.fetch_page(int(num_per_page))
+
+    memcache.set(next_page_cursor_key, forward_cursor) # pylint: disable=no-member
+
     return {
         'results': results,
-        'cursor': urlsafe,
+        'page': page,
         'more': more
     }
 

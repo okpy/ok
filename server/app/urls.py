@@ -51,14 +51,13 @@ class WebArgsException(Exception):
 def args_error(error):
     raise WebArgsException(error)
 
-def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
+def register_api(view, endpoint, url):
     """
     Registers the given view at the endpoint, accessible by the given url.
     """
-    url = API_PREFIX + url
+    url = API_PREFIX + '/' + url
     view = view.as_view(endpoint)
 
-    @ndb.toplevel
     @wraps(view)
     def wrapped(*args, **kwds):
         #TODO(martinis) add tests
@@ -87,20 +86,13 @@ def register_api(view, endpoint, url, primary_key='key', pk_type='int:'):
             return utils.create_api_response(500, 'internal server error:\n%s' %
                                              error_message)
 
-    # To get all objects
-    app.add_url_rule(url, defaults={primary_key: None},
-                     view_func=wrapped, methods=['GET', ])
+    app.add_url_rule('%s' % url, view_func=wrapped, defaults={'path': None},
+            methods=['GET', 'POST'])
+    app.add_url_rule('%s/<path:path>' % url, view_func=wrapped,
+            methods=['GET', 'POST', 'DELETE', 'PUT'])
 
-    # To create a new object
-    app.add_url_rule(url, view_func=wrapped, methods=['POST', ])
-
-    # To operate on individual object
-    app.add_url_rule('%s/<%s%s>' % (url, pk_type, primary_key),
-                     view_func=wrapped, methods=['GET', 'PUT', 'DELETE'])
-
-register_api(api.UserAPI, 'user_api', '/user', pk_type='')
-register_api(api.AssignmentAPI, 'assignment_api', '/assignment')
-register_api(api.SubmissionAPI, 'submission_api', '/submission')
-register_api(api.VersionAPI, 'version_api', '/version')
-register_api(api.CourseAPI, 'course_api', '/course')
-
+register_api(api.UserAPI, 'user_api', 'user')
+register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
+register_api(api.SubmissionAPI, 'submission_api', 'submission')
+register_api(api.VersionAPI, 'version_api', 'version')
+register_api(api.CourseAPI, 'course_api', 'course')

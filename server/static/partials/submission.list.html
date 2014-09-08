@@ -1,12 +1,9 @@
 <h2>Submissions</h2>
 <div>
-  <div class="center-block" ng-if="!submissions.$resolved">
-    Loading...
-  </div>
-  <div class="center-block" ng-if="submissions.$resolved && submissions.length == 0">
+  <div class="center-block" ng-if="data.results.$resolved && data.results.length == 0">
     No Submissions
   </div>
-  <table ng-if="submissions.length > 0" class="table table-striped table-bordered table-responsive">
+  <table ng-if="data.results.length > 0" class="table table-striped table-bordered table-responsive">
     <tr>
       <th>Submitter</th>
       <th>Assignment</th>
@@ -14,7 +11,7 @@
       <th>Download Link</th>
       <th>View Submission</th>
     </tr>
-    <tr ng-repeat="submission in submissions">
+    <tr ng-repeat="submission in data.results">
       <td>{{submission.submitter.id}}</td>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
@@ -23,7 +20,7 @@
         {{submission.created | prettyDate}}
       </td>
       <td>
-        <a href='/api/v1/submission/{{submission.id}}?download=true'>link</a>
+        <a href='/api/v1/submission/{{submission.id}}/download'>link</a>
       </td>
       <td>
         <a ui-sref='submission.detail({submissionId:submission.id})'>
@@ -32,4 +29,8 @@
       </td>
     </tr>
   </table>
+
+  <div class='text-center'>
+    <pager items-per-page="itemsPerPage" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()"></pager>
+  </div>
 </div>
