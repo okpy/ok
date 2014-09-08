@@ -226,20 +226,6 @@ class UserAPI(APIResource):
     model = models.User
     key_type = str
 
-    def new_entity(self, attributes):
-        """
-        Creates a new entity with given attributes.
-        """
-        if 'email' not in attributes:
-            return None, create_api_response(400, 'Email required')
-        entity = self.model.get_by_id(attributes['email'])
-        if entity:
-            return None, create_api_response(400,
-                                             '%s already exists' % self.name)
-        entity = self.model.from_dict(attributes)
-        entity.put()
-        return entity, None
-
     web_args = {
         'first_name': Arg(str),
         'last_name': Arg(str),
@@ -348,10 +334,45 @@ class VersionAPI(APIResource):
     model = models.Version
 
     web_args = {
-        'file_data': Arg(str),
         'name': Arg(str),
         'version': Arg(str),
     }
+
+    key_type = str
+
+    def new(self, key):
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        args = self.parse_args(False)
+        new_version = args['version']
+
+        if new_version in obj.versions:
+            return create_api_response(
+                400, "Duplicate version: {}".format(new_version))
+
+        obj.versions.append(new_version)
+        obj.put()
+
+        return create_api_response(200, "Success", obj)
+
+    def latest(self, key):
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        return create_api_response(200, "Success", sorted(obj.versions)[-1])
 
 class CourseAPI(APIResource):
     model = models.Course
