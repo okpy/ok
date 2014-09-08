@@ -79,8 +79,10 @@ def paginate(entries, page, num_per_page):
             'more': False
         }
 
-    this_page_cursor_key = "cursor_page_%s" % page
-    next_page_cursor_key = "cursor_page_%s" % (page + 1)
+    query_serialized = ('_'.join(str(x) for x in
+            (entries.kind, entries.filters, entries.orders)))
+    this_page_cursor_key = "cursor_page_%s_%s" % (query_serialized, page)
+    next_page_cursor_key = "cursor_page_%s_%s" % (query_serialized, page + 1)
     cursor = None
     if page > 1:
         cursor = memcache.get(this_page_cursor_key) # pylint: disable=no-member
