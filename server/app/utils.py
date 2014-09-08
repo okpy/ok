@@ -11,14 +11,21 @@ from flask import jsonify, request, Response, json
 from google.appengine.api import memcache
 
 def coerce_to_json(data, fields):
+    """
+    Coerces |data| to json, using on the allowed |fields|
+    """
     if hasattr(data, 'to_json'):
         return data.to_json(fields)
     elif isinstance(data, list):
         return [mdl.to_json(fields) if hasattr(data, 'to_json')
                 else coerce_to_json(mdl, fields) for mdl in data]
     elif isinstance(data, dict):
-        return {k: (mdl.to_json(fields.get(k, {})) if hasattr(data, 'to_json')
-                else coerce_to_json(mdl, fields.get(k, {}))) for k, mdl in data.iteritems()}
+        new_fields = fields.get(k, {})
+        if hasattr(data, 'to_json'):
+            return {k: mdl.to_json(new_fields) for k, mdl in data.iteritems()}
+        else:
+            return {k: coerce_to_json(mdl, new_fields)
+                    for k, mdl in data.iteritems()}
     else:
         return data
 
@@ -43,6 +50,9 @@ def create_api_response(status, message, data=None):
     return response
 
 def create_zip(obj):
+    """
+    Creates a file from the given dictionary of filenames to contents.
+    """
     zipfile_str = StringIO()
     with zf.ZipFile(zipfile_str, 'w') as zipfile:
         for filename, contents in obj.items():
@@ -79,23 +89,28 @@ def paginate(entries, page, num_per_page):
             'more': False
         }
 
-    query_serialized = ('_'.join(str(x) for x in
-            (entries.kind, entries.filters, entries.orders)))
-    this_page_cursor_key = "cursor_page_%s_%s" % (query_serialized, page)
-    next_page_cursor_key = "cursor_page_%s_%s" % (query_serialized, page + 1)
+    query_serialized = (
+        '_'.join(str(x) for x in (
+            entries.kind, entries.filters, entries.orders, num_per_page)))
+    def get_mem_key(page):
+        return "cursor_page_%s_%s" % (query_serialized, page)
+    this_page_key = get_mem_key(page)
+    next_page_key = get_mem_key(page + 1)
+
     cursor = None
     if page > 1:
-        cursor = memcache.get(this_page_cursor_key) # pylint: disable=no-member
+        cursor = memcache.get(this_page_key) # pylint: disable=no-member
         if not cursor:
             page = 1 # Reset to the front, since memcached failed
 
+    pages_to_fetch = int(num_per_page)
     if cursor is not None:
         results, forward_cursor, more = entries.fetch_page(
-            int(num_per_page), start_cursor=cursor)
+            pages_to_fetch, start_cursor=cursor)
     else:
-        results, forward_cursor, more = entries.fetch_page(int(num_per_page))
+        results, forward_cursor, more = entries.fetch_page(pages_to_fetch)
 
-    memcache.set(next_page_cursor_key, forward_cursor) # pylint: disable=no-member
+    memcache.set(next_page_key, forward_cursor) # pylint: disable=no-member
 
     return {
         'results': results,
@@ -104,6 +119,9 @@ def paginate(entries, page, num_per_page):
     }
 
 def _apply_filter(query, model, arg, value):
+    """
+    Applies a filter on |model| of |arg| == |value| to |query|.
+    """
     field = getattr(model, arg, None)
     if not field:
         # Silently swallow for now
