@@ -30,7 +30,9 @@
     "underscore": "~1.6.0",
     "moment": "~2.8.2",
     "highlightjs": "~8.0.0",
-    "angular-loading-bar": "~0.5.1"
+    "angular-loading-bar": "~0.5.1",
+    "angular-bootstrap": "~0.11.0",
+    "angular-chosen-localytics": "~1.0.6"
   },
   "directory": "js"
 }

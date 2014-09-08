@@ -1,8 +1,6 @@
-var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar']);
+var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap']);
 
-// TODO https://github.com/chieffancypants/angular-loading-bar
 // http://ngmodules.org/modules/MacGyver
-// https://github.com/localytics/angular-chosen
 
 app.directive('snippet', ['$timeout', '$interpolate', function ($timeout, $interpolate) {
         "use strict";
@@ -107,12 +105,9 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission/:id', {format: "json"}, {
+      return $resource('api/v1/submission/:id', {format: "json", stats: true}, {
         query: {
-          isArray: true,
-          transformResponse: function(data) {
-            return JSON.parse(data).data.results;
-          }
+          isArray: false
         },
         get: {
           isArray: false,
@@ -126,7 +121,11 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-    $scope.submissions = Submission.query({
+  $scope.itemsPerPage = 20;
+  $scope.currentPage = 1;
+
+  $scope.refresh = function(page) {
+    Submission.query({
       fields: {
         'created': true,
         'id': true,
@@ -136,9 +135,25 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
         'assignment': {
           'name': true,
           'id': true,
-        }
+        },
+      },
+      page: page,
+      num_page: $scope.itemsPerPage
+    }, function(response) {
+      $scope.data = response.data;
+      $scope.message = response.message;
+      $scope.totalItems = response.data.statistics.total;
+      if (response.data.page !== $scope.currentPage) {
+        $scope.currentPage = response.data.page;
+        $scope.pageChange();
       }
     });
+  }
+  $scope.pageChanged = function() {
+    console.log("changed")
+    $scope.refresh($scope.currentPage);
+  }
+  $scope.refresh(1);
   }]);
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
@@ -164,41 +179,6 @@ app.factory('Assignment', ['$resource',
       });
     }
   ]);
-
-function transformSubmission(data) {
-  data.submitter_s = function() {
-    return data.submitter || "Anonymous";
-  }
-  return data;
-}
-app.config(['$httpProvider',
-    function($httpProvider) {
-      $httpProvider.interceptors.push(['$q',
-        function($q) {
-          return {
-            response: function (response, a) {
-              config = response.config;
-              if (! (/^api\/v1/).test(config.url)) {
-                return response;
-              }
-              url = config.url.slice(7);
-
-              if (url.split('/')[0] !== "submission") {
-                return response;
-              }
-              data = response.data;
-              if (angular.isArray(data)) {
-                angular.forEach(data, transformSubmission);
-              }
-              else {
-                data = transformSubmission(data);
-              }
-              response.data = data;
-              return response;
-            }
-          }
-        }]);
-  }]);
 
 app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
   function($scope, Assignment) {
