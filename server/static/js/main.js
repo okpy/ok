@@ -1,7 +1,6 @@
 var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap']);
 
 // http://ngmodules.org/modules/MacGyver
-// https://github.com/localytics/angular-chosen
 
 app.directive('snippet', ['$timeout', '$interpolate', function ($timeout, $interpolate) {
         "use strict";
@@ -122,7 +121,7 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-  $scope.itemsPerPage = 20;
+  $scope.itemsPerPage = 3;
   $scope.currentPage = 1;
 
   $scope.refresh = function(page) {
@@ -138,14 +137,15 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
           'id': true,
         },
       },
-      page: (page - 1),
+      page: page,
       num_page: $scope.itemsPerPage
     }, function(response) {
       $scope.data = response.data;
       $scope.message = response.message;
       $scope.totalItems = response.data.statistics.total;
       if (response.data.page !== $scope.currentPage) {
-        $scope.refresh(response.data.page + 1);
+        $scope.currentPage = response.data.page;
+        $scope.pageChange();
       }
     });
   }

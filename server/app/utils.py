@@ -75,17 +75,17 @@ def paginate(entries, page, num_per_page):
     if num_per_page is None:
         return {
             'results': entries.fetch(),
-            'page': 0,
+            'page': 1,
             'more': False
         }
 
     this_page_cursor_key = "cursor_page_%s" % page
     next_page_cursor_key = "cursor_page_%s" % (page + 1)
     cursor = None
-    if page > 0:
+    if page > 1:
         cursor = memcache.get(this_page_cursor_key) # pylint: disable=no-member
         if not cursor:
-            page = 0 # Reset to the front, since memcached failed
+            page = 1 # Reset to the front, since memcached failed
 
     if cursor is not None:
         results, forward_cursor, more = entries.fetch_page(

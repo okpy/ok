@@ -206,7 +206,7 @@ class APIResource(View):
         if not query.orders and created_prop:
             query = query.order(-created_prop)
 
-        page = int(request.args.get('page', 0))
+        page = int(request.args.get('page', 1))
         num_page = request.args.get('num_page', None)
         query_results = paginate(query, page, num_page)
 
