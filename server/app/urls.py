@@ -5,7 +5,7 @@ from functools import wraps
 import logging
 import traceback
 
-from flask import render_template, session, request
+from flask import render_template, session, request, Response
 
 from google.appengine.api import users
 from google.appengine.ext.db import BadValueError
@@ -74,7 +74,10 @@ def register_api(view, endpoint, url):
         session['user'] = user
 
         try:
-            return view(*args, **kwds)
+            rval = view(*args, **kwds)
+            if not isinstance(rval, Response):
+                rval = utils.create_api_response(200, "success", rval)
+            return rval
         except (WebArgsException, BadValueError) as e:
             message = "Invalid arguments: %s" % e.message
             logging.warning(message)

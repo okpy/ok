@@ -93,7 +93,7 @@ class APIResource(View):
         if not obj.can(session['user'], need, obj):
             return need.api_response()
 
-        return create_api_response(200, "", obj)
+        return obj
 
     def put(self, key):
         """
@@ -126,7 +126,7 @@ class APIResource(View):
         if changed:
             obj.put()
 
-        return create_api_response(200, "", obj)
+        return obj
 
     def post(self):
         """
@@ -141,9 +141,9 @@ class APIResource(View):
         entity, error_response = self.new_entity(data)
 
         if not error_response:
-            return create_api_response(200, "success", {
+            return {
                 'key': entity.key.id()
-            })
+            }
         else:
             return error_response
 
@@ -168,7 +168,7 @@ class APIResource(View):
             return need.api_response()
 
         ent.key.delete()
-        return create_api_response(200, "success", {})
+        return {}
 
     def parse_args(self, index):
         """
@@ -213,7 +213,7 @@ class APIResource(View):
         add_statistics = request.args.get('stats', False)
         if add_statistics:
             query_results['statistics'] = self.statistics()
-        return create_api_response(200, "success", query_results)
+        return query_results
 
     def statistics(self):
         return {
@@ -297,9 +297,9 @@ class SubmissionAPI(APIResource):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment, messages)
-        return create_api_response(200, "success", {
+        return {
             'key': submission.key.id()
-        })
+        }
 
     def post(self):
         data = self.parse_args(False)
@@ -346,7 +346,7 @@ class VersionAPI(APIResource):
         obj.versions.append(new_version)
         obj.put()
 
-        return create_api_response(200, "Success", obj)
+        return obj
 
     def latest(self, key):
         obj = self.model.get_by_id(key)
@@ -358,7 +358,7 @@ class VersionAPI(APIResource):
         if not obj.can(session['user'], need, obj):
             return need.api_response()
 
-        return create_api_response(200, "Success", sorted(obj.versions)[-1])
+        return sorted(obj.versions)[-1]
 
 class CourseAPI(APIResource):
     model = models.Course
