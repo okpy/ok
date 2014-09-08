@@ -121,7 +121,7 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-  $scope.itemsPerPage = 3;
+  $scope.itemsPerPage = 20;
   $scope.currentPage = 1;
 
   $scope.refresh = function(page) {
