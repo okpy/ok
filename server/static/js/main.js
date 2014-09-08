@@ -106,7 +106,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission/:id', {format: "json", num_page: 10, stats: true}, {
+      return $resource('api/v1/submission/:id', {format: "json", stats: true}, {
         query: {
           isArray: false
         },
@@ -122,7 +122,7 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-  $scope.itemsPerPage = 10;
+  $scope.itemsPerPage = 20;
   $scope.currentPage = 1;
 
   $scope.refresh = function(page) {
@@ -138,18 +138,22 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
           'id': true,
         },
       },
-      page: (page - 1)
+      page: (page - 1),
+      num_page: $scope.itemsPerPage
     }, function(response) {
       $scope.data = response.data;
       $scope.message = response.message;
       $scope.totalItems = response.data.statistics.total;
+      if (response.data.page !== $scope.currentPage) {
+        $scope.refresh(response.data.page + 1);
+      }
     });
   }
   $scope.pageChanged = function() {
     console.log("changed")
     $scope.refresh($scope.currentPage);
   }
-  $scope.refresh(0);
+  $scope.refresh(1);
   }]);
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
