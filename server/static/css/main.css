@@ -33,3 +33,4 @@ h2 {
   height: 20px;
 }
 
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }

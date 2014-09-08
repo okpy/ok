@@ -1,4 +1,4 @@
-var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar']);
+var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap']);
 
 // http://ngmodules.org/modules/MacGyver
 // https://github.com/localytics/angular-chosen
@@ -106,7 +106,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission/:id', {format: "json", num_page: 50, stats: true}, {
+      return $resource('api/v1/submission/:id', {format: "json", num_page: 10, stats: true}, {
         query: {
           isArray: false
         },
@@ -122,45 +122,34 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-    $scope.refresh = function(page) {
-      Submission.query({
-        fields: {
-          'created': true,
-          'id': true,
-          'submitter': {
-            'id': true
-          },
-          'assignment': {
-            'name': true,
-            'id': true,
-          },
+  $scope.itemsPerPage = 10;
+  $scope.currentPage = 1;
+
+  $scope.refresh = function(page) {
+    Submission.query({
+      fields: {
+        'created': true,
+        'id': true,
+        'submitter': {
+          'id': true
         },
-        page: page
-      }, function(response) {
-        $scope.data = response.data;
-        $scope.message = response.message;
-        $scope.page = response.data.page;
-      });
-    }
-    $scope.$watch('page', function(newValue, oldValue) {
-      if (newValue === oldValue) {
-        return;
-      }
-
-      $scope.refresh(newValue);
+        'assignment': {
+          'name': true,
+          'id': true,
+        },
+      },
+      page: (page - 1)
+    }, function(response) {
+      $scope.data = response.data;
+      $scope.message = response.message;
+      $scope.totalItems = response.data.statistics.total;
     });
-    $scope.page = 0;
-    $scope.refresh(0);
-    $scope.nextPage = function() {
-      if ($scope.data.more) {
-        $scope.page ++;
-      }
-    };
-
-    $scope.previousPage = function() {
-      $scope.page = Math.max($scope.page - 1, 0);
-    };
-    $scope.cls = "disabled";
+  }
+  $scope.pageChanged = function() {
+    console.log("changed")
+    $scope.refresh($scope.currentPage);
+  }
+  $scope.refresh(0);
   }]);
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
