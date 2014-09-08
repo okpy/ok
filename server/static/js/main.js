@@ -174,7 +174,7 @@ app.factory('Assignment', ['$resource',
         query: {
           isArray: true,
           transformResponse: function(data) {
-            return JSON.parse(data).data;
+            return JSON.parse(data).data.results;
           }
         },
         get: {
@@ -206,7 +206,7 @@ app.factory('Course', ['$resource',
         query: {
           isArray: true,
           transformResponse: function(data) {
-            return JSON.parse(data).data;
+            return JSON.parse(data).data.results;
           }
         },
         get: {
