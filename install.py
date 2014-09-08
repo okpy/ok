@@ -94,7 +94,7 @@ def run_linkenv():
 def symlink_git_hooks():
     """Add symlink to hooks in .git."""
     if not os.path.exists('.git/hooks/pre-commit'):
-        os.symlink('../../hooks/pre-commit.py', '.git/hooks/pre-commit')
+        os.symlink('../../hooks/pre-commit', '.git/hooks/pre-commit')
 
 if __name__ == '__main__':
     # If there are command-line arguments, call the named functions.
