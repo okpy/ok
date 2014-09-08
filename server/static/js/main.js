@@ -1,6 +1,5 @@
-var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar']);
+var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap']);
 
-// TODO https://github.com/chieffancypants/angular-loading-bar
 // http://ngmodules.org/modules/MacGyver
 // https://github.com/localytics/angular-chosen
 
@@ -107,12 +106,9 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission/:id', {format: "json"}, {
+      return $resource('api/v1/submission/:id', {format: "json", num_page: 40, stats: true}, {
         query: {
-          isArray: true,
-          transformResponse: function(data) {
-            return JSON.parse(data).data.results;
-          }
+          isArray: false
         },
         get: {
           isArray: false,
@@ -126,7 +122,7 @@ app.factory('Submission', ['$resource',
 
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-    $scope.submissions = Submission.query({
+    Submission.query({
       fields: {
         'created': true,
         'id': true,
@@ -138,6 +134,9 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
           'id': true,
         }
       }
+    }, function(response) {
+      $scope.data = response.data;
+      $scope.message = response.message;
     });
   }]);
 
@@ -152,7 +151,7 @@ app.factory('Assignment', ['$resource',
         query: {
           isArray: true,
           transformResponse: function(data) {
-            return JSON.parse(data).data.results;
+            return JSON.parse(data).data;
           }
         },
         get: {
@@ -164,41 +163,6 @@ app.factory('Assignment', ['$resource',
       });
     }
   ]);
-
-function transformSubmission(data) {
-  data.submitter_s = function() {
-    return data.submitter || "Anonymous";
-  }
-  return data;
-}
-app.config(['$httpProvider',
-    function($httpProvider) {
-      $httpProvider.interceptors.push(['$q',
-        function($q) {
-          return {
-            response: function (response, a) {
-              config = response.config;
-              if (! (/^api\/v1/).test(config.url)) {
-                return response;
-              }
-              url = config.url.slice(7);
-
-              if (url.split('/')[0] !== "submission") {
-                return response;
-              }
-              data = response.data;
-              if (angular.isArray(data)) {
-                angular.forEach(data, transformSubmission);
-              }
-              else {
-                data = transformSubmission(data);
-              }
-              response.data = data;
-              return response;
-            }
-          }
-        }]);
-  }]);
 
 app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
   function($scope, Assignment) {
@@ -219,7 +183,7 @@ app.factory('Course', ['$resource',
         query: {
           isArray: true,
           transformResponse: function(data) {
-            return JSON.parse(data).data.results;
+            return JSON.parse(data).data;
           }
         },
         get: {

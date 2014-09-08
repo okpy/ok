@@ -2,7 +2,7 @@
 The public API
 """
 
-from flask.views import MethodView
+from flask.views import View
 from flask.app import request, json
 from flask import session, make_response
 from webargs import Arg
@@ -10,6 +10,7 @@ from webargs.flaskparser import FlaskParser
 
 from app import models
 from app.models import BadValueError
+from app.constants import API_PREFIX
 from app.needs import Need
 from app.utils import create_api_response, paginate, filter_query, create_zip
 
@@ -31,7 +32,7 @@ def KeyRepeatedArg(klass, **kwds):
         return [ndb.Key(klass, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
 
-class APIResource(object):
+class APIResource(View):
     """The base class for API resources.
 
     Set the model for each subclass.
@@ -39,18 +40,50 @@ class APIResource(object):
 
     model = None
     web_args = {}
+    key_type = int
 
     @property
     def name(self):
         return self.model.__name__
 
+    def dispatch_request(self, path, *args, **kwargs):
+        meth = request.method.upper()
+
+        if not path: # Index
+            if meth == "GET":
+                return self.index()
+            elif meth == "POST":
+                return self.post()
+            assert meth in ("GET", "POST"), 'Unimplemented method %s' % meth
+
+        if '/' not in path:
+            # For now, just allow ID gets
+            assert meth in ['GET', 'PUT', 'DELETE']
+            meth = getattr(self, meth.lower(), None)
+
+            assert meth is not None, 'Unimplemented method %r' % request.method
+            try:
+                key = self.key_type(path)
+            except (ValueError, AssertionError):
+                return create_api_response(400, 
+                    "Invalid key. Needs to be of type '%s'" % self.key_type)
+            return meth(key, *args, **kwargs)
+
+        entity_id, action = path.split('/')
+        try:
+            key = self.key_type(entity_id)
+        except (ValueError, AssertionError):
+            return create_api_response(400, 
+                "Invalid key. Needs to be of type '%s'" % self.key_type)
+
+        meth = getattr(self, action, None)
+        assert meth is not None, 'Unimplemented action %r' % action
+        return meth(key, *args, **kwargs)
+
     def get(self, key):
         """
         The GET HTTP method
         """
-        if key is None:
-            return self.index()
-
         obj = self.model.get_by_id(key)
         if not obj:
             return create_api_response(404, "{resource} {key} not found".format(
@@ -173,15 +206,25 @@ class APIResource(object):
         if not query.orders and created_prop:
             query = query.order(-created_prop)
 
-        cursor = request.args.get('cursor', None)
+        page = int(request.args.get('page', 0))
         num_page = request.args.get('num_page', None)
-        query_results = paginate(query, cursor, num_page)
+        query_results = paginate(query, page, num_page)
+
+        add_statistics = request.args.get('stats', False)
+        if add_statistics:
+            query_results['statistics'] = self.statistics()
         return create_api_response(200, "success", query_results)
 
+    def statistics(self):
+        return {
+            'total': self.model.query().count()
+        }
 
-class UserAPI(MethodView, APIResource):
+
+class UserAPI(APIResource):
     """The API resource for the User Object"""
     model = models.User
+    key_type = str
 
     def new_entity(self, attributes):
         """
@@ -206,7 +249,7 @@ class UserAPI(MethodView, APIResource):
     }
 
 
-class AssignmentAPI(MethodView, APIResource):
+class AssignmentAPI(APIResource):
     """The API resource for the Assignment Object"""
     model = models.Assignment
 
@@ -240,19 +283,16 @@ class SubmitNDBImplementation(object):
         return submission
 
 
-class SubmissionAPI(MethodView, APIResource):
+class SubmissionAPI(APIResource):
     """The API resource for the Submission Object"""
     model = models.Submission
 
     db = SubmitNDBImplementation()
 
-    def get(self, key):
+    def download(self, key):
         """
-        The GET HTTP method
+        Allows you to download a submission.
         """
-        if key is None:
-            return self.index()
-
         obj = self.model.get_by_id(key)
         if not obj:
             return create_api_response(404, "{resource} {key} not found".format(
@@ -262,14 +302,15 @@ class SubmissionAPI(MethodView, APIResource):
         if not obj.can(session['user'], need, obj):
             return need.api_response()
 
-        if request.args.get('download') == 'true' \
-                and 'file_contents' in obj.messages:
-            response = make_response(create_zip(obj.messages['file_contents']))
-            response.headers["Content-Disposition"] = (
-                "attachment; filename=submission-%s.zip" % str(obj.created))
-            response.headers["Content-Type"] = "application/zip"
-            return response
-        return create_api_response(200, "", obj)
+        if 'file_contents' not in obj.messages:
+            return create_api_response(400,
+                "Submissions has no contents to download.")
+
+        response = make_response(create_zip(obj.messages['file_contents']))
+        response.headers["Content-Disposition"] = (
+            "attachment; filename=submission-%s.zip" % str(obj.created))
+        response.headers["Content-Type"] = "application/zip"
+        return response
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -303,7 +344,7 @@ class SubmissionAPI(MethodView, APIResource):
     }
 
 
-class VersionAPI(APIResource, MethodView):
+class VersionAPI(APIResource):
     model = models.Version
 
     web_args = {
@@ -312,7 +353,7 @@ class VersionAPI(APIResource, MethodView):
         'version': Arg(str),
     }
 
-class CourseAPI(APIResource, MethodView):
+class CourseAPI(APIResource):
     model = models.Course
 
     def parse_args(self, is_index):
