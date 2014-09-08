@@ -29,5 +29,9 @@
       </td>
     </tr>
   </table>
-  <pager total-items="data.statistics.total" ng-model="data."></pager>
+  <ul class="pager">
+    <li><a ng-class="cls" ng-click="previousPage()">Previous</a></li>
+    <li><span class="active">{{page}}</span></li>
+    <li><a ng-class="{disabled: data.more}" ng-click="nextPage()">Next</a></li>
+  </ul>
 </div>

@@ -8,7 +8,6 @@ except:
 import zipfile as zf
 from flask import jsonify, request, Response, json
 
-from google.appengine.datastore.datastore_query import Cursor
 from google.appengine.api import memcache
 
 def coerce_to_json(data, fields):
@@ -19,7 +18,7 @@ def coerce_to_json(data, fields):
                 else coerce_to_json(mdl, fields) for mdl in data]
     elif isinstance(data, dict):
         return {k: (mdl.to_json(fields.get(k, {})) if hasattr(data, 'to_json')
-            else coerce_to_json(mdl, fields.get(k, {}))) for k, mdl in data.iteritems()}
+                else coerce_to_json(mdl, fields.get(k, {}))) for k, mdl in data.iteritems()}
     else:
         return data
 
@@ -30,7 +29,7 @@ def create_api_response(status, message, data=None):
     an arbitrary message string, and a dictionary or list of data"""
     if isinstance(data, dict) and 'results' in data:
         data['results'] = (
-                coerce_to_json(data['results'], request.fields.get('fields', {})))
+            coerce_to_json(data['results'], request.fields.get('fields', {})))
 
     if request.args.get('format', 'default') == 'raw':
         response = Response(json.dumps(data))
@@ -53,7 +52,9 @@ def create_zip(obj):
 
 def paginate(entries, page, num_per_page):
     """
-    Added stuff from https://p.ota.to/blog/2013/4/pagination-with-cursors-in-the-app-engine-datastore/
+    Added stuff from
+    https://p.ota.to/blog/2013/4/pagination-with-cursors-
+        in-the-app-engine-datastore/
 
     Support pagination for an NDB query.
     Arguments:
@@ -79,21 +80,22 @@ def paginate(entries, page, num_per_page):
         }
 
     this_page_cursor_key = "cursor_page_%s" % page
-    next_page_cursor_key = "cursor_page_%s" % page + 1
-    if page > 1:
-        cursor = memcache.get(this_page_cursor_key)
-        
+    next_page_cursor_key = "cursor_page_%s" % (page + 1)
+    cursor = None
+    if page > 0:
+        cursor = memcache.get(this_page_cursor_key) # pylint: disable=no-member
+
     if cursor is not None:
         results, forward_cursor, more = entries.fetch_page(
             int(num_per_page), start_cursor=cursor)
     else:
         results, forward_cursor, more = entries.fetch_page(int(num_per_page))
 
-    memcache.set(next_page_cursor_key, forward_cursor)
+    memcache.set(next_page_cursor_key, forward_cursor) # pylint: disable=no-member
 
     return {
         'results': results,
-        'page': page + 1,
+        'page': page,
         'more': more
     }
 
