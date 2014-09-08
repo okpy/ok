@@ -221,20 +221,6 @@ class APIResource(View):
         }
 
 
-class UserAPI(APIResource):
-    """The API resource for the User Object"""
-    model = models.User
-    key_type = str
-
-    web_args = {
-        'first_name': Arg(str),
-        'last_name': Arg(str),
-        'email': Arg(str),
-        'login': Arg(str),
-        'course': KeyArg('User'),
-    }
-
-
 class AssignmentAPI(APIResource):
     """The API resource for the Assignment Object"""
     model = models.Assignment

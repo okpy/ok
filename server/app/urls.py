@@ -91,7 +91,6 @@ def register_api(view, endpoint, url):
     app.add_url_rule('%s/<path:path>' % url, view_func=wrapped,
             methods=['GET', 'POST', 'DELETE', 'PUT'])
 
-register_api(api.UserAPI, 'user_api', 'user')
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
 register_api(api.VersionAPI, 'version_api', 'version')
