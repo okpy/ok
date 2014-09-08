@@ -61,11 +61,14 @@ def register_api(view, endpoint, url):
     @wraps(view)
     def wrapped(*args, **kwds):
         #TODO(martinis) add tests
-        if 'client_version' in request.args:
-            if request.args['client_version'] != app.config['CLIENT_VERSION']:
+        # This is so that any client can check for the latest version
+        if 'client_version' in request.args and 'version' not in request.path:
+            # TODO(martinis) maybe change hardcoded value?
+            latest_version = api.VersionAPI().latest("okpy")
+            if request.args['client_version'] != latest_version:
                 return utils.create_api_response(403, "incorrect client version", {
                     'supplied_version': request.args['client_version'],
-                    'correct_version': app.config['CLIENT_VERSION']
+                    'correct_version': latest_version
                 })
 
         user = auth.authenticate()
