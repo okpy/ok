@@ -106,13 +106,13 @@ class APIBaseTestCase(BaseTestCase):
         """
         if 'num_page' not in kwds:
             self.get('/{}'.format(self.name), *args, **kwds)
-        elif 'cursor' not in kwds:
+        elif 'page' not in kwds:
             self.get('/{0}?num_page={1}'.format(self.name, kwds['num_page']))
         else:
-            self.get('/{0}?cursor={1}&num_page={2}'
-                .format(self.name, kwds['cursor'], kwds['num_page']))
+            self.get('/{0}?page={1}&num_page={2}'
+                .format(self.name, kwds['page'], kwds['num_page']))
         if self.response_json:
-            self.forward_cursor = self.response_json['cursor']
+            self.page = self.response_json['page']
             self.more = self.response_json['more']
             self.response_json = self.response_json['results']
 
