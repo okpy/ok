@@ -251,6 +251,7 @@ def server_timer():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
+    server_thread, timer_thread = None, None
     try:
         timer_thread = multiprocessing.Process(target=server_timer, args=())
         print("You are running version {0} of ok.py".format(VERSION))
@@ -291,9 +292,14 @@ def ok_main(args):
             pass
 
         if not args.force:
-            server_thread.stop()
+            server_thread.terminate()
+
+    except KeyboardInterrupt:
+        if timer_thread:
+            timer_thread.terminate()
+        if server_thread:
+            server_thread.terminate()
     except:
-        # Suppress all error messages.
         pass
 
 if __name__ == '__main__':
