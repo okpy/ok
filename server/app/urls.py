@@ -4,6 +4,7 @@ URL dispatch route mappings and error handlers
 from functools import wraps
 import logging
 import traceback
+import collections
 
 from flask import render_template, session, request, Response
 
@@ -51,10 +52,14 @@ def args_error(error):
     raise WebArgsException(error)
 
 def check_version(client):
-    latest = api.VersionAPI().latest("okpy")
+    latest = api.VersionAPI().current("okpy")
+
+    # If it returned a response, and not a string
+    if not isinstance(latest, (str, unicode)):
+        raise RuntimeError(latest)
     if client != latest:
         return ("Incorrect client version. Supplied version was {}. "
-                + "Correct version is {}.".format(client, latest))
+                "Correct version is {}.".format(client, latest))
 
 def register_api(view, endpoint, url):
     """
@@ -68,7 +73,9 @@ def register_api(view, endpoint, url):
         #TODO(martinis) add tests
         # Any client can check for the latest version
 
-        message = check_version(request.args['client_version']) or "success"
+        message = "success"
+        if request.args.get('client_version'):
+            message = check_version(request.args['client_version']) or message
 
         user = auth.authenticate()
         if not isinstance(user, models.User):
@@ -79,6 +86,8 @@ def register_api(view, endpoint, url):
             rval = view(*args, **kwds)
             if not isinstance(rval, Response):
                 rval = utils.create_api_response(200, message, rval)
+            if isinstance(rval, collections.Iterable):
+                rval = utils.create_api_response(*rval)
             return rval
         except (WebArgsException, BadValueError) as e:
             message = "Invalid arguments: %s" % e.message

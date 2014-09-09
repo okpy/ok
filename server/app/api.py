@@ -12,14 +12,14 @@ from app import models
 from app.models import BadValueError
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import create_api_response, paginate, filter_query, create_zip
+from app.utils import paginate, filter_query, create_zip
 
 from google.appengine.ext import ndb
 
 parser = FlaskParser()
 
 def KeyArg(klass, **kwds):
-    return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]}, **kwds)
+    return Arg(ndb.Key, use=lambda c: {'pairs':[(klass, int(c))]}, **kwds)
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
@@ -65,16 +65,14 @@ class APIResource(View):
             try:
                 key = self.key_type(path)
             except (ValueError, AssertionError):
-                return create_api_response(400, 
-                    "Invalid key. Needs to be of type '%s'" % self.key_type)
+                return 400, "Invalid key. Needs to be type '%s'" % self.key_type
             return meth(key, *args, **kwargs)
 
         entity_id, action = path.split('/')
         try:
             key = self.key_type(entity_id)
         except (ValueError, AssertionError):
-            return create_api_response(400, 
-                "Invalid key. Needs to be of type '%s'" % self.key_type)
+            return 400, "Invalid key. Needs to be type '%s'" % self.key_type
 
         meth = getattr(self, action, None)
         assert meth is not None, 'Unimplemented action %r' % action
@@ -86,8 +84,8 @@ class APIResource(View):
         """
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         need = Need('get')
         if not obj.can(session['user'], need, obj):
@@ -101,8 +99,8 @@ class APIResource(View):
         """
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         need = Need('get')
         if not obj.can(session['user'], need, obj):
@@ -117,8 +115,7 @@ class APIResource(View):
         for key, value in self.parse_args(False).iteritems():
             old_val = getattr(obj, key, blank_val)
             if old_val == blank_val:
-                return create_api_response(
-                    400, "{} is not a valid field.".format(key))
+                return 400, "{} is not a valid field.".format(key)
 
             setattr(obj, key, value)
             changed = True
@@ -267,16 +264,15 @@ class SubmissionAPI(APIResource):
         """
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         need = Need('get')
         if not obj.can(session['user'], need, obj):
             return need.api_response()
 
         if 'file_contents' not in obj.messages:
-            return create_api_response(400,
-                "Submissions has no contents to download.")
+            return 400, "Submissions has no contents to download."
 
         response = make_response(create_zip(obj.messages['file_contents']))
         response.headers["Content-Disposition"] = (
@@ -308,7 +304,7 @@ class SubmissionAPI(APIResource):
             return self.submit(session['user'], data['assignment'],
                                data['messages'])
         except BadValueError as exc:
-            return create_api_response(400, exc.message, {})
+            return 400, exc.message, {}
 
     web_args = {
         'assignment': Arg(str),
@@ -329,8 +325,8 @@ class VersionAPI(APIResource):
     def new(self, key):
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         need = Need('get')
         if not obj.can(session['user'], need, obj):
@@ -340,23 +336,24 @@ class VersionAPI(APIResource):
         new_version = args['version']
 
         if new_version in obj.versions:
-            return create_api_response(
-                400, "Duplicate version: {}".format(new_version))
+            return 400, "Duplicate version: {}".format(new_version)
 
         obj.versions.append(new_version)
         obj.put()
 
         return obj
 
-    def latest(self, key):
+    def current(self, key):
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         # No permissions check because anyone can check for the latest version
 
-        return sorted(obj.versions)[-1]
+        if not obj.current_version:
+            return 500, "Invalid version resource. Contact an administrator."
+        return obj.current_version
 
 class CourseAPI(APIResource):
     model = models.Course

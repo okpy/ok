@@ -307,6 +307,7 @@ class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
     name = ndb.StringProperty()
     versions = ndb.StringProperty(repeated=True)
+    current_version = ndb.StringProperty()
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):

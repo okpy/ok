@@ -29,7 +29,7 @@ class AutoUpdateTest(APIBaseTestCase):
         self.version.put()
 
     def set_version(self, version):
-        self.version.chosen_version = version
+        self.version.current_version = version
         self.version.put()
 
     def add_and_set_version(self, version):
@@ -58,8 +58,6 @@ class AutoUpdateTest(APIBaseTestCase):
         self.set_version('1.0.0')
         self.try_request('1.1.0')
         self.assertAccessInvalid()
-
-
 
 
 if __name__ == '__main__':
