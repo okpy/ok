@@ -34,7 +34,13 @@ def DateTimeArg(**kwds):
     return Arg(None, use=parse_date)
 
 def KeyArg(klass, **kwds):
-    return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]}, **kwds)
+    def parse_key(key):
+        try:
+            key = int(key)
+        except ValueError:
+            pass
+        return {'pairs': [(klass, key)]}
+    return Arg(ndb.Key, use=parse_key, **kwds)
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
@@ -356,7 +362,8 @@ class SubmissionAPI(APIResource):
     web_args = {
         'assignment': Arg(str),
         'messages': Arg(None),
-        'created': DateTimeArg()
+        'created': DateTimeArg(),
+        'submitter': KeyArg('User'),
     }
 
 
