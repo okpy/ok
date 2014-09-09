@@ -19,7 +19,6 @@ from google.appengine.ext import ndb
 
 parser = FlaskParser()
 
-
 def DateTimeArg(**kwds):
     def parse_date(arg):
         op = None
@@ -37,7 +36,7 @@ def KeyArg(klass, **kwds):
     def parse_key(key):
         try:
             key = int(key)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
         return {'pairs': [(klass, key)]}
     return Arg(ndb.Key, use=parse_key, **kwds)

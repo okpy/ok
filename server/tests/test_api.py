@@ -301,6 +301,7 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         """Posts an entity to the server."""
         data = inst.to_json()
         data['assignment'] = self.assignment_name
+        data['submitter'] = data['submitter']['id']
         del data['created']
 
         self.post_json('/{}'.format(self.name),

@@ -163,5 +163,4 @@ def filter_query(query, args, model):
 
         query = _apply_filter(query, model, arg, value, op)
 
-    print query
     return query
