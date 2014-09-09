@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 """The ok.py script runs tests, checks for updates, and saves your work.
 
@@ -47,12 +47,13 @@ import json
 import os
 import sys
 import utils
-import threading
 import base64
 import time
+import multiprocessing
 
 def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
+    assignment = core.Assignment.deserialize(assignment)
     data = {
         'assignment': assignment['name'],
         'messages': messages,
@@ -216,33 +217,6 @@ def get_latest_version(server):
         pass
 
 ##########################
-# Threads a stop method  #
-##########################
-# Source: http://stackoverflow.com/a/25670684
-
-class StopThread(StopIteration): pass
-
-threading.SystemExit = SystemExit, StopThread
-
-class Thread2(threading.Thread):
-
-    def stop(self):
-        self.__stop = True
-
-    def _bootstrap(self):
-        if threading._trace_hook is not None:
-            raise ValueError('Cannot run thread with tracing!')
-        self.__stop = False
-        sys.settrace(self.__trace)
-        super()._bootstrap()
-
-    def __trace(self, frame, event, arg):
-        if self.__stop:
-            raise StopThread()
-        return self.__trace
-
-
-##########################
 # Command-line Interface #
 ##########################
 
@@ -277,54 +251,50 @@ def server_timer():
 
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    timer_thread = threading.Thread(target=server_timer, args=())
-    print("You are running version {0} of ok.py".format(VERSION))
-    timer_thread.start()
-    assignment = load_tests(args.tests, config.cases)
-
-    # TODO(soumya): uncomment this once ok.py is ready to ship, to hide
-    # error messages.
-    # try:
-    #     assignment = load_tests(args.tests, config.cases)
-    # except Exception as ex:
-    #     print(ex)
-    #     sys.exit(1)
-
-    logger = sys.stdout = utils.OutputLogger()
-
-    start_protocols = \
-        [p(args, assignment, logger) for p in config.protocols.values()]
-    interact_protocols = \
-        [p(args, assignment, logger) for p in config.protocols.values()]
-
-    messages = dict()
-
-    for protocol in start_protocols:
-        messages[protocol.name] = protocol.on_start()
-
     try:
-        access_token = authenticate(args.authenticate)
-        server_thread = Thread2(target=send_to_server, args=(access_token, messages, assignment, args.server))
-        server_thread.start()
-    except error.URLError as ex:
-        # TODO(soumya) Make a better error message
-        # print("Nothing was sent to the server!")
+        timer_thread = multiprocessing.Process(target=server_timer, args=())
+        print("You are running version {0} of ok.py".format(VERSION))
+        timer_thread.start()
+        assignment = load_tests(args.tests, config.cases)
+
+        logger = sys.stdout = utils.OutputLogger()
+
+        start_protocols = \
+            [p(args, assignment, logger) for p in config.protocols.values()]
+        interact_protocols = \
+            [p(args, assignment, logger) for p in config.protocols.values()]
+
+        messages = dict()
+
+        for protocol in start_protocols:
+            messages[protocol.name] = protocol.on_start()
+
+        try:
+            access_token = authenticate(args.authenticate)
+            server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment.serialize(), args.server))
+            server_thread.start()
+        except error.URLError as ex:
+            # TODO(soumya) Make a better error message
+            # print("Nothing was sent to the server!")
+            pass
+
+        for protocol in interact_protocols:
+            protocol.on_interact()
+
+        # TODO(denero) Print server responses.
+
+        # TODO(albert): a premature error might prevent tests from being
+        # dumped. Perhaps add this in a "finally" clause.
+        dump_tests(args.tests, assignment)
+
+        while timer_thread.is_alive():
+            pass
+
+        if not args.force:
+            server_thread.stop()
+    except:
+        # Suppress all error messages.
         pass
-
-    for protocol in interact_protocols:
-        protocol.on_interact()
-
-    # TODO(denero) Print server responses.
-
-    # TODO(albert): a premature error might prevent tests from being
-    # dumped. Perhaps add this in a "finally" clause.
-    dump_tests(args.tests, assignment)
-
-    while timer_thread.is_alive():
-        pass
-
-    if not args.force:
-        server_thread.stop()
 
 if __name__ == '__main__':
     ok_main(parse_input())
