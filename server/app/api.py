@@ -1,6 +1,7 @@
 """
 The public API
 """
+import logging
 
 from flask.views import View
 from flask.app import request, json
