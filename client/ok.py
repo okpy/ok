@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-VERSION = '1.0.3'
+VERSION = '1.0.4'
 
 """The ok.py script runs tests, checks for updates, and saves your work.
 
@@ -256,7 +256,9 @@ def ok_main(args):
         timer_thread = multiprocessing.Process(target=server_timer, args=())
         print("You are running version {0} of ok.py".format(VERSION))
         timer_thread.start()
+        print("Started timer thread")
         assignment = load_tests(args.tests, config.cases)
+        print("Loaded tests")
 
         logger = sys.stdout = utils.OutputLogger()
 
@@ -299,8 +301,6 @@ def ok_main(args):
             timer_thread.terminate()
         if server_thread:
             server_thread.terminate()
-    except:
-        pass
 
 if __name__ == '__main__':
     ok_main(parse_input())
