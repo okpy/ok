@@ -92,8 +92,9 @@ def paginate(entries, page, num_per_page):
     query_serialized = (
         '_'.join(str(x) for x in (
             entries.kind, entries.filters, entries.orders, num_per_page)))
+    query_serialized = query_serialized.replace(' ', '_')
     def get_mem_key(page):
-        return "cursor_page_%s_%s" % (query_serialized, page)
+        return "cp_%s_%s" % (query_serialized, page)
     this_page_key = get_mem_key(page)
     next_page_key = get_mem_key(page + 1)
 
