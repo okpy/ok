@@ -20,11 +20,10 @@ def coerce_to_json(data, fields):
         return [mdl.to_json(fields) if hasattr(data, 'to_json')
                 else coerce_to_json(mdl, fields) for mdl in data]
     elif isinstance(data, dict):
-        new_fields = fields.get(k, {})
         if hasattr(data, 'to_json'):
-            return {k: mdl.to_json(new_fields) for k, mdl in data.iteritems()}
+            return {k: mdl.to_json(fields.get(k, {})) for k, mdl in data.iteritems()}
         else:
-            return {k: coerce_to_json(mdl, new_fields)
+            return {k: coerce_to_json(mdl, fields.get(k, {}))
                     for k, mdl in data.iteritems()}
     else:
         return data
