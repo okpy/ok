@@ -49,7 +49,6 @@ import sys
 import utils
 import base64
 import time
-import pickle
 import multiprocessing
 
 def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
@@ -257,14 +256,6 @@ def ok_main(args):
         print("You are running version {0} of ok.py".format(VERSION))
         timer_thread.start()
         assignment = load_tests(args.tests, config.cases)
-
-        # TODO(soumya): uncomment this once ok.py is ready to ship, to hide
-        # error messages.
-        # try:
-        #     assignment = load_tests(args.tests, config.cases)
-        # except Exception as ex:
-        #     print(ex)
-        #     sys.exit(1)
 
         logger = sys.stdout = utils.OutputLogger()
 
