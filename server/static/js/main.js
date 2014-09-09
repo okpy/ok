@@ -1,4 +1,4 @@
-var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap']);
+var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment']);
 
 // http://ngmodules.org/modules/MacGyver
 
@@ -235,10 +235,3 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
       };
     }
   ]);
-
-
-app.filter('prettyDate', function() {
-  return function(date) {
-    return moment(date).calendar();
-  }
-});
