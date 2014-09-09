@@ -32,7 +32,7 @@ class JSONEncoder(old_json):
             return got.to_json()
         elif isinstance(obj, datetime.datetime):
             obj = convert_timezone(obj)
-            return str(obj)
+            return obj.strftime(app.config["GAE_DATETIME_FORMAT"])
         if isinstance(obj, ndb.Model):
             return obj.to_json()
         return super(JSONEncoder, self).default(obj)

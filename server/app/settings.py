@@ -23,6 +23,7 @@ class Config(object): #pylint: disable=R0903
     CACHE_TYPE = 'gaememcached'
     AUTHENTICATOR = GOOGLE_AUTHENTICATOR
     CLIENT_VERSION = '1.0.3'
+    GAE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 class Debug(Config): #pylint: disable=R0903
     """
