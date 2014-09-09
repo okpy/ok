@@ -331,6 +331,10 @@ class SubmissionAPI(APIResource):
 
     def post(self):
         data = self.parse_args(False)
+        if 'assignment' not in data:
+            raise BadValueError("Missing required arguments 'assignment'")
+        if 'messages' not in data:
+            raise BadValueError("Missing required arguments 'messages'")
 
         try:
             return self.submit(session['user'], data['assignment'],
@@ -339,8 +343,8 @@ class SubmissionAPI(APIResource):
             return create_api_response(400, exc.message, {})
 
     web_args = {
-        'assignment': Arg(str, required=True),
-        'messages': Arg(None, required=True),
+        'assignment': Arg(str),
+        'messages': Arg(None),
     }
 
 
