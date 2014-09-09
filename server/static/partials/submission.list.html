@@ -17,7 +17,7 @@
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
       </td>
       <td>
-        {{submission.created | prettyDate}}
+        {{submission.created | amCalendar}}
       </td>
       <td>
         <a href='/api/v1/submission/{{submission.id}}/download'>link</a>
