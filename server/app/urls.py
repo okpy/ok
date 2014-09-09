@@ -26,7 +26,7 @@ def index():
         params['users_link'] = users.create_login_url('/')
         params['users_title'] = "Sign In"
     else:
-        logging.info("User is " % user.email())
+        logging.info("User is %s", user.email())
         params["user"] = {'email': user.email()}
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
@@ -65,7 +65,7 @@ def register_api(view, endpoint, url):
     """
     Registers the given view at the endpoint, accessible by the given url.
     """
-    url = API_PREFIX + '/' + url
+    url = '/'.join((API_PREFIX, view.api_version, url))
     view = view.as_view(endpoint)
 
     @wraps(view)

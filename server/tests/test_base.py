@@ -59,6 +59,7 @@ class APIBaseTestCase(BaseTestCase):
     model = None
     name = ""
     num = 1
+    api_version = 'v1'
 
     def get_accounts(self):
         """
@@ -92,7 +93,8 @@ class APIBaseTestCase(BaseTestCase):
         """
         Makes a get request.
         """
-        self.response = self.client.get(API_PREFIX + url, *args, **kwds)
+        url = API_PREFIX + '/' + self.api_version + url
+        self.response = self.client.get(url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)['data']
             self.response_json = models.json.loads(json.dumps(response_json))
@@ -127,7 +129,8 @@ class APIBaseTestCase(BaseTestCase):
         Makes a post request, with json.
         """
         kwds.setdefault('content_type', 'application/json')
-        self.response = self.client.post(API_PREFIX + url, *args, **kwds)
+        url = API_PREFIX + '/' + self.api_version + url
+        self.response = self.client.post(url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)
             self.response_json = models.json.loads(

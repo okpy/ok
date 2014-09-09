@@ -41,6 +41,7 @@ class APIResource(View):
     model = None
     web_args = {}
     key_type = int
+    api_version = 'v1'
 
     @property
     def name(self):
