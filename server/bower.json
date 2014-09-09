@@ -32,7 +32,8 @@
     "highlightjs": "~8.0.0",
     "angular-loading-bar": "~0.5.1",
     "angular-bootstrap": "~0.11.0",
-    "angular-chosen-localytics": "~1.0.6"
+    "angular-chosen-localytics": "~1.0.6",
+    "angular-moment": "~0.8.2"
   },
   "directory": "js"
 }
