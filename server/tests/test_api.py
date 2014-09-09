@@ -131,8 +131,8 @@ class APITest(object): #pylint: disable=no-init
             inst = self.get_basic_instance(mutate=True)
             inst.put()
         while total_objects > 0:
-            if hasattr(self, 'forward_cursor'):
-                self.get_index(cursor=self.forward_cursor, num_page=num_page)
+            if hasattr(self, 'page'):
+                self.get_index(page=self.page, num_page=num_page)
             else:
                 self.get_index(num_page=num_page)
 
@@ -147,6 +147,7 @@ class APITest(object): #pylint: disable=no-init
                 "Not right number returned: " + str(total_objects) +
                 " vs. " +str(num_instances) + str(self.response_json))
             total_objects -= num_page
+            self.page += 1
 
 
     ## ENTITY GET ##
