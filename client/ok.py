@@ -256,9 +256,7 @@ def ok_main(args):
         timer_thread = multiprocessing.Process(target=server_timer, args=())
         print("You are running version {0} of ok.py".format(VERSION))
         timer_thread.start()
-        print("Started timer thread")
         assignment = load_tests(args.tests, config.cases)
-        print("Loaded tests")
 
         logger = sys.stdout = utils.OutputLogger()
 
