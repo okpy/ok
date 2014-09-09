@@ -9,7 +9,6 @@ from flask import render_template, session, request, Response
 
 from google.appengine.api import users
 from google.appengine.ext.db import BadValueError
-from google.appengine.ext import ndb
 
 from app import app
 from app import api
@@ -26,7 +25,7 @@ def index():
         params['users_link'] = users.create_login_url('/')
         params['users_title'] = "Sign In"
     else:
-        logging.info("User is %s." % user.email())
+        logging.info("User is " % user.email())
         params["user"] = {'email': user.email()}
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
@@ -51,6 +50,12 @@ class WebArgsException(Exception):
 def args_error(error):
     raise WebArgsException(error)
 
+def check_version(client):
+    latest = api.VersionAPI().latest("okpy")
+    if client != latest:
+        return ("Incorrect client version. Supplied version was {}. "
+                + "Correct version is {}.".format(client, latest))
+
 def register_api(view, endpoint, url):
     """
     Registers the given view at the endpoint, accessible by the given url.
@@ -61,15 +66,9 @@ def register_api(view, endpoint, url):
     @wraps(view)
     def wrapped(*args, **kwds):
         #TODO(martinis) add tests
-        # This is so that any client can check for the latest version
-        if 'client_version' in request.args and 'version' not in request.path:
-            # TODO(martinis) maybe change hardcoded value?
-            latest_version = api.VersionAPI().latest("okpy")
-            if request.args['client_version'] != latest_version:
-                return utils.create_api_response(403, "incorrect client version", {
-                    'supplied_version': request.args['client_version'],
-                    'correct_version': latest_version
-                })
+        # Any client can check for the latest version
+
+        message = check_version(request.args['client_version']) or "success"
 
         user = auth.authenticate()
         if not isinstance(user, models.User):
@@ -79,7 +78,7 @@ def register_api(view, endpoint, url):
         try:
             rval = view(*args, **kwds)
             if not isinstance(rval, Response):
-                rval = utils.create_api_response(200, "success", rval)
+                rval = utils.create_api_response(200, message, rval)
             return rval
         except (WebArgsException, BadValueError) as e:
             message = "Invalid arguments: %s" % e.message
@@ -93,9 +92,9 @@ def register_api(view, endpoint, url):
                                              error_message)
 
     app.add_url_rule('%s' % url, view_func=wrapped, defaults={'path': None},
-            methods=['GET', 'POST'])
+                     methods=['GET', 'POST'])
     app.add_url_rule('%s/<path:path>' % url, view_func=wrapped,
-            methods=['GET', 'POST', 'DELETE', 'PUT'])
+                     methods=['GET', 'POST', 'DELETE', 'PUT'])
 
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')

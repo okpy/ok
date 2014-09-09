@@ -354,9 +354,7 @@ class VersionAPI(APIResource):
             return create_api_response(404, "{resource} {key} not found".format(
                 resource=self.name, key=key))
 
-        need = Need('get')
-        if not obj.can(session['user'], need, obj):
-            return need.api_response()
+        # No permissions check because anyone can check for the latest version
 
         return sorted(obj.versions)[-1]
 
