@@ -105,7 +105,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission/:id', {format: "json", stats: true}, {
+      return $resource('api/v1/submission/:id', {format: "json"}, {
         query: {
           isArray: false
         },
