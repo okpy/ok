@@ -84,10 +84,13 @@ def register_api(view, endpoint, url):
 
         try:
             rval = view(*args, **kwds)
-            if not isinstance(rval, Response):
-                rval = utils.create_api_response(200, message, rval)
-            if isinstance(rval, collections.Iterable):
+
+            if (isinstance(rval, collections.Iterable)
+                and not isinstance(rval, dict)):
                 rval = utils.create_api_response(*rval)
+            else:
+                rval = utils.create_api_response(200, message, rval)
+
             return rval
         except (WebArgsException, BadValueError) as e:
             message = "Invalid arguments: %s" % e.message
