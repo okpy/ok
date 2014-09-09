@@ -339,8 +339,8 @@ class SubmissionAPI(APIResource):
             return create_api_response(400, exc.message, {})
 
     web_args = {
-        'assignment': Arg(str),
-        'messages': Arg(None),
+        'assignment': Arg(str, required=True),
+        'messages': Arg(None, required=True),
     }
 
 
