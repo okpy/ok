@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 """The ok.py script runs tests, checks for updates, and saves your work.
 
