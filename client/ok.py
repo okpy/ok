@@ -290,8 +290,7 @@ def ok_main(args):
     # dumped. Perhaps add this in a "finally" clause.
     dump_tests(args.tests, assignment)
 
-    while timer_thread.is_alive():
-        pass
+    timer_thread.join()
 
     if not args.force:
         server_thread.terminate()
