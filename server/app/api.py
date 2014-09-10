@@ -338,11 +338,8 @@ class SubmissionAPI(APIResource):
         if 'messages' not in data:
             raise BadValueError("Missing required arguments 'messages'")
 
-        try:
-            return self.submit(session['user'], data['assignment'],
-                               data['messages'])
-        except BadValueError as exc:
-            return create_api_response(400, exc.message, {})
+        return self.submit(session['user'], data['assignment'],
+                           data['messages'])
 
     web_args = {
         'assignment': Arg(str),
