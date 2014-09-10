@@ -37,7 +37,9 @@ handlers:
   script: lib.gae_mini_profiler.main.app
 
 - url: /static
+  secure: always
   static_dir: static
 
 - url: .*
   script: run.app.app
+  secure: always
