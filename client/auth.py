@@ -46,7 +46,7 @@ def make_refresh_post(refresh_token):
         resource_endpoint='https://www.googleapis.com/oauth2/v1',
         client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
     params = {"grant_type": "refresh_token"}
-    client.request_token(refresh_token=refresh_token, **params)
+    client.request_token(refresh_token=refresh_token, timeout=3, **params)
     return client.access_token, client.expires_in
 
 def get_storage():
