@@ -1,0 +1,45 @@
+application: ok-server
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+default_expiration: "5d"
+
+builtins:
+- appstats: on
+- admin_redirect: on
+- deferred: on
+- remote_api: on
+
+libraries:
+- name: jinja2
+  version: "2.6"
+- name: markupsafe
+  version: "0.15"
+
+inbound_services:
+- warmup
+
+handlers:
+- url: /favicon.ico
+  static_files: app/static/img/favicon.ico
+  upload: app/static/img/favicon.ico
+
+- url: /robots.txt
+  static_files: app/static/robots.txt
+  upload: app/static/robots.txt
+
+- url: /gae_mini_profiler/static
+  static_dir: lib/gae_mini_profiler/static
+
+- url: /gae_mini_profiler/.*
+  script: lib.gae_mini_profiler.main.app
+
+- url: /static
+  secure: always
+  static_dir: static
+
+- url: .*
+  script: run.app.app
+  secure: always
