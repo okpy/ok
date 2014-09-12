@@ -240,11 +240,11 @@ def parse_input():
     parser.add_argument('-l', '--lock', type=str,
                         help="partial name or path to test file or directory to lock")
     parser.add_argument('-f', '--force', action='store_true',
-                        help="Force waiting for a server response without timeout")
+                        help="force waiting for a server response without timeout")
     parser.add_argument('-a', '--authenticate', action='store_true',
-                        help="Authenticate, ignoring previous authentication")
+                        help="authenticate, ignoring previous authentication")
     parser.add_argument('--local', action='store_true',
-                        help="Disable any network activity")
+                        help="disable any network activity")
     return parser.parse_args()
 
 
