@@ -243,6 +243,8 @@ def parse_input():
                         help="Forces a server response regardless of how long it takes")
     parser.add_argument('-a', '--authenticate', action='store_true',
                         help="Authenticate, ignoring previous authentication")
+    parser.add_argument('-ns', '--no-server', action='store_true',
+                        help="Disables any server activity")
     return parser.parse_args()
 
 
@@ -253,9 +255,10 @@ def ok_main(args):
     """Run all relevant aspects of ok.py."""
     server_thread, timer_thread = None, None
     try:
-        timer_thread = multiprocessing.Process(target=server_timer, args=())
         print("You are running version {0} of ok.py".format(VERSION))
-        timer_thread.start()
+        if not args.no_server:
+            timer_thread = multiprocessing.Process(target=server_timer, args=())
+            timer_thread.start()
         assignment = load_tests(args.tests, config.cases)
 
         logger = sys.stdout = utils.OutputLogger()
@@ -270,14 +273,15 @@ def ok_main(args):
         for protocol in start_protocols:
             messages[protocol.name] = protocol.on_start()
 
-        try:
-            access_token = authenticate(args.authenticate)
-            server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment.serialize(), args.server))
-            server_thread.start()
-        except error.URLError as ex:
-            # TODO(soumya) Make a better error message
-            # print("Nothing was sent to the server!")
-            pass
+        if not args.no_server:
+            try:
+                access_token = authenticate(args.authenticate)
+                server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment.serialize(), args.server))
+                server_thread.start()
+            except error.URLError as ex:
+                # TODO(soumya) Make a better error message
+                # print("Nothing was sent to the server!")
+                pass
 
         for protocol in interact_protocols:
             protocol.on_interact()
@@ -288,11 +292,12 @@ def ok_main(args):
         # dumped. Perhaps add this in a "finally" clause.
         dump_tests(args.tests, assignment)
 
-        while timer_thread.is_alive():
-            pass
+        if not args.no_server:
+            while timer_thread.is_alive():
+                pass
 
-        if not args.force:
-            server_thread.terminate()
+            if not args.force:
+                server_thread.terminate()
 
     except KeyboardInterrupt:
         if timer_thread:
