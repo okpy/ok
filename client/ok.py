@@ -236,15 +236,15 @@ def parse_input():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
     parser.add_argument('-i', '--interactive', action='store_true',
-                        help="toggles interactive mode")
+                        help="toggle interactive mode")
     parser.add_argument('-l', '--lock', type=str,
                         help="partial name or path to test file or directory to lock")
     parser.add_argument('-f', '--force', action='store_true',
-                        help="Forces a server response regardless of how long it takes")
+                        help="force waiting for a server response without timeout")
     parser.add_argument('-a', '--authenticate', action='store_true',
-                        help="Authenticate, ignoring previous authentication")
-    parser.add_argument('-ns', '--no-server', action='store_true',
-                        help="Disables any server activity")
+                        help="authenticate, ignoring previous authentication")
+    parser.add_argument('--local', action='store_true',
+                        help="disable any network activity")
     return parser.parse_args()
 
 
@@ -256,7 +256,7 @@ def ok_main(args):
     server_thread, timer_thread = None, None
     try:
         print("You are running version {0} of ok.py".format(VERSION))
-        if not args.no_server:
+        if not args.local:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
             timer_thread.start()
         assignment = load_tests(args.tests, config.cases)
@@ -273,7 +273,7 @@ def ok_main(args):
         for protocol in start_protocols:
             messages[protocol.name] = protocol.on_start()
 
-        if not args.no_server:
+        if not args.local:
             try:
                 access_token = authenticate(args.authenticate)
                 server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment.serialize(), args.server))
@@ -292,7 +292,7 @@ def ok_main(args):
         # dumped. Perhaps add this in a "finally" clause.
         dump_tests(args.tests, assignment)
 
-        if not args.no_server:
+        if not args.local:
             while timer_thread.is_alive():
                 pass
 
