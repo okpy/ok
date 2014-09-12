@@ -243,7 +243,7 @@ def parse_input():
                         help="Forces a server response regardless of how long it takes")
     parser.add_argument('-a', '--authenticate', action='store_true',
                         help="Authenticate, ignoring previous authentication")
-    parser.add_argument('-n', '--no-server', action='store_true',
+    parser.add_argument('-ns', '--no-server', action='store_true',
                         help="Disables any server activity")
     return parser.parse_args()
 
