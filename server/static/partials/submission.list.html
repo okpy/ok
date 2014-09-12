@@ -12,7 +12,11 @@
       <th>View Submission</th>
     </tr>
     <tr ng-repeat="submission in data.results">
-      <td>{{submission.submitter.id}}</td>
+      <td>
+        <div ng-repeat="submitter in submission.submitters">
+          {{submitter.id}}
+        </div>
+      </td>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
       </td>

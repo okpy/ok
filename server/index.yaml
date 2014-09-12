@@ -20,3 +20,9 @@ indexes:
   - name: submitter
   - name: created
     direction: desc
+
+- kind: Submission
+  properties:
+  - name: submitters
+  - name: created
+    direction: desc

@@ -44,6 +44,24 @@ def convert_timezone(utc_dt):
     delta = datetime.timedelta(hours = -7)
     return (datetime.datetime.combine(utc_dt.date(),utc_dt.time()) + delta)
 
+def convert_value(value, key, fields):
+    if isinstance(value, (list, tuple)):
+        return type(value)(convert_value(v, key, fields) for v in value)
+
+    if isinstance(value, ndb.Key):
+        val = value.get()
+        if val:
+            return val.to_json(fields.get(key))
+        else:
+            return None
+    else:
+        try:
+            return app.json_encoder().default(value)
+        except TypeError:
+            return value
+
+
+
 
 class Base(ndb.Model):
     """Shared utilities."""
@@ -69,14 +87,8 @@ class Base(ndb.Model):
             result['id'] = self.key.id()
 
         for key, value in result.items():
-            if isinstance(value, ndb.Key):
-                result[key] = value.get().to_json(fields.get(key))
-            else:
-                try:
-                    new_value = app.json_encoder().default(value)
-                    result[key] = new_value
-                except TypeError:
-                    pass
+            result[key] = convert_value(value, key, fields)
+
         return result
     @classmethod
     def can(cls, user, need, obj=None, query=None):
@@ -257,7 +269,7 @@ def validate_messages(_, messages):
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
-    submitter = ndb.KeyProperty(User)
+    submitters = ndb.KeyProperty(User, repeated=True)
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
@@ -268,11 +280,13 @@ class Submission(Base):
         if action == "get":
             if not obj:
                 raise ValueError("Need instance for get action.")
-            if user.is_admin or obj.submitter == user.key:
+            if user.is_admin or obj.submitters == user.key:
                 return True
             if user.is_staff:
                 for course in user.staffed_courses:
-                    if course.key in obj.submitter.get().courses:
+                    # I assume that every user is in the same class...
+                    submitters_courses = obj.submitter[0].get().courses
+                    if course.key in submitters_courses:
                         return True
         if action in ("create", "put"):
             return user.logged_in
@@ -294,7 +308,7 @@ class Submission(Base):
                     filters.append(Submission.assignment.IN(
                         assignments.get()))
 
-            filters.append(Submission.submitter == user.key)
+            filters.append(Submission.submitters == user.key)
 
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
