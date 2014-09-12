@@ -254,7 +254,6 @@ def server_timer():
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
     server_thread, timer_thread = None, None
-    print(args)
     try:
         if not args.no_server:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
