@@ -293,7 +293,7 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
             message = '{"value":' + str(self.num) + '}'
             self.num += 1
         rval = models.Submission(
-            messages=message, submitter=self._submitter.key,
+            messages=message, submitters=[self._submitter.key],
             assignment=self._assign.key)
         return rval
 

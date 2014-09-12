@@ -105,12 +105,12 @@ class PermissionsUnitTest(BaseTestCase):
 
         self.submissions = {
             "first": models.Submission(
-                submitter=self.accounts["student0"].key,
+                submitters=[self.accounts["student0"].key],
                 assignment=self.assignments["first"].key,
                 messages="{}"
                 ),
             "second": models.Submission(
-                submitter=self.accounts["student1"].key,
+                submitters=[self.accounts["student1"].key],
                 assignment=self.assignments["first"].key,
                 messages="{}"
                 ),

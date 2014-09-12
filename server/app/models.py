@@ -280,12 +280,12 @@ class Submission(Base):
         if action == "get":
             if not obj:
                 raise ValueError("Need instance for get action.")
-            if user.is_admin or obj.submitters == user.key:
+            if user.is_admin or user.key in obj.submitters:
                 return True
             if user.is_staff:
                 for course in user.staffed_courses:
                     # I assume that every user is in the same class...
-                    submitters_courses = obj.submitter[0].get().courses
+                    submitters_courses = obj.submitters[0].get().courses
                     if course.key in submitters_courses:
                         return True
         if action in ("create", "put"):
