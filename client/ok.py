@@ -255,9 +255,9 @@ def ok_main(args):
     """Run all relevant aspects of ok.py."""
     server_thread, timer_thread = None, None
     try:
+        print("You are running version {0} of ok.py".format(VERSION))
         if not args.no_server:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
-            print("You are running version {0} of ok.py".format(VERSION))
             timer_thread.start()
         assignment = load_tests(args.tests, config.cases)
 
