@@ -299,7 +299,7 @@ class UnlockConsole(object):
                 if student_input not in choice_map:
                     student_input = ''
                 else:
-                    student_input = choice_map[student_input]
+                    student_input = normalize(choice_map[student_input])
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
