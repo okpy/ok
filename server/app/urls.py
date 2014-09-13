@@ -65,8 +65,8 @@ def register_api(view, endpoint, url):
             if request.args['client_version'] != app.config['CLIENT_VERSION']:
                 logging.info(
                     "Client out of date. Client version {} != {}".format(
-                        request.args['client_version']),
-                    app.config['CLIENT_VERSION'])
+                        request.args['client_version'],
+                    app.config['CLIENT_VERSION']))
                 return utils.create_api_response(403, "incorrect client version", {
                     'supplied_version': request.args['client_version'],
                     'correct_version': app.config['CLIENT_VERSION']
