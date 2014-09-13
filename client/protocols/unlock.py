@@ -299,10 +299,7 @@ class UnlockConsole(object):
                 if student_input not in choice_map:
                     student_input = ''
                 else:
-                    student_input = choice_map[student_input].strip()
-                    input_array = student_input.split('\n')
-                    if len(input_array) > 1:
-                        student_input = input_array[0].strip() + '\n' + input_array[1].strip()
+                    student_input = choice_map[student_input]
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
