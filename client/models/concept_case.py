@@ -57,6 +57,10 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
         self['locked'] = False
 
     def on_lock(self, hash_fn):
-        self['answer'] = hash_fn(self['answer'])
+        #TODO(soumya): Make this a call to normalize after it's moved to an appropriate place.
+        if self['choices']:
+            self['answer'] = hash_fn("".join(self['answer']))
+        else:
+            self['answer'] = hash_fn(self['answer'])
         self['locked'] = True
 
