@@ -10,6 +10,7 @@ from webargs import Arg
 from webargs.flaskparser import FlaskParser
 
 from app import models
+from app.codereview import compare
 from app.models import BadValueError
 from app.constants import API_PREFIX
 from app.needs import Need
@@ -66,7 +67,7 @@ class APIResource(View):
             try:
                 key = self.key_type(path)
             except (ValueError, AssertionError):
-                return create_api_response(400, 
+                return create_api_response(400,
                     "Invalid key. Needs to be of type '%s'" % self.key_type)
             return meth(key, *args, **kwargs)
 
@@ -74,7 +75,7 @@ class APIResource(View):
         try:
             key = self.key_type(entity_id)
         except (ValueError, AssertionError):
-            return create_api_response(400, 
+            return create_api_response(400,
                 "Invalid key. Needs to be of type '%s'" % self.key_type)
 
         meth = getattr(self, action, None)
@@ -288,6 +289,7 @@ class SubmitNDBImplementation(object):
 class SubmissionAPI(APIResource):
     """The API resource for the Submission Object"""
     model = models.Submission
+    diff_model = models.SubmissionDiff
 
     db = SubmitNDBImplementation()
 
@@ -306,13 +308,43 @@ class SubmissionAPI(APIResource):
 
         if 'file_contents' not in obj.messages:
             return create_api_response(400,
-                "Submissions has no contents to download.")
+                "Submission has no contents to download.")
 
         response = make_response(create_zip(obj.messages['file_contents']))
         response.headers["Content-Disposition"] = (
             "attachment; filename=submission-%s.zip" % str(obj.created))
         response.headers["Content-Type"] = "application/zip"
         return response
+
+    def diff(self, key):
+        """
+        Gets the associated diff for a submission
+        """
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        if 'file_contents' not in obj.messages:
+            return create_api_response(400,
+                "Submission has no contents to diff.")
+
+        diffs = list(self.diff_model.query(self.diff_model.submission == obj.key))
+        if len(diffs) != 0:
+            return create_api_response(200, "success", diffs[0].diff)
+
+        diff = {}
+        templates = json.loads(obj.assignment.get().templates)
+        for filename, contents in obj.messages['file_contents'].items():
+            diff[filename] = compare.diff(templates[filename], contents)
+
+        self.diff_model(submission=obj.key,
+                        diff=diff).put()
+        return create_api_response(200, "success", diff)
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
