@@ -34,3 +34,32 @@ h2 {
 }
 
 .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
+.diff {
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  text-shadow: 0 1px 0 #fff;
+  background-color: #f7f7f7;
+}
+.diff-line {
+  position: relative;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 12px;
+  color: #333;
+  vertical-align: top;
+  white-space: pre;
+  overflow: visible;
+}
+
+.diff-line-pos {
+  background-color: #dfd;
+}
+
+.diff-line-neg {
+  background-color: #fdd;
+}

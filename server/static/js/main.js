@@ -16,6 +16,34 @@ app.directive('snippet', ['$timeout', '$interpolate', function ($timeout, $inter
         };
     }]);
 
+app.directive('diff', ['$timeout', '$interpolate', function ($timeout, $interpolate) {
+        "use strict";
+        return {
+            restrict: 'E',
+            template: '<div class="diff" ng-transclude></div>',
+            replace: true,
+            transclude: true,
+            link: function (scope, elm) {
+              var contents = JSON.parse($interpolate(elm.text())(scope));
+              elm.html("");
+              angular.forEach(contents, function(val) {
+                var start = val[0];
+                var content = val;
+                var elem = $("<div class='diff-line'>")
+                elem.text(content);
+                if (start == " ") {
+                  elem.addClass('diff-line-empty')
+                } else if (start == "+") {
+                  elem.addClass('diff-line-pos')
+                } else if (start == "-") {
+                  elem.addClass('diff-line-neg')
+                }
+                elm.append(elem);
+              });
+            }
+        };
+    }]);
+
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider, $locationProvider) {
     $urlRouterProvider.otherwise("/submission/");
@@ -39,6 +67,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       url: '/:submissionId',
       templateUrl: 'static/partials/submission.detail.html',
       controller: "SubmissionDetailCtrl"
+    }
+
+    var submissionDiff = {
+      name: 'submission.diff',
+      url: '/:submissionId/diff',
+      templateUrl: 'static/partials/submission.diff.html',
+      controller: "SubmissionDiffCtrl"
     }
 
     var assignments = {
@@ -94,6 +129,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(submissions).
       state(submissionList).
       state(submissionDetail).
+      state(submissionDiff).
       state(assignments).
       state(assignmentList).
       state(assignmentDetail).
@@ -110,6 +146,13 @@ app.factory('Submission', ['$resource',
           isArray: false
         },
         get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        diff: {
+          url: 'api/v1/submission/:id/diff',
           isArray: false,
           transformResponse: function(data) {
             return JSON.parse(data).data;
@@ -142,7 +185,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
     }, function(response) {
       $scope.data = response.data;
       $scope.message = response.message;
-      $scope.totalItems = response.data.statistics.total;
+      //$scope.totalItems = response.data.statistics.total;
       if (response.data.page !== $scope.currentPage) {
         $scope.currentPage = response.data.page;
         $scope.pageChange();
@@ -160,6 +203,12 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
   function($scope, $stateParams, Submission) {
     $scope.submission = Submission.get({id: $stateParams.submissionId});
   }]);
+
+app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission',
+  function($scope, $stateParams, Submission) {
+    $scope.diff = Submission.diff({id: $stateParams.submissionId});
+  }]);
+
 
 app.factory('Assignment', ['$resource',
     function($resource) {

@@ -10,6 +10,7 @@
       <th>Submission Time</th>
       <th>Download Link</th>
       <th>View Submission</th>
+      <th>View Diff</th>
     </tr>
     <tr ng-repeat="submission in data.results">
       <td>{{submission.submitter.id}}</td>
@@ -26,6 +27,11 @@
         <a ui-sref='submission.detail({submissionId:submission.id})'>
           View
         </a>
+      <td>
+        <a ui-sref='submission.diff({submissionId:submission.id})'>
+          View
+        </a>
+      </td>
       </td>
     </tr>
   </table>
