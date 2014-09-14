@@ -41,10 +41,10 @@ h2 {
   margin-bottom: 15px;
   border: 1px solid #ddd;
   border-radius: 3px;
+  width: 100%;
   text-shadow: 0 1px 0 #fff;
-  background-color: #f7f7f7;
 }
-.diff-line {
+.diff-line-code {
   position: relative;
   padding-left: 10px;
   padding-right: 10px;
@@ -56,10 +56,42 @@ h2 {
   overflow: visible;
 }
 
-.diff-line-pos {
+.diff-line-code-pos {
   background-color: #dfd;
 }
 
-.diff-line-neg {
+.diff-line-code-neg {
   background-color: #fdd;
+}
+
+.diff-line-num {
+  width: 1%;
+  min-width: 50px;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(0,0,0,0.3);
+  vertical-align: top;
+  text-align: right;
+  border: solid #eee;
+  border-width: 0 1px 0 0;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.diff-line-num-pos {
+  background-color: #ceffce;
+  border-color: #b4e2b4;
+}
+
+.diff-line-num-neg {
+  background-color: #f7c8c8;
+  border-color: #e9aeae;
 }

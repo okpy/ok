@@ -20,26 +20,54 @@ app.directive('diff', ['$timeout', '$interpolate', function ($timeout, $interpol
         "use strict";
         return {
             restrict: 'E',
-            template: '<div class="diff" ng-transclude></div>',
+            template: '<table class="diff" ng-transclude></table>',
             replace: true,
             transclude: true,
             link: function (scope, elm) {
-              var contents = JSON.parse($interpolate(elm.text())(scope));
               elm.html("");
-              angular.forEach(contents, function(val) {
+
+              var contents = JSON.parse($interpolate(elm.text())(scope));
+              var leftNum = 0;
+              var rightNum = 0;
+              for (var i = 0; i <= contents.length; i++) {
+                var val = contents[i];
                 var start = val[0];
-                var content = val;
-                var elem = $("<div class='diff-line'>")
-                elem.text(content);
+                var content = val[0] + val.slice(2);
+                var elem = $("<tr class='diff-line'>")
+                var lineNumLeft = $("<td class='diff-line-num diff-line-num-left'>")
+                var lineNumRight = $("<td class='diff-line-num diff-line-num-right'>")
+                var code = $("<td class='diff-line-code'>")
+                var showLeft = false;
+                var showRight = false;
                 if (start == " ") {
-                  elem.addClass('diff-line-empty')
+                  code.addClass('diff-line-code-empty')
+                  showRight = true;
+                  showLeft = true;
                 } else if (start == "+") {
-                  elem.addClass('diff-line-pos')
+                  code.addClass('diff-line-code-pos')
+                  lineNumRight.addClass('diff-line-num-pos')
+                  lineNumLeft.addClass('diff-line-num-pos')
+                  showRight = true;
                 } else if (start == "-") {
-                  elem.addClass('diff-line-neg')
+                  code.addClass('diff-line-code-neg')
+                  lineNumLeft.addClass('diff-line-num-neg')
+                  lineNumRight.addClass('diff-line-num-neg')
+                  showLeft = true;
                 }
+                if (showRight == true) {
+                  rightNum++;
+                  lineNumRight.text(rightNum);
+                }
+                if (showLeft == true) {
+                  leftNum++;
+                  lineNumLeft.text(leftNum);
+                }
+                code.text(content);
+                elem.append(lineNumLeft);
+                elem.append(lineNumRight);
+                elem.append(code);
                 elm.append(elem);
-              });
+              };
             }
         };
     }]);
