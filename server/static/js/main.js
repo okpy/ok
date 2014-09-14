@@ -24,9 +24,10 @@ app.directive('diff', ['$timeout', '$interpolate', function ($timeout, $interpol
             replace: true,
             transclude: true,
             link: function (scope, elm) {
-              elm.html("");
 
               var contents = JSON.parse($interpolate(elm.text())(scope));
+              elm.html("");
+
               var leftNum = 0;
               var rightNum = 0;
               for (var i = 0; i <= contents.length; i++) {
