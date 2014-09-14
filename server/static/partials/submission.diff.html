@@ -5,6 +5,6 @@
 
   <div ng-repeat="(file_name, contents) in diff">
     <h3>{{file_name}}</h3>
-    <diff>{{contents}}</diff>
+    <diff name='{{file_name}}'>{{contents}}</diff>
   </div>
 </div>

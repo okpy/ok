@@ -5,6 +5,6 @@
 
   <div ng-repeat="(file_name, contents) in submission.messages.file_contents">
     <h3>{{file_name}}</h3>
-    <snippet>{{contents}}</snippet>
+    <snippet name='{{file_name}}'>{{contents}}</snippet>
   </div>
 </div>

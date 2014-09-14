@@ -2,41 +2,73 @@ var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-ba
 
 // http://ngmodules.org/modules/MacGyver
 
-app.directive('snippet', ['$timeout', '$interpolate', function ($timeout, $interpolate) {
+app.directive('snippet', ['$compile', '$location', '$anchorScroll', '$timeout', '$interpolate', function ($compile, $location, $anchorScroll, $timeout, $interpolate) {
         "use strict";
         return {
             restrict: 'E',
-            template: '<pre><code ng-transclude></code></pre>',
+            template: '<table class="snippet" ng-transclude></table>',
             replace: true,
             transclude: true,
-            link: function (scope, elm) {
-                var tmp = $interpolate(elm.find('code').text())(scope);
-                elm.find('code').html(hljs.highlightAuto(tmp).value);
+            link: function (scope, elm, attrs) {
+              scope.scrollTo = function(id) {
+                console.log("Scrolling to " + id);
+                $location.hash(id);
+                $anchorScroll();
+              }
+              var contents = $interpolate(elm.text())(scope).split('\n');
+              elm.html("");
+
+              var leftNum = 0;
+              var rightNum = 0;
+              for (var i = 0; i < contents.length; i++) {
+                var content = contents[i];
+                var id = attrs.name + "-L"+(i+1);
+                var elem = $("<tr id='"+id+"' class='diff-line anchor'>")
+                var lineNum = $("<td ng-click='scrollTo(\""+id+"\")' class='diff-line-num diff-line-num-left'>")
+                lineNum.text(i + 1);
+                var code = $("<td class='diff-line-code'>")
+                var span = $("<span>")
+                code.addClass('diff-line-code-empty')
+                code.append(span);
+                span.text(content);
+                elem.append(lineNum);
+                elem.append(code);
+                elm.append(elem);
+                hljs.highlightBlock(span[0]);
+                $compile(elem)(scope);
+              };
+              $anchorScroll();
             }
         };
     }]);
 
-app.directive('diff', ['$timeout', '$interpolate', function ($timeout, $interpolate) {
+app.directive('diff', ['$compile', '$timeout', '$location', '$anchorScroll', '$interpolate', function ($compile, $timeout, $location, $anchorScroll, $interpolate) {
         "use strict";
         return {
             restrict: 'E',
             template: '<table class="diff" ng-transclude></table>',
             replace: true,
             transclude: true,
-            link: function (scope, elm) {
+            link: function (scope, elm, attrs) {
 
+              scope.scrollTo = function(id) {
+                console.log("Scrolling to " + id);
+                $location.hash(id);
+                $anchorScroll();
+              }
               var contents = JSON.parse($interpolate(elm.text())(scope));
               elm.html("");
 
               var leftNum = 0;
               var rightNum = 0;
-              for (var i = 0; i <= contents.length; i++) {
+              for (var i = 0; i < contents.length; i++) {
                 var val = contents[i];
                 var start = val[0];
                 var content = val[0] + val.slice(2);
-                var elem = $("<tr class='diff-line'>")
-                var lineNumLeft = $("<td class='diff-line-num diff-line-num-left'>")
-                var lineNumRight = $("<td class='diff-line-num diff-line-num-right'>")
+                var id = attrs.name + "-L"+(i+1);
+                var elem = $("<tr id='"+id+"' class='diff-line'>")
+                var lineNumLeft = $("<td ng-click='scrollTo(\""+id+"\")' class='diff-line-num diff-line-num-left'>")
+                var lineNumRight = $("<td ng-click='scrollTo(\""+id+"\")' class='diff-line-num diff-line-num-right'>")
                 var code = $("<td class='diff-line-code'>")
                 var showLeft = false;
                 var showRight = false;
@@ -68,7 +100,9 @@ app.directive('diff', ['$timeout', '$interpolate', function ($timeout, $interpol
                 elem.append(lineNumRight);
                 elem.append(code);
                 elm.append(elem);
+                $compile(elem)(scope);
               };
+              $anchorScroll();
             }
         };
     }]);
@@ -214,7 +248,6 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
     }, function(response) {
       $scope.data = response.data;
       $scope.message = response.message;
-      $scope.totalItems = response.data.statistics.total;
       if (response.data.page !== $scope.currentPage) {
         $scope.currentPage = response.data.page;
         $scope.pageChange();
@@ -222,14 +255,13 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
     });
   }
   $scope.pageChanged = function() {
-    console.log("changed")
     $scope.refresh($scope.currentPage);
   }
   $scope.refresh(1);
   }]);
 
-app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
-  function($scope, $stateParams, Submission) {
+app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  'Submission',
+  function($scope, $location, $stateParams, Submission) {
     $scope.submission = Submission.get({id: $stateParams.submissionId});
   }]);
 

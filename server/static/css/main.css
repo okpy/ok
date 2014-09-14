@@ -44,6 +44,17 @@ h2 {
   width: 100%;
   text-shadow: 0 1px 0 #fff;
 }
+
+.snippet {
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  width: 100%;
+  text-shadow: 0 1px 0 #fff;
+}
+
 .diff-line-code {
   position: relative;
   padding-left: 10px;
@@ -88,4 +99,10 @@ h2 {
 .diff-line-num-neg {
   background-color: #f7c8c8;
   border-color: #e9aeae;
+}
+.hljs {
+  display: block;
+  padding: 0.0em;
+  color: #333;
+  background: white;
 }
