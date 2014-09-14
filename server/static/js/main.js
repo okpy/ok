@@ -185,7 +185,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
     }, function(response) {
       $scope.data = response.data;
       $scope.message = response.message;
-      //$scope.totalItems = response.data.statistics.total;
+      $scope.totalItems = response.data.statistics.total;
       if (response.data.page !== $scope.currentPage) {
         $scope.currentPage = response.data.page;
         $scope.pageChange();
