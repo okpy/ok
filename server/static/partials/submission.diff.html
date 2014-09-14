@@ -1,0 +1,10 @@
+<div cg-busy="submissions">
+  <div class="center-block">
+    <h2>Submission: {{submission.created | amCalendar}} </h2>
+  </div>
+
+  <div ng-repeat="(file_name, contents) in diff">
+    <h3>{{file_name}}</h3>
+    <diff>{{contents}}</diff>
+  </div>
+</div>
