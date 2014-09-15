@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-VERSION = '1.0.0'
+VERSION = '1.0.6'
 
 """The ok.py script runs tests, checks for updates, and saves your work.
 
@@ -47,12 +47,13 @@ import json
 import os
 import sys
 import utils
-import multiprocessing
 import base64
 import time
+import multiprocessing
 
 def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
+    assignment = core.Assignment.deserialize(assignment)
     data = {
         'assignment': assignment['name'],
         'messages': messages,
@@ -235,66 +236,74 @@ def parse_input():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
     parser.add_argument('-i', '--interactive', action='store_true',
-                        help="toggles interactive mode")
+                        help="toggle interactive mode")
     parser.add_argument('-l', '--lock', type=str,
                         help="partial name or path to test file or directory to lock")
     parser.add_argument('-f', '--force', action='store_true',
-                        help="Forces a server response regardless of how long it takes")
+                        help="force waiting for a server response without timeout")
     parser.add_argument('-a', '--authenticate', action='store_true',
-                        help="Authenticate, ignoring previous authentication")
+                        help="authenticate, ignoring previous authentication")
+    parser.add_argument('--local', action='store_true',
+                        help="disable any network activity")
     return parser.parse_args()
 
 
+def server_timer():
+    time.sleep(0.8)
+
 def ok_main(args):
     """Run all relevant aspects of ok.py."""
-    timer_thread = multiprocessing.Process(target=lambda: time.sleep(0.8), args=())
-    print("You are running version {0} of ok.py".format(VERSION))
-    timer_thread.start()
-    assignment = load_tests(args.tests, config.cases)
-
-    # TODO(soumya): uncomment this once ok.py is ready to ship, to hide
-    # error messages.
-    # try:
-    #     assignment = load_tests(args.tests, config.cases)
-    # except Exception as ex:
-    #     print(ex)
-    #     sys.exit(1)
-
-    logger = sys.stdout = utils.OutputLogger()
-
-    start_protocols = \
-        [p(args, assignment, logger) for p in config.protocols.values()]
-    interact_protocols = \
-        [p(args, assignment, logger) for p in config.protocols.values()]
-
-    messages = dict()
-
-    for protocol in start_protocols:
-        messages[protocol.name] = protocol.on_start()
-
+    server_thread, timer_thread = None, None
     try:
-        access_token = authenticate(args.authenticate)
-        server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment, args.server))
-        server_thread.start()
-    except error.URLError as ex:
-        # TODO(soumya) Make a better error message
-        # print("Nothing was sent to the server!")
-        pass
+        print("You are running version {0} of ok.py".format(VERSION))
+        if not args.local:
+            timer_thread = multiprocessing.Process(target=server_timer, args=())
+            timer_thread.start()
+        assignment = load_tests(args.tests, config.cases)
 
-    for protocol in interact_protocols:
-        protocol.on_interact()
+        logger = sys.stdout = utils.OutputLogger()
 
-    # TODO(denero) Print server responses.
+        start_protocols = \
+            [p(args, assignment, logger) for p in config.protocols.values()]
+        interact_protocols = \
+            [p(args, assignment, logger) for p in config.protocols.values()]
 
-    # TODO(albert): a premature error might prevent tests from being
-    # dumped. Perhaps add this in a "finally" clause.
-    dump_tests(args.tests, assignment)
+        messages = dict()
 
-    while timer_thread.is_alive():
-        pass
+        for protocol in start_protocols:
+            messages[protocol.name] = protocol.on_start()
 
-    if not args.force:
-        server_thread.terminate()
+        if not args.local:
+            try:
+                access_token = authenticate(args.authenticate)
+                server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment.serialize(), args.server))
+                server_thread.start()
+            except error.URLError as ex:
+                # TODO(soumya) Make a better error message
+                # print("Nothing was sent to the server!")
+                pass
+
+        for protocol in interact_protocols:
+            protocol.on_interact()
+
+        # TODO(denero) Print server responses.
+
+        # TODO(albert): a premature error might prevent tests from being
+        # dumped. Perhaps add this in a "finally" clause.
+        dump_tests(args.tests, assignment)
+
+        if not args.local:
+            while timer_thread.is_alive():
+                pass
+
+            if not args.force:
+                server_thread.terminate()
+
+    except KeyboardInterrupt:
+        if timer_thread:
+            timer_thread.terminate()
+        if server_thread:
+            server_thread.terminate()
 
 if __name__ == '__main__':
     ok_main(parse_input())
