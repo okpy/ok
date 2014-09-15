@@ -416,4 +416,5 @@ class GroupAPI(APIResource):
     web_args = {
         'members': KeyRepeatedArg('User'),
         'name': Arg(str),
+        'assignment': KeyArg('Assignment')
     }

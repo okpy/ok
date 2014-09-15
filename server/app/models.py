@@ -206,6 +206,7 @@ class Assignment(Base):
     creator = ndb.KeyProperty(User)
     templates = ndb.JsonProperty()
     course = ndb.KeyProperty('Course')
+    max_group_size = ndb.IntegerProperty()
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -341,11 +342,10 @@ class Group(Base):
     """
     A group is a collection of users who all submit submissions.
     They all can see submissions for an assignment all as a group.
-
-    Ancestors of a Course
     """
     name = ndb.StringProperty()
     members = ndb.KeyProperty('User', repeated=True)
+    assignment = ndb.KeyProperty('Assignment')
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -366,3 +366,8 @@ class Group(Base):
             return user.is_admin or user.key in obj.members
         return False
 
+    def _pre_put_hook(self):
+        max_group_size = self.assignment.get()
+        if len(self.members) > max_group_size:
+            raise BadValueError("Too many members. Max allowed is %s" % (
+                max_group_size))
