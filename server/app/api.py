@@ -276,9 +276,9 @@ class SubmitNDBImplementation(object):
         by_name = models.Assignment.name == name
         return list(models.Assignment.query().filter(by_name))
 
-    def create_submission(self, user, assignment, messages):
+    def create_submission(self, users, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
-        submission = models.Submission(submitter=user.key,
+        submission = models.Submission(submitters=[user.key for user in users],
                                        assignment=assignment.key,
                                        messages=messages)
         submission.put()
@@ -323,10 +323,10 @@ class SubmissionAPI(APIResource):
             raise BadValueError('Multiple assignments named \'%s\'' % name)
         return assignments[0]
 
-    def submit(self, user, assignment, messages):
+    def submit(self, users, assignment, messages):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
-        submission = self.db.create_submission(user, valid_assignment, messages)
+        submission = self.db.create_submission(users, valid_assignment, messages)
         return create_api_response(200, "success", {
             'key': submission.key.id()
         })
@@ -338,12 +338,18 @@ class SubmissionAPI(APIResource):
         if 'messages' not in data:
             raise BadValueError("Missing required arguments 'messages'")
 
-        return self.submit(session['user'], data['assignment'],
+        users = [session['user']]
+        users.extend([models.User.get_or_insert(email)
+            for email in data.get('partner', [])])
+
+
+        return self.submit(users, data['assignment'],
                            data['messages'])
 
     web_args = {
         'assignment': Arg(str),
         'messages': Arg(None),
+        'partner': Arg(str, multiple=True)
     }
 
 

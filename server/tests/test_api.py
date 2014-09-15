@@ -54,6 +54,20 @@ class APITest(object): #pylint: disable=no-init
                 first_name="Student",
                 last_name="Jones",
                 login="billy",
+            ),
+            "dummy_student2": models.User(
+                key=ndb.Key("User", "dummy2@student.com"),
+                email="dummy2@student.com",
+                first_name="Student",
+                last_name="Anrdew",
+                login="billyz",
+            ),
+            "dummy_student3": models.User(
+                key=ndb.Key("User", "dummy3@student.com"),
+                email="dummy3@student.com",
+                first_name="Student",
+                last_name="Denero",
+                login="denerorulez",
             )
         }
 
@@ -284,6 +298,7 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         self._assign = models.Assignment(name=self.assignment_name, points=3)
         self._assign.put()
         self._submitter = self.accounts['dummy_student']
+        self._submitter2 = self.accounts['dummy_student2']
         self.logout()
         self.login('dummy_student')
 
@@ -293,7 +308,8 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
             message = '{"value":' + str(self.num) + '}'
             self.num += 1
         rval = models.Submission(
-            messages=message, submitter=self._submitter.key,
+            messages=message, submitters=[
+                self._submitter.key, self._submitter2.key],
             assignment=self._assign.key)
         return rval
 
@@ -318,6 +334,25 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
 
         self.post_entity(inst)
         self.assertStatusCode(400)
+
+    def test_partner_get(self):
+        self.logout()
+        self.login('dummy_student2')
+
+        inst = self.get_basic_instance()
+        inst.put()
+        self.get_entity(inst)
+        self.assertJson(inst.to_json())
+
+    def test_non_partner_cannot_get(self):
+        self.logout()
+        self.login('dummy_student3')
+
+        inst = self.get_basic_instance()
+        inst.put()
+        self.get_entity(inst)
+        self.assertStatusCode(401)
+
 
 class CourseAPITest(APITest, APIBaseTestCase):
     model = models.Course

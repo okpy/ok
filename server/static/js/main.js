@@ -129,7 +129,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
       fields: {
         'created': true,
         'id': true,
-        'submitter': {
+        'submitters': {
           'id': true
         },
         'assignment': {
