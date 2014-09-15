@@ -1,6 +1,6 @@
 var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment']);
 
-app.directive('snippet', ['$compile', '$location', '$anchorScroll', '$timeout', '$interpolate', function ($compile, $location, $anchorScroll, $timeout, $interpolate) {
+app.directive('snippet', function() {
         "use strict";
         return {
             restrict: 'E',
@@ -9,18 +9,18 @@ app.directive('snippet', ['$compile', '$location', '$anchorScroll', '$timeout', 
               scope.contents = scope.contents.split('\n');
             }
         };
-    }]);
+    });
 
-app.directive('diff', ['$compile', '$location', '$anchorScroll', '$timeout', '$interpolate', function ($compile, $location, $anchorScroll, $timeout, $interpolate) {
+app.directive('diff', function() {
         "use strict";
         return {
             restrict: 'E',
             templateUrl: 'static/partials/diff.html',
         };
-    }]);
+    });
 
 app.config(['$stateProvider', '$urlRouterProvider',
-  function($stateProvider, $urlRouterProvider, $locationProvider) {
+  function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/submission/");
 
     var submissions = {

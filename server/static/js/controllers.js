@@ -77,8 +77,8 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
     }
   ]);
 
-app.controller("CodeLineController", ["$scope", "$element", "$stateParams", "$timeout", "$location", "$anchorScroll",
-    function ($scope, $element, $stateParams, $timeout, $location, $anchorScroll) {
+app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$anchorScroll",
+    function ($scope, $timeout, $location, $anchorScroll) {
       $scope.lineNum = $scope.$index + 1;
       $scope.anchorId = $scope.file_name + "-L" + $scope.lineNum;
       $scope.scroll = function() {
@@ -97,8 +97,8 @@ app.controller("CodeLineController", ["$scope", "$element", "$stateParams", "$ti
     }
   ]);
 
-app.controller("DiffController", ["$scope", "$element", "$stateParams", "$timeout", "$location", "$anchorScroll",
-    function ($scope, $element, $stateParams, $timeout, $location, $anchorScroll) {
+app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScroll",
+    function ($scope, $timeout, $location, $anchorScroll) {
       contents = [];
       var leftNum = 0, rightNum = 0;
       for (var i = 0; i < $scope.contents.length; i++) {
@@ -129,8 +129,8 @@ app.controller("DiffController", ["$scope", "$element", "$stateParams", "$timeou
     }
   ]);
 
-app.controller("DiffLineController", ["$scope", "$element", "$stateParams", "$timeout", "$location", "$anchorScroll",
-    function ($scope, $element, $stateParams, $timeout, $location, $anchorScroll) {
+app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll",
+    function ($scope, $timeout, $location, $anchorScroll) {
       var start = $scope.codeline.start;
       if (start == "+") {
         $scope.positive = true;
@@ -141,7 +141,6 @@ app.controller("DiffLineController", ["$scope", "$element", "$stateParams", "$ti
       }
       $scope.anchorId = $scope.file_name + "-L" + $scope.codeline.lineNum;
       $scope.scroll = function() {
-        console.log("Scrolling to "+$scope.anchorId);
         $location.hash($scope.anchorId);
         $anchorScroll();
       }
