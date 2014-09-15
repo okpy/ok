@@ -116,6 +116,10 @@ class User(Base):
     def staffed_courses(self):
         return Course.query(Course.staff == self.key)
 
+    @property
+    def groups(self):
+        return Group.query(Group.members == self.key)
+
     @classmethod
     def from_dict(cls, values):
         """Creates an instance from the given values."""
@@ -258,6 +262,7 @@ def validate_messages(_, messages):
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
+    group = ndb.KeyProperty('Group')
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
@@ -274,6 +279,9 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
+            groups = user.groups.fetch()
+            if groups and obj.group in [g.key for g in groups]:
+                return True
         if action in ("create", "put"):
             return user.logged_in
 
@@ -288,13 +296,17 @@ class Submission(Base):
             courses = user.courses
             filters = []
             for course in courses:
-                if user.key in course.staff:
+                if user.key in course.get().staff:
                     assignments = Assignment.query().filter(
                         Assignment.course == course.key)
                     filters.append(Submission.assignment.IN(
-                        assignments.get()))
+                        [assign.key for assign in assignments.get()]))
 
             filters.append(Submission.submitter == user.key)
+            groups = user.groups.get()
+            if groups:
+                filters.append(Submission.group.IN(
+                    [u.key for u in user.groups]))
 
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
@@ -318,4 +330,15 @@ class Version(Base):
         if action == "index":
             return query
         return user.is_admin
+
+
+class Group(Base):
+    """
+    A group is a collection of users who all submit submissions.
+    They all can see submissions for an assignment all as a group.
+
+    Ancestors of a Course
+    """
+    name = ndb.StringProperty()
+    members = ndb.KeyProperty('User', repeated=True)
 

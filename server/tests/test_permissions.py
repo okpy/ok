@@ -36,6 +36,13 @@ class PermissionsUnitTest(BaseTestCase):
                 last_name="Jones",
                 login="other13413",
             ),
+            "student2": models.User(
+                key=ndb.Key("User", "otherrr@student.com"),
+                email="otherrr@student.com",
+                first_name="Otherrrrr",
+                last_name="Jones",
+                login="otherrr13413",
+            ),
             "staff": models.User(
                 key=ndb.Key("User", "dummy@staff.com"),
                 email="dummy@staff.com",
@@ -115,6 +122,26 @@ class PermissionsUnitTest(BaseTestCase):
                 messages="{}"
                 ),
             }
+
+        self.groups = {
+            'group1': models.Group(
+                name="group1",
+                members=[self.accounts['student1'].key,
+                         self.accounts['student1'].key],
+                parent=self.courses['first'].key
+            )}
+        self.groups['group1'].put()
+
+        group_submission = models.Submission(
+            submitter=self.accounts['student0'].key,
+            assignment=self.assignments['first'].key,
+            messages='{}',
+            group=self.groups['group1'].key,
+        )
+
+        group_submission.put()
+        self.submissions['group'] = group_submission
+
         self.user = None
 
     def login(self, user):
@@ -137,6 +164,14 @@ class PermissionsUnitTest(BaseTestCase):
               "student0", "Submission", "first", "get", True),
         PTest("student_get_other",
               "student1", "Submission", "first", "get", False),
+        PTest("student_get_group",
+              "student1", "Submission", "group", "get", True),
+        PTest("student_get_other_group",
+              "student2", "Submission", "group", "get", False),
+        PTest("student_index_group",
+              "student1", "Submission", "group", "index", True),
+        PTest("student_index_other_group",
+              "student2", "Submission", "group", "index", False),
         PTest("anon_get_first_own",
               "anon", "Submission", "first", "get", False),
         PTest("anon_get_other",
@@ -240,7 +275,19 @@ class PermissionsUnitTest(BaseTestCase):
         if not obj:
             self.assertTrue(False, "Invalid test arguments %s" % model)
 
-        self.assertEqual(value.output, obj.can(self.user, Need(need), obj))
+        query = None
+        if need == "index":
+            query = obj.__class__.query()
+            query = obj.can(self.user, Need(need), obj, query=query)
+
+            data = query.fetch()
+
+            if value.output:
+                self.assertIn(obj, data)
+            else:
+                self.assertNotIn(obj, data)
+        else:
+            self.assertEqual(value.output, obj.can(self.user, Need(need), obj))
 
 if __name__ == "__main__":
     unittest.main()
