@@ -8,8 +8,8 @@
       <th>Submitter</th>
       <th>Assignment</th>
       <th>Submission Time</th>
-      <th>Download Link</th>
-      <th>View Submission</th>
+      <th>Download</th>
+      <th>View Code</th>
       <th>View Diff</th>
     </tr>
     <tr ng-repeat="submission in data.results">
@@ -21,7 +21,7 @@
         {{submission.created | amCalendar}}
       </td>
       <td>
-        <a href='/api/v1/submission/{{submission.id}}/download'>link</a>
+        <a href='/api/v1/submission/{{submission.id}}/download'>Download</a>
       </td>
       <td>
         <a ui-sref='submission.detail({submissionId:submission.id})'>
