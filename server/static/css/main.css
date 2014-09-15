@@ -6,6 +6,12 @@
 .nowrap { white-space: nowrap; }
 
 /* Your customizations here */
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #333;
+}
 
 .menu-button {
   float: left;
@@ -36,19 +42,12 @@ h2 {
 .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
 
 .diff {
-  position: relative;
-  margin-top: 20px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 3px;
   width: 100%;
-  text-shadow: 0 1px 0 #fff;
+  border-collapse: separate;
 }
 
 .snippet {
   position: relative;
-  margin-top: 20px;
-  margin-bottom: 15px;
   border: 1px solid #ddd;
   border-radius: 3px;
   width: 100%;
@@ -105,4 +104,33 @@ h2 {
   padding: 0.0em;
   color: #333;
   background: white;
+}
+
+.file {
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+.file .meta {
+  padding: 5px 10px;
+  text-shadow: 0 1px 0 #fff;
+  border-bottom: 1px solid #d8d8d8;
+  background-color: #f7f7f7;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+.snippet-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+.file .meta .info {
+  line-height: 33px;
+}
+
+.line-number {
+  color: rgba(0,0,0,0.3);
 }

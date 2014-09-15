@@ -1,0 +1,24 @@
+<div class='file'>
+  <div class='meta'>
+    <div class='info'>
+      {{file_name}}
+    </div>
+  </div>
+  <div class='snippet-wrapper'>
+    <table class='snippet' ng-controller="DiffController">
+      <tbody>
+      <tr ng-controller="DiffLineController" ng-repeat='codeline in contents track by $index'>
+        <td ng-click="scroll()" id='{{anchorId}}' ng-class='{"diff-line-num-neg": negative, "diff-line-num-pos": positive}' class='diff-line-num diff-line-num-left'>
+            {{codeline.leftNum}}
+        </td>
+        <td ng-click="scroll()" id='{{anchorId}}' ng-class='{"diff-line-num-neg": negative, "diff-line-num-pos": positive}' class='diff-line-num diff-line-num-right'>
+            {{codeline.rightNum}}
+        </td>
+        </a>
+        <td ng-if="negative" class='diff-line-code diff-line-code-neg'>{{codeline.start+codeline.line}}</td>
+        <td ng-if="neutral" class='diff-line-code diff-line-code-empty'>{{codeline.start+codeline.line}}</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
