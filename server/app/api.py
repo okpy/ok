@@ -21,7 +21,7 @@ from google.appengine.ext import ndb
 parser = FlaskParser()
 
 def KeyArg(klass, **kwds):
-    return Arg(ndb.Key, use=lambda c:{'pairs':[(klass, int(c))]}, **kwds)
+    return Arg(ndb.Key, use=lambda c: {'pairs':[(klass, int(c))]}, **kwds)
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
@@ -260,6 +260,7 @@ class AssignmentAPI(APIResource):
         'name': Arg(str),
         'points': Arg(float),
         'course': KeyArg('Course'),
+        'templates': Arg(str),
     }
 
     def parse_args(self, is_index):
@@ -333,16 +334,21 @@ class SubmissionAPI(APIResource):
             return create_api_response(400,
                 "Submission has no contents to diff.")
 
-        diffs = list(self.diff_model.query(self.diff_model.submission == obj.key))
-        if len(diffs) != 0:
-            return create_api_response(200, "success", diffs[0].diff)
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if diff_obj:
+            return create_api_response(200, "success", diff_obj.diff)
 
         diff = {}
-        templates = json.loads(obj.assignment.get().templates)
+        templates = obj.assignment.get().templates
+        if not templates:
+            return create_api_response(500,
+                "No templates for assignment yet... Contact course staff")
+
+        templates = json.loads(templates)
         for filename, contents in obj.messages['file_contents'].items():
             diff[filename] = compare.diff(templates[filename], contents)
 
-        self.diff_model(submission=obj.key,
+        self.diff_model(id=obj.key.id(),
                         diff=diff).put()
         return create_api_response(200, "success", diff)
 
