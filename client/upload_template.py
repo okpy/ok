@@ -8,7 +8,7 @@ from os import path
 import json
 
 SERVER_URL = 'https://ok-server.appspot.com/api/v1/assignment'
-SERVER_URL = 'http://localhost:8080/api/v1/assignment'
+#SERVER_URL = 'http://localhost:8080/api/v1/assignment'
 
 def get_current_templates(assign_name):
     resp = requests.get(SERVER_URL + "?name=" + assign_name)
