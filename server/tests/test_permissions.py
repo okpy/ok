@@ -109,6 +109,8 @@ class PermissionsUnitTest(BaseTestCase):
                 creator=self.accounts["admin"].key
                 ),
             }
+        for v in self.assignments.values():
+            v.put()
 
         self.submissions = {
             "first": models.Submission(
@@ -128,8 +130,9 @@ class PermissionsUnitTest(BaseTestCase):
                 name="group1",
                 members=[self.accounts['student1'].key,
                          self.accounts['student1'].key],
-                parent=self.courses['first'].key
+                assignment=self.assignments['first'].key
             )}
+
         self.groups['group1'].put()
 
         group_submission = models.Submission(
