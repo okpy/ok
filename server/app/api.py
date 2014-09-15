@@ -146,7 +146,7 @@ class APIResource(View):
 
         entity.put()
 
-        return create_api_response(200, "success", {
+        return create_api_response(201, "success", {
             'key': entity.key.id()
         })
 
@@ -283,7 +283,7 @@ class AssignmentAPI(APIResource):
                   .filter(models.Group.assignment == obj.key).fetch())
 
         if len(groups) > 1:
-            return create_api_response(500, "You are in multiple groups", groups)
+            return create_api_response(409, "You are in multiple groups", groups)
         elif not groups:
             return create_api_response(200, "You are not in any groups", [])
         else:
