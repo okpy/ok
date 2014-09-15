@@ -263,7 +263,6 @@ def validate_messages(_, messages):
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
-    group = ndb.KeyProperty('Group')
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
