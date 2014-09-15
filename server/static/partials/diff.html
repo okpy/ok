@@ -15,8 +15,7 @@
             {{codeline.rightNum}}
         </td>
         </a>
-        <td ng-if="negative" class='diff-line-code diff-line-code-neg'>{{codeline.start+codeline.line}}</td>
-        <td ng-if="neutral" class='diff-line-code diff-line-code-empty'>{{codeline.start+codeline.line}}</td>
+        <td ng-class='{"diff-line-code-pos":positive, "diff-line-code-neg": negative, "diff-line-code-empty": neutral}' class='diff-line-code'>{{codeline.start+codeline.line}}</td>
       </tr>
       </tbody>
     </table>
