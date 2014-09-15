@@ -25,7 +25,7 @@ def KeyArg(klass, **kwds):
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
-        staff_lst = []
+        staff_lst = key_list
         if not isinstance(key_list, list):
             if ',' in key_list:
                 staff_lst = key_list.split(',')
@@ -136,18 +136,19 @@ class APIResource(View):
         """
         data = self.parse_args(False)
 
+        entity, error_response = self.new_entity(data)
+        if error_response:
+            return error_response
+
         need = Need('create')
-        if not self.model.can(session['user'], need):
+        if not self.model.can(session['user'], need, obj=entity):
             return need.api_response()
 
-        entity, error_response = self.new_entity(data)
+        entity.put()
 
-        if not error_response:
-            return create_api_response(200, "success", {
-                'key': entity.key.id()
-            })
-        else:
-            return error_response
+        return create_api_response(200, "success", {
+            'key': entity.key.id()
+        })
 
     def new_entity(self, attributes):
         """
@@ -156,7 +157,6 @@ class APIResource(View):
         is a True value.
         """
         entity = self.model.from_dict(attributes)
-        entity.put()
         return entity, None
 
     def delete(self, user_id):
@@ -240,7 +240,6 @@ class UserAPI(APIResource):
             return None, create_api_response(400,
                                              '%s already exists' % self.name)
         entity = self.model.from_dict(attributes)
-        entity.put()
         return entity, None
 
     web_args = {
@@ -268,6 +267,27 @@ class AssignmentAPI(APIResource):
         if not is_index:
             data['creator'] = session['user'].key
         return data
+
+    def group(self, key):
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return create_api_response(404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        groups = (models.Group.query()
+                  .filter(models.Group.members == session['user'].key)
+                  .filter(models.Group.assignment == obj.key).fetch())
+
+        if len(groups) > 1:
+            return create_api_response(500, "You are in multiple groups", groups)
+        elif not groups:
+            return create_api_response(200, "You are not in any groups", [])
+        else:
+            return create_api_response(200, "success", groups[0])
 
 
 class SubmitNDBImplementation(object):

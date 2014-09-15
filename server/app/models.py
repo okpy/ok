@@ -353,6 +353,8 @@ class Group(Base):
         if action == "delete":
             return False
         if action == "index":
+            if user.is_admin:
+                return query
             return query.filter(Group.members == user.key)
         if action == "get":
             if not obj:
