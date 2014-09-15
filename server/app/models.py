@@ -204,6 +204,7 @@ class Assignment(Base):
     # TODO(denero) Validate uniqueness of name.
     points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User)
+    templates = ndb.JsonProperty()
     course = ndb.KeyProperty('Course')
 
     @classmethod
@@ -257,7 +258,6 @@ def validate_messages(_, messages):
         #              and call protocol-specific validators on each value.
     except Exception as exc:
         raise BadValueError(exc)
-
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
@@ -313,6 +313,11 @@ class Submission(Base):
             else:
                 return query.filter(filters[0])
         return False
+
+
+class SubmissionDiff(Base):
+    submission = ndb.KeyProperty(Submission)
+    diff = ndb.JsonProperty()
 
 
 class Version(Base):
