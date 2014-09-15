@@ -16,20 +16,21 @@ def get_current_templates(assign_name):
     return results['id'], results['templates']
 
 def main():
-    #assign_name = raw_input("Please input the assignment name: ")
-    assign_name = 'hw1'
+    assign_name = raw_input("Please input the assignment name: ")
 
     params = {
-        #'access_token': raw_input("Please enter your access token:")
-        'access_token': 'test@example.com'
+        'access_token': raw_input("Please enter your access token:")
     }
 
     assign_id, current_templates = get_current_templates(assign_name)
+
     try:
         current_templates = json.loads(current_templates)
     except ValueError:
         current_templates = {}
+
     in_str = True
+
     while in_str:
         in_str = raw_input("Enter filename to upload, or \"done\" to upload: ")
         if in_str == "done":
@@ -44,8 +45,6 @@ def main():
     headers = {'content-type': 'application/json'}
 
     data = json.dumps(data)
-    print data
-    print type(data)
     resp = requests.put(SERVER_URL + '/%s' % assign_id, params=params, data=data, headers=headers)
     print resp
 
