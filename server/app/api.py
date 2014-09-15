@@ -260,7 +260,7 @@ class AssignmentAPI(APIResource):
         'name': Arg(str),
         'points': Arg(float),
         'course': KeyArg('Course'),
-        'templates': Arg(str),
+        'templates': Arg(str, use=lambda temps: json.dumps(temps)),
     }
 
     def parse_args(self, is_index):
