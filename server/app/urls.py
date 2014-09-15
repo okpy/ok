@@ -9,7 +9,6 @@ from flask import render_template, session, request
 
 from google.appengine.api import users
 from google.appengine.ext.db import BadValueError
-from google.appengine.ext import ndb
 
 from app import app
 from app import api
@@ -101,3 +100,4 @@ register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
 register_api(api.VersionAPI, 'version_api', 'version')
 register_api(api.CourseAPI, 'course_api', 'course')
+register_api(api.GroupAPI, 'group_api', 'group')

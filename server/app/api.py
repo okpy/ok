@@ -409,3 +409,11 @@ class CourseAPI(APIResource):
         'offering': Arg(str),
         'institution': Arg(str),
     }
+
+class GroupAPI(APIResource):
+    model = models.Group
+
+    web_args = {
+        'members': KeyRepeatedArg('User'),
+        'name': Arg(str),
+    }

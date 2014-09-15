@@ -347,3 +347,22 @@ class Group(Base):
     name = ndb.StringProperty()
     members = ndb.KeyProperty('User', repeated=True)
 
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+
+        if action == "delete":
+            return False
+        if action == "index":
+            return query.filter(Group.members == user.key)
+        if action == "get":
+            if not obj:
+                raise ValueError("Need instance for get action.")
+            return user.is_admin or user.key in obj.members
+        if action in ("create", "update"):
+            #TODO(martinis) make sure other students are ok with this group
+            if not obj:
+                raise ValueError("Need instance for get action.")
+            return user.is_admin or user.key in obj.members
+        return False
+
