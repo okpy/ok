@@ -114,6 +114,9 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
           leftNum++;
           codeline.leftNum = leftNum;;
           codeline.rightNum = "";
+        } else if (codeline.start == "?") {
+          // TODO: add in-line coloring
+          continue;
         } else {
           leftNum++;
           rightNum++;
