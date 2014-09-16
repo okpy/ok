@@ -22,7 +22,7 @@
       </div>
     </div>
   </div>
-  <div ng-if="group.in_group !== false">
+  <div ng-if="group.in_group !== false && group.members.length < assignment.max_group_size">
     <div class='row'>
       <form class="col-md-offset-2 col-md-4 form-inline" ng-submit="add()" ng-controller="AddMemberController">
         <div class="form-group">

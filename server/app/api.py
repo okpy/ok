@@ -260,6 +260,7 @@ class AssignmentAPI(APIResource):
         'name': Arg(str),
         'points': Arg(float),
         'course': KeyArg('Course'),
+        'max_group_size': Arg(int),
         'templates': Arg(str, use=lambda temps: json.dumps(temps)),
     }
 
@@ -418,10 +419,12 @@ class GroupAPI(APIResource):
     def add_member(self, obj, user):
         data = self.parse_args(False, user)
         group_obj = self.model.get_by_id(obj.key.id())
+        assignment = group_obj.assignment.get()
         for member in data['members']:
             if member not in group_obj.members:
                 group_obj.members.append(member)
-        print group_obj.members
+            if len(group_obj.members) > assignment.max_group_size:
+                return {}
         group_obj.put()
 
     def remove_member(self, obj, user):
