@@ -143,5 +143,9 @@ h2 {
 }
 
 .tab-content {
-  background-color: #eee;
+  border: 2px solid #eee;
+}
+
+.member {
+  background-color: #f7f7f9;
 }

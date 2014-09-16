@@ -414,3 +414,23 @@ class GroupAPI(APIResource):
         'name': Arg(str),
         'assignment': KeyArg('Assignment')
     }
+
+    def add_member(self, obj, user):
+        data = self.parse_args(False, user)
+        group_obj = self.model.get_by_id(obj.key.id())
+        for member in data['members']:
+            if member not in group_obj.members:
+                group_obj.members.append(member)
+        print group_obj.members
+        group_obj.put()
+
+    def remove_member(self, obj, user):
+        data = self.parse_args(False, user)
+        group_obj = self.model.get_by_id(obj.key.id())
+        for member in data['members']:
+            if member in group_obj.members:
+                group_obj.members.remove(member)
+        if len(group_obj.members) == 0:
+            group_obj.key.delete()
+        else:
+            group_obj.put()

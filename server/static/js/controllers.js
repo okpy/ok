@@ -154,7 +154,6 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
 app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
     function ($scope, $stateParams, $window, $timeout, Group) {
       $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
-      $scope.id = $scope.group.id;
       $scope.refresh = function() {
           $timeout(function() {
             $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
@@ -172,18 +171,23 @@ app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeou
 app.controller("MemberController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
     function ($scope, $stateParams, $window, $timeout, Group) {
       $scope.remove = function() {
-        var member = $scope.member.email;
-        var members = $scope.group.members.map(function(member) {
-          return member.email;
-        });
-        var i = members.indexOf(member);
-        if(i != -1) {
-            members.splice(i, 1);
-        }
-        Group.update({
-          members: members,
+        Group.removeMember({
+          members: [$scope.member.email],
           id: $scope.group.id
         }, $scope.refresh);
+      }
+    }
+  ]);
+
+app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
+    function ($scope, $stateParams, $window, $timeout, Group) {
+      $scope.add = function() {
+        if ($scope.newMember != "") {
+          Group.addMember({
+            members: [$scope.newMember],
+            id: $scope.group.id
+          }, $scope.refresh)
+        }
       }
     }
   ]);

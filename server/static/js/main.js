@@ -191,13 +191,22 @@ app.factory('Group', ['$resource',
             return JSON.parse(data).data;
           }
         },
-        update: {
+        addMember: {
+          url: 'api/v1/group/:id/add_member',
+          isArray: false,
+          method: 'PUT',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        removeMember: {
+          url: 'api/v1/group/:id/remove_member',
           method: 'PUT',
           isArray: false,
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
-        },
+        }
       });
     }
   ]);

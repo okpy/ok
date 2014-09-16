@@ -6,18 +6,33 @@
         <button ng-click="createGroup()" class='btn btn-primary'>Create group</button>
       </div>
     </div>
-    <div class='col-md-6' ng-if="group.in_group !== false">
-      <h4>Members:</h4>
-      <div ng-repeat="member in group.members">
-        <div class='list-group'>
-          <div class='list-group-item clearfix' ng-controller="MemberController">
+    <div ng-if="group.in_group !== false">
+      <div class='center-block col-md-6'>
+        <h4>Members</h4>
+        <div ng-repeat="member in group.members">
+          <div class='list-group'>
+            <div class='member list-group-item clearfix' ng-controller="MemberController">
               {{member.email}}
               <span class='pull-right'>
                 <button ng-click="remove()"class='btn btn-xs btn-danger'>x</button>
               </span>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+  <div ng-if="group.in_group !== false">
+    <div class='row'>
+      <form class="col-md-offset-2 col-md-4 form-inline" ng-submit="add()" ng-controller="AddMemberController">
+        <div class="form-group">
+          <div class="input-group">
+            <div class="input-group-addon">@</div>
+            <input ng-model="newMember" class="form-control col-md-9" type="email" placeholder="Enter email">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add member</button>
+      </form>
     </div>
   </div>
 </div>
