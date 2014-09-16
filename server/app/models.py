@@ -396,6 +396,6 @@ class Group(Base):
 
     def _pre_put_hook(self):
         max_group_size = self.assignment.get().max_group_size
-        if len(self.members) > max_group_size:
+        if max_group_size and len(self.members) > max_group_size:
             raise BadValueError("Too many members. Max allowed is %s" % (
                 max_group_size))
