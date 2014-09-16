@@ -277,8 +277,11 @@ class Submission(Base):
 
     @property
     def group(self):
-        return APIProxy.AssignmentAPI().group(
+        group = APIProxy.AssignmentAPI().group(
             self.assignment.get(), self.submitter.get())
+        if not isinstance(group, Group):
+            return None
+        return group
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -293,8 +296,10 @@ class Submission(Base):
                     if course.key in obj.submitter.get().courses:
                         return True
             groups = user.groups.fetch()
-            if groups and obj.group in [g.key for g in groups]:
+            my_group = obj.group
+            if groups and my_group and my_group.key in [g.key for g in groups]:
                 return True
+            return False
         if action in ("create", "put"):
             return user.logged_in
 
@@ -310,17 +315,22 @@ class Submission(Base):
             filters = []
             for course in courses:
                 assignments = Assignment.query().filter(
-                    Assignment.course == course)
+                    Assignment.course == course).fetch()
 
                 if user.key in course.get().staff:
                     filters.append(Submission.assignment.IN(
                         [assign.key for assign in assignments]))
                 else:
-                    for assignment in assignments:
-                        group = assignment.group
-                        if isinstance(group, Group):
-                            for user in group.members:
-                                filters.append(Submission.submitter == user)
+                    if assignments:
+                        for assignment in assignments:
+                            group = APIProxy.AssignmentAPI().group(assignment, user)
+                            if not isinstance(group, Group):
+                                continue
+                            if isinstance(group, Group):
+                                for user in group.members:
+                                    filters.append(Submission.submitter == user)
+                    else:
+                        filters.append(Submission.submitter == user.key)
 
 
             if len(filters) > 1:

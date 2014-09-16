@@ -283,7 +283,7 @@ class AssignmentAPI(APIResource):
                 "in_group": False,
             })
         else:
-            return (200, "success", groups[0])
+            return groups[0]
 
 
 class SubmitNDBImplementation(object):
