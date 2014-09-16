@@ -99,7 +99,7 @@ class APIResource(View):
 
         meth = getattr(self, action, None)
         assert meth is not None, 'Unimplemented action %r' % action
-        inst = self.get_instance(key)
+        inst = self.get_instance(key, user)
         if not isinstance(inst, self.model):
             return inst
 
