@@ -141,12 +141,12 @@ class User(Base):
     def get_or_insert(cls, email, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for users"
         kwargs['email'] = email
-        return super(cls, User).get_or_insert(email, **kwargs)
+        return super(User, cls).get_or_insert(email, **kwargs)
 
     @classmethod
     def get_by_id(cls, id, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for users"
-        return super(cls, User).get_by_id(id, **kwargs)
+        return super(User, cls).get_by_id(id, **kwargs)
 
     @property
     def logged_in(self):
@@ -199,6 +199,10 @@ class AnonymousUser(User):
         Disable puts for Anonymous Users
         """
         pass
+
+    @classmethod
+    def get_or_insert(cls, *args, **kwds):
+        return super(AnonymousUser, cls).get_or_insert(*args, **kwds)
 
 
 AnonymousUser = AnonymousUser.get_or_insert("anon_user")
