@@ -86,27 +86,30 @@ class PermissionsUnitTest(BaseTestCase):
         self.accounts = self.get_accounts()
 
         self.courses = {
-            "first": models.Course(),
-            "second": models.Course(),
+            "first": models.Course(name="first"),
+            "second": models.Course(name="second"),
             }
 
         for course in self.courses.values():
             course.put()
 
         self.enroll("student0", "first")
-        self.enroll("student1", "second")
+        self.enroll("student1", "first")
+        self.enroll("student2", "second")
         self.teach("staff", "first")
 
         self.assignments = {
             "first": models.Assignment(
                 name="first",
                 points=3,
-                creator=self.accounts["admin"].key
+                creator=self.accounts["admin"].key,
+                course=self.courses['first'].key,
                 ),
             "empty": models.Assignment(
                 name="empty",
                 points=3,
-                creator=self.accounts["admin"].key
+                creator=self.accounts["admin"].key,
+                course=self.courses['first'].key,
                 ),
             }
         for v in self.assignments.values():
@@ -123,12 +126,17 @@ class PermissionsUnitTest(BaseTestCase):
                 assignment=self.assignments["first"].key,
                 messages="{}"
                 ),
+            "third": models.Submission(
+                submitter=self.accounts["student2"].key,
+                assignment=self.assignments["first"].key,
+                messages="{}"
+                ),
             }
 
         self.groups = {
             'group1': models.Group(
                 name="group1",
-                members=[self.accounts['student1'].key,
+                members=[self.accounts['student0'].key,
                          self.accounts['student1'].key],
                 assignment=self.assignments['first'].key
             )}
@@ -165,7 +173,7 @@ class PermissionsUnitTest(BaseTestCase):
         PTest("student_get_own",
               "student0", "Submission", "first", "get", True),
         PTest("student_get_other",
-              "student1", "Submission", "first", "get", False),
+              "student1", "Submission", "third", "get", False),
         PTest("student_get_group",
               "student1", "Submission", "group", "get", True),
         PTest("student_get_other_group",
@@ -181,11 +189,11 @@ class PermissionsUnitTest(BaseTestCase):
         PTest("staff_get_same_course",
               "staff", "Submission", "first", "get", True),
         PTest("staff_get_other_course",
-              "staff", "Submission", "second", "get", False),
+              "staff", "Submission", "third", "get", False),
         PTest("admin_get_student0",
               "admin", "Submission", "first", "get", True),
         PTest("admin_get_student1",
-              "admin", "Submission", "second", "get", True),
+              "admin", "Submission", "third", "get", True),
         PTest("admin_delete_own_student",
               "admin", "Submission", "first", "delete", False),
         PTest("staff_delete_own_student",
@@ -246,7 +254,7 @@ class PermissionsUnitTest(BaseTestCase):
         PTest("student_get_other",
               "student0", "User", "student1", "get", False),
         PTest("staff_get_user_wrong_course",
-              "staff", "User", "student1", "get", False),
+              "staff", "User", "student2", "get", False),
         PTest("staff_get_user",
               "staff", "User", "student0", "get", True),
         PTest("admin_get_student1",
