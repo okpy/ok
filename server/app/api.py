@@ -209,7 +209,7 @@ class APIResource(View):
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
             logging.info("Adding default ordering by creation time.")
-            query = query.order(-created_prop)
+            query = query.order(-created_prop, self.model.key)
 
         page = int(request.args.get('page', 1))
         num_page = request.args.get('num_page', None)
