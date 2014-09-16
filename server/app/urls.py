@@ -4,6 +4,7 @@ URL dispatch route mappings and error handlers
 from functools import wraps
 import logging
 import traceback
+import collections
 
 from flask import render_template, session, request
 
@@ -78,7 +79,15 @@ def register_api(view, endpoint, url):
         logging.info("User is %s.", user.email)
 
         try:
-            return view(*args, **kwds)
+            rval = view(*args, **kwds)
+
+            if (isinstance(rval, collections.Iterable)
+                and not isinstance(rval, dict)):
+                rval = utils.create_api_response(*rval)
+            else:
+                rval = utils.create_api_response(200, 'success', rval)
+
+            return rval
         except (WebArgsException, BadValueError) as e:
             message = "Invalid arguments: %s" % e.message
             logging.warning(message)

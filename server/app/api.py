@@ -11,12 +11,13 @@ from webargs.flaskparser import FlaskParser
 
 from app import models
 from app.codereview import compare
-from app.models import BadValueError
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import create_api_response, paginate, filter_query, create_zip
+from app.utils import paginate, filter_query, create_zip
 
-from google.appengine.ext import ndb
+from google.appengine.ext import db, ndb
+
+BadValueError = db.BadValueError
 
 parser = FlaskParser()
 
@@ -48,14 +49,27 @@ class APIResource(View):
     def name(self):
         return self.model.__name__
 
+    def get_instance(self, key, user):
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return (404, "{resource} {key} not found".format(
+                resource=self.name, key=key))
+
+        need = Need('get')
+        if not obj.can(user, need, obj):
+            return need.api_response()
+
+        return obj
+
     def dispatch_request(self, path, *args, **kwargs):
         meth = request.method.upper()
+        user = session['user']
 
         if not path: # Index
             if meth == "GET":
-                return self.index()
+                return self.index(user)
             elif meth == "POST":
-                return self.post()
+                return self.post(user)
             assert meth in ("GET", "POST"), 'Unimplemented method %s' % meth
 
         if '/' not in path:
@@ -67,60 +81,50 @@ class APIResource(View):
             try:
                 key = self.key_type(path)
             except (ValueError, AssertionError):
-                return create_api_response(400,
+                return (400,
                     "Invalid key. Needs to be of type '%s'" % self.key_type)
-            return meth(key, *args, **kwargs)
+
+            inst = self.get_instance(key, user)
+            if not isinstance(inst, self.model):
+                return inst
+
+            return meth(inst, user, *args, **kwargs)
 
         entity_id, action = path.split('/')
         try:
             key = self.key_type(entity_id)
         except (ValueError, AssertionError):
-            return create_api_response(400,
+            return (400,
                 "Invalid key. Needs to be of type '%s'" % self.key_type)
 
         meth = getattr(self, action, None)
         assert meth is not None, 'Unimplemented action %r' % action
-        return meth(key, *args, **kwargs)
+        inst = self.get_instance(key)
+        if not isinstance(inst, self.model):
+            return inst
 
-    def get(self, key):
+        return meth(inst, user, *args, **kwargs)
+
+    def get(self, obj, user):
         """
         The GET HTTP method
         """
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+        return obj
 
-        need = Need('get')
-        if not obj.can(session['user'], need, obj):
-            return need.api_response()
-
-        return create_api_response(200, "", obj)
-
-    def put(self, key):
+    def put(self, obj, user):
         """
         The PUT HTTP method
         """
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
-
-        need = Need('get')
-        if not obj.can(session['user'], need, obj):
-            return need.api_response()
-
         need = Need('put')
-        if not obj.can(session['user'], need, obj):
+        if not obj.can(user, need, obj):
             return need.api_response()
 
         blank_val = object()
         changed = False
-        for key, value in self.parse_args(False).iteritems():
+        for key, value in self.parse_args(False, user).iteritems():
             old_val = getattr(obj, key, blank_val)
             if old_val == blank_val:
-                return create_api_response(
-                    400, "{} is not a valid field.".format(key))
+                return 400, "{} is not a valid field.".format(key)
 
             setattr(obj, key, value)
             changed = True
@@ -128,25 +132,25 @@ class APIResource(View):
         if changed:
             obj.put()
 
-        return create_api_response(200, "", obj)
+        return obj
 
-    def post(self):
+    def post(self, user):
         """
         The POST HTTP method
         """
-        data = self.parse_args(False)
+        data = self.parse_args(False, user)
 
         entity, error_response = self.new_entity(data)
         if error_response:
             return error_response
 
         need = Need('create')
-        if not self.model.can(session['user'], need, obj=entity):
+        if not self.model.can(user, need, obj=entity):
             return need.api_response()
 
         entity.put()
 
-        return create_api_response(201, "success", {
+        return (201, "success", {
             'key': entity.key.id()
         })
 
@@ -159,20 +163,18 @@ class APIResource(View):
         entity = self.model.from_dict(attributes)
         return entity, None
 
-    def delete(self, user_id):
+    def delete(self, obj, user):
         """
         The DELETE HTTP method
         """
-        ent = self.model.query.get(user_id)
-
         need = Need('delete')
-        if not self.model.can_static(session['user'], need):
+        if not self.model.can(user, need, obj=obj):
             return need.api_response()
 
-        ent.key.delete()
-        return create_api_response(200, "success", {})
+        obj.key.delete()
+        return None
 
-    def parse_args(self, index):
+    def parse_args(self, index, user):
         """
         Parses the arguments to this API call.
         |index| is whether or not this is an index call.
@@ -189,7 +191,7 @@ class APIResource(View):
 
         return {k:v for k, v in parser.parse(self.web_args).iteritems() if v}
 
-    def index(self):
+    def index(self, user):
         """
         Index HTTP method. Should be called from GET when no key is provided.
 
@@ -198,11 +200,11 @@ class APIResource(View):
         query = self.model.query()
         need = Need('index')
 
-        result = self.model.can(session['user'], need, query=query)
+        result = self.model.can(user, need, query=query)
         if not result:
             return need.api_response()
 
-        args = self.parse_args(True)
+        args = self.parse_args(True, user)
         query = filter_query(result, args, self.model)
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
@@ -216,7 +218,7 @@ class APIResource(View):
         add_statistics = request.args.get('stats', False)
         if add_statistics:
             query_results['statistics'] = self.statistics()
-        return create_api_response(200, "success", query_results)
+        return query_results
 
     def statistics(self):
         return {
@@ -234,11 +236,10 @@ class UserAPI(APIResource):
         Creates a new entity with given attributes.
         """
         if 'email' not in attributes:
-            return None, create_api_response(400, 'Email required')
+            return None, (400, 'Email required')
         entity = self.model.get_by_id(attributes['email'])
         if entity:
-            return None, create_api_response(400,
-                                             '%s already exists' % self.name)
+            return None, (400, '%s already exists' % self.name)
         entity = self.model.from_dict(attributes)
         return entity, None
 
@@ -262,32 +263,23 @@ class AssignmentAPI(APIResource):
         'templates': Arg(str, use=lambda temps: json.dumps(temps)),
     }
 
-    def parse_args(self, is_index):
-        data = super(AssignmentAPI, self).parse_args(is_index)
+    def parse_args(self, is_index, user):
+        data = super(AssignmentAPI, self).parse_args(is_index, user)
         if not is_index:
-            data['creator'] = session['user'].key
+            data['creator'] = user.key
         return data
 
-    def group(self, key):
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
-
-        need = Need('get')
-        if not obj.can(session['user'], need, obj):
-            return need.api_response()
-
+    def group(self, obj, user):
         groups = (models.Group.query()
-                  .filter(models.Group.members == session['user'].key)
+                  .filter(models.Group.members == user.key)
                   .filter(models.Group.assignment == obj.key).fetch())
 
         if len(groups) > 1:
-            return create_api_response(409, "You are in multiple groups", groups)
+            return (409, "You are in multiple groups", groups)
         elif not groups:
-            return create_api_response(200, "You are not in any groups", [])
+            return (200, "You are not in any groups", [])
         else:
-            return create_api_response(200, "success", groups[0])
+            return (200, "success", groups[0])
 
 
 class SubmitNDBImplementation(object):
@@ -314,22 +306,12 @@ class SubmissionAPI(APIResource):
 
     db = SubmitNDBImplementation()
 
-    def download(self, key):
+    def download(self, obj, user):
         """
         Allows you to download a submission.
         """
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
-
-        need = Need('get')
-        if not obj.can(session['user'], need, obj):
-            return need.api_response()
-
         if 'file_contents' not in obj.messages:
-            return create_api_response(400,
-                "Submission has no contents to download.")
+            return 400, "Submission has no contents to download."
 
         response = make_response(create_zip(obj.messages['file_contents']))
         response.headers["Content-Disposition"] = (
@@ -337,31 +319,21 @@ class SubmissionAPI(APIResource):
         response.headers["Content-Type"] = "application/zip"
         return response
 
-    def diff(self, key):
+    def diff(self, obj, user):
         """
         Gets the associated diff for a submission
         """
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
-
-        need = Need('get')
-        if not obj.can(session['user'], need, obj):
-            return need.api_response()
-
         if 'file_contents' not in obj.messages:
-            return create_api_response(400,
-                "Submission has no contents to diff.")
+            return 400, "Submission has no contents to diff."
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            return create_api_response(200, "success", diff_obj.diff)
+            return diff_obj.diff
 
         diff = {}
         templates = obj.assignment.get().templates
         if not templates:
-            return create_api_response(500,
+            return (500,
                 "No templates for assignment yet... Contact course staff")
 
         templates = json.loads(templates)
@@ -370,7 +342,7 @@ class SubmissionAPI(APIResource):
 
         self.diff_model(id=obj.key.id(),
                         diff=diff).put()
-        return create_api_response(200, "success", diff)
+        return diff
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -385,18 +357,18 @@ class SubmissionAPI(APIResource):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment, messages)
-        return create_api_response(200, "success", {
+        return {
             'key': submission.key.id()
-        })
+        }
 
-    def post(self):
-        data = self.parse_args(False)
+    def post(self, user):
+        data = self.parse_args(False, user)
         if 'assignment' not in data:
             raise BadValueError("Missing required arguments 'assignment'")
         if 'messages' not in data:
             raise BadValueError("Missing required arguments 'messages'")
 
-        return self.submit(session['user'], data['assignment'],
+        return self.submit(user, data['assignment'],
                            data['messages'])
 
     web_args = {
@@ -417,10 +389,10 @@ class VersionAPI(APIResource):
 class CourseAPI(APIResource):
     model = models.Course
 
-    def parse_args(self, is_index):
-        data = super(CourseAPI, self).parse_args(is_index)
+    def parse_args(self, is_index, user):
+        data = super(CourseAPI, self).parse_args(is_index, user)
         if not is_index:
-            data['creator'] = session['user'].key
+            data['creator'] = user.key
         return data
 
     web_args = {

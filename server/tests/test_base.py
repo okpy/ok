@@ -158,7 +158,7 @@ class APIBaseTestCase(BaseTestCase):
                 self.assertEqual(inst.key.id(), self.response_json['key'])
             else:
                 inst.key = models.ndb.Key(self.model, self.response_json['key'])
-        self.assertStatusCode(200)
+        self.assertStatusCode(201)
 
     ## ASSERTS ##
     def assertHeader(self, header, value): #pylint: disable=invalid-name

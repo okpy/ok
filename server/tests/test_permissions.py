@@ -139,7 +139,6 @@ class PermissionsUnitTest(BaseTestCase):
             submitter=self.accounts['student0'].key,
             assignment=self.assignments['first'].key,
             messages='{}',
-            group=self.groups['group1'].key,
         )
 
         group_submission.put()

@@ -18,6 +18,14 @@ from google.appengine.ext import db, ndb
 
 BadValueError = db.BadValueError
 
+# To deal with circular imports
+class APIProxy(object):
+    def __getattribute__(self, key):
+        import app
+        return app.api.__getattribute__(key)
+
+APIProxy = APIProxy()
+
 class JSONEncoder(old_json):
     """
     Wrapper class to try calling an object's to_dict() method. This allows
@@ -267,6 +275,11 @@ class Submission(Base):
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
 
+    @property
+    def group(self):
+        return APIProxy.AssignmentAPI().group(
+            self.assignment.get(), self.submitter.get())
+
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
         action = need.action
@@ -296,22 +309,26 @@ class Submission(Base):
             courses = user.courses
             filters = []
             for course in courses:
-                if user.key in course.get().staff:
-                    assignments = Assignment.query().filter(
-                        Assignment.course == course.key)
-                    filters.append(Submission.assignment.IN(
-                        [assign.key for assign in assignments.get()]))
+                assignments = Assignment.query().filter(
+                    Assignment.course == course)
 
-            filters.append(Submission.submitter == user.key)
-            groups = user.groups.get()
-            if groups:
-                filters.append(Submission.group.IN(
-                    [u.key for u in user.groups]))
+                if user.key in course.get().staff:
+                    filters.append(Submission.assignment.IN(
+                        [assign.key for assign in assignments]))
+                else:
+                    for assignment in assignments:
+                        group = assignment.group
+                        if isinstance(group, Group):
+                            for user in group.members:
+                                filters.append(Submission.submitter == user)
+
 
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
-            else:
+            elif filters:
                 return query.filter(filters[0])
+            else:
+                return query
         return False
 
 

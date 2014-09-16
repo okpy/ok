@@ -182,7 +182,6 @@ class APITest(object): #pylint: disable=no-init
         """Tests creating an empty entity."""
         inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
-        self.assertStatusCode(200)
 
         gotten = self.model.get_by_id(self.response_json['key'])
         self.assertEqual(gotten.key, inst.key)
@@ -190,12 +189,10 @@ class APITest(object): #pylint: disable=no-init
     def test_create_two_entities(self):
         inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
-        self.assertStatusCode(200)
         gotten = self.model.get_by_id(self.response_json['key'])
 
         inst2 = self.get_basic_instance(mutate=True)
         self.post_entity(inst2)
-        self.assertStatusCode(200)
         gotten2 = self.model.get_by_id(self.response_json['key'])
 
         self.assertEqual(gotten.key, inst.key)
