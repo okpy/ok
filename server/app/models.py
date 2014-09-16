@@ -278,6 +278,9 @@ class Submission(Base):
             return user.logged_in
 
         if action == "index":
+            if not user.logged_in:
+                return False
+
             if not query:
                 raise ValueError(
                         "Need query instance for Submission index action")
