@@ -201,7 +201,7 @@ class AnonymousUser(User):
         pass
 
 
-AnonymousUser = AnonymousUser()
+AnonymousUser = AnonymousUser.get_or_insert("anon_user")
 
 
 class Assignment(Base):
@@ -270,7 +270,7 @@ def validate_messages(_, messages):
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
-    submitter = ndb.KeyProperty(User)
+    submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
@@ -304,6 +304,9 @@ class Submission(Base):
             return user.logged_in
 
         if action == "index":
+            if not user.logged_in:
+                return False
+
             if not query:
                 raise ValueError(
                         "Need query instance for Submission index action")
