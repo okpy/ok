@@ -50,6 +50,7 @@ import utils
 import base64
 import time
 import multiprocessing
+from protocols import protocol
 
 def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
@@ -263,14 +264,12 @@ def ok_main(args):
 
         logger = sys.stdout = utils.OutputLogger()
 
-        start_protocols = \
-            [p(args, assignment, logger) for p in config.protocols.values()]
-        interact_protocols = \
-            [p(args, assignment, logger) for p in config.protocols.values()]
+        protocols = [p(args, assignment, logger)
+                     for p in protocol.get_protocols(config.protocols)]
 
         messages = dict()
 
-        for protocol in start_protocols:
+        for protocol in protocols:
             messages[protocol.name] = protocol.on_start()
 
         if not args.local:
@@ -283,7 +282,7 @@ def ok_main(args):
                 # print("Nothing was sent to the server!")
                 pass
 
-        for protocol in interact_protocols:
+        for protocol in protocols:
             protocol.on_interact()
 
         # TODO(denero) Print server responses.
