@@ -21,7 +21,7 @@ try:
             pass
 
         return 'utf-8'
-    HTTPMessage.get_content_charset = get_charset 
+    HTTPMessage.get_content_charset = get_charset
 except ImportError: # pragma: no cover
     from urllib.parse import urlencode, urlsplit, urlunsplit, parse_qsl
     from urllib.request import Request, urlopen
@@ -60,7 +60,7 @@ class Client(object):
         self.token_expires = -1
         self.refresh_token = None
 
-    def auth_uri(self, redirect_uri=None, scope=None, scope_delim=None, 
+    def auth_uri(self, redirect_uri=None, scope=None, scope_delim=None,
         state=None, **kwargs):
 
         """  Builds the auth URI for the authorization endpoint
@@ -92,7 +92,7 @@ class Client(object):
 
         return '%s?%s' % (self.auth_endpoint, urlencode(kwargs))
 
-    def request_token(self, parser=None, redirect_uri=None, **kwargs):
+    def request_token(self, parser=None, redirect_uri=None, timeout=5, **kwargs):
         """ Request an access token from the token endpoint.
         This is largely a helper method and expects the client code to
         understand what the server expects. Anything that's passed into
@@ -128,7 +128,7 @@ class Client(object):
 
         # TODO: maybe raise an exception here if status code isn't 200?
         msg = urlopen(self.token_endpoint, urlencode(kwargs).encode(
-            'utf-8'))
+            'utf-8'), timeout)
         data = parser(msg.read().decode(msg.info().get_content_charset() or
             'utf-8'))
 
@@ -150,7 +150,7 @@ class Client(object):
         self.request_token(refresh_token=self.refresh_token,
             grant_type='refresh_token')
 
-    def request(self, url, method=None, data=None, headers=None, parser=None): 
+    def request(self, url, method=None, data=None, headers=None, parser=None):
         """ Request user data from the resource endpoint
         :param url: The path to the resource and querystring if required
         :param method: HTTP method. Defaults to ``GET`` unless data is not None
@@ -160,12 +160,12 @@ class Client(object):
                        to ``json.loads`.`
         """
         assert self.access_token is not None
-        parser = parser or loads 
+        parser = parser or loads
 
         if not method:
             method = 'GET' if not data else 'POST'
 
-        req = self.token_transport('{0}{1}'.format(self.resource_endpoint, 
+        req = self.token_transport('{0}{1}'.format(self.resource_endpoint,
             url), self.access_token, data=data, method=method, headers=headers)
 
         resp = urlopen(req)
