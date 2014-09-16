@@ -189,7 +189,7 @@ class AnonymousUser(User):
         pass
 
 
-AnonymousUser = AnonymousUser()
+AnonymousUser = AnonymousUser.get_or_insert("anon_user")
 
 
 class Assignment(Base):
