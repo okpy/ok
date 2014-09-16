@@ -377,7 +377,7 @@ class Group(Base):
             if not obj:
                 raise ValueError("Need instance for get action.")
             return user.is_admin or user.key in obj.members
-        if action in ("create", "update"):
+        if action in ("create", "put"):
             #TODO(martinis) make sure other students are ok with this group
             if not obj:
                 raise ValueError("Need instance for get action.")

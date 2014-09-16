@@ -53,6 +53,9 @@
           <a id="courses-button" type="button" class="btn btn-default navbar-btn" ui-sref="course.list">Courses</a>
           <div class="pull-right">
             {% if user %}
+              <script>
+                window.user = "{{user.email}}";
+              </script>
               <span class="navbar-text">
                 Welcome {{user.first_name | default(user.email, true)}}
               </span>

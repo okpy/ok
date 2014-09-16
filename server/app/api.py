@@ -189,7 +189,7 @@ class APIResource(View):
         })
         request.fields = fields
 
-        return {k:v for k, v in parser.parse(self.web_args).iteritems() if v}
+        return {k:v for k, v in parser.parse(self.web_args).iteritems() if v != None}
 
     def index(self, user):
         """
@@ -275,9 +275,13 @@ class AssignmentAPI(APIResource):
                   .filter(models.Group.assignment == obj.key).fetch())
 
         if len(groups) > 1:
-            return (409, "You are in multiple groups", groups)
+            return (409, "You are in multiple groups", {
+                "groups": groups
+            })
         elif not groups:
-            return (200, "You are not in any groups", [])
+            return (200, "You are not in any groups", {
+                "in_group": False,
+            })
         else:
             return (200, "success", groups[0])
 

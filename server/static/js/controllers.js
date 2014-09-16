@@ -73,7 +73,8 @@ app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
   }]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
-    function ($scope, $stateParams, Assignment) { $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
+    function ($scope, $stateParams, Assignment) {
+      $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
     }
   ]);
 
@@ -146,6 +147,43 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
       $scope.scroll = function() {
         $location.hash($scope.anchorId);
         $anchorScroll();
+      }
+    }
+  ]);
+
+app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
+    function ($scope, $stateParams, $window, $timeout, Group) {
+      $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
+      $scope.id = $scope.group.id;
+      $scope.refresh = function() {
+          $timeout(function() {
+            $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
+          }, 200);
+      }
+      $scope.createGroup = function() {
+        Group.save({
+          assignment: $stateParams.assignmentId,
+          members: [$window.user]
+        }, $scope.refresh);
+      }
+    }
+  ]);
+
+app.controller("MemberController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
+    function ($scope, $stateParams, $window, $timeout, Group) {
+      $scope.remove = function() {
+        var member = $scope.member.email;
+        var members = $scope.group.members.map(function(member) {
+          return member.email;
+        });
+        var i = members.indexOf(member);
+        if(i != -1) {
+            members.splice(i, 1);
+        }
+        Group.update({
+          members: members,
+          id: $scope.group.id
+        }, $scope.refresh);
       }
     }
   ]);
