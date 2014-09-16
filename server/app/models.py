@@ -189,7 +189,7 @@ class AnonymousUser(User):
         pass
 
 
-AnonymousUser = AnonymousUser()
+AnonymousUser = AnonymousUser.get_or_insert("anon_user")
 
 
 class Assignment(Base):
@@ -278,6 +278,9 @@ class Submission(Base):
             return user.logged_in
 
         if action == "index":
+            if not user.logged_in:
+                return False
+
             if not query:
                 raise ValueError(
                         "Need query instance for Submission index action")
