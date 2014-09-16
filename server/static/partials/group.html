@@ -1,0 +1,23 @@
+<div class='group'>
+  <div class='row'>
+    <div class= 'col-md-12' ng-if="group.in_group === false">
+      <div class='alert alert-info' style="margin-bottom:0px">
+        You don't seem to be in a group. People in your group will share submissions with you. Want to create one? &nbsp;&nbsp;
+        <button ng-click="createGroup()" class='btn btn-primary'>Create group</button>
+      </div>
+    </div>
+    <div class='col-md-6' ng-if="group.in_group !== false">
+      <h4>Members:</h4>
+      <div ng-repeat="member in group.members">
+        <div class='list-group'>
+          <div class='list-group-item clearfix' ng-controller="MemberController">
+              {{member.email}}
+              <span class='pull-right'>
+                <button ng-click="remove()"class='btn btn-xs btn-danger'>x</button>
+              </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
