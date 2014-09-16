@@ -327,17 +327,14 @@ class Submission(Base):
                 if user.key in course.get().staff:
                     filters.append(Submission.assignment.IN(
                         [assign.key for assign in assignments]))
-                else:
-                    if assignments:
-                        for assignment in assignments:
-                            group = APIProxy.AssignmentAPI().group(assignment, user)
-                            if not isinstance(group, Group):
-                                continue
-                            if isinstance(group, Group):
-                                for user in group.members:
-                                    filters.append(Submission.submitter == user)
-                    else:
-                        filters.append(Submission.submitter == user.key)
+
+            for group in user.groups:
+                if isinstance(group, Group):
+                    for member in group.members:
+                        if member != user.key:
+                            filters.append(Submission.submitter == member)
+            filters.append(Submission.submitter == user.key)
+
 
 
             if len(filters) > 1:
