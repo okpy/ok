@@ -422,7 +422,8 @@ class GroupAPI(APIResource):
         assignment = group_obj.assignment.get()
         for member in data['members']:
             if member not in group_obj.members:
-                group_obj.members.append(member)
+                member = models.User.get_or_insert(member.id())
+                group_obj.members.append(member.key)
             if len(group_obj.members) > assignment.max_group_size:
                 return {}
         group_obj.put()
