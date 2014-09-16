@@ -329,10 +329,7 @@ class Submission(Base):
                         [assign.key for assign in assignments]))
 
             for group in user.groups:
-                if isinstance(group, Group):
-                    for member in group.members:
-                        if member != user.key:
-                            filters.append(Submission.submitter == member)
+                filters.append(Submission.submitter.IN(group.members))
             filters.append(Submission.submitter == user.key)
 
 
