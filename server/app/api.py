@@ -187,7 +187,7 @@ class APIResource(View):
         })
         request.fields = fields
 
-        return {k:v for k, v in parser.parse(self.web_args).iteritems() if v}
+        return {k:v for k, v in parser.parse(self.web_args).iteritems() if v != None}
 
     def index(self):
         """
@@ -283,11 +283,15 @@ class AssignmentAPI(APIResource):
                   .filter(models.Group.assignment == obj.key).fetch())
 
         if len(groups) > 1:
-            return create_api_response(409, "You are in multiple groups", groups)
+            return create_api_response(409, "You are in multiple groups", {
+                "groups": groups
+            })
         elif not groups:
-            return create_api_response(200, "You are not in any groups", [])
+            return create_api_response(200, "You are not in a group", {
+                "in_group": False,
+            })
         else:
-            return create_api_response(200, "success", groups[0])
+            return create_api_response(200, "success", groups[0]);
 
 
 class SubmitNDBImplementation(object):

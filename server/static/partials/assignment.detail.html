@@ -1,7 +1,14 @@
 <div>
   <h2>Assignment: {{assignment.name}}</h2>
-  <span>Statistics</span>
-  <div>
-    3
+  <div ng-controller='GroupController'>
+  <tabset justified="true">
+    <tab heading="Group">
+      <div class='tab-wrapper'>
+        <group/>
+      </div>
+    </tab>
+    <tab heading="Statistics">
+    </tab>
+  </tabset>
   </div>
 </div>

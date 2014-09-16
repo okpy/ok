@@ -134,3 +134,14 @@ h2 {
 .line-number {
   color: rgba(0,0,0,0.3);
 }
+
+.group {
+  padding-top: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+}
+
+.tab-content {
+  background-color: #eee;
+}

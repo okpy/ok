@@ -19,6 +19,15 @@ app.directive('diff', function() {
         };
     });
 
+app.directive('group', function() {
+        "use strict";
+        return {
+            restrict: 'E',
+            templateUrl: 'static/partials/group.html',
+        };
+    });
+
+
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/submission/");
@@ -151,7 +160,44 @@ app.factory('Assignment', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
-        }
+        },
+        group: {
+          url: 'api/v1/assignment/:id/group',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+      });
+    }
+  ]);
+
+app.factory('Group', ['$resource',
+    function($resource) {
+      return $resource('api/v1/group/:id', {
+        format: "json",
+        id: "@id",
+      }, {
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        getFromAssignment: {
+          url: 'api/v1/assignment/:id/group',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        update: {
+          method: 'PUT',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
       });
     }
   ]);
