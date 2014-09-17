@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='ok',
+    name='okpy',
     version='1.0.6',
     description=('ok.py supports programming projects by running tests, '
                 'tracking progress, and assisting in debugging.'),
