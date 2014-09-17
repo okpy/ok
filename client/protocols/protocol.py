@@ -26,7 +26,13 @@ class Protocol(object):
         """Called to execute an interactive or output-intensive session."""
 
 def get_protocols(names):
-    mapping = {protocol.name: protocol for protocol in Protocol.__subclasses__()}
+    mapping = {}
+    subclasses = Protocol.__subclasses__()
+    while subclasses:
+        protocol = subclasses.pop()
+        if protocol.name != Protocol.name:
+            mapping[protocol.name] = protocol
+        subclasses.extend(protocol.__subclasses__())
     try:
         return [mapping[name] for name in names]
     except KeyError as e:

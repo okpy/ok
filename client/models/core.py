@@ -176,6 +176,7 @@ def get_testcases(types):
             mapping[case.type] = case
         subclasses.extend(case.__subclasses__())
 
+    # TODO(albert): cleanup error handling
     try:
         return [mapping[type] for type in types]
     except KeyError as e:

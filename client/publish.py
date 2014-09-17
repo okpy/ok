@@ -3,7 +3,7 @@
 """
 This module is responsible for publishing ok. This will put all of the
 required files (as determined by config.py) into a separate directory
-and then make a zipfile called 'ok' that can be distributed to students.
+and then make a zipfile called "ok" that can be distributed to students.
 """
 
 from models import *
@@ -16,6 +16,7 @@ import importlib
 import sys
 
 STAGING_DIR = os.path.join(os.getcwd(), 'staging')
+OK_NAME = 'ok'
 CONFIG_NAME = 'config.py'
 
 REQUIRED_FILES = [
@@ -112,7 +113,7 @@ def create_zip(staging_dir, destination):
     if not os.path.isdir(destination):
         os.mkdir(destination)
 
-    dest = os.path.join(destination, 'ok')
+    dest = os.path.join(destination,OK_NAME)
     zipf = zipfile.ZipFile(dest, 'w')
     for root, dirs, files in os.walk(staging_dir):
         if '__pycache__' in root:
