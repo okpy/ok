@@ -168,10 +168,17 @@ class TestCase(serialize.Serializable):
                     self.type, self['type'])
 
 def get_testcases(types):
-    mapping = {case.type: case for case in TestCase.__subclasses__()}
+    mapping = {}
+    subclasses = TestCase.__subclasses__()
+    while subclasses:
+        case = subclasses.pop()
+        if case.type != TestCase.type:
+            mapping[case.type] = case
+        subclasses.extend(case.__subclasses__())
+
     try:
         return [mapping[type] for type in types]
     except KeyError as e:
-        raise exceptions.OkException(e)
+        raise exceptions.OkException(str(e) + ' is not a test case')
 
 

@@ -30,4 +30,4 @@ def get_protocols(names):
     try:
         return [mapping[name] for name in names]
     except KeyError as e:
-        raise exceptions.OkException(e)
+        raise exceptions.OkException(str(e) + ' is not a protocol')
