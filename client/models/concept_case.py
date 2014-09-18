@@ -6,7 +6,6 @@ focus mainly on unlocking. When used in the grading protocol,
 ConceptTestCases simply display the answer if already unlocked.
 """
 
-from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock

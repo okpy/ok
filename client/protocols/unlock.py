@@ -16,7 +16,7 @@ import string
 try:
     import readline
     HAS_READLINE = True
-except:
+except ImportError:
     HAS_READLINE = False
 
 
@@ -66,7 +66,8 @@ class LockProtocol(protocol.Protocol):
     def on_start(self):
         """Responsible for locking each test."""
         if self.args.lock:
-            formatting.print_title('Locking tests for {}'.format(self.assignment['name']))
+            formatting.print_title('Locking tests for {}'.format(
+                self.assignment['name']))
             if not self.assignment['hash_key']:
                 self.assignment['hash_key'] = self._gen_hash_key()
             for test in self.assignment.tests:
@@ -107,7 +108,8 @@ class UnlockProtocol(protocol.Protocol):
         """
         if not self.args.unlock:
             return
-        formatting.print_title('Unlocking tests for {}'.format(self.assignment['name']))
+        formatting.print_title('Unlocking tests for {}'.format(
+            self.assignment['name']))
 
         print('At each "{}",'.format(UnlockConsole.PROMPT)
               + ' type in what you would expect the output to be.')
@@ -122,7 +124,8 @@ class UnlockProtocol(protocol.Protocol):
                 # TODO(albert): the unlock function returns the number
                 # of unlocked test cases. This can be a useful metric
                 # for analytics in the future.
-                cases_unlocked, end_session = unlock(test, self.logger, self.assignment['hash_key'])
+                cases_unlocked, end_session = unlock(
+                    test, self.logger, self.assignment['hash_key'])
                 if end_session:
                     break
                 print()
@@ -220,9 +223,9 @@ class UnlockConsole(object):
     # Private Methods #
     ###################
 
-    def _verify(self, guess, lock):
+    def _verify(self, guess, locked):
         return hmac.new(self._hash_key.encode('utf-8'),
-                        guess.encode('utf-8')).hexdigest() == lock
+                        guess.encode('utf-8')).hexdigest() == locked
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""

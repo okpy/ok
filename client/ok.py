@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-VERSION = '1.0.6'
-
 """The ok.py script runs tests, checks for updates, and saves your work.
 
 Common uses:
@@ -12,6 +9,8 @@ This script will search the current directory for test files. Make sure that
 ok.py appears in the same directory as the assignment you wish to test.
 Otherwise, use -t to specify a test file manually.
 """
+
+VERSION = '1.0.6'
 
 # TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
 DEVELOPER_INSTRUCTIONS = """
@@ -36,24 +35,22 @@ receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
 
-from auth import authenticate
 from models import *
 from protocols import *
 from urllib import request, error
-from utils import formatting
+from utils import auth
+from utils import loading
 from utils import output
 import argparse
 import base64
 import config
-import exceptions
-import importlib.machinery
 import json
 import multiprocessing
-import os
 import sys
 import time
 
-def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
+def send_to_server(access_token, messages, assignment, server,
+                   endpoint='submission'):
     """Send messages to server, along with user authentication."""
     assignment = core.Assignment.deserialize(assignment)
     data = {
@@ -65,7 +62,8 @@ def send_to_server(access_token, messages, assignment, server, endpoint='submiss
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
-        address += "?access_token=%s&client_version=%s" % (access_token, VERSION)
+        address += "?access_token={0}&client_version={1}".format(
+            access_token, VERSION)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
@@ -84,8 +82,6 @@ def send_to_server(access_token, messages, assignment, server, endpoint='submiss
             # print(e)
             # print("Couldn't connect to server")
             pass
-
-
 
 #####################
 # Software Updating #
@@ -106,12 +102,13 @@ def get_latest_version(server):
 
         full_response = json.loads(response.read().decode('utf-8'))
 
-        file_contents = base64.b64decode(full_response['data']['results'][0]['file_data'])
+        contents = base64.b64decode(
+            full_response['data']['results'][0]['file_data'])
         new_file = open('ok', 'wb')
-        new_file.write(file_contents)
+        new_file.write(contents)
         new_file.close()
         #print("Done updating!")
-    except error.HTTPError as ex:
+    except error.HTTPError:
         # print("Error when downloading new version")
         pass
 
@@ -126,7 +123,8 @@ def parse_input():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-q', '--question', type=str,
                         help="focus on a specific question")
-    parser.add_argument('-s', '--server', type=str, default='ok-server.appspot.com',
+    parser.add_argument('-s', '--server', type=str,
+                        default='ok-server.appspot.com',
                         help="server address")
     parser.add_argument('-t', '--tests', metavar='A', default='tests', type=str,
                         help="partial name or path to test file or directory")
@@ -137,9 +135,9 @@ def parse_input():
     parser.add_argument('-i', '--interactive', action='store_true',
                         help="toggle interactive mode")
     parser.add_argument('-l', '--lock', type=str,
-                        help="partial name or path to test file or directory to lock")
+                        help="partial path to directory to lock")
     parser.add_argument('-f', '--force', action='store_true',
-                        help="force waiting for a server response without timeout")
+                        help="wait for server response without timeout")
     parser.add_argument('-a', '--authenticate', action='store_true',
                         help="authenticate, ignoring previous authentication")
     parser.add_argument('--local', action='store_true',
@@ -150,6 +148,7 @@ def parse_input():
 
 
 def server_timer():
+    """Timeout for the server."""
     time.sleep(0.8)
 
 def ok_main(args):
@@ -160,8 +159,8 @@ def ok_main(args):
         if not args.local:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
             timer_thread.start()
-        case_map = {case.type: case for case in core.get_testcases(config.cases)}
-        assignment = load_tests(args.tests, case_map)
+        cases = {case.type: case for case in core.get_testcases(config.cases)}
+        assignment = loading.load_tests(args.tests, cases)
 
         logger = sys.stdout = output.OutputLogger()
 
@@ -175,8 +174,11 @@ def ok_main(args):
 
         if not args.local:
             try:
-                access_token = authenticate(args.authenticate)
-                server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment.serialize(), args.server))
+                access_token = auth.authenticate(args.authenticate)
+                server_thread = multiprocessing.Process(
+                    target=send_to_server,
+                    args=(access_token, messages, assignment.serialize(),
+                          args.server))
                 server_thread.start()
             except error.URLError as ex:
                 # TODO(soumya) Make a better error message
@@ -190,7 +192,7 @@ def ok_main(args):
 
         # TODO(albert): a premature error might prevent tests from being
         # dumped. Perhaps add this in a "finally" clause.
-        dump_tests(args.tests, assignment)
+        loading.dump_tests(args.tests, assignment)
 
         if not args.local:
             while timer_thread.is_alive():

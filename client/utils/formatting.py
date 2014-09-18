@@ -80,8 +80,7 @@ def prettyjson(json, indentation='  '):
             return '"""\n' + dedent(json) + '\n"""'
         return repr(json)
     elif isinstance(json, list):
-        lst = [indent(prettyjson(elem, indentation), indentation)
-                        for elem in json]
+        lst = [indent(prettyjson(el, indentation), indentation) for el in json]
         return '[\n' + ',\n'.join(lst) + '\n]'
     elif isinstance(json, dict):
         pairs = []

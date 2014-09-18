@@ -34,12 +34,12 @@ def load_tests(test_dir, case_map):
     """
     if not os.path.isdir(test_dir):
         raise exceptions.OkException(
-                'Assignment must have a {} directory'.format(test_dir))
+            'Assignment must have a {} directory'.format(test_dir))
     info_file = os.path.join(test_dir, INFO_FILE)
     if not os.path.isfile(info_file):
         raise exceptions.OkException(
-                'Directory {} must have a file called {}'.format(
-                    test_dir, INFO_FILE))
+            'Directory {} must have a file called {}'.format(
+                test_dir, INFO_FILE))
     sys.path.insert(0, os.path.abspath(test_dir))
     assignment = _get_info()
     _get_tests(test_dir, assignment, case_map)

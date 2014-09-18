@@ -48,7 +48,8 @@ class GradingProtocol(protocol.Protocol):
 
     def on_interact(self):
         """Run gradeable tests and print results."""
-        formatting.print_title('Running tests for {}'.format(self.assignment['name']))
+        formatting.print_title('Running tests for {}'.format(
+            self.assignment['name']))
 
         # TODO(albert): clean up the case where the test is not
         # recognized.
@@ -58,7 +59,8 @@ class GradingProtocol(protocol.Protocol):
                 self._grade_test(test)
                 any_graded = True
         if not any_graded and self.args.question:
-            print('Test {} does not exist. Try one of the following:'.format(self.args.question))
+            print('Test {} does not exist. Try one of the following:'.format(
+                self.args.question))
             print(' '.join(sorted(test.name for test in self.assignment.tests)))
 
     def _grade_test(self, test):
@@ -68,16 +70,16 @@ class GradingProtocol(protocol.Protocol):
         if test['note']:
             print(test['note'])
         total_passed = grade(test, self.logger, self.args.interactive,
-                              self.args.verbose, self.args.timeout)
+                             self.args.verbose, self.args.timeout)
 
         total_cases = test.num_cases
         if total_cases > 0:
-            print('== {} ({}%) cases passed for {} =='.format(total_passed,
-                                            round(100 * total_passed / total_cases, 2),
-                                            test.name))
+            print('== {} ({}%) cases passed for {} =='.format(
+                total_passed, round(100 * total_passed / total_cases, 2),
+                test.name))
         if test.num_locked > 0:
-            print('-- There are still {} locked test cases.'.format(test.num_locked) + \
-            ' Use the -u flag to unlock them. --')
+            print('-- There are still {} locked test cases.'.format(
+                test.num_locked) + ' Use the -u flag to unlock them. --')
         print()
 
 def grade(test, logger, interactive=False, verbose=False, timeout=10):

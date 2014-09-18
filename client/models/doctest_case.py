@@ -4,7 +4,6 @@ PythonTestCases follow a line-by-line input format that is designed to
 mimic a Python interpreter.
 """
 
-from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock
@@ -69,24 +68,9 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     ##################
 
     @property
-    def num_prompts(self):
-        """Returns the number of prompts for this test case."""
-        return [line.startswith(self.PROMPT)
-                for line in self._lines].count(True)
-
-    @property
     def lines(self):
         """Returns lines of code for the test case."""
         return self._lines
-
-    @classmethod
-    def strip_prompt(cls, text):
-        """Removes a prompt from the start of the text, if it exists.
-        Otherwise, the text is left unchanged.
-        """
-        if text.startswith(cls.PROMPT):
-            text = text[len(cls.PROMPT):]
-        return text
 
     ######################################
     # Protocol interface implementations #
@@ -134,7 +118,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def on_unlock(self, logger, interact_fn):
         """Implements the UnlockTestCase interface."""
-        for i, line in enumerate(self.lines):
+        for line in self.lines:
             if isinstance(line, str):
                 print(line)
             elif isinstance(line, _Answer):
@@ -147,7 +131,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def on_lock(self, hash_fn):
         """Implements the UnlockTestCase interface."""
-        for i, line in enumerate(self.lines):
+        for line in self.lines:
             if isinstance(line, _Answer):
                 if not line.locked:
                     line.output = hash_fn(line.output)
@@ -175,10 +159,10 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         case._format_lines()
         if cls.type in assignment['params']:
             case._assignment_params = _DoctestParams.deserialize(
-                    assignment['params'][cls.type])
+                assignment['params'][cls.type])
         if cls.type in test['params']:
             case._test_params = _DoctestParams.deserialize(
-                    test['params'][cls.type])
+                test['params'][cls.type])
         exec(case._assignment_params['cache'], case._frame)
         exec(case._test_params['cache'], case._frame)
         return case
@@ -220,8 +204,8 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
                 self._lines.append(_Answer(line))
 
 class _Answer(object):
-    status_re = re.compile('#\s*(.+):\s*(.*)')
-    locked_re = re.compile('#\s*locked')
+    status_re = re.compile(r'#\s*(.+):\s*(.*)')
+    locked_re = re.compile(r'#\s*locked')
 
     def __init__(self, output, choices=None, explanation='',
                  locked=False):
