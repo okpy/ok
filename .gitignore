@@ -16,3 +16,4 @@ gaenv/
 
 # pip-related files
 *.egg-info
+dist

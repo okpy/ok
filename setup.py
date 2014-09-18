@@ -1,18 +1,22 @@
 from setuptools import setup, find_packages
 
+VERSION = '1.0.6'
+
 setup(
     name='okpy',
-    version='1.0.6',
+    version=VERSION,
+    author='John Denero, Soumya Basu, Stephen Martinis, Sharad Vikram, Albert Wu',
+    # author_email='',
     description=('ok.py supports programming projects by running tests, '
                 'tracking progress, and assisting in debugging.'),
     # long_description=long_description,
     url='https://github.com/Cal-CS-61A-Staff/ok',
-    author='John Denero, Soumya Basu, Stephen Martinis, Sharad Vikram, Albert Wu',
-    # author_email='',
+    download_url='https://github.com/Cal-CS-61A-Staff/ok/releases/download/v{}/ok'.format(VERSION),
+
     license='Apache License, Version 2.0',
     keywords=['education', 'autograding'],
     packages=find_packages('client',
-                           exclude=['*.tests', '*.tests.*',
+                           exclude=['*tests*',
                                     '*demo_assignments*']),
     package_dir={'': 'client'},
     # install_requires=[],
