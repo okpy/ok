@@ -21,13 +21,12 @@ CONFIG_NAME = 'config.py'
 
 REQUIRED_FILES = [
     '__main__',
-    'auth',
     'exceptions',
     'ok',
-    'utils',
 ]
 REQUIRED_FOLDERS = [
     'sanction',
+    'utils',
 ]
 
 def populate_staging(staging_dir, config_path):
