@@ -39,17 +39,18 @@ communications should be limited to the body of an on_interact method.
 from auth import authenticate
 from models import core
 from urllib import request, error
+from utils import formatting
+from utils import output
 import argparse
+import base64
 import config
 import exceptions
 import importlib.machinery
 import json
+import multiprocessing
 import os
 import sys
-import utils
-import base64
 import time
-import multiprocessing
 
 def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
     """Send messages to server, along with user authentication."""
@@ -175,7 +176,7 @@ def dump_tests(test_dir, assignment):
     """
     # TODO(albert): prettyify string formatting by using triple quotes.
     # TODO(albert): verify that assign_copy is serializable into json.
-    info = utils.prettyformat(assignment.serialize())
+    info = formatting.prettyjson(assignment.serialize())
     with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
         f.write('info = ' + info)
 
@@ -184,7 +185,7 @@ def dump_tests(test_dir, assignment):
     # TODO(albert): might need to delete obsolete test files too.
     # TODO(albert): verify that test_json is serializable into json.
     for test in assignment.tests:
-        test_json = utils.prettyformat(test.serialize())
+        test_json = formatting.prettyjson(test.serialize())
         with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
             f.write('test = ' + test_json)
 
@@ -245,6 +246,8 @@ def parse_input():
                         help="authenticate, ignoring previous authentication")
     parser.add_argument('--local', action='store_true',
                         help="disable any network activity")
+    parser.add_argument('--timeout', type=int, default=10,
+                        help="set the timeout duration for running tests")
     return parser.parse_args()
 
 
@@ -261,7 +264,7 @@ def ok_main(args):
             timer_thread.start()
         assignment = load_tests(args.tests, config.cases)
 
-        logger = sys.stdout = utils.OutputLogger()
+        logger = sys.stdout = output.OutputLogger()
 
         start_protocols = \
             [p(args, assignment, logger) for p in config.protocols.values()]

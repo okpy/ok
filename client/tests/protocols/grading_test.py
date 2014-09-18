@@ -3,12 +3,12 @@
 from models import core
 from protocols import grading
 from unittest import mock
+from utils import output
 import unittest
-import utils
 
 class GradeTest(unittest.TestCase):
     def setUp(self):
-        self.logger = utils.OutputLogger()
+        self.logger = output.OutputLogger()
         self.mock_test = core.Test(names=['dummy'], points=1)
 
     def makeGradedTestCase(self, error=False, should_grade=True):

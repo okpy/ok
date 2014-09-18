@@ -8,10 +8,12 @@ from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock
+from utils import formatting
+from utils import timer
 import code
+import exceptions
 import re
 import traceback
-import utils
 
 # TODO(albert): After v1 is released, come up with a better solution
 # (preferably one that is cross-platform).
@@ -90,7 +92,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     # Protocol interface implementations #
     ######################################
 
-    def on_grade(self, logger, verbose, interactive):
+    def on_grade(self, logger, verbose, interactive, timeout):
         """Implements the GradedTestCase interface."""
         # TODO(albert): For now, all output is displayed, even if
         # verbosity is toggled off (effectively, the verbosity flag
@@ -103,7 +105,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         log = []
         logger.register_log(log)
 
-        console = _PythonConsole()
+        console = _PythonConsole(timeout)
         frame = self._frame.copy()
         if console.exec(self._assignment_params['setup'], frame) \
                 or console.exec(self._test_params['setup'], frame):
@@ -205,7 +207,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         prompts.
         """
         self._lines = []
-        for line in utils.dedent(self['test']).splitlines():
+        for line in formatting.dedent(self['test']).splitlines():
             if not line:
                 continue
             elif line.startswith(self.PS1) or line.startswith(self.PS2):
@@ -262,9 +264,9 @@ class _DoctestParams(serialize.Serializable):
 
     def __init__(self, **fields):
         super().__init__(**fields)
-        self['setup'] = utils.dedent(self['setup'])
-        self['teardown'] = utils.dedent(self['teardown'])
-        self['cache'] = utils.dedent(self['cache'])
+        self['setup'] = formatting.dedent(self['setup'])
+        self['teardown'] = formatting.dedent(self['teardown'])
+        self['cache'] = formatting.dedent(self['cache'])
 
 class _PythonConsole(object):
     """Handles test evaluation and output formatting for a single
@@ -273,13 +275,14 @@ class _PythonConsole(object):
 
     PS1 = DoctestCase.PS1
     PS2 = DoctestCase.PS2
-    def __init__(self, equal_fn=None):
+    def __init__(self, timeout, equal_fn=None):
         """Constructor.
 
         PARAMETERS:
         equal_fn -- function; a function that determines if expected
                     output is equal to actual output.
         """
+        self.timeout = timeout
         if equal_fn:
             self.equal = equal_fn
         else:
@@ -371,11 +374,11 @@ class _PythonConsole(object):
         """
         try:
             if expected:
-                expect = utils.timed(eval, (expected, frame.copy()))
-                actual = utils.timed(eval, (expr, frame))
+                expect = timer.timed(self.timeout, eval, (expected, frame.copy()))
+                actual = timer.timed(self.timeout, eval, (expr, frame))
             else:
                 expect = None
-                actual = utils.timed(exec, (expr, frame))
+                actual = timer.timed(self.timeout, exec, (expr, frame))
         except RuntimeError:
             stacktrace_length = 9
             stacktrace = traceback.format_exc().split('\n')
@@ -383,7 +386,7 @@ class _PythonConsole(object):
             print('\n'.join(stacktrace[-stacktrace_length:-1]))
             print('# Error: maximum recursion depth exceeded.')
             return True
-        except utils.Timeout as e:
+        except exceptions.Timeout as e:
             print('# Error: evaluation exceeded {} seconds.'.format(e.timeout))
             return True
         except Exception as e:

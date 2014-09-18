@@ -2,6 +2,20 @@ class OkException(BaseException):
     """Base exception for ok.py."""
     pass
 
+class Timeout(OkException):
+    """Exception for timeouts."""
+    _message = 'Evaluation timed out!'
+
+    def __init__(self, timeout):
+        """Constructor.
+
+        PARAMTERS:
+        timeout -- int; number of seconds before timeout error occurred
+        """
+        super().__init__(self)
+        self.timeout = timeout
+
+
 class DeserializeError(OkException):
 
     @classmethod

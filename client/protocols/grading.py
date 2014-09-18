@@ -7,7 +7,7 @@ are compatible with the GradingProtocol.
 
 from models import core
 from protocols import protocol
-import utils
+from utils import formatting
 
 #####################
 # Testing Mechanism #
@@ -18,7 +18,7 @@ class GradedTestCase(core.TestCase):
     Subclasses must implement the on_grade method.
     """
 
-    def on_grade(self, logger, verbose, interact):
+    def on_grade(self, logger, verbose, interact, timeout):
         """Subclasses that are used by the grading protocol must
         implement this method.
 
@@ -48,7 +48,7 @@ class GradingProtocol(protocol.Protocol):
 
     def on_interact(self):
         """Run gradeable tests and print results."""
-        utils.print_title('Running tests for {}'.format(self.assignment['name']))
+        formatting.print_title('Running tests for {}'.format(self.assignment['name']))
 
         # TODO(albert): clean up the case where the test is not
         # recognized.
@@ -63,12 +63,12 @@ class GradingProtocol(protocol.Protocol):
 
     def _grade_test(self, test):
         """Grades a single Test."""
-        utils.underline('Running tests for ' + test.name)
+        formatting.underline('Running tests for ' + test.name)
         print()
         if test['note']:
             print(test['note'])
         total_passed = grade(test, self.logger, self.args.interactive,
-                             self.args.verbose)
+                              self.args.verbose, self.args.timeout)
 
         total_cases = test.num_cases
         if total_cases > 0:
@@ -80,7 +80,7 @@ class GradingProtocol(protocol.Protocol):
             ' Use the -u flag to unlock them. --')
         print()
 
-def grade(test, logger, interactive=False, verbose=False):
+def grade(test, logger, interactive=False, verbose=False, timeout=10):
     """Grades all suites for the specified test.
 
     PARAMETERS:
@@ -94,23 +94,23 @@ def grade(test, logger, interactive=False, verbose=False):
     RETURNS:
     int; number of TestCases that passed.
     """
-    cases_tested = utils.Counter()
+    cases_tested = _Counter()
     total_passed = 0
     for suite in test['suites']:
         passed, error = _run_suite(suite, logger, cases_tested,
-                                   verbose, interactive)
+                                   verbose, interactive, timeout)
         total_passed += passed
         if error:
             break
     return total_passed
 
-def _run_suite(suite, logger, cases_tested, verbose, interactive):
+def _run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
     """Runs tests for a single suite.
 
     PARAMETERS:
     suite        -- list; each element is a TestCase
     logger       -- OutputLogger.
-    cases_tested -- Counter; an object that keeps track of the
+    cases_tested -- _Counter; an object that keeps track of the
                     number of cases that have been tested so far.
     verbose      -- bool; True if verbose mode is toggled on
     interactive  -- bool; True if interactive mode is toggled on
@@ -131,11 +131,26 @@ def _run_suite(suite, logger, cases_tested, verbose, interactive):
             return passed, True  # students must unlock first
         cases_tested.increment()
 
-        utils.underline('Case {}'.format(cases_tested), line='-')
-        error = case.on_grade(logger, verbose, interactive)
+        formatting.underline('Case {}'.format(cases_tested), line='-')
+        error = case.on_grade(logger, verbose, interactive, timeout)
         if error:
             return passed, True
         passed += 1
     logger.on()
     return passed, False
 
+class _Counter(object):
+    """Keeps track of a running count of natural numbers."""
+    def __init__(self):
+        self._count = 0
+
+    @property
+    def number(self):
+        return self._count
+
+    def increment(self):
+        self._count += 1
+        return self._count
+
+    def __repr__(self):
+        return str(self._count)

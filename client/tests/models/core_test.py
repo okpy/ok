@@ -6,7 +6,6 @@ from unittest import mock
 import exceptions
 import sys
 import unittest
-import utils
 
 class MockCase(core.TestCase):
     type = 'mock'

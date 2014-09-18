@@ -18,7 +18,6 @@ concrete subclasses of TestCase should be located in client/models/.
 
 from models import serialize
 import exceptions
-import utils
 
 class Assignment(serialize.Serializable):
     """A representation of an assignment."""
