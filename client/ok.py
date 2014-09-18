@@ -37,7 +37,8 @@ communications should be limited to the body of an on_interact method.
 """
 
 from auth import authenticate
-from models import core
+from models import *
+from protocols import *
 from urllib import request, error
 from utils import formatting
 from utils import output
@@ -159,19 +160,18 @@ def ok_main(args):
         if not args.local:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
             timer_thread.start()
-        assignment = load_tests(args.tests, config.cases)
+        case_map = {case.type: case for case in core.get_testcases(config.cases)}
+        assignment = load_tests(args.tests, case_map)
 
         logger = sys.stdout = output.OutputLogger()
 
-        start_protocols = \
-            [p(args, assignment, logger) for p in config.protocols.values()]
-        interact_protocols = \
-            [p(args, assignment, logger) for p in config.protocols.values()]
+        protocols = [p(args, assignment, logger)
+                     for p in protocol.get_protocols(config.protocols)]
 
         messages = dict()
 
-        for protocol in start_protocols:
-            messages[protocol.name] = protocol.on_start()
+        for proto in protocols:
+            messages[proto.name] = proto.on_start()
 
         if not args.local:
             try:
@@ -183,8 +183,8 @@ def ok_main(args):
                 # print("Nothing was sent to the server!")
                 pass
 
-        for protocol in interact_protocols:
-            protocol.on_interact()
+        for proto in protocols:
+            proto.on_interact()
 
         # TODO(denero) Print server responses.
 

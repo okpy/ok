@@ -166,3 +166,19 @@ class TestCase(serialize.Serializable):
             raise exceptions.DeserializeError.unexpected_value('type',
                     self.type, self['type'])
 
+def get_testcases(types):
+    mapping = {}
+    subclasses = TestCase.__subclasses__()
+    while subclasses:
+        case = subclasses.pop()
+        if case.type != TestCase.type:
+            mapping[case.type] = case
+        subclasses.extend(case.__subclasses__())
+
+    # TODO(albert): cleanup error handling
+    try:
+        return [mapping[type] for type in types]
+    except KeyError as e:
+        raise exceptions.OkException(str(e) + ' is not a test case')
+
+
