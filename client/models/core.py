@@ -18,7 +18,6 @@ concrete subclasses of TestCase should be located in client/models/.
 
 from models import serialize
 import exceptions
-import utils
 
 class Assignment(serialize.Serializable):
     """A representation of an assignment."""
@@ -126,9 +125,9 @@ class Test(serialize.Serializable):
                 case_type = case_json['type']
                 if case_type not in case_map:
                     raise exceptions.DeserializeError.unknown_type(
-                            case_type, case_map)
+                        case_type, case_map)
                 test_case = case_map[case_type].deserialize(
-                        case_json, assignment, test)
+                    case_json, assignment, test)
                 new_suite.append(test_case)
             new_suites.append(new_suite)
         test['suites'] = new_suites
@@ -164,8 +163,8 @@ class TestCase(serialize.Serializable):
 
     def _assertType(self):
         if self['type'] != self.type:
-            raise exceptions.DeserializeError.unexpected_value('type',
-                    self.type, self['type'])
+            raise exceptions.DeserializeError.unexpected_value(
+                'type', self.type, self['type'])
 
 def get_testcases(types):
     mapping = {}

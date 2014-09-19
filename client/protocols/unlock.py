@@ -8,26 +8,17 @@ compatible with the UnlockProtocol.
 from models import core
 from models import serialize
 from protocols import protocol
+from utils import formatting
+import hmac
 import random
+import string
+
 try:
     import readline
     HAS_READLINE = True
-except:
+except ImportError:
     HAS_READLINE = False
-import hmac
-import string
-import utils
 
-
-# TODO(albert): move this to locking mechanism
-# def __make_hash_fn(hash_key, encoding='utf-8'):
-#     def hash_fn(x):
-#         return hmac.new(hash_key.encode(encoding),
-#                         x.encode(encoding)).digest()
-#     return hash_fn
-#
-# hash_key = tests['project_info']['hash_key']
-# __make_hash_fn(hash_key)
 
 def normalize(x):
     """
@@ -75,7 +66,8 @@ class LockProtocol(protocol.Protocol):
     def on_start(self):
         """Responsible for locking each test."""
         if self.args.lock:
-            utils.print_title('Locking tests for {}'.format(self.assignment['name']))
+            formatting.print_title('Locking tests for {}'.format(
+                self.assignment['name']))
             if not self.assignment['hash_key']:
                 self.assignment['hash_key'] = self._gen_hash_key()
             for test in self.assignment.tests:
@@ -116,7 +108,8 @@ class UnlockProtocol(protocol.Protocol):
         """
         if not self.args.unlock:
             return
-        utils.print_title('Unlocking tests for {}'.format(self.assignment['name']))
+        formatting.print_title('Unlocking tests for {}'.format(
+            self.assignment['name']))
 
         print('At each "{}",'.format(UnlockConsole.PROMPT)
               + ' type in what you would expect the output to be.')
@@ -126,12 +119,13 @@ class UnlockProtocol(protocol.Protocol):
             if test.num_cases == 0:
                 print('No tests to unlock for {}.'.format(test.name))
             else:
-                utils.underline('Unlocking tests for {}'.format(test.name))
+                formatting.underline('Unlocking tests for {}'.format(test.name))
                 print()
                 # TODO(albert): the unlock function returns the number
                 # of unlocked test cases. This can be a useful metric
                 # for analytics in the future.
-                cases_unlocked, end_session = unlock(test, self.logger, self.assignment['hash_key'])
+                cases_unlocked, end_session = unlock(
+                    test, self.logger, self.assignment['hash_key'])
                 if end_session:
                     break
                 print()
@@ -172,7 +166,7 @@ def unlock(test, logger, hash_key):
             if not isinstance(case, UnlockTestCase) \
                     or not case['locked']:
                 continue
-            utils.underline('Case {}'.format(cases), line='-')
+            formatting.underline('Case {}'.format(cases), line='-')
             if console.run(case):   # Abort unlocking.
                 return cases_unlocked, True
             cases_unlocked += 1
@@ -229,9 +223,9 @@ class UnlockConsole(object):
     # Private Methods #
     ###################
 
-    def _verify(self, guess, lock):
+    def _verify(self, guess, locked):
         return hmac.new(self._hash_key.encode('utf-8'),
-                        guess.encode('utf-8')).hexdigest() == lock
+                        guess.encode('utf-8')).hexdigest() == locked
 
     def _input(self, prompt):
         """Retrieves user input from stdin."""

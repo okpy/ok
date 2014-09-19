@@ -6,11 +6,10 @@ focus mainly on unlocking. When used in the grading protocol,
 ConceptTestCases simply display the answer if already unlocked.
 """
 
-from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock
-import utils
+from utils import formatting
 
 class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for conceptual questions."""
@@ -30,15 +29,15 @@ class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def __init__(self, **fields):
         super().__init__(**fields)
-        self['question'] = utils.dedent(self['question'])
-        self['answer'] = utils.dedent(self['answer'])
+        self['question'] = formatting.dedent(self['question'])
+        self['answer'] = formatting.dedent(self['answer'])
 
 
     ######################################
     # Protocol interface implementations #
     ######################################
 
-    def on_grade(self, logger, verbose, interact):
+    def on_grade(self, logger, verbose, interact, timeout):
         """Implements the GradedTestCase interface."""
         print('Q: ' + self['question'])
         print('A: ' + self['answer'])

@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-VERSION = '1.0.6'
-
 """The ok.py script runs tests, checks for updates, and saves your work.
 
 Common uses:
@@ -12,6 +9,8 @@ This script will search the current directory for test files. Make sure that
 ok.py appears in the same directory as the assignment you wish to test.
 Otherwise, use -t to specify a test file manually.
 """
+
+VERSION = '1.0.6'
 
 # TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
 DEVELOPER_INSTRUCTIONS = """
@@ -36,23 +35,22 @@ receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
 
-from auth import authenticate
 from models import *
 from protocols import *
 from urllib import request, error
+from utils import auth
+from utils import loading
+from utils import output
 import argparse
 import base64
 import config
-import exceptions
-import importlib.machinery
 import json
 import multiprocessing
-import os
 import sys
 import time
-import utils
 
-def send_to_server(access_token, messages, assignment, server, endpoint='submission'):
+def send_to_server(access_token, messages, assignment, server,
+                   endpoint='submission'):
     """Send messages to server, along with user authentication."""
     assignment = core.Assignment.deserialize(assignment)
     data = {
@@ -64,7 +62,8 @@ def send_to_server(access_token, messages, assignment, server, endpoint='submiss
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
-        address += "?access_token=%s&client_version=%s" % (access_token, VERSION)
+        address += "?access_token={0}&client_version={1}".format(
+            access_token, VERSION)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
@@ -83,111 +82,6 @@ def send_to_server(access_token, messages, assignment, server, endpoint='submiss
             # print(e)
             # print("Couldn't connect to server")
             pass
-
-
-######################
-# Assignment loading #
-######################
-
-INFO_FILE = 'info.py'
-
-def load_tests(test_dir, case_map):
-    """Loads information and tests for the current assignment.
-
-    PARAMETERS:
-    test_dir -- str; a filepath to the test directory, 'tests' by default.
-    case_map -- dict; a mapping of TestCase tags to TestCase classes
-
-    RETURNS:
-    assignment -- Assignment; contains information related to the
-    assignment and its tests.
-    """
-    if not os.path.isdir(test_dir):
-        raise exceptions.OkException(
-                'Assignment must have a {} directory'.format(test_dir))
-    info_file = os.path.join(test_dir, INFO_FILE)
-    if not os.path.isfile(info_file):
-        raise exceptions.OkException(
-                'Directory {} must have a file called {}'.format(
-                    test_dir, INFO_FILE))
-    sys.path.insert(0, os.path.abspath(test_dir))
-    assignment = _get_info()
-    _get_tests(test_dir, assignment, case_map)
-    return assignment
-
-
-def _get_info():
-    """Loads information from an INFO file, given by the filepath.
-
-    PARAMETERS:
-    filepath -- str; filepath to an INFO file.
-
-    RETURNS:
-    dict; information contained in the INFO file.
-    """
-    # TODO(albert): add error handling in case no attribute info is
-    # found.
-    module_name, _ = os.path.splitext(INFO_FILE)
-    info_json = _import_module(module_name).info
-    return core.Assignment.deserialize(info_json)
-
-
-def _get_tests(directory, assignment, case_map):
-    """Loads all tests in a tests directory and adds them to the given
-    Assignment object.
-
-    PARAMETER:
-    directory  -- str; filepath to a directory that contains tests.
-    assignment -- Assignment; top-level information about the
-                  assignment, extracted from the info file.
-    """
-    test_files = os.listdir(directory)
-    # TODO(albert): have a better way to sort tests.
-    for file in sorted(test_files):
-        if file == INFO_FILE or not file.endswith('.py'):
-            continue
-        path = os.path.normpath(os.path.join(directory, file))
-        module_name, _ = os.path.splitext(file)
-        if os.path.isfile(path):
-            try:
-                test_json = _import_module(module_name).test
-                test = core.Test.deserialize(test_json, assignment, case_map)
-                assignment.add_test(test)
-            except AttributeError as ex:
-                # TODO(soumya): Do something here, but only for staff protocols.
-                pass
-
-
-def _import_module(module):
-    """Attempt to load the source file at path. Returns None on failure."""
-    return importlib.import_module(module)
-
-######################
-# Assignment dumping #
-######################
-
-def dump_tests(test_dir, assignment):
-    """Writes an assignment into the given test directory.
-
-    PARAMETERS:
-    test_dir   -- str; filepath to the assignment's test directory.
-    assignment -- dict; contains information, including Test objects,
-                  for an assignment.
-    """
-    # TODO(albert): prettyify string formatting by using triple quotes.
-    # TODO(albert): verify that assign_copy is serializable into json.
-    info = utils.prettyformat(assignment.serialize())
-    with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
-        f.write('info = ' + info)
-
-    # TODO(albert): writing causes an error halfway, the tests
-    # directory may be left in a corrupted state.
-    # TODO(albert): might need to delete obsolete test files too.
-    # TODO(albert): verify that test_json is serializable into json.
-    for test in assignment.tests:
-        test_json = utils.prettyformat(test.serialize())
-        with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
-            f.write('test = ' + test_json)
 
 #####################
 # Software Updating #
@@ -208,12 +102,13 @@ def get_latest_version(server):
 
         full_response = json.loads(response.read().decode('utf-8'))
 
-        file_contents = base64.b64decode(full_response['data']['results'][0]['file_data'])
+        contents = base64.b64decode(
+            full_response['data']['results'][0]['file_data'])
         new_file = open('ok', 'wb')
-        new_file.write(file_contents)
+        new_file.write(contents)
         new_file.close()
         #print("Done updating!")
-    except error.HTTPError as ex:
+    except error.HTTPError:
         # print("Error when downloading new version")
         pass
 
@@ -228,7 +123,8 @@ def parse_input():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-q', '--question', type=str,
                         help="focus on a specific question")
-    parser.add_argument('-s', '--server', type=str, default='ok-server.appspot.com',
+    parser.add_argument('-s', '--server', type=str,
+                        default='ok-server.appspot.com',
                         help="server address")
     parser.add_argument('-t', '--tests', metavar='A', default='tests', type=str,
                         help="partial name or path to test file or directory")
@@ -239,17 +135,20 @@ def parse_input():
     parser.add_argument('-i', '--interactive', action='store_true',
                         help="toggle interactive mode")
     parser.add_argument('-l', '--lock', type=str,
-                        help="partial name or path to test file or directory to lock")
+                        help="partial path to directory to lock")
     parser.add_argument('-f', '--force', action='store_true',
-                        help="force waiting for a server response without timeout")
+                        help="wait for server response without timeout")
     parser.add_argument('-a', '--authenticate', action='store_true',
                         help="authenticate, ignoring previous authentication")
     parser.add_argument('--local', action='store_true',
                         help="disable any network activity")
+    parser.add_argument('--timeout', type=int, default=10,
+                        help="set the timeout duration for running tests")
     return parser.parse_args()
 
 
 def server_timer():
+    """Timeout for the server."""
     time.sleep(0.8)
 
 def ok_main(args):
@@ -260,10 +159,10 @@ def ok_main(args):
         if not args.local:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
             timer_thread.start()
-        case_map = {case.type: case for case in core.get_testcases(config.cases)}
-        assignment = load_tests(args.tests, case_map)
+        cases = {case.type: case for case in core.get_testcases(config.cases)}
+        assignment = loading.load_tests(args.tests, cases)
 
-        logger = sys.stdout = utils.OutputLogger()
+        logger = sys.stdout = output.OutputLogger()
 
         protocols = [p(args, assignment, logger)
                      for p in protocol.get_protocols(config.protocols)]
@@ -275,8 +174,11 @@ def ok_main(args):
 
         if not args.local:
             try:
-                access_token = authenticate(args.authenticate)
-                server_thread = multiprocessing.Process(target=send_to_server, args=(access_token, messages, assignment.serialize(), args.server))
+                access_token = auth.authenticate(args.authenticate)
+                server_thread = multiprocessing.Process(
+                    target=send_to_server,
+                    args=(access_token, messages, assignment.serialize(),
+                          args.server))
                 server_thread.start()
             except error.URLError as ex:
                 # TODO(soumya) Make a better error message
@@ -290,7 +192,7 @@ def ok_main(args):
 
         # TODO(albert): a premature error might prevent tests from being
         # dumped. Perhaps add this in a "finally" clause.
-        dump_tests(args.tests, assignment)
+        loading.dump_tests(args.tests, assignment)
 
         if not args.local:
             while timer_thread.is_alive():
