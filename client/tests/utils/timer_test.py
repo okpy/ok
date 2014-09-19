@@ -1,5 +1,6 @@
 from utils import timer
 import exceptions
+import time
 import unittest
 
 class TimedTest(unittest.TestCase):
