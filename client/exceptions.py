@@ -4,7 +4,8 @@ class OkException(BaseException):
     """Base exception for ok.py."""
     pass
 
-class Timeout(OkException):
+# TODO(albert): extend from a base class designed for student bugs.
+class Timeout(BaseException):
     """Exception for timeouts."""
     _message = 'Evaluation timed out!'
 
