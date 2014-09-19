@@ -6,14 +6,17 @@ required files (as determined by config.py) into a separate directory
 and then make a zipfile called "ok" that can be distributed to students.
 """
 
+import os
+import sys
+OK_ROOT = os.path.dirname(os.path.relpath(__file__))
+sys.path.append(OK_ROOT)
+
 from models import *
 from protocols import *
 import argparse
-import os
 import shutil
 import zipfile
 import importlib
-import sys
 
 STAGING_DIR = os.path.join(os.getcwd(), 'staging')
 OK_NAME = 'ok'
@@ -33,12 +36,14 @@ REQUIRED_FOLDERS = [
 def populate_staging(staging_dir, config_path):
     """Populates the staging directory with files for ok.py."""
     for filename in REQUIRED_FILES:
-        fullname = filename + '.py'
-        shutil.copyfile(fullname, os.path.join(staging_dir, fullname))
+        filename += '.py'
+        fullname = os.path.join(OK_ROOT, filename)
+        shutil.copyfile(fullname, os.path.join(staging_dir, filename))
     shutil.copyfile(config_path, os.path.join(staging_dir, CONFIG_NAME))
 
     for folder in REQUIRED_FOLDERS:
-        shutil.copytree(folder, os.path.join(staging_dir, folder))
+        shutil.copytree(os.path.join(OK_ROOT, folder),
+                        os.path.join(staging_dir, folder))
 
     config = load_config(config_path)
     populate_protocols(staging_dir, config)
@@ -60,7 +65,7 @@ def populate_protocols(staging_dir, config):
     relevant protocols.
     """
     os.mkdir(os.path.join(staging_dir, 'protocols'))
-    shutil.copyfile(os.path.join('protocols', 'protocol.py'),
+    shutil.copyfile(os.path.join(OK_ROOT, 'protocols', 'protocol.py'),
                     os.path.join(staging_dir, 'protocols', 'protocol.py'))
 
     protocol_modules = ['protocol']
@@ -70,9 +75,9 @@ def populate_protocols(staging_dir, config):
         # Add the module to the list of imports in protocols/__init__
         protocol_modules.append(path_components[-1])
         # Convert to filesystem path.
-        protocol_src = os.path.join(*path_components) + '.py'
+        protocol_src = os.path.join(OK_ROOT, *path_components) + '.py'
+        protocol_dest = os.path.join(staging_dir, *path_components) + '.py'
 
-        protocol_dest = os.path.join(staging_dir, protocol_src)
         if os.path.isfile(protocol_src):
             shutil.copyfile(protocol_src, protocol_dest)
         else:
@@ -86,9 +91,9 @@ def populate_models(staging_dir, config):
     relevant test cases.
     """
     os.mkdir(os.path.join(staging_dir, 'models'))
-    shutil.copyfile(os.path.join('models', 'core.py'),
+    shutil.copyfile(os.path.join(OK_ROOT, 'models', 'core.py'),
                     os.path.join(staging_dir, 'models', 'core.py'))
-    shutil.copyfile(os.path.join('models', 'serialize.py'),
+    shutil.copyfile(os.path.join(OK_ROOT, 'models', 'serialize.py'),
                     os.path.join(staging_dir, 'models', 'serialize.py'))
 
     case_modules = ['core', 'serialize']
@@ -98,9 +103,9 @@ def populate_models(staging_dir, config):
         # Add the module to the list of imports in models/__init__
         case_modules.append(path_components[-1])
         # Convert to filesystem path.
-        case_src = os.path.join(*path_components) + '.py'
+        case_src = os.path.join(OK_ROOT, *path_components) + '.py'
+        case_dest = os.path.join(staging_dir, *path_components) + '.py'
 
-        case_dest = os.path.join(staging_dir, case_src)
         if os.path.isfile(case_src):
             shutil.copyfile(case_src, case_dest)
         else:
@@ -129,9 +134,10 @@ def create_zip(staging_dir, destination):
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-c', '--config', type=str, default=CONFIG_NAME,
+    parser.add_argument('-c', '--config', type=str,
+                        default=os.path.join(OK_ROOT, CONFIG_NAME),
                         help='Publish with a specificed config file.')
-    parser.add_argument('-d', '--destination', type=str, default='',
+    parser.add_argument('-d', '--destination', type=str, default='.',
                         help='Publish to the specified directory.')
 
     return parser.parse_args()
