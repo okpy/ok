@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.0.7'
+VERSION = '1.0.8'
 
 setup(
     name='okpy',
@@ -15,9 +15,12 @@ setup(
 
     license='Apache License, Version 2.0',
     keywords=['education', 'autograding'],
-    packages=find_packages(include=['client'],
-                           exclude=['*tests*',
-                                    '*demo_assignments*']),
+    packages=find_packages(include=[
+        'client',
+        'client.protocols',
+        'client.models',
+        'client.sanction',
+    ]),
     # install_requires=[],
     entry_points={
         'console_scripts': [
@@ -31,4 +34,3 @@ setup(
         'Programming Language :: Python :: 3.4',
     ],
 )
-
