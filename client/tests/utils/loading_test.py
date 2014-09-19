@@ -1,39 +1,15 @@
 from models import core
-from protocols import file_contents
-from protocols import protocol
 from unittest import mock
+from utils import loading
 import exceptions
-import ok
 import os
 import shutil
-import sys
 import unittest
 
 DEMO = 'demo_assignments'
 INVALID = os.path.join(DEMO, 'invalid')
 VALID = os.path.join(DEMO, 'valid')
 TMP = os.path.join(DEMO, 'tmp')
-
-class TestProtocol(protocol.Protocol):
-    def __init__(self, args, src_files):
-        protocol.Protocol.__init__(args, src_files)
-        self.called_start = 0
-        self.called_interact = 0
-
-    def on_start(self):
-        self.called_start += 1
-
-    def on_interact(self):
-        self.called_interact += 1
-
-
-class TestOK(unittest.TestCase):
-    def test_parse_input(self):
-        old_sys_argv = sys.argv[1:]
-        sys.argv[1:] = []
-        _ = ok.parse_input() # Does not crash and returns a value.
-        sys.argv[1:] = old_sys_argv
-
 
 class TestLoadTests(unittest.TestCase):
 
@@ -55,15 +31,15 @@ class TestLoadTests(unittest.TestCase):
     #########
 
     def testMissingTests(self):
-        self.assertRaises(exceptions.OkException, ok.load_tests,
+        self.assertRaises(exceptions.OkException, loading.load_tests,
                           self.ASSIGN_NO_TESTS, self.case_map)
 
     def testMissingInfo(self):
-        self.assertRaises(exceptions.OkException, ok.load_tests,
+        self.assertRaises(exceptions.OkException, loading.load_tests,
                           self.ASSIGN_NO_INFO, self.case_map)
 
     def testLoadValidAssignment(self):
-        assignment = ok.load_tests(self.VALID_ASSIGN, self.case_map)
+        assignment = loading.load_tests(self.VALID_ASSIGN, self.case_map)
         self.assertIsInstance(assignment, core.Assignment)
         self.assertEqual(self.VALID_NAME, assignment['name'])
         self.assertEqual(self.VALID_VERSION, assignment['version'])
@@ -105,13 +81,13 @@ class TestDumpTests(unittest.TestCase):
     #########
 
     def testNoTests(self):
-        ok.dump_tests(TMP, self.assignment)
-        self.assertEqual({ok.INFO_FILE}, self.listTestDir())
+        loading.dump_tests(TMP, self.assignment)
+        self.assertEqual({loading.INFO_FILE}, self.listTestDir())
 
         # TODO(albert): this part of the test is broken because Python
         # does not re-import modules. Thus, only one version of info.py
         # can be imported.
-        # assignment = ok.load_tests(TMP, self.case_map)
+        # assignment = loading.load_tests(TMP, self.case_map)
         # self.assertEqual(self.assignment.serialize(),
         #                  assignment.serialize())
 
@@ -121,13 +97,13 @@ class TestDumpTests(unittest.TestCase):
         self.mock_test.name = 'q1'
         self.assignment.add_test(self.mock_test)
 
-        ok.dump_tests(TMP, self.assignment)
-        self.assertEqual({ok.INFO_FILE, 'q1.py'}, self.listTestDir())
+        loading.dump_tests(TMP, self.assignment)
+        self.assertEqual({loading.INFO_FILE, 'q1.py'}, self.listTestDir())
 
         # TODO(albert): this part of the test is broken because Python
         # does not re-import modules. Thus, only one version of info.py
         # can be imported.
-        # assignment = ok.load_tests(TMP, self.case_map)
+        # assignment = loading.load_tests(TMP, self.case_map)
         # self.assertEqual([self.mock_test], assignment.tests)
 
     #############
@@ -163,18 +139,3 @@ class TestDumpTests(unittest.TestCase):
         self.mock_deserialize.return_value = self.mock_test
         self.addCleanup(deserialize_patcher.stop)
 
-class TestFileContentsProtocol(unittest.TestCase):
-    SRC_FILE = os.path.join(VALID, 'hw1', 'hw1.py')
-
-    def setUp(self):
-        cmd_line_args = mock.Mock()
-        self.assignment = mock.MagicMock()
-        self.assignment.__getitem__.return_value =  [self.SRC_FILE]
-        self.logger = mock.Mock()
-        self.proto = file_contents.FileContents(cmd_line_args, self.assignment, self.logger)
-
-    def test_on_start(self):
-        contents = self.proto.on_start()
-        self.assertEqual(1, len(contents))
-        self.assertIn('hw1.py', contents)
-        self.assertIn('def square(x):', contents['hw1.py'])

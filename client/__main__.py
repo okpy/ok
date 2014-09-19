@@ -15,4 +15,9 @@ except Exception as e:
 	sys.exit("Please run ok with the --local flag \n i.e. python3 ok -u --local")
 
 import ok
-ok.ok_main(ok.parse_input())
+def main():
+    ok.ok_main(ok.parse_input())
+
+if __name__ == '__main__':
+    main()
+
