@@ -21,13 +21,12 @@ CONFIG_NAME = 'config.py'
 
 REQUIRED_FILES = [
     '__main__',
-    'auth',
     'exceptions',
     'ok',
-    'utils',
 ]
 REQUIRED_FOLDERS = [
     'sanction',
+    'utils',
 ]
 
 def populate_staging(staging_dir, config_path):
@@ -45,6 +44,7 @@ def populate_staging(staging_dir, config_path):
     populate_models(staging_dir, config)
 
 def load_config(filepath):
+    """Loads the configuration file at the given filepath."""
     # TODO(albert): merge this import tool with the one in ok
     if not filepath:
         import config
@@ -77,7 +77,7 @@ def populate_protocols(staging_dir, config):
             shutil.copyfile(protocol_src, protocol_dest)
         else:
             print('Unable to copy protocol {} from {}.'.format(
-                  proto.name, protocol_src))
+                proto.name, protocol_src))
     with open(os.path.join(staging_dir, 'protocols', '__init__.py'), 'w') as f:
         f.write('__all__ = {}'.format(protocol_modules))
 
@@ -105,7 +105,7 @@ def populate_models(staging_dir, config):
             shutil.copyfile(case_src, case_dest)
         else:
             print('Unable to copy test case {} from {}.'.format(
-                  case.type, case_src))
+                case.type, case_src))
     with open(os.path.join(staging_dir, 'models', '__init__.py'), 'w') as f:
         f.write('__all__ = {}'.format(case_modules))
 
@@ -113,9 +113,9 @@ def create_zip(staging_dir, destination):
     if not os.path.isdir(destination):
         os.mkdir(destination)
 
-    dest = os.path.join(destination,OK_NAME)
+    dest = os.path.join(destination, OK_NAME)
     zipf = zipfile.ZipFile(dest, 'w')
-    for root, dirs, files in os.walk(staging_dir):
+    for root, _, files in os.walk(staging_dir):
         if '__pycache__' in root:
             continue
         for filename in files:
@@ -139,7 +139,7 @@ def parse_args():
 def publish(args):
     if os.path.exists(STAGING_DIR):
         answer = input('{} already exists. Delete it? [y/n]: '.format(
-                       STAGING_DIR))
+            STAGING_DIR))
         if answer.lower() in ('yes', 'y'):
             shutil.rmtree(STAGING_DIR)
         else:
