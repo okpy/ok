@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.0.6'
+VERSION = '1.0.7'
 
 setup(
     name='okpy',
@@ -15,15 +15,14 @@ setup(
 
     license='Apache License, Version 2.0',
     keywords=['education', 'autograding'],
-    packages=find_packages('client',
+    packages=find_packages(include=['client'],
                            exclude=['*tests*',
                                     '*demo_assignments*']),
-    package_dir={'': 'client'},
     # install_requires=[],
     entry_points={
         'console_scripts': [
             'ok=client.__main__:main',
-            # 'ok-publish=client.publish:main',
+            'ok-publish=client.publish:main',
         ],
     },
     classifiers=[
