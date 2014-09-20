@@ -1,6 +1,9 @@
 import sys
 sys.path.append('.')
 
+# List of unsupported in (Major, Minor, Micro) form. 
+# unsupported_versions = [(1,2,2)]
+
 # Basic Version Checking
 if sys.version_info[0] < 3:
 	sys.exit("ok requires Python 3. \nFor more info: http://www-inst.eecs.berkeley.edu/~cs61a/fa14/lab/lab01/#installing-python")
