@@ -282,6 +282,9 @@ def ok_main(args):
                 # TODO(soumya) Make a better error message
                 # print("Nothing was sent to the server!")
                 pass
+            except TypeError:
+                print("Uh-oh! OK could not authenticate you. Running OK locally")
+                args.local = True
 
         for protocol in interact_protocols:
             protocol.on_interact()

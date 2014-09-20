@@ -8,11 +8,13 @@ sys.path.append('.')
 if sys.version_info[0] < 3:
 	sys.exit("ok requires Python 3. \nFor more info: http://www-inst.eecs.berkeley.edu/~cs61a/fa14/lab/lab01/#installing-python")
 
-try: 
-	import ssl
-except Exception as e:
-	print(e)
-	sys.exit("Please run ok with the --local flag \n i.e. python3 ok -u --local")
-
 import ok
-ok.ok_main(ok.parse_input())
+args = ok.parse_input()
+
+if not args.local:
+	try:
+		import ssl
+	except: 
+		sys.exit("SSL Bindings are not installed. Try to enable python3 ssl support. \n Please try another OS or contact staff")
+
+ok.ok_main(args)
