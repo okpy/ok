@@ -1,9 +1,9 @@
 """Tests the UnlockProtocol."""
 
-from models import core
-from protocols import unlock
+from client.models import core
+from client.protocols import unlock
+from client.utils import output
 from unittest import mock
-from utils import output
 import unittest
 
 class InteractTest(unittest.TestCase):

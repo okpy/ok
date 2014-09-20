@@ -1,6 +1,6 @@
 """Formatting utilities."""
 
-import exceptions
+from client import exceptions
 import textwrap
 
 #############

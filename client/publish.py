@@ -127,8 +127,8 @@ def create_zip(staging_dir, destination):
             if filename.endswith('.pyc'):
                 continue
             fullname = os.path.join(root, filename)
-            # Replace 'staging' with '.' in the zip archive.
-            arcname = fullname.replace(staging_dir, '.')
+            # Replace 'staging' with './client' in the zip archive.
+            arcname = fullname.replace(staging_dir, './client')
             zipf.write(fullname, arcname=arcname)
     zipf.close()
 

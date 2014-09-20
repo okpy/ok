@@ -35,15 +35,15 @@ receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
 
-from models import *
-from protocols import *
+from client.models import *
+from client.protocols import *
+from client.utils import auth
+from client.utils import loading
+from client.utils import output
 from urllib import request, error
-from utils import auth
-from utils import loading
-from utils import output
 import argparse
 import base64
-import config
+import client.config
 import json
 import multiprocessing
 import sys

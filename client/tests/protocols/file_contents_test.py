@@ -1,4 +1,4 @@
-from protocols import file_contents
+from client.protocols import file_contents
 from unittest import mock
 import os
 import unittest

@@ -1,10 +1,9 @@
-"""Tests the GradingProtocol."""
+"""Tests Protocol."""
 
-from protocols import protocol
+from client import exceptions
+from client.protocols import protocol
 from unittest import mock
 import unittest
-import utils
-import exceptions
 
 class GetProtocolTest(unittest.TestCase):
     def calls_get_protocols(self, names, expected_classes):
