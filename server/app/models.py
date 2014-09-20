@@ -129,12 +129,12 @@ class User(Base):
     def get_or_insert(cls, email, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for users"
         kwargs['email'] = email
-        return super(cls, User).get_or_insert(email, **kwargs)
+        return super(User, cls).get_or_insert(email, **kwargs)
 
     @classmethod
     def get_by_id(cls, id, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for users"
-        return super(cls, User).get_by_id(id, **kwargs)
+        return super(User, cls).get_by_id(id, **kwargs)
 
     @property
     def logged_in(self):
@@ -188,8 +188,18 @@ class AnonymousUser(User):
         """
         pass
 
+    @classmethod
+    def get_or_insert(cls, *args, **kwds):
+        return super(_AnonUserClass, cls).get_or_insert(*args, **kwds)
 
-AnonymousUser = AnonymousUser()
+_AnonUserClass = AnonymousUser
+_AnonUser = None
+
+def AnonymousUser():
+    global _AnonUser
+    if not _AnonUser:
+        _AnonUser = _AnonUserClass.get_or_insert("anon_user")
+    return _AnonUser
 
 
 class Assignment(Base):
@@ -257,7 +267,7 @@ def validate_messages(_, messages):
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
-    submitter = ndb.KeyProperty(User)
+    submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
@@ -278,6 +288,9 @@ class Submission(Base):
             return user.logged_in
 
         if action == "index":
+            if not user.logged_in:
+                return False
+
             if not query:
                 raise ValueError(
                         "Need query instance for Submission index action")

@@ -6,7 +6,6 @@ from unittest import mock
 import exceptions
 import sys
 import unittest
-import utils
 
 class MockCase(core.TestCase):
     type = 'mock'
@@ -127,3 +126,33 @@ class SerializationTest(unittest.TestCase):
         self.assertRaises(exceptions.DeserializeError, core.Test.deserialize,
                           test_json, self.assignment, self.case_map)
 
+class GetTestCasesTest(unittest.TestCase):
+    def calls_get_cases(self, types, expected_classes):
+        classes = core.get_testcases(types)
+        self.assertEqual(expected_classes, classes)
+
+    def testNoTypes(self):
+        self.calls_get_cases([], [])
+
+    def testSingleType(self):
+        self.calls_get_cases([CaseA.type], [CaseA])
+
+    def testMultipleTypes(self):
+        cases = [CaseA, CaseC, CaseB]
+        self.calls_get_cases([p.type for p in cases], cases)
+
+    def testNonexistentType(self):
+        self.assertRaises(exceptions.OkException, core.get_testcases,
+                ['bogus'])
+
+    def testDuplicateType(self):
+        self.calls_get_cases([CaseA.type, CaseA.type], [CaseA, CaseA])
+
+class CaseA(core.TestCase):
+    type = 'A'
+
+class CaseB(core.TestCase):
+    type = 'B'
+
+class CaseC(core.TestCase):
+    type = 'C'

@@ -4,11 +4,12 @@ from models import core
 from models import doctest_case
 from protocols import unlock
 from unittest import mock
+from utils import formatting
+from utils import output
 import exceptions
 import ok
 import sys
 import unittest
-import utils
 
 class OnGradeTest(unittest.TestCase):
     ASSIGN_NAME = 'dummy'
@@ -17,13 +18,13 @@ class OnGradeTest(unittest.TestCase):
         # This logger captures output and is used by the unittest,
         # it is wired to stdout.
         self.log = []
-        self.capture = sys.stdout = utils.OutputLogger()
+        self.capture = sys.stdout = output.OutputLogger()
         self.capture.register_log(self.log)
         self.capture.on = mock.Mock()
         self.capture.off = mock.Mock()
 
         # This logger is used by on_grade.
-        self.logger = utils.OutputLogger()
+        self.logger = output.OutputLogger()
 
         self.assignment = core.Assignment.deserialize({
             'name': self.ASSIGN_NAME,
@@ -47,7 +48,7 @@ class OnGradeTest(unittest.TestCase):
     def calls_onGrade(self, case_json, errors=False, verbose=False,
             interact=False):
         case = self.makeTestCase(case_json)
-        error = case.on_grade(self.logger, verbose, interact)
+        error = case.on_grade(self.logger, verbose, interact, 10)
         if errors:
             self.assertTrue(error)
         else:
@@ -457,7 +458,7 @@ class SerializationTest(unittest.TestCase):
     def testSimplePrompt(self):
         self.assertSerialize({
             'type': 'doctest',
-            'test': utils.dedent("""
+            'test': formatting.dedent("""
             >>> square(-2)
             4
             """),
@@ -466,7 +467,7 @@ class SerializationTest(unittest.TestCase):
     def testExplanation(self):
         self.assertSerialize({
             'type': 'doctest',
-            'test': utils.dedent("""
+            'test': formatting.dedent("""
             >>> square(-2)
             4
             # explanation: Squares a negative number
@@ -476,7 +477,7 @@ class SerializationTest(unittest.TestCase):
     def testMultipleChoice(self):
         self.assertSerialize({
             'type': 'doctest',
-            'test': utils.dedent("""
+            'test': formatting.dedent("""
             >>> square(-2)
             4
             # choice: 0
@@ -488,7 +489,7 @@ class SerializationTest(unittest.TestCase):
     def testLocked(self):
         self.assertSerialize({
             'type': 'doctest',
-            'test': utils.dedent("""
+            'test': formatting.dedent("""
             >>> square(-2)
             5
             # locked
@@ -498,7 +499,7 @@ class SerializationTest(unittest.TestCase):
     def testMultiplePrompts(self):
         self.assertSerialize({
             'type': 'doctest',
-            'test': utils.dedent("""
+            'test': formatting.dedent("""
             >>> square(-2)
             4
             >>> x = 4
@@ -517,7 +518,7 @@ class SerializationTest(unittest.TestCase):
         }
         self.assertSerialize({
             'type': 'doctest',
-            'test': utils.dedent("""
+            'test': formatting.dedent("""
             >>> square(2)
             4
             """)
@@ -533,7 +534,7 @@ class SerializationTest(unittest.TestCase):
         }
         self.assertSerialize({
             'type': 'doctest',
-            'test': utils.dedent("""
+            'test': formatting.dedent("""
             >>> square(2)
             4
             """)

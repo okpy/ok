@@ -20,8 +20,7 @@ class Serializable(object):
         # Error if any required fields are missing.
         missing_fields = set(self.REQUIRED) - set(self._fields)
         if missing_fields:
-            raise exceptions.DeserializeError.missing_fields(
-                    missing_fields)
+            raise exceptions.DeserializeError.missing_fields(missing_fields)
 
         # Set defaults for missing optional fields.
         for field in set(self.OPTIONAL) - set(self._fields):
@@ -90,7 +89,7 @@ class Serializable(object):
             raise exceptions.DeserializeError.unexpected_field(field)
         if not field_type.validate(value):
             raise exceptions.DeserializeError.unexpected_type(
-                    field, field_type, value)
+                field, field_type, value)
 
 ######################
 # Serializable Types #
@@ -123,8 +122,8 @@ class SerializePrimitive(SerializeType):
 
 class SerializeObject(SerializeType):
     """A serializable non-primitive object."""
-    def __init__(self, type, *args):
-        self._type = type
+    def __init__(self, type_, *args):
+        self._type = type_
         self._args = args
 
     @property
@@ -140,14 +139,14 @@ class SerializeObject(SerializeType):
 class SerializeArray(SerializeType):
     """Represents an array whose elements are of homogeneous type."""
 
-    def __init__(self, type):
+    def __init__(self, type_):
         """Constructor.
 
         PARAMETERS:
         type -- SerializeType; for example, to create an array of
                 an Object, the type should be SerializeObject(Object)
         """
-        self._type = type
+        self._type = type_
 
     @property
     def type(self):

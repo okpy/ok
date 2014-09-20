@@ -4,14 +4,15 @@ PythonTestCases follow a line-by-line input format that is designed to
 mimic a Python interpreter.
 """
 
-from models import core
 from models import serialize
 from protocols import grading
 from protocols import unlock
+from utils import formatting
+from utils import timer
 import code
+import exceptions
 import re
 import traceback
-import utils
 
 # TODO(albert): After v1 is released, come up with a better solution
 # (preferably one that is cross-platform).
@@ -67,30 +68,15 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     ##################
 
     @property
-    def num_prompts(self):
-        """Returns the number of prompts for this test case."""
-        return [line.startswith(self.PROMPT)
-                for line in self._lines].count(True)
-
-    @property
     def lines(self):
         """Returns lines of code for the test case."""
         return self._lines
-
-    @classmethod
-    def strip_prompt(cls, text):
-        """Removes a prompt from the start of the text, if it exists.
-        Otherwise, the text is left unchanged.
-        """
-        if text.startswith(cls.PROMPT):
-            text = text[len(cls.PROMPT):]
-        return text
 
     ######################################
     # Protocol interface implementations #
     ######################################
 
-    def on_grade(self, logger, verbose, interactive):
+    def on_grade(self, logger, verbose, interactive, timeout):
         """Implements the GradedTestCase interface."""
         # TODO(albert): For now, all output is displayed, even if
         # verbosity is toggled off (effectively, the verbosity flag
@@ -103,7 +89,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         log = []
         logger.register_log(log)
 
-        console = _PythonConsole()
+        console = _PythonConsole(timeout)
         frame = self._frame.copy()
         if console.exec(self._assignment_params['setup'], frame) \
                 or console.exec(self._test_params['setup'], frame):
@@ -132,7 +118,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def on_unlock(self, logger, interact_fn):
         """Implements the UnlockTestCase interface."""
-        for i, line in enumerate(self.lines):
+        for line in self.lines:
             if isinstance(line, str):
                 print(line)
             elif isinstance(line, _Answer):
@@ -145,7 +131,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
     def on_lock(self, hash_fn):
         """Implements the UnlockTestCase interface."""
-        for i, line in enumerate(self.lines):
+        for line in self.lines:
             if isinstance(line, _Answer):
                 if not line.locked:
                     line.output = hash_fn(line.output)
@@ -173,10 +159,10 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         case._format_lines()
         if cls.type in assignment['params']:
             case._assignment_params = _DoctestParams.deserialize(
-                    assignment['params'][cls.type])
+                assignment['params'][cls.type])
         if cls.type in test['params']:
             case._test_params = _DoctestParams.deserialize(
-                    test['params'][cls.type])
+                test['params'][cls.type])
         exec(case._assignment_params['cache'], case._frame)
         exec(case._test_params['cache'], case._frame)
         return case
@@ -205,7 +191,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         prompts.
         """
         self._lines = []
-        for line in utils.dedent(self['test']).splitlines():
+        for line in formatting.dedent(self['test']).splitlines():
             if not line:
                 continue
             elif line.startswith(self.PS1) or line.startswith(self.PS2):
@@ -218,8 +204,8 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
                 self._lines.append(_Answer(line))
 
 class _Answer(object):
-    status_re = re.compile('#\s*(.+):\s*(.*)')
-    locked_re = re.compile('#\s*locked')
+    status_re = re.compile(r'#\s*(.+):\s*(.*)')
+    locked_re = re.compile(r'#\s*locked')
 
     def __init__(self, output, choices=None, explanation='',
                  locked=False):
@@ -262,9 +248,9 @@ class _DoctestParams(serialize.Serializable):
 
     def __init__(self, **fields):
         super().__init__(**fields)
-        self['setup'] = utils.dedent(self['setup'])
-        self['teardown'] = utils.dedent(self['teardown'])
-        self['cache'] = utils.dedent(self['cache'])
+        self['setup'] = formatting.dedent(self['setup'])
+        self['teardown'] = formatting.dedent(self['teardown'])
+        self['cache'] = formatting.dedent(self['cache'])
 
 class _PythonConsole(object):
     """Handles test evaluation and output formatting for a single
@@ -273,13 +259,14 @@ class _PythonConsole(object):
 
     PS1 = DoctestCase.PS1
     PS2 = DoctestCase.PS2
-    def __init__(self, equal_fn=None):
+    def __init__(self, timeout, equal_fn=None):
         """Constructor.
 
         PARAMETERS:
         equal_fn -- function; a function that determines if expected
                     output is equal to actual output.
         """
+        self.timeout = timeout
         if equal_fn:
             self.equal = equal_fn
         else:
@@ -371,11 +358,11 @@ class _PythonConsole(object):
         """
         try:
             if expected:
-                expect = utils.timed(eval, (expected, frame.copy()))
-                actual = utils.timed(eval, (expr, frame))
+                expect = timer.timed(self.timeout, eval, (expected, frame.copy()))
+                actual = timer.timed(self.timeout, eval, (expr, frame))
             else:
                 expect = None
-                actual = utils.timed(exec, (expr, frame))
+                actual = timer.timed(self.timeout, exec, (expr, frame))
         except RuntimeError:
             stacktrace_length = 9
             stacktrace = traceback.format_exc().split('\n')
@@ -383,7 +370,7 @@ class _PythonConsole(object):
             print('\n'.join(stacktrace[-stacktrace_length:-1]))
             print('# Error: maximum recursion depth exceeded.')
             return True
-        except utils.Timeout as e:
+        except exceptions.Timeout as e:
             print('# Error: evaluation exceeded {} seconds.'.format(e.timeout))
             return True
         except Exception as e:
