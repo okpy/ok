@@ -96,23 +96,23 @@ def grade(test, logger, interactive=False, verbose=False, timeout=10):
     RETURNS:
     int; number of TestCases that passed.
     """
-    cases_tested = _Counter()
+    cases_tested = Counter()
     total_passed = 0
     for suite in test['suites']:
-        passed, error = _run_suite(suite, logger, cases_tested,
+        passed, error = run_suite(suite, logger, cases_tested,
                                    verbose, interactive, timeout)
         total_passed += passed
         if error:
             break
     return total_passed
 
-def _run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
+def run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
     """Runs tests for a single suite.
 
     PARAMETERS:
     suite        -- list; each element is a TestCase
     logger       -- OutputLogger.
-    cases_tested -- _Counter; an object that keeps track of the
+    cases_tested -- Counter; an object that keeps track of the
                     number of cases that have been tested so far.
     verbose      -- bool; True if verbose mode is toggled on
     interactive  -- bool; True if interactive mode is toggled on
@@ -141,7 +141,7 @@ def _run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
     logger.on()
     return passed, False
 
-class _Counter(object):
+class Counter(object):
     """Keeps track of a running count of natural numbers."""
     def __init__(self):
         self._count = 0
