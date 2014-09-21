@@ -10,8 +10,6 @@ ok.py appears in the same directory as the assignment you wish to test.
 Otherwise, use -t to specify a test file manually.
 """
 
-VERSION = '1.0.8'
-
 # TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
 DEVELOPER_INSTRUCTIONS = """
 
@@ -42,6 +40,7 @@ from client.utils import auth
 from client.utils import loading
 from client.utils import output
 from urllib import request, error
+import client
 import argparse
 import base64
 import json
@@ -63,7 +62,7 @@ def send_to_server(access_token, messages, assignment, server,
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
         address += "?access_token={0}&client_version={1}".format(
-            access_token, VERSION)
+            access_token, client.__version__)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
@@ -157,12 +156,12 @@ def main():
     args = parse_input()
 
     if args.version:
-        print("okpy=={}".format(VERSION))
+        print("okpy=={}".format(client.__version__))
         exit(0)
 
     server_thread, timer_thread = None, None
     try:
-        print("You are running version {0} of ok.py".format(VERSION))
+        print("You are running version {0} of ok.py".format(client.__version__))
         if not args.local:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
             timer_thread.start()

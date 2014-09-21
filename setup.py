@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
+import client
 
-VERSION = '1.0.9'
+VERSION = client.__version__
 
 setup(
     name='okpy',
@@ -17,7 +18,11 @@ setup(
     keywords=['education', 'autograding'],
     packages=find_packages(include=[
         'client',
-        'client.*',
+        'client.cli',
+        'client.models',
+        'client.protocols',
+        'client.sanction',
+        'client.utils',
     ]),
     # install_requires=[],
     entry_points={
