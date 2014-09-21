@@ -266,7 +266,7 @@ class UserAPI(APIResource):
                 }
         return {
             "invitations": [{
-                "members": invitation.invited_members,
+                "members": invitation.members,
                 "id": invitation.key.id(),
                 "assignment": invitation.assignment,
             } for invitation in list(query)]
@@ -278,10 +278,12 @@ class UserAPI(APIResource):
             return
         group = models.Group.get_by_id(data['invitation'])
         if group:
-            if user.key in group.invited_members:
-                group.invited_members.remove(user.key)
-                group.members.append(user.key)
-                group.put()
+            already_in_group = len(list(user.get_groups(group.assignment.get()))) > 0
+            if not already_in_group:
+                if user.key in group.invited_members:
+                    group.invited_members.remove(user.key)
+                    group.members.append(user.key)
+                    group.put()
 
     def reject_invitation(self, user, obj):
         data = self.parse_args(False, user)

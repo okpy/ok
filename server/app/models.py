@@ -128,6 +128,9 @@ class User(Base):
     def groups(self):
         return Group.query(Group.members == self.key)
 
+    def get_groups(self, assignment):
+        return Group.query().filter(ndb.AND(Group.members == self.key, Group.assignment == assignment.key))
+
     @classmethod
     def from_dict(cls, values):
         """Creates an instance from the given values."""

@@ -1,7 +1,7 @@
 <div class='group'>
   <div class='row'>
     <div class= 'col-md-6'>
-      <h4>Current Group <span ng-if="group.in_group !== false ">: {{group.id}}</span> </h4>
+      <h4>Current Group<span ng-if="group.in_group !== false ">: {{group.id}}</span> </h4>
       <div ng-if="group.in_group === false">
         <div class='alert alert-info' style="margin-bottom:0px">
           You don't seem to be in a group. People in your group will share submissions with you. Want to create one? &nbsp;&nbsp;
@@ -13,7 +13,7 @@
       <div ng-if="group.in_group !== false">
         <div class='alert alert-info'>
           <div ng-repeat="member in group.members">
-            <div class='list-group-item list-group-item-success' ng-controller="MemberController">
+            <div class='list-group-item list-group-item-primary' ng-controller="MemberController">
               {{member.email}}
               <span class='pull-right'>
                 <button ng-click="remove()" type="button" class="btn btn-xs btn-danger">
@@ -54,7 +54,12 @@
     <div class= 'col-md-6'>
       <h4>Invitations</h4>
       <div id="invitations" ng-controller="InvitationsController">
-        <accordion close-others="oneAtATime">
+        <div ng-if="invitations.invitations.length === 0">
+          <div class='alert alert-success' style="margin-bottom:0px">
+            You have no current group invitations.
+          </div>
+        </div>
+        <accordion ng-if="invitations.invitations.length !== 0" close-others="oneAtATime">
           <accordion-group ng-repeat="invitation in invitations.invitations" heading="Group ID: {{invitation.id}}">
             <accordion-heading>
               Group ID: {{invitation.id}}
