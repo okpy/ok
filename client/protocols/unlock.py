@@ -20,12 +20,9 @@ except ImportError:
     HAS_READLINE = False
 
 
-def normalize(x):
-    """
-    Takes an input, removes all whitespace and converts it to lowercase.
-    This is so that whitespace and case sensitivity doesn't matter on inputs.
-    """
-    return "".join(x.split())
+def normalize(text):
+    """Normalizes whitespace in a specified string of text."""
+    return " ".join(text.split())
 
 class UnlockTestCase(core.TestCase):
     """Interface for tests that can be unlocked by the unlock protocol.
@@ -78,9 +75,10 @@ class LockProtocol(protocol.Protocol):
     def _alphabet(self):
         return string.ascii_lowercase + string.digits
 
-    def _hash_fn(self, x):
+    def _hash_fn(self, text):
+        text = normalize(text)
         return hmac.new(self.assignment['name'].encode('utf-8'),
-                        x.encode('utf-8')).hexdigest()
+                        text.encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
     print('Locking cases for Test ' + test.name)
@@ -123,7 +121,7 @@ class UnlockProtocol(protocol.Protocol):
                 # of unlocked test cases. This can be a useful metric
                 # for analytics in the future.
                 cases_unlocked, end_session = unlock(
-                    test, self.logger, self.assignment['hash_key'])
+                    test, self.logger, self.assignment['name'])
                 if end_session:
                     break
                 print()

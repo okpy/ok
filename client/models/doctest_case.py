@@ -34,6 +34,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     OPTIONAL = {
         'test': serialize.STR,
         'locked': serialize.BOOL_FALSE,
+        'hidden': serialize.BOOL_FALSE,
         'teardown': serialize.STR,
         'never_lock': serialize.BOOL_FALSE,
     }

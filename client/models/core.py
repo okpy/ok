@@ -29,7 +29,6 @@ class Assignment(serialize.Serializable):
     OPTIONAL = {
         'src_files': serialize.LIST,
         'params': serialize.DICT,
-        'hash_key': serialize.STR,
     }
 
     def __init__(self, **fields):

@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'ok=client.cli.ok:main',
             'ok-publish=client.cli.publish:main',
+            'ok-lock=client.cli.lock:main',
         ],
     },
     classifiers=[
