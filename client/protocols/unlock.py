@@ -69,8 +69,6 @@ class LockProtocol(protocol.Protocol):
         if self.args.lock:
             formatting.print_title('Locking tests for {}'.format(
                 self.assignment['name']))
-            if not self.assignment['hash_key']:
-                self.assignment['hash_key'] = self._gen_hash_key()
             for test in self.assignment.tests:
                 lock(test, self._hash_fn)
             print('Completed locking {}.'.format(self.assignment['name']))
@@ -80,11 +78,8 @@ class LockProtocol(protocol.Protocol):
     def _alphabet(self):
         return string.ascii_lowercase + string.digits
 
-    def _gen_hash_key(self):
-        return ''.join(random.choice(self._alphabet) for _ in range(128))
-
     def _hash_fn(self, x):
-        return hmac.new(self.assignment['hash_key'].encode('utf-8'),
+        return hmac.new(self.assignment['name'].encode('utf-8'),
                         x.encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
