@@ -213,17 +213,12 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
             });
           }, 300);
       }
-      $scope.refreshInvitations();
-    }
-  ]);
-
-app.controller("InvitationController", ["$scope", "$stateParams", "$window", "User",
-    function ($scope, $stateParams, $window, User) {
-      $scope.accept = function() {
+      $scope.accept = function(invitation, $event) {
+        $event.stopPropagation();
         if ($scope.group.in_group === false) {
           console.log("Accepting invitation");
           User.acceptInvitation({
-            invitation: $scope.invitation.id
+            invitation: invitation.id
           }, function() {
             $scope.refreshInvitations();
             $scope.refreshGroup();
@@ -232,11 +227,13 @@ app.controller("InvitationController", ["$scope", "$stateParams", "$window", "Us
         }
       }
 
-      $scope.reject = function() {
+      $scope.reject = function(invitation, $event) {
+        $event.stopPropagation();
         console.log("Rejecting invitation");
         User.rejectInvitation({
-          invitation: $scope.invitation.id
+          invitation: invitation.id
         }, $scope.refreshInvitations);
       }
+      $scope.refreshInvitations();
     }
   ]);
