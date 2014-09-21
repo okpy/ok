@@ -206,6 +206,9 @@ app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$ti
 
 app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$timeout", "User",
     function ($scope, $stateParams, $window, $timeout, User) {
+      $scope.invitations = User.invitations({
+        assignment: $stateParams.assignmentId
+      });
       $scope.refreshInvitations = function() {
           $timeout(function() {
             $scope.invitations = User.invitations({
@@ -216,7 +219,6 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
       $scope.accept = function(invitation, $event) {
         $event.stopPropagation();
         if ($scope.group.in_group === false) {
-          console.log("Accepting invitation");
           User.acceptInvitation({
             invitation: invitation.id
           }, function() {
@@ -229,11 +231,9 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
 
       $scope.reject = function(invitation, $event) {
         $event.stopPropagation();
-        console.log("Rejecting invitation");
         User.rejectInvitation({
           invitation: invitation.id
         }, $scope.refreshInvitations);
       }
-      $scope.refreshInvitations();
     }
   ]);
