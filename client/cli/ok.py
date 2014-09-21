@@ -146,13 +146,13 @@ def parse_input():
                         help="set the timeout duration for running tests")
     return parser.parse_args()
 
-
 def server_timer():
     """Timeout for the server."""
     time.sleep(0.8)
 
-def ok_main(args):
+def main():
     """Run all relevant aspects of ok.py."""
+    args = parse_input()
     server_thread, timer_thread = None, None
     try:
         print("You are running version {0} of ok.py".format(VERSION))
@@ -208,4 +208,4 @@ def ok_main(args):
             server_thread.terminate()
 
 if __name__ == '__main__':
-    ok_main(parse_input())
+    main()
