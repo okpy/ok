@@ -1,4 +1,4 @@
-from utils import formatting
+from client.utils import formatting
 import unittest
 
 class PrettyJsonTest(unittest.TestCase):

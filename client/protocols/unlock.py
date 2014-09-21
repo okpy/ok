@@ -5,10 +5,10 @@ The UnlockTestCase interface can be implemented by TestCases that are
 compatible with the UnlockProtocol.
 """
 
-from models import core
-from models import serialize
-from protocols import protocol
-from utils import formatting
+from client.models import core
+from client.models import serialize
+from client.protocols import protocol
+from client.utils import formatting
 import hmac
 import random
 import string

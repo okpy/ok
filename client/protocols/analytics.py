@@ -2,7 +2,7 @@
 for the ok grading session.
 """
 
-from protocols import protocol
+from client.protocols import protocol
 from datetime import datetime
 
 class AnalyticsProtocol(protocol.Protocol):

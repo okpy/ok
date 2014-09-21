@@ -1,4 +1,4 @@
-import ok
+from client import ok
 import sys
 import unittest
 
