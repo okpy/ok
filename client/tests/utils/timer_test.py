@@ -1,5 +1,5 @@
-from utils import timer
-import exceptions
+from client import exceptions
+from client.utils import timer
 import time
 import unittest
 

@@ -6,10 +6,10 @@ focus mainly on unlocking. When used in the grading protocol,
 ConceptTestCases simply display the answer if already unlocked.
 """
 
-from models import serialize
-from protocols import grading
-from protocols import unlock
-from utils import formatting
+from client.models import serialize
+from client.protocols import grading
+from client.protocols import unlock
+from client.utils import formatting
 
 class ConceptCase(grading.GradedTestCase, unlock.UnlockTestCase):
     """TestCase for conceptual questions."""

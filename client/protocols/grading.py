@@ -5,9 +5,9 @@ The GradedTestCase interface should be implemented by TestCases that
 are compatible with the GradingProtocol.
 """
 
-from models import core
-from protocols import protocol
-from utils import formatting
+from client.models import core
+from client.protocols import protocol
+from client.utils import formatting
 
 #####################
 # Testing Mechanism #

@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-import sys
 
-from sanction import Client
-
+from client.sanction import Client
+from urllib.parse import urlparse, parse_qs
 import http.server
 import pickle
+import sys
 import time
-from urllib.parse import urlparse, parse_qs
 import webbrowser
 
 CLIENT_ID = \

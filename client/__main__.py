@@ -1,6 +1,8 @@
-import ok
+import os
 import sys
-sys.path.append('.')
+sys.path.append(os.getcwd())
+
+from client import ok
 
 def main():
     ok.ok_main(ok.parse_input())

@@ -1,4 +1,4 @@
-import exceptions
+from client import exceptions
 
 class Serializable(object):
     """An abstract class for serializable objects."""
