@@ -144,6 +144,8 @@ def parse_input():
                         help="disable any network activity")
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
+    parser.add_argument('--version', action='store_true',
+                        help="Prints the version number and quits")
     return parser.parse_args()
 
 def server_timer():
@@ -153,6 +155,11 @@ def server_timer():
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
+
+    if args.version:
+        print("okpy=={}".format(VERSION))
+        exit(0)
+
     server_thread, timer_thread = None, None
     try:
         print("You are running version {0} of ok.py".format(VERSION))
