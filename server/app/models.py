@@ -202,10 +202,16 @@ class AnonymousUser(User):
 
     @classmethod
     def get_or_insert(cls, *args, **kwds):
-        return super(AnonymousUser, cls).get_or_insert(*args, **kwds)
+        return super(_AnonUserClass, cls).get_or_insert(*args, **kwds)
 
+_AnonUserClass = AnonymousUser
+_AnonUser = None
 
-AnonymousUser = AnonymousUser.get_or_insert("anon_user")
+def AnonymousUser():
+    global _AnonUser
+    if not _AnonUser:
+        _AnonUser = _AnonUserClass.get_or_insert("anon_user")
+    return _AnonUser
 
 
 class Assignment(Base):

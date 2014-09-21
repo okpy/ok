@@ -13,3 +13,7 @@ env
 # Don't store secret keys in version control
 secret_keys.py
 gaenv/
+
+# pip-related files
+*.egg-info
+dist

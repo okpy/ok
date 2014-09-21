@@ -67,7 +67,7 @@ class PermissionsUnitTest(BaseTestCase):
                 login="albert",
                 role=ADMIN_ROLE
             ),
-            "anon": models.AnonymousUser,
+            "anon": models.AnonymousUser(),
         }
 
     def enroll(self, student, course):

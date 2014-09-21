@@ -1,14 +1,14 @@
 """Tests the GradingProtocol."""
 
-from models import core
-from protocols import grading
+from client.models import core
+from client.protocols import grading
+from client.utils import output
 from unittest import mock
 import unittest
-import utils
 
 class GradeTest(unittest.TestCase):
     def setUp(self):
-        self.logger = utils.OutputLogger()
+        self.logger = output.OutputLogger()
         self.mock_test = core.Test(names=['dummy'], points=1)
 
     def makeGradedTestCase(self, error=False, should_grade=True):

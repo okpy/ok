@@ -1,10 +1,10 @@
 """Tests the UnlockProtocol."""
 
-from models import core
-from protocols import unlock
+from client.models import core
+from client.protocols import unlock
+from client.utils import output
 from unittest import mock
 import unittest
-import utils
 
 class InteractTest(unittest.TestCase):
     EXIT = unlock.UnlockConsole.EXIT_INPUTS[0]
@@ -12,7 +12,7 @@ class InteractTest(unittest.TestCase):
 
     def setUp(self):
         mock_verify = lambda x, y: self.encode(x) == y
-        self.logger = utils.OutputLogger()
+        self.logger = output.OutputLogger()
         self.console = unlock.UnlockConsole(self.logger, '')
         self.console._verify = mock.Mock(side_effect=mock_verify)
         self.register_choices()
@@ -83,7 +83,7 @@ class InteractTest(unittest.TestCase):
 
 class UnlockTest(unittest.TestCase):
     def setUp(self):
-        self.logger = utils.OutputLogger()
+        self.logger = output.OutputLogger()
         self.mock_test = core.Test(names=['dummy'], points=1)
 
     def makeUnlockTestCase(self, lock=True, abort=False):

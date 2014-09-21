@@ -1,3 +1,5 @@
+from client import exceptions
+
 class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
     name = None # Override in sub-class.
@@ -23,4 +25,15 @@ class Protocol(object):
     def on_interact(self):
         """Called to execute an interactive or output-intensive session."""
 
-
+def get_protocols(names):
+    mapping = {}
+    subclasses = Protocol.__subclasses__()
+    while subclasses:
+        protocol = subclasses.pop()
+        if protocol.name != Protocol.name:
+            mapping[protocol.name] = protocol
+        subclasses.extend(protocol.__subclasses__())
+    try:
+        return [mapping[name] for name in names]
+    except KeyError as e:
+        raise exceptions.OkException(str(e) + ' is not a protocol')
