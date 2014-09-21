@@ -24,8 +24,9 @@ setup(
     # install_requires=[],
     entry_points={
         'console_scripts': [
-            'ok=client.__main__:main',
-            'ok-publish=client.publish:main',
+            'ok=client.cli.ok:main',
+            'ok-publish=client.cli.publish:main',
+            'ok-lock=client.cli.lock:main',
         ],
     },
     classifiers=[

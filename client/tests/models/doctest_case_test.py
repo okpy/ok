@@ -1,7 +1,6 @@
 """Tests the DoctestCase model."""
 
 from client import exceptions
-from client import ok
 from client.models import core
 from client.models import doctest_case
 from client.protocols import unlock

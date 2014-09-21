@@ -10,7 +10,7 @@ ok.py appears in the same directory as the assignment you wish to test.
 Otherwise, use -t to specify a test file manually.
 """
 
-VERSION = '1.0.6'
+VERSION = '1.0.8'
 
 # TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
 DEVELOPER_INSTRUCTIONS = """
@@ -144,15 +144,22 @@ def parse_input():
                         help="disable any network activity")
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
+    parser.add_argument('--version', action='store_true',
+                        help="Prints the version number and quits")
     return parser.parse_args()
-
 
 def server_timer():
     """Timeout for the server."""
     time.sleep(0.8)
 
-def ok_main(args):
+def main():
     """Run all relevant aspects of ok.py."""
+    args = parse_input()
+
+    if args.version:
+        print("okpy=={}".format(VERSION))
+        exit(0)
+
     server_thread, timer_thread = None, None
     try:
         print("You are running version {0} of ok.py".format(VERSION))
@@ -208,4 +215,4 @@ def ok_main(args):
             server_thread.terminate()
 
 if __name__ == '__main__':
-    ok_main(parse_input())
+    main()
