@@ -6,7 +6,7 @@ import os
 import shutil
 import unittest
 
-DEMO = 'demo_assignments'
+DEMO = 'client/demo_assignments'
 INVALID = os.path.join(DEMO, 'invalid')
 VALID = os.path.join(DEMO, 'valid')
 TMP = os.path.join(DEMO, 'tmp')
@@ -56,7 +56,7 @@ class TestLoadTests(unittest.TestCase):
     def applyPatches(self):
         """Applies unittest patches (temporary mocks)."""
         # Patch Test.deserialize to always return self.sample_test
-        deserialize_patcher = mock.patch('models.core.Test.deserialize',
+        deserialize_patcher = mock.patch('client.models.core.Test.deserialize',
                                        autospec=core.Test.deserialize)
         deserialize = deserialize_patcher.start()
         deserialize.return_value = self.sample_test
@@ -133,7 +133,7 @@ class TestDumpTests(unittest.TestCase):
     def applyPatches(self):
         """Applies unittest patches (temporary mocks)."""
         # Patch Test.deserialize to always return self.sample_test
-        deserialize_patcher = mock.patch('models.core.Test.deserialize',
+        deserialize_patcher = mock.patch('client.models.core.Test.deserialize',
                                        autospec=core.Test.deserialize)
         self.mock_deserialize = deserialize_patcher.start()
         self.mock_deserialize.return_value = self.mock_test

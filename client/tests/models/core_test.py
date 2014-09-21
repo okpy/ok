@@ -3,7 +3,7 @@
 from client import exceptions
 from client.models import core
 from client.models import serialize
-from client.unittest import mock
+from unittest import mock
 import sys
 import unittest
 

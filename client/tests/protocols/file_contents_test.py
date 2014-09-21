@@ -3,7 +3,7 @@ from unittest import mock
 import os
 import unittest
 
-DEMO = 'demo_assignments'
+DEMO = 'client/demo_assignments'
 INVALID = os.path.join(DEMO, 'invalid')
 VALID = os.path.join(DEMO, 'valid')
 TMP = os.path.join(DEMO, 'tmp')
