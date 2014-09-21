@@ -1,37 +1,36 @@
 <div class='group'>
   <div class='row'>
-    <div class= 'col-md-12' ng-if="group.in_group === false">
-      <div class='alert alert-info' style="margin-bottom:0px">
-        You don't seem to be in a group. People in your group will share submissions with you. Want to create one? &nbsp;&nbsp;
-        <button ng-click="createGroup()" class='btn btn-primary'>Create group</button>
+    <div class= 'col-md-6'>
+      <h4>Current Group</h4>
+      <div ng-if="group.in_group === false">
+        <div class='alert alert-info' style="margin-bottom:0px">
+          You don't seem to be in a group. People in your group will share submissions with you. Want to create one? &nbsp;&nbsp;
+          <div class='center-block'>
+          <button ng-click="createGroup()" class='btn btn-primary'>Create group</button>
+          </div>
+        </div>
       </div>
-    </div>
     <div ng-if="group.in_group !== false">
-      <div class='center-block col-md-6'>
-        <h4>Members</h4>
+      <div class='alert alert-info'>
         <div ng-repeat="member in group.members">
-          <div class='list-group'>
-            <div class='member list-group-item clearfix' ng-controller="MemberController">
-              {{member.email}}
-              <span class='pull-right'>
-                <button ng-click="remove()"class='btn btn-xs btn-danger'>x</button>
-              </span>
-            </div>
+          <div class='list-group-item list-group-item-success' ng-controller="MemberController">
+            {{member.email}}
+            <span class='pull-right'>
+              <button ng-click="remove()"class='btn btn-xs btn-danger'>x</button>
+            </span>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div ng-if="group.in_group !== false && group.members.length < assignment.max_group_size">
-    <div class='row'>
-      <form class="col-md-offset-2 col-md-4 form-inline" ng-submit="add()" ng-controller="AddMemberController">
+    <div ng-if="group.in_group !== false && group.members.length < assignment.max_group_size">
+      <form class="add-member-form form-inline" ng-submit="add()" ng-controller="AddMemberController">
         <div class="form-group">
           <div class="input-group">
             <div class="input-group-addon">@</div>
             <input ng-model="newMember" class="form-control col-md-9" type="email" placeholder="Enter email">
           </div>
         </div>
-        <button type="submit" class="btn btn-primary">Add member</button>
+        <button type="submit" class="btn btn-primary">Invite member</button>
       </form>
     </div>
   </div>

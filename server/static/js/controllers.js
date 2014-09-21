@@ -157,7 +157,7 @@ app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeou
       $scope.refresh = function() {
           $timeout(function() {
             $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
-          }, 200);
+          }, 300);
       }
       $scope.createGroup = function() {
         Group.save({
@@ -168,13 +168,25 @@ app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeou
     }
   ]);
 
-app.controller("MemberController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
-    function ($scope, $stateParams, $window, $timeout, Group) {
+app.controller("MemberController", ["$scope", "$modal", "Group",
+    function ($scope, $modal, Group) {
       $scope.remove = function() {
-        Group.removeMember({
-          members: [$scope.member.email],
-          id: $scope.group.id
-        }, $scope.refresh);
+        var modal = $modal.open({
+          templateUrl: '/static/partials/removemember.modal.html',
+          scope: $scope,
+          size: 'sm',
+          resolve: {
+            modal: function () {
+              return modal;
+            }
+          }
+        });
+        modal.result.then(function() {
+          Group.removeMember({
+            members: [$scope.member.email],
+            id: $scope.group.id
+          }, $scope.refresh);
+        });
       }
     }
   ]);

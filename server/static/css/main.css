@@ -149,3 +149,11 @@ h2 {
 .member {
   background-color: #f7f7f9;
 }
+
+.add-member-form {
+  text-align: right;
+}
+
+.center-block {
+  text-align: center;
+}
