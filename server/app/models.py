@@ -371,7 +371,8 @@ class Group(Base):
     They all can see submissions for an assignment all as a group.
     """
     name = ndb.StringProperty()
-    members = ndb.KeyProperty('User', repeated=True)
+    members = ndb.KeyProperty(kind='User', repeated=True)
+    invited_members = ndb.KeyProperty(kind='User', repeated=True)
     assignment = ndb.KeyProperty('Assignment')
 
     @classmethod

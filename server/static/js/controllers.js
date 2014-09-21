@@ -154,7 +154,7 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
 app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
     function ($scope, $stateParams, $window, $timeout, Group) {
       $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
-      $scope.refresh = function() {
+      $scope.refreshGroup = function() {
           $timeout(function() {
             $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
           }, 300);
@@ -163,7 +163,7 @@ app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeou
         Group.save({
           assignment: $stateParams.assignmentId,
           members: [$window.user]
-        }, $scope.refresh);
+        }, $scope.refreshGroup);
       }
     }
   ]);
@@ -185,7 +185,7 @@ app.controller("MemberController", ["$scope", "$modal", "Group",
           Group.removeMember({
             members: [$scope.member.email],
             id: $scope.group.id
-          }, $scope.refresh);
+          }, $scope.refreshGroup);
         });
       }
     }
@@ -198,8 +198,45 @@ app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$ti
           Group.addMember({
             members: [$scope.newMember],
             id: $scope.group.id
-          }, $scope.refresh)
+          }, $scope.refreshGroup);
         }
+      }
+    }
+  ]);
+
+app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$timeout", "User",
+    function ($scope, $stateParams, $window, $timeout, User) {
+      $scope.refreshInvitations = function() {
+          $timeout(function() {
+            $scope.invitations = User.invitations({
+              assignment: $stateParams.assignmentId
+            });
+          }, 300);
+      }
+      $scope.refreshInvitations();
+    }
+  ]);
+
+app.controller("InvitationController", ["$scope", "$stateParams", "$window", "User",
+    function ($scope, $stateParams, $window, User) {
+      $scope.accept = function() {
+        if ($scope.group.in_group === false) {
+          console.log("Accepting invitation");
+          User.acceptInvitation({
+            invitation: $scope.invitation.id
+          }, function() {
+            $scope.refreshInvitations();
+            $scope.refreshGroup();
+          });
+        } else {
+        }
+      }
+
+      $scope.reject = function() {
+        console.log("Rejecting invitation");
+        User.rejectInvitation({
+          invitation: $scope.invitation.id
+        }, $scope.refreshInvitations);
       }
     }
   ]);

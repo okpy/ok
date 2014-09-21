@@ -248,8 +248,51 @@ class UserAPI(APIResource):
         'last_name': Arg(str),
         'email': Arg(str),
         'login': Arg(str),
+        'assignment': Arg(int),
+        'invitation': Arg(int),
         'course': KeyArg('User'),
     }
+
+    def invitations(self, user, obj):
+        data = self.parse_args(False, user)
+        query = models.Group.query(user.key == models.Group.invited_members)
+        if 'assignment' in data:
+            assignment = models.Assignment.get_by_id(data['assignment'])
+            if assignment:
+                query = query.filter(models.Group.assignment == assignment.key)
+            else:
+                return {
+                    "invitations": []
+                }
+        return {
+            "invitations": [{
+                "members": invitation.invited_members,
+                "id": invitation.key.id(),
+                "assignment": invitation.assignment,
+            } for invitation in list(query)]
+        }
+
+    def accept_invitation(self, user, obj):
+        data = self.parse_args(False, user)
+        if 'invitation' not in data:
+            return
+        group = models.Group.get_by_id(data['invitation'])
+        if group:
+            if user.key in group.invited_members:
+                group.invited_members.remove(user.key)
+                group.members.append(user.key)
+                group.put()
+
+    def reject_invitation(self, user, obj):
+        data = self.parse_args(False, user)
+        if 'invitation' not in data:
+            return
+        group = models.Group.get_by_id(data['invitation'])
+        if group:
+            if user.key in group.invited_members:
+                group.invited_members.remove(user.key)
+                group.put()
+
 
 
 class AssignmentAPI(APIResource):
@@ -421,11 +464,9 @@ class GroupAPI(APIResource):
         group_obj = self.model.get_by_id(obj.key.id())
         assignment = group_obj.assignment.get()
         for member in data['members']:
-            if member not in group_obj.members:
+            if member not in group_obj.invited_members:
                 member = models.User.get_or_insert(member.id())
-                group_obj.members.append(member.key)
-            if len(group_obj.members) > assignment.max_group_size:
-                return {}
+                group_obj.invited_members.append(member.key)
         group_obj.put()
 
     def remove_member(self, obj, user):
@@ -434,6 +475,8 @@ class GroupAPI(APIResource):
         for member in data['members']:
             if member in group_obj.members:
                 group_obj.members.remove(member)
+            if member in group_obj.invited_members:
+                group_obj.invited_members.remove(member)
         if len(group_obj.members) == 0:
             group_obj.key.delete()
         else:

@@ -123,6 +123,45 @@ app.config(['$stateProvider', '$urlRouterProvider',
       ;
   }]);
 
+app.factory('User', ['$resource',
+    function($resource) {
+      return $resource('api/v1/user/:id', {
+        format: "json",
+        id: window.user,
+      }, {
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        invitations: {
+          url: 'api/v1/user/:id/invitations',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        acceptInvitation: {
+          url: 'api/v1/user/:id/accept_invitation',
+          method: 'POST',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        rejectInvitation: {
+          url: 'api/v1/user/:id/reject_invitation',
+          method: 'POST',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        }
+      });
+    }
+  ]);
+
 app.factory('Submission', ['$resource',
     function($resource) {
       return $resource('api/v1/submission/:id', {format: "json"}, {
