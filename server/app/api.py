@@ -278,11 +278,13 @@ class UserAPI(APIResource):
             return
         group = models.Group.get_by_id(data['invitation'])
         if group:
-            already_in_group = len(list(user.get_groups(group.assignment.get()))) > 0
-            if not already_in_group:
-                if user.key in group.invited_members:
-                    group.invited_members.remove(user.key)
-                    group.members.append(user.key)
+            assignment = group.assignment.get()
+            if len(group.members) < assignment.max_group_size:
+                already_in_group = len(list(user.get_groups(assignment))) > 0
+                if not already_in_group:
+                    if user.key in group.invited_members:
+                        group.invited_members.remove(user.key)
+                        group.members.append(user.key)
                     group.put()
 
     def reject_invitation(self, user, obj):
@@ -469,6 +471,9 @@ class GroupAPI(APIResource):
             if member not in group_obj.invited_members:
                 member = models.User.get_or_insert(member.id())
                 group_obj.invited_members.append(member.key)
+                break
+        else:
+            return
         group_obj.put()
 
     def remove_member(self, obj, user):
