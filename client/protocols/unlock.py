@@ -35,6 +35,7 @@ class UnlockTestCase(core.TestCase):
     OPTIONAL = {
         'locked': serialize.BOOL_FALSE,
         'never_lock': serialize.BOOL_FALSE,
+        'hidden': serialize.BOOL_FALSE,
     }
 
     def on_unlock(self, logger, interact_fn):
@@ -89,8 +90,10 @@ class LockProtocol(protocol.Protocol):
 def lock(test, hash_fn):
     print('Locking cases for Test ' + test.name)
     for suite in test['suites']:
-        for case in suite:
-            if not case['never_lock'] and not case['locked']:
+        for case in list(suite):
+            if case['hidden']:
+                suite.remove(case)
+            elif not case['never_lock'] and not case['locked']:
                 case.on_lock(hash_fn)
 
 ######################

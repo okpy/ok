@@ -219,6 +219,12 @@ class LockTest(unittest.TestCase):
         self.proto.on_start()
         self.assertFalse(self.mock_case.on_lock.called)
 
+    def testHiddenTest(self):
+        self.mock_case['hidden'] = True
+        self.proto.on_start()
+        self.assertFalse(self.mock_case.on_lock.called)
+        self.assertEqual(0, self.test.num_cases)
+
 class MockUnlockCase(unlock.UnlockTestCase):
     def on_onlock(self, logger, interact_fn):
         pass
