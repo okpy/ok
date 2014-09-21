@@ -10,7 +10,7 @@ ok.py appears in the same directory as the assignment you wish to test.
 Otherwise, use -t to specify a test file manually.
 """
 
-VERSION = '1.0.6'
+VERSION = '1.0.8'
 
 # TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
 DEVELOPER_INSTRUCTIONS = """
