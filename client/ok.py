@@ -35,6 +35,7 @@ receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
 
+from client import config
 from client.models import *
 from client.protocols import *
 from client.utils import auth
@@ -43,7 +44,6 @@ from client.utils import output
 from urllib import request, error
 import argparse
 import base64
-import client.config
 import json
 import multiprocessing
 import sys

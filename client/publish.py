@@ -9,10 +9,9 @@ and then make a zipfile called "ok" that can be distributed to students.
 import os
 import sys
 OK_ROOT = os.path.dirname(os.path.relpath(__file__))
-sys.path.append(OK_ROOT)
 
-from models import *
-from protocols import *
+from client.models import *
+from client.protocols import *
 import argparse
 import shutil
 import zipfile
@@ -23,7 +22,7 @@ OK_NAME = 'ok'
 CONFIG_NAME = 'config.py'
 
 REQUIRED_FILES = [
-    '__main__',
+    '__init__',
     'exceptions',
     'ok',
 ]
@@ -72,6 +71,8 @@ def populate_protocols(staging_dir, config):
     for proto in protocol.get_protocols(config.protocols):
         # Split the module along pacakge delimiters, the '.'
         path_components = proto.__module__.split('.')
+        # Remove 'client' from path, since it's already part of OK_ROOT.
+        path_components.pop(0)
         # Add the module to the list of imports in protocols/__init__
         protocol_modules.append(path_components[-1])
         # Convert to filesystem path.
@@ -100,6 +101,8 @@ def populate_models(staging_dir, config):
     for case in core.get_testcases(config.cases):
         # Split the module along pacakge delimiters, the '.'
         path_components = case.__module__.split('.')
+        # Remove 'client' from path, since it's already part of OK_ROOT.
+        path_components.pop(0)
         # Add the module to the list of imports in models/__init__
         case_modules.append(path_components[-1])
         # Convert to filesystem path.
@@ -120,6 +123,7 @@ def create_zip(staging_dir, destination):
 
     dest = os.path.join(destination, OK_NAME)
     zipf = zipfile.ZipFile(dest, 'w')
+    zipf.write(os.path.join(OK_ROOT, '__main__.py'), './__main__.py')
     for root, _, files in os.walk(staging_dir):
         if '__pycache__' in root:
             continue
