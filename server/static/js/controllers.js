@@ -184,7 +184,6 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
       $scope.version = {};
 
       $scope.$watch('version.name', function (newValue, oldValue) {
-        console.log("watch new", newValue, "old", oldValue);
         if (newValue in $scope.versions) {
           var existingVersion = $scope.versions[newValue];
           $scope.version.base_url = existingVersion.base_url;
