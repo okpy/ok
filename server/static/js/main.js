@@ -1,23 +1,26 @@
 var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment']);
 
-// http://ngmodules.org/modules/MacGyver
-
-app.directive('snippet', ['$timeout', '$interpolate', function ($timeout, $interpolate) {
+app.directive('snippet', function() {
         "use strict";
         return {
             restrict: 'E',
-            template: '<pre><code ng-transclude></code></pre>',
-            replace: true,
-            transclude: true,
-            link: function (scope, elm) {
-                var tmp = $interpolate(elm.find('code').text())(scope);
-                elm.find('code').html(hljs.highlightAuto(tmp).value);
+            templateUrl: 'static/partials/snippet.html',
+            link: function(scope, elem, attrs) {
+              scope.contents = scope.contents.split('\n');
             }
         };
-    }]);
+    });
+
+app.directive('diff', function() {
+        "use strict";
+        return {
+            restrict: 'E',
+            templateUrl: 'static/partials/diff.html',
+        };
+    });
 
 app.config(['$stateProvider', '$urlRouterProvider',
-  function($stateProvider, $urlRouterProvider, $locationProvider) {
+  function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/submission/");
 
     var submissions = {
@@ -39,6 +42,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       url: '/:submissionId',
       templateUrl: 'static/partials/submission.detail.html',
       controller: "SubmissionDetailCtrl"
+    }
+
+    var submissionDiff = {
+      name: 'submission.diff',
+      url: '/:submissionId/diff',
+      templateUrl: 'static/partials/submission.diff.html',
+      controller: "SubmissionDiffCtrl"
     }
 
     var assignments = {
@@ -94,6 +104,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(submissions).
       state(submissionList).
       state(submissionDetail).
+      state(submissionDiff).
       state(assignments).
       state(assignmentList).
       state(assignmentDetail).
@@ -105,7 +116,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission/:id', {format: "json", stats: true}, {
+      return $resource('api/v1/submission/:id', {format: "json"}, {
         query: {
           isArray: false
         },
@@ -114,52 +125,17 @@ app.factory('Submission', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
+        },
+        diff: {
+          url: 'api/v1/submission/:id/diff',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
         }
       });
     }
   ]);
-
-app.controller("SubmissionListCtrl", ['$scope', 'Submission',
-  function($scope, Submission) {
-  $scope.itemsPerPage = 20;
-  $scope.currentPage = 1;
-
-  $scope.refresh = function(page) {
-    Submission.query({
-      fields: {
-        'created': true,
-        'id': true,
-        'submitter': {
-          'id': true
-        },
-        'assignment': {
-          'name': true,
-          'id': true,
-        },
-      },
-      page: page,
-      num_page: $scope.itemsPerPage
-    }, function(response) {
-      $scope.data = response.data;
-      $scope.message = response.message;
-      $scope.totalItems = response.data.statistics.total;
-      if (response.data.page !== $scope.currentPage) {
-        $scope.currentPage = response.data.page;
-        $scope.pageChange();
-      }
-    });
-  }
-  $scope.pageChanged = function() {
-    console.log("changed")
-    $scope.refresh($scope.currentPage);
-  }
-  $scope.refresh(1);
-  }]);
-
-app.controller("SubmissionDetailCtrl", ['$scope', '$stateParams',  'Submission',
-  function($scope, $stateParams, Submission) {
-    $scope.submission = Submission.get({id: $stateParams.submissionId});
-  }]);
 
 app.factory('Assignment', ['$resource',
     function($resource) {
@@ -177,17 +153,6 @@ app.factory('Assignment', ['$resource',
           }
         }
       });
-    }
-  ]);
-
-app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
-    $scope.assignments = Assignment.query();
-  }]);
-
-app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
-    function ($scope, $stateParams, Assignment) {
-      $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
     }
   ]);
 
@@ -212,26 +177,3 @@ app.factory('Course', ['$resource',
     }
   ]);
 
-app.controller("CourseListCtrl", ['$scope', 'Course',
-  function($scope, Course) {
-    $scope.courses = Course.query();
-  }]);
-
-app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
-    function ($scope, $stateParams, Course) {
-      $scope.course = Course.get({id: $stateParams.courseId});
-    }
-  ]);
-
-// NOT WORKING RIGHT NOW
-app.controller("CourseNewCtrl", ["$scope", "Course",
-    function ($scope, Course) {
-      $scope.course = {};
-      $scope.test = {'test':3};
-
-      $scope.save = function() {
-        var course = new Course($scope.course);
-        course.$save();
-      };
-    }
-  ]);

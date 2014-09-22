@@ -2,9 +2,7 @@
   <div class="center-block">
     <h2>Submission: {{submission.created | amCalendar}} </h2>
   </div>
-
   <div ng-repeat="(file_name, contents) in submission.messages.file_contents">
-    <h3>{{file_name}}</h3>
-    <snippet>{{contents}}</snippet>
+    <snippet/>
   </div>
 </div>
