@@ -465,48 +465,53 @@ class GroupAPI(APIResource):
 
     def add_member(self, obj, user):
         data = self.parse_args(False, user)
-        group_obj = self.model.get_by_id(obj.key.id())
-        assignment = group_obj.assignment.get()
+
         for member in data['members']:
-            if member not in group_obj.invited_members:
+            if member not in obj.invited_members:
                 member = models.User.get_or_insert(member.id())
-                group_obj.invited_members.append(member.key)
+                obj.invited_members.append(member.key)
                 break
         else:
             return
 
         #TODO(martinis) make this async
-        group_obj.put()
+        obj.put()
 
         audit_log_message = models.AuditLog(
             event_type='Group.add_member',
-            user=user,
+            user=user.key,
             description="Added members {} to group".format(data['members']),
-            obj=group_obj.key
+            obj=obj.key
             )
         audit_log_message.put()
 
     def remove_member(self, obj, user):
         data = self.parse_args(False, user)
-        group_obj = self.model.get_by_id(obj.key.id())
+
+        changed = False
         for member in data['members']:
-            if member in group_obj.members:
-                group_obj.members.remove(member)
-            if member in group_obj.invited_members:
-                group_obj.invited_members.remove(member)
+            if member in obj.members:
+                changed = True
+                obj.members.remove(member)
+            if member in obj.invited_members:
+                changed = True
+                obj.invited_members.remove(member)
+
+        if not changed:
+            return
 
         audit_log_message = models.AuditLog(
             event_type='Group.remove_member',
-            user=user,
-            obj=group_obj.key
+            user=user.key,
+            obj=obj.key
             )
 
         message = ""
-        if len(group_obj.members) == 0:
-            group_obj.key.delete()
+        if len(obj.members) == 0:
+            obj.key.delete()
             message = "Deleted group"
         else:
-            group_obj.put()
+            obj.put()
             message = "Removed members {} from group".format(data['members'])
 
         audit_log_message.description = message

@@ -387,7 +387,7 @@ class Group(Base):
     name = ndb.StringProperty()
     members = ndb.KeyProperty(kind='User', repeated=True)
     invited_members = ndb.KeyProperty(kind='User', repeated=True)
-    assignment = ndb.KeyProperty('Assignment')
+    assignment = ndb.KeyProperty('Assignment', required=True)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -417,7 +417,7 @@ class Group(Base):
                 max_group_size))
 
 def anon_converter(prop, value):
-    if not value.logged_in:
+    if not value.get().logged_in:
         return None
 
     return value
