@@ -10,6 +10,8 @@ tests.py
 
 """
 
+import datetime
+
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 
 from google.appengine.ext import ndb
@@ -226,6 +228,7 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
         rval = models.Assignment(name=name, points=3, course=self.course.key)
         return rval
 
+
 class SubmissionAPITest(APITest, APIBaseTestCase):
     model = models.Submission
     name = 'submission'
@@ -255,6 +258,7 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         """Posts an entity to the server."""
         data = inst.to_json()
         data['assignment'] = self.assignment_name
+        data['submitter'] = data['submitter']['id']
         del data['created']
 
         self.post_json('/{}'.format(self.name),
@@ -272,6 +276,28 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
 
         self.post_entity(inst)
         self.assertStatusCode(400)
+
+    def test_sorting(self):
+        time = datetime.datetime.now()
+        delta = datetime.timedelta(days=1)
+        changed_time = time - delta
+
+        inst = self.get_basic_instance()
+        inst.created = changed_time
+        inst.put()
+
+        inst2 = self.get_basic_instance(mutate=True)
+        inst2.created = time
+        inst2.put()
+
+        self.get_index(created='>|%s' % str(changed_time - datetime.timedelta(hours=7)))
+        self.assertJson([inst2.to_json()])
+
+        self.get_index(created='<|%s' % str(time - datetime.timedelta(hours=7)))
+        self.assertJson([inst.to_json()])
+
+
+
 
 class CourseAPITest(APITest, APIBaseTestCase):
     model = models.Course
