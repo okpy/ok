@@ -26,9 +26,8 @@ def DateTimeArg(**kwds):
         op = None
         if '|' in arg:
             op, arg = arg.split('|', 1)
-            date = datetime.datetime.strptime(arg, app.config["GAE_DATETIME_FORMAT"])
-        else:
-            date = datetime.datetime.strptime(arg, app.config["GAE_DATETIME_FORMAT"])
+
+        date = datetime.datetime.strptime(arg, app.config["GAE_DATETIME_FORMAT"])
         delta = datetime.timedelta(hours = 7)
         date = (datetime.datetime.combine(date.date(),date.time()) + delta)
         return (op, date) if op else date
