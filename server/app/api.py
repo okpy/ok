@@ -498,7 +498,7 @@ class GroupAPI(APIResource):
                 obj.invited_members.remove(member)
 
         if not changed:
-            return
+            return 400, "Tried to remove a user which is not part of this group"
 
         audit_log_message = models.AuditLog(
             event_type='Group.remove_member',
@@ -518,7 +518,7 @@ class GroupAPI(APIResource):
         audit_log_message.put()
 
     def put(self, *args):
-        return 404
+        return 404, "No PUT allowed"
 
     def post(self, *args):
-        return 404
+        return 404, "No POST allowed"

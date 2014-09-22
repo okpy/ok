@@ -31,7 +31,6 @@ class JSONEncoder(old_json):
     Wrapper class to try calling an object's to_dict() method. This allows
     us to JSONify objects coming from the ORM. Also handles dates & datetimes.
     """
-
     def default(self, obj): #pylint: disable=E0202
         if isinstance(obj, ndb.Key):
             got = obj.get()
@@ -44,7 +43,6 @@ class JSONEncoder(old_json):
         if isinstance(obj, ndb.Model):
             return obj.to_json()
         return super(JSONEncoder, self).default(obj)
-
 
 app.json_encoder = JSONEncoder
 
