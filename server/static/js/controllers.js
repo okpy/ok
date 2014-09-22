@@ -158,13 +158,16 @@ app.controller("VersionListCtrl", ['$scope', 'Version',
 app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version",
     function ($scope, $stateParams, Version) {
       $scope.version = Version.get({id: $stateParams.versionId});
+      $scope.download_link = function(version) {
+        return [$scope.version.base_url, version, $scope.version.name].join('/');
+      }
     }
   ]);
 
-app.controller("VersionNewCtrl", ["$scope", "Version",
-    function ($scope, Version) {
+app.controller("VersionNewCtrl", ["$scope", "Version", "$state",
+    function ($scope, Version, $state) {
       $scope.version = {};
-      $scope.version_names = Version.query();
+      $scope.versionNames = Version.query();
 
       $scope.save = function() {
         var version = new Version($scope.version);
@@ -172,8 +175,20 @@ app.controller("VersionNewCtrl", ["$scope", "Version",
           delete version.current;
           version.current_version = version.version;
         }
-        console.log(version);
-        version.$update({"id": version.name});
+        var newVersion = true;
+        angular.forEach($scope.versionNames, function (item) {
+          if (item.name == version.name) {
+            newVersion = false;
+          }
+        })
+
+        if (newVersion) {
+          version.$save();
+        }
+        else{
+          version.$update({"id": version.name});
+        }
+        $state.go('^.list');
       };
     }
   ]);

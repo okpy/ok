@@ -78,6 +78,7 @@ class Base(ndb.Model):
                 except TypeError:
                     pass
         return result
+
     @classmethod
     def can(cls, user, need, obj=None, query=None):
         """
@@ -326,6 +327,15 @@ class Version(Base):
     name = ndb.StringProperty()
     versions = ndb.StringProperty(repeated=True)
     current_version = ndb.StringProperty()
+    base_url = ndb.StringProperty()
+
+    def to_json(self, fields=None):
+        json = super(Version, self).to_json(fields)
+        if self.current_version:
+            json['current_download_link'] = '/'.join((
+                self.base_url, self.current_version, self.name))
+
+        return json
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):

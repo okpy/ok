@@ -141,6 +141,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(courseNew).
       state(versions).
       state(versionList).
+      state(versionDetail).
       state(versionNew)
       ;
   }]);

@@ -360,6 +360,7 @@ class VersionAPI(APIResource):
         'name': Arg(str),
         'version': Arg(str),
         'current_version': Arg(str),
+        'base_url': Arg(str),
     }
 
     key_type = str
@@ -399,6 +400,12 @@ class VersionAPI(APIResource):
         if not obj.current_version:
             return 500, "Invalid version resource. Contact an administrator."
         return obj.current_version
+
+    def new_entity(self, attributes):
+        if 'version' in attributes:
+            attributes['versions'] = [attributes.pop('version')]
+
+        return super(VersionAPI, self).new_entity(attributes)
 
 class CourseAPI(APIResource):
     model = models.Course
