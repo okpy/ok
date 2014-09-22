@@ -81,6 +81,7 @@ def register_api(view, endpoint, url):
         if not isinstance(user, models.User):
             return user
         session['user'] = user
+        logging.info("User is %s.", user.email)
 
         try:
             rval = view(*args, **kwds)

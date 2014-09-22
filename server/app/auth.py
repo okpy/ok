@@ -1,8 +1,10 @@
 """Convert access tokens to user records."""
 
+# Because pylint doesn't understand memcache for some reason
+# pylint: disable=no-member
+
 from app import models
 from app import app
-from app.utils import create_api_response
 from app.authenticator import AuthenticationException
 
 from google.appengine.api import memcache as mc
@@ -21,7 +23,7 @@ def authenticate():
         return models.User.get_or_insert(user.email())
 
     if 'access_token' not in request.args:
-        return models.AnonymousUser
+        return models.AnonymousUser()
     else:
         access_token = request.args['access_token']
         user = mc.get("%s-%s" % (MC_NAMESPACE, access_token))

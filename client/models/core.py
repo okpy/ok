@@ -16,9 +16,8 @@ respective Protocols (in the client/protocols/ directory), while
 concrete subclasses of TestCase should be located in client/models/.
 """
 
-from models import serialize
-import exceptions
-import utils
+from client.models import serialize
+from client import exceptions
 
 class Assignment(serialize.Serializable):
     """A representation of an assignment."""
@@ -30,7 +29,6 @@ class Assignment(serialize.Serializable):
     OPTIONAL = {
         'src_files': serialize.LIST,
         'params': serialize.DICT,
-        'hash_key': serialize.STR,
     }
 
     def __init__(self, **fields):
@@ -126,9 +124,9 @@ class Test(serialize.Serializable):
                 case_type = case_json['type']
                 if case_type not in case_map:
                     raise exceptions.DeserializeError.unknown_type(
-                            case_type, case_map)
+                        case_type, case_map)
                 test_case = case_map[case_type].deserialize(
-                        case_json, assignment, test)
+                    case_json, assignment, test)
                 new_suite.append(test_case)
             new_suites.append(new_suite)
         test['suites'] = new_suites
@@ -164,6 +162,22 @@ class TestCase(serialize.Serializable):
 
     def _assertType(self):
         if self['type'] != self.type:
-            raise exceptions.DeserializeError.unexpected_value('type',
-                    self.type, self['type'])
+            raise exceptions.DeserializeError.unexpected_value(
+                'type', self.type, self['type'])
+
+def get_testcases(types):
+    mapping = {}
+    subclasses = TestCase.__subclasses__()
+    while subclasses:
+        case = subclasses.pop()
+        if case.type != TestCase.type:
+            mapping[case.type] = case
+        subclasses.extend(case.__subclasses__())
+
+    # TODO(albert): cleanup error handling
+    try:
+        return [mapping[type] for type in types]
+    except KeyError as e:
+        raise exceptions.OkException(str(e) + ' is not a test case')
+
 

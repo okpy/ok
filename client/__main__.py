@@ -1,5 +1,9 @@
-import ok
+import os
 import sys
-sys.path.append('.')
+sys.path.append(os.getcwd())
 
-ok.ok_main(ok.parse_input())
+from client.cli import ok
+
+if __name__ == '__main__':
+    ok.main()
+

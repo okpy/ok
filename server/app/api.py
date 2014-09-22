@@ -1,6 +1,7 @@
 """
 The public API
 """
+import logging
 
 from flask.views import View
 from flask.app import request, json
@@ -9,6 +10,7 @@ from webargs import Arg
 from webargs.flaskparser import FlaskParser
 
 from app import models
+from app.codereview import compare
 from app.models import BadValueError
 from app.constants import API_PREFIX
 from app.needs import Need
@@ -202,6 +204,7 @@ class APIResource(View):
         query = filter_query(result, args, self.model)
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
+            logging.info("Adding default ordering by creation time.")
             query = query.order(-created_prop)
 
         page = int(request.args.get('page', 1))
@@ -227,6 +230,7 @@ class AssignmentAPI(APIResource):
         'name': Arg(str),
         'points': Arg(float),
         'course': KeyArg('Course'),
+        'templates': Arg(str, use=lambda temps: json.dumps(temps)),
     }
 
     def parse_args(self, is_index):
@@ -256,6 +260,7 @@ class SubmitNDBImplementation(object):
 class SubmissionAPI(APIResource):
     """The API resource for the Submission Object"""
     model = models.Submission
+    diff_model = models.SubmissionDiff
 
     db = SubmitNDBImplementation()
 
@@ -281,6 +286,40 @@ class SubmissionAPI(APIResource):
         response.headers["Content-Type"] = "application/zip"
         return response
 
+    def diff(self, key):
+        """
+        Gets the associated diff for a submission
+        """
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        if 'file_contents' not in obj.messages:
+            return 400, "Submission has no contents to diff."
+
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if diff_obj:
+            return 200, "success", diff_obj.diff
+
+        diff = {}
+        templates = obj.assignment.get().templates
+        if not templates:
+            return (500,
+                "No templates for assignment yet... Contact course staff")
+
+        templates = json.loads(templates)
+        for filename, contents in obj.messages['file_contents'].items():
+            diff[filename] = compare.diff(templates[filename], contents)
+
+        self.diff_model(id=obj.key.id(),
+                        diff=diff).put()
+        return diff
+
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
         assignments = self.db.lookup_assignments_by_name(name)
@@ -300,12 +339,13 @@ class SubmissionAPI(APIResource):
 
     def post(self):
         data = self.parse_args(False)
+        if 'assignment' not in data:
+            raise BadValueError("Missing required arguments 'assignment'")
+        if 'messages' not in data:
+            raise BadValueError("Missing required arguments 'messages'")
 
-        try:
-            return self.submit(session['user'], data['assignment'],
-                               data['messages'])
-        except BadValueError as exc:
-            return 400, exc.message, {}
+        return self.submit(session['user'], data['assignment'],
+                           data['messages'])
 
     web_args = {
         'assignment': Arg(str),
