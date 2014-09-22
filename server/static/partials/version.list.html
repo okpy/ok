@@ -9,7 +9,7 @@
   <table ng-if="versions.length > 0" class="table table-striped table-bordered table-responsive">
     <tr>
       <th>Name</th>
-      <th>Downloads</th>
+      <th>Actions</th>
     </tr>
     <tr ng-repeat="version in versions">
       <td>
@@ -18,7 +18,7 @@
         </a>
       </td>
       <td>
-        <a ng-href="{{version.current_download_link}}">Download</a>
+        <a ng-href="{{version.current_download_link}}">Download Latest Version</a>
       </td>
     </tr>
   </table>
