@@ -155,8 +155,13 @@ app.controller("VersionListCtrl", ['$scope', 'Version',
     $scope.versions = Version.query();
   }]);
 
-app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version",
-    function ($scope, $stateParams, Version) {
+app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version", "$state",
+    function ($scope, $stateParams, Version, $state) {
+      if ($stateParams.versionId == "new") {
+        $state.go("^.new");
+        return;
+      }
+
       $scope.version = Version.get({id: $stateParams.versionId});
       $scope.download_link = function(version) {
         return [$scope.version.base_url, version, $scope.version.name].join('/');
@@ -167,7 +172,27 @@ app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version",
 app.controller("VersionNewCtrl", ["$scope", "Version", "$state",
     function ($scope, Version, $state) {
       $scope.version = {};
-      $scope.versionNames = Version.query();
+      $scope.versions = {};
+      Version.query(function (versions) {
+        angular.forEach(versions, function (version) {
+          $scope.versions[version.name] = version;
+        });
+      });
+      delete $scope.versionNames;
+
+      $scope.$watch('version.name', function (newValue, oldValue) {
+        if (newValue in $scope.versions) {
+          var existingVersion = $scope.versions[newValue];
+          $scope.version.base_url = existingVersion.base_url;
+          if (existingVersion.current_version) { 
+            $scope.version.version = existingVersion.current_version;
+            $scope.version.current = true;
+          }
+        }
+        else {
+          $scope.version = {name: newValue};
+        }
+      });
 
       $scope.save = function() {
         var version = new Version($scope.version);
@@ -175,12 +200,7 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state",
           delete version.current;
           version.current_version = version.version;
         }
-        var newVersion = true;
-        angular.forEach($scope.versionNames, function (item) {
-          if (item.name == version.name) {
-            newVersion = false;
-          }
-        })
+        var newVersion = version.name in $scope.versions;
 
         if (newVersion) {
           version.$save();
