@@ -121,6 +121,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "VersionDetailCtrl"
     }
 
+    var versionUpdate = {
+      name: 'version.update',
+      url: '/:versionId/new',
+      templateUrl: 'static/partials/version.new.html',
+      controller: "VersionNewCtrl"
+    }
+
     var versionNew = {
       name: 'version.new',
       url: '/new',
@@ -142,6 +149,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(versions).
       state(versionList).
       state(versionDetail).
+      state(versionUpdate).
       state(versionNew)
       ;
   }]);

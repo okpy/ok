@@ -169,18 +169,22 @@ app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version", "$stat
     }
   ]);
 
-app.controller("VersionNewCtrl", ["$scope", "Version", "$state",
-    function ($scope, Version, $state) {
-      $scope.version = {};
+app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
+    function ($scope, Version, $state, $stateParams) {
       $scope.versions = {};
       Version.query(function (versions) {
         angular.forEach(versions, function (version) {
           $scope.versions[version.name] = version;
         });
+        if ($stateParams.versionId) {
+          $scope.version = $scope.versions[$stateParams.versionId] || {};
+        }
       });
       delete $scope.versionNames;
+      $scope.version = {};
 
       $scope.$watch('version.name', function (newValue, oldValue) {
+        console.log("watch new", newValue, "old", oldValue);
         if (newValue in $scope.versions) {
           var existingVersion = $scope.versions[newValue];
           $scope.version.base_url = existingVersion.base_url;
