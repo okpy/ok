@@ -474,7 +474,17 @@ class GroupAPI(APIResource):
                 break
         else:
             return
+
+        #TODO(martinis) make this async
         group_obj.put()
+
+        audit_log_message = models.AuditLog(
+            event_type='Group.add_member',
+            user=user,
+            description="Added members {} to group".format(data['members']),
+            obj=group_obj.key
+            )
+        audit_log_message.put()
 
     def remove_member(self, obj, user):
         data = self.parse_args(False, user)
@@ -484,7 +494,26 @@ class GroupAPI(APIResource):
                 group_obj.members.remove(member)
             if member in group_obj.invited_members:
                 group_obj.invited_members.remove(member)
+
+        audit_log_message = models.AuditLog(
+            event_type='Group.remove_member',
+            user=user,
+            obj=group_obj.key
+            )
+
+        message = ""
         if len(group_obj.members) == 0:
             group_obj.key.delete()
+            message = "Deleted group"
         else:
             group_obj.put()
+            message = "Removed members {} from group".format(data['members'])
+
+        audit_log_message.description = message
+        audit_log_message.put()
+
+    def put(self, *args):
+        return 404
+
+    def post(self, *args):
+        return 404

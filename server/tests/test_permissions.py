@@ -294,6 +294,10 @@ class PermissionsUnitTest(BaseTestCase):
             query = obj.__class__.query()
             query = obj.can(self.user, Need(need), obj, query=query)
 
+            if not query:
+                self.assertFalse(value.output, "|can| method returned false.")
+                return
+
             data = query.fetch()
 
             if value.output:
