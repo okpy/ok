@@ -185,7 +185,7 @@ def ok_main(args):
                 # print("Nothing was sent to the server!")
                 pass
             except TypeError:
-                print("Uh-oh! OK could not authenticate you. Running OK locally")
+                print("Uh-oh! ok could not authenticate you. Running ok locally.")
                 args.local = True
 
         for proto in protocols:
