@@ -149,3 +149,37 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
       }
     }
   ]);
+
+app.controller("VersionListCtrl", ['$scope', 'Version',
+  function($scope, Version) {
+    $scope.versions = Version.query();
+  }]);
+
+app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version",
+    function ($scope, $stateParams, Version) {
+      $scope.version = Version.get({id: $stateParams.versionId});
+    }
+  ]);
+
+app.controller("VersionNewCtrl", ["$scope", "Version",
+    function ($scope, Version) {
+      $scope.version = {};
+      $scope.version_names = Version.query();
+
+      $scope.save = function() {
+        var version = new Version($scope.version);
+        if (version.current) {
+          delete version.current;
+          version.current_version = version.version;
+        }
+        console.log(version);
+        version.$update({"id": version.name});
+      };
+    }
+  ]);
+
+function DropdownCtrl($scope) {
+  $scope.status = {
+    isopen: false
+  };
+}

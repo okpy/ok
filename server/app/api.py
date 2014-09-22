@@ -359,6 +359,7 @@ class VersionAPI(APIResource):
     web_args = {
         'name': Arg(str),
         'version': Arg(str),
+        'current_version': Arg(str),
     }
 
     key_type = str
@@ -380,6 +381,9 @@ class VersionAPI(APIResource):
             return 400, "Duplicate version: {}".format(new_version)
 
         obj.versions.append(new_version)
+        if 'current_version' in args:
+            obj.current_version = args['current_version']
+
         obj.put()
 
         return obj
