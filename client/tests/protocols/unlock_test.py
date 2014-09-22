@@ -188,36 +188,28 @@ class LockTest(unittest.TestCase):
         self.test.add_suite([self.mock_case])
         self.assignment.add_test(self.test)
 
-    def testWithNoHashKey(self):
+    def testNotYetLocked(self):
         # TestCase starts as unlocked.
         self.mock_case['locked'] = False
         self.proto.on_start()
         self.assertTrue(self.mock_case.on_lock.called)
         self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
-        self.assertNotEqual('', self.assignment['hash_key'])
-
-    def testWithHashKey(self):
-        # TestCase starts as unlocked.
-        self.mock_case['locked'] = False
-        hash_key = self.proto._gen_hash_key()
-        self.assignment['hash_key'] = hash_key
-        self.proto.on_start()
-        self.assertTrue(self.mock_case.on_lock.called)
-        self.mock_case.on_lock.assert_called_with(self.proto._hash_fn)
-        self.assertEqual(hash_key, self.assignment['hash_key'])
 
     def testAlreadyLocked(self):
         self.mock_case['locked'] = True
-        hash_key = self.proto._gen_hash_key()
-        self.assignment['hash_key'] = hash_key
         self.proto.on_start()
         self.assertFalse(self.mock_case.on_lock.called)
-        self.assertEqual(hash_key, self.assignment['hash_key'])
 
     def testNeverLock(self):
         self.mock_case['never_lock'] = True
         self.proto.on_start()
         self.assertFalse(self.mock_case.on_lock.called)
+
+    def testHiddenTest(self):
+        self.mock_case['hidden'] = True
+        self.proto.on_start()
+        self.assertFalse(self.mock_case.on_lock.called)
+        self.assertEqual(0, self.test.num_cases)
 
 class MockUnlockCase(unlock.UnlockTestCase):
     def on_onlock(self, logger, interact_fn):

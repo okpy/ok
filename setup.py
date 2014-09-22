@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
+import client
 
-VERSION = '1.0.8'
+VERSION = client.__version__
 
 setup(
     name='okpy',
@@ -17,15 +18,18 @@ setup(
     keywords=['education', 'autograding'],
     packages=find_packages(include=[
         'client',
-        'client.protocols',
+        'client.cli',
         'client.models',
+        'client.protocols',
         'client.sanction',
+        'client.utils',
     ]),
     # install_requires=[],
     entry_points={
         'console_scripts': [
-            'ok=client.__main__:main',
-            'ok-publish=client.publish:main',
+            'ok=client.cli.ok:main',
+            'ok-publish=client.cli.publish:main',
+            'ok-lock=client.cli.lock:main',
         ],
     },
     classifiers=[

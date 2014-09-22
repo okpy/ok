@@ -7,15 +7,16 @@ and then make a zipfile called "ok" that can be distributed to students.
 """
 
 import os
-import sys
-OK_ROOT = os.path.dirname(os.path.relpath(__file__))
+OK_ROOT = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.relpath(__file__)), '..'))  # Parent of cli/
 
 from client.models import *
 from client.protocols import *
 import argparse
-import shutil
-import zipfile
 import importlib
+import shutil
+import sys
+import zipfile
 
 STAGING_DIR = os.path.join(os.getcwd(), 'staging')
 OK_NAME = 'ok'
@@ -24,19 +25,29 @@ CONFIG_NAME = 'config.py'
 REQUIRED_FILES = [
     '__init__',
     'exceptions',
-    'ok',
 ]
 REQUIRED_FOLDERS = [
     'sanction',
     'utils',
 ]
+COMMAND_LINE = [
+    'ok',
+]
 
 def populate_staging(staging_dir, config_path):
     """Populates the staging directory with files for ok.py."""
+    # Command line tools.
+    os.mkdir(os.path.join(staging_dir, 'cli'))
+    for filename in ['__init__'] + COMMAND_LINE:
+        filename += '.py'
+        fullname = os.path.join(OK_ROOT, 'cli', filename)
+        shutil.copy(fullname, os.path.join(staging_dir, 'cli'))
+    # Top-level files.
     for filename in REQUIRED_FILES:
         filename += '.py'
         fullname = os.path.join(OK_ROOT, filename)
         shutil.copyfile(fullname, os.path.join(staging_dir, filename))
+    # Configuration file.
     shutil.copyfile(config_path, os.path.join(staging_dir, CONFIG_NAME))
 
     for folder in REQUIRED_FOLDERS:
