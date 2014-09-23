@@ -204,13 +204,13 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
           delete version.current;
           version.current_version = version.version;
         }
-        var newVersion = version.name in $scope.versions;
+        var oldVersion = $scope.versions && version.name in $scope.versions;
 
-        if (newVersion) {
-          version.$save();
+        if (oldVersion) {
+          version.$update({"id": version.name});
         }
         else{
-          version.$update({"id": version.name});
+          version.$save();
         }
         $state.go('^.list');
       };
