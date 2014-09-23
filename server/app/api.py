@@ -400,7 +400,7 @@ class SubmissionAPI(APIResource):
 
     def add_comment(self, obj, user):
         """
-        Gets the associated diff for a submission
+        Adds a comment to this diff.
         """
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if not diff_obj:
@@ -421,6 +421,22 @@ class SubmissionAPI(APIResource):
             author=user.key,
             parent=diff_obj.key)
         comment.put()
+
+    def delete_comment(self, obj, user):
+        """
+        Deletes a comment on this diff.
+        """
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+
+        data = self.parse_args(False, user)
+        comment = data.get('comment', None)
+        if not comment:
+            return 400, "Missing required argument 'comment'"
+
+        comment = models.Comment.get_by_id(comment)
+        comment.key.delete()
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -455,6 +471,7 @@ class SubmissionAPI(APIResource):
         'message': Arg(str),
         'file': Arg(str),
         'index': Arg(int),
+        'comment': Arg(int),
     }
 
 
