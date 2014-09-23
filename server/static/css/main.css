@@ -157,3 +157,18 @@ h2 {
 .tab-wrapper {
   padding: 10px 10px 10px 10px;
 }
+
+.comment-button {
+  position: relative;
+  z-index: 5;
+  float: left;
+  width: 20px;
+  height: 20px;
+  margin: -1px -10px -1px -20px;
+  line-height: 20px;
+  color: #fff;
+  text-align: center;
+  text-indent: 0;
+  cursor: pointer;
+  font-size: 10px;
+}

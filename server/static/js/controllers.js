@@ -130,6 +130,11 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
       $timeout(function() {
         $anchorScroll();
       });
+      $scope.comment = function(line) {
+        codeline = {"line":"HELLo"}
+        $scope.contents.splice(line + 1, 0, codeline);
+        console.log("Commenting on line", line);
+      }
     }
   ]);
 
