@@ -182,6 +182,7 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
       });
       delete $scope.versionNames;
       $scope.version = {};
+      $scope.version.current = true;
 
       $scope.$watch('version.name', function (newValue, oldValue) {
         if (newValue in $scope.versions) {
