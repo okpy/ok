@@ -359,6 +359,11 @@ class Submission(Base):
 class SubmissionDiff(Base):
     submission = ndb.KeyProperty(Submission)
     diff = ndb.JsonProperty()
+    comments = ndb.KeyProperty('Comment', repeated=True)
+
+class Comment(Base):
+    author = ndb.KeyProperty('User')
+    text = ndb.StringProperty()
 
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""

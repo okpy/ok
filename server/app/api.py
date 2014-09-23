@@ -380,7 +380,7 @@ class SubmissionAPI(APIResource):
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            return diff_obj.diff
+            return diff_obj
 
         diff = {}
         templates = obj.assignment.get().templates
@@ -392,8 +392,9 @@ class SubmissionAPI(APIResource):
         for filename, contents in obj.messages['file_contents'].items():
             diff[filename] = compare.diff(templates[filename], contents)
 
-        self.diff_model(id=obj.key.id(),
-                        diff=diff).put()
+        diff = self.diff_model(id=obj.key.id(),
+                               diff=diff)
+        diff.put()
         return diff
 
     def get_assignment(self, name):
