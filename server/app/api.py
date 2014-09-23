@@ -393,8 +393,9 @@ class SubmissionAPI(APIResource):
         for filename, contents in obj.messages['file_contents'].items():
             diff[filename] = compare.diff(templates[filename], contents)
 
-        self.diff_model(id=obj.key.id(),
-                        diff=diff).put()
+        diff = self.diff_model(id=obj.key.id(),
+                               diff=diff)
+        diff.put()
         return diff
 
     def add_comment(self, obj, user):
