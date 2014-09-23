@@ -98,14 +98,26 @@ app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$ancho
     }
   ]);
 
-app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScroll",
-    function ($scope, $timeout, $location, $anchorScroll) {
+app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce",
+    function ($scope, $timeout, $location, $anchorScroll, $sce) {
+      var converter = new Showdown.converter();
+      $scope.convertMarkdown = function(text) {
+        if (text == "" || text === undefined) {
+          return $sce.trustAsHtml("No comment yet...")
+        }
+        return $sce.trustAsHtml(converter.makeHtml(text));
+      }
       contents = [];
       var leftNum = 0, rightNum = 0;
       for (var i = 0; i < $scope.contents.length; i++) {
-        codeline = {};
+        codeline = {"type": "line"};
         codeline.start = $scope.contents[i][0];
         codeline.line = $scope.contents[i].slice(2);
+        codeline.index = i;
+        if ($scope.diff.comments.hasOwnProperty($scope.file_name)) {
+
+          codeline.comments = $scope.diff.comments[$scope.file_name][i]
+        }
         codeline.lineNum = i + 1;
         if (codeline.start == "+") {
           rightNum++;
@@ -130,11 +142,6 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
       $timeout(function() {
         $anchorScroll();
       });
-      $scope.comment = function(line) {
-        codeline = {"line":"HELLo"}
-        $scope.contents.splice(line + 1, 0, codeline);
-        console.log("Commenting on line", line);
-      }
     }
   ]);
 
@@ -152,6 +159,30 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
       $scope.scroll = function() {
         $location.hash($scope.anchorId);
         $anchorScroll();
+      }
+      $scope.showComment = false;
+      $scope.toggleComment = function(line) {
+        $scope.showComment = !$scope.showComment;
+      }
+    }
+  ]);
+
+app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Submission",
+    function ($scope, $sce, $stateParams, Submission) {
+      $scope.commentText = {}
+      $scope.comment = function() {
+        text = $scope.commentText.text;
+        if (text !== undefined && text.trim() != "") {
+          console.log("Commenting: ", text);
+          console.log($scope.file_name)
+          Submission.addComment({
+            id: $stateParams.submissionId,
+            file: $scope.file_name,
+            index: $scope.codeline.index,
+            message: text,
+          });
+          console.log($scope.codeline);
+        }
       }
     }
   ]);

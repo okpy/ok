@@ -3,7 +3,7 @@
     <h2>Submission: {{submission.created | amCalendar}} </h2>
   </div>
 
-  <div ng-repeat="(file_name, contents) in diff">
+  <div ng-repeat="(file_name, contents) in diff.diff">
     <diff/>
   </div>
 </div>

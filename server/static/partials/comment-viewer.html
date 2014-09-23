@@ -1,0 +1,34 @@
+<div>
+  <div ng-if="codeline.comments.length > 0">
+  <div ng-repeat="comment in codeline.comments track by $index"></div>
+    <div class='comment'>
+      <div ng-bind-html="convertMarkdown(comment)"></div>
+    </div>
+  </div>
+  <div ng-controller="WriteCommentController" class='add-comment' class='row' ng-if="showComment">
+    <form class="form-horizontal" role="form">
+      <tabset>
+        <tab heading="Write Comment">
+          <div class="form-group">
+            <div class="col-sm-12">
+              <textarea ng-model="commentText.text" class="comment-input form-control" placeholder="Enter comment here"></textarea>
+            </div>
+          </div>
+        </tab>
+        <tab heading="Preview">
+          <div class="form-group">
+            <div class="col-sm-12">
+              <div class='comment-preview' ng-if="commentText != ''" ng-bind-html="convertMarkdown(commentText.text)">Hello</div>
+            </div>
+          </div>
+        </tab>
+      </tabset>
+      <div style="margin-top: 10px" class="form-group">
+        <div class="col-sm-offset-10">
+          <button ng-click="toggleComment()" class="btn btn-default">Close</button>
+          <button type="submit" ng-click="comment()" class="btn btn-primary">Comment</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

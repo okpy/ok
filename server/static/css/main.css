@@ -52,6 +52,7 @@ h2 {
   border-radius: 3px;
   width: 100%;
   text-shadow: 0 1px 0 #fff;
+  border-collapse: separate;
 }
 
 .diff-line-code {
@@ -171,4 +172,17 @@ h2 {
   text-indent: 0;
   cursor: pointer;
   font-size: 10px;
+}
+
+.add-comment {
+  padding: 10px 10px 10px 10px;
+  border-top: 3px solid #eee;
+  border-bottom: 3px solid #eee;
+}
+
+.comment-input {
+  height: 200px !important;
+}
+.comment-preview {
+  padding: 10px 10px 10px 10px;
 }
