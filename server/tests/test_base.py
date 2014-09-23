@@ -141,7 +141,8 @@ class APIBaseTestCase(BaseTestCase):
         """
         data = kwds.get('data', {})
         if isinstance(data, models.Base):
-            data = data.to_dict()
+            data = data.to_json()
+
         if isinstance(data, dict):
             data = models.json.dumps(data)
         kwds['data'] = data

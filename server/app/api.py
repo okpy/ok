@@ -465,26 +465,60 @@ class GroupAPI(APIResource):
 
     def add_member(self, obj, user):
         data = self.parse_args(False, user)
-        group_obj = self.model.get_by_id(obj.key.id())
-        assignment = group_obj.assignment.get()
+
         for member in data['members']:
-            if member not in group_obj.invited_members:
+            if member not in obj.invited_members:
                 member = models.User.get_or_insert(member.id())
-                group_obj.invited_members.append(member.key)
+                obj.invited_members.append(member.key)
                 break
         else:
             return
-        group_obj.put()
+
+        #TODO(martinis) make this async
+        obj.put()
+
+        audit_log_message = models.AuditLog(
+            event_type='Group.add_member',
+            user=user.key,
+            description="Added members {} to group".format(data['members']),
+            obj=obj.key
+            )
+        audit_log_message.put()
 
     def remove_member(self, obj, user):
         data = self.parse_args(False, user)
-        group_obj = self.model.get_by_id(obj.key.id())
+
+        changed = False
         for member in data['members']:
-            if member in group_obj.members:
-                group_obj.members.remove(member)
-            if member in group_obj.invited_members:
-                group_obj.invited_members.remove(member)
-        if len(group_obj.members) == 0:
-            group_obj.key.delete()
+            if member in obj.members:
+                changed = True
+                obj.members.remove(member)
+            if member in obj.invited_members:
+                changed = True
+                obj.invited_members.remove(member)
+
+        if not changed:
+            return 400, "Tried to remove a user which is not part of this group"
+
+        audit_log_message = models.AuditLog(
+            event_type='Group.remove_member',
+            user=user.key,
+            obj=obj.key
+            )
+
+        message = ""
+        if len(obj.members) == 0:
+            obj.key.delete()
+            message = "Deleted group"
         else:
-            group_obj.put()
+            obj.put()
+            message = "Removed members {} from group".format(data['members'])
+
+        audit_log_message.description = message
+        audit_log_message.put()
+
+    def put(self, *args):
+        return 404, "No PUT allowed"
+
+    def post(self, *args):
+        return 404, "No POST allowed"
