@@ -2,6 +2,7 @@
 The public API
 """
 import logging
+import datetime
 
 from flask.views import View
 from flask.app import request, json
@@ -380,7 +381,7 @@ class SubmissionAPI(APIResource):
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            return diff_obj.diff
+            return diff_obj
 
         diff = {}
         templates = obj.assignment.get().templates
@@ -395,6 +396,32 @@ class SubmissionAPI(APIResource):
         self.diff_model(id=obj.key.id(),
                         diff=diff).put()
         return diff
+
+    def add_comment(self, obj, user):
+        """
+        Gets the associated diff for a submission
+        """
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+        data = self.parse_args(False, user)
+        index = data["index"]
+        message = data["message"]
+        file = data["file"]
+        if message.strip() == "":
+            raise BadValueError("Cannot make empty comment")
+        if file not in diff_obj.comments:
+            diff_obj.comments[file] = {}
+        print index, diff_obj.comments[file]
+        if index not in diff_obj.comments[file]:
+            diff_obj.comments[file][index] = []
+        comment = {
+            "message": message,
+            "user": user.email,
+            "created": str(datetime.datetime.now())
+        }
+        diff_obj.comments[file][index].append(comment)
+        diff_obj.put()
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -426,6 +453,9 @@ class SubmissionAPI(APIResource):
     web_args = {
         'assignment': Arg(str),
         'messages': Arg(None),
+        'message': Arg(str),
+        'file': Arg(str),
+        'index': Arg(str),
     }
 
 
