@@ -39,8 +39,13 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
   }]);
 
 app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
-  function($scope, $stateParams, Submission) {
+  function($scope, $stateParams, Submission, $timeout) {
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
+    $scope.refreshDiff = function() {
+        $timeout(function() {
+          $scope.diff = Submission.diff({id: $stateParams.submissionId});
+        }, 300);
+    }
   }]);
 
 app.controller("CourseListCtrl", ['$scope', 'Course',
@@ -100,13 +105,6 @@ app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$ancho
 
 app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce",
     function ($scope, $timeout, $location, $anchorScroll, $sce) {
-      var converter = new Showdown.converter();
-      $scope.convertMarkdown = function(text) {
-        if (text == "" || text === undefined) {
-          return $sce.trustAsHtml("No comment yet...")
-        }
-        return $sce.trustAsHtml(converter.makeHtml(text));
-      }
       contents = [];
       var leftNum = 0, rightNum = 0;
       for (var i = 0; i < $scope.contents.length; i++) {
@@ -114,8 +112,7 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
         codeline.start = $scope.contents[i][0];
         codeline.line = $scope.contents[i].slice(2);
         codeline.index = i;
-        if ($scope.diff.comments.hasOwnProperty($scope.file_name)) {
-
+        if ($scope.diff.comments.hasOwnProperty($scope.file_name) && $scope.diff.comments[$scope.file_name].hasOwnProperty(i)) {
           codeline.comments = $scope.diff.comments[$scope.file_name][i]
         }
         codeline.lineNum = i + 1;
@@ -145,8 +142,15 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
     }
   ]);
 
-app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll",
-    function ($scope, $timeout, $location, $anchorScroll) {
+app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce",
+    function ($scope, $timeout, $location, $anchorScroll, $sce) {
+      var converter = new Showdown.converter();
+      $scope.convertMarkdown = function(text) {
+        if (text == "" || text === undefined) {
+          return $sce.trustAsHtml("")
+        }
+        return $sce.trustAsHtml(converter.makeHtml(text));
+      }
       var start = $scope.codeline.start;
       if (start == "+") {
         $scope.positive = true;
@@ -169,6 +173,13 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
 
 app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Submission",
     function ($scope, $sce, $stateParams, Submission) {
+      var converter = new Showdown.converter();
+      $scope.convertMarkdown = function(text) {
+        if (text == "" || text === undefined) {
+          return $sce.trustAsHtml("No comment yet...")
+        }
+        return $sce.trustAsHtml(converter.makeHtml(text));
+      }
       $scope.commentText = {}
       $scope.comment = function() {
         text = $scope.commentText.text;
@@ -180,10 +191,10 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
             file: $scope.file_name,
             index: $scope.codeline.index,
             message: text,
-          });
-          console.log($scope.codeline);
+          }, $scope.refreshDiff);
         }
       }
+      console.log($scope.codeline.comments);
     }
   ]);
 
