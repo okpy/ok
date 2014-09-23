@@ -1,19 +1,17 @@
 <div>
   <div class='comment-box' ng-if="codeline.comments.length > 0">
-    <div class='comment' ng-repeat="comment in codeline.comments">
-      <div class='row'>
-        <div class='col-md-12 comment-header'>
+    <div class='comment-holder' ng-repeat="comment in codeline.comments">
+      <div class='comment'>
+        <div class='comment-header'>
           <strong>{{comment.user}}</strong> wrote:
         </div>
-      </div>
-      <div class='row'>
-        <div class='col-md-12 comment-text'>
+        <div class='comment-text'>
           <div ng-bind-html="convertMarkdown(comment.message)"></div>
         </div>
       </div>
     </div>
-    <div ng-if="!showComment" class='row'>
-      <div class='col-md-12 text-right'>
+    <div ng-if="!showComment">
+      <div>
         <button ng-click="toggleComment()" class='btn btn-primary'>Reply</button>
       </div>
     </div>

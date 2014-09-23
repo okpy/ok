@@ -176,6 +176,8 @@ h2 {
 
 .add-comment {
   padding: 10px 10px 10px 10px;
+  max-width: 780px;
+  margin-left: 20px;
   border-top: 3px solid #eee;
   border-bottom: 3px solid #eee;
 }
@@ -184,21 +186,34 @@ h2 {
   height: 200px !important;
 }
 .comment-preview {
-  padding: 10px 10px 10px 10px;
 }
 .comment-box {
-  border-top: 3px solid #eee;
-  border-bottom: 3px solid #eee;
   padding: 10px 10px 10px 10px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+.comment-holder {
+  max-width: 780px;
 }
 .comment {
-  min-height: 40px;
-  border-bottom: 3px solid #eee;
+  margin-bottom: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+.comment-text {
+  padding-top: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 .comment-header {
+  padding-left: 15px;
+  padding-right: 15px;
+  line-height: 40px;
   color: #8e9597;
   background-color: #f2f8fa;
   border-bottom-color: #e1edf1;
-  height: 40px;
-  line-height: 40px;
+  border-bottom: 1px solid #eee;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
 }
