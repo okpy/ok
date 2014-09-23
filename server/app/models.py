@@ -367,9 +367,11 @@ class SubmissionDiff(Base):
     def to_json(self, fields=None):
         dct = super(SubmissionDiff, self).to_json(fields)
         comments = list(self.comments)
-        comments = {comment.filename: comment.to_json() for comment in comments}
-        dct['comments'] = comments
-        print dct
+        comment_dict = {}
+        for comment in comments:
+            comment_dict.setdefault(comment.filename, {})[comment.line] = comment
+
+        dct['comments'] = comment_dict
         return dct
 
 class Comment(Base):
