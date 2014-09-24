@@ -12,7 +12,6 @@ app = Flask('app') #pylint: disable=invalid-name
 from app.models import MODEL_BLUEPRINT
 from app import constants
 from app import utils
-from app import models
 from app import api
 from app import auth
 
