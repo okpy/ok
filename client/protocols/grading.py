@@ -52,20 +52,34 @@ class GradingProtocol(protocol.Protocol):
             return
         formatting.print_title('Running tests for {}'.format(
             self.assignment['name']))
+        self._grade_all()
 
+    def _grade_all(self):
+        """Grades the specified test (from the command line), 
+        or all tests for the assignment (if no tests specified).
+
+        RETURNS:
+        bool; True if grading was successful, False otherwise.
+        """
         # TODO(albert): clean up the case where the test is not
         # recognized.
         any_graded = False
         for test in self.assignment.tests:
             if not self.args.question or self.args.question in test['names']:
-                self._grade_test(test)
+                passed, total = self._handle_test(test)
                 any_graded = True
+                if total > 0:
+                    print('-- {} cases passed ({}%) for {} --'.format(
+                        passed, round(100 * passed / total, 2), test.name))
+                print()
         if not any_graded and self.args.question:
             print('Test {} does not exist. Try one of the following:'.format(
                 self.args.question))
             print(' '.join(sorted(test.name for test in self.assignment.tests)))
+            return False
+        return True
 
-    def _grade_test(self, test):
+    def _handle_test(self, test):
         """Grades a single Test."""
         formatting.underline('Running tests for ' + test.name)
         print()
@@ -74,15 +88,10 @@ class GradingProtocol(protocol.Protocol):
         total_passed = grade(test, self.logger, self.args.interactive,
                              self.args.verbose, self.args.timeout)
 
-        total_cases = test.num_cases
-        if total_cases > 0:
-            print('-- {} cases passed ({}%) for {} --'.format(
-                total_passed, round(100 * total_passed / total_cases, 2),
-                test.name))
         if test.num_locked > 0:
             print('-- There are still {} locked test cases.'.format(
                 test.num_locked) + ' Use the -u flag to unlock them. --')
-        print()
+        return total_passed, test.num_cases
 
 def grade(test, logger, interactive=False, verbose=False, timeout=10):
     """Grades all suites for the specified test.

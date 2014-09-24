@@ -1,13 +1,9 @@
-"""Implements the GradingProtocol, which runs all specified tests
+"""Implements the ScoringProtocol, which runs all specified tests
 associated with an assignment.
-
-The GradedTestCase interface should be implemented by TestCases that
-are compatible with the GradingProtocol.
 """
 
 from client.models import core
 from client.protocols import grading
-from client.protocols import protocol
 from client.utils import formatting
 from collections import OrderedDict
 
@@ -15,7 +11,7 @@ from collections import OrderedDict
 # Testing Mechanism #
 #####################
 
-class ScoringProtocol(protocol.Protocol):
+class ScoringProtocol(grading.GradingProtocol):
     """A Protocol that runs tests, formats results, and reports a
     student's score.
     """
@@ -27,36 +23,21 @@ class ScoringProtocol(protocol.Protocol):
             return
         formatting.print_title('Scoring tests for {}'.format(
             self.assignment['name']))
+        self.scores = OrderedDict()
+        if self._grade_all():
+            # If testing is successful, print out the point breakdown.
+            display_breakdown(self.scores)
 
-        # TODO(albert): clean up the case where the test is not
-        # recognized.
-        any_graded = False
-        scores = OrderedDict()
-        for test in self.assignment.tests:
-            if not self.args.question or self.args.question in test['names']:
-                score = self._score_test(test)
-                scores[test.name] = (score, test['points'])
-                any_graded = True
-        if not any_graded and self.args.question:
-            print('Test {} does not exist. Try one of the following:'.format(
-                self.args.question))
-            print(' '.join(sorted(test.name for test in self.assignment.tests)))
-        else:
-            display_breakdown(scores)
-
-    def _score_test(self, test):
+    def _handle_test(self, test):
         """Grades a single Test."""
         formatting.underline('Scoring tests for ' + test.name)
         print()
         points, passed, total = score(test, self.logger, self.args.interactive,
             self.args.verbose, self.args.timeout)
 
-        if total > 0:
-            print('-- {} suites passed ({}%) for {} --'.format(
-                passed, round(100 * passed / total, 2),
-                test.name))
-            print()
-        return points
+        self.scores[test.name] = (points, test['points'])
+        return passed, total
+        print()
 
 def display_breakdown(scores):
     """Prints the point breakdown given a dictionary of scores.
