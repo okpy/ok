@@ -48,14 +48,13 @@ def print_title(text):
     """Prints the given text as a "title" to standard output, in the
     following format:
 
-    ###############
-    # Sample Text #
-    ###############
+    ***********
+    Sample Text
+    ***********
     """
-    text = '# ' + text + ' #'
-    print('#'* len(text))
+    print('*'* len(text))
     print(text)
-    print('#'* len(text))
+    print('*'* len(text))
     print()
 
 #################

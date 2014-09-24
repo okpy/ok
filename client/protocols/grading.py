@@ -48,22 +48,38 @@ class GradingProtocol(protocol.Protocol):
 
     def on_interact(self):
         """Run gradeable tests and print results."""
+        if self.args.score:
+            return
         formatting.print_title('Running tests for {}'.format(
             self.assignment['name']))
+        self._grade_all()
 
+    def _grade_all(self):
+        """Grades the specified test (from the command line), 
+        or all tests for the assignment (if no tests specified).
+
+        RETURNS:
+        bool; True if grading was successful, False otherwise.
+        """
         # TODO(albert): clean up the case where the test is not
         # recognized.
         any_graded = False
         for test in self.assignment.tests:
             if not self.args.question or self.args.question in test['names']:
-                self._grade_test(test)
+                passed, total = self._handle_test(test)
                 any_graded = True
+                if total > 0:
+                    print('-- {} cases passed ({}%) for {} --'.format(
+                        passed, round(100 * passed / total, 2), test.name))
+                print()
         if not any_graded and self.args.question:
             print('Test {} does not exist. Try one of the following:'.format(
                 self.args.question))
             print(' '.join(sorted(test.name for test in self.assignment.tests)))
+            return False
+        return True
 
-    def _grade_test(self, test):
+    def _handle_test(self, test):
         """Grades a single Test."""
         formatting.underline('Running tests for ' + test.name)
         print()
@@ -72,15 +88,10 @@ class GradingProtocol(protocol.Protocol):
         total_passed = grade(test, self.logger, self.args.interactive,
                              self.args.verbose, self.args.timeout)
 
-        total_cases = test.num_cases
-        if total_cases > 0:
-            print('== {} ({}%) cases passed for {} =='.format(
-                total_passed, round(100 * total_passed / total_cases, 2),
-                test.name))
         if test.num_locked > 0:
             print('-- There are still {} locked test cases.'.format(
                 test.num_locked) + ' Use the -u flag to unlock them. --')
-        print()
+        return total_passed, test.num_cases
 
 def grade(test, logger, interactive=False, verbose=False, timeout=10):
     """Grades all suites for the specified test.
@@ -96,26 +107,29 @@ def grade(test, logger, interactive=False, verbose=False, timeout=10):
     RETURNS:
     int; number of TestCases that passed.
     """
-    cases_tested = _Counter()
+    cases_tested = Counter()
     total_passed = 0
     for suite in test['suites']:
-        passed, error = _run_suite(suite, logger, cases_tested,
+        passed, error = run_suite(suite, logger, cases_tested,
                                    verbose, interactive, timeout)
         total_passed += passed
         if error:
             break
     return total_passed
 
-def _run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
+def run_suite(suite, logger, cases_tested, verbose, interactive, timeout, stop_fast=True):
     """Runs tests for a single suite.
 
     PARAMETERS:
     suite        -- list; each element is a TestCase
     logger       -- OutputLogger.
-    cases_tested -- _Counter; an object that keeps track of the
+    cases_tested -- Counter; an object that keeps track of the
                     number of cases that have been tested so far.
     verbose      -- bool; True if verbose mode is toggled on
     interactive  -- bool; True if interactive mode is toggled on
+    stop_fast    -- bool; True if grading should stop at the first
+                    test case where should_grade returns False. If
+                    False, grading will continue.
 
     RETURNS:
     (passed, errored), where
@@ -128,7 +142,7 @@ def _run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
             # TODO(albert): should non-GradedTestCases be counted as
             # passing?
             continue
-        elif not case.should_grade():
+        elif stop_fast and not case.should_grade():
             logger.on()
             return passed, True  # students must unlock first
         cases_tested.increment()
@@ -141,7 +155,7 @@ def _run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
     logger.on()
     return passed, False
 
-class _Counter(object):
+class Counter(object):
     """Keeps track of a running count of natural numbers."""
     def __init__(self):
         self._count = 0
