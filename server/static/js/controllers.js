@@ -207,8 +207,6 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
       $scope.comment = function() {
         text = $scope.commentText.text;
         if (text !== undefined && text.trim() != "") {
-          console.log("Commenting: ", text);
-          console.log($scope.file_name)
           Submission.addComment({
             id: $stateParams.submissionId,
             file: $scope.file_name,
@@ -217,7 +215,6 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
           }, $scope.refreshDiff);
         }
       }
-      console.log($scope.codeline.comments);
     }
   ]);
 
