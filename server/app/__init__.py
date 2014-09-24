@@ -39,5 +39,3 @@ import urls
 
 # Import the authenticator. Central usage place.
 import authenticator
-if len(list(models.Assignment.query().filter(models.Assignment.name == "proj1"))) == 0:
-    models.Assignment(max_group_size=2, name='proj1', points=20).put()
