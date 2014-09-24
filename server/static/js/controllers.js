@@ -180,7 +180,7 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
         }
         return $sce.trustAsHtml(converter.makeHtml(text));
       }
-      $scope.commentText = {}
+      $scope.commentText = {text:""}
       $scope.comment = function() {
         text = $scope.commentText.text;
         if (text !== undefined && text.trim() != "") {

@@ -15,31 +15,38 @@
         <button ng-click="toggleComment()" class='btn btn-primary'>Reply</button>
       </div>
     </div>
-  </div>
-  <div ng-controller="WriteCommentController" class='add-comment' class='row' ng-if="showComment">
-    <form class="form-horizontal" role="form">
-      <tabset>
-        <tab heading="Write Comment">
-          <div class="form-group">
-            <div class="col-sm-12">
-              <textarea ng-model="commentText.text" class="comment-input form-control" placeholder="Enter comment here"></textarea>
+    <div ng-controller="WriteCommentController" class='comment-form' class='row' ng-if="showComment">
+      <form class="comment-tabsetcomment-tabset  form-horizontal" role="form">
+        <tabset class='tabset-background'>
+          <tab heading="Write Comment">
+            <div class='tab-body'>
+              <div class="form-group">
+                <div class="col-sm-12">
+                  <textarea ng-model="commentText.text" class="comment-input form-control" placeholder="Enter comment here"></textarea>
+                </div>
+              </div>
             </div>
-          </div>
-        </tab>
-        <tab heading="Preview">
-          <div class="form-group">
-            <div class="col-sm-12">
-              <div class='comment-preview' ng-if="commentText != ''" ng-bind-html="convertMarkdown(commentText.text)">Hello</div>
+          </tab>
+          <tab heading="Preview">
+            <div class='tab-body'>
+              <div class="form-group">
+                <div class="col-sm-12">
+                  <div class='comment-preview' ng-if="commentText != ''" ng-bind-html="convertMarkdown(commentText.text)">Hello</div>
+                </div>
+              </div>
             </div>
+          </tab>
+        </tabset>
+        <div class='comment-buttons'>
+          <div class="left">
+            <button ng-click="toggleComment()" class="btn btn-default">Close</button>
           </div>
-        </tab>
-      </tabset>
-      <div style="margin-top: 10px" class="form-group">
-        <div class="col-sm-offset-10">
-          <button ng-click="toggleComment()" class="btn btn-default">Close</button>
-          <button type="submit" ng-click="comment()" class="btn btn-primary">Comment</button>
+          <div class="right">
+            <button type="submit" ng-disabled="commentText.text == ''" ng-click="comment()" class="btn btn-primary">Comment</button>
+          </div>
+          <div class="clearfix"></div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
