@@ -8,5 +8,6 @@ protocols = [
     'unlock',
     'lock',
     'grading',
+    'scoring',
     'analytics',
 ]

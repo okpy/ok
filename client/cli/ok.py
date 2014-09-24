@@ -148,6 +148,8 @@ def parse_input():
                         help="set the timeout duration for running tests")
     parser.add_argument('--version', action='store_true',
                         help="Prints the version number and quits")
+    parser.add_argument('--score', action='store_true',
+                        help="Scores the assignment")
     return parser.parse_args()
 
 def server_timer():
