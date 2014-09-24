@@ -10,8 +10,6 @@ ok.py appears in the same directory as the assignment you wish to test.
 Otherwise, use -t to specify a test file manually.
 """
 
-VERSION = '1.0.6'
-
 # TODO(denero) Add mechanism for removing DEVELOPER INSTRUCTIONS.
 DEVELOPER_INSTRUCTIONS = """
 
@@ -35,15 +33,16 @@ receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
 
-from models import *
-from protocols import *
+from client import config
+from client.models import *
+from client.protocols import *
+from client.utils import auth
+from client.utils import loading
+from client.utils import output
 from urllib import request, error
-from utils import auth
-from utils import loading
-from utils import output
+import client
 import argparse
 import base64
-import config
 import json
 import multiprocessing
 import sys
@@ -63,7 +62,7 @@ def send_to_server(access_token, messages, assignment, server,
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
         address += "?access_token={0}&client_version={1}".format(
-            access_token, VERSION)
+            access_token, client.__version__)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
@@ -144,18 +143,25 @@ def parse_input():
                         help="disable any network activity")
     parser.add_argument('--timeout', type=int, default=10,
                         help="set the timeout duration for running tests")
+    parser.add_argument('--version', action='store_true',
+                        help="Prints the version number and quits")
     return parser.parse_args()
-
 
 def server_timer():
     """Timeout for the server."""
     time.sleep(0.8)
 
-def ok_main(args):
+def main():
     """Run all relevant aspects of ok.py."""
+    args = parse_input()
+
+    if args.version:
+        print("okpy=={}".format(client.__version__))
+        exit(0)
+
     server_thread, timer_thread = None, None
     try:
-        print("You are running version {0} of ok.py".format(VERSION))
+        print("You are running version {0} of ok.py".format(client.__version__))
         if not args.local:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
             timer_thread.start()
@@ -208,4 +214,4 @@ def ok_main(args):
             server_thread.terminate()
 
 if __name__ == '__main__':
-    ok_main(parse_input())
+    main()

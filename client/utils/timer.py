@@ -1,6 +1,6 @@
 """Timeout mechanism."""
 
-import exceptions
+from client import exceptions
 import threading
 import traceback
 

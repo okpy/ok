@@ -1,9 +1,9 @@
 """Tests the GradingProtocol."""
 
-from models import core
-from protocols import grading
+from client.models import core
+from client.protocols import grading
+from client.utils import output
 from unittest import mock
-from utils import output
 import unittest
 
 class GradeTest(unittest.TestCase):

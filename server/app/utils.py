@@ -1,6 +1,8 @@
 """
 Utility functions used by API and other services
 """
+import collections
+
 try:
     from cStringIO import StringIO
 except:
@@ -118,7 +120,8 @@ def paginate(entries, page, num_per_page):
         'more': more
     }
 
-def _apply_filter(query, model, arg, value):
+
+def _apply_filter(query, model, arg, value, op):
     """
     Applies a filter on |model| of |arg| == |value| to |query|.
     """
@@ -129,7 +132,20 @@ def _apply_filter(query, model, arg, value):
         return query
 
     # Only equals for now
-    return query.filter(field == value)
+    if op == "==":
+        filtered = field == value
+    elif op == "<":
+        filtered = field < value
+    elif op == "<=":
+        filtered = field <= value
+    elif op == ">":
+        filtered = field > value
+    elif op == ">=":
+        filtered = field >= value
+    else:
+        raise ValueError("Invalid filtering operator {}".format(op))
+
+    return query.filter(filtered)
 
 def filter_query(query, args, model):
     """
@@ -140,6 +156,11 @@ def filter_query(query, args, model):
     Returns a modified query with the appropriate filters.
     """
     for arg, value in args.iteritems():
-        query = _apply_filter(query, model, arg, value)
+        if isinstance(value, collections.Iterable):
+            op, value = value
+        else:
+            value, op = value, '=='
+
+        query = _apply_filter(query, model, arg, value, op)
 
     return query

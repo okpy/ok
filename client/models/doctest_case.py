@@ -4,13 +4,13 @@ PythonTestCases follow a line-by-line input format that is designed to
 mimic a Python interpreter.
 """
 
-from models import serialize
-from protocols import grading
-from protocols import unlock
-from utils import formatting
-from utils import timer
+from client import exceptions
+from client.models import serialize
+from client.protocols import grading
+from client.protocols import unlock
+from client.utils import formatting
+from client.utils import timer
 import code
-import exceptions
 import re
 import traceback
 
@@ -34,6 +34,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     OPTIONAL = {
         'test': serialize.STR,
         'locked': serialize.BOOL_FALSE,
+        'hidden': serialize.BOOL_FALSE,
         'teardown': serialize.STR,
         'never_lock': serialize.BOOL_FALSE,
     }

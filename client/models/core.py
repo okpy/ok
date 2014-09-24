@@ -16,8 +16,8 @@ respective Protocols (in the client/protocols/ directory), while
 concrete subclasses of TestCase should be located in client/models/.
 """
 
-from models import serialize
-import exceptions
+from client.models import serialize
+from client import exceptions
 
 class Assignment(serialize.Serializable):
     """A representation of an assignment."""
@@ -29,7 +29,6 @@ class Assignment(serialize.Serializable):
     OPTIONAL = {
         'src_files': serialize.LIST,
         'params': serialize.DICT,
-        'hash_key': serialize.STR,
     }
 
     def __init__(self, **fields):

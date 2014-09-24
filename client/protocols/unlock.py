@@ -5,10 +5,10 @@ The UnlockTestCase interface can be implemented by TestCases that are
 compatible with the UnlockProtocol.
 """
 
-from models import core
-from models import serialize
-from protocols import protocol
-from utils import formatting
+from client.models import core
+from client.models import serialize
+from client.protocols import protocol
+from client.utils import formatting
 import hmac
 import random
 import string
@@ -20,12 +20,9 @@ except ImportError:
     HAS_READLINE = False
 
 
-def normalize(x):
-    """
-    Takes an input, removes all whitespace and converts it to lowercase.
-    This is so that whitespace and case sensitivity doesn't matter on inputs.
-    """
-    return "".join(x.split())
+def normalize(text):
+    """Normalizes whitespace in a specified string of text."""
+    return " ".join(text.split())
 
 class UnlockTestCase(core.TestCase):
     """Interface for tests that can be unlocked by the unlock protocol.
@@ -35,6 +32,7 @@ class UnlockTestCase(core.TestCase):
     OPTIONAL = {
         'locked': serialize.BOOL_FALSE,
         'never_lock': serialize.BOOL_FALSE,
+        'hidden': serialize.BOOL_FALSE,
     }
 
     def on_unlock(self, logger, interact_fn):
@@ -68,8 +66,6 @@ class LockProtocol(protocol.Protocol):
         if self.args.lock:
             formatting.print_title('Locking tests for {}'.format(
                 self.assignment['name']))
-            if not self.assignment['hash_key']:
-                self.assignment['hash_key'] = self._gen_hash_key()
             for test in self.assignment.tests:
                 lock(test, self._hash_fn)
             print('Completed locking {}.'.format(self.assignment['name']))
@@ -79,18 +75,18 @@ class LockProtocol(protocol.Protocol):
     def _alphabet(self):
         return string.ascii_lowercase + string.digits
 
-    def _gen_hash_key(self):
-        return ''.join(random.choice(self._alphabet) for _ in range(128))
-
-    def _hash_fn(self, x):
-        return hmac.new(self.assignment['hash_key'].encode('utf-8'),
-                        x.encode('utf-8')).hexdigest()
+    def _hash_fn(self, text):
+        text = normalize(text)
+        return hmac.new(self.assignment['name'].encode('utf-8'),
+                        text.encode('utf-8')).hexdigest()
 
 def lock(test, hash_fn):
     print('Locking cases for Test ' + test.name)
     for suite in test['suites']:
-        for case in suite:
-            if not case['never_lock'] and not case['locked']:
+        for case in list(suite):
+            if case['hidden']:
+                suite.remove(case)
+            elif not case['never_lock'] and not case['locked']:
                 case.on_lock(hash_fn)
 
 ######################
@@ -125,7 +121,7 @@ class UnlockProtocol(protocol.Protocol):
                 # of unlocked test cases. This can be a useful metric
                 # for analytics in the future.
                 cases_unlocked, end_session = unlock(
-                    test, self.logger, self.assignment['hash_key'])
+                    test, self.logger, self.assignment['name'])
                 if end_session:
                     break
                 print()

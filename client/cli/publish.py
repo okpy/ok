@@ -6,38 +6,53 @@ required files (as determined by config.py) into a separate directory
 and then make a zipfile called "ok" that can be distributed to students.
 """
 
-from models import *
-from protocols import *
-import argparse
 import os
-import shutil
-import zipfile
+OK_ROOT = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.relpath(__file__)), '..'))  # Parent of cli/
+
+from client.models import *
+from client.protocols import *
+import argparse
 import importlib
+import shutil
 import sys
+import zipfile
 
 STAGING_DIR = os.path.join(os.getcwd(), 'staging')
 OK_NAME = 'ok'
 CONFIG_NAME = 'config.py'
 
 REQUIRED_FILES = [
-    '__main__',
+    '__init__',
     'exceptions',
-    'ok',
 ]
 REQUIRED_FOLDERS = [
     'sanction',
     'utils',
 ]
+COMMAND_LINE = [
+    'ok',
+]
 
 def populate_staging(staging_dir, config_path):
     """Populates the staging directory with files for ok.py."""
+    # Command line tools.
+    os.mkdir(os.path.join(staging_dir, 'cli'))
+    for filename in ['__init__'] + COMMAND_LINE:
+        filename += '.py'
+        fullname = os.path.join(OK_ROOT, 'cli', filename)
+        shutil.copy(fullname, os.path.join(staging_dir, 'cli'))
+    # Top-level files.
     for filename in REQUIRED_FILES:
-        fullname = filename + '.py'
-        shutil.copyfile(fullname, os.path.join(staging_dir, fullname))
+        filename += '.py'
+        fullname = os.path.join(OK_ROOT, filename)
+        shutil.copyfile(fullname, os.path.join(staging_dir, filename))
+    # Configuration file.
     shutil.copyfile(config_path, os.path.join(staging_dir, CONFIG_NAME))
 
     for folder in REQUIRED_FOLDERS:
-        shutil.copytree(folder, os.path.join(staging_dir, folder))
+        shutil.copytree(os.path.join(OK_ROOT, folder),
+                        os.path.join(staging_dir, folder))
 
     config = load_config(config_path)
     populate_protocols(staging_dir, config)
@@ -60,19 +75,21 @@ def populate_protocols(staging_dir, config):
     relevant protocols.
     """
     os.mkdir(os.path.join(staging_dir, 'protocols'))
-    shutil.copyfile(os.path.join('protocols', 'protocol.py'),
+    shutil.copyfile(os.path.join(OK_ROOT, 'protocols', 'protocol.py'),
                     os.path.join(staging_dir, 'protocols', 'protocol.py'))
 
     protocol_modules = ['protocol']
     for proto in protocol.get_protocols(config.protocols):
         # Split the module along pacakge delimiters, the '.'
         path_components = proto.__module__.split('.')
+        # Remove 'client' from path, since it's already part of OK_ROOT.
+        path_components.pop(0)
         # Add the module to the list of imports in protocols/__init__
         protocol_modules.append(path_components[-1])
         # Convert to filesystem path.
-        protocol_src = os.path.join(*path_components) + '.py'
+        protocol_src = os.path.join(OK_ROOT, *path_components) + '.py'
+        protocol_dest = os.path.join(staging_dir, *path_components) + '.py'
 
-        protocol_dest = os.path.join(staging_dir, protocol_src)
         if os.path.isfile(protocol_src):
             shutil.copyfile(protocol_src, protocol_dest)
         else:
@@ -86,21 +103,23 @@ def populate_models(staging_dir, config):
     relevant test cases.
     """
     os.mkdir(os.path.join(staging_dir, 'models'))
-    shutil.copyfile(os.path.join('models', 'core.py'),
+    shutil.copyfile(os.path.join(OK_ROOT, 'models', 'core.py'),
                     os.path.join(staging_dir, 'models', 'core.py'))
-    shutil.copyfile(os.path.join('models', 'serialize.py'),
+    shutil.copyfile(os.path.join(OK_ROOT, 'models', 'serialize.py'),
                     os.path.join(staging_dir, 'models', 'serialize.py'))
 
     case_modules = ['core', 'serialize']
     for case in core.get_testcases(config.cases):
         # Split the module along pacakge delimiters, the '.'
         path_components = case.__module__.split('.')
+        # Remove 'client' from path, since it's already part of OK_ROOT.
+        path_components.pop(0)
         # Add the module to the list of imports in models/__init__
         case_modules.append(path_components[-1])
         # Convert to filesystem path.
-        case_src = os.path.join(*path_components) + '.py'
+        case_src = os.path.join(OK_ROOT, *path_components) + '.py'
+        case_dest = os.path.join(staging_dir, *path_components) + '.py'
 
-        case_dest = os.path.join(staging_dir, case_src)
         if os.path.isfile(case_src):
             shutil.copyfile(case_src, case_dest)
         else:
@@ -115,6 +134,7 @@ def create_zip(staging_dir, destination):
 
     dest = os.path.join(destination, OK_NAME)
     zipf = zipfile.ZipFile(dest, 'w')
+    zipf.write(os.path.join(OK_ROOT, '__main__.py'), './__main__.py')
     for root, _, files in os.walk(staging_dir):
         if '__pycache__' in root:
             continue
@@ -122,16 +142,17 @@ def create_zip(staging_dir, destination):
             if filename.endswith('.pyc'):
                 continue
             fullname = os.path.join(root, filename)
-            # Replace 'staging' with '.' in the zip archive.
-            arcname = fullname.replace(staging_dir, '.')
+            # Replace 'staging' with './client' in the zip archive.
+            arcname = fullname.replace(staging_dir, './client')
             zipf.write(fullname, arcname=arcname)
     zipf.close()
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-c', '--config', type=str, default=CONFIG_NAME,
+    parser.add_argument('-c', '--config', type=str,
+                        default=os.path.join(OK_ROOT, CONFIG_NAME),
                         help='Publish with a specificed config file.')
-    parser.add_argument('-d', '--destination', type=str, default='',
+    parser.add_argument('-d', '--destination', type=str, default='.',
                         help='Publish to the specified directory.')
 
     return parser.parse_args()

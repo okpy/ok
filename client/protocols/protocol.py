@@ -1,4 +1,4 @@
-import exceptions
+from client import exceptions
 
 class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
