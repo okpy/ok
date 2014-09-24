@@ -454,7 +454,7 @@ class SubmissionAPI(APIResource):
         if not comment:
             return 400, "Missing required argument 'comment'"
 
-        comment = models.Comment.get_by_id(comment)
+        comment = models.Comment.get_by_id(comment, parent=diff_obj.key)
         if comment:
             comment.key.delete()
 
