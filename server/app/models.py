@@ -362,14 +362,18 @@ class SubmissionDiff(Base):
 
     @property
     def comments(self):
-        return Comment.query(ancestor=self.key)
+        return Comment.query(ancestor=self.key).order(Comment.created)
 
     def to_json(self, fields=None):
         dct = super(SubmissionDiff, self).to_json(fields)
         comments = list(self.comments)
         comment_dict = {}
         for comment in comments:
-            comment_dict.setdefault(comment.filename, {})[comment.line] = comment
+            if comment.filename not in comment_dict:
+                comment_dict[comment.filename] = {}
+            if comment.line not in comment_dict[comment.filename]:
+                comment_dict[comment.filename][comment.line] = []
+            comment_dict[comment.filename][comment.line].append(comment)
 
         dct['comments'] = comment_dict
         return dct

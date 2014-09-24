@@ -3,7 +3,7 @@
     <div class='comment-holder' ng-repeat="comment in codeline.comments">
       <div class='comment'>
         <div class='comment-header'>
-          <strong>{{comment.user}}</strong> wrote:
+          <strong>{{comment.author.email}}</strong> wrote:
         </div>
         <div class='comment-text'>
           <div ng-bind-html="convertMarkdown(comment.message)"></div>
