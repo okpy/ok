@@ -540,6 +540,3 @@ class GroupAPI(APIResource):
 
     def put(self, *args):
         return 404, "No PUT allowed"
-
-    def post(self, *args):
-        return 404, "No POST allowed"
