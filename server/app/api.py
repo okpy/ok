@@ -436,7 +436,8 @@ class SubmissionAPI(APIResource):
             return 400, "Missing required argument 'comment'"
 
         comment = models.Comment.get_by_id(comment)
-        comment.key.delete()
+        if comment:
+            comment.key.delete()
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""

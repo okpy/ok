@@ -1,9 +1,17 @@
 <div>
   <div class='comment-box' ng-if="codeline.comments.length > 0">
-    <div class='comment-holder' ng-repeat="comment in codeline.comments">
+    <div class='comment-holder' ng-repeat="comment in codeline.comments" ng-controller="CommentController">
       <div class='comment'>
         <div class='comment-header'>
-          <strong>{{comment.author.email}}</strong> wrote:
+          <div class='left'>
+            <strong>{{comment.author.email}}</strong> wrote:
+          </div>
+          <div class='right'>
+            <button type="button" ng-click="remove()" class="btn btn-danger btn-xs">
+              <span class="glyphicon glyphicon-remove"></span>
+            </button>
+          </div>
+          <div class='clearfix'></div>
         </div>
         <div class='comment-text'>
           <div ng-bind-html="convertMarkdown(comment.message)"></div>

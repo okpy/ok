@@ -142,8 +142,8 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
     }
   ]);
 
-app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce",
-    function ($scope, $timeout, $location, $anchorScroll, $sce) {
+app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce", "$modal",
+    function ($scope, $timeout, $location, $anchorScroll, $sce, $modal) {
       var converter = new Showdown.converter();
       $scope.convertMarkdown = function(text) {
         if (text == "" || text === undefined) {
@@ -167,6 +167,29 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
       $scope.showComment = false;
       $scope.toggleComment = function(line) {
         $scope.showComment = !$scope.showComment;
+      }
+    }
+  ]);
+
+app.controller("CommentController", ["$scope", "$stateParams", "$timeout", "$modal", "Submission",
+    function ($scope, $stateParams, $timeout, $modal, Submission) {
+      $scope.remove = function() {
+        var modal = $modal.open({
+          templateUrl: '/static/partials/removecomment.modal.html',
+          scope: $scope,
+          size: 'sm',
+          resolve: {
+            modal: function () {
+              return modal;
+            }
+          }
+        });
+        modal.result.then(function() {
+          Submission.deleteComment({
+            id: $stateParams.submissionId,
+            comment: $scope.comment.id
+          }, $scope.refreshDiff);
+        });
       }
     }
   ]);
