@@ -1,6 +1,7 @@
 """
 The public API
 """
+import datetime
 import logging
 
 from flask.views import View
@@ -9,7 +10,7 @@ from flask import session, make_response
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
 
-from app import models
+from app import models, app
 from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
@@ -21,8 +22,26 @@ BadValueError = db.BadValueError
 
 parser = FlaskParser()
 
+def DateTimeArg(**kwds):
+    def parse_date(arg):
+        op = None
+        if '|' in arg:
+            op, arg = arg.split('|', 1)
+
+        date = datetime.datetime.strptime(arg, app.config["GAE_DATETIME_FORMAT"])
+        delta = datetime.timedelta(hours = 7)
+        date = (datetime.datetime.combine(date.date(),date.time()) + delta)
+        return (op, date) if op else date
+    return Arg(None, use=parse_date)
+
 def KeyArg(klass, **kwds):
-    return Arg(ndb.Key, use=lambda c: {'pairs':[(klass, int(c))]}, **kwds)
+    def parse_key(key):
+        try:
+            key = int(key)
+        except (ValueError, TypeError):
+            pass
+        return {'pairs': [(klass, key)]}
+    return Arg(ndb.Key, use=parse_key, **kwds)
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
@@ -426,6 +445,8 @@ class SubmissionAPI(APIResource):
     web_args = {
         'assignment': Arg(str),
         'messages': Arg(None),
+        'created': DateTimeArg(),
+        'submitter': KeyArg('User'),
     }
 
 

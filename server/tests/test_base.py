@@ -8,6 +8,7 @@ Server test case scaffolding
 import os
 import sys
 import collections
+import urllib
 
 sys.path.insert(0, os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..')))
@@ -92,7 +93,8 @@ class APIBaseTestCase(BaseTestCase):
         """
         Makes a get request.
         """
-        self.response = self.client.get(API_PREFIX + url, *args, **kwds)
+        params = urllib.urlencode(kwds)
+        self.response = self.client.get(API_PREFIX + url + '?' + params, *args)
         try:
             response_json = json.loads(self.response.data)['data']
             self.response_json = models.json.loads(json.dumps(response_json))
@@ -104,13 +106,8 @@ class APIBaseTestCase(BaseTestCase):
         Makes a get request on the index.
         Properly creates URL arguments for pagination.
         """
-        if 'num_page' not in kwds:
-            self.get('/{}'.format(self.name), *args, **kwds)
-        elif 'page' not in kwds:
-            self.get('/{0}?num_page={1}'.format(self.name, kwds['num_page']))
-        else:
-            self.get('/{0}?page={1}&num_page={2}'
-                .format(self.name, kwds['page'], kwds['num_page']))
+        self.get('/{}'.format(self.name), *args, **kwds)
+
         if self.response_json:
             self.page = self.response_json['page']
             self.more = self.response_json['more']
