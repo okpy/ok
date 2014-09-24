@@ -5,11 +5,11 @@ The GradedTestCase interface should be implemented by TestCases that
 are compatible with the GradingProtocol.
 """
 
+from client.models import core
+from client.protocols import grading
+from client.protocols import protocol
+from client.utils import formatting
 from collections import OrderedDict
-from models import core
-from protocols import grading
-from protocols import protocol
-from utils import formatting
 
 #####################
 # Testing Mechanism #
@@ -23,6 +23,8 @@ class ScoringProtocol(protocol.Protocol):
 
     def on_interact(self):
         """Run gradeable tests and print results."""
+        if not self.args.score:
+            return
         formatting.print_title('Scoring tests for {}'.format(
             self.assignment['name']))
 
@@ -40,33 +42,40 @@ class ScoringProtocol(protocol.Protocol):
                 self.args.question))
             print(' '.join(sorted(test.name for test in self.assignment.tests)))
         else:
-            underline('Point breakdown')
-            for name, (score, total) in scores.items():
-                print(name + ': ' + '{}/{}'.format(score, total))
-            print()
-            total = sum(score for score, _ in scores.values())
-            underline('Total score')
-            print(total)
+            display_breakdown(scores)
 
     def _score_test(self, test):
         """Grades a single Test."""
         formatting.underline('Scoring tests for ' + test.name)
         print()
-        if test['note']:
-            print(test['note'])
-        suites_passed = grade(test, self.logger, self.args.interactive,
-                             self.args.verbose, self.args.timeout)
+        points, passed, total = score(test, self.logger, self.args.interactive,
+            self.args.verbose, self.args.timeout)
 
-        total_suites = len(test['suites'])
-        if total_suites > 0:
-            print('== {} ({}%) suites passed for {} =='.format(
-                total_suites, round(100 * suites_passed / total_suites, 2),
+        if total > 0:
+            print('-- {} suites passed ({}%) for {} --'.format(
+                passed, round(100 * passed / total, 2),
                 test.name))
+            print()
+        return points
 
-        score = suites_passed * total_suites / test['points']
-        return score
+def display_breakdown(scores):
+    """Prints the point breakdown given a dictionary of scores.
 
-def grade(test, logger, interactive=False, verbose=False, timeout=10):
+    RETURNS:
+    int; the total score for the assignment
+    """
+    formatting.underline('Point breakdown')
+    for name, (score, total) in scores.items():
+        print(name + ': ' + '{}/{}'.format(score, total))
+    print()
+
+    total = sum(score for score, _ in scores.values())
+    print('Total score:')
+    print(total)
+
+    return total
+
+def score(test, logger, interactive=False, verbose=False, timeout=10):
     """Grades all suites for the specified test.
 
     PARAMETERS:
@@ -78,15 +87,27 @@ def grade(test, logger, interactive=False, verbose=False, timeout=10):
                    test case passes.
 
     RETURNS:
-    int; number of TestCases that passed.
+    (score, passed, total); where
+    score  -- float; score for the Test.
+    passed -- int; number of suites that passed.
+    total  -- int; total number of suites
     """
     cases_tested = grading.Counter()
-    passed = 0
+    passed, total = 0, 0
     for suite in test['suites']:
-        _, error = grading.run_suite(suite, logger, cases_tested,
-                                   verbose, interactive, timeout)
-        passed += 1
+        correct, error = grading.run_suite(suite, logger, cases_tested,
+                                           verbose, interactive, timeout,
+                                           stop_fast=False)
         if error:
-            break
-    return passed
+            total += 1
+        elif not error and correct > 0:
+            # If no error but correct == 0, then the suite has no
+            # graded test cases.
+            total += 1
+            passed += 1
+    if total > 0:
+        score = passed * test['points'] / total
+    else:
+        score = 0
+    return score, passed, total
 

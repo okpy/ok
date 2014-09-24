@@ -48,6 +48,8 @@ class GradingProtocol(protocol.Protocol):
 
     def on_interact(self):
         """Run gradeable tests and print results."""
+        if self.args.score:
+            return
         formatting.print_title('Running tests for {}'.format(
             self.assignment['name']))
 
@@ -74,7 +76,7 @@ class GradingProtocol(protocol.Protocol):
 
         total_cases = test.num_cases
         if total_cases > 0:
-            print('== {} ({}%) cases passed for {} =='.format(
+            print('-- {} cases passed ({}%) for {} --'.format(
                 total_passed, round(100 * total_passed / total_cases, 2),
                 test.name))
         if test.num_locked > 0:
@@ -106,7 +108,7 @@ def grade(test, logger, interactive=False, verbose=False, timeout=10):
             break
     return total_passed
 
-def run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
+def run_suite(suite, logger, cases_tested, verbose, interactive, timeout, stop_fast=True):
     """Runs tests for a single suite.
 
     PARAMETERS:
@@ -116,6 +118,9 @@ def run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
                     number of cases that have been tested so far.
     verbose      -- bool; True if verbose mode is toggled on
     interactive  -- bool; True if interactive mode is toggled on
+    stop_fast    -- bool; True if grading should stop at the first
+                    test case where should_grade returns False. If
+                    False, grading will continue.
 
     RETURNS:
     (passed, errored), where
@@ -128,7 +133,7 @@ def run_suite(suite, logger, cases_tested, verbose, interactive, timeout):
             # TODO(albert): should non-GradedTestCases be counted as
             # passing?
             continue
-        elif not case.should_grade():
+        elif stop_fast and not case.should_grade():
             logger.on()
             return passed, True  # students must unlock first
         cases_tested.increment()

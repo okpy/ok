@@ -3,5 +3,6 @@ __all__ = [
     'file_contents',
     'grading',
     'protocol',
+    'scoring',
     'unlock',
 ]
