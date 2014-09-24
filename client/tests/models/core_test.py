@@ -126,6 +126,38 @@ class SerializationTest(unittest.TestCase):
         self.assertRaises(exceptions.DeserializeError, core.Test.deserialize,
                           test_json, self.assignment, self.case_map)
 
+    def testParams(self):
+        test_json = {
+            'names': [self.TEST_NAME],
+            'points': 2,
+            'params': {
+                'foo': 5,
+            }
+        }
+        test = core.Test.deserialize(test_json, self.assignment,
+                                     self.case_map)
+
+        self.assertEqual({'foo': 5}, test['params'])
+        self.assertEqual(test_json, test.serialize())
+
+    def testHiddenParams(self):
+        test_json = {
+            'names': [self.TEST_NAME],
+            'points': 2,
+            'hidden_params': {
+                'foo': 5,
+            },
+            'params': {
+                'foo': 2,
+            }
+        }
+        test = core.Test.deserialize(test_json, self.assignment,
+                                     self.case_map)
+
+        self.assertEqual({'foo': 5}, test['hidden_params'])
+        self.assertEqual({'foo': 2}, test['params'])
+        self.assertEqual(test_json, test.serialize())
+
 class GetTestCasesTest(unittest.TestCase):
     def calls_get_cases(self, types, expected_classes):
         classes = core.get_testcases(types)

@@ -122,6 +122,29 @@ class OnGradeTest(unittest.TestCase):
             """,
         })
 
+    def testPass_hiddenAssignmentParams(self):
+        self.assignment['hidden_params'] = {
+            'doctest': {
+                'setup': 'y = 4',
+            }
+        }
+        self.assignment['params'] = {
+            'doctest': {
+                'cache': 'x = 3',
+                'setup': 'y = 1',
+            }
+        }
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(x)
+            9
+            >>> square(y)
+            16
+            """,
+        })
+
     def testPass_testParams(self):
         self.test['params'] = {
             'doctest': {
@@ -137,6 +160,29 @@ class OnGradeTest(unittest.TestCase):
             9
             >>> square(y)
             1
+            """,
+        })
+
+    def testPass_hiddenTestParams(self):
+        self.test['hidden_params'] = {
+            'doctest': {
+                'setup': 'y = 4',
+            }
+        }
+        self.test['params'] = {
+            'doctest': {
+                'cache': 'x = 3',
+                'setup': 'y = 1',
+            }
+        }
+        self.calls_onGrade({
+            'test': """
+            >>> def square(x):
+            ...     return x * x
+            >>> square(x)
+            9
+            >>> square(y)
+            16
             """,
         })
 

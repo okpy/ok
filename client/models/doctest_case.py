@@ -159,11 +159,21 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         case = super().deserialize(case_json, assignment, test)
         case._format_lines()
         if cls.type in assignment['params']:
+            # Use params first.
             case._assignment_params = _DoctestParams.deserialize(
                 assignment['params'][cls.type])
+        if cls.type in assignment['hidden_params']:
+            # Apply hidden params, if any
+            case._assignment_params.update(_DoctestParams.deserialize(
+                assignment['hidden_params'][cls.type]))
+
         if cls.type in test['params']:
             case._test_params = _DoctestParams.deserialize(
                 test['params'][cls.type])
+        if cls.type in test['hidden_params']:
+            case._test_params.update(_DoctestParams.deserialize(
+                test['hidden_params'][cls.type]))
+
         exec(case._assignment_params['cache'], case._frame)
         exec(case._test_params['cache'], case._frame)
         return case
@@ -252,6 +262,11 @@ class _DoctestParams(serialize.Serializable):
         self['setup'] = formatting.dedent(self['setup'])
         self['teardown'] = formatting.dedent(self['teardown'])
         self['cache'] = formatting.dedent(self['cache'])
+
+    def update(self, other):
+        for field in self.OPTIONAL:
+            if other[field]:
+                self[field] = other[field]
 
 class _PythonConsole(object):
     """Handles test evaluation and output formatting for a single
