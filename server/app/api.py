@@ -274,7 +274,7 @@ class UserAPI(APIResource):
         'index': {
         },
         'invitations': {
-            'methods': set(['GET'])
+            'methods': set(['GET']),
             'web_args': {
                 'first_name': Arg(str),
                 'last_name': Arg(str),
@@ -288,7 +288,7 @@ class UserAPI(APIResource):
             }
         },
         'reject_invitation': {
-            'methods': set(['POST'])
+            'methods': set(['POST']),
             'web_args': {
             }
         },
@@ -537,10 +537,10 @@ class CourseAPI(APIResource):
     methods = {
         'post': {
             'web_args': {
-                'staff': KeyRepeatedArg('User', repeated=True),
-                'name': Arg(str, repeated=True),
-                'offering': Arg(str, repeated=True),
-                'institution': Arg(str, repeated=True),
+                'staff': KeyRepeatedArg('User', required=True),
+                'name': Arg(str, required=True),
+                'offering': Arg(str, required=True),
+                'institution': Arg(str, required=True),
             }
         },
         'get': {
