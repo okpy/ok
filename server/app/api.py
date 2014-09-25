@@ -451,7 +451,7 @@ class SubmissionAPI(APIResource):
         diff.put()
         return diff
 
-    def add_comment(self, obj, user):
+    def add_comment(self, obj, user, data):
         """
         Adds a comment to this diff.
         """
@@ -459,7 +459,6 @@ class SubmissionAPI(APIResource):
         if not diff_obj:
             raise BadValueError("Diff doesn't exist yet")
 
-        data = self.parse_args(False, user)
         index = data["index"]
         message = data["message"]
         filename = data["file"]
@@ -475,7 +474,7 @@ class SubmissionAPI(APIResource):
             parent=diff_obj.key)
         comment.put()
 
-    def delete_comment(self, obj, user):
+    def delete_comment(self, obj, user, data):
         """
         Deletes a comment on this diff.
         """
@@ -483,7 +482,6 @@ class SubmissionAPI(APIResource):
         if not diff_obj:
             raise BadValueError("Diff doesn't exist yet")
 
-        data = self.parse_args(False, user)
         comment = data.get('comment', None)
         if not comment:
             return 400, "Missing required argument 'comment'"
@@ -554,6 +552,7 @@ class CourseAPI(APIResource):
         if not is_index:
             data['creator'] = user.key
         return data
+
 
 class GroupAPI(APIResource):
     model = models.Group
