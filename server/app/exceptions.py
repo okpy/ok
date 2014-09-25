@@ -29,8 +29,8 @@ class PermissionError(APIException):
         return self.need.get_exception_message()
 
 
-class InvalidKeyError(APIException):
-    code = 400
+class ResourceDoesntExist(APIException):
+    code = 404
 
 
 class IncorrectVersionError(APIException):

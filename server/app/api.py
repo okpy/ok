@@ -72,7 +72,7 @@ class APIResource(View):
     def get_instance(self, key, user):
         obj = self.model.get_by_id(key)
         if not obj:
-            raise InvalidKeyError("{resource} {key} not found".format(
+            raise ResourceDoesntExistError("{resource} {key} not found".format(
                 resource=self.name, key=key))
 
         need = Need('get')
@@ -104,6 +104,8 @@ class APIResource(View):
         user = session['user']
 
         if path is None: # Index
+            if http_method not in ("GET", "POST"):
+                raise IncorrectHTTPMethodError('Incorrect HTTP method: %s' % http_method)
             method_name = "index" if http_method == "GET" else http_method.lower()
             return self.call_method(method_name, user, is_index=(method_name == "index"))
 
