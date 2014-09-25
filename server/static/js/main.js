@@ -1,5 +1,9 @@
 var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment', 'localytics.directives']);
 
+String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
 app.directive('snippet', function() {
         "use strict";
         return {
@@ -70,6 +74,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       url: '/:assignmentId',
       templateUrl: 'static/partials/assignment.detail.html',
       controller: "AssignmentDetailCtrl"
+    }
+
+    var assignmentNew = {
+      name: 'assignment.new',
+      url: '/new',
+      templateUrl: 'static/partials/assignment.new.html',
+      controller: "AssignmentNewCtrl"
     }
 
     var courses = {
@@ -143,6 +154,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(assignments).
       state(assignmentList).
       state(assignmentDetail).
+      state(assignmentNew).
       state(courses).
       state(courseList).
       state(courseNew).

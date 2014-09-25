@@ -54,15 +54,22 @@ app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
     }
   ]);
 
-// NOT WORKING RIGHT NOW
-app.controller("CourseNewCtrl", ["$scope", "Course",
-    function ($scope, Course) {
+app.controller("CourseNewCtrl", ["$scope", "Course", "$state", 
+    function ($scope, Course, $state) {
+      $scope.courses = Course.query();
       $scope.course = {};
-      $scope.test = {'test':3};
 
       $scope.save = function() {
         var course = new Course($scope.course);
-        course.$save();
+        var oldCourse = $scope.courses && course.name in $scope.courses;
+
+        if (oldCourse) {
+          course.$update({"id": course.name});
+        }
+        else{
+          course.$save();
+        }
+        $state.go('^.list');
       };
     }
   ]);
@@ -72,10 +79,36 @@ app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
     $scope.assignments = Assignment.query();
   }]);
 
-app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
-    function ($scope, $stateParams, Assignment) { $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
+app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment", "$state", 
+    function ($scope, $stateParams, Assignment, $state) { 
+      if ($stateParams.assignmentId == "new") {
+        $state.go("^.new");
+        return;
+      }
+
+      $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
     }
   ]);
+
+app.controller("AssignmentNewCtrl", ['$scope', 'Assignment', 'Course', '$state', 
+  function($scope, Assignment, Course, $state) {
+    $scope.assignments = Assignment.query();
+    $scope.courses = Course.query();
+
+    $scope.save = function() {
+      var assignment = new Assignment($scope.assignment);
+
+      var oldAssignment = $scope.assignments && assignment.name in $scope.assignment;
+
+      if (oldAssignment) {
+        assignment.$update({"id": assignment.id});
+      }
+      else{
+        assignment.$save();
+      }
+      $state.go('^.list');
+    };
+  }]);
 
 app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$anchorScroll",
     function ($scope, $timeout, $location, $anchorScroll) {
