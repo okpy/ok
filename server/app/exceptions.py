@@ -29,7 +29,7 @@ class PermissionError(APIException):
         return self.need.get_exception_message()
 
 
-class ResourceDoesntExist(APIException):
+class ResourceDoesntExistError(APIException):
     code = 404
 
 
