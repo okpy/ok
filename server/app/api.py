@@ -17,9 +17,9 @@ from app.constants import API_PREFIX
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
 
-from google.appengine.ext import db, ndb
+from app.exceptions import *
 
-BadValueError = db.BadValueError
+from google.appengine.ext import ndb
 
 parser = FlaskParser()
 
@@ -62,7 +62,7 @@ class APIResource(View):
     """
 
     model = None
-    web_args = {}
+    methods = {}
     key_type = int
 
     @property
@@ -72,72 +72,73 @@ class APIResource(View):
     def get_instance(self, key, user):
         obj = self.model.get_by_id(key)
         if not obj:
-            return (404, "{resource} {key} not found".format(
+            raise InvalidKeyError("{resource} {key} not found".format(
                 resource=self.name, key=key))
 
         need = Need('get')
         if not obj.can(user, need, obj):
-            return need.api_response()
-
+            raise PermissionError(need)
         return obj
 
+    def call_method(self, method_name, user, instance=None, is_index=False,
+                    http_method=None):
+        if method_name not in self.methods:
+            raise BadMethodError('Unimplemented method %s' % method_name)
+        constraints = self.methods[method_name]
+        if "methods" in constraints:
+            if http_method is None:
+                raise IncorrectHTTPMethodError('Need to specify HTTP method')
+            if http_method not in constraints["methods"]:
+                raise IncorrectHTTPMethodError('Bad HTTP Method: %s' % http_method)
+        data = {}
+        web_args = constraints.get('web_args', {})
+        data = self.parse_args(web_args, user, is_index=is_index)
+        method = getattr(self, method_name)
+        if instance is not None:
+            return method(instance, user, data)
+        return method(user, data)
+
     def dispatch_request(self, path, *args, **kwargs):
-        meth = request.method.upper()
+        http_method = request.method.upper()
         user = session['user']
 
-        if not path: # Index
-            if meth == "GET":
-                return self.index(user)
-            elif meth == "POST":
-                return self.post(user)
-            assert meth in ("GET", "POST"), 'Unimplemented method %s' % meth
+        if path is None: # Index
+            method_name = "index" if http_method == "GET" else http_method.lower()
+            return self.call_method(method_name, user, is_index=(method_name == "index"))
 
-        if '/' not in path:
-            # For now, just allow ID gets
-            assert meth in ['GET', 'PUT', 'DELETE']
-            meth = getattr(self, meth.lower(), None)
-
-            assert meth is not None, 'Unimplemented method %r' % request.method
+        path = path.split('/')
+        if len(path) == 1:
+            entity_id = path[0]
             try:
-                key = self.key_type(path)
+                key = self.key_type(entity_id)
             except (ValueError, AssertionError):
-                return (400,
-                    "Invalid key. Needs to be of type '%s'" % self.key_type)
+                raise BadValueError("Invalid key. Needs to be of type: %s" % self.key_type)
+            instance = self.get_instance(key, user)
+            method_name = http_method.lower()
+            return self.call_method(method_name, user, instance=instance)
 
-            inst = self.get_instance(key, user)
-            if not isinstance(inst, self.model):
-                return inst
-
-            return meth(inst, user, *args, **kwargs)
-
-        entity_id, action = path.split('/')
+        entity_id, method_name = path
         try:
             key = self.key_type(entity_id)
         except (ValueError, AssertionError):
-            return (400,
-                "Invalid key. Needs to be of type '%s'" % self.key_type)
+            raise BadValueError("Invalid key. Needs to be of type: %s" % self.key_type)
+        instance = self.get_instance(key, user)
+        return self.call_method(method_name, user, instance=instance, http_method=http_method)
 
-        meth = getattr(self, action, None)
-        assert meth is not None, 'Unimplemented action %r' % action
-        inst = self.get_instance(key, user)
-        if not isinstance(inst, self.model):
-            return inst
 
-        return meth(inst, user, *args, **kwargs)
-
-    def get(self, obj, user):
+    def get(self, obj, user, data):
         """
         The GET HTTP method
         """
         return obj
 
-    def put(self, obj, user):
+    def put(self, obj, user, data):
         """
         The PUT HTTP method
         """
         need = Need('put')
         if not obj.can(user, need, obj):
-            return need.api_response()
+            raise PermissionError(need)
 
         blank_val = object()
         changed = False
@@ -154,7 +155,7 @@ class APIResource(View):
 
         return obj
 
-    def post(self, user):
+    def post(self, user, data):
         """
         The POST HTTP method
         """
@@ -166,13 +167,13 @@ class APIResource(View):
 
         need = Need('create')
         if not self.model.can(user, need, obj=entity):
-            return need.api_response()
+            raise PermissionError(need)
 
         entity.put()
 
-        return (201, "success", {
+        return {
             'key': entity.key.id()
-        })
+        }
 
     def new_entity(self, attributes):
         """
@@ -183,7 +184,7 @@ class APIResource(View):
         entity = self.model.from_dict(attributes)
         return entity, None
 
-    def delete(self, obj, user):
+    def delete(self, obj, user, data):
         """
         The DELETE HTTP method
         """
@@ -194,24 +195,33 @@ class APIResource(View):
         obj.key.delete()
         return None
 
-    def parse_args(self, index, user):
+    def parse_args(self, web_args, user, is_index=False):
         """
         Parses the arguments to this API call.
         |index| is whether or not this is an index call.
         """
         def use_fields(field):
             if not field[0] == '{':
+                if field == "false":
+                    return False
+                elif field == "true":
+                    return True
                 return field
             return json.loads(field)
 
+        request.fields = {}
         fields = parser.parse({
             'fields': Arg(None, use=use_fields)
         })
+        if fields['fields'] is None:
+            fields['fields'] = {}
+        if type(fields['fields']) != dict and type(fields['fields']) != bool:
+            raise BadValueError("fields should be dictionary or boolean")
         request.fields = fields
+        return {k:v for k, v in parser.parse(web_args).iteritems() if v != None}
 
-        return {k:v for k, v in parser.parse(self.web_args).iteritems() if v != None}
 
-    def index(self, user):
+    def index(self, user, data):
         """
         Index HTTP method. Should be called from GET when no key is provided.
 
@@ -222,10 +232,9 @@ class APIResource(View):
 
         result = self.model.can(user, need, query=query)
         if not result:
-            return need.api_response()
+            raise PermissionError(need)
 
-        args = self.parse_args(True, user)
-        query = filter_query(result, args, self.model)
+        query = filter_query(result, data, self.model)
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
             logging.info("Adding default ordering by creation time.")
@@ -251,71 +260,59 @@ class UserAPI(APIResource):
     model = models.User
     key_type = str
 
+    methods = {
+        'post': {
+            'web_args': {
+                'first_name': Arg(str),
+                'last_name': Arg(str),
+                'email': Arg(str, required=True),
+                'login': Arg(str),
+            }
+        },
+        'get': {
+        },
+        'index': {
+        },
+        'invitations': {
+            'methods': set(['GET'])
+            'web_args': {
+                'first_name': Arg(str),
+                'last_name': Arg(str),
+                'email': Arg(str, required=True),
+                'login': Arg(str),
+            }
+        },
+        'accept_invitation': {
+            'methods': set(['POST']),
+            'web_args': {
+            }
+        },
+        'reject_invitation': {
+            'methods': set(['POST'])
+            'web_args': {
+            }
+        },
+    }
+
     def new_entity(self, attributes):
         """
         Creates a new entity with given attributes.
         """
-        if 'email' not in attributes:
-            return None, (400, 'Email required')
         entity = self.model.get_by_id(attributes['email'])
         if entity:
             return None, (400, '%s already exists' % self.name)
         entity = self.model.from_dict(attributes)
         return entity, None
 
-    web_args = {
-        'first_name': Arg(str),
-        'last_name': Arg(str),
-        'email': Arg(str),
-        'login': Arg(str),
-        'assignment': Arg(int),
-        'invitation': Arg(int),
-        'course': KeyArg('User'),
-    }
 
     def invitations(self, user, obj):
-        data = self.parse_args(False, user)
-        query = models.Group.query(user.key == models.Group.invited_members)
-        if 'assignment' in data:
-            assignment = models.Assignment.get_by_id(data['assignment'])
-            if assignment:
-                query = query.filter(models.Group.assignment == assignment.key)
-            else:
-                return {
-                    "invitations": []
-                }
-        return {
-            "invitations": [{
-                "members": invitation.members,
-                "id": invitation.key.id(),
-                "assignment": invitation.assignment,
-            } for invitation in list(query)]
-        }
+        pass
 
     def accept_invitation(self, user, obj):
-        data = self.parse_args(False, user)
-        if 'invitation' not in data:
-            return
-        group = models.Group.get_by_id(data['invitation'])
-        if group:
-            assignment = group.assignment.get()
-            if len(group.members) < assignment.max_group_size:
-                already_in_group = len(list(user.get_groups(assignment))) > 0
-                if not already_in_group:
-                    if user.key in group.invited_members:
-                        group.invited_members.remove(user.key)
-                        group.members.append(user.key)
-                    group.put()
+        pass
 
     def reject_invitation(self, user, obj):
-        data = self.parse_args(False, user)
-        if 'invitation' not in data:
-            return
-        group = models.Group.get_by_id(data['invitation'])
-        if group:
-            if user.key in group.invited_members:
-                group.invited_members.remove(user.key)
-                group.put()
+        pass
 
 
 
@@ -323,21 +320,35 @@ class AssignmentAPI(APIResource):
     """The API resource for the Assignment Object"""
     model = models.Assignment
 
-    web_args = {
-        'name': Arg(str),
-        'points': Arg(float),
-        'course': KeyArg('Course'),
-        'max_group_size': Arg(int),
-        'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+    methods = {
+        'post': {
+            'web_args': {
+                'name': Arg(str, required=True),
+                'display_name': Arg(str, required=True),
+                'points': Arg(float, required=True),
+                'course': KeyArg('Course', required=True),
+                'max_group_size': Arg(int, required=True),
+                'templates': Arg(str, use=lambda temps: json.dumps(temps), required=True),
+            }
+        },
+        'get': {
+        },
+        'index': {
+        },
+        'group': {
+            'methods': set(['GET'])
+        },
     }
 
-    def parse_args(self, is_index, user):
-        data = super(AssignmentAPI, self).parse_args(is_index, user)
-        if not is_index:
-            data['creator'] = user.key
-        return data
+    def post(self, user, data):
+        """
+        The POST HTTP method
+        """
+        data['creator'] = user.key
+        return super(AssignmentAPI, self).post(user, data)
 
-    def group(self, obj, user):
+
+    def group(self, obj, user, data):
         groups = (models.Group.query()
                   .filter(models.Group.members == user.key)
                   .filter(models.Group.assignment == obj.key).fetch())
@@ -378,12 +389,35 @@ class SubmissionAPI(APIResource):
 
     db = SubmitNDBImplementation()
 
-    def download(self, obj, user):
+    methods = {
+        'post': {
+            'web_args': {
+                'assignment': Arg(str, required=True),
+                'messages': Arg(None, required=True),
+            }
+        },
+        'get': {
+            'web_args': {
+            }
+        },
+        'index': {
+            'web_args': {
+            }
+        },
+        'diff': {
+            'methods': set(["GET"]),
+        },
+        'download': {
+            'methods': set(["GET"]),
+        },
+    }
+
+    def download(self, obj, user, data):
         """
         Allows you to download a submission.
         """
         if 'file_contents' not in obj.messages:
-            return 400, "Submission has no contents to download."
+            raise BadValueError("Submission has no contents to download")
 
         response = make_response(create_zip(obj.messages['file_contents']))
         response.headers["Content-Disposition"] = (
@@ -391,7 +425,7 @@ class SubmissionAPI(APIResource):
         response.headers["Content-Type"] = "application/zip"
         return response
 
-    def diff(self, obj, user):
+    def diff(self, obj, user, data):
         """
         Gets the associated diff for a submission
         """
@@ -475,37 +509,45 @@ class SubmissionAPI(APIResource):
             'key': submission.key.id()
         }
 
-    def post(self, user):
-        data = self.parse_args(False, user)
-        if 'assignment' not in data:
-            raise BadValueError("Missing required arguments 'assignment'")
-        if 'messages' not in data:
-            raise BadValueError("Missing required arguments 'messages'")
-
+    def post(self, user, data):
         return self.submit(user, data['assignment'],
                            data['messages'])
-
-    web_args = {
-        'assignment': Arg(str),
-        'messages': Arg(None),
-        'message': Arg(str),
-        'file': Arg(str),
-        'index': Arg(int),
-        'comment': Arg(int),
-    }
 
 
 class VersionAPI(APIResource):
     model = models.Version
 
-    web_args = {
-        'file_data': Arg(str),
-        'name': Arg(str),
-        'version': Arg(str),
+    methods = {
+        'post': {
+            'web_args': {
+                'file_data': Arg(str, required=True),
+                'name': Arg(str, required=True),
+                'version': Arg(str, required=True),
+            }
+        },
+        'get': {
+        },
+        'index': {
+        },
     }
 
 class CourseAPI(APIResource):
     model = models.Course
+
+    methods = {
+        'post': {
+            'web_args': {
+                'staff': KeyRepeatedArg('User', repeated=True),
+                'name': Arg(str, repeated=True),
+                'offering': Arg(str, repeated=True),
+                'institution': Arg(str, repeated=True),
+            }
+        },
+        'get': {
+        },
+        'index': {
+        },
+    }
 
     def parse_args(self, is_index, user):
         data = super(CourseAPI, self).parse_args(is_index, user)
@@ -513,75 +555,35 @@ class CourseAPI(APIResource):
             data['creator'] = user.key
         return data
 
-    web_args = {
-        'staff': KeyRepeatedArg('User'),
-        'name': Arg(str),
-        'offering': Arg(str),
-        'institution': Arg(str),
-    }
-
 class GroupAPI(APIResource):
     model = models.Group
 
-    web_args = {
-        'members': KeyRepeatedArg('User'),
-        'name': Arg(str),
-        'assignment': KeyArg('Assignment')
+    methods = {
+        'post': {
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
+        },
+        'get': {
+            'web_args': {
+            }
+        },
+        'add_member': {
+            'methods': set(['POST']),
+            'web_args': {
+                'member': KeyArg('User', required=True),
+            },
+        },
+        'remove_member': {
+            'methods': set(['POST']),
+            'web_args': {
+                'member': KeyArg('User', required=True),
+            },
+        }
     }
 
-    def add_member(self, obj, user):
-        data = self.parse_args(False, user)
+    def add_member(self, obj, user, data):
+        pass
 
-        for member in data['members']:
-            if member not in obj.invited_members:
-                member = models.User.get_or_insert(member.id())
-                obj.invited_members.append(member.key)
-                break
-        else:
-            return
-
-        #TODO(martinis) make this async
-        obj.put()
-
-        audit_log_message = models.AuditLog(
-            event_type='Group.add_member',
-            user=user.key,
-            description="Added members {} to group".format(data['members']),
-            obj=obj.key
-            )
-        audit_log_message.put()
-
-    def remove_member(self, obj, user):
-        data = self.parse_args(False, user)
-
-        changed = False
-        for member in data['members']:
-            if member in obj.members:
-                changed = True
-                obj.members.remove(member)
-            if member in obj.invited_members:
-                changed = True
-                obj.invited_members.remove(member)
-
-        if not changed:
-            return 400, "Tried to remove a user which is not part of this group"
-
-        audit_log_message = models.AuditLog(
-            event_type='Group.remove_member',
-            user=user.key,
-            obj=obj.key
-            )
-
-        message = ""
-        if len(obj.members) == 0:
-            obj.key.delete()
-            message = "Deleted group"
-        else:
-            obj.put()
-            message = "Removed members {} from group".format(data['members'])
-
-        audit_log_message.description = message
-        audit_log_message.put()
-
-    def put(self, *args):
-        return 404, "No PUT allowed"
+    def remove_member(self, obj, user, data):
+        pass

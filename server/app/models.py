@@ -63,9 +63,13 @@ class Base(ndb.Model):
 
     def to_json(self, fields=None):
         """Converts this model to a json dictionary."""
+        if fields == True:
+            return self.to_dict()
+        elif fields == False:
+            return {}
+
         if not fields:
             fields = {}
-
         if fields:
             result = self.to_dict(include=fields.keys())
         else:

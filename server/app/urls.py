@@ -6,10 +6,9 @@ import logging
 import traceback
 import collections
 
-from flask import render_template, session, request
+from flask import render_template, session, request, Response
 
 from google.appengine.api import users
-from google.appengine.ext.db import BadValueError
 
 from app import app
 from app import api
@@ -17,6 +16,7 @@ from app import auth
 from app import models
 from app import utils
 from app.constants import API_PREFIX
+from app.exceptions import *
 
 @app.route("/")
 def index():
@@ -44,12 +44,9 @@ def page_not_found(e):
 def server_error(e):
     return render_template('base.html', error=e), 500
 
-class WebArgsException(Exception):
-    pass
-
 @api.parser.error_handler
-def args_error(error):
-    raise WebArgsException(error)
+def args_error(e):
+    raise BadArgumentException(e.message)
 
 def register_api(view, endpoint, url):
     """
@@ -59,7 +56,7 @@ def register_api(view, endpoint, url):
     view = view.as_view(endpoint)
 
     @wraps(view)
-    def wrapped(*args, **kwds):
+    def api_wrapper(*args, **kwds):
         #TODO(martinis) add tests
         if 'client_version' in request.args:
             if request.args['client_version'] != app.config['CLIENT_VERSION']:
@@ -84,24 +81,21 @@ def register_api(view, endpoint, url):
             if (isinstance(rval, collections.Iterable)
                 and not isinstance(rval, dict)):
                 rval = utils.create_api_response(*rval)
+            elif isinstance(rval, Response):
+                pass
             else:
                 rval = utils.create_api_response(200, 'success', rval)
-
             return rval
-        except (WebArgsException, BadValueError) as e:
-            message = "Invalid arguments: %s" % e.message
-            logging.warning(message)
-            return utils.create_api_response(400, message)
+        except APIException as e:
+            logging.warning(e.message)
+            return utils.create_api_response(e.code, e.message)
         except Exception as e: #pylint: disable=broad-except
-            #TODO(martinis) add tests
-            error_message = traceback.format_exc()
-            logging.error(error_message)
-            return utils.create_api_response(500, 'internal server error:\n%s' %
-                                             error_message)
+            logging.exception(e.message)
+            return utils.create_api_response(500, 'internal server error :(')
 
-    app.add_url_rule('%s' % url, view_func=wrapped, defaults={'path': None},
+    app.add_url_rule('%s' % url, view_func=api_wrapper, defaults={'path': None},
             methods=['GET', 'POST'])
-    app.add_url_rule('%s/<path:path>' % url, view_func=wrapped,
+    app.add_url_rule('%s/<path:path>' % url, view_func=api_wrapper,
             methods=['GET', 'POST', 'DELETE', 'PUT'])
 
 register_api(api.UserAPI, 'user_api', 'user')
