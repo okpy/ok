@@ -485,11 +485,18 @@ class SubmissionAPI(APIResource):
         return self.submit(user, data['assignment'],
                            data['messages'])
 
+    def parse_args(self, is_index, user):
+        data = super(SubmissionAPI, self).parse_args(is_index, user)
+        if not is_index and 'created' in data:
+            del data['created']
+        return data
+
     web_args = {
         'assignment': Arg(str),
         'messages': Arg(None),
         'message': Arg(str),
         'file': Arg(str),
+        'created': DateTimeArg(),
         'index': Arg(int),
         'comment': Arg(int),
     }
