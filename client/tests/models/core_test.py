@@ -9,11 +9,16 @@ import unittest
 
 class MockCase(core.TestCase):
     type = 'mock'
+    MAGIC_NUMBER = 42
 
     REQUIRED = {
         'type': serialize.STR,
         'foo': serialize.INT,
     }
+
+    @classmethod
+    def process_params(cls, obj):
+        return cls.MAGIC_NUMBER
 
 class SerializationTest(unittest.TestCase):
     ASSIGN_NAME = 'dummy'
@@ -145,17 +150,18 @@ class SerializationTest(unittest.TestCase):
             'names': [self.TEST_NAME],
             'points': 2,
             'hidden_params': {
-                'foo': 5,
+                'mock': 5,
             },
             'params': {
-                'foo': 2,
+                'mock': 2,
             }
         }
         test = core.Test.deserialize(test_json, self.assignment,
                                      self.case_map)
 
-        self.assertEqual({'foo': 5}, test['hidden_params'])
-        self.assertEqual({'foo': 2}, test['params'])
+        self.assertEqual({'mock': 5}, test['hidden_params'])
+        self.assertEqual({'mock': 2}, test['params'])
+        self.assertEqual(MockCase.MAGIC_NUMBER, test.processed_params['mock'])
         self.assertEqual(test_json, test.serialize())
 
 class GetTestCasesTest(unittest.TestCase):

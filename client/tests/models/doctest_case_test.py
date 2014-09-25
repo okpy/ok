@@ -25,17 +25,36 @@ class OnGradeTest(unittest.TestCase):
         # This logger is used by on_grade.
         self.logger = output.OutputLogger()
 
-        self.assignment = core.Assignment.deserialize({
-            'name': self.ASSIGN_NAME,
-            'version': '1.0',
-        })
-        self.test = core.Test.deserialize({
-            'names': ['q1'],
-            'points': 1,
-        }, self.assignment, {})
+        self.case_map = {'doctest': doctest_case.DoctestCase}
+        self.makeAssignment()
+        self.makeTest()
 
     def tearDown(self):
         self.stdout = sys.__stdout__
+
+    def makeAssignment(self, hidden_params=None, params=None):
+        json = {
+            'name': self.ASSIGN_NAME,
+            'version': '1.0',
+        }
+        if hidden_params:
+            json['hidden_params'] = hidden_params
+        if params:
+            json['params'] = params
+        self.assignment = core.Assignment.deserialize(json, self.case_map)
+        return self.assignment
+
+    def makeTest(self, hidden_params=None, params=None):
+        json = {
+            'names': ['q1'],
+            'points': 1,
+        }
+        if hidden_params:
+            json['hidden_params'] = hidden_params
+        if params:
+            json['params'] = params
+        self.test = core.Test.deserialize(json, self.assignment, self.case_map)
+        return self.test
 
     def makeTestCase(self, case_json):
         case_json['type'] = doctest_case.DoctestCase.type
@@ -105,12 +124,12 @@ class OnGradeTest(unittest.TestCase):
         })
 
     def testPass_assignmentParams(self):
-        self.assignment['params'] = {
+        self.makeAssignment(params={
             'doctest': {
                 'cache': 'x = 3',
                 'setup': 'y = 1',
             }
-        }
+        })
         self.calls_onGrade({
             'test': """
             >>> def square(x):
@@ -123,17 +142,16 @@ class OnGradeTest(unittest.TestCase):
         })
 
     def testPass_hiddenAssignmentParams(self):
-        self.assignment['hidden_params'] = {
+        self.makeAssignment(hidden_params={
             'doctest': {
                 'setup': 'y = 4',
             }
-        }
-        self.assignment['params'] = {
+        }, params={
             'doctest': {
                 'cache': 'x = 3',
                 'setup': 'y = 1',
             }
-        }
+        })
         self.calls_onGrade({
             'test': """
             >>> def square(x):
@@ -146,12 +164,12 @@ class OnGradeTest(unittest.TestCase):
         })
 
     def testPass_testParams(self):
-        self.test['params'] = {
+        self.makeTest(params={
             'doctest': {
                 'cache': 'x = 3',
                 'setup': 'y = 1',
             }
-        }
+        })
         self.calls_onGrade({
             'test': """
             >>> def square(x):
@@ -164,17 +182,16 @@ class OnGradeTest(unittest.TestCase):
         })
 
     def testPass_hiddenTestParams(self):
-        self.test['hidden_params'] = {
+        self.makeTest(hidden_params={
             'doctest': {
                 'setup': 'y = 4',
             }
-        }
-        self.test['params'] = {
+        }, params={
             'doctest': {
                 'cache': 'x = 3',
                 'setup': 'y = 1',
             }
-        }
+        })
         self.calls_onGrade({
             'test': """
             >>> def square(x):
@@ -342,7 +359,7 @@ class OnUnlockTest(unittest.TestCase):
         self.assignment = core.Assignment.deserialize({
             'name': self.ASSIGN_NAME,
             'version': '1.0',
-        })
+        }, {})
         self.test = core.Test.deserialize({
             'names': ['q1'],
             'points': 1,
@@ -416,7 +433,7 @@ class OnLockTest(unittest.TestCase):
         self.assignment = core.Assignment.deserialize({
             'name': self.ASSIGN_NAME,
             'version': '1.0',
-        })
+        }, {})
         self.test = core.Test.deserialize({
             'names': ['q1'],
             'points': 1,
@@ -483,7 +500,7 @@ class SerializationTest(unittest.TestCase):
         self.assignment = core.Assignment.deserialize({
             'name': self.ASSIGN_NAME,
             'version': '1.0',
-        })
+        }, {})
         self.test = core.Test.deserialize({
             'names': ['q1'],
             'points': 1,

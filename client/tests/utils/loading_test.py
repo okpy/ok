@@ -71,10 +71,10 @@ class TestDumpTests(unittest.TestCase):
     # like this for the time being.
     def setUp(self):
         self.makeTestDirectory()
+        self.case_map = {}
         self.assignment = self.makeAssignment()
         self.mock_test = mock.Mock(spec=core.Test)
         self.applyPatches()
-        self.case_map = {}
 
     #########
     # Tests #
@@ -119,7 +119,7 @@ class TestDumpTests(unittest.TestCase):
         return core.Assignment.deserialize({
             'name': self.ASSIGN_NAME,
             'version': '1.0',
-        })
+        }, self.case_map)
 
     def makeTestJson(self, names=None):
         return {

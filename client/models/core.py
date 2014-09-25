@@ -35,6 +35,7 @@ class Assignment(serialize.Serializable):
     def __init__(self, **fields):
         super().__init__(**fields)
         self._tests = []
+        self.processed_params = {}
 
     def add_test(self, test):
         assert isinstance(test, Test), '{} must be a Test'.format(test)
@@ -51,6 +52,15 @@ class Assignment(serialize.Serializable):
     def num_tests(self):
         return len(self._tests)
 
+    @classmethod
+    def deserialize(cls, json, case_map):
+        assignment = cls(**json)
+        for case_type, case_obj in case_map.items():
+            assignment.processed_params[case_type] = case_obj.process_params(
+                assignment)
+        return assignment
+
+
 class Test(serialize.Serializable):
     """Represents all suites for a single test in an assignment."""
 
@@ -65,6 +75,10 @@ class Test(serialize.Serializable):
         'note': serialize.STR,
         'extra': serialize.BOOL_FALSE,
     }
+
+    def __init__(self, **fields):
+        super().__init__(**fields)
+        self.processed_params = {}
 
     @property
     def name(self):
@@ -114,7 +128,10 @@ class Test(serialize.Serializable):
         RETURNS:
         Test
         """
-        test = Test(**test_json)
+        test = cls(**test_json)
+        for case_type, case_obj in case_map.items():
+            test.processed_params[case_type] = case_obj.process_params(test)
+
         new_suites = []
         for suite in test['suites']:
             if not suite:
@@ -161,6 +178,17 @@ class TestCase(serialize.Serializable):
         result = super().deserialize(json)
         result._assertType()
         return result
+
+    @classmethod
+    def process_params(cls, obj):
+        """Subclasses can override this to process assignment and
+        test params.
+
+        RETURN:
+        object; the TestCase can choose how to represent its processed
+        params.
+        """
+        return None
 
     def _assertType(self):
         if self['type'] != self.type:

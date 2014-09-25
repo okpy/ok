@@ -59,10 +59,6 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         """
         super().__init__(**fields)
         self._lines = []
-        self._frame = {}
-        # TODO(albert): consolidate these parameters.
-        self._assignment_params = _DoctestParams()
-        self._test_params = _DoctestParams()
 
     ##################
     # Public Methods #
@@ -90,10 +86,15 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         log = []
         logger.register_log(log)
 
+        assignment_params = self.assignment.processed_params[self.type]
+        test_params = self.test.processed_params[self.type]
+
         console = _PythonConsole(timeout)
-        frame = self._frame.copy()
-        if console.exec(self._assignment_params['setup'], frame) \
-                or console.exec(self._test_params['setup'], frame):
+        frame = assignment_params.update_frame({})
+        frame = test_params.update_frame(frame)
+
+        if console.exec(assignment_params['setup'], frame) \
+                or console.exec(test_params['setup'], frame):
             # If any of the setup code errors.
             return True
 
@@ -105,8 +106,8 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         if error and interactive:
             _interact(frame)
 
-        console.exec(self._assignment_params['teardown'], frame)
-        console.exec(self._test_params['teardown'], frame)
+        console.exec(assignment_params['teardown'], frame)
+        console.exec(test_params['teardown'], frame)
         print()
 
         if error:
@@ -158,24 +159,8 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         """
         case = super().deserialize(case_json, assignment, test)
         case._format_lines()
-        if cls.type in assignment['params']:
-            # Use params first.
-            case._assignment_params = _DoctestParams.deserialize(
-                assignment['params'][cls.type])
-        if cls.type in assignment['hidden_params']:
-            # Apply hidden params, if any
-            case._assignment_params.update(_DoctestParams.deserialize(
-                assignment['hidden_params'][cls.type]))
-
-        if cls.type in test['params']:
-            case._test_params = _DoctestParams.deserialize(
-                test['params'][cls.type])
-        if cls.type in test['hidden_params']:
-            case._test_params.update(_DoctestParams.deserialize(
-                test['hidden_params'][cls.type]))
-
-        exec(case._assignment_params['cache'], case._frame)
-        exec(case._test_params['cache'], case._frame)
+        case.assignment = assignment
+        case.test = test
         return case
 
     def serialize(self):
@@ -196,6 +181,14 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
     ###################
     # Private methods #
     ###################
+
+    @classmethod
+    def process_params(cls, obj):
+        params = _DoctestParams.deserialize(
+            obj['params'].get(cls.type, {}))
+        params.update(_DoctestParams.deserialize(
+            obj['hidden_params'].get(cls.type, {})))
+        return params
 
     def _format_lines(self):
         """Splits the test string and adds _Answer objects to denote
@@ -262,6 +255,14 @@ class _DoctestParams(serialize.Serializable):
         self['setup'] = formatting.dedent(self['setup'])
         self['teardown'] = formatting.dedent(self['teardown'])
         self['cache'] = formatting.dedent(self['cache'])
+        self._frame = None
+
+    def update_frame(self, frame):
+        if self._frame is None:
+            self._frame = {}
+            exec(self['cache'], self._frame)
+        frame.update(self._frame)
+        return frame
 
     def update(self, other):
         for field in self.OPTIONAL:

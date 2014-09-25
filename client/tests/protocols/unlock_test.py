@@ -176,7 +176,7 @@ class LockTest(unittest.TestCase):
         self.assignment = core.Assignment.deserialize({
             'name': 'dummy',
             'version': '1.0',
-        })
+        }, {})
         self.logger = mock.Mock()
         self.proto = unlock.LockProtocol(self.args, self.assignment,
                                          self.logger)
