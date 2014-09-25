@@ -174,9 +174,9 @@ class APIResource(View):
 
         entity.put()
 
-        return {
+        return (201, {
             'key': entity.key.id()
-        }
+        })
 
     def new_entity(self, attributes):
         """
@@ -505,9 +505,9 @@ class SubmissionAPI(APIResource):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment, messages)
-        return {
+        return (201, "success", {
             'key': submission.key.id()
-        }
+        })
 
     def post(self, user, data):
         return self.submit(user, data['assignment'],
@@ -554,7 +554,7 @@ class CourseAPI(APIResource):
         The POST HTTP method
         """
         data['creator'] = user.key
-        return super(AssignmentAPI, self).post(user, data)
+        return super(CourseAPI, self).post(user, data)
 
 
 
