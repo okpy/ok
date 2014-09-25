@@ -233,7 +233,7 @@ class Assignment(Base):
     creator = ndb.KeyProperty(User)
     templates = ndb.JsonProperty()
     course = ndb.KeyProperty('Course')
-    max_group_size = ndb.IntegerProperty()
+    max_group_size = ndb.IntegerProperty(required=True, default=10)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
