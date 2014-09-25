@@ -10,6 +10,9 @@ class Need(object):
     def set_object(self, obj):
         self.obj = obj
 
+    def exception(self):
+        return PermissionError(self.get_exception_message())
+
     def get_exception_message(self):
         class_name = ""
         if isinstance(self.obj, type):

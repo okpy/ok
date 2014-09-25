@@ -88,6 +88,7 @@ def register_api(view, endpoint, url):
             return rval
         except APIException as e:
             logging.warning(e.message)
+            import traceback
             return utils.create_api_response(e.code, e.message)
         except Exception as e: #pylint: disable=broad-except
             logging.exception(e.message)

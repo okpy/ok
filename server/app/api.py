@@ -77,7 +77,7 @@ class APIResource(View):
 
         need = Need('get')
         if not obj.can(user, need, obj):
-            raise PermissionError(need)
+            raise need.exception()
         return obj
 
     def call_method(self, method_name, user, instance=None, is_index=False,
@@ -141,7 +141,7 @@ class APIResource(View):
         """
         need = Need('put')
         if not obj.can(user, need, obj):
-            raise PermissionError(need)
+            raise need.exception()
 
         blank_val = object()
         changed = False
@@ -170,7 +170,7 @@ class APIResource(View):
 
         need = Need('create')
         if not self.model.can(user, need, obj=entity):
-            raise PermissionError(need)
+            raise need.exception()
 
         entity.put()
 
@@ -234,7 +234,7 @@ class APIResource(View):
 
         result = self.model.can(user, need, query=query)
         if not result:
-            raise PermissionError(need)
+            raise need.exception()
 
         query = filter_query(result, data, self.model)
         created_prop = getattr(self.model, 'created', None)
