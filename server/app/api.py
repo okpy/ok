@@ -99,6 +99,7 @@ class APIResource(View):
         return method(user, data)
 
     def dispatch_request(self, path, *args, **kwargs):
+        request.fields = {}
         http_method = request.method.upper()
         user = session['user']
 
@@ -209,7 +210,6 @@ class APIResource(View):
                 return field
             return json.loads(field)
 
-        request.fields = {}
         fields = parser.parse({
             'fields': Arg(None, use=use_fields)
         })
@@ -547,11 +547,13 @@ class CourseAPI(APIResource):
         },
     }
 
-    def parse_args(self, is_index, user):
-        data = super(CourseAPI, self).parse_args(is_index, user)
-        if not is_index:
-            data['creator'] = user.key
-        return data
+    def post(self, user, data):
+        """
+        The POST HTTP method
+        """
+        data['creator'] = user.key
+        return super(AssignmentAPI, self).post(user, data)
+
 
 
 class GroupAPI(APIResource):
@@ -564,8 +566,8 @@ class GroupAPI(APIResource):
             }
         },
         'get': {
-            'web_args': {
-            }
+        },
+        'index': {
         },
         'add_member': {
             'methods': set(['POST']),

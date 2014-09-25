@@ -145,7 +145,7 @@ class APITest(object): #pylint: disable=no-init
             self.assertTrue(num_instances <= num_page,
                 "There are too many instances returned. There are " +
                 str(num_instances) + " instances")
-            self.assertTrue(num_instances == min(total_objects, num_page), 
+            self.assertTrue(num_instances == min(total_objects, num_page),
                 "Not right number returned: " + str(total_objects) +
                 " vs. " +str(num_instances) + str(self.response_json))
             total_objects -= num_page
@@ -261,14 +261,15 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
     def setUp(self):
         super(AssignmentAPITest, self).setUp()
-        self.course = models.Course(name="test")
+        self.course = models.Course(name="test").put()
 
     def get_basic_instance(self, mutate=True):
         name = 'proj'
         if mutate:
             name += str(self.num)
             self.num += 1
-        rval = models.Assignment(name=name, points=3, course=self.course.key)
+        rval = models.Assignment(name=name, points=3, course=self.course, templates={},
+                                 display_name=name)
         return rval
 
 

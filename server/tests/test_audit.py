@@ -32,7 +32,7 @@ class AuditTest(APIBaseTestCase): #pylint: disable=no-init
         self.assignment = models.Assignment(name='testassign')
         self.assignment.put()
 
-        self.group = models.Group(  
+        self.group = models.Group(
             name='testgroup',
             assignment=self.assignment.key)
         self.group.put()
@@ -71,9 +71,9 @@ class AuditTest(APIBaseTestCase): #pylint: disable=no-init
         self.group.members = members
         self.group.put()
 
-        self.set_data({'members': members})
+        data = {'members': members}
 
-        result = self.api.remove_member(self.group, self.user)
+        result = self.api.remove_member(self.group, self.user, data)
 
         audit_logs = models.AuditLog.query().fetch()
         self.assertEqual(len(audit_logs), 1)
@@ -86,9 +86,9 @@ class AuditTest(APIBaseTestCase): #pylint: disable=no-init
 
     def test_add_member(self):
         members = [self.accounts['dummy_student'].key]
-        self.set_data({'members': members})
+        data = {'members': members}
 
-        result = self.api.add_member(self.group, self.user)
+        result = self.api.add_member(self.group, self.user, data)
 
         audit_logs = models.AuditLog.query().fetch()
         self.assertEqual(len(audit_logs), 1)

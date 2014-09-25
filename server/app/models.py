@@ -232,6 +232,7 @@ class Assignment(Base):
     The Assignment Model
     """
     name = ndb.StringProperty() # Must be unique to support submission.
+    display_name = ndb.StringProperty() # Name displayed to students
     # TODO(denero) Validate uniqueness of name.
     points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User)
@@ -301,7 +302,7 @@ class Submission(Base):
     @property
     def group(self):
         group = APIProxy.AssignmentAPI().group(
-            self.assignment.get(), self.submitter.get())
+            self.assignment.get(), self.submitter.get(), {})
         if not isinstance(group, Group):
             return None
         return group
