@@ -107,10 +107,10 @@ class APITest(object): #pylint: disable=no-init
                         self.response_json)
 
     pagination_tests = [
-        (11, 10),
-        (32, 10),
-        (6, 10),
-        (10, 10)
+        (3, 2),
+        (10, 3),
+        (2, 3),
+        (2, 2)
     ]
 
     @data(*pagination_tests)
@@ -142,12 +142,14 @@ class APITest(object): #pylint: disable=no-init
             if self.name == 'user' and num_instances < num_page:
                 total_objects += 1 # To take care of the dummy already there
 
-            self.assertTrue(num_instances <= num_page,
+            self.assertTrue(
+                num_instances <= num_page,
                 "There are too many instances returned. There are " +
                 str(num_instances) + " instances")
-            self.assertTrue(num_instances == min(total_objects, num_page), 
-                "Not right number returned: " + str(total_objects) +
-                " vs. " +str(num_instances) + str(self.response_json))
+            self.assertTrue(
+                num_instances == min(total_objects, num_page),
+                "Not right number returned: {} vs. {} {}".format(
+                    total_objects, num_instances, self.response_json))
             total_objects -= num_page
             self.page += 1
 
@@ -206,54 +208,6 @@ class APITest(object): #pylint: disable=no-init
     ## ENTITY PUT ##
 
     ## ENTITY DELETE ##
-
-class UserAPITest(APITest, APIBaseTestCase):
-    model = models.User
-    name = 'user'
-    access_token = 'dummy_student'
-    num = 1
-
-    @classmethod
-    def get_basic_instance(cls, mutate=False):
-        if mutate:
-            email = str(cls.num) + "test@example.com"
-            cls.num += 1
-            return models.User(
-                key=ndb.Key('User', email),
-                email=email,
-                first_name="Test",
-                last_name="User",
-                login="aotnehu"
-            )
-        else:
-            return cls.accounts['dummy_student']
-
-    def test_index_empty(self):
-        """This test doesn't make sense for the user API."""
-        pass
-
-    def test_get_invalid_id_errors(self):
-        """Tests that a get on an invalid ID errors."""
-        self.get('/{}/4'.format(self.name))
-        self.assertStatusCode(404)
-
-    def test_index_one_added(self):
-        """Tests that the index method gives the added entity."""
-        inst = self.get_basic_instance()
-        inst.put()
-
-        self.get_index()
-        self.assertTrue(inst.to_json() in self.response_json)
-        return inst
-
-    def test_index_one_removed(self):
-        """Tests that removing an entity makes it disappear from the index."""
-        inst = self.get_basic_instance()
-        inst.put()
-
-        inst.key.delete()
-        self.get_index()
-        self.assertTrue(inst.to_json() not in self.response_json)
 
 
 class AssignmentAPITest(APITest, APIBaseTestCase):
@@ -370,7 +324,8 @@ class VersionAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        return self.model(name=name, file_data='aaabb', version='1.0.0')
+        return self.model(key=ndb.Key('Version', name),
+            name=name, versions=['1.0.0', '1.1.0'])
 
 
 if __name__ == '__main__':

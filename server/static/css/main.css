@@ -134,3 +134,11 @@ h2 {
 .line-number {
   color: rgba(0,0,0,0.3);
 }
+
+input.ng-invalid.ng-dirty {
+  background-color: #FA787E;
+}
+
+input.ng-valid.ng-dirty {
+  background-color: #78FA89;
+}

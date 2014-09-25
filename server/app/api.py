@@ -15,7 +15,7 @@ from app.codereview import compare
 from app.models import BadValueError
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import create_api_response, paginate, filter_query, create_zip
+from app.utils import paginate, filter_query, create_zip
 
 from google.appengine.ext import ndb
 
@@ -62,6 +62,7 @@ class APIResource(View):
     model = None
     web_args = {}
     key_type = int
+    api_version = 'v1'
 
     @property
     def name(self):
@@ -86,16 +87,14 @@ class APIResource(View):
             try:
                 key = self.key_type(path)
             except (ValueError, AssertionError):
-                return create_api_response(400,
-                    "Invalid key. Needs to be of type '%s'" % self.key_type)
+                return 400, "Invalid key. Needs to be type '%s'" % self.key_type
             return meth(key, *args, **kwargs)
 
         entity_id, action = path.split('/')
         try:
             key = self.key_type(entity_id)
         except (ValueError, AssertionError):
-            return create_api_response(400,
-                "Invalid key. Needs to be of type '%s'" % self.key_type)
+            return 400, "Invalid key. Needs to be type '%s'" % self.key_type
 
         meth = getattr(self, action, None)
         assert meth is not None, 'Unimplemented action %r' % action
@@ -107,14 +106,14 @@ class APIResource(View):
         """
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         need = Need('get')
         if not obj.can(session['user'], need, obj):
             return need.api_response()
 
-        return create_api_response(200, "", obj)
+        return obj
 
     def put(self, key):
         """
@@ -122,8 +121,8 @@ class APIResource(View):
         """
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         need = Need('get')
         if not obj.can(session['user'], need, obj):
@@ -138,8 +137,7 @@ class APIResource(View):
         for key, value in self.parse_args(False).iteritems():
             old_val = getattr(obj, key, blank_val)
             if old_val == blank_val:
-                return create_api_response(
-                    400, "{} is not a valid field.".format(key))
+                return 400, "{} is not a valid field.".format(key)
 
             setattr(obj, key, value)
             changed = True
@@ -147,7 +145,7 @@ class APIResource(View):
         if changed:
             obj.put()
 
-        return create_api_response(200, "", obj)
+        return obj
 
     def post(self):
         """
@@ -162,9 +160,9 @@ class APIResource(View):
         entity, error_response = self.new_entity(data)
 
         if not error_response:
-            return create_api_response(200, "success", {
+            return {
                 'key': entity.key.id()
-            })
+            }
         else:
             return error_response
 
@@ -189,7 +187,7 @@ class APIResource(View):
             return need.api_response()
 
         ent.key.delete()
-        return create_api_response(200, "success", {})
+        return {}
 
     def parse_args(self, index):
         """
@@ -235,40 +233,12 @@ class APIResource(View):
         add_statistics = request.args.get('stats', False)
         if add_statistics:
             query_results['statistics'] = self.statistics()
-        return create_api_response(200, "success", query_results)
+        return query_results
 
     def statistics(self):
         return {
             'total': self.model.query().count()
         }
-
-
-class UserAPI(APIResource):
-    """The API resource for the User Object"""
-    model = models.User
-    key_type = str
-
-    def new_entity(self, attributes):
-        """
-        Creates a new entity with given attributes.
-        """
-        if 'email' not in attributes:
-            return None, create_api_response(400, 'Email required')
-        entity = self.model.get_by_id(attributes['email'])
-        if entity:
-            return None, create_api_response(400,
-                                             '%s already exists' % self.name)
-        entity = self.model.from_dict(attributes)
-        entity.put()
-        return entity, None
-
-    web_args = {
-        'first_name': Arg(str),
-        'last_name': Arg(str),
-        'email': Arg(str),
-        'login': Arg(str),
-        'course': KeyArg('User'),
-    }
 
 
 class AssignmentAPI(APIResource):
@@ -319,16 +289,15 @@ class SubmissionAPI(APIResource):
         """
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         need = Need('get')
         if not obj.can(session['user'], need, obj):
             return need.api_response()
 
         if 'file_contents' not in obj.messages:
-            return create_api_response(400,
-                "Submission has no contents to download.")
+            return 400, "Submissions has no contents to download."
 
         response = make_response(create_zip(obj.messages['file_contents']))
         response.headers["Content-Disposition"] = (
@@ -342,25 +311,24 @@ class SubmissionAPI(APIResource):
         """
         obj = self.model.get_by_id(key)
         if not obj:
-            return create_api_response(404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
 
         need = Need('get')
         if not obj.can(session['user'], need, obj):
             return need.api_response()
 
         if 'file_contents' not in obj.messages:
-            return create_api_response(400,
-                "Submission has no contents to diff.")
+            return 400, "Submission has no contents to diff."
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            return create_api_response(200, "success", diff_obj.diff)
+            return 200, "success", diff_obj.diff
 
         diff = {}
         templates = obj.assignment.get().templates
         if not templates:
-            return create_api_response(500,
+            return (500,
                 "No templates for assignment yet... Contact course staff")
 
         templates = json.loads(templates)
@@ -369,7 +337,7 @@ class SubmissionAPI(APIResource):
 
         self.diff_model(id=obj.key.id(),
                         diff=diff).put()
-        return create_api_response(200, "success", diff)
+        return diff
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -384,9 +352,9 @@ class SubmissionAPI(APIResource):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment, messages)
-        return create_api_response(200, "success", {
+        return {
             'key': submission.key.id()
-        })
+        }
 
     def post(self):
         data = self.parse_args(False)
@@ -410,10 +378,55 @@ class VersionAPI(APIResource):
     model = models.Version
 
     web_args = {
-        'file_data': Arg(str),
         'name': Arg(str),
         'version': Arg(str),
+        'current_version': Arg(str),
+        'base_url': Arg(str),
     }
+
+    key_type = str
+
+    def new(self, key):
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        args = self.parse_args(False)
+        new_version = args['version']
+
+        if new_version in obj.versions:
+            return 400, "Duplicate version: {}".format(new_version)
+
+        obj.versions.append(new_version)
+        if 'current_version' in args:
+            obj.current_version = args['current_version']
+
+        obj.put()
+
+        return obj
+
+    def current(self, key):
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
+
+        # No permissions check because anyone can check for the latest version
+
+        if not obj.current_version:
+            return 500, "Invalid version resource. Contact an administrator."
+        return obj.current_version
+
+    def new_entity(self, attributes):
+        if 'version' in attributes:
+            attributes['versions'] = [attributes.pop('version')]
+
+        return super(VersionAPI, self).new_entity(attributes)
 
 class CourseAPI(APIResource):
     model = models.Course
