@@ -284,11 +284,7 @@ class UserAPI(APIResource):
                     "invitations": []
                 }
         return {
-            "invitations": [{
-                "members": invitation.members,
-                "id": invitation.key.id(),
-                "assignment": invitation.assignment,
-            } for invitation in list(query)]
+            "invitations": list(query)
         }
 
     def accept_invitation(self, user, obj):
