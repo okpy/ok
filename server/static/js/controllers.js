@@ -189,7 +189,7 @@ app.controller("MemberController", ["$scope", "$modal", "Group",
         });
       }
     }
-);
+]);
 
 app.controller("VersionListCtrl", ['$scope', 'Version',
   function($scope, Version) {
