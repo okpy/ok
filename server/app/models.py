@@ -84,6 +84,7 @@ class Base(ndb.Model):
                 except TypeError:
                     pass
         return result
+
     @classmethod
     def can(cls, user, need, obj=None, query=None):
         """
@@ -233,7 +234,7 @@ class Assignment(Base):
     creator = ndb.KeyProperty(User)
     templates = ndb.JsonProperty()
     course = ndb.KeyProperty('Course')
-    max_group_size = ndb.IntegerProperty()
+    max_group_size = ndb.IntegerProperty(required=True, default=10)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -389,8 +390,17 @@ class Comment(Base):
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
     name = ndb.StringProperty()
-    file_data = ndb.TextProperty()
-    version = ndb.StringProperty()
+    versions = ndb.StringProperty(repeated=True)
+    current_version = ndb.StringProperty()
+    base_url = ndb.StringProperty()
+
+    def to_json(self, fields=None):
+        json = super(Version, self).to_json(fields)
+        if self.current_version:
+            json['current_download_link'] = '/'.join((
+                self.base_url, self.current_version, self.name))
+
+        return json
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -402,6 +412,25 @@ class Version(Base):
             return query
         return user.is_admin
 
+    @classmethod
+    def from_dict(cls, values):
+        """Creates an instance from the given values."""
+        if 'name' not in values:
+            raise ValueError("Need to specify a name")
+        inst = cls(key=ndb.Key('Version', values['name']))
+        inst.populate(**values) #pylint: disable=star-args
+        return inst
+
+    @classmethod
+    def get_or_insert(cls, key, **kwargs):
+        assert not isinstance(id, int), "Only string keys allowed for versions"
+        kwargs['name'] = key
+        return super(cls, Version).get_or_insert(key, **kwargs)
+
+    @classmethod
+    def get_by_id(cls, key, **kwargs):
+        assert not isinstance(id, int), "Only string keys allowed for versions"
+        return super(cls, Version).get_by_id(key, **kwargs)
 
 class Group(Base):
     """

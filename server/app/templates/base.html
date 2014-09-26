@@ -15,6 +15,8 @@
         <link href="/static/vendor/angular-busy/dist/angular-busy.css" rel="stylesheet"></link>
         <link href="/static/vendor/highlightjs/styles/github.css" rel="stylesheet"></link>
         <link href="/static/vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet"></link>
+        <link href="/static/vendor/chosen_v1.1.0/chosen.css" rel="stylesheet"></link>
+        <link href="/static/vendor/angular-chosen-localytics/chosen-spinner.css" rel="stylesheet"></link>
         <link href="/static/css/main.css" rel="stylesheet"></link>
 
         <script src="/static/vendor/jquery/dist/jquery.min.js"></script>
@@ -31,6 +33,8 @@
         <script src="/static/vendor/moment/moment.js"></script>
         <script src="/static/vendor/angular-moment/angular-moment.js"></script>
         <script src="/static/vendor/showdown/compressed/showdown.js"></script>
+        <script src="/static/vendor/chosen/chosen.jquery.js"></script>
+        <script src="/static/vendor/angular-chosen-localytics/chosen.js"></script>
         <base href="/">
     </head>
     <body ng-cloak class="ng-cloak">
@@ -52,6 +56,16 @@
           <a id="submissions-button" type="button" class="btn btn-default navbar-btn" ui-sref="submission.list">Submissions</a>
           <a id="assignments-button" type="button" class="btn btn-default navbar-btn" ui-sref="assignment.list">Assignments</a>
           <a id="courses-button" type="button" class="btn btn-default navbar-btn" ui-sref="course.list">Courses</a>
+          <div class="btn-group" dropdown>
+            <a type="button" class="btn btn-default" ui-sref="version.list">Versions</a>
+            <span type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+              <span class="caret"></span>
+              <span class="sr-only">Toggle Dropdown</span>
+            </span>
+            <ul class="dropdown-menu" role="menu">
+              <li><a ui-sref="version.new">New Version</a></li>
+            </ul>
+          </div>
           <div class="pull-right">
             {% if user %}
               <script>
