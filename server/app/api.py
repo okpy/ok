@@ -180,7 +180,7 @@ class APIResource(View):
 
         entity.put()
 
-        return (201, {
+        return (201, "success", {
             'key': entity.key.id()
         })
 
