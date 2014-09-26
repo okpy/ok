@@ -231,6 +231,8 @@ class Course(Base):
     institution = ndb.StringProperty(required=True) # E.g., 'UC Berkeley'
     name = ndb.StringProperty(required=True) # E.g., 'CS 61A'
     offering = ndb.StringProperty(required=True)  # E.g., 'Fall 2014'
+    term = ndb.StringProperty(required=True)
+    year = ndb.StringProperty(required=True)
     # TODO: validate offering
     creator = ndb.KeyProperty(User, required=True)
     staff = ndb.KeyProperty(User, repeated=True)
