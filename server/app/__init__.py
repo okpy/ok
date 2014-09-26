@@ -18,8 +18,8 @@ from app import auth
 
 app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
-            if 'SERVER_SOFTWARE' in os.environ
-            else True)
+         if 'SERVER_SOFTWARE' in os.environ
+         else True)
 
 if DEBUG:
     app.config.from_object('app.settings.Debug')
@@ -36,5 +36,5 @@ app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 # Pull in URL dispatch routes
 import urls
 
-# Import the authenticator. Central usage place. 
+# Import the authenticator. Central usage place.
 import authenticator

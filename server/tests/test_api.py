@@ -186,7 +186,6 @@ class APITest(object): #pylint: disable=no-init
         """Tests creating an empty entity."""
         inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
-        self.assertStatusCode(200)
 
         gotten = self.model.get_by_id(self.response_json['key'])
         self.assertEqual(gotten.key, inst.key)
@@ -194,12 +193,10 @@ class APITest(object): #pylint: disable=no-init
     def test_create_two_entities(self):
         inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
-        self.assertStatusCode(200)
         gotten = self.model.get_by_id(self.response_json['key'])
 
         inst2 = self.get_basic_instance(mutate=True)
         self.post_entity(inst2)
-        self.assertStatusCode(200)
         gotten2 = self.model.get_by_id(self.response_json['key'])
 
         self.assertEqual(gotten.key, inst.key)
@@ -326,6 +323,56 @@ class VersionAPITest(APITest, APIBaseTestCase):
             self.num += 1
         return self.model(key=ndb.Key('Version', name),
             name=name, versions=['1.0.0', '1.1.0'])
+
+class GroupAPITest(APITest, APIBaseTestCase):
+    model = models.Group
+    name = 'group'
+    num = 1
+    access_token = 'dummy_admin'
+
+    def setUp(self):
+        super(GroupAPITest, self).setUp()
+        self.assignment = models.Assignment(name='testassign')
+        self.assignment.put()
+
+    def get_basic_instance(self, mutate=True):
+        name = 'testversion'
+        if mutate:
+            name += str(self.num)
+            self.num += 1
+        return self.model(name=name, assignment=self.assignment.key)
+
+    def test_add_member(self):
+        inst = self.get_basic_instance()
+        inst.put()
+
+        self.post_json(
+            '/{}/{}/add_member'.format(self.name, inst.key.id()),
+            data={'members': [self.accounts['dummy_student'].key.id()]})
+
+        inst = self.model.get_by_id(inst.key.id())
+        self.assertEqual(len(inst.invited_members), 1)
+
+    def test_add_member(self):
+        members = [self.accounts['dummy_student'].key]
+        inst = self.get_basic_instance()
+        inst.members = members
+        inst.put()
+
+        self.post_json(
+            '/{}/{}/remove_member'.format(self.name, inst.key.id()),
+            data={'members': [x.id() for x in members]})
+
+        self.assertEquals(None, self.model.get_by_id(inst.key.id()))
+
+    def test_entity_create_basic(self):
+        # No entity create for Groups
+        pass
+
+    def test_create_two_entities(self):
+        # No entity create for Groups
+        pass
+
 
 
 if __name__ == '__main__':

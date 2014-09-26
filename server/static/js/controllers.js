@@ -73,7 +73,8 @@ app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
   }]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
-    function ($scope, $stateParams, Assignment) { $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
+    function ($scope, $stateParams, Assignment) {
+      $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
     }
   ]);
 
@@ -150,6 +151,46 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
     }
   ]);
 
+app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
+    function ($scope, $stateParams, $window, $timeout, Group) {
+      $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
+      $scope.refreshGroup = function() {
+          $timeout(function() {
+            $scope.group = Group.getFromAssignment({id: $stateParams.assignmentId});
+          }, 300);
+      }
+      $scope.createGroup = function() {
+        Group.save({
+          assignment: $stateParams.assignmentId,
+          members: [$window.user]
+        }, $scope.refreshGroup);
+      }
+    }
+  ]);
+
+app.controller("MemberController", ["$scope", "$modal", "Group",
+    function ($scope, $modal, Group) {
+      $scope.remove = function() {
+        var modal = $modal.open({
+          templateUrl: '/static/partials/removemember.modal.html',
+          scope: $scope,
+          size: 'sm',
+          resolve: {
+            modal: function () {
+              return modal;
+            }
+          }
+        });
+        modal.result.then(function() {
+          Group.removeMember({
+            members: [$scope.member.email],
+            id: $scope.group.id
+          }, $scope.refreshGroup);
+        });
+      }
+    }
+]);
+
 app.controller("VersionListCtrl", ['$scope', 'Version',
   function($scope, Version) {
     $scope.versions = Version.query();
@@ -165,6 +206,53 @@ app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version", "$stat
       $scope.version = Version.get({id: $stateParams.versionId});
       $scope.download_link = function(version) {
         return [$scope.version.base_url, version, $scope.version.name].join('/');
+      }
+    }
+  ]);
+
+app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
+    function ($scope, $stateParams, $window, $timeout, Group) {
+      $scope.add = function() {
+        if ($scope.newMember != "") {
+          Group.addMember({
+            members: [$scope.newMember],
+            id: $scope.group.id
+          }, $scope.refreshGroup);
+        }
+      }
+    }
+  ]);
+
+app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$timeout", "User",
+    function ($scope, $stateParams, $window, $timeout, User) {
+      $scope.invitations = User.invitations({
+        assignment: $stateParams.assignmentId
+      });
+      $scope.refreshInvitations = function() {
+          $timeout(function() {
+            $scope.invitations = User.invitations({
+              assignment: $stateParams.assignmentId
+            });
+          }, 300);
+      }
+      $scope.accept = function(invitation, $event) {
+        $event.stopPropagation();
+        if ($scope.group.in_group === false) {
+          User.acceptInvitation({
+            invitation: invitation.id
+          }, function() {
+            $scope.refreshInvitations();
+            $scope.refreshGroup();
+          });
+        } else {
+        }
+      }
+
+      $scope.reject = function(invitation, $event) {
+        $event.stopPropagation();
+        User.rejectInvitation({
+          invitation: invitation.id
+        }, $scope.refreshInvitations);
       }
     }
   ]);

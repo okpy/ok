@@ -36,6 +36,13 @@ class PermissionsUnitTest(BaseTestCase):
                 last_name="Jones",
                 login="other13413",
             ),
+            "student2": models.User(
+                key=ndb.Key("User", "otherrr@student.com"),
+                email="otherrr@student.com",
+                first_name="Otherrrrr",
+                last_name="Jones",
+                login="otherrr13413",
+            ),
             "staff": models.User(
                 key=ndb.Key("User", "dummy@staff.com"),
                 email="dummy@staff.com",
@@ -79,29 +86,34 @@ class PermissionsUnitTest(BaseTestCase):
         self.accounts = self.get_accounts()
 
         self.courses = {
-            "first": models.Course(),
-            "second": models.Course(),
+            "first": models.Course(name="first"),
+            "second": models.Course(name="second"),
             }
 
         for course in self.courses.values():
             course.put()
 
         self.enroll("student0", "first")
-        self.enroll("student1", "second")
+        self.enroll("student1", "first")
+        self.enroll("student2", "second")
         self.teach("staff", "first")
 
         self.assignments = {
             "first": models.Assignment(
                 name="first",
                 points=3,
-                creator=self.accounts["admin"].key
+                creator=self.accounts["admin"].key,
+                course=self.courses['first'].key,
                 ),
             "empty": models.Assignment(
                 name="empty",
                 points=3,
-                creator=self.accounts["admin"].key
+                creator=self.accounts["admin"].key,
+                course=self.courses['first'].key,
                 ),
             }
+        for v in self.assignments.values():
+            v.put()
 
         self.submissions = {
             "first": models.Submission(
@@ -114,7 +126,32 @@ class PermissionsUnitTest(BaseTestCase):
                 assignment=self.assignments["first"].key,
                 messages="{}"
                 ),
+            "third": models.Submission(
+                submitter=self.accounts["student2"].key,
+                assignment=self.assignments["first"].key,
+                messages="{}"
+                ),
             }
+
+        self.groups = {
+            'group1': models.Group(
+                name="group1",
+                members=[self.accounts['student0'].key,
+                         self.accounts['student1'].key],
+                assignment=self.assignments['first'].key
+            )}
+
+        self.groups['group1'].put()
+
+        group_submission = models.Submission(
+            submitter=self.accounts['student0'].key,
+            assignment=self.assignments['first'].key,
+            messages='{}',
+        )
+
+        group_submission.put()
+        self.submissions['group'] = group_submission
+
         self.user = None
 
     def login(self, user):
@@ -136,19 +173,31 @@ class PermissionsUnitTest(BaseTestCase):
         PTest("student_get_own",
               "student0", "Submission", "first", "get", True),
         PTest("student_get_other",
-              "student1", "Submission", "first", "get", False),
+              "student1", "Submission", "third", "get", False),
+        PTest("student_get_group",
+              "student1", "Submission", "group", "get", True),
+        PTest("student_get_other_group",
+              "student2", "Submission", "group", "get", False),
+        PTest("student_index_group",
+              "student1", "Submission", "group", "index", True),
+        PTest("student_index_other_group",
+              "student2", "Submission", "group", "index", False),
         PTest("anon_get_first_own",
               "anon", "Submission", "first", "get", False),
         PTest("anon_get_other",
               "anon", "Submission", "second", "get", False),
+        PTest("anon_index_0",
+              "anon", "Submission", "first", "index", False),
+        PTest("anon_index_1",
+              "anon", "Submission", "second", "index", False),
         PTest("staff_get_same_course",
               "staff", "Submission", "first", "get", True),
         PTest("staff_get_other_course",
-              "staff", "Submission", "second", "get", False),
+              "staff", "Submission", "third", "get", False),
         PTest("admin_get_student0",
               "admin", "Submission", "first", "get", True),
         PTest("admin_get_student1",
-              "admin", "Submission", "second", "get", True),
+              "admin", "Submission", "third", "get", True),
         PTest("admin_delete_own_student",
               "admin", "Submission", "first", "delete", False),
         PTest("staff_delete_own_student",
@@ -209,7 +258,7 @@ class PermissionsUnitTest(BaseTestCase):
         PTest("student_get_other",
               "student0", "User", "student1", "get", False),
         PTest("staff_get_user_wrong_course",
-              "staff", "User", "student1", "get", False),
+              "staff", "User", "student2", "get", False),
         PTest("staff_get_user",
               "staff", "User", "student0", "get", True),
         PTest("admin_get_student1",
@@ -240,7 +289,23 @@ class PermissionsUnitTest(BaseTestCase):
         if not obj:
             self.assertTrue(False, "Invalid test arguments %s" % model)
 
-        self.assertEqual(value.output, obj.can(self.user, Need(need), obj))
+        query = None
+        if need == "index":
+            query = obj.__class__.query()
+            query = obj.can(self.user, Need(need), obj, query=query)
+
+            if not query:
+                self.assertFalse(value.output, "|can| method returned false.")
+                return
+
+            data = query.fetch()
+
+            if value.output:
+                self.assertIn(obj, data)
+            else:
+                self.assertNotIn(obj, data)
+        else:
+            self.assertEqual(value.output, obj.can(self.user, Need(need), obj))
 
 if __name__ == "__main__":
     unittest.main()

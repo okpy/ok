@@ -18,12 +18,19 @@ from google.appengine.ext import db, ndb
 
 BadValueError = db.BadValueError
 
+# To deal with circular imports
+class APIProxy(object):
+    def __getattribute__(self, key):
+        import app
+        return app.api.__getattribute__(key)
+
+APIProxy = APIProxy()
+
 class JSONEncoder(old_json):
     """
     Wrapper class to try calling an object's to_dict() method. This allows
     us to JSONify objects coming from the ORM. Also handles dates & datetimes.
     """
-
     def default(self, obj): #pylint: disable=E0202
         if isinstance(obj, ndb.Key):
             got = obj.get()
@@ -36,7 +43,6 @@ class JSONEncoder(old_json):
         if isinstance(obj, ndb.Model):
             return obj.to_json()
         return super(JSONEncoder, self).default(obj)
-
 
 app.json_encoder = JSONEncoder
 
@@ -117,6 +123,13 @@ class User(Base):
     def staffed_courses(self):
         return Course.query(Course.staff == self.key)
 
+    @property
+    def groups(self):
+        return Group.query(Group.members == self.key)
+
+    def get_groups(self, assignment):
+        return Group.query().filter(ndb.AND(Group.members == self.key, Group.assignment == assignment.key))
+
     @classmethod
     def from_dict(cls, values):
         """Creates an instance from the given values."""
@@ -193,6 +206,14 @@ class AnonymousUser(User):
     def get_or_insert(cls, *args, **kwds):
         return super(_AnonUserClass, cls).get_or_insert(*args, **kwds)
 
+    @property
+    def staffed_courses(self):
+        return ()
+
+    @property
+    def groups(self):
+        return ()
+
 _AnonUserClass = AnonymousUser
 _AnonUser = None
 
@@ -213,6 +234,7 @@ class Assignment(Base):
     creator = ndb.KeyProperty(User)
     templates = ndb.JsonProperty()
     course = ndb.KeyProperty('Course')
+    max_group_size = ndb.IntegerProperty(required=True, default=10)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -273,6 +295,14 @@ class Submission(Base):
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
 
+    @property
+    def group(self):
+        group = APIProxy.AssignmentAPI().group(
+            self.assignment.get(), self.submitter.get())
+        if not isinstance(group, Group):
+            return None
+        return group
+
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
         action = need.action
@@ -285,6 +315,11 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
+            groups = list(user.groups)
+            my_group = obj.group
+            if groups and my_group and my_group.key in [g.key for g in groups]:
+                return True
+            return False
         if action in ("create", "put"):
             return user.logged_in
 
@@ -302,25 +337,29 @@ class Submission(Base):
             courses = user.courses
             filters = []
             for course in courses:
-                if user.key in course.staff:
-                    assignments = Assignment.query().filter(
-                        Assignment.course == course.key)
-                    filters.append(Submission.assignment.IN(
-                        assignments.get()))
+                assignments = Assignment.query().filter(
+                    Assignment.course == course).fetch()
 
+                if user.key in course.get().staff:
+                    filters.append(Submission.assignment.IN(
+                        [assign.key for assign in assignments]))
+
+            for group in user.groups:
+                filters.append(Submission.submitter.IN(group.members))
             filters.append(Submission.submitter == user.key)
 
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
-            else:
+            elif filters:
                 return query.filter(filters[0])
+            else:
+                return query
         return False
 
 
 class SubmissionDiff(Base):
     submission = ndb.KeyProperty(Submission)
     diff = ndb.JsonProperty()
-
 
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
@@ -366,3 +405,53 @@ class Version(Base):
     def get_by_id(cls, key, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for versions"
         return super(cls, Version).get_by_id(key, **kwargs)
+
+class Group(Base):
+    """
+    A group is a collection of users who all submit submissions.
+    They all can see submissions for an assignment all as a group.
+    """
+    name = ndb.StringProperty()
+    members = ndb.KeyProperty(kind='User', repeated=True)
+    invited_members = ndb.KeyProperty(kind='User', repeated=True)
+    assignment = ndb.KeyProperty('Assignment', required=True)
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+
+        if action == "delete":
+            return False
+        if action == "index":
+            if user.is_admin:
+                return query
+            return query.filter(Group.members == user.key)
+        if action == "get":
+            if not obj:
+                raise ValueError("Need instance for get action.")
+            return user.is_admin or user.key in obj.members
+        if action in ("create", "put"):
+            #TODO(martinis) make sure other students are ok with this group
+            if not obj:
+                raise ValueError("Need instance for get action.")
+            return user.is_admin or user.key in obj.members
+        return False
+
+    def _pre_put_hook(self):
+        max_group_size = self.assignment.get().max_group_size
+        if max_group_size and len(self.members) > max_group_size:
+            raise BadValueError("Too many members. Max allowed is %s" % (
+                max_group_size))
+
+def anon_converter(prop, value):
+    if not value.get().logged_in:
+        return None
+
+    return value
+
+class AuditLog(Base):
+    created = ndb.DateTimeProperty(auto_now_add=True)
+    event_type = ndb.StringProperty()
+    user = ndb.KeyProperty('User', required=True, validator=anon_converter)
+    description = ndb.StringProperty()
+    obj = ndb.KeyProperty()

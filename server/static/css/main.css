@@ -135,6 +135,28 @@ h2 {
   color: rgba(0,0,0,0.3);
 }
 
+.group {
+}
+
+.tab-content {
+  border: 2px solid #eee;
+}
+
+.member {
+  background-color: #f7f7f9;
+}
+
+.add-member-form {
+  text-align: right;
+}
+
+.center-block {
+  text-align: center;
+}
+
+.tab-wrapper {
+  padding: 10px 10px 10px 10px;
+
 input.ng-invalid.ng-dirty {
   background-color: #FA787E;
 }

@@ -19,6 +19,15 @@ app.directive('diff', function() {
         };
     });
 
+app.directive('group', function() {
+        "use strict";
+        return {
+            restrict: 'E',
+            templateUrl: 'static/partials/group.html',
+        };
+    });
+
+
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/submission/");
@@ -154,6 +163,45 @@ app.config(['$stateProvider', '$urlRouterProvider',
       ;
   }]);
 
+app.factory('User', ['$resource',
+    function($resource) {
+      return $resource('api/v1/user/:id', {
+        format: "json",
+        id: window.user,
+      }, {
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        invitations: {
+          url: 'api/v1/user/:id/invitations',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        acceptInvitation: {
+          url: 'api/v1/user/:id/accept_invitation',
+          method: 'POST',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        rejectInvitation: {
+          url: 'api/v1/user/:id/reject_invitation',
+          method: 'POST',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        }
+      });
+    }
+  ]);
+
 app.factory('Submission', ['$resource',
     function($resource) {
       return $resource('api/v1/submission/:id', {format: "json"}, {
@@ -187,6 +235,52 @@ app.factory('Assignment', ['$resource',
           }
         },
         get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        group: {
+          url: 'api/v1/assignment/:id/group',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+      });
+    }
+  ]);
+
+app.factory('Group', ['$resource',
+    function($resource) {
+      return $resource('api/v1/group/:id', {
+        format: "json",
+        id: "@id",
+      }, {
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        getFromAssignment: {
+          url: 'api/v1/assignment/:id/group',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        addMember: {
+          url: 'api/v1/group/:id/add_member',
+          isArray: false,
+          method: 'PUT',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        removeMember: {
+          url: 'api/v1/group/:id/remove_member',
+          method: 'PUT',
           isArray: false,
           transformResponse: function(data) {
             return JSON.parse(data).data;
