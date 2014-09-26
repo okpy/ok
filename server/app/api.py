@@ -23,17 +23,20 @@ from google.appengine.ext import ndb
 
 parser = FlaskParser()
 
+
 def DateTimeArg(**kwds):
     def parse_date(arg):
         op = None
         if '|' in arg:
             op, arg = arg.split('|', 1)
 
-        date = datetime.datetime.strptime(arg, app.config["GAE_DATETIME_FORMAT"])
-        delta = datetime.timedelta(hours = 7)
-        date = (datetime.datetime.combine(date.date(),date.time()) + delta)
+        date = datetime.datetime.strptime(arg,
+                                          app.config["GAE_DATETIME_FORMAT"])
+        delta = datetime.timedelta(hours=7)
+        date = (datetime.datetime.combine(date.date(), date.time()) + delta)
         return (op, date) if op else date
     return Arg(None, use=parse_date)
+
 
 def KeyArg(klass, **kwds):
     def parse_key(key):
@@ -43,6 +46,7 @@ def KeyArg(klass, **kwds):
             pass
         return {'pairs': [(klass, key)]}
     return Arg(ndb.Key, use=parse_key, **kwds)
+
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
@@ -54,6 +58,7 @@ def KeyRepeatedArg(klass, **kwds):
                 staff_lst = [key_list]
         return [ndb.Key(klass, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
+
 
 class APIResource(View):
     """The base class for API resources.
@@ -80,8 +85,8 @@ class APIResource(View):
             raise need.exception()
         return obj
 
-    def call_method(self, method_name, user, instance=None, is_index=False,
-                    http_method=None):
+    def call_method(self, method_name, user, http_method,
+                    instance=None, is_index=False):
         if method_name not in self.methods:
             raise BadMethodError('Unimplemented method %s' % method_name)
         constraints = self.methods[method_name]
@@ -89,7 +94,8 @@ class APIResource(View):
             if http_method is None:
                 raise IncorrectHTTPMethodError('Need to specify HTTP method')
             if http_method not in constraints["methods"]:
-                raise IncorrectHTTPMethodError('Bad HTTP Method: %s' % http_method)
+                raise IncorrectHTTPMethodError('Bad HTTP Method: %s'
+                                               % http_method)
         data = {}
         web_args = constraints.get('web_args', {})
         data = self.parse_args(web_args, user, is_index=is_index)
@@ -103,11 +109,14 @@ class APIResource(View):
         http_method = request.method.upper()
         user = session['user']
 
-        if path is None: # Index
+        if path is None:  # Index
             if http_method not in ("GET", "POST"):
-                raise IncorrectHTTPMethodError('Incorrect HTTP method: %s' % http_method)
-            method_name = "index" if http_method == "GET" else http_method.lower()
-            return self.call_method(method_name, user, is_index=(method_name == "index"))
+                raise IncorrectHTTPMethodError('Incorrect HTTP method: %s'
+                                               % http_method)
+            method_name = ("index" if http_method == "GET"
+                           else http_method.lower())
+            return self.call_method(method_name, user, http_method,
+                                    is_index=(method_name == "index"))
 
         path = path.split('/')
         if len(path) == 1:
@@ -115,19 +124,22 @@ class APIResource(View):
             try:
                 key = self.key_type(entity_id)
             except (ValueError, AssertionError):
-                raise BadValueError("Invalid key. Needs to be of type: %s" % self.key_type)
+                raise BadValueError("Invalid key. Needs to be of type: %s"
+                                    % self.key_type)
             instance = self.get_instance(key, user)
             method_name = http_method.lower()
-            return self.call_method(method_name, user, instance=instance)
+            return self.call_method(method_name, user, http_method,
+                                    instance=instance)
 
         entity_id, method_name = path
         try:
             key = self.key_type(entity_id)
         except (ValueError, AssertionError):
-            raise BadValueError("Invalid key. Needs to be of type: %s" % self.key_type)
+            raise BadValueError("Invalid key. Needs to be of type: %s"
+                                % self.key_type)
         instance = self.get_instance(key, user)
-        return self.call_method(method_name, user, instance=instance, http_method=http_method)
-
+        return self.call_method(method_name, user, http_method,
+                                instance=instance)
 
     def get(self, obj, user, data):
         """
@@ -164,7 +176,7 @@ class APIResource(View):
         """
         data = self.parse_args(False, user)
 
-        entity, error_response = self.new_entity(data)
+        entity = self.new_entity(data)
         if error_response:
             return error_response
 
@@ -184,8 +196,7 @@ class APIResource(View):
         Returns (entity, error_response) should be ignored if error_response
         is a True value.
         """
-        entity = self.model.from_dict(attributes)
-        return entity, None
+        return self.model.from_dict(attributes)
 
     def delete(self, obj, user, data):
         """
@@ -220,8 +231,8 @@ class APIResource(View):
         if type(fields['fields']) != dict and type(fields['fields']) != bool:
             raise BadValueError("fields should be dictionary or boolean")
         request.fields = fields
-        return {k:v for k, v in parser.parse(web_args).iteritems() if v != None}
-
+        return {k: v for k, v in parser.parse(web_args).iteritems()
+                if v is not None}
 
     def index(self, user, data):
         """
@@ -277,22 +288,6 @@ class UserAPI(APIResource):
         },
         'invitations': {
             'methods': set(['GET']),
-            'web_args': {
-                'first_name': Arg(str),
-                'last_name': Arg(str),
-                'email': Arg(str, required=True),
-                'login': Arg(str),
-            }
-        },
-        'accept_invitation': {
-            'methods': set(['POST']),
-            'web_args': {
-            }
-        },
-        'reject_invitation': {
-            'methods': set(['POST']),
-            'web_args': {
-            }
         },
     }
 
@@ -302,20 +297,14 @@ class UserAPI(APIResource):
         """
         entity = self.model.get_by_id(attributes['email'])
         if entity:
-            return None, (400, '%s already exists' % self.name)
+            raise BadValueError("user already exists")
         entity = self.model.from_dict(attributes)
-        return entity, None
+        return entity
 
-
-    def invitations(self, user, obj):
-        pass
-
-    def accept_invitation(self, user, obj):
-        pass
-
-    def reject_invitation(self, user, obj):
-        pass
-
+    def invitations(self, user, obj, data):
+        return {
+            "invitations": list(models.Group.query(models.Group.invited_members == user.key))
+        }
 
 
 class AssignmentAPI(APIResource):
@@ -330,7 +319,8 @@ class AssignmentAPI(APIResource):
                 'points': Arg(float, required=True),
                 'course': KeyArg('Course', required=True),
                 'max_group_size': Arg(int, required=True),
-                'templates': Arg(str, use=lambda temps: json.dumps(temps), required=True),
+                'templates': Arg(str, use=lambda temps: json.dumps(temps),
+                                 required=True),
             }
         },
         'get': {
@@ -349,22 +339,15 @@ class AssignmentAPI(APIResource):
         data['creator'] = user.key
         return super(AssignmentAPI, self).post(user, data)
 
-
-    def group(self, obj, user, data):
-        groups = (models.Group.query()
-                  .filter(models.Group.members == user.key)
-                  .filter(models.Group.assignment == obj.key).fetch())
-
-        if len(groups) > 1:
-            return (409, "You are in multiple groups", {
-                "groups": groups
-            })
-        elif not groups:
-            return (200, "You are not in any groups", {
-                "in_group": False,
-            })
-        else:
-            return groups[0]
+    def group(self, assignment, user, data):
+        current_group = list(user.groups(assignment.key))
+        if len(current_group) == 0:
+            return {
+                "in_group": False
+            }
+        if len(current_group) > 1:
+            raise BadValueError("in multiple groups")
+        return current_group[0]
 
 
 class SubmitNDBImplementation(object):
@@ -412,6 +395,20 @@ class SubmissionAPI(APIResource):
         'download': {
             'methods': set(["GET"]),
         },
+        'add_comment': {
+            'methods': set(["POST"]),
+            'web_args': {
+                'index': Arg(int, required=True),
+                'file': Arg(str, required=True),
+                'message': Arg(str, required=True)
+            }
+        },
+        'delete_comment': {
+            'methods': set(["POST"]),
+            'web_args': {
+                'comment': KeyArg('Comment', required=True)
+            }
+        },
     }
 
     def download(self, obj, user, data):
@@ -432,7 +429,7 @@ class SubmissionAPI(APIResource):
         Gets the associated diff for a submission
         """
         if 'file_contents' not in obj.messages:
-            return 400, "Submission has no contents to diff."
+            raise BadValueError("Submission has no contents to diff")
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
@@ -441,8 +438,8 @@ class SubmissionAPI(APIResource):
         diff = {}
         templates = obj.assignment.get().templates
         if not templates:
-            return (500,
-                "No templates for assignment yet... Contact course staff")
+            raise BadValueError("no templates for assignment, \
+                                please contact course staff")
 
         templates = json.loads(templates)
         for filename, contents in obj.messages['file_contents'].items():
@@ -486,9 +483,9 @@ class SubmissionAPI(APIResource):
 
         comment = data.get('comment', None)
         if not comment:
-            return 400, "Missing required argument 'comment'"
+            raise ResourceDoesntExistError("comment doesn't exist")
 
-        comment = models.Comment.get_by_id(comment, parent=diff_obj.key)
+        comment = models.Comment.get_by_id(comment.id(), parent=diff_obj.key)
         if comment:
             comment.key.delete()
 
@@ -504,7 +501,8 @@ class SubmissionAPI(APIResource):
     def submit(self, user, assignment, messages):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
-        submission = self.db.create_submission(user, valid_assignment, messages)
+        submission = self.db.create_submission(user, valid_assignment,
+                                               messages)
         return (201, "success", {
             'key': submission.key.id()
         })
@@ -530,6 +528,7 @@ class VersionAPI(APIResource):
         'index': {
         },
     }
+
 
 class CourseAPI(APIResource):
     model = models.Course
@@ -557,7 +556,6 @@ class CourseAPI(APIResource):
         return super(CourseAPI, self).post(user, data)
 
 
-
 class GroupAPI(APIResource):
     model = models.Group
 
@@ -572,21 +570,81 @@ class GroupAPI(APIResource):
         'index': {
         },
         'add_member': {
-            'methods': set(['POST']),
+            'methods': set(['PUT']),
             'web_args': {
                 'member': KeyArg('User', required=True),
             },
         },
         'remove_member': {
-            'methods': set(['POST']),
+            'methods': set(['PUT']),
             'web_args': {
                 'member': KeyArg('User', required=True),
             },
+        },
+        'accept_invitation': {
+            'methods': set(['PUT']),
+        },
+        'reject_invitation': {
+            'methods': set(['PUT']),
         }
     }
 
-    def add_member(self, obj, user, data):
-        pass
+    def post(self, user, data):
+        # no permissions necessary, anyone can create a group
+        current_group = list(user.groups(data['assignment']))
+        if len(current_group) == 1:
+            raise BadValueError("already in a group")
+        if len(current_group) > 1:
+            raise BadValueError("in multiple groups")
+        group = self.new_entity(data)
+        group.members.append(user.key)
+        group.put()
 
-    def remove_member(self, obj, user, data):
-        pass
+
+    def add_member(self, group, user, data):
+        # can only remove a member if you are a member
+        need = Need('member')
+        if not group.can(user, need, group):
+            raise need.exception()
+        if data['member'] in group.invited_members:
+            raise BadValueError("user has already been invited")
+        if data['member'] in group.members:
+            raise BadValueError("user already part of group")
+        user = models.User.get_or_insert(data['member'].id())
+        group.invited_members.append(user.key)
+        group.put()
+
+    def remove_member(self, group, user, data):
+        # can only remove a member if you are a member
+        need = Need('member')
+        if not group.can(user, need, group):
+            raise need.exception()
+        if data['member'] in group.members:
+            group.members.remove(data['member'])
+        elif data['member'] in group.invited_members:
+            group.invited_members.remove(data['member'])
+        if len(group.members) == 0:
+            group.key.delete()
+        else:
+            group.put()
+
+    def accept_invitation(self, group, user, data):
+        # can only accept an invitation if you are in the invited_members
+        need = Need('invitation')
+        if not group.can(user, need, group):
+            raise need.exception()
+        assignment = group.assignment.get()
+        if len(group.members) < assignment.max_group_size:
+            group.invited_members.remove(user.key)
+            group.members.append(user.key)
+            group.put()
+        else:
+            raise BadValueError("too many people in group")
+
+    def reject_invitation(self, group, user):
+        # can only reject an invitation if you are in the invited_members
+        need = Need('invitation')
+        if not group.can(user, need, group):
+            raise need.exception()
+        group.invited_members.remove(user.key)
+        group.put()

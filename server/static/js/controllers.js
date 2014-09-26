@@ -229,7 +229,6 @@ app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeou
       $scope.createGroup = function() {
         Group.save({
           assignment: $stateParams.assignmentId,
-          members: [$window.user]
         }, $scope.refreshGroup);
       }
     }
@@ -250,7 +249,7 @@ app.controller("MemberController", ["$scope", "$modal", "Group",
         });
         modal.result.then(function() {
           Group.removeMember({
-            members: [$scope.member.email],
+            member: $scope.member.email,
             id: $scope.group.id
           }, $scope.refreshGroup);
         });
@@ -263,7 +262,7 @@ app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$ti
       $scope.add = function() {
         if ($scope.newMember != "") {
           Group.addMember({
-            members: [$scope.newMember],
+            member: $scope.newMember,
             id: $scope.group.id
           }, $scope.refreshGroup);
         }
@@ -271,8 +270,8 @@ app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$ti
     }
   ]);
 
-app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$timeout", "User",
-    function ($scope, $stateParams, $window, $timeout, User) {
+app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$timeout", "User", "Group",
+    function ($scope, $stateParams, $window, $timeout, User, Group) {
       $scope.invitations = User.invitations({
         assignment: $stateParams.assignmentId
       });
@@ -286,8 +285,8 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
       $scope.accept = function(invitation, $event) {
         $event.stopPropagation();
         if ($scope.group.in_group === false) {
-          User.acceptInvitation({
-            invitation: invitation.id
+          Group.acceptInvitation({
+            id: invitation.id
           }, function() {
             $scope.refreshInvitations();
             $scope.refreshGroup();
@@ -298,8 +297,8 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
 
       $scope.reject = function(invitation, $event) {
         $event.stopPropagation();
-        User.rejectInvitation({
-          invitation: invitation.id
+        Group.rejectInvitation({
+          id: invitation.id
         }, $scope.refreshInvitations);
       }
     }

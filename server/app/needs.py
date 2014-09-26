@@ -1,4 +1,5 @@
 from app.utils import create_api_response
+from app.exceptions import PermissionError
 
 class Need(object):
     """A need represents an action taken on an object, such as getting it."""
@@ -11,7 +12,7 @@ class Need(object):
         self.obj = obj
 
     def exception(self):
-        return PermissionError(self.get_exception_message())
+        return PermissionError(self)
 
     def get_exception_message(self):
         class_name = ""

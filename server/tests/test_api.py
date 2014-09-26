@@ -183,6 +183,7 @@ class APITest(object): #pylint: disable=no-init
     def test_entity_create_basic(self):
         """Tests creating an empty entity."""
         inst = self.get_basic_instance(mutate=True)
+        print "INST", inst.to_json()
         self.post_entity(inst)
 
         gotten = self.model.get_by_id(self.response_json['key'])
@@ -354,7 +355,7 @@ class CourseAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        rval = self.model(name=name)
+        rval = self.model(name=name, institution="UC Soumya", offering="Fall 2014", staff=[])
         return rval
 
 class VersionAPITest(APITest, APIBaseTestCase):

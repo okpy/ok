@@ -126,12 +126,12 @@ class User(Base):
     def staffed_courses(self):
         return Course.query(Course.staff == self.key)
 
-    @property
-    def groups(self):
-        return Group.query(Group.members == self.key)
 
-    def get_groups(self, assignment):
-        return Group.query().filter(ndb.AND(Group.members == self.key, Group.assignment == assignment.key))
+    def groups(self, assignment=None):
+        query = Group.query(Group.members == self.key)
+        if assignment:
+            query = query.filter(Group.assignment == assignment)
+        return query
 
     @classmethod
     def from_dict(cls, values):
@@ -319,7 +319,7 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
-            groups = list(user.groups)
+            groups = list(user.groups())
             my_group = obj.group
             if groups and my_group and my_group.key in [g.key for g in groups]:
                 return True
@@ -348,7 +348,7 @@ class Submission(Base):
                     filters.append(Submission.assignment.IN(
                         [assign.key for assign in assignments]))
 
-            for group in user.groups:
+            for group in user.groups():
                 filters.append(Submission.submitter.IN(group.members))
             filters.append(Submission.submitter == user.key)
 
@@ -428,10 +428,12 @@ class Group(Base):
             if user.is_admin:
                 return query
             return query.filter(Group.members == user.key)
+        if action == "invitation":
+            return user.key in obj.invited_members
+        if action == "member":
+            return user.key in obj.members
         if action == "get":
-            if not obj:
-                raise ValueError("Need instance for get action.")
-            return user.is_admin or user.key in obj.members
+            return user.is_admin or user.key in obj.members or user.key in obj.invited_members
         if action in ("create", "put"):
             #TODO(martinis) make sure other students are ok with this group
             if not obj:

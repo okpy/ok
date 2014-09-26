@@ -150,22 +150,6 @@ app.factory('User', ['$resource',
             return JSON.parse(data).data;
           }
         },
-        acceptInvitation: {
-          url: 'api/v1/user/:id/accept_invitation',
-          method: 'POST',
-          isArray: false,
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
-        rejectInvitation: {
-          url: 'api/v1/user/:id/reject_invitation',
-          method: 'POST',
-          isArray: false,
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        }
       });
     }
   ]);
@@ -267,6 +251,22 @@ app.factory('Group', ['$resource',
         },
         removeMember: {
           url: 'api/v1/group/:id/remove_member',
+          method: 'PUT',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        acceptInvitation: {
+          url: 'api/v1/group/:id/accept_invitation',
+          method: 'PUT',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        rejectInvitation: {
+          url: 'api/v1/group/:id/reject_invitation',
           method: 'PUT',
           isArray: false,
           transformResponse: function(data) {
