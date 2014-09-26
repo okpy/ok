@@ -288,6 +288,9 @@ class UserAPI(APIResource):
         },
         'invitations': {
             'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('assignment')
+            }
         },
     }
 
@@ -302,8 +305,11 @@ class UserAPI(APIResource):
         return entity
 
     def invitations(self, user, obj, data):
+        query = models.Group.query(models.Group.invited_members == user.key)
+        if 'assignment' in data:
+            query = query.filter(models.Group.assignment == data['assignment'])
         return {
-            "invitations": list(models.Group.query(models.Group.invited_members == user.key))
+            "invitations": list(query)
         }
 
 
