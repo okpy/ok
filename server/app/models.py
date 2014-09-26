@@ -229,7 +229,6 @@ class Course(Base):
     """Courses have enrolled students and assignment lists with due dates."""
     institution = ndb.StringProperty(required=True) # E.g., 'UC Berkeley'
     name = ndb.StringProperty(required=True) # E.g., 'CS 61A'
-    offering = ndb.StringProperty(required=True)  # E.g., 'Fall 2014'
     term = ndb.StringProperty(required=True)
     year = ndb.StringProperty(required=True)
     # TODO: validate offering
