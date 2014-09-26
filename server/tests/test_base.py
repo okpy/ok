@@ -124,7 +124,13 @@ class APIBaseTestCase(BaseTestCase):
         Makes a post request, with json.
         """
         kwds.setdefault('content_type', 'application/json')
-        self.response = self.client.post(API_PREFIX + url, *args, **kwds)
+        method = kwds.pop('method', None)
+        if method:
+            mthd = getattr(self.client, method.lower())
+        else:
+            mthd = self.client.post
+
+        self.response = mthd(API_PREFIX + url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)
             self.response_json = models.json.loads(

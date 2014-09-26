@@ -378,7 +378,8 @@ class SubmissionAPI(APIResource):
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assignment'),
-                'course': KeyArg('Course')
+                'course': KeyArg('Course'),
+                'created': DateTimeArg(),
                 # fill in filter parameters
             }
         },
@@ -532,6 +533,8 @@ class CourseAPI(APIResource):
                 'name': Arg(str, required=True),
                 'offering': Arg(str, required=True),
                 'institution': Arg(str, required=True),
+                'term': Arg(str, required=True),
+                'year': Arg(str, required=True),
                 'active': Arg(bool),
             }
         },
@@ -637,37 +640,60 @@ class GroupAPI(APIResource):
 
 
     def add_member(self, group, user, data):
-        # can only remove a member if you are a member
+        # can only add a member if you are a member
         need = Need('member')
         if not group.can(user, need, group):
             raise need.exception()
+
         if data['member'] in group.invited_members:
             raise BadValueError("user has already been invited")
         if data['member'] in group.members:
             raise BadValueError("user already part of group")
-        user = models.User.get_or_insert(data['member'].id())
-        group.invited_members.append(user.key)
+
+        user_to_add = models.User.get_or_insert(data['member'].id())
+        group.invited_members.append(user_to_add.key)
         group.put()
+
+        audit_log_message = models.AuditLog(
+            event_type='Group.add_member',
+            user=user.key,
+            description="Added member {} to group".format(data['member']),
+            obj=group.key
+            )
+        audit_log_message.put()
 
     def remove_member(self, group, user, data):
         # can only remove a member if you are a member
         need = Need('member')
         if not group.can(user, need, group):
             raise need.exception()
+
         if data['member'] in group.members:
             group.members.remove(data['member'])
         elif data['member'] in group.invited_members:
             group.invited_members.remove(data['member'])
+
         if len(group.members) == 0:
             group.key.delete()
+            description = "Deleted group"
         else:
             group.put()
+            description = "Changed group"
+
+        audit_log_message = models.AuditLog(
+            event_type='Group.remove_member',
+            user=user.key,
+            obj=group.key,
+            description=description
+            )
+        audit_log_message.put()
 
     def accept_invitation(self, group, user, data):
         # can only accept an invitation if you are in the invited_members
         need = Need('invitation')
         if not group.can(user, need, group):
             raise need.exception()
+
         assignment = group.assignment.get()
         if len(group.members) < assignment.max_group_size:
             group.invited_members.remove(user.key)

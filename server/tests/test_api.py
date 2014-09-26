@@ -21,6 +21,28 @@ from app.constants import ADMIN_ROLE
 
 from ddt import ddt, data, unpack
 
+def make_fake_course(creator):
+    return models.Course(
+        name="cs61a",
+        institution="UC Soumya",
+        offering="Fall 2014",
+        term="fall",
+        year="2014",
+        creator=creator.key,
+        staff=[])
+
+def make_fake_assignment(course, creator):
+    return models.Assignment(
+        name='hw1',
+        points=3,
+        display_name="CS 61A",
+        templates="[]",
+        course=course.key,
+        creator=creator.key,
+        max_group_size=4,
+        due_date=datetime.datetime.now())
+
+
 @ddt
 class APITest(object): #pylint: disable=no-init
     """
@@ -191,10 +213,12 @@ class APITest(object): #pylint: disable=no-init
     def test_create_two_entities(self):
         inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
+        self.assertStatusCode(201)
         gotten = self.model.get_by_id(self.response_json['key'])
 
         inst2 = self.get_basic_instance(mutate=True)
         self.post_entity(inst2)
+        self.assertStatusCode(201)
         gotten2 = self.model.get_by_id(self.response_json['key'])
 
         self.assertEqual(gotten.key, inst.key)
@@ -261,16 +285,32 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
     def setUp(self):
         super(AssignmentAPITest, self).setUp()
-        self.course = models.Course(name="test").put()
 
     def get_basic_instance(self, mutate=True):
         name = 'proj'
         if mutate:
             name += str(self.num)
             self.num += 1
-        rval = models.Assignment(name=name, points=3, course=self.course, templates={},
-                                 display_name=name)
+
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assignment = rval = make_fake_assignment(self._course, self.user)
+        rval.name = name
         return rval
+
+    def post_entity(self, inst, *args, **kwds):
+        """Posts an entity to the server."""
+        data = inst.to_json()
+        data['course'] = data['course']['id']
+
+        self.post_json('/{}'.format(self.name),
+                       data=data, *args, **kwds)
+        if self.response_json and 'key' in self.response_json:
+            if inst.key:
+                self.assertEqual(inst.key.id(), self.response_json['key'])
+            else:
+                inst.key = models.ndb.Key(self.model,
+                                          self.response_json.get('key'))
 
 
 class SubmissionAPITest(APITest, APIBaseTestCase):
@@ -282,9 +322,14 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
     def setUp(self):
         super(SubmissionAPITest, self).setUp()
         self.assignment_name = u'test assignment'
-        self._assign = models.Assignment(name=self.assignment_name, points=3)
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assign = make_fake_assignment(self._course, self.user)
+        self._assign.name = self.assignment_name
         self._assign.put()
+
         self._submitter = self.accounts['dummy_student']
+        self._submitter.put()
         self.logout()
         self.login('dummy_student')
 
@@ -303,7 +348,6 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         data = inst.to_json()
         data['assignment'] = self.assignment_name
         data['submitter'] = data['submitter']['id']
-        del data['created']
 
         self.post_json('/{}'.format(self.name),
                        data=data, *args, **kwds)
@@ -354,7 +398,8 @@ class CourseAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        rval = self.model(name=name, institution="UC Soumya", offering="Fall 2014", staff=[])
+        rval = make_fake_course(self.user)
+        rval.name = name
         return rval
 
 class VersionAPITest(APITest, APIBaseTestCase):
@@ -378,7 +423,9 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
     def setUp(self):
         super(GroupAPITest, self).setUp()
-        self.assignment = models.Assignment(name='testassign')
+        self.course = make_fake_course(self.user)
+        self.course.put()
+        self.assignment = make_fake_assignment(self.course, self.user)
         self.assignment.put()
 
     def get_basic_instance(self, mutate=True):
@@ -386,20 +433,22 @@ class GroupAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        return self.model(name=name, assignment=self.assignment.key)
+        return self.model(assignment=self.assignment.key)
 
     def test_add_member(self):
+        members = [self.accounts['dummy_student'].key]
         inst = self.get_basic_instance()
         inst.put()
 
         self.post_json(
             '/{}/{}/add_member'.format(self.name, inst.key.id()),
-            data={'members': [self.accounts['dummy_student'].key.id()]})
+            data={'member': members[0].id()},
+            method='PUT')
 
         inst = self.model.get_by_id(inst.key.id())
-        self.assertEqual(len(inst.invited_members), 1)
+        self.assertEqual(inst.invited_members, members)
 
-    def test_add_member(self):
+    def test_remove_member(self):
         members = [self.accounts['dummy_student'].key]
         inst = self.get_basic_instance()
         inst.members = members
@@ -407,7 +456,8 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
         self.post_json(
             '/{}/{}/remove_member'.format(self.name, inst.key.id()),
-            data={'members': [x.id() for x in members]})
+            data={'member': members[0].id()},
+            method='PUT')
 
         self.assertEquals(None, self.model.get_by_id(inst.key.id()))
 
