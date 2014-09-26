@@ -64,6 +64,7 @@ class APIResource(View):
     model = None
     web_args = {}
     key_type = int
+    api_version = 'v1'
 
     @property
     def name(self):
@@ -192,7 +193,6 @@ class APIResource(View):
             return need.api_response()
 
         obj.key.delete()
-        return None
 
     def parse_args(self, index, user):
         """
@@ -285,11 +285,7 @@ class UserAPI(APIResource):
                     "invitations": []
                 }
         return {
-            "invitations": [{
-                "members": invitation.members,
-                "id": invitation.key.id(),
-                "assignment": invitation.assignment,
-            } for invitation in list(query)]
+            "invitations": list(query)
         }
 
     def accept_invitation(self, user, obj):
@@ -316,7 +312,6 @@ class UserAPI(APIResource):
             if user.key in group.invited_members:
                 group.invited_members.remove(user.key)
                 group.put()
-
 
 
 class AssignmentAPI(APIResource):
@@ -506,10 +501,55 @@ class VersionAPI(APIResource):
     model = models.Version
 
     web_args = {
-        'file_data': Arg(str),
         'name': Arg(str),
         'version': Arg(str),
+        'current_version': Arg(str),
+        'base_url': Arg(str),
     }
+
+    key_type = str
+
+    def new(self, key):
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
+
+        need = Need('get')
+        if not obj.can(session['user'], need, obj):
+            return need.api_response()
+
+        args = self.parse_args(False)
+        new_version = args['version']
+
+        if new_version in obj.versions:
+            return 400, "Duplicate version: {}".format(new_version)
+
+        obj.versions.append(new_version)
+        if 'current_version' in args:
+            obj.current_version = args['current_version']
+
+        obj.put()
+
+        return obj
+
+    def current(self, key):
+        obj = self.model.get_by_id(key)
+        if not obj:
+            return 404, "{resource} {key} not found".format(
+                resource=self.name, key=key)
+
+        # No permissions check because anyone can check for the latest version
+
+        if not obj.current_version:
+            return 500, "Invalid version resource. Contact an administrator."
+        return obj.current_version
+
+    def new_entity(self, attributes):
+        if 'version' in attributes:
+            attributes['versions'] = [attributes.pop('version')]
+
+        return super(VersionAPI, self).new_entity(attributes)
 
 class CourseAPI(APIResource):
     model = models.Course

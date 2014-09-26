@@ -6,7 +6,7 @@ import logging
 import traceback
 import collections
 
-from flask import render_template, session, request
+from flask import render_template, session, request, Response
 
 from google.appengine.api import users
 from google.appengine.ext.db import BadValueError
@@ -26,7 +26,7 @@ def index():
         params['users_link'] = users.create_login_url('/')
         params['users_title'] = "Sign In"
     else:
-        logging.info("User is %s." % user.email())
+        logging.info("User is %s", user.email())
         params["user"] = {'email': user.email()}
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
@@ -51,26 +51,31 @@ class WebArgsException(Exception):
 def args_error(error):
     raise WebArgsException(error)
 
+def check_version(client):
+    latest = api.VersionAPI().current("okpy")
+
+    # If it returned a response, and not a string
+    if not isinstance(latest, (str, unicode)):
+        raise RuntimeError(latest)
+    if client != latest:
+        return ("Incorrect client version. Supplied version was {}. "
+                "Correct version is {}.".format(client, latest))
+
 def register_api(view, endpoint, url):
     """
     Registers the given view at the endpoint, accessible by the given url.
     """
-    url = API_PREFIX + '/' + url
+    url = '/'.join((API_PREFIX, view.api_version, url))
     view = view.as_view(endpoint)
 
     @wraps(view)
     def wrapped(*args, **kwds):
         #TODO(martinis) add tests
-        if 'client_version' in request.args:
-            if request.args['client_version'] != app.config['CLIENT_VERSION']:
-                logging.info(
-                    "Client out of date. Client version {} != {}".format(
-                        request.args['client_version'],
-                    app.config['CLIENT_VERSION']))
-                return utils.create_api_response(403, "incorrect client version", {
-                    'supplied_version': request.args['client_version'],
-                    'correct_version': app.config['CLIENT_VERSION']
-                })
+        # Any client can check for the latest version
+
+        message = "success"
+        if request.args.get('client_version'):
+            message = check_version(request.args['client_version']) or message
 
         user = auth.authenticate()
         if not isinstance(user, models.User):
@@ -85,7 +90,7 @@ def register_api(view, endpoint, url):
                 and not isinstance(rval, dict)):
                 rval = utils.create_api_response(*rval)
             else:
-                rval = utils.create_api_response(200, 'success', rval)
+                rval = utils.create_api_response(200, message, rval)
 
             return rval
         except (WebArgsException, BadValueError) as e:
@@ -100,11 +105,10 @@ def register_api(view, endpoint, url):
                                              error_message)
 
     app.add_url_rule('%s' % url, view_func=wrapped, defaults={'path': None},
-            methods=['GET', 'POST'])
+                     methods=['GET', 'POST'])
     app.add_url_rule('%s/<path:path>' % url, view_func=wrapped,
-            methods=['GET', 'POST', 'DELETE', 'PUT'])
+                     methods=['GET', 'POST', 'DELETE', 'PUT'])
 
-register_api(api.UserAPI, 'user_api', 'user')
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
 register_api(api.VersionAPI, 'version_api', 'version')

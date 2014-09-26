@@ -1,0 +1,10 @@
+<div>
+  <h2>Version: {{version.name}}</h2>
+  <b>Versions</b>
+  <ul>
+    <li ng-repeat="version in version.versions">
+      <a ng-href="{{download_link(version)}}">{{version}}</a>
+    </li>
+  </ul>
+  <a ui-sref="version.update({versionId:version.name})">Add a new version</a>
+</div>

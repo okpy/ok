@@ -1,4 +1,4 @@
-var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment']);
+var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment', 'localytics.directives']);
 
 app.directive('snippet', function() {
         "use strict";
@@ -116,6 +116,41 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: 'static/partials/course.new.html',
       controller: "CourseNewCtrl"
     }
+ 
+    var versions = {
+      name: 'version',
+      abstract: true,
+      url: '/version',
+      templateUrl: 'static/partials/version.base.html',
+    }
+
+    var versionList = {
+      name: 'version.list',
+      url: '/',
+      templateUrl: 'static/partials/version.list.html',
+      controller: "VersionListCtrl"
+    }
+
+    var versionDetail = {
+      name: 'version.detail',
+      url: '/:versionId',
+      templateUrl: 'static/partials/version.detail.html',
+      controller: "VersionDetailCtrl"
+    }
+
+    var versionUpdate = {
+      name: 'version.update',
+      url: '/:versionId/new',
+      templateUrl: 'static/partials/version.new.html',
+      controller: "VersionNewCtrl"
+    }
+
+    var versionNew = {
+      name: 'version.new',
+      url: '/new',
+      templateUrl: 'static/partials/version.new.html',
+      controller: "VersionNewCtrl"
+    }
 
     $stateProvider.
       state(submissions).
@@ -127,7 +162,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(assignmentDetail).
       state(courses).
       state(courseList).
-      state(courseNew)
+      state(courseNew).
+      state(versions).
+      state(versionList).
+      state(versionDetail).
+      state(versionUpdate).
+      state(versionNew)
       ;
   }]);
 
@@ -294,6 +334,32 @@ app.factory('Course', ['$resource',
             return JSON.parse(data).data;
           }
         },
+      });
+    }
+  ]);
+
+app.factory('Version', ['$resource',
+    function($resource) {
+      return $resource('api/v1/version/:id', {
+        format: "json",
+      }, {
+        query: {
+          isArray: true,
+          transformResponse: function(data) {
+            return JSON.parse(data).data.results;
+          }
+        },
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        update: {
+          method: "PUT",
+          url: "api/v1/version/:id/new",
+          params: {}
+        }
       });
     }
   ]);
