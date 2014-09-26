@@ -336,6 +336,10 @@ class AssignmentAPI(APIResource):
         The POST HTTP method
         """
         data['creator'] = user.key
+        # check if there is a duplicate assignment
+        assignments = list(models.Assignment.query(models.Assignment.name == data['name']))
+        if len(assignments) > 0:
+            raise BadValueError("assignment with name %s exists already" % data["name"])
         return super(AssignmentAPI, self).post(user, data)
 
 
