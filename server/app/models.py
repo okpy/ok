@@ -103,13 +103,12 @@ class Base(ndb.Model):
 
 class User(Base):
     """Users."""
-    email = ndb.StringProperty() # Must be associated with some OAuth login.
+    email = ndb.StringProperty(required=True) # Must be associated with some OAuth login.
     login = ndb.StringProperty() # TODO(denero) Legacy of glookup system
     role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
-    #TODO(martinis) figure out how to actually use this data
-    courses = ndb.KeyProperty('Course', repeated=True)
+    logged_in = ndb.BooleanProperty(default=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -117,6 +116,10 @@ class User(Base):
     @property
     def is_admin(self):
         return self.role == constants.ADMIN_ROLE
+
+    @property
+    def logged_in(self):
+        return self.email == "_anon"
 
     @property
     def is_staff(self):
@@ -194,51 +197,22 @@ class User(Base):
             return user.is_admin
         return False
 
-class AnonymousUser(User):
-    @property
-    def logged_in(self):
-        return False
 
-    def put(self, *args, **kwds):
-        """
-        Disable puts for Anonymous Users
-        """
-        pass
 
-    @classmethod
-    def get_or_insert(cls, *args, **kwds):
-        return super(_AnonUserClass, cls).get_or_insert(*args, **kwds)
-
-    @property
-    def staffed_courses(self):
-        return ()
-
-    @property
-    def groups(self):
-        return ()
-
-_AnonUserClass = AnonymousUser
-_AnonUser = None
-
-def AnonymousUser():
-    global _AnonUser
-    if not _AnonUser:
-        _AnonUser = _AnonUserClass.get_or_insert("anon_user")
-    return _AnonUser
-
+anonymous = User(email="_anon")
 
 class Assignment(Base):
     """
     The Assignment Model
     """
-    name = ndb.StringProperty() # Must be unique to support submission.
-    display_name = ndb.StringProperty() # Name displayed to students
-    # TODO(denero) Validate uniqueness of name.
-    points = ndb.FloatProperty()
-    creator = ndb.KeyProperty(User)
-    templates = ndb.JsonProperty()
-    course = ndb.KeyProperty('Course')
-    max_group_size = ndb.IntegerProperty()
+    name = ndb.StringProperty(required=True) # Must be unique to support submission.
+    display_name = ndb.StringProperty(required=True) # Name displayed to students
+    points = ndb.FloatProperty(required=True)
+    creator = ndb.KeyProperty(User, required=True)
+    templates = ndb.JsonProperty(required=True)
+    course = ndb.KeyProperty('Course', required=True)
+    max_group_size = ndb.IntegerProperty(required=True)
+    due_date = ndb.DateTimeProperty(required=True)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -254,25 +228,35 @@ class Assignment(Base):
 
 class Course(Base):
     """Courses have enrolled students and assignment lists with due dates."""
-    institution = ndb.StringProperty() # E.g., 'UC Berkeley'
-    name = ndb.StringProperty() # E.g., 'CS 61A'
-    offering = ndb.StringProperty()  # E.g., 'Fall 2014'
-    creator = ndb.KeyProperty(User)
+    institution = ndb.StringProperty(required=True) # E.g., 'UC Berkeley'
+    name = ndb.StringProperty(required=True) # E.g., 'CS 61A'
+    offering = ndb.StringProperty(required=True)  # E.g., 'Fall 2014'
+    # TODO: validate offering
+    creator = ndb.KeyProperty(User, required=True)
     staff = ndb.KeyProperty(User, repeated=True)
+    active = ndb.BooleanProperty(default=True)
 
     @classmethod
-    def _can(cls, user, need, obj=None, query=None):
+    def _can(cls, user, need, course=None, query=None):
         action = need.action
         if action == "get":
+            if user.is_admin:
+                return True
             return True
         elif action == "index":
             return query
         elif action in ("create", "delete", "put"):
             return user.is_admin
         elif action == "modify":
-            if not obj:
+            if user.is_admin:
+                return True
+            if not course:
                 raise ValueError("Need instance for get action.")
-            return user.key in obj.staff
+            return user.key in course.staff
+        elif action == "staff":
+            if user.is_admin:
+                return True
+            return user.key in course.staff
         return False
 
 
@@ -291,6 +275,7 @@ def validate_messages(_, messages):
         #              and call protocol-specific validators on each value.
     except Exception as exc:
         raise BadValueError(exc)
+
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
@@ -386,16 +371,16 @@ class SubmissionDiff(Base):
 class Comment(Base):
     author = ndb.KeyProperty('User', required=True)
     created = ndb.DateTimeProperty(auto_now_add=True)
-    line = ndb.IntegerProperty()
-    message = ndb.TextProperty()
+    line = ndb.IntegerProperty(required=True)
+    message = ndb.TextProperty(required=True)
     draft = ndb.BooleanProperty(required=True, default=True)
-    filename = ndb.StringProperty()
+    filename = ndb.StringProperty(required=True)
 
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
-    name = ndb.StringProperty()
-    file_data = ndb.TextProperty()
-    version = ndb.StringProperty()
+    name = ndb.StringProperty(required=True)
+    file_data = ndb.TextProperty(required=True)
+    version = ndb.StringProperty(required=True)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -413,7 +398,6 @@ class Group(Base):
     A group is a collection of users who all submit submissions.
     They all can see submissions for an assignment all as a group.
     """
-    name = ndb.StringProperty()
     members = ndb.KeyProperty(kind='User', repeated=True)
     invited_members = ndb.KeyProperty(kind='User', repeated=True)
     assignment = ndb.KeyProperty('Assignment', required=True)
@@ -455,7 +439,7 @@ def anon_converter(prop, value):
 
 class AuditLog(Base):
     created = ndb.DateTimeProperty(auto_now_add=True)
-    event_type = ndb.StringProperty()
+    event_type = ndb.StringProperty(required=True)
     user = ndb.KeyProperty('User', required=True, validator=anon_converter)
     description = ndb.StringProperty()
     obj = ndb.KeyProperty()

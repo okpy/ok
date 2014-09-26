@@ -157,6 +157,7 @@ def filter_query(query, args, model):
 
     Returns a modified query with the appropriate filters.
     """
+    print "FILTERING QUERY", query, args
     for arg, value in args.iteritems():
         if isinstance(value, collections.Iterable) and not isinstance(value, str):
             op, value = value

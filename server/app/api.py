@@ -172,11 +172,7 @@ class APIResource(View):
         """
         The POST HTTP method
         """
-        data = self.parse_args(False, user)
-
         entity = self.new_entity(data)
-        if error_response:
-            return error_response
 
         need = Need('create')
         if not self.model.can(user, need, obj=entity):
@@ -202,7 +198,7 @@ class APIResource(View):
         """
         need = Need('delete')
         if not self.model.can(user, need, obj=obj):
-            return need.api_response()
+            raise need.exception()
 
         obj.key.delete()
         return None
@@ -245,7 +241,6 @@ class APIResource(View):
         if not result:
             raise need.exception()
 
-        query = filter_query(result, data, self.model)
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
             logging.info("Adding default ordering by creation time.")
@@ -528,15 +523,29 @@ class CourseAPI(APIResource):
     methods = {
         'post': {
             'web_args': {
-                'staff': KeyRepeatedArg('User', required=True),
                 'name': Arg(str, required=True),
                 'offering': Arg(str, required=True),
                 'institution': Arg(str, required=True),
+                'active': Arg(bool),
             }
+        },
+        'delete': {
         },
         'get': {
         },
         'index': {
+        },
+        'add_staff': {
+            'methods': set(['POST']),
+            'web_args': {
+                'staff_member': KeyArg('User', required=True)
+            }
+        },
+        'remove_staff': {
+            'methods': set(['POST']),
+            'web_args': {
+                'staff_member': KeyArg('User', required=True)
+            }
         },
     }
 
@@ -547,6 +556,23 @@ class CourseAPI(APIResource):
         data['creator'] = user.key
         return super(CourseAPI, self).post(user, data)
 
+    def add_staff(self, course, user, data):
+        need = Need("staff")
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        if data['staff_member'] not in course.staff:
+            user = models.User.get_or_insert(data['staff_member'].id())
+            course.staff.append(user.key)
+            course.put()
+
+    def remove_staff(self, course, user, data):
+        need = Need("staff")
+        if not course.can(user, need, course):
+            raise need.exception()
+        if data['staff_member'] in course.staff:
+            course.staff.remove(data['staff_member'])
+            course.put()
 
 class GroupAPI(APIResource):
     model = models.Group

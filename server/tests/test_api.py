@@ -183,7 +183,6 @@ class APITest(object): #pylint: disable=no-init
     def test_entity_create_basic(self):
         """Tests creating an empty entity."""
         inst = self.get_basic_instance(mutate=True)
-        print "INST", inst.to_json()
         self.post_entity(inst)
 
         gotten = self.model.get_by_id(self.response_json['key'])
