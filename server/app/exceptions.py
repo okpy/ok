@@ -6,16 +6,12 @@ class BadValueError(APIException):
     code = 400
 
 
-class BadArgumentException(APIException):
-    code = 400
-
-
 class BadMethodError(APIException):
-    code = 400
+    code = 405
 
 
 class IncorrectHTTPMethodError(APIException):
-    code = 400
+    code = 405
 
 
 class PermissionError(APIException):
@@ -29,9 +25,16 @@ class PermissionError(APIException):
         return self.need.get_exception_message()
 
 
-class ResourceDoesntExistError(APIException):
+class BadKeyError(APIException):
     code = 404
+
+    def __init__(self, key):
+        self.key = key
+
+    @property
+    def message(self):
+        return "Key {key} not found".format(key=self.key)
 
 
 class IncorrectVersionError(APIException):
-    code = 400
+    code = 403

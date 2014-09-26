@@ -77,8 +77,7 @@ class APIResource(View):
     def get_instance(self, key, user):
         obj = self.model.get_by_id(key)
         if not obj:
-            raise ResourceDoesntExistError("{resource} {key} not found".format(
-                resource=self.name, key=key))
+            raise BadKeyError(key)
 
         need = Need('get')
         if not obj.can(user, need, obj):
@@ -105,7 +104,6 @@ class APIResource(View):
         return method(user, data)
 
     def dispatch_request(self, path, *args, **kwargs):
-        request.fields = {}
         http_method = request.method.upper()
         user = session['user']
 
@@ -563,7 +561,7 @@ class GroupAPI(APIResource):
         },
         'index': {
             'web_args': {
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment')
             }
         },
         'add_member': {

@@ -46,7 +46,7 @@ def server_error(e):
 
 @api.parser.error_handler
 def args_error(e):
-    raise BadArgumentException(e.message)
+    raise BadValueError(e.message)
 
 def register_api(view, endpoint, url):
     """
@@ -58,6 +58,7 @@ def register_api(view, endpoint, url):
     @wraps(view)
     def api_wrapper(*args, **kwds):
         #TODO(martinis) add tests
+        request.fields = {}
         if 'client_version' in request.args:
             if request.args['client_version'] != app.config['CLIENT_VERSION']:
                 logging.info(
