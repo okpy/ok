@@ -17,6 +17,8 @@ from google.appengine.ext import ndb
 from app import models, api
 from app.constants import ADMIN_ROLE
 
+from test_api import make_fake_assignment, make_fake_course
+
 class AuditTest(APIBaseTestCase): #pylint: disable=no-init
     """
     Tests that audit logs are correctly created for actions.
@@ -29,11 +31,12 @@ class AuditTest(APIBaseTestCase): #pylint: disable=no-init
         super(AuditTest, self).setUp()
         self.login('dummy_admin')
         self.api = api.GroupAPI()
-        self.assignment = models.Assignment(name='testassign')
+        self.course = make_fake_course(self.user)
+        self.course.put()
+        self.assignment = make_fake_assignment(self.course, self.user)
         self.assignment.put()
 
         self.group = models.Group(
-            name='testgroup',
             assignment=self.assignment.key)
         self.group.put()
 
@@ -71,8 +74,9 @@ class AuditTest(APIBaseTestCase): #pylint: disable=no-init
         self.group.members = members
         self.group.put()
 
-        data = {'members': members}
+        data = {'member': members[0]}
 
+        print self.user
         result = self.api.remove_member(self.group, self.user, data)
 
         audit_logs = models.AuditLog.query().fetch()
@@ -86,7 +90,7 @@ class AuditTest(APIBaseTestCase): #pylint: disable=no-init
 
     def test_add_member(self):
         members = [self.accounts['dummy_student'].key]
-        data = {'members': members}
+        data = {'member': members[0]}
 
         result = self.api.add_member(self.group, self.user, data)
 

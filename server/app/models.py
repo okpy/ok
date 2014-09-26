@@ -80,7 +80,11 @@ class Base(ndb.Model):
 
         for key, value in result.items():
             if isinstance(value, ndb.Key):
-                result[key] = value.get().to_json(fields.get(key))
+                value = value.get()
+                if value:
+                    result[key] = value.to_json(fields.get(key))
+                else:
+                    result[key] = None
             else:
                 try:
                     new_value = app.json_encoder().default(value)
@@ -88,6 +92,7 @@ class Base(ndb.Model):
                 except TypeError:
                     pass
         return result
+
     @classmethod
     def can(cls, user, need, obj=None, query=None):
         """
@@ -128,10 +133,14 @@ class User(Base):
     def staffed_courses(self):
         return Course.query(Course.staff == self.key)
 
+    @property
+    def courses(self):
+        return [group.assignment.get().course for group in self.groups()]
+
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
-            query = query.filter(Group.assignment == assignment)
+            query = query.filter(Group.assignment == assignment.key)
         return query
 
     @classmethod
@@ -196,8 +205,12 @@ class User(Base):
         return False
 
 
-
-anonymous = User(email="_anon")
+_AnonUser = None
+def AnonymousUser():
+    global _AnonUser
+    if not _AnonUser:
+        _AnonUser = User.get_or_insert("_anon")
+    return _AnonUser
 
 class Assignment(Base):
     """
@@ -290,11 +303,8 @@ class Submission(Base):
 
     @property
     def group(self):
-        group = APIProxy.AssignmentAPI().group(
-            self.assignment.get(), self.submitter.get(), {})
-        if not isinstance(group, Group):
-            return None
-        return group
+        submitter = self.submitter.get()
+        return submitter.groups(self.assignment.get()).get()
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -310,6 +320,7 @@ class Submission(Base):
                         return True
             groups = list(user.groups())
             my_group = obj.group
+
             if groups and my_group and my_group.key in [g.key for g in groups]:
                 return True
             return False
@@ -327,15 +338,14 @@ class Submission(Base):
             if user.is_admin:
                 return query
 
-            courses = user.courses()
             filters = []
+            courses = Course.query().filter(Course.staff == user.key)
             for course in courses:
                 assignments = Assignment.query().filter(
                     Assignment.course == course).fetch()
 
-                if user.key in course.get().staff:
-                    filters.append(Submission.assignment.IN(
-                        [assign.key for assign in assignments]))
+                filters.append(Submission.assignment.IN(
+                    [assign.key for assign in assignments]))
 
             for group in user.groups():
                 filters.append(Submission.submitter.IN(group.members))
@@ -412,21 +422,28 @@ class Group(Base):
         if not user.logged_in:
             return False
 
+        if action == "index":
+            if user.is_admin:
+                return query
+            return query.filter(Group.members == user.key)
+
+        if user.is_admin:
+            return True
+
         if action == "delete":
             return False
-        if action == "index":
-            return query.filter(Group.members == user.key)
         if action == "invitation":
             return user.key in obj.invited_members
         if action == "member":
             return user.key in obj.members
         if action == "get":
-            return user.is_admin or user.key in obj.members or user.key in obj.invited_members
+            return user.key in obj.members or user.key in obj.invited_members
+
         if action in ("create", "put"):
             #TODO(martinis) make sure other students are ok with this group
             if not obj:
                 raise ValueError("Need instance for get action.")
-            return user.is_admin or user.key in obj.members
+            return user.key in obj.members
         return False
 
     def _pre_put_hook(self):
