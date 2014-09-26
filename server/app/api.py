@@ -531,7 +531,6 @@ class CourseAPI(APIResource):
         'post': {
             'web_args': {
                 'name': Arg(str, required=True),
-                'offering': Arg(str, required=True),
                 'institution': Arg(str, required=True),
                 'term': Arg(str, required=True),
                 'year': Arg(str, required=True),

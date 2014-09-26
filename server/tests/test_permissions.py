@@ -93,16 +93,14 @@ class PermissionsUnitTest(BaseTestCase):
             "first": models.Course(
                 name="first",
                 institution="UC Awesome",
-                offering="Fall",
                 year="2014",
-                term="hmm",
+                term="Fall",
                 creator=self.accounts['admin'].key),
             "second": models.Course(
                 name="second",
                 institution="UC Awesome",
-                offering="Fall",
                 year="2014",
-                term="hmm",
+                term="Fall",
                 creator=self.accounts['admin'].key),
             }
 

@@ -25,8 +25,7 @@ def make_fake_course(creator):
     return models.Course(
         name="cs61a",
         institution="UC Soumya",
-        offering="Fall 2014",
-        term="fall",
+        term="Fall",
         year="2014",
         creator=creator.key,
         staff=[])
