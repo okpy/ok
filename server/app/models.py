@@ -108,7 +108,6 @@ class User(Base):
     role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
-    logged_in = ndb.BooleanProperty(default=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -119,7 +118,7 @@ class User(Base):
 
     @property
     def logged_in(self):
-        return self.email == "_anon"
+        return self.email != "_anon"
 
     @property
     def is_staff(self):
