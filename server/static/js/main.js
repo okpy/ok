@@ -27,6 +27,14 @@ app.directive('group', function() {
         };
     });
 
+app.directive('comments', function() {
+        "use strict";
+        return {
+            scope: false,
+            restrict: 'E',
+            templateUrl: 'static/partials/comment-viewer.html',
+        };
+    });
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
@@ -204,7 +212,10 @@ app.factory('User', ['$resource',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission/:id', {format: "json"}, {
+      return $resource('api/v1/submission/:id', {
+        format: "json",
+        id: "@id",
+      }, {
         query: {
           isArray: false
         },
@@ -216,6 +227,22 @@ app.factory('Submission', ['$resource',
         },
         diff: {
           url: 'api/v1/submission/:id/diff',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        addComment: {
+          method: "POST",
+          url: 'api/v1/submission/:id/add_comment',
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        deleteComment: {
+          method: "POST",
+          url: 'api/v1/submission/:id/delete_comment',
           isArray: false,
           transformResponse: function(data) {
             return JSON.parse(data).data;

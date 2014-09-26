@@ -3,6 +3,7 @@ The public API
 """
 import datetime
 import logging
+import datetime
 
 from flask.views import View
 from flask.app import request, json
@@ -394,7 +395,7 @@ class SubmissionAPI(APIResource):
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            return diff_obj.diff
+            return diff_obj
 
         diff = {}
         templates = obj.assignment.get().templates
@@ -406,9 +407,51 @@ class SubmissionAPI(APIResource):
         for filename, contents in obj.messages['file_contents'].items():
             diff[filename] = compare.diff(templates[filename], contents)
 
-        self.diff_model(id=obj.key.id(),
-                        diff=diff).put()
+        diff = self.diff_model(id=obj.key.id(),
+                               diff=diff)
+        diff.put()
         return diff
+
+    def add_comment(self, obj, user):
+        """
+        Adds a comment to this diff.
+        """
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+
+        data = self.parse_args(False, user)
+        index = data["index"]
+        message = data["message"]
+        filename = data["file"]
+
+        if message.strip() == "":
+            raise BadValueError("Cannot make empty comment")
+
+        comment = models.Comment(
+            filename=filename,
+            message=message,
+            line=index,
+            author=user.key,
+            parent=diff_obj.key)
+        comment.put()
+
+    def delete_comment(self, obj, user):
+        """
+        Deletes a comment on this diff.
+        """
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+
+        data = self.parse_args(False, user)
+        comment = data.get('comment', None)
+        if not comment:
+            return 400, "Missing required argument 'comment'"
+
+        comment = models.Comment.get_by_id(comment, parent=diff_obj.key)
+        if comment:
+            comment.key.delete()
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -437,11 +480,20 @@ class SubmissionAPI(APIResource):
         return self.submit(user, data['assignment'],
                            data['messages'])
 
+    def parse_args(self, is_index, user):
+        data = super(SubmissionAPI, self).parse_args(is_index, user)
+        if not is_index and 'created' in data:
+            del data['created']
+        return data
+
     web_args = {
         'assignment': Arg(str),
         'messages': Arg(None),
+        'message': Arg(str),
+        'file': Arg(str),
         'created': DateTimeArg(),
-        'submitter': KeyArg('User'),
+        'index': Arg(int),
+        'comment': Arg(int),
     }
 
 

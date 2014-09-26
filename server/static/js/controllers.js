@@ -39,8 +39,13 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
   }]);
 
 app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
-  function($scope, $stateParams, Submission) {
+  function($scope, $stateParams, Submission, $timeout) {
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
+    $scope.refreshDiff = function() {
+        $timeout(function() {
+          $scope.diff = Submission.diff({id: $stateParams.submissionId});
+        }, 300);
+    }
   }]);
 
 app.controller("CourseListCtrl", ['$scope', 'Course',
@@ -98,14 +103,18 @@ app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$ancho
     }
   ]);
 
-app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScroll",
-    function ($scope, $timeout, $location, $anchorScroll) {
+app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce",
+    function ($scope, $timeout, $location, $anchorScroll, $sce) {
       contents = [];
       var leftNum = 0, rightNum = 0;
       for (var i = 0; i < $scope.contents.length; i++) {
-        codeline = {};
+        codeline = {"type": "line"};
         codeline.start = $scope.contents[i][0];
         codeline.line = $scope.contents[i].slice(2);
+        codeline.index = i;
+        if ($scope.diff.comments.hasOwnProperty($scope.file_name) && $scope.diff.comments[$scope.file_name].hasOwnProperty(i)) {
+          codeline.comments = $scope.diff.comments[$scope.file_name][i]
+        }
         codeline.lineNum = i + 1;
         if (codeline.start == "+") {
           rightNum++;
@@ -133,8 +142,15 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
     }
   ]);
 
-app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll",
-    function ($scope, $timeout, $location, $anchorScroll) {
+app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce", "$modal",
+    function ($scope, $timeout, $location, $anchorScroll, $sce, $modal) {
+      var converter = new Showdown.converter();
+      $scope.convertMarkdown = function(text) {
+        if (text == "" || text === undefined) {
+          return $sce.trustAsHtml("")
+        }
+        return $sce.trustAsHtml(converter.makeHtml(text));
+      }
       var start = $scope.codeline.start;
       if (start == "+") {
         $scope.positive = true;
@@ -147,6 +163,57 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
       $scope.scroll = function() {
         $location.hash($scope.anchorId);
         $anchorScroll();
+      }
+      $scope.showComment = false;
+      $scope.toggleComment = function(line) {
+        $scope.showComment = !$scope.showComment;
+      }
+    }
+  ]);
+
+app.controller("CommentController", ["$scope", "$stateParams", "$timeout", "$modal", "Submission",
+    function ($scope, $stateParams, $timeout, $modal, Submission) {
+      $scope.remove = function() {
+        var modal = $modal.open({
+          templateUrl: '/static/partials/removecomment.modal.html',
+          scope: $scope,
+          size: 'sm',
+          resolve: {
+            modal: function () {
+              return modal;
+            }
+          }
+        });
+        modal.result.then(function() {
+          Submission.deleteComment({
+            id: $stateParams.submissionId,
+            comment: $scope.comment.id
+          }, $scope.refreshDiff);
+        });
+      }
+    }
+  ]);
+
+app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Submission",
+    function ($scope, $sce, $stateParams, Submission) {
+      var converter = new Showdown.converter();
+      $scope.convertMarkdown = function(text) {
+        if (text == "" || text === undefined) {
+          return $sce.trustAsHtml("No comment yet...")
+        }
+        return $sce.trustAsHtml(converter.makeHtml(text));
+      }
+      $scope.commentText = {text:""}
+      $scope.comment = function() {
+        text = $scope.commentText.text;
+        if (text !== undefined && text.trim() != "") {
+          Submission.addComment({
+            id: $stateParams.submissionId,
+            file: $scope.file_name,
+            index: $scope.codeline.index,
+            message: text,
+          }, $scope.refreshDiff);
+        }
       }
     }
   ]);

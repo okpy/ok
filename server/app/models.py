@@ -361,6 +361,32 @@ class SubmissionDiff(Base):
     submission = ndb.KeyProperty(Submission)
     diff = ndb.JsonProperty()
 
+    @property
+    def comments(self):
+        return Comment.query(ancestor=self.key).order(Comment.created)
+
+    def to_json(self, fields=None):
+        dct = super(SubmissionDiff, self).to_json(fields)
+        comments = list(self.comments)
+        comment_dict = {}
+        for comment in comments:
+            if comment.filename not in comment_dict:
+                comment_dict[comment.filename] = {}
+            if comment.line not in comment_dict[comment.filename]:
+                comment_dict[comment.filename][comment.line] = []
+            comment_dict[comment.filename][comment.line].append(comment)
+
+        dct['comments'] = comment_dict
+        return dct
+
+class Comment(Base):
+    author = ndb.KeyProperty('User', required=True)
+    created = ndb.DateTimeProperty(auto_now_add=True)
+    line = ndb.IntegerProperty()
+    message = ndb.TextProperty()
+    draft = ndb.BooleanProperty(required=True, default=True)
+    filename = ndb.StringProperty()
+
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
     name = ndb.StringProperty()
