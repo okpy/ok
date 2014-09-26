@@ -333,9 +333,6 @@ class AssignmentAPI(APIResource):
         },
         'index': {
         },
-        'group': {
-            'methods': set(['GET'])
-        },
     }
 
     def post(self, user, data):
@@ -344,16 +341,6 @@ class AssignmentAPI(APIResource):
         """
         data['creator'] = user.key
         return super(AssignmentAPI, self).post(user, data)
-
-    def group(self, assignment, user, data):
-        current_group = list(user.groups(assignment.key))
-        if len(current_group) == 0:
-            return {
-                "in_group": False
-            }
-        if len(current_group) > 1:
-            raise BadValueError("in multiple groups")
-        return current_group[0]
 
 
 class SubmitNDBImplementation(object):
@@ -393,6 +380,7 @@ class SubmissionAPI(APIResource):
         },
         'index': {
             'web_args': {
+                # fill in filter parameters
             }
         },
         'diff': {
@@ -574,6 +562,9 @@ class GroupAPI(APIResource):
         'get': {
         },
         'index': {
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
         },
         'add_member': {
             'methods': set(['PUT']),

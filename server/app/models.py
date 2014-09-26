@@ -421,12 +421,12 @@ class Group(Base):
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
         action = need.action
+        if not user.logged_in:
+            return False
 
         if action == "delete":
             return False
         if action == "index":
-            if user.is_admin:
-                return query
             return query.filter(Group.members == user.key)
         if action == "invitation":
             return user.key in obj.invited_members
