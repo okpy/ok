@@ -156,4 +156,11 @@ h2 {
 
 .tab-wrapper {
   padding: 10px 10px 10px 10px;
+
+input.ng-invalid.ng-dirty {
+  background-color: #FA787E;
+}
+
+input.ng-valid.ng-dirty {
+  background-color: #78FA89;
 }

@@ -1,5 +1,5 @@
 """App constants"""
-API_PREFIX = "/api/v1"
+API_PREFIX = "/api"
 STUDENT_ROLE = 'student'
 STAFF_ROLE = 'staff'
 ADMIN_ROLE = 'admin'

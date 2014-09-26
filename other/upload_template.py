@@ -24,8 +24,10 @@ def main():
 
     assign_id, current_templates = get_current_templates(assign_name)
 
+    current_templates = {}
     try:
-        current_templates = json.loads(current_templates)
+        if isinstance(current_templates, str):
+            current_templates = json.loads(current_templates)
     except ValueError:
         current_templates = {}
 

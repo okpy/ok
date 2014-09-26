@@ -16,7 +16,7 @@ class Need(object):
             class_name = self.obj.__name__
         elif self.obj:
             class_name = type(self.obj).__name__
-        return (401, "Don't have permission to {} {}".format(
-            self.action, class_name))
+        return (401, "Don't have permission to {} {}".format(self.action,
+                                                             class_name))
 
 
