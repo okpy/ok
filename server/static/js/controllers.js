@@ -295,7 +295,7 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
       }
       $scope.accept = function(invitation, $event) {
         $event.stopPropagation();
-        if ($scope.group.in_group === false) {
+        if ($scope.inGroup === false) {
           Group.acceptInvitation({
             id: invitation.id
           }, function() {

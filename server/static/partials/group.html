@@ -1,7 +1,7 @@
 <div class='group'>
   <div class='row'>
     <div class= 'col-md-6'>
-      <h4>Current Group<span ng-if="group.inGroup !== false ">: {{group.id}}</span> </h4>
+      <h4>Current Group<span ng-if="inGroup !== false ">: {{group.id}}</span> </h4>
       <div ng-if="inGroup === false">
         <div class='alert alert-info' style="margin-bottom:0px">
           You don't seem to be in a group. People in your group will share submissions with you. Want to create one? &nbsp;&nbsp;
@@ -39,7 +39,7 @@
           </div>
         </div>
       </div>
-      <div ng-if="group.inGroup !== false && group.members.length < assignment.max_group_size">
+      <div ng-if="inGroup !== false && group.members.length < assignment.max_group_size">
         <form class="add-member-form form-inline" ng-submit="add()" ng-controller="AddMemberController">
           <div class="form-group">
             <div class="input-group">
@@ -54,21 +54,21 @@
     <div class= 'col-md-6'>
       <h4>Invitations</h4>
       <div id="invitations" ng-controller="InvitationsController">
-        <div ng-if="invitations.invitations.length === 0">
+        <div ng-if="invitations.length === 0">
           <div class='alert alert-success' style="margin-bottom:0px">
             You have no current group invitations.
           </div>
         </div>
-        <accordion ng-if="invitations.invitations.length !== 0" close-others="oneAtATime">
-          <accordion-group ng-repeat="invitation in invitations.invitations" heading="Group ID: {{invitation.id}}">
+        <accordion ng-if="invitations.length !== 0" close-others="oneAtATime">
+          <accordion-group ng-repeat="invitation in invitations" heading="Group ID: {{invitation.id}}">
             <accordion-heading>
               Group ID: {{invitation.id}}
               <span class="pull-right">
                 <span style="margin-right: 2px">
-                  <button ng-if="group.inGroup === false" ng-click="accept(invitation, $event)" type="button" class="btn btn-xs btn-success">
+                  <button ng-if="inGroup === false" ng-click="accept(invitation, $event)" type="button" class="btn btn-xs btn-success">
                     <span class="glyphicon glyphicon-ok"></span>
                   </button>
-                  <button ng-if="group.inGroup !== false" popover-placement="top" popover-title="Cannot accept" popover="You are already in a group." type="button" class="btn btn-xs btn-success">
+                  <button ng-if="inGroup !== false" popover-placement="top" popover-title="Cannot accept" popover="You are already in a group." type="button" class="btn btn-xs btn-success">
                     <span class="glyphicon glyphicon-ok"></span>
                   </button>
                 </span>

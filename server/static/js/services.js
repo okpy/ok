@@ -11,6 +11,7 @@ app.factory('User', ['$resource',
         },
         invitations: {
           url: 'api/v1/user/:id/invitations',
+          isArray: true,
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }

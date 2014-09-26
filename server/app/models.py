@@ -259,6 +259,10 @@ class Course(Base):
             return user.key in course.staff
         return False
 
+    @property
+    def assignments(self):
+        return Assignment.query(Assignment.course == self.key)
+
 
 def validate_messages(_, messages):
     """Messages is a JSON string encoding a map from protocols to data."""

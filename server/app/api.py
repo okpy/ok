@@ -35,7 +35,7 @@ def DateTimeArg(**kwds):
         delta = datetime.timedelta(hours=7)
         date = (datetime.datetime.combine(date.date(), date.time()) + delta)
         return (op, date) if op else date
-    return Arg(None, use=parse_date)
+    return Arg(None, use=parse_date, **kwds)
 
 
 def KeyArg(klass, **kwds):
@@ -241,6 +241,7 @@ class APIResource(View):
         if not result:
             raise need.exception()
 
+        query = filter_query(result, data, self.model)
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
             logging.info("Adding default ordering by creation time.")
@@ -282,7 +283,7 @@ class UserAPI(APIResource):
         'invitations': {
             'methods': set(['GET']),
             'web_args': {
-                'assignment': KeyArg('assignment')
+                'assignment': KeyArg('Assignment')
             }
         },
     }
@@ -301,9 +302,7 @@ class UserAPI(APIResource):
         query = models.Group.query(models.Group.invited_members == user.key)
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
-        return {
-            "invitations": list(query)
-        }
+        return list(query)
 
 
 class AssignmentAPI(APIResource):
@@ -318,6 +317,7 @@ class AssignmentAPI(APIResource):
                 'points': Arg(float, required=True),
                 'course': KeyArg('Course', required=True),
                 'max_group_size': Arg(int, required=True),
+                'due_date': DateTimeArg(required=True),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
                                  required=True),
             }
@@ -325,6 +325,9 @@ class AssignmentAPI(APIResource):
         'get': {
         },
         'index': {
+            'web_args': {
+                'course': KeyArg('Course'),
+            }
         },
     }
 
@@ -547,6 +550,11 @@ class CourseAPI(APIResource):
                 'staff_member': KeyArg('User', required=True)
             }
         },
+        'assignments': {
+            'methods': set(['GET']),
+            'web_args': {
+            }
+        },
     }
 
     def post(self, user, data):
@@ -573,6 +581,9 @@ class CourseAPI(APIResource):
         if data['staff_member'] in course.staff:
             course.staff.remove(data['staff_member'])
             course.put()
+
+    def assignments(self, course, user, data):
+        return list(course.assignments)
 
 class GroupAPI(APIResource):
     model = models.Group

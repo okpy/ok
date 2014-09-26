@@ -79,7 +79,9 @@ def register_api(view, endpoint, url):
         try:
             rval = view(*args, **kwds)
 
-            if (isinstance(rval, collections.Iterable)
+            if isinstance(rval, list):
+                rval = utils.create_api_response(200, 'success', rval)
+            elif (isinstance(rval, collections.Iterable)
                 and not isinstance(rval, dict)):
                 rval = utils.create_api_response(*rval)
             elif isinstance(rval, Response):
