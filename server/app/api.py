@@ -180,7 +180,7 @@ class APIResource(View):
 
         entity.put()
 
-        return (201, {
+        return (201, 'success', {
             'key': entity.key.id()
         })
 
@@ -532,6 +532,8 @@ class CourseAPI(APIResource):
                 'name': Arg(str, required=True),
                 'offering': Arg(str, required=True),
                 'institution': Arg(str, required=True),
+                'term': Arg(str, required=True),
+                'year': Arg(str, required=True),
                 'active': Arg(bool),
             }
         },

@@ -129,7 +129,6 @@ class User(Base):
     def staffed_courses(self):
         return Course.query(Course.staff == self.key)
 
-
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
@@ -324,12 +323,12 @@ class Submission(Base):
 
             if not query:
                 raise ValueError(
-                        "Need query instance for Submission index action")
+                    "Need query instance for Submission index action")
 
             if user.is_admin:
                 return query
 
-            courses = user.courses
+            courses = user.courses()
             filters = []
             for course in courses:
                 assignments = Assignment.query().filter(

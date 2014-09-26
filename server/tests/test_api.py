@@ -21,6 +21,28 @@ from app.constants import ADMIN_ROLE
 
 from ddt import ddt, data, unpack
 
+def make_fake_course(creator):
+    return models.Course(
+        name="cs61a",
+        institution="UC Soumya",
+        offering="Fall 2014",
+        term="fall",
+        year="2014",
+        creator=creator.key,
+        staff=[])
+
+def make_fake_assignment(course, creator):
+    return models.Assignment(
+        name='hw1',
+        points=3,
+        display_name="CS 61A",
+        templates="[]",
+        course=course.key,
+        creator=creator.key,
+        max_group_size=4,
+        due_date=datetime.datetime.now())
+
+
 @ddt
 class APITest(object): #pylint: disable=no-init
     """
@@ -268,8 +290,12 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        rval = models.Assignment(name=name, points=3, course=self.course, templates={},
-                                 display_name=name)
+
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        rval = make_fake_assignment(self._course, self.user)
+        rval.name = name
+        rval.put()
         return rval
 
 
@@ -282,8 +308,12 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
     def setUp(self):
         super(SubmissionAPITest, self).setUp()
         self.assignment_name = u'test assignment'
-        self._assign = models.Assignment(name=self.assignment_name, points=3)
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assign = make_fake_assignment(self._course, self.user)
+        self._assign.name = self.assignment_name
         self._assign.put()
+
         self._submitter = self.accounts['dummy_student']
         self.logout()
         self.login('dummy_student')
@@ -354,7 +384,13 @@ class CourseAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        rval = self.model(name=name, institution="UC Soumya", offering="Fall 2014", staff=[])
+        rval = self.model(
+            name=name,
+            institution="UC Soumya",
+            offering="Fall 2014",
+            term="fall",
+            year="2014",
+            staff=[])
         return rval
 
 class VersionAPITest(APITest, APIBaseTestCase):
