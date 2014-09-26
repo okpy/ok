@@ -332,9 +332,6 @@ class AssignmentAPI(APIResource):
     }
 
     def post(self, user, data):
-        """
-        The POST HTTP method
-        """
         data['creator'] = user.key
         # check if there is a duplicate assignment
         assignments = list(models.Assignment.query(models.Assignment.name == data['name']))
@@ -380,6 +377,8 @@ class SubmissionAPI(APIResource):
         },
         'index': {
             'web_args': {
+                'assignment': KeyArg('Assignment'),
+                'course': KeyArg('Course')
                 # fill in filter parameters
             }
         },
