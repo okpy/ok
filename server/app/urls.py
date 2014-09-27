@@ -26,7 +26,7 @@ def index():
         params['users_link'] = users.create_login_url('/')
         params['users_title'] = "Sign In"
     else:
-        logging.info("User is %s." % user.email())
+        logging.info("User is %s", user.email())
         params["user"] = {'email': user.email()}
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
@@ -48,27 +48,31 @@ def server_error(e):
 def args_error(e):
     raise BadValueError(e.message)
 
+def check_version(client):
+    latest = api.VersionAPI().current("okpy")
+
+    # If it returned a response, and not a string
+    if not isinstance(latest, (str, unicode)):
+        raise RuntimeError(latest)
+    if client != latest:
+        return ("Incorrect client version. Supplied version was {}. "
+                "Correct version is {}.".format(client, latest))
+
 def register_api(view, endpoint, url):
     """
     Registers the given view at the endpoint, accessible by the given url.
     """
-    url = API_PREFIX + '/' + url
+    url = '/'.join((API_PREFIX, view.api_version, url))
     view = view.as_view(endpoint)
 
     @wraps(view)
     def api_wrapper(*args, **kwds):
         #TODO(martinis) add tests
-        request.fields = {}
-        if 'client_version' in request.args:
-            if request.args['client_version'] != app.config['CLIENT_VERSION']:
-                logging.info(
-                    "Client out of date. Client version {} != {}".format(
-                        request.args['client_version'],
-                    app.config['CLIENT_VERSION']))
-                return utils.create_api_response(403, "incorrect client version", {
-                    'supplied_version': request.args['client_version'],
-                    'correct_version': app.config['CLIENT_VERSION']
-                })
+        # Any client can check for the latest version
+
+        message = "success"
+        if request.args.get('client_version'):
+            message = check_version(request.args['client_version']) or message
 
         user = auth.authenticate()
         if not isinstance(user, models.User):
@@ -87,7 +91,8 @@ def register_api(view, endpoint, url):
             elif isinstance(rval, Response):
                 pass
             else:
-                rval = utils.create_api_response(200, 'success', rval)
+                rval = utils.create_api_response(200, message, rval)
+
             return rval
         except APIException as e:
             logging.exception(e.message)
@@ -101,7 +106,6 @@ def register_api(view, endpoint, url):
     app.add_url_rule('%s/<path:path>' % url, view_func=api_wrapper,
             methods=['GET', 'POST', 'DELETE', 'PUT'])
 
-register_api(api.UserAPI, 'user_api', 'user')
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
 register_api(api.VersionAPI, 'version_api', 'version')

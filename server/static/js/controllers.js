@@ -266,6 +266,25 @@ app.controller("MemberController", ["$scope", "$modal", "Group",
         });
       }
     }
+]);
+
+app.controller("VersionListCtrl", ['$scope', 'Version',
+  function($scope, Version) {
+    $scope.versions = Version.query();
+  }]);
+
+app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version", "$state",
+    function ($scope, $stateParams, Version, $state) {
+      if ($stateParams.versionId == "new") {
+        $state.go("^.new");
+        return;
+      }
+
+      $scope.version = Version.get({id: $stateParams.versionId});
+      $scope.download_link = function(version) {
+        return [$scope.version.base_url, version, $scope.version.name].join('/');
+      }
+    }
   ]);
 
 app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
@@ -314,3 +333,57 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
       }
     }
   ]);
+
+app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
+    function ($scope, Version, $state, $stateParams) {
+      $scope.versions = {};
+      Version.query(function (versions) {
+        angular.forEach(versions, function (version) {
+          $scope.versions[version.name] = version;
+        });
+        if ($stateParams.versionId) {
+          $scope.version = $scope.versions[$stateParams.versionId] || {};
+        }
+      });
+      delete $scope.versionNames;
+      $scope.version = {};
+      $scope.version.current = true;
+
+      $scope.$watch('version.name', function (newValue, oldValue) {
+        if (newValue in $scope.versions) {
+          var existingVersion = $scope.versions[newValue];
+          $scope.version.base_url = existingVersion.base_url;
+          if (existingVersion.current_version) { 
+            $scope.version.version = existingVersion.current_version;
+            $scope.version.current = true;
+          }
+        }
+        else {
+          $scope.version = {name: newValue};
+        }
+      });
+
+      $scope.save = function() {
+        var version = new Version($scope.version);
+        if (version.current) {
+          delete version.current;
+          version.current_version = version.version;
+        }
+        var oldVersion = $scope.versions && version.name in $scope.versions;
+
+        if (oldVersion) {
+          version.$update({"id": version.name});
+        }
+        else{
+          version.$save();
+        }
+        $state.go('^.list');
+      };
+    }
+  ]);
+
+function DropdownCtrl($scope) {
+  $scope.status = {
+    isopen: false
+  };
+}

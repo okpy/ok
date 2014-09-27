@@ -60,6 +60,7 @@ class APIBaseTestCase(BaseTestCase):
     model = None
     name = ""
     num = 1
+    api_version = 'v1'
 
     def get_accounts(self):
         """
@@ -93,8 +94,9 @@ class APIBaseTestCase(BaseTestCase):
         """
         Makes a get request.
         """
+        url = API_PREFIX + '/' + self.api_version + url
         params = urllib.urlencode(kwds)
-        self.response = self.client.get(API_PREFIX + url + '?' + params, *args)
+        self.response = self.client.get(url + '?' + params, *args)
         try:
             response_json = json.loads(self.response.data)['data']
             self.response_json = models.json.loads(json.dumps(response_json))
