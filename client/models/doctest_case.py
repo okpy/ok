@@ -90,8 +90,8 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         test_params = self.test.processed_params[self.type]
 
         console = _PythonConsole(timeout)
-        frame = assignment_params.update_frame({})
-        frame = test_params.update_frame(frame)
+        frame = assignment_params.update_frame({}, console.exec)
+        frame = test_params.update_frame(frame, console.exec)
 
         if console.exec(assignment_params['setup'], frame) \
                 or console.exec(test_params['setup'], frame):
@@ -257,10 +257,10 @@ class _DoctestParams(serialize.Serializable):
         self['cache'] = formatting.dedent(self['cache'])
         self._frame = None
 
-    def update_frame(self, frame):
+    def update_frame(self, frame, exec_fn):
         if self._frame is None:
-            self._frame = {}
-            exec(self['cache'], self._frame)
+            self._frame = frame.copy()
+            exec_fn(self['cache'], self._frame)
         frame.update(self._frame)
         return frame
 
