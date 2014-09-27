@@ -389,6 +389,15 @@ class Comment(Base):
     draft = ndb.BooleanProperty(required=True, default=True)
     filename = ndb.StringProperty(required=True)
 
+    @classmethod
+    def _can(cls, user, need, comment=None, query=None):
+        if need.action == "get":
+            return user.is_admin or comment.author == user.key
+        if need.action == "delete":
+            return user.is_admin or comment.author == user.key
+        return False
+
+
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
     name = ndb.StringProperty(required=True)

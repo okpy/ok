@@ -475,13 +475,13 @@ class SubmissionAPI(APIResource):
         if not diff_obj:
             raise BadValueError("Diff doesn't exist yet")
 
-        comment = data.get('comment', None)
+        comment = models.Comment.get_by_id(data['comment'].id(), parent=diff_obj.key)
         if not comment:
-            raise ResourceDoesntExistError("comment doesn't exist")
-
-        comment = models.Comment.get_by_id(comment.id(), parent=diff_obj.key)
-        if comment:
-            comment.key.delete()
+            raise BadKeyError(data['comment'])
+        need = Need('delete')
+        if not comment.can(user, need, comment):
+            raise need.exception()
+        comment.key.delete()
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
