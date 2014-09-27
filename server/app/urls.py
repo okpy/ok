@@ -70,6 +70,7 @@ def register_api(view, endpoint, url):
         #TODO(martinis) add tests
         # Any client can check for the latest version
 
+        request.fields = {}
         message = "success"
         if request.args.get('client_version'):
             message = check_version(request.args['client_version']) or message
