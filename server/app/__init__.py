@@ -52,9 +52,6 @@ def seed():
 	course.put()
 	assign = make_fake_assignment(course, c)
 	assign.put()
-	
-if len(list(models.Course.query().filter(models.Course.name == 'cs61a'))) == 0:
-	seed()
 
 app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
@@ -62,6 +59,9 @@ DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          else True)
 if DEBUG:
     app.config.from_object('app.settings.Debug')
+	if len(list(models.Course.query().filter(models.Course.name == 'cs61a'))) == 0:
+		seed()
+
     # Google app engine mini profiler
     # https://github.com/kamens/gae_mini_profiler
     app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
