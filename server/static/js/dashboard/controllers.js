@@ -9,7 +9,7 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
 app.controller("SubmissionModuleController", ["$scope", "Submission",
     function ($scope, Submission) {
       Submission.query(function(response) {
-        $scope.Submissions = response.data.results;
+        $scope.submissions = response.data.results;
       });
     }
   ]);
