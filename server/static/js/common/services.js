@@ -148,3 +148,30 @@ app.factory('Course', ['$resource',
       });
     }
   ]);
+
+app.factory('Version', ['$resource',
+    function($resource) {
+      return $resource('api/v1/version/:id', {
+        format: "json",
+      }, {
+        query: {
+          isArray: true,
+          transformResponse: function(data) {
+            return JSON.parse(data).data.results;
+          }
+        },
+        get: {
+          isArray: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        update: {
+          method: "PUT",
+          url: "api/v1/version/:id/new",
+          params: {}
+        }
+      });
+    }
+  ]);
+

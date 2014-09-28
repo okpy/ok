@@ -1,51 +1,43 @@
-var app = angular.module('okpy', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment', 'localytics.directives']);
-
-app.directive('snippet', function() {
-        "use strict";
-        return {
-            restrict: 'E',
-            templateUrl: 'static/partials/snippet.html',
-            link: function(scope, elem, attrs) {
-              scope.contents = scope.contents.split('\n');
-            }
-        };
-    });
-
-app.directive('diff', function() {
-        "use strict";
-        return {
-            restrict: 'E',
-            templateUrl: 'static/partials/diff.html',
-        };
-    });
-
-app.directive('group', function() {
-        "use strict";
-        return {
-            restrict: 'E',
-            templateUrl: 'static/partials/group.html',
-        };
-    });
-
-app.directive('comments', function() {
-        "use strict";
-        return {
-            scope: false,
-            restrict: 'E',
-            templateUrl: 'static/partials/comment-viewer.html',
-        };
-    });
+var app = angular.module('dashboard', ['ngResource', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment']);
 
 app.directive('assignmentModule', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/assignment.moduledash.html',
+            templateUrl: '/static/partials/dashboard/assignment.moduledash.html',
+        };
+    });
+
+app.directive('assignmentList', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/static/partials/dashboard/assignment.list.html',
+        };
+    });
+
+app.directive('submissionModule', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/static/partials/dashboard/submission.module.html',
+        };
+    });
+
+app.directive('submissionList', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/static/partials/dashboard/submission.list.html',
         };
     });
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise("/submission/");
+    console.log($stateProvider);
+    $urlRouterProvider.otherwise("/");
+
+    var dashboard = {
+      name: 'dashboard',
+      url: '/',
+      templateUrl: '/static/partials/dashboard/dashboard.html',
+    }
 
     var submissions = {
       name: 'submission',
@@ -79,13 +71,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       name: 'assignment',
       abstract: true,
       url: '/assignment',
-      templateUrl: 'static/partials/assignment.base.html',
+      templateUrl: '/static/partials/assignment.base.html',
     }
 
     var assignmentList = {
       name: 'assignment.list',
       url: '/',
-      templateUrl: 'static/partials/assignment.list.html',
+      templateUrl: '/static/partials/assignment.list.html',
       controller: "AssignmentListCtrl"
     }
 
@@ -123,7 +115,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: 'static/partials/course.new.html',
       controller: "CourseNewCtrl"
     }
- 
+
     var versions = {
       name: 'version',
       abstract: true,
@@ -160,6 +152,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     }
 
     $stateProvider.
+      state(dashboard).
       state(submissions).
       state(submissionList).
       state(submissionDetail).
@@ -177,31 +170,3 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(versionNew)
       ;
   }]);
-
-
-app.factory('Version', ['$resource',
-    function($resource) {
-      return $resource('api/v1/version/:id', {
-        format: "json",
-      }, {
-        query: {
-          isArray: true,
-          transformResponse: function(data) {
-            return JSON.parse(data).data.results;
-          }
-        },
-        get: {
-          isArray: false,
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
-        update: {
-          method: "PUT",
-          url: "api/v1/version/:id/new",
-          params: {}
-        }
-      });
-    }
-  ]);
-

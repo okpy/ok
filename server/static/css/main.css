@@ -7,10 +7,6 @@
 
 /* Your customizations here */
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.42857143;
-  color: #333;
 }
 
 .menu-button {
@@ -52,6 +48,7 @@ h2 {
   border-radius: 3px;
   width: 100%;
   text-shadow: 0 1px 0 #fff;
+  background-color: white;
   border-collapse: separate;
 }
 

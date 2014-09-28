@@ -18,7 +18,7 @@ from app import utils
 from app.constants import API_PREFIX
 from app.exceptions import *
 
-@app.route("/")
+@app.route("/old")
 def index():
     user = users.get_current_user()
     params = {}
@@ -33,7 +33,7 @@ def index():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
 
-@app.route("/dashboard")
+@app.route("/")
 def dashboard():
     user = users.get_current_user()
     params = {}
