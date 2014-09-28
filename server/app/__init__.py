@@ -57,10 +57,11 @@ app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          if 'SERVER_SOFTWARE' in os.environ
          else True)
+if len(list(models.Course.query().filter(models.Course.name == 'cs61a'))) == 0:
+	seed()
+
 if DEBUG:
     app.config.from_object('app.settings.Debug')
-	if len(list(models.Course.query().filter(models.Course.name == 'cs61a'))) == 0:
-		seed()
 
     # Google app engine mini profiler
     # https://github.com/kamens/gae_mini_profiler

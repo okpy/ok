@@ -1,0 +1,34 @@
+<div class="box" ng-controller="AssignmentListCtrl" >
+<div class="box-header">
+  <h3 class="box-title" ng-if="assignments.$resolved && assignments.length == 0" >No Assignments</h3>
+  <h3 class="box-title" ng-if="assignments.length > 0">Assignments</h3>
+</div><!-- /.box-header -->
+
+<div class="box-body no-padding">
+  <table ng-if="assignments.length > 0" class="table table-striped table-bordered table-responsive">
+  <tbody>
+  <tr>
+    <th >Name</th>
+    <!-- <th>Due Date</th> -->    
+    <!-- Future Progress Bar --> 
+    <th>Points</th>
+    <th style="width: 15%">Label</th>
+  </tr>
+
+    <tr ng-repeat="assignment in assignments">
+      <td>
+        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{assignment.name}} </a> 
+      </td>
+      <td>{{assignment.points}}</td>
+      <td>
+        <span class="badge bg-info">{{assignment.name}}</span>
+      </td>
+
+        <!-- Future Progress Bar -->                                         
+        </tr>
+      </tbody>
+    </table>
+  </div><!-- /.box-body -->
+</div><!-- /.box -->
+
+

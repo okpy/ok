@@ -19,6 +19,25 @@
         <link href="/static/vendor/angular-chosen-localytics/chosen-spinner.css" rel="stylesheet"></link>
         <link href="/static/css/main.css" rel="stylesheet"></link>
 
+         <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+
+
+        <!-- Ionicons -->
+        <link href="//code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css" rel="stylesheet" type="text/css" />
+        <!-- Theme style -->
+        <link href="/static/admin/css/AdminLTE.css" rel="stylesheet" type="text/css" />
+        <!-- Custom style -->
+        <link href="/static/admin/css/ok.css" rel="stylesheet" type="text/css" />
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+          <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+
         <script src="/static/vendor/jquery/dist/jquery.min.js"></script>
         <script src="/static/vendor/bootstrap/dist/js/bootstrap.js"></script>
         <script src="/static/vendor/modernizr/modernizr.js"></script>
@@ -37,23 +56,12 @@
         <script src="/static/vendor/angular-chosen-localytics/chosen.js"></script>
         <base href="/">
     </head>
-    <body ng-cloak class="ng-cloak">
+    <body ng-cloak class="skin-black ng-cloak">
         <!--[if lt IE 7]>
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
-    <div class="navbar navbar-inverse navbar-default" role="navigation">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" ui-sref="submission">ok.py</a>
-        </div>
-        <div class="navbar-collapse collapse">
-          <a id="submissions-button" type="button" class="btn btn-default navbar-btn" ui-sref="submission.list">Submissions</a>
+<!--           
+        <a id="submissions-button" type="button" class="btn btn-default navbar-btn" ui-sref="submission.list">Submissions</a>
           <a id="assignments-button" type="button" class="btn btn-default navbar-btn" ui-sref="assignment.list">Assignments</a>
           <a id="courses-button" type="button" class="btn btn-default navbar-btn" ui-sref="course.list">Courses</a>
           <div class="btn-group" dropdown>
@@ -66,20 +74,68 @@
               <li><a ui-sref="version.new">New Version</a></li>
             </ul>
           </div>
-          <div class="pull-right">
-            {% if user %}
-              <script>
-                window.user = "{{user.email}}";
-              </script>
-              <span class="navbar-text">
-                Welcome {{user.first_name | default(user.email, true)}}
-              </span>
-            {% endif %}
-            <a id="login-button" type="button" class="btn btn-default navbar-btn" href={{users_link}}>{{users_title}}</a>
-          </div>
-        </div><!--/.navbar-collapse -->
+  -->
+          <header class="header">
+            <a href="/" class="logo">
+                <!-- Add the class icon to your logo image or logo icon to add the margining -->
+                ok
+            </a>
+            <!-- Header Navbar: style can be found in header.less -->
+            <nav class="navbar navbar-static-top" role="navigation">
+                <!-- Sidebar toggle button-->
+                <div class="navbar-right">
+                    <ul class="nav navbar-nav">
+                        <!-- User Account: style can be found in dropdown.less -->
+                {% if user %}
+
+                    <li class="dropdown user user-menu" >
+                        <a href="#" class="dropdown-toggle" style="display:inline;" data-toggle="dropdown">
+                      <span class="navbar-text">
+                      <i class="glyphicon glyphicon-user"></i>
+                        <span> {{user.first_name | default(user.email, true)}} <i class="caret"></i></span>
+                      </span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- Menu Body -->
+                        <li class="user-body">
+                            <div class="col-xs-4 text-center">
+                                  <a id="submissions-button"  ui-sref="submission.list">Submissions</a>
+                            </div>
+                            <div class="col-xs-4 text-center">
+                                    <a id="assignments-button" ui-sref="assignment.list">Assignments</a>
+                            </div>
+                            <div class="col-xs-4 text-center">
+                                    <a id="courses-button" ui-sref="course.list">Courses</a>
+                            </div>
+
+                                </li>
+                                <!-- Menu Footer-->
+                                <li class="user-footer">
+                                    <div class="pull-left">
+
+                            <a type="button" class="btn btn-default" ui-sref="version.list">Versions</a>
       </div>
-    </div>
+
+
+                  <div class="pull-right">
+                      <a id="login-button" type="button" class="btn btn-default btn-flat" href={{users_link}}>{{users_title}}</a>
+                  </div>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                    <li class="user">
+                        <a href={{users_link}}>Login</a>
+                    </li> 
+
+                    {% endif %}
+
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+
     <div ui-view class="container navbar-bottom">
     </div> <!-- /container -->
 

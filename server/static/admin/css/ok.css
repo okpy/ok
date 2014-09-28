@@ -1,0 +1,36 @@
+.skin-black .logo {
+  background: #ffffff;
+  color: #333333;
+  border-bottom: 1px solid #eee;
+}
+.skin-black .logo > a {
+  color: #333333;
+}
+.skin-black .logo:hover {
+  background: #ffffff;
+}
+@media screen and (min-width: 480px) {
+  .download-btn-group {
+    width: 20%;
+    min-width: 200px;
+  }
+}
+@media screen and (max-width: 480px) {
+  .download-btn-group {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 0px;
+  }
+  .download-btn-group .btn {
+    width: 100%;
+  }
+  .download-btn-group .btn.btn-flat:first-of-type,
+  .download-btn-group .btn.btn-flat:last-of-type {
+    border-radius: 0;
+  }
+}
+.student-main {
+  background-color: #f9f9f9;
+  margin-left: 20px;
+}

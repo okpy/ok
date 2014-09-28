@@ -1,0 +1,22 @@
+<div class="small-box bg-green" ng-controller="SubmissionModuleController" ng-cloak>
+
+    <div class="inner">
+        <h3 ng-cloak>
+          {{Submissions.length}}
+        </h3>
+        <p ng-if="Submissions.length != 1">
+            submissions
+        </p>
+        <p ng-if="Submissions.length == 1">
+            submission
+        </p>
+        </div>
+        <div class="icon">
+            <i class="ion ion-stats-bars"></i>
+        </div>
+        <a href="/submissions" class="small-box-footer">
+            More info <i class="fa fa-arrow-circle-right"></i>
+        </a>
+    </div>
+
+</div>

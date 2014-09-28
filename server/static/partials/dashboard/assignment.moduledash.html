@@ -1,0 +1,19 @@
+<div class="small-box bg-teal" ng-controller="AssignmentModuleController" ng-cloak>
+    <div class="inner">
+        <h3 ng-cloak>
+          {{assignments.length}}
+        </h3>
+        <p ng-if="assignments.length != 1">
+            Assignments
+        </p>
+        <p ng-if="assignments.length == 1">
+            Assignment
+        </p>
+    </div>
+    <div class="icon">
+        <i class="ion ion-ios7-alarm-outline"></i>
+    </div>
+    <a href="/assignments" class="small-box-footer">
+        More info <i class="fa fa-arrow-circle-right"></i>
+    </a>
+</div>

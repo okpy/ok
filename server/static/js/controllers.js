@@ -72,16 +72,6 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
     }
   ]);
 
-app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
-    $scope.assignments = Assignment.query();
-  }]);
-
-app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
-    function ($scope, $stateParams, Assignment) {
-      $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
-    }
-  ]);
 
 app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$anchorScroll",
     function ($scope, $timeout, $location, $anchorScroll) {

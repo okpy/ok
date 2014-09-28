@@ -31,7 +31,7 @@ def index():
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
     params['DEBUG'] = app.config['DEBUG']
-    return render_template("base.html", **params)
+    return render_template("student_dash.html", **params)
 
 ## Error handlers
 # Handle 404 errors

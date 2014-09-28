@@ -36,6 +36,13 @@ app.directive('comments', function() {
         };
     });
 
+app.directive('assignmentModule', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/static/partials/assignment.moduledash.html',
+        };
+    });
+
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/submission/");
