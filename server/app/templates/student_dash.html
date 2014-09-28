@@ -53,13 +53,14 @@
                         <!-- User Account: style can be found in dropdown.less -->
                       {% if user %}
 
+                        <a href="#" class="dropdown-toggle" style="display:inline;" data-toggle="dropdown">
+
                           <li class="dropdown user user-menu" >
-                              <a href="#" class="dropdown-toggle" style="display:inline;" data-toggle="dropdown">
                             <span class="navbar-text">
                             <i class="glyphicon glyphicon-user"></i>
                               <span> {{user.first_name | default(user.email, true)}} <i class="caret"></i></span>
                             </span>
-                                  </a>
+                        </a>
                                   <ul class="dropdown-menu">
                                       <!-- Menu Body -->
                                       <li class="user-body">
@@ -108,6 +109,7 @@
                         <li class="active">Dashboard</li>
                     </ol>
                 </section>
+                      {% if user %}
 
                 <!-- Main content -->
                 <section class="content">
@@ -137,6 +139,9 @@
                     </div>
 
                 </section><!-- /.content -->
+  
+            {% endif %}
+
             </aside><!-- /.right-side -->
         </div><!-- ./wrapper -->
 

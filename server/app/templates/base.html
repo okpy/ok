@@ -86,49 +86,45 @@
                 <div class="navbar-right">
                     <ul class="nav navbar-nav">
                         <!-- User Account: style can be found in dropdown.less -->
-                {% if user %}
+                      {% if user %}
 
-                    <li class="dropdown user user-menu" >
-                        <a href="#" class="dropdown-toggle" style="display:inline;" data-toggle="dropdown">
-                      <span class="navbar-text">
-                      <i class="glyphicon glyphicon-user"></i>
-                        <span> {{user.first_name | default(user.email, true)}} <i class="caret"></i></span>
-                      </span>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <!-- Menu Body -->
-                        <li class="user-body">
-                            <div class="col-xs-4 text-center">
-                                  <a id="submissions-button"  ui-sref="submission.list">Submissions</a>
-                            </div>
-                            <div class="col-xs-4 text-center">
-                                    <a id="assignments-button" ui-sref="assignment.list">Assignments</a>
-                            </div>
-                            <div class="col-xs-4 text-center">
-                                    <a id="courses-button" ui-sref="course.list">Courses</a>
-                            </div>
+                          <li class="dropdown user user-menu" >
+                              <a href="#" class="dropdown-toggle" style="display:inline;" data-toggle="dropdown">
+                            <span class="navbar-text">
+                            <i class="glyphicon glyphicon-user"></i>
+                              <span> {{user.first_name | default(user.email, true)}} <i class="caret"></i></span>
+                            </span>
+                                  </a>
+                                  <ul class="dropdown-menu">
+                                      <!-- Menu Body -->
+                                      <li class="user-body">
+                                          <div class="col-xs-4 text-center">
+                                                <!-- Very bad linking --> 
+                                                <a id="submissions-button"  href="/assign/#/assignment">Submissions</a>
+                                          </div>
+                                          <div class="col-xs-4 text-center">
+                                                  <!-- Very bad linking --> 
+                                                  <a id="assignments-button" href="/subm/#/submission">Assignments</a>
+                                          </div>
+                                          <div class="col-xs-4 text-center">
+                                                  <!-- Very bad linking --> 
+                                                  <a  id="assignments-button" href="/course/#/course">Course</a>
+                                          </div>
+                                      </li>
+                                      <!-- Menu Footer-->
+                                      <li class="user-footer">
+                                          <div class="pull-right">
+                                              <a id="login-button" type="button" class="btn btn-default btn-flat" href={{users_link}}>{{users_title}}</a>
+                                          </div>
+                                      </li>
+                                  </ul>
+                              </li>
+                          {% else %}
+                          <li class="user">
+                              <a href={{users_link}}>Login</a>
+                          </li> 
 
-                                </li>
-                                <!-- Menu Footer-->
-                                <li class="user-footer">
-                                    <div class="pull-left">
-
-                            <a type="button" class="btn btn-default" ui-sref="version.list">Versions</a>
-      </div>
-
-
-                  <div class="pull-right">
-                      <a id="login-button" type="button" class="btn btn-default btn-flat" href={{users_link}}>{{users_title}}</a>
-                  </div>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
-                    <li class="user">
-                        <a href={{users_link}}>Login</a>
-                    </li> 
-
-                    {% endif %}
+                          {% endif %}
 
                     </ul>
                 </div>

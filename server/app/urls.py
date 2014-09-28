@@ -31,6 +31,21 @@ def index():
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
     params['DEBUG'] = app.config['DEBUG']
+    return render_template("base.html", **params)
+
+@app.route("/dashboard")
+def dashboard():
+    user = users.get_current_user()
+    params = {}
+    if user is None:
+        params['users_link'] = users.create_login_url('/')
+        params['users_title'] = "Sign In"
+    else:
+        logging.info("User is %s", user.email())
+        params["user"] = {'email': user.email()}
+        params['users_link'] = users.create_logout_url('/')
+        params['users_title'] = "Log Out"
+    params['DEBUG'] = app.config['DEBUG']
     return render_template("student_dash.html", **params)
 
 ## Error handlers
