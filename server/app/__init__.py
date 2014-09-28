@@ -58,7 +58,7 @@ DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          if 'SERVER_SOFTWARE' in os.environ
          else True)
 if len(list(models.Course.query().filter(models.Course.name == 'cs61a'))) == 0:
-	seed()
+    seed()
 
 if DEBUG:
     app.config.from_object('app.settings.Debug')
