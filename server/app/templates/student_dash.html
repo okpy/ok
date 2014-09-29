@@ -121,6 +121,9 @@
         <aside class="right-side student-main dashview">
 
         {% if user %}
+        <script>
+          window.user = "{{user.email}}";
+        </script>
           <div ui-view></div>
         {% else %}
           <div class="box">
