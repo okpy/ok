@@ -49,14 +49,14 @@ def args_error(e):
     raise BadValueError(e.message)
 
 def check_version(client):
-    latest = api.VersionAPI().current("okpy")
+    latest = models.Version.query(models.Version.name=='okpy').get().current_version
 
     # If it returned a response, and not a string
     if not isinstance(latest, (str, unicode)):
         raise RuntimeError(latest)
     if client != latest:
-        return ("Incorrect client version. Supplied version was {}. "
-                "Correct version is {}.".format(client, latest))
+        raise IncorrectVersionError(client, latest)
+
 
 def register_api(view, endpoint, url):
     """
@@ -70,24 +70,24 @@ def register_api(view, endpoint, url):
         #TODO(martinis) add tests
         # Any client can check for the latest version
 
-        request.fields = {}
-        message = "success"
-        if request.args.get('client_version'):
-            message = check_version(request.args['client_version']) or message
-
-        user = auth.authenticate()
-        if not isinstance(user, models.User):
-            return user
-        session['user'] = user
-        logging.info("User is %s.", user.email)
-
         try:
+            request.fields = {}
+            message = "success"
+            if request.args.get('client_version'):
+                check_version(request.args['client_version'])
+
+            user = auth.authenticate()
+            if not isinstance(user, models.User):
+                return user
+            session['user'] = user
+            logging.info("User is %s.", user.email)
+
             rval = view(*args, **kwds)
 
             if isinstance(rval, list):
-                rval = utils.create_api_response(200, 'success', rval)
+                rval = utils.create_api_response(200, message, rval)
             elif (isinstance(rval, collections.Iterable)
-                and not isinstance(rval, dict)):
+                  and not isinstance(rval, dict)):
                 rval = utils.create_api_response(*rval)
             elif isinstance(rval, Response):
                 pass
@@ -97,7 +97,7 @@ def register_api(view, endpoint, url):
             return rval
         except APIException as e:
             logging.exception(e.message)
-            return utils.create_api_response(e.code, e.message)
+            return utils.create_api_response(e.code, e.message, e.data)
         except Exception as e: #pylint: disable=broad-except
             logging.exception(e.message)
             return utils.create_api_response(500, 'internal server error :(')
@@ -112,3 +112,4 @@ register_api(api.SubmissionAPI, 'submission_api', 'submission')
 register_api(api.VersionAPI, 'version_api', 'version')
 register_api(api.CourseAPI, 'course_api', 'course')
 register_api(api.GroupAPI, 'group_api', 'group')
+register_api(api.UserAPI, 'user_api', 'user')
