@@ -69,7 +69,7 @@
                         <!-- User Account: style can be found in dropdown.less -->
                       {% if user %}
 
-                        <a href="#" class="dropdown-toggle" style="display:inline;" data-toggle="dropdown">
+                        <a href="#" class="dropdown-toggle" style="display:inline;">
 
                           <li class="dropdown user user-menu" >
                             <span class="navbar-text">
@@ -98,6 +98,9 @@
                                           <div class="pull-right">
                                               <a id="login-button" type="button" class="btn btn-default btn-flat" href={{users_link}}>{{users_title}}</a>
                                           </div>
+                                          <div class="pull-left">
+                                              <a type="button" class="btn btn-default btn-flat" href='/'>Dashboard</a>
+                                          </div>
                                       </li>
                                   </ul>
                               </li>
@@ -105,16 +108,33 @@
                           <li class="user">
                               <a href={{users_link}}>Login</a>
                           </li> 
-
                           {% endif %}
                     </ul>
                 </div>
             </nav>
         </header>
+      
+        {% if admin %}
+          <!-- Todo --> 
+        {% endif %}
+
+        <aside class="right-side student-main dashview">
 
         {% if user %}
-        <div ui-view></div>
+          <div ui-view></div>
+        {% else %}
+          <div class="box">
+          <div class="box-header">
+              <h3 class="box-title">Login</h3>
+          </div>
+          <div class="box-body">
+              <a href={{users_link}} class="btn btn-lg btn-primary btn-block">Login</a>
+
+          </div>
+          </div>
         {% endif %}
+
+        </aside>
             <!-- Right side column. Contains the navbar and content of the page -->
         </div><!-- ./wrapper -->
 
