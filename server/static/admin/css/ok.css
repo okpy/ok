@@ -21,9 +21,8 @@
   float: left;
 }
 .dashview {
-/*  width: 100%;
-  padding: 40px;
-*/
+  margin-top: 20px;
+  margin-right: 20px;
 }
 
 @media screen and (min-width: 480px) {
