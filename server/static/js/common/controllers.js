@@ -82,6 +82,13 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
 app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
   function($scope, $stateParams, Submission, $timeout) {
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
+    $scope.submission = Submission.get({
+      fields: {
+        created: true
+      }
+    }, {
+      id: $stateParams.submissionId
+    });
     $scope.refreshDiff = function() {
         $timeout(function() {
           $scope.diff = Submission.diff({id: $stateParams.submissionId});
