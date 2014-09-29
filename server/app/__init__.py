@@ -40,6 +40,11 @@ def seed():
             max_group_size=4,
             due_date=datetime.datetime.now())
 
+    def make_fake_submission(assignment, submitter):
+        return models.Submission(
+            assignment=assignment.key,
+            submitter=submitter.key)
+
     c = models.User(
                     key=ndb.Key("User", "dummy@admin.com"),
                     email="dummy@admin.com",
@@ -48,10 +53,13 @@ def seed():
                     login="albert",
                     role="admin"
                 )
+
     course = make_fake_course(c)
     course.put()
     assign = make_fake_assignment(course, c)
     assign.put()
+    subm = make_fake_submission(assign, c)
+    subm.put()
 
 app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
