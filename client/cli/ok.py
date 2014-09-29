@@ -48,12 +48,11 @@ import multiprocessing
 import sys
 import time
 
-def send_to_server(access_token, messages, assignment, server,
+def send_to_server(access_token, messages, name, server,
                    endpoint='submission'):
     """Send messages to server, along with user authentication."""
-    assignment = core.Assignment.deserialize(assignment)
     data = {
-        'assignment': assignment['name'],
+        'assignment': name,
         'messages': messages,
     }
     try:
@@ -185,7 +184,7 @@ def main():
                 access_token = auth.authenticate(args.authenticate)
                 server_thread = multiprocessing.Process(
                     target=send_to_server,
-                    args=(access_token, messages, assignment.serialize(),
+                    args=(access_token, messages, assignment['name'],
                           args.server))
                 server_thread.start()
             except error.URLError as ex:

@@ -9,11 +9,16 @@ import unittest
 
 class MockCase(core.TestCase):
     type = 'mock'
+    MAGIC_NUMBER = 42
 
     REQUIRED = {
         'type': serialize.STR,
         'foo': serialize.INT,
     }
+
+    @classmethod
+    def process_params(cls, obj):
+        return cls.MAGIC_NUMBER
 
 class SerializationTest(unittest.TestCase):
     ASSIGN_NAME = 'dummy'
@@ -125,6 +130,39 @@ class SerializationTest(unittest.TestCase):
         }
         self.assertRaises(exceptions.DeserializeError, core.Test.deserialize,
                           test_json, self.assignment, self.case_map)
+
+    def testParams(self):
+        test_json = {
+            'names': [self.TEST_NAME],
+            'points': 2,
+            'params': {
+                'foo': 5,
+            }
+        }
+        test = core.Test.deserialize(test_json, self.assignment,
+                                     self.case_map)
+
+        self.assertEqual({'foo': 5}, test['params'])
+        self.assertEqual(test_json, test.serialize())
+
+    def testHiddenParams(self):
+        test_json = {
+            'names': [self.TEST_NAME],
+            'points': 2,
+            'hidden_params': {
+                'mock': 5,
+            },
+            'params': {
+                'mock': 2,
+            }
+        }
+        test = core.Test.deserialize(test_json, self.assignment,
+                                     self.case_map)
+
+        self.assertEqual({'mock': 5}, test['hidden_params'])
+        self.assertEqual({'mock': 2}, test['params'])
+        self.assertEqual(MockCase.MAGIC_NUMBER, test.processed_params['mock'])
+        self.assertEqual(test_json, test.serialize())
 
 class GetTestCasesTest(unittest.TestCase):
     def calls_get_cases(self, types, expected_classes):
