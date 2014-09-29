@@ -15,57 +15,13 @@ from app import exceptions
 from app import utils
 from app import api
 from app import auth
-
-def seed():
-    import datetime
-    from google.appengine.ext import ndb
-
-    def make_fake_course(creator):
-        return models.Course(
-            name="cs61a",
-            institution="UC Soumya",
-            term="Fall",
-            year="2014",
-            creator=creator.key,
-            staff=[])
-
-    def make_fake_assignment(course, creator):
-        return models.Assignment(
-            name='hw1',
-            points=3,
-            display_name="Hog",
-            templates={},
-            course=course.key,
-            creator=creator.key,
-            max_group_size=4,
-            due_date=datetime.datetime.now())
-
-    def make_fake_submission(assignment, submitter):
-        return models.Submission(
-            assignment=assignment.key,
-            submitter=submitter.key)
-
-    c = models.User(
-                    key=ndb.Key("User", "dummy@admin.com"),
-                    email="dummy@admin.com",
-                    first_name="Admin",
-                    last_name="Jones",
-                    login="albert",
-                    role="admin"
-                )
-
-    course = make_fake_course(c)
-    course.put()
-    assign = make_fake_assignment(course, c)
-    assign.put()
-    subm = make_fake_submission(assign, c)
-    subm.put()
+from app.seed import seed
 
 app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          if 'SERVER_SOFTWARE' in os.environ
          else True)
-if len(list(models.Course.query().filter(models.Course.name == 'cs61a'))) == 0:
+if len(list(models.Course.query().filter(models.Course.name == 'CS 61A'))) == 0:
     seed()
 
 if DEBUG:
