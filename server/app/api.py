@@ -327,6 +327,9 @@ class AssignmentAPI(APIResource):
         'index': {
             'web_args': {
                 'course': KeyArg('Course'),
+                'active': Arg(bool),
+                'name': Arg(str),
+                'points': Arg(int)
             }
         },
     }
@@ -509,56 +512,70 @@ class SubmissionAPI(APIResource):
 class VersionAPI(APIResource):
     model = models.Version
 
-    web_args = {
-        'name': Arg(str),
-        'version': Arg(str),
-        'current_version': Arg(str),
-        'base_url': Arg(str),
-    }
-
     key_type = str
 
-    def new(self, key):
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return 404, "{resource} {key} not found".format(
-                resource=self.name, key=key)
+    methods = {
+        'post': {
+            'web_args': {
+                'name': Arg(str, required=True),
+                'base_url': Arg(str, required=True),
+            }
+        },
+        'get': {
+            'web_args': {
+            }
+        },
+        'index': {
+            'web_args': {
+            }
+        },
+        'new': {
+            'methods': set(['POST']),
+            'web_args': {
+                'version': Arg(str, required=True),
+                'current': Arg(bool)
+            }
+        },
+        'current': {
+            'methods': set(['GET']),
+            'web_args': {
+            }
+        },
+        'set_current': {
+            'methods': set(['POST']),
+            'web_args': {
+                'version': Arg(str, required=True)
+            }
+        },
+    }
 
+    def new(self, obj, user, data):
         need = Need('get')
-        if not obj.can(session['user'], need, obj):
-            return need.api_response()
+        if not obj.can(user, need, obj):
+            raise need.exception()
 
-        args = self.parse_args(False)
-        new_version = args['version']
+        new_version = data['version']
 
         if new_version in obj.versions:
-            return 400, "Duplicate version: {}".format(new_version)
+            raise BadValueError("Duplicate version: {}".format(new_version))
 
         obj.versions.append(new_version)
-        if 'current_version' in args:
-            obj.current_version = args['current_version']
-
+        if 'current' in data and data['current']:
+            obj.current_version = data['current_version']
         obj.put()
-
         return obj
 
-    def current(self, key):
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return 404, "{resource} {key} not found".format(
-                resource=self.name, key=key)
-
-        # No permissions check because anyone can check for the latest version
-
+    def current(self, obj, user, data):
         if not obj.current_version:
-            return 500, "Invalid version resource. Contact an administrator."
+            raise BadValueError("Invalid version resource. Contact an administrator.")
         return obj.current_version
 
-    def new_entity(self, attributes):
-        if 'version' in attributes:
-            attributes['versions'] = [attributes.pop('version')]
-
-        return super(VersionAPI, self).new_entity(attributes)
+    def set_current(self, obj, user, data):
+        current_version = data['version']
+        if current_version not in obj.versions:
+            raise BadValueError("Invalid version. Cannot update to current.")
+        obj.current_version = current_version
+        obj.put()
 
 
 class CourseAPI(APIResource):
@@ -640,7 +657,7 @@ class GroupAPI(APIResource):
         },
         'index': {
             'web_args': {
-                'assignment': KeyArg('Assignment')
+                'assignment': KeyArg('Assignment'),
             }
         },
         'add_member': {

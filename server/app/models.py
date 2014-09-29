@@ -224,6 +224,7 @@ class Assignment(Base):
     course = ndb.KeyProperty('Course', required=True)
     max_group_size = ndb.IntegerProperty(required=True)
     due_date = ndb.DateTimeProperty(required=True)
+    active = ndb.ComputedProperty(lambda a: datetime.datetime.now() <= a.due_date)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -400,10 +401,10 @@ class Comment(Base):
 
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
-    name = ndb.StringProperty()
+    name = ndb.StringProperty(required=True)
     versions = ndb.StringProperty(repeated=True)
     current_version = ndb.StringProperty()
-    base_url = ndb.StringProperty()
+    base_url = ndb.StringProperty(required=True)
 
     def to_json(self, fields=None):
         json = super(Version, self).to_json(fields)
