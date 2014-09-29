@@ -400,10 +400,10 @@ class Comment(Base):
 
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
-    name = ndb.StringProperty()
+    name = ndb.StringProperty(required=True)
     versions = ndb.StringProperty(repeated=True)
     current_version = ndb.StringProperty()
-    base_url = ndb.StringProperty()
+    base_url = ndb.StringProperty(required=True)
 
     def to_json(self, fields=None):
         json = super(Version, self).to_json(fields)
