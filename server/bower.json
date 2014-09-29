@@ -36,7 +36,28 @@
     "angular-moment": "~0.8.2",
     "jquery": "~2.1.1",
     "showdown": "~0.3.1",
-    "chosen_v1.1.0": "https://github.com/harvesthq/chosen/releases/download/v1.1.0/chosen_v1.1.0.zip"
+    "chosen_v1.1.0": "https://github.com/harvesthq/chosen/releases/download/v1.1.0/chosen_v1.1.0.zip",
+    "font-awesome": ">=4.0.0",
+    "iCheck": "~1.0.1",
+    "ionicons": ">=1.4.0"
   },
-  "directory": "js"
+  "devDependencies": {
+    "jquery-ui": ">=1.10.3",
+    "sparkline": "http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js",
+    "datatables": ">=1.9",
+    "datatables-bootstrap3": "latest",
+    "bootstrap-daterangepicker": "~1.3",
+    "bootstrap3-datetimepicker": "~3.0",
+    "bootstrap-social": ">=4.2.0",
+    "bootstrap-datepicker": "^1.3",
+    "flot": ">=0.8.3",
+    "bootstrap3-wysihtml5-bower": ">=0.2.10",
+    "jquery.inputmask": "~3.0.0",
+    "bower-jvectormap": ">=1.2.2",
+    "morrisjs": "~0.5.1"
+  },
+  "directory": "js",
+  "resolutions": {
+    "datatables": ">=1.9"
+  }
 }
