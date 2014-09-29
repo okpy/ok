@@ -764,7 +764,7 @@ class GroupAPI(APIResource):
         else:
             raise BadValueError("too many people in group")
 
-    def reject_invitation(self, group, user):
+    def reject_invitation(self, group, user, data):
         # can only reject an invitation if you are in the invited_members
         need = Need('invitation')
         if not group.can(user, need, group):
