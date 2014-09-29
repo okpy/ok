@@ -58,6 +58,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
         status    -- keyword arguments; statuses for the test case.
         """
         super().__init__(**fields)
+        self['teardown'] = formatting.dedent(self['teardown'])
         self._lines = []
 
     ##################
@@ -108,6 +109,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
         console.exec(assignment_params['teardown'], frame)
         console.exec(test_params['teardown'], frame)
+        console.exec(self['teardown'], frame)
         print()
 
         if error:
