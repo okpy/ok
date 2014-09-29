@@ -2,7 +2,7 @@ app.directive('snippet', function() {
         "use strict";
         return {
             restrict: 'E',
-            templateUrl: 'static/partials/snippet.html',
+            templateUrl: '/static/partials/common/snippet.html',
             link: function(scope, elem, attrs) {
               scope.contents = scope.contents.split('\n');
             }
@@ -13,7 +13,7 @@ app.directive('diff', function() {
         "use strict";
         return {
             restrict: 'E',
-            templateUrl: 'static/partials/diff.html',
+            templateUrl: '/static/partials/common/diff.html',
         };
     });
 
@@ -21,7 +21,7 @@ app.directive('group', function() {
         "use strict";
         return {
             restrict: 'E',
-            templateUrl: 'static/partials/group.html',
+            templateUrl: '/static/partials/common/group.html',
         };
     });
 
@@ -30,7 +30,7 @@ app.directive('comments', function() {
         return {
             scope: false,
             restrict: 'E',
-            templateUrl: 'static/partials/comment-viewer.html',
+            templateUrl: '/static/partials/common/comment-viewer.html',
         };
     });
 

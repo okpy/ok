@@ -61,9 +61,9 @@ app.factory('Assignment', ['$resource',
     function($resource) {
       return $resource('api/v1/assignment/:id', {format: "json"}, {
         query: {
-          isArray: true,
+          isArray: false,
           transformResponse: function(data) {
-            return JSON.parse(data).data.results;
+            return JSON.parse(data).data;
           }
         },
         get: {

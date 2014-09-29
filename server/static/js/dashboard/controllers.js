@@ -1,7 +1,9 @@
 app.controller("AssignmentModuleController", ["$scope", "Assignment",
     function ($scope, Assignment) {
-      Assignment.query(function(response) {
-        $scope.assignments = response.data.results;
+      Assignment.query({
+        active: true,
+      }, function(response) {
+        $scope.assignments = response.results;
       });
     }
   ]);

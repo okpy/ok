@@ -2,7 +2,7 @@
 app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
   function($scope, Assignment) {
       Assignment.query(function(response) {
-        $scope.assignments = response.data.results;
+        $scope.assignments = response.results;
       });
   }]);
 
@@ -181,7 +181,7 @@ app.controller("CommentController", ["$scope", "$stateParams", "$timeout", "$mod
     function ($scope, $stateParams, $timeout, $modal, Submission) {
       $scope.remove = function() {
         var modal = $modal.open({
-          templateUrl: '/static/partials/removecomment.modal.html',
+          templateUrl: '/static/partials/common/removecomment.modal.html',
           scope: $scope,
           size: 'sm',
           resolve: {
@@ -256,7 +256,7 @@ app.controller("MemberController", ["$scope", "$modal", "Group",
     function ($scope, $modal, Group) {
       $scope.remove = function() {
         var modal = $modal.open({
-          templateUrl: '/static/partials/removemember.modal.html',
+          templateUrl: '/static/partials/common/removemember.modal.html',
           scope: $scope,
           size: 'sm',
           resolve: {
