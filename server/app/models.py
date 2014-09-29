@@ -140,7 +140,7 @@ class User(Base):
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
-            query = query.filter(Group.assignment == assignment.key)
+            query = query.filter(Group.assignment == assignment)
         return query
 
     @classmethod
