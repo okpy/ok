@@ -59,6 +59,14 @@ def KeyRepeatedArg(klass, **kwds):
         return [ndb.Key(klass, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
 
+def BooleanArg(**kwargs):
+    def parse_bool(arg):
+        if arg == "false":
+            return False
+        if arg == "true":
+            return True
+        raise BadValueError("malformed boolean: either 'true' or 'false'")
+    return Arg(None, use=parse_bool, **kwargs)
 
 class APIResource(View):
     """The base class for API resources.
@@ -216,6 +224,7 @@ class APIResource(View):
                     return True
                 return field
             return json.loads(field)
+        print web_args, request.args, parser.parse(web_args)
 
         fields = parser.parse({
             'fields': Arg(None, use=use_fields)
@@ -327,7 +336,7 @@ class AssignmentAPI(APIResource):
         'index': {
             'web_args': {
                 'course': KeyArg('Course'),
-                'active': Arg(bool),
+                'active': BooleanArg(),
                 'name': Arg(str),
                 'points': Arg(int)
             }
@@ -533,7 +542,7 @@ class VersionAPI(APIResource):
             'methods': set(['POST']),
             'web_args': {
                 'version': Arg(str, required=True),
-                'current': Arg(bool)
+                'current': BooleanArg()
             }
         },
         'current': {
@@ -588,7 +597,7 @@ class CourseAPI(APIResource):
                 'institution': Arg(str, required=True),
                 'term': Arg(str, required=True),
                 'year': Arg(str, required=True),
-                'active': Arg(bool),
+                'active': BooleanArg(),
             }
         },
         'delete': {
