@@ -108,6 +108,7 @@ class DoctestCase(grading.GradedTestCase, unlock.UnlockTestCase):
 
         console.exec(assignment_params['teardown'], frame)
         console.exec(test_params['teardown'], frame)
+        console.exec(self['teardown'], frame)
         print()
 
         if error:
