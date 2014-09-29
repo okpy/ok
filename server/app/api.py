@@ -224,7 +224,6 @@ class APIResource(View):
                     return True
                 return field
             return json.loads(field)
-        print web_args, request.args, parser.parse(web_args)
 
         fields = parser.parse({
             'fields': Arg(None, use=use_fields)
