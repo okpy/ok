@@ -61,11 +61,13 @@ def KeyRepeatedArg(klass, **kwds):
 
 def BooleanArg(**kwargs):
     def parse_bool(arg):
+        if isinstance(arg, bool):
+            return arg
         if arg == "false":
             return False
         if arg == "true":
             return True
-        raise BadValueError("malformed boolean: either 'true' or 'false'")
+        raise BadValueError("malformed boolean %s: either 'true' or 'false'" % arg)
     return Arg(None, use=parse_bool, **kwargs)
 
 class APIResource(View):

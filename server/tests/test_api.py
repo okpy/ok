@@ -28,7 +28,8 @@ def make_fake_course(creator):
         term="Fall",
         year="2014",
         creator=creator.key,
-        staff=[])
+        staff=[],
+        active=True)
 
 def make_fake_assignment(course, creator):
     return models.Assignment(
@@ -366,7 +367,7 @@ class VersionAPITest(APITest, APIBaseTestCase):
             name += str(self.num)
             self.num += 1
         return self.model(key=ndb.Key('Version', name),
-            name=name, versions=['1.0.0', '1.1.0'])
+            name=name, versions=['1.0.0', '1.1.0'], base_url="https://www.baseurl.com")
 
 class GroupAPITest(APITest, APIBaseTestCase):
     model = models.Group
