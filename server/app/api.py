@@ -327,6 +327,9 @@ class AssignmentAPI(APIResource):
         'index': {
             'web_args': {
                 'course': KeyArg('Course'),
+                'active': Arg(bool),
+                'name': Arg(str),
+                'points': Arg(int)
             }
         },
     }
@@ -546,9 +549,6 @@ class VersionAPI(APIResource):
         },
     }
 
-    def index(self, user, data):
-        return list(self.model.query())
-
     def new(self, obj, user, data):
         need = Need('get')
         if not obj.can(user, need, obj):
@@ -657,7 +657,7 @@ class GroupAPI(APIResource):
         },
         'index': {
             'web_args': {
-                'assignment': KeyArg('Assignment')
+                'assignment': KeyArg('Assignment'),
             }
         },
         'add_member': {
