@@ -30,7 +30,6 @@ app.directive('submissionList', function() {
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
-    console.log($stateProvider);
     $urlRouterProvider.otherwise("/");
 
     var dashboard = {
