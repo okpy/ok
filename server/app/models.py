@@ -424,6 +424,8 @@ class Version(Base):
             return False
         if action == "index":
             return query
+        if action == "get":
+            return True
         return user.is_admin
 
     @classmethod

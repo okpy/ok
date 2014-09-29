@@ -132,7 +132,8 @@ class APIBaseTestCase(BaseTestCase):
         else:
             mthd = self.client.post
 
-        self.response = mthd(API_PREFIX + url, *args, **kwds)
+        url = API_PREFIX + '/' + self.api_version + url
+        self.response = mthd(url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)
             self.response_json = models.json.loads(

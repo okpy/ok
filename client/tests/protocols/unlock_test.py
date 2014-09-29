@@ -176,7 +176,7 @@ class LockTest(unittest.TestCase):
         self.assignment = core.Assignment.deserialize({
             'name': 'dummy',
             'version': '1.0',
-        })
+        }, {})
         self.logger = mock.Mock()
         self.proto = unlock.LockProtocol(self.args, self.assignment,
                                          self.logger)
@@ -210,6 +210,20 @@ class LockTest(unittest.TestCase):
         self.proto.on_start()
         self.assertFalse(self.mock_case.on_lock.called)
         self.assertEqual(0, self.test.num_cases)
+
+    def testHiddenParamsInTest(self):
+        self.test['hidden_params'] = {
+            'foo': 'bar'
+        }
+        self.proto.on_start()
+        self.assertEqual({}, self.test['hidden_params'])
+
+    def testHiddenParamsInAssignment(self):
+        self.assignment['hidden_params'] = {
+            'foo': 'bar'
+        }
+        self.proto.on_start()
+        self.assertEqual({}, self.test['hidden_params'])
 
 class MockUnlockCase(unlock.UnlockTestCase):
     def on_onlock(self, logger, interact_fn):
