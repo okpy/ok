@@ -9,6 +9,23 @@
 .skin-black .logo:hover {
   background: #ffffff;
 }
+
+.pager {
+  padding-left: 0;
+  margin: 20px;
+  padding-bottom: 10px;
+  text-align: center;
+  list-style: none;
+}
+.navbar-text {
+  float: left;
+}
+.dashview {
+/*  width: 100%;
+  padding: 40px;
+*/
+}
+
 @media screen and (min-width: 480px) {
   .download-btn-group {
     width: 20%;
