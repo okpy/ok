@@ -29,7 +29,7 @@ class Assignment(serialize.Serializable):
     OPTIONAL = {
         'src_files': serialize.LIST,
         'params': serialize.DICT,
-        'hidden_params': serialize.DICT,
+        'hidden_params': serialize.DICT,    # Hidden from students.
     }
 
     def __init__(self, **fields):
@@ -71,7 +71,7 @@ class Test(serialize.Serializable):
     OPTIONAL = {
         'suites': serialize.SerializeArray(serialize.LIST),
         'params': serialize.DICT,
-        'hidden_params': serialize.DICT,
+        'hidden_params': serialize.DICT,    # Hidden from students.
         'note': serialize.STR,
         'extra': serialize.BOOL_FALSE,
     }
