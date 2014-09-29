@@ -98,6 +98,9 @@
                                           <div class="pull-right">
                                               <a id="login-button" type="button" class="btn btn-default btn-flat" href={{users_link}}>{{users_title}}</a>
                                           </div>
+                                          <div class="pull-left">
+                                              <a type="button" class="btn btn-default btn-flat" href='/'>Dashboard</a>
+                                          </div>
                                       </li>
                                   </ul>
                               </li>
@@ -105,7 +108,6 @@
                           <li class="user">
                               <a href={{users_link}}>Login</a>
                           </li> 
-
                           {% endif %}
                     </ul>
                 </div>
@@ -120,6 +122,16 @@
 
         {% if user %}
           <div ui-view></div>
+        {% else %}
+          <div class="box">
+          <div class="box-header">
+              <h3 class="box-title">Login</h3>
+          </div>
+          <div class="box-body">
+              <a href={{users_link}} class="btn btn-lg btn-primary btn-block">Login</a>
+
+          </div>
+          </div>
         {% endif %}
 
         </aside>
