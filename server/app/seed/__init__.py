@@ -56,6 +56,14 @@ def seed():
             assignment=assignment.key,
             submitter=submitter.key)
 
+    def make_version(current_version):
+        return models.Version(
+            name='okpy',
+            base_url='github.com',
+            versions=[current_version],
+            current_version=current_version
+        )
+
     c = models.User(
                     key=ndb.Key("User", "dummy@admin.com"),
                     email="dummy@admin.com",
@@ -64,6 +72,8 @@ def seed():
                     login="albert",
                     role="admin"
                 )
+    version = make_version('1.0.11')
+    version.put()
     c.put()
     course = make_fake_course(c)
     course.put()
