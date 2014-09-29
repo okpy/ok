@@ -140,6 +140,8 @@ class User(Base):
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
+            if not isinstance(assignment, ndb.Key):
+                assignment = assignment.key
             query = query.filter(Group.assignment == assignment)
         return query
 
