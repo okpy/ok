@@ -522,6 +522,10 @@ class VersionAPI(APIResource):
             'web_args': {
             }
         },
+        'index': {
+            'web_args': {
+            }
+        },
         'new': {
             'methods': set(['POST']),
             'web_args': {
@@ -541,6 +545,9 @@ class VersionAPI(APIResource):
             }
         },
     }
+
+    def index(self, user, data):
+        return list(self.model.query())
 
     def new(self, obj, user, data):
         need = Need('get')
