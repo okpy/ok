@@ -19,7 +19,7 @@ def coerce_to_json(data, fields):
     if hasattr(data, 'to_json'):
         return data.to_json(fields)
     elif isinstance(data, list):
-        return [mdl.to_json(fields) if hasattr(data, 'to_json')
+        return [mdl.to_json(fields) if hasattr(mdl, 'to_json')
                 else coerce_to_json(mdl, fields) for mdl in data]
     elif isinstance(data, dict):
         if hasattr(data, 'to_json'):
@@ -38,6 +38,8 @@ def create_api_response(status, message, data=None):
     if isinstance(data, dict) and 'results' in data:
         data['results'] = (
             coerce_to_json(data['results'], request.fields.get('fields', {})))
+    else:
+        data = coerce_to_json(data, request.fields.get('fields', {}))
 
     if request.args.get('format', 'default') == 'raw':
         response = Response(json.dumps(data))
@@ -156,7 +158,7 @@ def filter_query(query, args, model):
     Returns a modified query with the appropriate filters.
     """
     for arg, value in args.iteritems():
-        if isinstance(value, collections.Iterable):
+        if isinstance(value, collections.Iterable) and not isinstance(value, str):
             op, value = value
         else:
             value, op = value, '=='

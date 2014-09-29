@@ -9,7 +9,6 @@ import collections
 from flask import render_template, session, request, Response
 
 from google.appengine.api import users
-from google.appengine.ext.db import BadValueError
 
 from app import app
 from app import api
@@ -17,6 +16,7 @@ from app import auth
 from app import models
 from app import utils
 from app.constants import API_PREFIX
+from app.exceptions import *
 
 @app.route("/")
 def index():
@@ -44,22 +44,23 @@ def page_not_found(e):
 def server_error(e):
     return render_template('base.html', error=e), 500
 
-class WebArgsException(Exception):
-    pass
-
 @api.parser.error_handler
-def args_error(error):
-    raise WebArgsException(error)
+def args_error(e):
+    raise BadValueError(e.message)
 
 def check_version(client):
-    latest = api.VersionAPI().current("okpy")
+    latest = models.Version.query(models.Version.name=='okpy').get()
+
+    if latest is None or latest.current_version is None:
+        raise APIException('Current version of okpy not found')
+    latest = latest.current_version
 
     # If it returned a response, and not a string
     if not isinstance(latest, (str, unicode)):
         raise RuntimeError(latest)
     if client != latest:
-        return ("Incorrect client version. Supplied version was {}. "
-                "Correct version is {}.".format(client, latest))
+        raise IncorrectVersionError(client, latest)
+
 
 def register_api(view, endpoint, url):
     """
@@ -69,48 +70,50 @@ def register_api(view, endpoint, url):
     view = view.as_view(endpoint)
 
     @wraps(view)
-    def wrapped(*args, **kwds):
+    def api_wrapper(*args, **kwds):
         #TODO(martinis) add tests
         # Any client can check for the latest version
 
-        message = "success"
-        if request.args.get('client_version'):
-            message = check_version(request.args['client_version']) or message
-
-        user = auth.authenticate()
-        if not isinstance(user, models.User):
-            return user
-        session['user'] = user
-        logging.info("User is %s.", user.email)
-
         try:
+            request.fields = {}
+            message = "success"
+            if request.args.get('client_version'):
+                check_version(request.args['client_version'])
+
+            user = auth.authenticate()
+            if not isinstance(user, models.User):
+                return user
+            session['user'] = user
+            logging.info("User is %s.", user.email)
+
             rval = view(*args, **kwds)
 
-            if (isinstance(rval, collections.Iterable)
-                and not isinstance(rval, dict)):
+            if isinstance(rval, list):
+                rval = utils.create_api_response(200, message, rval)
+            elif (isinstance(rval, collections.Iterable)
+                  and not isinstance(rval, dict)):
                 rval = utils.create_api_response(*rval)
+            elif isinstance(rval, Response):
+                pass
             else:
                 rval = utils.create_api_response(200, message, rval)
 
             return rval
-        except (WebArgsException, BadValueError) as e:
-            message = "Invalid arguments: %s" % e.message
-            logging.warning(message)
-            return utils.create_api_response(400, message)
+        except APIException as e:
+            logging.exception(e.message)
+            return utils.create_api_response(e.code, e.message, e.data)
         except Exception as e: #pylint: disable=broad-except
-            #TODO(martinis) add tests
-            error_message = traceback.format_exc()
-            logging.error(error_message)
-            return utils.create_api_response(500, 'internal server error:\n%s' %
-                                             error_message)
+            logging.exception(e.message)
+            return utils.create_api_response(500, 'internal server error :(')
 
-    app.add_url_rule('%s' % url, view_func=wrapped, defaults={'path': None},
-                     methods=['GET', 'POST'])
-    app.add_url_rule('%s/<path:path>' % url, view_func=wrapped,
-                     methods=['GET', 'POST', 'DELETE', 'PUT'])
+    app.add_url_rule('%s' % url, view_func=api_wrapper, defaults={'path': None},
+            methods=['GET', 'POST'])
+    app.add_url_rule('%s/<path:path>' % url, view_func=api_wrapper,
+            methods=['GET', 'POST', 'DELETE', 'PUT'])
 
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
 register_api(api.VersionAPI, 'version_api', 'version')
 register_api(api.CourseAPI, 'course_api', 'course')
 register_api(api.GroupAPI, 'group_api', 'group')
+register_api(api.UserAPI, 'user_api', 'user')

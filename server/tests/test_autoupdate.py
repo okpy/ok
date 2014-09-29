@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-Tests api field filtering.
+Tests api auto updating
 """
+import datetime 
+
+
 from test_base import APIBaseTestCase, unittest
+from test_api import make_fake_assignment, make_fake_course
 from app import models
-from app.urls import check_version
+from app.urls import check_version, IncorrectVersionError
 
 class AutoUpdateTest(APIBaseTestCase):
     """
@@ -17,12 +21,24 @@ class AutoUpdateTest(APIBaseTestCase):
 
     def setUp(self):
         super(AutoUpdateTest, self).setUp()
-        self.assignment = models.Assignment(name='testassign')
+        due_date = datetime.datetime.now() + datetime.timedelta(days=2)
+        self.user = models.User.get_or_insert('test@example.com')
+
+        self.course = make_fake_course(self.user)
+        self.course.put()
+
+        self.assignment = make_fake_assignment(self.course, self.user)
         self.assignment.put()
-        self.version = models.Version.get_or_insert('okpy')
+
+        self.version = models.Version.get_or_insert('okpy', base_url="https://www.baseurl.com")
+        self.invalid = False
 
     def try_request(self, version):
-        self.message = check_version(version)
+        try:
+            self.message = check_version(version)
+            self.invalid = False
+        except IncorrectVersionError:
+            self.invalid = True
 
     def add_version(self, version):
         self.version.versions.append(version)
@@ -37,10 +53,10 @@ class AutoUpdateTest(APIBaseTestCase):
         self.set_version(version)
 
     def assertAccessOk(self):
-        self.assertEqual(self.message, None)
+        self.assertEqual(self.invalid, False)
 
     def assertAccessInvalid(self):
-        self.assertNotEqual(self.message, None)
+        self.assertEqual(self.invalid, True)
 
     def test_basic_access(self):
         self.add_and_set_version('1.0.0')

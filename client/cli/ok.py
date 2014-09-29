@@ -49,14 +49,15 @@ import sys
 import time
 
 def send_to_server(access_token, messages, name, server,
-                   endpoint='submission'):
+                   insecure=False):
     """Send messages to server, along with user authentication."""
     data = {
         'assignment': name,
         'messages': messages,
     }
     try:
-        address = 'https://' + server + '/api/v1/' + endpoint
+        prefix = "http" if insecure else "https"
+        address = prefix + '://' + server + '/api/v1/submission'
         serialized = json.dumps(data).encode(encoding='utf-8')
         # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
         # TODO(denero) Send access token with the request
@@ -135,6 +136,8 @@ def parse_input():
                         help="unlock tests interactively")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
+    parser.add_argument('--insecure', action='store_true',
+                        help="uses http instead of https")
     parser.add_argument('-i', '--interactive', action='store_true',
                         help="toggle interactive mode")
     parser.add_argument('-l', '--lock', type=str,
@@ -190,7 +193,7 @@ def main():
                 server_thread = multiprocessing.Process(
                     target=send_to_server,
                     args=(access_token, messages, assignment['name'],
-                          args.server))
+                          args.server, args.insecure))
                 server_thread.start()
             except error.URLError as ex:
                 # TODO(soumya) Make a better error message

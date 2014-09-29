@@ -63,9 +63,13 @@ class Base(ndb.Model):
 
     def to_json(self, fields=None):
         """Converts this model to a json dictionary."""
+        if fields == True:
+            return self.to_dict()
+        elif fields == False:
+            return {}
+
         if not fields:
             fields = {}
-
         if fields:
             result = self.to_dict(include=fields.keys())
         else:
@@ -76,7 +80,11 @@ class Base(ndb.Model):
 
         for key, value in result.items():
             if isinstance(value, ndb.Key):
-                result[key] = value.get().to_json(fields.get(key))
+                value = value.get()
+                if value:
+                    result[key] = value.to_json(fields.get(key))
+                else:
+                    result[key] = None
             else:
                 try:
                     new_value = app.json_encoder().default(value)
@@ -100,13 +108,11 @@ class Base(ndb.Model):
 
 class User(Base):
     """Users."""
-    email = ndb.StringProperty() # Must be associated with some OAuth login.
+    email = ndb.StringProperty(required=True) # Must be associated with some OAuth login.
     login = ndb.StringProperty() # TODO(denero) Legacy of glookup system
     role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
-    #TODO(martinis) figure out how to actually use this data
-    courses = ndb.KeyProperty('Course', repeated=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -114,6 +120,10 @@ class User(Base):
     @property
     def is_admin(self):
         return self.role == constants.ADMIN_ROLE
+
+    @property
+    def logged_in(self):
+        return self.email != "_anon"
 
     @property
     def is_staff(self):
@@ -124,11 +134,16 @@ class User(Base):
         return Course.query(Course.staff == self.key)
 
     @property
-    def groups(self):
-        return Group.query(Group.members == self.key)
+    def courses(self):
+        return [group.assignment.get().course for group in self.groups()]
 
-    def get_groups(self, assignment):
-        return Group.query().filter(ndb.AND(Group.members == self.key, Group.assignment == assignment.key))
+    def groups(self, assignment=None):
+        query = Group.query(Group.members == self.key)
+        if assignment:
+            if not isinstance(assignment, ndb.Key):
+                assignment = assignment.key
+            query = query.filter(Group.assignment == assignment)
+        return query
 
     @classmethod
     def from_dict(cls, values):
@@ -191,50 +206,27 @@ class User(Base):
             return user.is_admin
         return False
 
-class AnonymousUser(User):
-    @property
-    def logged_in(self):
-        return False
 
-    def put(self, *args, **kwds):
-        """
-        Disable puts for Anonymous Users
-        """
-        pass
-
-    @classmethod
-    def get_or_insert(cls, *args, **kwds):
-        return super(_AnonUserClass, cls).get_or_insert(*args, **kwds)
-
-    @property
-    def staffed_courses(self):
-        return ()
-
-    @property
-    def groups(self):
-        return ()
-
-_AnonUserClass = AnonymousUser
 _AnonUser = None
-
 def AnonymousUser():
     global _AnonUser
     if not _AnonUser:
-        _AnonUser = _AnonUserClass.get_or_insert("anon_user")
+        _AnonUser = User.get_or_insert("_anon")
     return _AnonUser
-
 
 class Assignment(Base):
     """
     The Assignment Model
     """
-    name = ndb.StringProperty() # Must be unique to support submission.
-    # TODO(denero) Validate uniqueness of name.
-    points = ndb.FloatProperty()
-    creator = ndb.KeyProperty(User)
-    templates = ndb.JsonProperty()
-    course = ndb.KeyProperty('Course')
-    max_group_size = ndb.IntegerProperty(required=True, default=10)
+    name = ndb.StringProperty(required=True) # Must be unique to support submission.
+    display_name = ndb.StringProperty(required=True) # Name displayed to students
+    points = ndb.FloatProperty(required=True)
+    creator = ndb.KeyProperty(User, required=True)
+    templates = ndb.JsonProperty(required=True)
+    course = ndb.KeyProperty('Course', required=True)
+    max_group_size = ndb.IntegerProperty(required=True)
+    due_date = ndb.DateTimeProperty(required=True)
+    active = ndb.ComputedProperty(lambda a: datetime.datetime.now() <= a.due_date)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -250,26 +242,41 @@ class Assignment(Base):
 
 class Course(Base):
     """Courses have enrolled students and assignment lists with due dates."""
-    institution = ndb.StringProperty() # E.g., 'UC Berkeley'
-    name = ndb.StringProperty() # E.g., 'CS 61A'
-    offering = ndb.StringProperty()  # E.g., 'Fall 2014'
-    creator = ndb.KeyProperty(User)
+    institution = ndb.StringProperty(required=True) # E.g., 'UC Berkeley'
+    name = ndb.StringProperty(required=True) # E.g., 'CS 61A'
+    term = ndb.StringProperty(required=True)
+    year = ndb.StringProperty(required=True)
+    # TODO: validate offering
+    creator = ndb.KeyProperty(User, required=True)
     staff = ndb.KeyProperty(User, repeated=True)
+    active = ndb.BooleanProperty(default=True)
 
     @classmethod
-    def _can(cls, user, need, obj=None, query=None):
+    def _can(cls, user, need, course=None, query=None):
         action = need.action
         if action == "get":
+            if user.is_admin:
+                return True
             return True
         elif action == "index":
             return query
         elif action in ("create", "delete", "put"):
             return user.is_admin
         elif action == "modify":
-            if not obj:
+            if user.is_admin:
+                return True
+            if not course:
                 raise ValueError("Need instance for get action.")
-            return user.key in obj.staff
+            return user.key in course.staff
+        elif action == "staff":
+            if user.is_admin:
+                return True
+            return user.key in course.staff
         return False
+
+    @property
+    def assignments(self):
+        return Assignment.query(Assignment.course == self.key)
 
 
 def validate_messages(_, messages):
@@ -288,6 +295,7 @@ def validate_messages(_, messages):
     except Exception as exc:
         raise BadValueError(exc)
 
+
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User, required=True)
@@ -297,11 +305,8 @@ class Submission(Base):
 
     @property
     def group(self):
-        group = APIProxy.AssignmentAPI().group(
-            self.assignment.get(), self.submitter.get())
-        if not isinstance(group, Group):
-            return None
-        return group
+        submitter = self.submitter.get()
+        return submitter.groups(self.assignment.get()).get()
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -315,8 +320,9 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
-            groups = list(user.groups)
+            groups = list(user.groups())
             my_group = obj.group
+
             if groups and my_group and my_group.key in [g.key for g in groups]:
                 return True
             return False
@@ -329,22 +335,21 @@ class Submission(Base):
 
             if not query:
                 raise ValueError(
-                        "Need query instance for Submission index action")
+                    "Need query instance for Submission index action")
 
             if user.is_admin:
                 return query
 
-            courses = user.courses
             filters = []
+            courses = Course.query().filter(Course.staff == user.key)
             for course in courses:
                 assignments = Assignment.query().filter(
                     Assignment.course == course).fetch()
 
-                if user.key in course.get().staff:
-                    filters.append(Submission.assignment.IN(
-                        [assign.key for assign in assignments]))
+                filters.append(Submission.assignment.IN(
+                    [assign.key for assign in assignments]))
 
-            for group in user.groups:
+            for group in user.groups():
                 filters.append(Submission.submitter.IN(group.members))
             filters.append(Submission.submitter == user.key)
 
@@ -361,12 +366,47 @@ class SubmissionDiff(Base):
     submission = ndb.KeyProperty(Submission)
     diff = ndb.JsonProperty()
 
+    @property
+    def comments(self):
+        return Comment.query(ancestor=self.key).order(Comment.created)
+
+    def to_json(self, fields=None):
+        dct = super(SubmissionDiff, self).to_json(fields)
+        comments = list(self.comments)
+        comment_dict = {}
+        for comment in comments:
+            if comment.filename not in comment_dict:
+                comment_dict[comment.filename] = {}
+            if comment.line not in comment_dict[comment.filename]:
+                comment_dict[comment.filename][comment.line] = []
+            comment_dict[comment.filename][comment.line].append(comment)
+
+        dct['comments'] = comment_dict
+        return dct
+
+class Comment(Base):
+    author = ndb.KeyProperty('User', required=True)
+    created = ndb.DateTimeProperty(auto_now_add=True)
+    line = ndb.IntegerProperty(required=True)
+    message = ndb.TextProperty(required=True)
+    draft = ndb.BooleanProperty(required=True, default=True)
+    filename = ndb.StringProperty(required=True)
+
+    @classmethod
+    def _can(cls, user, need, comment=None, query=None):
+        if need.action == "get":
+            return user.is_admin or comment.author == user.key
+        if need.action == "delete":
+            return user.is_admin or comment.author == user.key
+        return False
+
+
 class Version(Base):
     """A version of client-side resources. Used for auto-updating."""
-    name = ndb.StringProperty()
+    name = ndb.StringProperty(required=True)
     versions = ndb.StringProperty(repeated=True)
     current_version = ndb.StringProperty()
-    base_url = ndb.StringProperty()
+    base_url = ndb.StringProperty(required=True)
 
     def to_json(self, fields=None):
         json = super(Version, self).to_json(fields)
@@ -384,6 +424,8 @@ class Version(Base):
             return False
         if action == "index":
             return query
+        if action == "get":
+            return True
         return user.is_admin
 
     @classmethod
@@ -411,7 +453,6 @@ class Group(Base):
     A group is a collection of users who all submit submissions.
     They all can see submissions for an assignment all as a group.
     """
-    name = ndb.StringProperty()
     members = ndb.KeyProperty(kind='User', repeated=True)
     invited_members = ndb.KeyProperty(kind='User', repeated=True)
     assignment = ndb.KeyProperty('Assignment', required=True)
@@ -419,22 +460,31 @@ class Group(Base):
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
         action = need.action
-
-        if action == "delete":
+        if not user.logged_in:
             return False
+
         if action == "index":
             if user.is_admin:
                 return query
             return query.filter(Group.members == user.key)
+
+        if user.is_admin:
+            return True
+
+        if action == "delete":
+            return False
+        if action == "invitation":
+            return user.key in obj.invited_members
+        if action == "member":
+            return user.key in obj.members
         if action == "get":
-            if not obj:
-                raise ValueError("Need instance for get action.")
-            return user.is_admin or user.key in obj.members
+            return user.key in obj.members or user.key in obj.invited_members
+
         if action in ("create", "put"):
             #TODO(martinis) make sure other students are ok with this group
             if not obj:
                 raise ValueError("Need instance for get action.")
-            return user.is_admin or user.key in obj.members
+            return user.key in obj.members
         return False
 
     def _pre_put_hook(self):
@@ -451,7 +501,7 @@ def anon_converter(prop, value):
 
 class AuditLog(Base):
     created = ndb.DateTimeProperty(auto_now_add=True)
-    event_type = ndb.StringProperty()
+    event_type = ndb.StringProperty(required=True)
     user = ndb.KeyProperty('User', required=True, validator=anon_converter)
     description = ndb.StringProperty()
     obj = ndb.KeyProperty()

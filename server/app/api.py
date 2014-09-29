@@ -3,6 +3,7 @@ The public API
 """
 import datetime
 import logging
+import datetime
 
 from flask.views import View
 from flask.app import request, json
@@ -16,11 +17,12 @@ from app.constants import API_PREFIX
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
 
-from google.appengine.ext import db, ndb
+from app.exceptions import *
 
-BadValueError = db.BadValueError
+from google.appengine.ext import ndb
 
 parser = FlaskParser()
+
 
 def DateTimeArg(**kwds):
     def parse_date(arg):
@@ -28,11 +30,13 @@ def DateTimeArg(**kwds):
         if '|' in arg:
             op, arg = arg.split('|', 1)
 
-        date = datetime.datetime.strptime(arg, app.config["GAE_DATETIME_FORMAT"])
-        delta = datetime.timedelta(hours = 7)
-        date = (datetime.datetime.combine(date.date(),date.time()) + delta)
+        date = datetime.datetime.strptime(arg,
+                                          app.config["GAE_DATETIME_FORMAT"])
+        delta = datetime.timedelta(hours=7)
+        date = (datetime.datetime.combine(date.date(), date.time()) + delta)
         return (op, date) if op else date
-    return Arg(None, use=parse_date)
+    return Arg(None, use=parse_date, **kwds)
+
 
 def KeyArg(klass, **kwds):
     def parse_key(key):
@@ -42,6 +46,7 @@ def KeyArg(klass, **kwds):
             pass
         return {'pairs': [(klass, key)]}
     return Arg(ndb.Key, use=parse_key, **kwds)
+
 
 def KeyRepeatedArg(klass, **kwds):
     def parse_list(key_list):
@@ -54,6 +59,17 @@ def KeyRepeatedArg(klass, **kwds):
         return [ndb.Key(klass, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
 
+def BooleanArg(**kwargs):
+    def parse_bool(arg):
+        if isinstance(arg, bool):
+            return arg
+        if arg == "false":
+            return False
+        if arg == "true":
+            return True
+        raise BadValueError("malformed boolean %s: either 'true' or 'false'" % arg)
+    return Arg(None, use=parse_bool, **kwargs)
+
 class APIResource(View):
     """The base class for API resources.
 
@@ -61,7 +77,7 @@ class APIResource(View):
     """
 
     model = None
-    web_args = {}
+    methods = {}
     key_type = int
     api_version = 'v1'
 
@@ -72,72 +88,81 @@ class APIResource(View):
     def get_instance(self, key, user):
         obj = self.model.get_by_id(key)
         if not obj:
-            return (404, "{resource} {key} not found".format(
-                resource=self.name, key=key))
+            raise BadKeyError(key)
 
         need = Need('get')
         if not obj.can(user, need, obj):
-            return need.api_response()
-
+            raise need.exception()
         return obj
 
+    def call_method(self, method_name, user, http_method,
+                    instance=None, is_index=False):
+        if method_name not in self.methods:
+            raise BadMethodError('Unimplemented method %s' % method_name)
+        constraints = self.methods[method_name]
+        if "methods" in constraints:
+            if http_method is None:
+                raise IncorrectHTTPMethodError('Need to specify HTTP method')
+            if http_method not in constraints["methods"]:
+                raise IncorrectHTTPMethodError('Bad HTTP Method: %s'
+                                               % http_method)
+        data = {}
+        web_args = constraints.get('web_args', {})
+        data = self.parse_args(web_args, user, is_index=is_index)
+        method = getattr(self, method_name)
+        if instance is not None:
+            return method(instance, user, data)
+        return method(user, data)
+
     def dispatch_request(self, path, *args, **kwargs):
-        meth = request.method.upper()
+        http_method = request.method.upper()
         user = session['user']
 
-        if not path: # Index
-            if meth == "GET":
-                return self.index(user)
-            elif meth == "POST":
-                return self.post(user)
-            assert meth in ("GET", "POST"), 'Unimplemented method %s' % meth
+        if path is None:  # Index
+            if http_method not in ("GET", "POST"):
+                raise IncorrectHTTPMethodError('Incorrect HTTP method: %s'
+                                               % http_method)
+            method_name = ("index" if http_method == "GET"
+                           else http_method.lower())
+            return self.call_method(method_name, user, http_method,
+                                    is_index=(method_name == "index"))
 
-        if '/' not in path:
-            # For now, just allow ID gets
-            assert meth in ['GET', 'PUT', 'DELETE']
-            meth = getattr(self, meth.lower(), None)
-
-            assert meth is not None, 'Unimplemented method %r' % request.method
+        path = path.split('/')
+        if len(path) == 1:
+            entity_id = path[0]
             try:
-                key = self.key_type(path)
+                key = self.key_type(entity_id)
             except (ValueError, AssertionError):
-                return (400,
-                    "Invalid key. Needs to be of type '%s'" % self.key_type)
+                raise BadValueError("Invalid key. Needs to be of type: %s"
+                                    % self.key_type)
+            instance = self.get_instance(key, user)
+            method_name = http_method.lower()
+            return self.call_method(method_name, user, http_method,
+                                    instance=instance)
 
-            inst = self.get_instance(key, user)
-            if not isinstance(inst, self.model):
-                return inst
-
-            return meth(inst, user, *args, **kwargs)
-
-        entity_id, action = path.split('/')
+        entity_id, method_name = path
         try:
             key = self.key_type(entity_id)
         except (ValueError, AssertionError):
-            return (400,
-                "Invalid key. Needs to be of type '%s'" % self.key_type)
+            raise BadValueError("Invalid key. Needs to be of type: %s"
+                                % self.key_type)
+        instance = self.get_instance(key, user)
+        return self.call_method(method_name, user, http_method,
+                                instance=instance)
 
-        meth = getattr(self, action, None)
-        assert meth is not None, 'Unimplemented action %r' % action
-        inst = self.get_instance(key, user)
-        if not isinstance(inst, self.model):
-            return inst
-
-        return meth(inst, user, *args, **kwargs)
-
-    def get(self, obj, user):
+    def get(self, obj, user, data):
         """
         The GET HTTP method
         """
         return obj
 
-    def put(self, obj, user):
+    def put(self, obj, user, data):
         """
         The PUT HTTP method
         """
         need = Need('put')
         if not obj.can(user, need, obj):
-            return need.api_response()
+            raise need.exception()
 
         blank_val = object()
         changed = False
@@ -154,19 +179,15 @@ class APIResource(View):
 
         return obj
 
-    def post(self, user):
+    def post(self, user, data):
         """
         The POST HTTP method
         """
-        data = self.parse_args(False, user)
-
-        entity, error_response = self.new_entity(data)
-        if error_response:
-            return error_response
+        entity = self.new_entity(data)
 
         need = Need('create')
         if not self.model.can(user, need, obj=entity):
-            return need.api_response()
+            raise need.exception()
 
         entity.put()
 
@@ -180,37 +201,44 @@ class APIResource(View):
         Returns (entity, error_response) should be ignored if error_response
         is a True value.
         """
-        entity = self.model.from_dict(attributes)
-        return entity, None
+        return self.model.from_dict(attributes)
 
-    def delete(self, obj, user):
+    def delete(self, obj, user, data):
         """
         The DELETE HTTP method
         """
         need = Need('delete')
         if not self.model.can(user, need, obj=obj):
-            return need.api_response()
+            raise need.exception()
 
         obj.key.delete()
 
-    def parse_args(self, index, user):
+    def parse_args(self, web_args, user, is_index=False):
         """
         Parses the arguments to this API call.
         |index| is whether or not this is an index call.
         """
         def use_fields(field):
             if not field[0] == '{':
+                if field == "false":
+                    return False
+                elif field == "true":
+                    return True
                 return field
             return json.loads(field)
 
         fields = parser.parse({
             'fields': Arg(None, use=use_fields)
         })
+        if fields['fields'] is None:
+            fields['fields'] = {}
+        if type(fields['fields']) != dict and type(fields['fields']) != bool:
+            raise BadValueError("fields should be dictionary or boolean")
         request.fields = fields
+        return {k: v for k, v in parser.parse(web_args).iteritems()
+                if v is not None}
 
-        return {k:v for k, v in parser.parse(self.web_args).iteritems() if v != None}
-
-    def index(self, user):
+    def index(self, user, data):
         """
         Index HTTP method. Should be called from GET when no key is provided.
 
@@ -221,10 +249,9 @@ class APIResource(View):
 
         result = self.model.can(user, need, query=query)
         if not result:
-            return need.api_response()
+            raise need.exception()
 
-        args = self.parse_args(True, user)
-        query = filter_query(result, args, self.model)
+        query = filter_query(result, data, self.model)
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
             logging.info("Adding default ordering by creation time.")
@@ -250,102 +277,80 @@ class UserAPI(APIResource):
     model = models.User
     key_type = str
 
+    methods = {
+        'post': {
+            'web_args': {
+                'first_name': Arg(str),
+                'last_name': Arg(str),
+                'email': Arg(str, required=True),
+                'login': Arg(str),
+            }
+        },
+        'get': {
+        },
+        'index': {
+        },
+        'invitations': {
+            'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('Assignment')
+            }
+        },
+    }
+
     def new_entity(self, attributes):
         """
         Creates a new entity with given attributes.
         """
-        if 'email' not in attributes:
-            return None, (400, 'Email required')
         entity = self.model.get_by_id(attributes['email'])
         if entity:
-            return None, (400, '%s already exists' % self.name)
+            raise BadValueError("user already exists")
         entity = self.model.from_dict(attributes)
-        return entity, None
+        return entity
 
-    web_args = {
-        'first_name': Arg(str),
-        'last_name': Arg(str),
-        'email': Arg(str),
-        'login': Arg(str),
-        'assignment': Arg(int),
-        'invitation': Arg(int),
-        'course': KeyArg('User'),
-    }
-
-    def invitations(self, user, obj):
-        data = self.parse_args(False, user)
-        query = models.Group.query(user.key == models.Group.invited_members)
+    def invitations(self, user, obj, data):
+        query = models.Group.query(models.Group.invited_members == user.key)
         if 'assignment' in data:
-            assignment = models.Assignment.get_by_id(data['assignment'])
-            if assignment:
-                query = query.filter(models.Group.assignment == assignment.key)
-            else:
-                return {
-                    "invitations": []
-                }
-        return {
-            "invitations": list(query)
-        }
-
-    def accept_invitation(self, user, obj):
-        data = self.parse_args(False, user)
-        if 'invitation' not in data:
-            return
-        group = models.Group.get_by_id(data['invitation'])
-        if group:
-            assignment = group.assignment.get()
-            if len(group.members) < assignment.max_group_size:
-                already_in_group = len(list(user.get_groups(assignment))) > 0
-                if not already_in_group:
-                    if user.key in group.invited_members:
-                        group.invited_members.remove(user.key)
-                        group.members.append(user.key)
-                    group.put()
-
-    def reject_invitation(self, user, obj):
-        data = self.parse_args(False, user)
-        if 'invitation' not in data:
-            return
-        group = models.Group.get_by_id(data['invitation'])
-        if group:
-            if user.key in group.invited_members:
-                group.invited_members.remove(user.key)
-                group.put()
+            query = query.filter(models.Group.assignment == data['assignment'])
+        return list(query)
 
 
 class AssignmentAPI(APIResource):
     """The API resource for the Assignment Object"""
     model = models.Assignment
 
-    web_args = {
-        'name': Arg(str),
-        'points': Arg(float),
-        'course': KeyArg('Course'),
-        'max_group_size': Arg(int),
-        'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+    methods = {
+        'post': {
+            'web_args': {
+                'name': Arg(str, required=True),
+                'display_name': Arg(str, required=True),
+                'points': Arg(float, required=True),
+                'course': KeyArg('Course', required=True),
+                'max_group_size': Arg(int, required=True),
+                'due_date': DateTimeArg(required=True),
+                'templates': Arg(str, use=lambda temps: json.dumps(temps),
+                                 required=True),
+            }
+        },
+        'get': {
+        },
+        'index': {
+            'web_args': {
+                'course': KeyArg('Course'),
+                'active': BooleanArg(),
+                'name': Arg(str),
+                'points': Arg(int)
+            }
+        },
     }
 
-    def parse_args(self, is_index, user):
-        data = super(AssignmentAPI, self).parse_args(is_index, user)
-        if not is_index:
-            data['creator'] = user.key
-        return data
-
-    def group(self, obj, user):
-        groups = (models.Group.query()
-                  .filter(models.Group.members == user.key)
-                  .filter(models.Group.assignment == obj.key).fetch())
-
-        if len(groups) > 1:
-            return (409, "You are in multiple groups", {
-                "groups": groups
-            })
-        elif not groups:
-            return (200, "You are not in any groups", {
-                "in_group": False,
-            })
-        else:
-            return groups[0]
+    def post(self, user, data):
+        data['creator'] = user.key
+        # check if there is a duplicate assignment
+        assignments = list(models.Assignment.query(models.Assignment.name == data['name']))
+        if len(assignments) > 0:
+            raise BadValueError("assignment with name %s exists already" % data["name"])
+        return super(AssignmentAPI, self).post(user, data)
 
 
 class SubmitNDBImplementation(object):
@@ -372,12 +377,53 @@ class SubmissionAPI(APIResource):
 
     db = SubmitNDBImplementation()
 
-    def download(self, obj, user):
+    methods = {
+        'post': {
+            'web_args': {
+                'assignment': Arg(str, required=True),
+                'messages': Arg(None, required=True),
+            }
+        },
+        'get': {
+            'web_args': {
+            }
+        },
+        'index': {
+            'web_args': {
+                'assignment': KeyArg('Assignment'),
+                'course': KeyArg('Course'),
+                'created': DateTimeArg(),
+                # fill in filter parameters
+            }
+        },
+        'diff': {
+            'methods': set(["GET"]),
+        },
+        'download': {
+            'methods': set(["GET"]),
+        },
+        'add_comment': {
+            'methods': set(["POST"]),
+            'web_args': {
+                'index': Arg(int, required=True),
+                'file': Arg(str, required=True),
+                'message': Arg(str, required=True)
+            }
+        },
+        'delete_comment': {
+            'methods': set(["POST"]),
+            'web_args': {
+                'comment': KeyArg('Comment', required=True)
+            }
+        },
+    }
+
+    def download(self, obj, user, data):
         """
         Allows you to download a submission.
         """
         if 'file_contents' not in obj.messages:
-            return 400, "Submission has no contents to download."
+            raise BadValueError("Submission has no contents to download")
 
         response = make_response(create_zip(obj.messages['file_contents']))
         response.headers["Content-Disposition"] = (
@@ -385,30 +431,70 @@ class SubmissionAPI(APIResource):
         response.headers["Content-Type"] = "application/zip"
         return response
 
-    def diff(self, obj, user):
+    def diff(self, obj, user, data):
         """
         Gets the associated diff for a submission
         """
         if 'file_contents' not in obj.messages:
-            return 400, "Submission has no contents to diff."
+            raise BadValueError("Submission has no contents to diff")
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            return diff_obj.diff
+            return diff_obj
 
         diff = {}
         templates = obj.assignment.get().templates
         if not templates:
-            return (500,
-                "No templates for assignment yet... Contact course staff")
+            raise BadValueError("no templates for assignment, \
+                                please contact course staff")
 
         templates = json.loads(templates)
         for filename, contents in obj.messages['file_contents'].items():
             diff[filename] = compare.diff(templates[filename], contents)
 
-        self.diff_model(id=obj.key.id(),
-                        diff=diff).put()
+        diff = self.diff_model(id=obj.key.id(),
+                               diff=diff)
+        diff.put()
         return diff
+
+    def add_comment(self, obj, user, data):
+        """
+        Adds a comment to this diff.
+        """
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+
+        index = data["index"]
+        message = data["message"]
+        filename = data["file"]
+
+        if message.strip() == "":
+            raise BadValueError("Cannot make empty comment")
+
+        comment = models.Comment(
+            filename=filename,
+            message=message,
+            line=index,
+            author=user.key,
+            parent=diff_obj.key)
+        comment.put()
+
+    def delete_comment(self, obj, user, data):
+        """
+        Deletes a comment on this diff.
+        """
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+
+        comment = models.Comment.get_by_id(data['comment'].id(), parent=diff_obj.key)
+        if not comment:
+            raise BadKeyError(data['comment'])
+        need = Need('delete')
+        if not comment.can(user, need, comment):
+            raise need.exception()
+        comment.key.delete()
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -422,161 +508,267 @@ class SubmissionAPI(APIResource):
     def submit(self, user, assignment, messages):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
-        submission = self.db.create_submission(user, valid_assignment, messages)
-        return {
+        submission = self.db.create_submission(user, valid_assignment,
+                                               messages)
+        return (201, "success", {
             'key': submission.key.id()
-        }
+        })
 
-    def post(self, user):
-        data = self.parse_args(False, user)
-        if 'assignment' not in data:
-            raise BadValueError("Missing required arguments 'assignment'")
-        if 'messages' not in data:
-            raise BadValueError("Missing required arguments 'messages'")
-
+    def post(self, user, data):
         return self.submit(user, data['assignment'],
                            data['messages'])
-
-    web_args = {
-        'assignment': Arg(str),
-        'messages': Arg(None),
-        'created': DateTimeArg(),
-        'submitter': KeyArg('User'),
-    }
 
 
 class VersionAPI(APIResource):
     model = models.Version
 
-    web_args = {
-        'name': Arg(str),
-        'version': Arg(str),
-        'current_version': Arg(str),
-        'base_url': Arg(str),
-    }
-
     key_type = str
 
-    def new(self, key):
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return 404, "{resource} {key} not found".format(
-                resource=self.name, key=key)
+    methods = {
+        'post': {
+            'web_args': {
+                'name': Arg(str, required=True),
+                'base_url': Arg(str, required=True),
+            }
+        },
+        'get': {
+            'web_args': {
+            }
+        },
+        'index': {
+            'web_args': {
+            }
+        },
+        'new': {
+            'methods': set(['POST']),
+            'web_args': {
+                'version': Arg(str, required=True),
+                'current': BooleanArg()
+            }
+        },
+        'current': {
+            'methods': set(['GET']),
+            'web_args': {
+            }
+        },
+        'set_current': {
+            'methods': set(['POST']),
+            'web_args': {
+                'version': Arg(str, required=True)
+            }
+        },
+    }
 
+    def new(self, obj, user, data):
         need = Need('get')
-        if not obj.can(session['user'], need, obj):
-            return need.api_response()
+        if not obj.can(user, need, obj):
+            raise need.exception()
 
-        args = self.parse_args(False)
-        new_version = args['version']
+        new_version = data['version']
 
         if new_version in obj.versions:
-            return 400, "Duplicate version: {}".format(new_version)
+            raise BadValueError("Duplicate version: {}".format(new_version))
 
         obj.versions.append(new_version)
-        if 'current_version' in args:
-            obj.current_version = args['current_version']
-
+        if 'current' in data and data['current']:
+            obj.current_version = data['current_version']
         obj.put()
-
         return obj
 
-    def current(self, key):
-        obj = self.model.get_by_id(key)
-        if not obj:
-            return 404, "{resource} {key} not found".format(
-                resource=self.name, key=key)
-
-        # No permissions check because anyone can check for the latest version
-
+    def current(self, obj, user, data):
         if not obj.current_version:
-            return 500, "Invalid version resource. Contact an administrator."
+            raise BadValueError("Invalid version resource. Contact an administrator.")
         return obj.current_version
 
-    def new_entity(self, attributes):
-        if 'version' in attributes:
-            attributes['versions'] = [attributes.pop('version')]
+    def set_current(self, obj, user, data):
+        current_version = data['version']
+        if current_version not in obj.versions:
+            raise BadValueError("Invalid version. Cannot update to current.")
+        obj.current_version = current_version
+        obj.put()
 
-        return super(VersionAPI, self).new_entity(attributes)
 
 class CourseAPI(APIResource):
     model = models.Course
 
-    def parse_args(self, is_index, user):
-        data = super(CourseAPI, self).parse_args(is_index, user)
-        if not is_index:
-            data['creator'] = user.key
-        return data
-
-    web_args = {
-        'staff': KeyRepeatedArg('User'),
-        'name': Arg(str),
-        'offering': Arg(str),
-        'institution': Arg(str),
+    methods = {
+        'post': {
+            'web_args': {
+                'name': Arg(str, required=True),
+                'institution': Arg(str, required=True),
+                'term': Arg(str, required=True),
+                'year': Arg(str, required=True),
+                'active': BooleanArg(),
+            }
+        },
+        'delete': {
+        },
+        'get': {
+        },
+        'index': {
+        },
+        'add_staff': {
+            'methods': set(['POST']),
+            'web_args': {
+                'staff_member': KeyArg('User', required=True)
+            }
+        },
+        'remove_staff': {
+            'methods': set(['POST']),
+            'web_args': {
+                'staff_member': KeyArg('User', required=True)
+            }
+        },
+        'assignments': {
+            'methods': set(['GET']),
+            'web_args': {
+            }
+        },
     }
+
+    def post(self, user, data):
+        """
+        The POST HTTP method
+        """
+        data['creator'] = user.key
+        return super(CourseAPI, self).post(user, data)
+
+    def add_staff(self, course, user, data):
+        need = Need("staff")
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        if data['staff_member'] not in course.staff:
+            user = models.User.get_or_insert(data['staff_member'].id())
+            course.staff.append(user.key)
+            course.put()
+
+    def remove_staff(self, course, user, data):
+        need = Need("staff")
+        if not course.can(user, need, course):
+            raise need.exception()
+        if data['staff_member'] in course.staff:
+            course.staff.remove(data['staff_member'])
+            course.put()
+
+    def assignments(self, course, user, data):
+        return list(course.assignments)
 
 class GroupAPI(APIResource):
     model = models.Group
 
-    web_args = {
-        'members': KeyRepeatedArg('User'),
-        'name': Arg(str),
-        'assignment': KeyArg('Assignment')
+    methods = {
+        'post': {
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
+        },
+        'get': {
+        },
+        'index': {
+            'web_args': {
+                'assignment': KeyArg('Assignment'),
+            }
+        },
+        'add_member': {
+            'methods': set(['PUT']),
+            'web_args': {
+                'member': KeyArg('User', required=True),
+            },
+        },
+        'remove_member': {
+            'methods': set(['PUT']),
+            'web_args': {
+                'member': KeyArg('User', required=True),
+            },
+        },
+        'accept_invitation': {
+            'methods': set(['PUT']),
+        },
+        'reject_invitation': {
+            'methods': set(['PUT']),
+        }
     }
 
-    def add_member(self, obj, user):
-        data = self.parse_args(False, user)
+    def post(self, user, data):
+        # no permissions necessary, anyone can create a group
+        current_group = list(user.groups(data['assignment']))
+        if len(current_group) == 1:
+            raise BadValueError("already in a group")
+        if len(current_group) > 1:
+            raise BadValueError("in multiple groups")
+        group = self.new_entity(data)
+        group.members.append(user.key)
+        group.put()
 
-        for member in data['members']:
-            if member not in obj.invited_members:
-                member = models.User.get_or_insert(member.id())
-                obj.invited_members.append(member.key)
-                break
-        else:
-            return
 
-        #TODO(martinis) make this async
-        obj.put()
+    def add_member(self, group, user, data):
+        # can only add a member if you are a member
+        need = Need('member')
+        if not group.can(user, need, group):
+            raise need.exception()
+
+        if data['member'] in group.invited_members:
+            raise BadValueError("user has already been invited")
+        if data['member'] in group.members:
+            raise BadValueError("user already part of group")
+
+        user_to_add = models.User.get_or_insert(data['member'].id())
+        group.invited_members.append(user_to_add.key)
+        group.put()
 
         audit_log_message = models.AuditLog(
             event_type='Group.add_member',
             user=user.key,
-            description="Added members {} to group".format(data['members']),
-            obj=obj.key
+            description="Added member {} to group".format(data['member']),
+            obj=group.key
             )
         audit_log_message.put()
 
-    def remove_member(self, obj, user):
-        data = self.parse_args(False, user)
+    def remove_member(self, group, user, data):
+        # can only remove a member if you are a member
+        need = Need('member')
+        if not group.can(user, need, group):
+            raise need.exception()
 
-        changed = False
-        for member in data['members']:
-            if member in obj.members:
-                changed = True
-                obj.members.remove(member)
-            if member in obj.invited_members:
-                changed = True
-                obj.invited_members.remove(member)
+        if data['member'] in group.members:
+            group.members.remove(data['member'])
+        elif data['member'] in group.invited_members:
+            group.invited_members.remove(data['member'])
 
-        if not changed:
-            return 400, "Tried to remove a user which is not part of this group"
+        if len(group.members) == 0:
+            group.key.delete()
+            description = "Deleted group"
+        else:
+            group.put()
+            description = "Changed group"
 
         audit_log_message = models.AuditLog(
             event_type='Group.remove_member',
             user=user.key,
-            obj=obj.key
+            obj=group.key,
+            description=description
             )
-
-        message = ""
-        if len(obj.members) == 0:
-            obj.key.delete()
-            message = "Deleted group"
-        else:
-            obj.put()
-            message = "Removed members {} from group".format(data['members'])
-
-        audit_log_message.description = message
         audit_log_message.put()
 
-    def put(self, *args):
-        return 404, "No PUT allowed"
+    def accept_invitation(self, group, user, data):
+        # can only accept an invitation if you are in the invited_members
+        need = Need('invitation')
+        if not group.can(user, need, group):
+            raise need.exception()
+
+        assignment = group.assignment.get()
+        if len(group.members) < assignment.max_group_size:
+            group.invited_members.remove(user.key)
+            group.members.append(user.key)
+            group.put()
+        else:
+            raise BadValueError("too many people in group")
+
+    def reject_invitation(self, group, user, data):
+        # can only reject an invitation if you are in the invited_members
+        need = Need('invitation')
+        if not group.can(user, need, group):
+            raise need.exception()
+        group.invited_members.remove(user.key)
+        group.put()

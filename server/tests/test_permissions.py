@@ -5,6 +5,8 @@
 Tests for the permissions system
 """
 
+import datetime
+
 from test_base import BaseTestCase, unittest #pylint: disable=relative-import
 
 from app import models
@@ -67,7 +69,7 @@ class PermissionsUnitTest(BaseTestCase):
                 login="albert",
                 role=ADMIN_ROLE
             ),
-            "anon": models.AnonymousUser(),
+            "anon": models.AnonymousUser()
         }
 
     def enroll(self, student, course):
@@ -84,18 +86,30 @@ class PermissionsUnitTest(BaseTestCase):
     def setUp(self):
         super(PermissionsUnitTest, self).setUp()
         self.accounts = self.get_accounts()
+        for user in self.accounts.values():
+            user.put()
 
         self.courses = {
-            "first": models.Course(name="first"),
-            "second": models.Course(name="second"),
+            "first": models.Course(
+                name="first",
+                institution="UC Awesome",
+                year="2014",
+                term="Fall",
+                creator=self.accounts['admin'].key),
+            "second": models.Course(
+                name="second",
+                institution="UC Awesome",
+                year="2014",
+                term="Fall",
+                creator=self.accounts['admin'].key),
             }
 
         for course in self.courses.values():
             course.put()
 
-        self.enroll("student0", "first")
-        self.enroll("student1", "first")
-        self.enroll("student2", "second")
+        #self.enroll("student0", "first")
+        #self.enroll("student1", "first")
+        #self.enroll("student2", "second")
         self.teach("staff", "first")
 
         self.assignments = {
@@ -104,12 +118,20 @@ class PermissionsUnitTest(BaseTestCase):
                 points=3,
                 creator=self.accounts["admin"].key,
                 course=self.courses['first'].key,
+                display_name="first display",
+                templates="{}",
+                max_group_size=3,
+                due_date=datetime.datetime.now()
                 ),
             "empty": models.Assignment(
                 name="empty",
                 points=3,
                 creator=self.accounts["admin"].key,
                 course=self.courses['first'].key,
+                display_name="second display",
+                templates="{}",
+                max_group_size=4,
+                due_date=datetime.datetime.now()
                 ),
             }
         for v in self.assignments.values():
@@ -135,7 +157,6 @@ class PermissionsUnitTest(BaseTestCase):
 
         self.groups = {
             'group1': models.Group(
-                name="group1",
                 members=[self.accounts['student0'].key,
                          self.accounts['student1'].key],
                 assignment=self.assignments['first'].key
