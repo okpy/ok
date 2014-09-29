@@ -91,7 +91,7 @@ def get_latest_version(server):
     #print("We detected that you are running an old version of ok.py: {0}".format(VERSION))
 
     # Get server version
-    address = "https://" + server + "/api/v1" + "/version?name=okpy"
+    address = "https://" + server + "/api/v1" + "/version/ok"
 
     try:
         #print("Updating now...")
@@ -100,11 +100,16 @@ def get_latest_version(server):
 
         full_response = json.loads(response.read().decode('utf-8'))
 
-        contents = base64.b64decode(
-            full_response['data']['results'][0]['file_data'])
-        new_file = open('ok', 'wb')
-        new_file.write(contents)
-        new_file.close()
+        if full_response['current_version'] == client.__version__:
+            return
+
+        # Grab the latest version from the download link
+        req = request.Request(full_response['current_download_link'])
+        response = request.urlopen(req)
+
+        zip_binary = response.read()
+        with open('ok', 'wb') as f:
+            f.write(zip_binary)
         #print("Done updating!")
     except error.HTTPError:
         # print("Error when downloading new version")
