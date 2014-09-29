@@ -43,8 +43,8 @@
         <form class="add-member-form form-inline" ng-submit="add()" ng-controller="AddMemberController">
           <div class="form-group">
             <div class="input-group">
-              <div class="input-group-addon">@</div>
-              <input ng-model="newMember" class="form-control col-md-9" type="email" placeholder="Enter email">
+              <div class="input-group-addon">Email:</div>
+              <input ng-model="newMember" class="form-control col-md-9" type="email" placeholder="Enter email address">
             </div>
           </div>
           <button type="submit" class="btn btn-primary">Invite member</button>
@@ -62,7 +62,8 @@
         <accordion ng-if="invitations.length !== 0" close-others="oneAtATime">
           <accordion-group ng-repeat="invitation in invitations" heading="Group ID: {{invitation.id}}">
             <accordion-heading>
-              Group ID: {{invitation.id}}
+            Group Members: <span ng-repeat="member in invitation.members">{{member.email}}{{$last ? '' : ', '}} </span>
+   
               <span class="pull-right">
                 <span style="margin-right: 2px">
                   <button ng-if="inGroup === false" ng-click="accept(invitation, $event)" type="button" class="btn btn-xs btn-success">

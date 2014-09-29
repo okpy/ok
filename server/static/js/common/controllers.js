@@ -28,6 +28,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
         },
         'assignment': {
           'name': true,
+          'display_name': true,
           'id': true,
         },
       },

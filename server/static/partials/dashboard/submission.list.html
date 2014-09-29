@@ -21,7 +21,7 @@
 
     <tr ng-repeat="submission in data.results">
       <td>
-        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
+        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
       </td>
       <td>{{submission.submitter.id}}</td>
       <td>
@@ -35,7 +35,7 @@
           </div>
       </td>    
       <!-- Future Progress Bar -->                 
-      <td><span class="badge bg-info">{{submission.assignment.name}}</span></td>
+      <td><span class="badge bg-info">{{submission.assignment.display_name}}</span></td>
                         
     </tr>
   </tbody>
