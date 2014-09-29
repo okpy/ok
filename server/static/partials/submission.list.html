@@ -15,7 +15,7 @@
     <tr ng-repeat="submission in data.results">
       <td>{{submission.submitter.id}}</td>
       <td>
-        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.name}}
+        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
       </td>
       <td>
         {{submission.created | amCalendar}}

@@ -14,7 +14,7 @@
     <tr ng-repeat="assignment in assignments">
       <td>
         <a ui-sref='assignment.detail({assignmentId:assignment.id})'>
-          {{assignment.name}}
+          {{assignment.display_name}}
         </a>
       </td>
       <td>{{assignment.points}}</td>
