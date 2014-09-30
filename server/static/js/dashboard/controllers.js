@@ -8,10 +8,39 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
     }
   ]);
 
+
+app.controller("SubmissionDashboardController", ["$scope", "Submission",
+    function ($scope, Submission) {
+      Submission.query({
+        fields: {
+          'created': true,
+          'id': true,
+          'submitter': {
+            'id': true
+          },
+          'assignment': {
+            'name': true,
+            'display_name': true,
+            'id': true,
+          },
+        },
+        page: 1,
+        num_page: 2,
+      }, function(response) {
+        $scope.submissions = response.data.results;
+      });
+    }
+  ]);
+
 app.controller("SubmissionModuleController", ["$scope", "Submission",
     function ($scope, Submission) {
-      Submission.query(function(response) {
-        $scope.submissions = response.data.results;
+      Submission.query({
+        fields: false,
+        num_page: 1,
+        page: 1,
+        stats: true
+      }, function(response) {
+        $scope.num_submissions = response.data.statistics.total;
       });
     }
   ]);

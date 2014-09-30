@@ -24,7 +24,7 @@ app.directive('submissionModule', function() {
 app.directive('submissionList', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/common/submission.list.html',
+            templateUrl: '/static/partials/dashboard/submission.list.html',
         };
     });
 
