@@ -11,12 +11,12 @@ MODEL_BLUEPRINT = Blueprint('models', __name__)
 
 from app import app
 from app.needs import Need
+from app.exceptions import *
 from flask import json
 from flask.json import JSONEncoder as old_json
 
 from google.appengine.ext import db, ndb
 
-BadValueError = db.BadValueError
 
 # To deal with circular imports
 class APIProxy(object):
@@ -408,11 +408,20 @@ class Version(Base):
     current_version = ndb.StringProperty()
     base_url = ndb.StringProperty(required=True)
 
+    def download_link(self, version=None):
+        if version is None:
+            if not self.current_version:
+                raise BadValueError("current version doesn't exist")
+            return '/'.join((self.base_url, self.current_version,
+                             self.name))
+        if version not in self.versions:
+            raise BadValueError("specified version %s doesn't exist" % version)
+        return '/'.join((self.base_url, version, self.name))
+
     def to_json(self, fields=None):
         json = super(Version, self).to_json(fields)
         if self.current_version:
-            json['current_download_link'] = '/'.join((
-                self.base_url, self.current_version, self.name))
+            json['current_download_link'] = self.download_link()
 
         return json
 

@@ -58,8 +58,9 @@ def seed():
 
     def make_version(current_version):
         return models.Version(
-            name='okpy',
-            base_url='github.com',
+            name='ok',
+            id='ok',
+            base_url='https://github.com/Cal-CS-61A-Staff/ok/releases/download',
             versions=[current_version],
             current_version=current_version
         )
@@ -72,7 +73,7 @@ def seed():
                     login="albert",
                     role="admin"
                 )
-    version = make_version('1.0.11')
+    version = make_version('v1.0.11')
     version.put()
     c.put()
     course = make_fake_course(c)

@@ -48,12 +48,13 @@ class IncorrectVersionError(APIException):
     def message(self):
         return ("Incorrect client version. Supplied version was {}. "
                 "Correct version is {}.".format(self.supplied_version,
-                                                self.correct_version))
+                                                self.correct_version.current_version))
 
     @property
     def data(self):
         return {
             'supplied': self.supplied_version,
-            'correct': self.correct_version
+            'correct': self.correct_version.current_version,
+            'download_link': self.correct_version.download_link()
         }
 
