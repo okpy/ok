@@ -21,7 +21,9 @@ app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          if 'SERVER_SOFTWARE' in os.environ
          else True)
-if len(list(models.Course.query().filter(models.Course.name == 'CS 61A'))) == 0:
+
+TESTING = os.environ["FLASK_CONF"] == "TEST" if "FLASK_CONF" in os.environ else False
+if DEBUG and not TESTING and len(list(models.Course.query().filter(models.Course.name == 'CS 61A'))) == 0:
     seed()
 
 if DEBUG:
