@@ -259,7 +259,8 @@ class APIResource(View):
             query = query.order(-created_prop, self.model.key)
 
         page = int(request.args.get('page', 1))
-        num_page = request.args.get('num_page', None)
+        # default page length is 100
+        num_page = request.args.get('num_page', 100)
         query_results = paginate(query, page, num_page)
 
         add_statistics = request.args.get('stats', False)
