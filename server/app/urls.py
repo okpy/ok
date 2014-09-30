@@ -6,6 +6,7 @@ import logging
 import traceback
 import collections
 
+import werkzeug
 from flask import render_template, session, request, Response
 
 from google.appengine.api import users
@@ -88,13 +89,13 @@ def register_api(view, endpoint, url):
 
             rval = view(*args, **kwds)
 
-            if isinstance(rval, list):
+            if isinstance(rval, Response) or isinstance(rval, werkzeug.wrappers.Response):
+                pass
+            elif isinstance(rval, list):
                 rval = utils.create_api_response(200, message, rval)
             elif (isinstance(rval, collections.Iterable)
                   and not isinstance(rval, dict)):
                 rval = utils.create_api_response(*rval)
-            elif isinstance(rval, Response):
-                pass
             else:
                 rval = utils.create_api_response(200, message, rval)
 

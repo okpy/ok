@@ -7,7 +7,7 @@ import datetime
 
 from flask.views import View
 from flask.app import request, json
-from flask import session, make_response
+from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
 
@@ -546,6 +546,12 @@ class VersionAPI(APIResource):
                 'current': BooleanArg()
             }
         },
+        'download': {
+            'methods': set(['GET']),
+            'web_args': {
+                'version': Arg(str)
+            }
+        },
         'current': {
             'methods': set(['GET']),
             'web_args': {
@@ -576,11 +582,28 @@ class VersionAPI(APIResource):
         return obj
 
     def current(self, obj, user, data):
+        need = Need('get')
+        if not obj.can(user, need, obj):
+            raise need.exception()
         if not obj.current_version:
             raise BadValueError("Invalid version resource. Contact an administrator.")
         return obj.current_version
 
+    def download(self, obj, user, data):
+        need = Need('get')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+        if 'version' not in data:
+            download_link = obj.download_link()
+        else:
+            download_link = obj.download_link(data['version'])
+        return redirect(download_link)
+
+
     def set_current(self, obj, user, data):
+        need = Need('update')
+        if not obj.can(user, need, obj):
+            raise need.exception()
         current_version = data['version']
         if current_version not in obj.versions:
             raise BadValueError("Invalid version. Cannot update to current.")

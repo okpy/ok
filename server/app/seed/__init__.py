@@ -58,8 +58,9 @@ def seed():
 
     def make_version(current_version):
         return models.Version(
-            name='okpy',
-            base_url='github.com',
+            name='ok',
+            id='ok',
+            base_url='https://github.com/Cal-CS-61A-Staff/ok/releases/download',
             versions=[current_version],
             current_version=current_version
         )
