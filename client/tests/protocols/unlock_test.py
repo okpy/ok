@@ -13,7 +13,7 @@ class InteractTest(unittest.TestCase):
     def setUp(self):
         mock_verify = lambda x, y: self.encode(x) == y
         self.logger = output.OutputLogger()
-        self.console = unlock.UnlockConsole(self.logger, '')
+        self.console = unlock.UnlockConsole(self.logger, '', analytics={'current':'q1', 'q1': []})
         self.console._verify = mock.Mock(side_effect=mock_verify)
         self.register_choices()
 

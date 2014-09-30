@@ -155,7 +155,7 @@ class UnlockProtocol(protocol.Protocol):
                     if self.args.question in test['names']]
         return self.assignment.tests
 
-def unlock(test, logger, hash_key, analytics):
+def unlock(test, logger, hash_key, analytics={}):
     """Unlocks TestCases for a given Test.
 
     PARAMETERS:
@@ -190,6 +190,7 @@ def unlock(test, logger, hash_key, analytics):
                 return cases_unlocked, True
             cases_unlocked += 1
     print("You are done unlocking tests for this question!")
+    del analytics['current']
     return cases_unlocked, False
 
 class UnlockException(BaseException):
@@ -204,7 +205,7 @@ class UnlockConsole(object):
         'quit()',
     )
 
-    def __init__(self, logger, hash_key, analytics):
+    def __init__(self, logger, hash_key, analytics={}):
         self._logger = logger
         self._hash_key = hash_key
         self._analytics = analytics
