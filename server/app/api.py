@@ -624,6 +624,15 @@ class CourseAPI(APIResource):
                 'active': BooleanArg(),
             }
         },
+        'put': {
+            'web_args': {
+                'name': Arg(str),
+                'institution': Arg(str),
+                'term': Arg(str),
+                'year': Arg(str),
+                'active': BooleanArg(),
+            }
+        },
         'delete': {
         },
         'get': {
