@@ -49,10 +49,10 @@ def args_error(e):
     raise BadValueError(e.message)
 
 def check_version(client):
-    latest = models.Version.query(models.Version.name=='okpy').get()
+    latest = models.Version.query(models.Version.name=='ok').get()
 
     if latest is None or latest.current_version is None:
-        raise APIException('Current version of okpy not found')
+        raise APIException('Current version of ok not found')
     latest = latest.current_version
 
     # If it returned a response, and not a string
