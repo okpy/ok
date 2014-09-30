@@ -234,7 +234,7 @@ def main():
         if not args.local:
             msg_queue.put(interact_msg)
             
-            while timer_thread.is_alive()
+            while timer_thread.is_alive():
                 pass
 
             if not args.force:
