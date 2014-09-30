@@ -1,13 +1,16 @@
 <div class="box" ng-controller="SubmissionListCtrl" ng-cloak>
 <div class="box-header">
-  <h3 class="box-title" ng-if="data.results.length > 0">Recent Submissions</h3>
-  <h4 class="box-title" ng-if="data.results.length == 0" >No Submissions</h3>
+  <h3 class="box-title" ng-if="submissions.length > 0">Recent Submissions</h3>
+  <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
 </div>
 <!-- /.box-header -->
 
 <div class="box-body no-padding table-responsive">
 
-  <table ng-if="data.results.length > 0" class="table table-striped table-bordered table-responsive ">
+    <div class='text-center'>
+      <pager items-per-page="itemsPerPage" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()"></pager>
+    </div>
+  <table ng-if="submissions.length > 0" class="table table-striped table-bordered table-responsive ">
 
   <tbody>
   
@@ -19,7 +22,7 @@
       <th style="width: 15%">Label</th>
     </tr>
 
-    <tr ng-repeat="submission in data.results">
+    <tr ng-repeat="submission in submissions">
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
       </td>
