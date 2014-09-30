@@ -11,24 +11,37 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
 
 app.controller("SubmissionDashboardController", ["$scope", "Submission",
     function ($scope, Submission) {
-      Submission.query({
-        fields: {
-          'created': true,
-          'id': true,
-          'submitter': {
-            'id': true
-          },
-          'assignment': {
-            'name': true,
-            'display_name': true,
+      $scope.itemsPerPage = 10;
+      $scope.currentPage = 1;
+      $scope.getPage = function(page) {
+        Submission.query({
+          fields: {
+            'created': true,
             'id': true,
+            'submitter': {
+              'id': true
+            },
+            'assignment': {
+              'name': true,
+              'display_name': true,
+              'id': true,
+            },
           },
-        },
-        page: 1,
-        num_page: 2,
-      }, function(response) {
-        $scope.submissions = response.data.results;
-      });
+          page: page,
+          num_page: $scope.itemsPerPage,
+        }, function(response) {
+          $scope.submissions = response.data.results;
+          if (response.data.more) {
+            $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
+          } else {
+            $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
+          }
+        });
+      }
+      $scope.pageChanged = function() {
+        $scope.getPage($scope.currentPage);
+      }
+      $scope.getPage(1);
     }
   ]);
 
