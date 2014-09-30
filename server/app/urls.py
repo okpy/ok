@@ -19,7 +19,7 @@ from app.constants import API_PREFIX
 from app.exceptions import *
 
 @app.route("/")
-def index():
+def dashboard():
     user = users.get_current_user()
     params = {}
     if user is None:
@@ -37,12 +37,12 @@ def index():
 # Handle 404 errors
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('base.html', error=e), 404
+    return render_template('error.html', error=e), 404
 
 # Handle 500 errors
 @app.errorhandler(500)
 def server_error(e):
-    return render_template('base.html', error=e), 500
+    return render_template('error.html', error=e), 500
 
 @api.parser.error_handler
 def args_error(e):

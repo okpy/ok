@@ -57,7 +57,7 @@
     <body class="skin-black">
         <!-- header logo: style can be found in header.less -->
         <header class="header">
-            <a ui-sref="dashboard" class="logo">
+            <a href="/" class="logo">
                 <!-- Add the class icon to your logo image or logo icon to add the margining -->
                 ok
             </a>
@@ -67,48 +67,9 @@
                 <div class="navbar-right">
                     <ul class="nav navbar-nav">
                         <!-- User Account: style can be found in dropdown.less -->
-                      {% if user %}
-
-                        <a href="#" class="dropdown-toggle" style="display:inline;">
-
-                          <li class="dropdown user user-menu" >
-                            <span class="navbar-text">
-                            <i class="glyphicon glyphicon-user"></i>
-                              <span> {{user.first_name | default(user.email, true)}} <i class="caret"></i></span>
-                            </span>
-                        </a>
-                                  <ul class="dropdown-menu">
-                                      <!-- Menu Body -->
-                                      <li class="user-body">
-                                          <div class="col-xs-4 text-center">
-                                                <!-- Very bad linking --> 
-                                                <a id="submissions-button" ui-sref="submission.list">Submissions</a>
-                                          </div>
-                                          <div class="col-xs-4 text-center">
-                                                  <!-- Very bad linking --> 
-                                                  <a id="assignments-button" ui-sref="assignment.list">Assignments</a>
-                                          </div>
-                                          <div class="col-xs-4 text-center">
-                                                  <!-- Very bad linking --> 
-                                                  <a id="assignments-button" ui-sref="course.list">Course</a>
-                                          </div>
-                                      </li>
-                                      <!-- Menu Footer-->
-                                      <li class="user-footer">
-                                          <div class="pull-right">
-                                              <a id="login-button" type="button" class="btn btn-default btn-flat" href={{users_link}}>{{users_title}}</a>
-                                          </div>
-                                          <div class="pull-left">
-                                              <a type="button" class="btn btn-default btn-flat" href='/'>Dashboard</a>
-                                          </div>
-                                      </li>
-                                  </ul>
-                              </li>
-                          {% else %}
                           <li class="user">
-                              <a href={{users_link}}>Login</a>
+                              <a href="/">Homepage</a>
                           </li> 
-                          {% endif %}
                     </ul>
                 </div>
             </nav>
@@ -118,24 +79,22 @@
           <!-- Todo --> 
         {% endif %}
 
-        <aside class="right-side student-main dashview">
+        <aside >
 
-        {% if user %}
-        <script>
-          window.user = "{{user.email}}";
-        </script>
-          <div ui-view></div>
-        {% else %}
-          <div class="box">
-          <div class="box-header">
-              <h3 class="box-title">Login</h3>
-          </div>
-          <div class="box-body">
-              <a href={{users_link}} class="btn btn-lg btn-primary btn-block">Login</a>
+                <section class="content">
 
-          </div>
-          </div>
-        {% endif %}
+                    <div class="error-page">
+                        <h2 class="headline text-info"> {{error.code}}</h2>
+                        <div class="error-content">
+                            <h3><i class="fa fa-warning text-yellow"></i> Oops!  {{error.description}}</h3>
+                            <p>
+                                We could not find the page you were looking for.
+                                Meanwhile, you may <a href='/'>return to the homepage</a>.
+                            </p>
+                        </div><!-- /.error-content -->
+                    </div><!-- /.error-page -->
+
+                </section><!-- /.content -->
 
         </aside>
             <!-- Right side column. Contains the navbar and content of the page -->

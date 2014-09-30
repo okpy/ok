@@ -15,12 +15,14 @@ from app import exceptions
 from app import utils
 from app import api
 from app import auth
-
+from app.seed import seed
 
 app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          if 'SERVER_SOFTWARE' in os.environ
          else True)
+if len(list(models.Course.query().filter(models.Course.name == 'CS 61A'))) == 0:
+    seed()
 
 if DEBUG:
     app.config.from_object('app.settings.Debug')

@@ -1,3 +1,18 @@
+// Assignment Controllers
+app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
+  function($scope, Assignment) {
+      Assignment.query(function(response) {
+        $scope.assignments = response.results;
+      });
+  }]);
+
+app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
+    function ($scope, $stateParams, Assignment) {
+      $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
+    }
+  ]);
+
+// Submission Controllers
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
   $scope.itemsPerPage = 20;
@@ -13,6 +28,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
         },
         'assignment': {
           'name': true,
+          'display_name': true,
           'id': true,
         },
       },
@@ -38,16 +54,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
     $scope.submission = Submission.get({id: $stateParams.submissionId});
   }]);
 
-app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
-  function($scope, $stateParams, Submission, $timeout) {
-    $scope.diff = Submission.diff({id: $stateParams.submissionId});
-    $scope.refreshDiff = function() {
-        $timeout(function() {
-          $scope.diff = Submission.diff({id: $stateParams.submissionId});
-        }, 300);
-    }
-  }]);
-
+// Course Controllers
 app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
     $scope.courses = Course.query();
@@ -59,7 +66,6 @@ app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
     }
   ]);
 
-// NOT WORKING RIGHT NOW
 app.controller("CourseNewCtrl", ["$scope", "Course",
     function ($scope, Course) {
       $scope.course = {};
@@ -72,16 +78,23 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
     }
   ]);
 
-app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
-    $scope.assignments = Assignment.query();
-  }]);
-
-app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
-    function ($scope, $stateParams, Assignment) {
-      $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
+// Diff Controllers
+app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
+  function($scope, $stateParams, Submission, $timeout) {
+    $scope.diff = Submission.diff({id: $stateParams.submissionId});
+    $scope.submission = Submission.get({
+      fields: {
+        created: true
+      }
+    }, {
+      id: $stateParams.submissionId
+    });
+    $scope.refreshDiff = function() {
+        $timeout(function() {
+          $scope.diff = Submission.diff({id: $stateParams.submissionId});
+        }, 300);
     }
-  ]);
+  }]);
 
 app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$anchorScroll",
     function ($scope, $timeout, $location, $anchorScroll) {
@@ -175,7 +188,7 @@ app.controller("CommentController", ["$scope", "$stateParams", "$timeout", "$mod
     function ($scope, $stateParams, $timeout, $modal, Submission) {
       $scope.remove = function() {
         var modal = $modal.open({
-          templateUrl: '/static/partials/removecomment.modal.html',
+          templateUrl: '/static/partials/common/removecomment.modal.html',
           scope: $scope,
           size: 'sm',
           resolve: {
@@ -218,6 +231,7 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
     }
   ]);
 
+// Group Controllers
 app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
     function ($scope, $stateParams, $window, $timeout, Group) {
       $scope.loadGroup = function() {
@@ -249,7 +263,7 @@ app.controller("MemberController", ["$scope", "$modal", "Group",
     function ($scope, $modal, Group) {
       $scope.remove = function() {
         var modal = $modal.open({
-          templateUrl: '/static/partials/removemember.modal.html',
+          templateUrl: '/static/partials/common/removemember.modal.html',
           scope: $scope,
           size: 'sm',
           resolve: {
@@ -267,25 +281,6 @@ app.controller("MemberController", ["$scope", "$modal", "Group",
       }
     }
 ]);
-
-app.controller("VersionListCtrl", ['$scope', 'Version',
-  function($scope, Version) {
-    $scope.versions = Version.query();
-  }]);
-
-app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version", "$state",
-    function ($scope, $stateParams, Version, $state) {
-      if ($stateParams.versionId == "new") {
-        $state.go("^.new");
-        return;
-      }
-
-      $scope.version = Version.get({id: $stateParams.versionId});
-      $scope.download_link = function(version) {
-        return [$scope.version.base_url, version, $scope.version.name].join('/');
-      }
-    }
-  ]);
 
 app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
     function ($scope, $stateParams, $window, $timeout, Group) {
@@ -334,6 +329,27 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
     }
   ]);
 
+
+// Version Controllers
+app.controller("VersionListCtrl", ['$scope', 'Version',
+  function($scope, Version) {
+    $scope.versions = Version.query();
+  }]);
+
+app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version", "$state",
+    function ($scope, $stateParams, Version, $state) {
+      if ($stateParams.versionId == "new") {
+        $state.go("^.new");
+        return;
+      }
+
+      $scope.version = Version.get({id: $stateParams.versionId});
+      $scope.download_link = function(version) {
+        return [$scope.version.base_url, version, $scope.version.name].join('/');
+      }
+    }
+  ]);
+
 app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
     function ($scope, Version, $state, $stateParams) {
       $scope.versions = {};
@@ -353,7 +369,7 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
         if (newValue in $scope.versions) {
           var existingVersion = $scope.versions[newValue];
           $scope.version.base_url = existingVersion.base_url;
-          if (existingVersion.current_version) { 
+          if (existingVersion.current_version) {
             $scope.version.version = existingVersion.current_version;
             $scope.version.current = true;
           }
@@ -381,9 +397,3 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
       };
     }
   ]);
-
-function DropdownCtrl($scope) {
-  $scope.status = {
-    isopen: false
-  };
-}
