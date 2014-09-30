@@ -20,6 +20,7 @@ from app.utils import paginate, filter_query, create_zip
 from app.exceptions import *
 
 from google.appengine.ext import ndb
+from google.appengine.ext.ndb import stats
 
 parser = FlaskParser()
 
@@ -267,9 +268,12 @@ class APIResource(View):
         return query_results
 
     def statistics(self):
-        return {
-            'total': self.model.query().count()
-        }
+        stat = stats.KindStat.query(stats.KindStat.kind_name == self.model.__name__).get()
+        if stat:
+            return {
+                'total': stat.count
+            }
+        return {}
 
 
 class UserAPI(APIResource):
@@ -283,6 +287,13 @@ class UserAPI(APIResource):
                 'first_name': Arg(str),
                 'last_name': Arg(str),
                 'email': Arg(str, required=True),
+                'login': Arg(str),
+            }
+        },
+        'put': {
+            'web_args': {
+                'first_name': Arg(str),
+                'last_name': Arg(str),
                 'login': Arg(str),
             }
         },
@@ -402,9 +413,8 @@ class SubmissionAPI(APIResource):
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assignment'),
-                'course': KeyArg('Course'),
+                'submitter': KeyArg('User'),
                 'created': DateTimeArg(),
-                # fill in filter parameters
             }
         },
         'diff': {
@@ -540,6 +550,12 @@ class VersionAPI(APIResource):
             'web_args': {
                 'name': Arg(str, required=True),
                 'base_url': Arg(str, required=True),
+            }
+        },
+        'put': {
+            'web_args': {
+                'name': Arg(str),
+                'base_url': Arg(str),
             }
         },
         'get': {
