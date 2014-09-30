@@ -73,7 +73,7 @@ def seed():
                     login="albert",
                     role="admin"
                 )
-    version = make_version('1.0.11')
+    version = make_version('v1.0.11')
     version.put()
     c.put()
     course = make_fake_course(c)

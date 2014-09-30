@@ -412,11 +412,11 @@ class Version(Base):
         if version is None:
             if not self.current_version:
                 raise BadValueError("current version doesn't exist")
-            return '/'.join((self.base_url, 'v' + self.current_version,
+            return '/'.join((self.base_url, self.current_version,
                              self.name))
         if version not in self.versions:
             raise BadValueError("specified version %s doesn't exist" % version)
-        return '/'.join((self.base_url, 'v' + version, self.name))
+        return '/'.join((self.base_url, version, self.name))
 
     def to_json(self, fields=None):
         json = super(Version, self).to_json(fields)
