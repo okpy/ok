@@ -166,7 +166,7 @@ class APIResource(View):
 
         blank_val = object()
         changed = False
-        for key, value in self.parse_args(False, user).iteritems():
+        for key, value in data.iteritems():
             old_val = getattr(obj, key, blank_val)
             if old_val == blank_val:
                 return 400, "{} is not a valid field.".format(key)
@@ -330,6 +330,17 @@ class AssignmentAPI(APIResource):
                 'due_date': DateTimeArg(required=True),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
                                  required=True),
+            }
+        },
+        'put': {
+            'web_args': {
+                'name': Arg(str),
+                'display_name': Arg(str),
+                'points': Arg(float),
+                'course': KeyArg('Course'),
+                'max_group_size': Arg(int),
+                'due_date': DateTimeArg(),
+                'templates': Arg(str, use=lambda temps: json.dumps(temps)),
             }
         },
         'get': {
