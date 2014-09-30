@@ -18,6 +18,7 @@ class Protocol(object):
         self.args = cmd_line_args
         self.assignment = assignment
         self.logger = logger
+        self.analytics = {}
 
     def on_start(self):
         """Called when ok.py starts. Returns an object to be sent to server."""

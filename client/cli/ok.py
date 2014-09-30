@@ -32,6 +32,7 @@ outside of this lifecycle, the send_to_server function can be used to send and
 receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
+BACKUP_FILE = ".ok_messages"
 
 from client import config
 from client.models import *
@@ -81,6 +82,17 @@ def send_to_server(access_token, messages, name, server,
             # print(e)
             # print("Couldn't connect to server")
             pass
+
+def dump_to_server(access_token, msg_queue, name, server, insecure, staging_queue):
+    while not msg_queue.empty():
+        message = msg_queue.get()
+        staging_queue.put(message)
+        try:
+            if send_to_server(access_token, message, name, server, insecure):
+                staging_queue.get() #throw away successful message
+        except error.URLError as ex:
+            pass
+    return
 
 #####################
 # Software Updating #
@@ -178,25 +190,40 @@ def main():
                      for p in protocol.get_protocols(config.protocols)]
 
         messages = dict()
+        msg_queue = multiprocessing.Queue()
+        file_contents = []
+
+        with open(BACKUP_FILE, 'rb') as fp:
+            file_contents = pickle.load(fp)
+
+        for message in file_contents:
+            msg_queue.put(message)
 
         for proto in protocols:
             messages[proto.name] = proto.on_start()
+        messages['timestamp'] = datetime.now()
 
         if not args.local:
             try:
                 access_token = auth.authenticate(args.authenticate)
+                msg_queue.put(messages)
+                staging_queue = multiprocessing.Queue()
                 server_thread = multiprocessing.Process(
-                    target=send_to_server,
-                    args=(access_token, messages, assignment['name'],
-                          args.server, args.insecure))
+                    target=dump_to_server,
+                    args=(access_token, msg_queue, assignment['name'],
+                          args.server, args.insecure, staging_queue))
                 server_thread.start()
             except error.URLError as ex:
                 # TODO(soumya) Make a better error message
                 # print("Nothing was sent to the server!")
                 pass
+        
+        interact_msg = {}
 
         for proto in protocols:
-            proto.on_interact()
+            interact_msg[proto.name] = proto.on_interact()
+
+        interact_msg['timestamp'] = datetime.now()
 
         # TODO(denero) Print server responses.
 
@@ -205,11 +232,21 @@ def main():
         loading.dump_tests(args.tests, assignment)
 
         if not args.local:
-            while timer_thread.is_alive():
+            msg_queue.put(interact_msg)
+            
+            while timer_thread.is_alive()
                 pass
 
             if not args.force:
                 server_thread.terminate()
+            
+            dump_list = []
+            while not msg_queue.empty():
+                dump_list.append(msg_queue.get_nowait())
+            while not staging_queue.empty():
+                dump_lsit.append(staging_queue.get_nowait())
+            with open(BACKUP_FILE, 'wb') as fp:
+                pickle.dump(dump_list, fp)
 
     except KeyboardInterrupt:
         if timer_thread:
