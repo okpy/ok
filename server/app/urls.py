@@ -54,12 +54,8 @@ def check_version(client):
 
     if latest is None or latest.current_version is None:
         raise APIException('Current version of ok not found')
-    latest = latest.current_version
 
-    # If it returned a response, and not a string
-    if not isinstance(latest, (str, unicode)):
-        raise RuntimeError(latest)
-    if client != latest:
+    if client != latest.current_version:
         raise IncorrectVersionError(client, latest)
 
 
