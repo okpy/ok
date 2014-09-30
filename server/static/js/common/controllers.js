@@ -15,38 +15,37 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
 // Submission Controllers
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
-  $scope.itemsPerPage = 20;
-  $scope.currentPage = 1;
-
-  $scope.refresh = function(page) {
-    Submission.query({
-      fields: {
-        'created': true,
-        'id': true,
-        'submitter': {
-          'id': true
-        },
-        'assignment': {
-          'name': true,
-          'display_name': true,
+    $scope.itemsPerPage = 20;
+    $scope.currentPage = 1;
+    $scope.getPage = function(page) {
+      Submission.query({
+        fields: {
+          'created': true,
           'id': true,
+          'submitter': {
+            'id': true
+          },
+          'assignment': {
+            'name': true,
+            'display_name': true,
+            'id': true,
+          },
         },
-      },
-      page: page,
-      num_page: $scope.itemsPerPage
-    }, function(response) {
-      $scope.data = response.data;
-      $scope.message = response.message;
-      if (response.data.page !== $scope.currentPage) {
-        $scope.currentPage = response.data.page;
-        $scope.pageChange();
-      }
-    });
-  }
-  $scope.pageChanged = function() {
-    $scope.refresh($scope.currentPage);
-  }
-  $scope.refresh(1);
+        page: page,
+        num_page: $scope.itemsPerPage,
+      }, function(response) {
+        $scope.submissions = response.data.results;
+        if (response.data.more) {
+          $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
+        } else {
+          $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
+        }
+      });
+    }
+    $scope.pageChanged = function() {
+      $scope.getPage($scope.currentPage);
+    }
+    $scope.getPage(1);
   }]);
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',

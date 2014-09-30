@@ -70,9 +70,10 @@ def send_to_server(access_token, messages, name, server,
     except error.HTTPError as ex:
         # print("Error while sending to server: {}".format(ex))
         try:
-            #response_json = json.loads(response)
             if ex.code == 403:
-                get_latest_version(server)
+                response = ex.read().decode('utf-8')
+                response_json = json.loads(response)
+                get_latest_version(response_json['data']['download_link'])
             #message = response_json['message']
             #indented = '\n'.join('\t' + line for line in message.split('\n'))
             #print(indented)
@@ -86,26 +87,20 @@ def send_to_server(access_token, messages, name, server,
 # Software Updating #
 #####################
 
-def get_latest_version(server):
+def get_latest_version(download_link):
     """Check for the latest version of ok and update this file accordingly.
     """
     #print("We detected that you are running an old version of ok.py: {0}".format(VERSION))
 
     # Get server version
-    address = "https://" + server + "/api/v1" + "/version?name=okpy"
 
     try:
-        #print("Updating now...")
-        req = request.Request(address)
+        req = request.Request(download_link)
         response = request.urlopen(req)
 
-        full_response = json.loads(response.read().decode('utf-8'))
-
-        contents = base64.b64decode(
-            full_response['data']['results'][0]['file_data'])
-        new_file = open('ok', 'wb')
-        new_file.write(contents)
-        new_file.close()
+        zip_binary = response.read()
+        with open('ok', 'wb') as f:
+            f.write(zip_binary)
         #print("Done updating!")
     except error.HTTPError:
         # print("Error when downloading new version")

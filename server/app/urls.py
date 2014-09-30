@@ -6,6 +6,7 @@ import logging
 import traceback
 import collections
 
+import werkzeug
 from flask import render_template, session, request, Response
 
 from google.appengine.api import users
@@ -49,16 +50,12 @@ def args_error(e):
     raise BadValueError(e.message)
 
 def check_version(client):
-    latest = models.Version.query(models.Version.name=='okpy').get()
+    latest = models.Version.query(models.Version.name=='ok').get()
 
     if latest is None or latest.current_version is None:
-        raise APIException('Current version of okpy not found')
-    latest = latest.current_version
+        raise APIException('Current version of ok not found')
 
-    # If it returned a response, and not a string
-    if not isinstance(latest, (str, unicode)):
-        raise RuntimeError(latest)
-    if client != latest:
+    if client != latest.current_version:
         raise IncorrectVersionError(client, latest)
 
 
@@ -88,13 +85,13 @@ def register_api(view, endpoint, url):
 
             rval = view(*args, **kwds)
 
-            if isinstance(rval, list):
+            if isinstance(rval, Response) or isinstance(rval, werkzeug.wrappers.Response):
+                pass
+            elif isinstance(rval, list):
                 rval = utils.create_api_response(200, message, rval)
             elif (isinstance(rval, collections.Iterable)
                   and not isinstance(rval, dict)):
                 rval = utils.create_api_response(*rval)
-            elif isinstance(rval, Response):
-                pass
             else:
                 rval = utils.create_api_response(200, message, rval)
 
