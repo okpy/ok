@@ -17,6 +17,19 @@ indexes:
 
 - kind: Submission
   properties:
+  - name: assignment
+  - name: created
+    direction: desc
+
+- kind: Submission
+  properties:
+  - name: assignment
+  - name: submitter
+  - name: created
+    direction: desc
+
+- kind: Submission
+  properties:
   - name: submitter
   - name: created
 
