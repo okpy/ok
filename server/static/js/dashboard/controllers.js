@@ -11,7 +11,7 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
 
 app.controller("SubmissionDashboardController", ["$scope", "Submission",
     function ($scope, Submission) {
-      $scope.itemsPerPage = 10;
+      $scope.itemsPerPage = 2;
       $scope.currentPage = 1;
       $scope.getPage = function(page) {
         Submission.query({
