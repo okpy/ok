@@ -72,7 +72,8 @@ def send_to_server(access_token, messages, name, server,
         try:
             #response_json = json.loads(response)
             if ex.code == 403:
-                get_latest_version(server)
+                response_json = json.loads(ex.read().decode())
+                get_latest_version(response_json['current_download_link'])
             #message = response_json['message']
             #indented = '\n'.join('\t' + line for line in message.split('\n'))
             #print(indented)
@@ -86,26 +87,14 @@ def send_to_server(access_token, messages, name, server,
 # Software Updating #
 #####################
 
-def get_latest_version(server):
+def get_latest_version(address):
     """Check for the latest version of ok and update this file accordingly.
     """
     #print("We detected that you are running an old version of ok.py: {0}".format(VERSION))
 
-    # Get server version
-    address = "https://" + server + "/api/v1" + "/version/ok"
-
     try:
         #print("Updating now...")
         req = request.Request(address)
-        response = request.urlopen(req)
-
-        full_response = json.loads(response.read().decode('utf-8'))
-
-        if full_response['current_version'] == client.__version__:
-            return
-
-        # Grab the latest version from the download link
-        req = request.Request(full_response['current_download_link'])
         response = request.urlopen(req)
 
         zip_binary = response.read()
