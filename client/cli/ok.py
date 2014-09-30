@@ -40,12 +40,14 @@ from client.protocols import *
 from client.utils import auth
 from client.utils import loading
 from client.utils import output
+from datetime import datetime
 from urllib import request, error
 import client
 import argparse
 import base64
 import json
 import multiprocessing
+import pickle
 import sys
 import time
 
@@ -193,15 +195,22 @@ def main():
         msg_queue = multiprocessing.Queue()
         file_contents = []
 
-        with open(BACKUP_FILE, 'rb') as fp:
-            file_contents = pickle.load(fp)
+        try:
+            with open(BACKUP_FILE, 'rb') as fp:
+                file_contents = pickle.load(fp)
+        except FileNotFoundError as e:
+            # File doesn't exist, so file_contents should be empty
+            pass
+        except EOFError as e:
+            # File is empty, so no messages are inside
+            pass
 
         for message in file_contents:
             msg_queue.put(message)
 
         for proto in protocols:
             messages[proto.name] = proto.on_start()
-        messages['timestamp'] = datetime.now()
+        messages['timestamp'] = str(datetime.now())
 
         if not args.local:
             try:
@@ -223,7 +232,7 @@ def main():
         for proto in protocols:
             interact_msg[proto.name] = proto.on_interact()
 
-        interact_msg['timestamp'] = datetime.now()
+        interact_msg['timestamp'] = str(datetime.now())
 
         # TODO(denero) Print server responses.
 
@@ -244,7 +253,7 @@ def main():
             while not msg_queue.empty():
                 dump_list.append(msg_queue.get_nowait())
             while not staging_queue.empty():
-                dump_lsit.append(staging_queue.get_nowait())
+                dump_list.append(staging_queue.get_nowait())
             with open(BACKUP_FILE, 'wb') as fp:
                 pickle.dump(dump_list, fp)
 
