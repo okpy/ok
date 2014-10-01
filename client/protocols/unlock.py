@@ -155,7 +155,7 @@ class UnlockProtocol(protocol.Protocol):
                     if self.args.question in test['names']]
         return self.assignment.tests
 
-def unlock(test, logger, hash_key, analytics={}):
+def unlock(test, logger, hash_key, analytics=None):
     """Unlocks TestCases for a given Test.
 
     PARAMETERS:
@@ -174,6 +174,7 @@ def unlock(test, logger, hash_key, analytics={}):
     after going through an unlocking session and whether the student wanted
     to exit the unlocker or not.
     """
+    analytics = analytics or {}
     console = UnlockConsole(logger, hash_key, analytics)
     cases = 0
     cases_unlocked = 0
@@ -205,7 +206,7 @@ class UnlockConsole(object):
         'quit()',
     )
 
-    def __init__(self, logger, hash_key, analytics={}):
+    def __init__(self, logger, hash_key, analytics=None):
         self._logger = logger
         self._hash_key = hash_key
         self._analytics = analytics
