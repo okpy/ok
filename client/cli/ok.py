@@ -172,6 +172,13 @@ def main():
         print("okpy=={}".format(client.__version__))
         exit(0)
 
+    if not args.local and not args.insecure:
+        try:
+            import ssl
+        except: 
+            sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
+
+
     server_thread, timer_thread = None, None
     try:
         print("You are running version {0} of ok.py".format(client.__version__))
