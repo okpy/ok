@@ -295,8 +295,8 @@ class UnlockConsole(object):
             if choices:
                 choice_map = self._display_choices(choices)
             try:
-                student_input = self._input(self.PROMPT)
                 attempts += 1
+                student_input = self._input(self.PROMPT)
             except (KeyboardInterrupt, EOFError):
                 try:
                     # TODO(albert): When you use Ctrl+C in Windows, it
@@ -309,6 +309,8 @@ class UnlockConsole(object):
                 raise UnlockException
             student_input.strip()
             if student_input in self.EXIT_INPUTS:
+                attempts -= 1
+                self._analytics[self._analytics['current']].append((attempts, correct))
                 raise UnlockException
 
             self._add_line_to_history(student_input)
