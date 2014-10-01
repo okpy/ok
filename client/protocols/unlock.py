@@ -174,7 +174,8 @@ def unlock(test, logger, hash_key, analytics=None):
     after going through an unlocking session and whether the student wanted
     to exit the unlocker or not.
     """
-    analytics = analytics or {}
+    if analytics is None:
+        analytics = {}
     console = UnlockConsole(logger, hash_key, analytics)
     cases = 0
     cases_unlocked = 0
