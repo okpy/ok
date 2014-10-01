@@ -1,0 +1,3 @@
+#!/bin/sh
+$GIT_DIR/../hooks/run_lint.py
+$GIT_DIR/../hooks/compile_binary
