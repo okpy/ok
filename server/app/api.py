@@ -594,7 +594,7 @@ class VersionAPI(APIResource):
     }
 
     def new(self, obj, user, data):
-        need = Need('get')
+        need = Need('update')
         if not obj.can(user, need, obj):
             raise need.exception()
 
