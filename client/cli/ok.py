@@ -163,6 +163,14 @@ def main():
         print("okpy=={}".format(client.__version__))
         exit(0)
 
+    if not args.local and not args.insecure:
+        try:
+            import ssl
+        except: 
+            print("SSL Bindings are not installed. Try to enable python3 ssl support. \n Running in Insecure Mode")
+            args.insecure = True
+            
+
     server_thread, timer_thread = None, None
     try:
         print("You are running version {0} of ok.py".format(client.__version__))
