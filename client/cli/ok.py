@@ -167,9 +167,8 @@ def main():
         try:
             import ssl
         except: 
-            print("SSL Bindings are not installed. Try to enable python3 ssl support. \n Running in Insecure Mode")
-            args.insecure = True
-            
+            sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
+
 
     server_thread, timer_thread = None, None
     try:
