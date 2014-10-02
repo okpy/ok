@@ -76,6 +76,11 @@ class LockProtocol(protocol.Protocol):
             print('Completed locking {}.'.format(self.assignment['name']))
             print()
 
+    @classmethod
+    def add_args(cls, parser):
+        parser.add_argument('--lock', action='store_true',
+                            help="Locks tests")
+
     @property
     def _alphabet(self):
         return string.ascii_lowercase + string.digits
@@ -144,6 +149,11 @@ class UnlockProtocol(protocol.Protocol):
                     break
                 print()
         return self.analytics
+
+    @classmethod
+    def add_args(cls, parser):
+        parser.add_argument('-u', '--unlock', action='store_true',
+                            help="unlock tests interactively")
 
     def _filter_tests(self):
         """

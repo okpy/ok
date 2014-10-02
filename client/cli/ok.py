@@ -124,7 +124,7 @@ def get_latest_version(download_link):
 # Command-line Interface #
 ##########################
 
-def parse_input():
+def parse_input(protocol_list):
     """Parses command line input."""
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -134,18 +134,12 @@ def parse_input():
     parser.add_argument('-s', '--server', type=str,
                         default='ok-server.appspot.com',
                         help="server address")
-    parser.add_argument('-t', '--tests', metavar='A', default='tests', type=str,
-                        help="partial name or path to test file or directory")
-    parser.add_argument('-u', '--unlock', action='store_true',
-                        help="unlock tests interactively")
+    parser.add_argument('-t', '--tests', metavar='TESTS_DIR', default='tests', type=str,
+                        help="path to test directory")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
     parser.add_argument('--insecure', action='store_true',
                         help="uses http instead of https")
-    parser.add_argument('-i', '--interactive', action='store_true',
-                        help="toggle interactive mode")
-    parser.add_argument('-l', '--lock', type=str,
-                        help="partial path to directory to lock")
     parser.add_argument('-f', '--force', action='store_true',
                         help="wait for server response without timeout")
     parser.add_argument('-a', '--authenticate', action='store_true',
@@ -156,8 +150,11 @@ def parse_input():
                         help="set the timeout duration for running tests")
     parser.add_argument('--version', action='store_true',
                         help="Prints the version number and quits")
-    parser.add_argument('--score', action='store_true',
-                        help="Scores the assignment")
+
+    # Add protocol-specific arguments
+    for proto in protocol_list:
+        proto.add_args(parser)
+
     return parser.parse_args()
 
 def server_timer():
@@ -166,7 +163,9 @@ def server_timer():
 
 def main():
     """Run all relevant aspects of ok.py."""
-    args = parse_input()
+    protocol_list = protocol.get_protocols(config.protocols)
+
+    args = parse_input(protocol_list)
 
     if args.version:
         print("okpy=={}".format(client.__version__))
@@ -190,8 +189,7 @@ def main():
 
         logger = sys.stdout = output.OutputLogger()
 
-        protocols = [p(args, assignment, logger)
-                     for p in protocol.get_protocols(config.protocols)]
+        protocols = [p(args, assignment, logger) for p in protocol_list]
 
         messages = dict()
         msg_queue = multiprocessing.Queue()

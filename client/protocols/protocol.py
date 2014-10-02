@@ -26,6 +26,17 @@ class Protocol(object):
     def on_interact(self):
         """Called to execute an interactive or output-intensive session."""
 
+    @classmethod
+    def add_args(cls, parser):
+        """Add argparse-style command line options to the given parser.
+        Subclasses can override this method to add their own command line
+        options.
+
+        PARAMETERS:
+        parser -- an object returned by argparse.ArgumentParser()
+        """
+        pass
+
 def get_protocols(names):
     mapping = {}
     subclasses = Protocol.__subclasses__()
