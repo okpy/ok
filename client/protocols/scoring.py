@@ -28,6 +28,11 @@ class ScoringProtocol(grading.GradingProtocol):
             # If testing is successful, print out the point breakdown.
             display_breakdown(self.scores)
 
+    @classmethod
+    def add_args(cls, parser):
+        parser.add_argument('--score', action='store_true',
+                            help="Scores the assignment")
+
     def _handle_test(self, test):
         """Grades a single Test."""
         formatting.underline('Scoring tests for ' + test.name)

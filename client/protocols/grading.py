@@ -60,6 +60,11 @@ class GradingProtocol(protocol.Protocol):
         self._grade_all()
         return self.analytics
 
+    @classmethod
+    def add_args(cls, parser):
+        parser.add_argument('-i', '--interactive', action='store_true',
+                            help="toggle interactive mode")
+
     def _grade_all(self):
         """Grades the specified test (from the command line), 
         or all tests for the assignment (if no tests specified).
