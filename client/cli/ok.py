@@ -200,7 +200,7 @@ def main():
         try:
             with open(BACKUP_FILE, 'rb') as fp:
                 file_contents = pickle.load(fp)
-        except FileNotFoundError as e:
+        except IOError as e:
             # File doesn't exist, so file_contents should be empty
             pass
         except EOFError as e:
