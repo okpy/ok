@@ -52,7 +52,7 @@ import time
 import logging
 
 BACKUP_FILE = ".ok_messages"
-LOGGING_FORMAT = '%(levelname)s %(filename)s, line %(lineno)d: %(message)s'
+LOGGING_FORMAT = '%(levelname)-10s | pid %(process)d | %(filename)s, line %(lineno)d: %(message)s'
 
 
 def send_to_server(access_token, messages, name, server, log, insecure=False):
@@ -221,10 +221,11 @@ def main():
         msg_queue = multiprocessing.Queue()
         file_contents = []
 
-        log.info('Loading backed up messages from %s', BACKUP_FILE)
         try:
             with open(BACKUP_FILE, 'rb') as fp:
                 file_contents = pickle.load(fp)
+                log.info('Loaded %d backed up messages from %s',
+                         len(file_contents), BACKUP_FILE)
         except (IOError, EOFError) as e:
             log.info('Error reading from ' + BACKUP_FILE \
                     + ', assume nothing backed up')
@@ -232,8 +233,8 @@ def main():
         for message in file_contents:
             msg_queue.put(message)
 
-        log.info('Execute protocol on_start methods')
         for proto in protocols:
+            log.info('Execute %s.on_start()', proto.name)
             messages[proto.name] = proto.on_start()
         messages['timestamp'] = str(datetime.now())
 
@@ -255,6 +256,7 @@ def main():
         interact_msg = {}
 
         for proto in protocols:
+            log.info('Execute %s.on_interact()', proto.name)
             interact_msg[proto.name] = proto.on_interact()
 
         interact_msg['timestamp'] = str(datetime.now())
@@ -290,7 +292,7 @@ def main():
     finally:
         if assignment:
             log.info('Dump tests for %s to %s', assignment['name'], args.tests)
-            loading.dump_tests(args.tests, assignment)
+            loading.dump_tests(args.tests, assignment, log)
 
 if __name__ == '__main__':
     main()
