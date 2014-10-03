@@ -32,9 +32,8 @@ outside of this lifecycle, the send_to_server function can be used to send and
 receive information from the server outside of the default times. Such
 communications should be limited to the body of an on_interact method.
 """
-BACKUP_FILE = ".ok_messages"
-
 from client import config
+from client import exceptions
 from client.models import *
 from client.protocols import *
 from client.utils import auth
@@ -50,9 +49,13 @@ import multiprocessing
 import pickle
 import sys
 import time
+import logging
 
-def send_to_server(access_token, messages, name, server,
-                   insecure=False):
+BACKUP_FILE = ".ok_messages"
+LOGGING_FORMAT = '%(levelname)s %(filename)s, line %(lineno)d: %(message)s'
+
+
+def send_to_server(access_token, messages, name, server, log, insecure=False):
     """Send messages to server, along with user authentication."""
     data = {
         'assignment': name,
@@ -66,36 +69,37 @@ def send_to_server(access_token, messages, name, server,
         # TODO(denero) Send access token with the request
         address += "?access_token={0}&client_version={1}".format(
             access_token, client.__version__)
+
+        log.info('Sending data to %s', address)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
         response = request.urlopen(req, serialized)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
-        # print("Error while sending to server: {}".format(ex))
+        log.warning('Error while sending to server: %s', str(ex))
+        response = ex.read().decode('utf-8')
+        response_json = json.loads(response)
+        log.warning('Server error message: %s', response_json['message'])
         try:
             if ex.code == 403:
-                response = ex.read().decode('utf-8')
-                response_json = json.loads(response)
+                log.info('403 error -- client version is outdated')
+                log.info('Retrieving latest version from %s',
+                         response_json['data']['download_link'])
                 get_latest_version(response_json['data']['download_link'])
-            #message = response_json['message']
-            #indented = '\n'.join('\t' + line for line in message.split('\n'))
-            #print(indented)
             return {}
         except Exception as e:
-            # print(e)
-            # print("Couldn't connect to server")
-            pass
+            log.warn('Could not connect to %s', server)
 
-def dump_to_server(access_token, msg_queue, name, server, insecure, staging_queue):
+def dump_to_server(access_token, msg_queue, name, server, insecure,
+        staging_queue, log):
     while not msg_queue.empty():
         message = msg_queue.get()
         staging_queue.put(message)
         try:
-            if send_to_server(access_token, message, name, server, insecure) == None:
+            if send_to_server(access_token, message, name, server, log, insecure) == None:
                 staging_queue.get() #throw away successful message
         except error.URLError as ex:
-            pass
-    return
+            log.warning('URLError: %s', str(ex))
 
 #####################
 # Software Updating #
@@ -140,6 +144,8 @@ def parse_input():
                         help="unlock tests interactively")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print more output")
+    parser.add_argument('--debug', action='store_true',
+                        help="show debug statements")
     parser.add_argument('--insecure', action='store_true',
                         help="uses http instead of https")
     parser.add_argument('-i', '--interactive', action='store_true',
@@ -168,6 +174,15 @@ def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
 
+    logging.basicConfig(format=LOGGING_FORMAT)
+    log = logging.getLogger(__name__)
+    if args.debug:
+        log.setLevel(logging.INFO)
+    else:
+        log.setLevel(logging.ERROR)
+
+    log.info(args)
+
     if args.version:
         print("okpy=={}".format(client.__version__))
         exit(0)
@@ -175,7 +190,8 @@ def main():
     if not args.local and not args.insecure:
         try:
             import ssl
-        except: 
+        except:
+            log.warning('Error importing ssl', stack_info=True)
             sys.exit("SSL Bindings are not installed. You can install python3 SSL bindings or \nrun ok locally with python3 ok --local")
 
 
@@ -185,31 +201,38 @@ def main():
         if not args.local:
             timer_thread = multiprocessing.Process(target=server_timer, args=())
             timer_thread.start()
+
         cases = {case.type: case for case in core.get_testcases(config.cases)}
-        assignment = loading.load_tests(args.tests, cases)
+        assignment = None
+        try:
+            assignment = loading.load_tests(args.tests, cases)
+        except exceptions.OkException as e:
+            print('Error:', e)
+            exit(1)
 
-        logger = sys.stdout = output.OutputLogger()
+        log.info('Replacing stdout with OutputLogger')
+        output_logger = sys.stdout = output.OutputLogger()
 
-        protocols = [p(args, assignment, logger)
+        log.info('Instantiating protocols')
+        protocols = [p(args, assignment, output_logger, log)
                      for p in protocol.get_protocols(config.protocols)]
 
         messages = dict()
         msg_queue = multiprocessing.Queue()
         file_contents = []
 
+        log.info('Loading backed up messages from %s', BACKUP_FILE)
         try:
             with open(BACKUP_FILE, 'rb') as fp:
                 file_contents = pickle.load(fp)
-        except IOError as e:
-            # File doesn't exist, so file_contents should be empty
-            pass
-        except EOFError as e:
-            # File is empty, so no messages are inside
-            pass
+        except (IOError, EOFError) as e:
+            log.info('Error reading from ' + BACKUP_FILE \
+                    + ', assume nothing backed up')
 
         for message in file_contents:
             msg_queue.put(message)
 
+        log.info('Execute protocol on_start methods')
         for proto in protocols:
             messages[proto.name] = proto.on_start()
         messages['timestamp'] = str(datetime.now())
@@ -217,18 +240,18 @@ def main():
         if not args.local:
             try:
                 access_token = auth.authenticate(args.authenticate)
+                log.info('Authenticated with access token %s', access_token)
+
                 msg_queue.put(messages)
                 staging_queue = multiprocessing.Queue()
                 server_thread = multiprocessing.Process(
                     target=dump_to_server,
                     args=(access_token, msg_queue, assignment['name'],
-                          args.server, args.insecure, staging_queue))
+                          args.server, args.insecure, staging_queue, log))
                 server_thread.start()
             except error.URLError as ex:
-                # TODO(soumya) Make a better error message
-                # print("Nothing was sent to the server!")
-                pass
-        
+                log.warning('on_start messages not sent to server: %s', str(e))
+
         interact_msg = {}
 
         for proto in protocols:
@@ -238,13 +261,9 @@ def main():
 
         # TODO(denero) Print server responses.
 
-        # TODO(albert): a premature error might prevent tests from being
-        # dumped. Perhaps add this in a "finally" clause.
-        loading.dump_tests(args.tests, assignment)
-
         if not args.local:
             msg_queue.put(interact_msg)
-            
+
             while timer_thread.is_alive():
                 pass
 
@@ -259,6 +278,8 @@ def main():
             while not staging_queue.empty():
                 dump_list.append(staging_queue.get_nowait())
             with open(BACKUP_FILE, 'wb') as fp:
+                log.info('Save %d unsent messages to %s', len(dump_list),
+                         BACKUP_FILE)
                 pickle.dump(dump_list, fp)
 
     except KeyboardInterrupt:
@@ -266,6 +287,10 @@ def main():
             timer_thread.terminate()
         if server_thread:
             server_thread.terminate()
+    finally:
+        if assignment:
+            log.info('Dump tests for %s to %s', assignment['name'], args.tests)
+            loading.dump_tests(args.tests, assignment)
 
 if __name__ == '__main__':
     main()
