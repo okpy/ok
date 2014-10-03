@@ -146,7 +146,7 @@ def parse_input():
                         help="toggle interactive mode")
     parser.add_argument('-l', '--lock', type=str,
                         help="partial path to directory to lock")
-    parser.add_argument('-f', '--force', action='store_true',
+    parser.add_argument('--submit', action='store_true',
                         help="wait for server response without timeout")
     parser.add_argument('-a', '--authenticate', action='store_true',
                         help="authenticate, ignoring previous authentication")
@@ -248,7 +248,7 @@ def main():
             while timer_thread.is_alive():
                 pass
 
-            if not args.force:
+            if not args.submit:
                 server_thread.terminate()
             else:
                 server_thread.join()
