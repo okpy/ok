@@ -4,7 +4,7 @@ class Protocol(object):
     """A Protocol encapsulates a single aspect of ok.py functionality."""
     name = None # Override in sub-class.
 
-    def __init__(self, cmd_line_args, assignment, output_logger, log):
+    def __init__(self, cmd_line_args, assignment, output_logger, log=None):
         """Constructor.
 
         PARAMETERS:
