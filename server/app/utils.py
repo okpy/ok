@@ -94,18 +94,21 @@ def paginate(entries, page, num_per_page):
 
     query_serialized = (
         '_'.join(str(x) for x in (
-            entries.kind, entries.filters, entries.orders, num_per_page)))
+            entries.kind, entries.filters, entries.orders)))
     query_serialized = query_serialized.replace(' ', '_')
     def get_mem_key(page):
-        return "cp_%s_%s" % (query_serialized, page)
+        offset = (page - 1) * num_per_page
+        return "cp_%s_%s" % (query_serialized, offset)
     this_page_key = get_mem_key(page)
     next_page_key = get_mem_key(page + 1)
 
     cursor = None
+    store_cache = True
     if page > 1:
         cursor = memcache.get(this_page_key) # pylint: disable=no-member
         if not cursor:
             page = 1 # Reset to the front, since memcached failed
+            store_cache = False
 
     pages_to_fetch = int(num_per_page)
     if cursor is not None:
@@ -114,7 +117,8 @@ def paginate(entries, page, num_per_page):
     else:
         results, forward_cursor, more = entries.fetch_page(pages_to_fetch)
 
-    memcache.set(next_page_key, forward_cursor) # pylint: disable=no-member
+    if store_cache:
+        memcache.set(next_page_key, forward_cursor) # pylint: disable=no-member
 
     return {
         'results': results,
