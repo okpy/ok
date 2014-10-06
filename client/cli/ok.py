@@ -36,89 +36,19 @@ BACKUP_FILE = ".ok_messages"
 
 from client import config
 from client.models import *
+from client.network import auth
+from client.network import server
 from client.protocols import *
-from client.utils import auth
 from client.utils import loading
 from client.utils import output
 from datetime import datetime
-from urllib import request, error
-import client
+from urllib import error
 import argparse
-import base64
-import json
+import client
 import multiprocessing
 import pickle
 import sys
-import time
 
-def send_to_server(access_token, messages, name, server,
-                   insecure=False):
-    """Send messages to server, along with user authentication."""
-    data = {
-        'assignment': name,
-        'messages': messages,
-    }
-    try:
-        prefix = "http" if insecure else "https"
-        address = prefix + '://' + server + '/api/v1/submission'
-        serialized = json.dumps(data).encode(encoding='utf-8')
-        # TODO(denero) Wrap in timeout (maybe use PR #51 timed execution).
-        # TODO(denero) Send access token with the request
-        address += "?access_token={0}&client_version={1}".format(
-            access_token, client.__version__)
-        req = request.Request(address)
-        req.add_header("Content-Type", "application/json")
-        response = request.urlopen(req, serialized)
-        return json.loads(response.read().decode('utf-8'))
-    except error.HTTPError as ex:
-        # print("Error while sending to server: {}".format(ex))
-        try:
-            if ex.code == 403:
-                response = ex.read().decode('utf-8')
-                response_json = json.loads(response)
-                get_latest_version(response_json['data']['download_link'])
-            #message = response_json['message']
-            #indented = '\n'.join('\t' + line for line in message.split('\n'))
-            #print(indented)
-            return {}
-        except Exception as e:
-            # print(e)
-            # print("Couldn't connect to server")
-            pass
-
-def dump_to_server(access_token, msg_queue, name, server, insecure, staging_queue):
-    while not msg_queue.empty():
-        message = msg_queue.get()
-        staging_queue.put(message)
-        try:
-            if send_to_server(access_token, message, name, server, insecure) == None:
-                staging_queue.get() #throw away successful message
-        except error.URLError as ex:
-            pass
-    return
-
-#####################
-# Software Updating #
-#####################
-
-def get_latest_version(download_link):
-    """Check for the latest version of ok and update this file accordingly.
-    """
-    #print("We detected that you are running an old version of ok.py: {0}".format(VERSION))
-
-    # Get server version
-
-    try:
-        req = request.Request(download_link)
-        response = request.urlopen(req)
-
-        zip_binary = response.read()
-        with open('ok', 'wb') as f:
-            f.write(zip_binary)
-        #print("Done updating!")
-    except error.HTTPError:
-        # print("Error when downloading new version")
-        pass
 
 ##########################
 # Command-line Interface #
@@ -160,10 +90,6 @@ def parse_input():
                         help="Scores the assignment")
     return parser.parse_args()
 
-def server_timer():
-    """Timeout for the server."""
-    time.sleep(0.8)
-
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
@@ -183,7 +109,8 @@ def main():
     try:
         print("You are running version {0} of ok.py".format(client.__version__))
         if not args.local:
-            timer_thread = multiprocessing.Process(target=server_timer, args=())
+            timer_thread = multiprocessing.Process(target=server.server_timer,
+                                                   args=())
             timer_thread.start()
         cases = {case.type: case for case in core.get_testcases(config.cases)}
         assignment = loading.load_tests(args.tests, cases)
@@ -220,9 +147,10 @@ def main():
                 msg_queue.put(messages)
                 staging_queue = multiprocessing.Queue()
                 server_thread = multiprocessing.Process(
-                    target=dump_to_server,
+                    target=server.dump_to_server,
                     args=(access_token, msg_queue, assignment['name'],
-                          args.server, args.insecure, staging_queue))
+                          args.server, args.insecure, staging_queue,
+                          client.__version__))
                 server_thread.start()
             except error.URLError as ex:
                 # TODO(soumya) Make a better error message
