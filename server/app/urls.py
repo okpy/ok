@@ -21,10 +21,15 @@ from app.exceptions import *
 
 @app.route("/")
 def dashboard():
+    def force_account_chooser(url):
+        if 'ServiceLogin' in url:
+            return url.replace('ServiceLogin', 'AccountChooser')
+        return url
+
     user = users.get_current_user()
     params = {}
     if user is None:
-        params['users_link'] = users.create_login_url('/')
+        params['users_link'] = force_account_chooser(users.create_login_url('/'))
         params['users_title'] = "Sign In"
     else:
         logging.info("User is %s", user.email())
@@ -32,7 +37,7 @@ def dashboard():
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
         params['relogin_link'] = users.create_logout_url(
-            users.create_login_url('/'))
+            force_account_chooser(users.create_login_url('/')))
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
 
