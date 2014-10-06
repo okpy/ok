@@ -121,11 +121,7 @@
         {% if user %}
         <script>
           window.user = "{{user.email}}";
-          if ("{{user.email}}".indexOf("berkeley.edu") == -1) {
-            if (!confirm("Logging you in with your \"{{user.email}}\" account... Hit cancel to log in with a different account.")) {
-              window.location.href = "{{relogin_link}}";
-            }
-          }
+          window.reloginLink = "{{relogin_link}}";
         </script>
           <div ui-view></div>
         {% else %}
