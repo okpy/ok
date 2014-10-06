@@ -150,6 +150,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "VersionNewCtrl"
     }
 
+    var loginLanding = {
+      name: 'loginLanding',
+      url: '/loginLanding',
+      templateUrl: '/static/partials/common/loginLanding.html'
+    }
+
     $stateProvider.
       state(dashboard).
       state(submissions).
@@ -166,6 +172,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(versionList).
       state(versionDetail).
       state(versionUpdate).
-      state(versionNew)
+      state(versionNew).
+      state(loginLanding)
       ;
   }]);
