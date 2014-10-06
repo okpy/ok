@@ -31,10 +31,8 @@ def dashboard():
         params["user"] = {'email': user.email()}
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
-        if not user.email().endswith('berkeley.edu'):
-            params['relogin_link'] = users.create_logout_url(
-                users.create_login_url('/'))
-            params['user_warning'] = True
+        params['relogin_link'] = users.create_logout_url(
+            users.create_login_url('/'))
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
 
