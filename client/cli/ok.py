@@ -91,7 +91,7 @@ def dump_to_server(access_token, msg_queue, name, server, insecure, staging_queu
         message = msg_queue.get()
         staging_queue.put(message)
         try:
-            if send_to_server(access_token, message, name, server, insecure) == None:
+            if send_to_server(access_token, message, name, server, insecure) != None:
                 staging_queue.get() #throw away successful message
         except error.URLError as ex:
             pass
@@ -256,8 +256,10 @@ def main():
             dump_list = []
             while not msg_queue.empty():
                 dump_list.append(msg_queue.get_nowait())
+            print(len(dump_list))
             while not staging_queue.empty():
                 dump_list.append(staging_queue.get_nowait())
+            print(len(dump_list))
             with open(BACKUP_FILE, 'wb') as fp:
                 pickle.dump(dump_list, fp)
 
