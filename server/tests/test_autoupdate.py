@@ -30,7 +30,7 @@ class AutoUpdateTest(APIBaseTestCase):
         self.assignment = make_fake_assignment(self.course, self.user)
         self.assignment.put()
 
-        self.version = models.Version.get_or_insert('okpy', base_url="https://www.baseurl.com")
+        self.version = models.Version.get_or_insert('ok', base_url="https://www.baseurl.com")
         self.invalid = False
 
     def try_request(self, version):
