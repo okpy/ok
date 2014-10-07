@@ -301,13 +301,7 @@ class Submission(Base):
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
-    _created = None
-
-    @property
-    def created(self):
-        if not self._created:
-            self._created = datetime.strptime(self.messages['analytics']['time'], "%Y-%m-%d %H:%M:%S.%f")
-        return self._created
+    created = ndb.DateTimeProperty()
 
     @property
     def group(self):
@@ -366,6 +360,16 @@ class Submission(Base):
             else:
                 return query
         return False
+
+    def _post_put_hook(self, future):
+        import pdb
+        val = future.get_result().get()
+        if val and not val.created:
+            if val.messages.get('analytics', {}).get('timestamp'):
+                val.created = val.messages['analytics']['timestamp']
+            else:
+                val.created = datetime.datetime.now()
+            val.put()
 
 
 class SubmissionDiff(Base):
