@@ -253,6 +253,8 @@ class APIResource(View):
             raise need.exception()
 
         query = filter_query(result, data, self.model)
+        if self.model.__name__ == "Submission":
+            query = query.filter(Sumbission.message.file_contents != None)
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
             logging.info("Adding default ordering by creation time.")

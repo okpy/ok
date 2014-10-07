@@ -30,9 +30,6 @@ app.factory('Submission', ['$resource',
         },
         get: {
           transformResponse: function(data) {
-            data = data.filter(function(message) {
-                return message['file_contents'] != null;
-            });
             return JSON.parse(data).data;
           }
         },
