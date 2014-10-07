@@ -396,3 +396,14 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
       };
     }
   ]);
+
+app.controller("LandingPageCtrl", ["$window", "$state",
+    function ($window, $state) {
+      if ($window.user.indexOf("berkeley.edu") == -1 && !$window.confirm("Logging you in with your \"" + $window.user + "\" account... Hit cancel to log in with a different account.")) {
+        $window.location.href = $window.reloginLink;
+      }
+      else {
+        $window.location.hash = "";
+      }
+    }
+]);
