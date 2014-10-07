@@ -287,12 +287,8 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         self.login('dummy_student')
 
     def get_basic_instance(self, mutate=True):
-        message = {}
-        if mutate:
-            message = {'value': str(self.num)}
-            self.num += 1
         rval = models.Submission(
-            messages=message, submitter=self._submitter.key,
+            submitter=self._submitter.key,
             assignment=self._assign.key)
         return rval
 

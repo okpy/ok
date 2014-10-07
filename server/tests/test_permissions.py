@@ -141,17 +141,14 @@ class PermissionsUnitTest(BaseTestCase):
             "first": models.Submission(
                 submitter=self.accounts["student0"].key,
                 assignment=self.assignments["first"].key,
-                messages={}
                 ),
             "second": models.Submission(
                 submitter=self.accounts["student1"].key,
                 assignment=self.assignments["first"].key,
-                messages={}
                 ),
             "third": models.Submission(
                 submitter=self.accounts["student2"].key,
                 assignment=self.assignments["first"].key,
-                messages={}
                 ),
             }
 
@@ -167,7 +164,6 @@ class PermissionsUnitTest(BaseTestCase):
         group_submission = models.Submission(
             submitter=self.accounts['student0'].key,
             assignment=self.assignments['first'].key,
-            messages={},
         )
 
         group_submission.put()

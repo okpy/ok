@@ -387,9 +387,18 @@ class SubmitNDBImplementation(object):
     def create_submission(self, user, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
         submission = models.Submission(submitter=user.key,
-                                       assignment=assignment.key,
-                                       messages=messages)
+                                       assignment=assignment.key)
         submission.put()
+
+        db_messages = []
+        for kind, message in messages.iteritems():
+            obj = models.Message(parent=submission.key,
+                kind=kind, contents=message)
+            obj.put()
+            db_messages.append(obj)
+        submission.messages = db_messages
+        submission.put()
+
         return submission
 
 

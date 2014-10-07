@@ -300,13 +300,16 @@ class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
-    messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty()
 
     @property
     def group(self):
         submitter = self.submitter.get()
         return submitter.groups(self.assignment.get()).get()
+
+    @property
+    def messages(self):
+        return Message.query(ancestor=self.key)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -362,14 +365,33 @@ class Submission(Base):
         return False
 
     def _post_put_hook(self, future):
-        import pdb
         val = future.get_result().get()
         if val and not val.created:
-            if val.messages.get('analytics', {}).get('timestamp'):
-                val.created = val.messages['analytics']['timestamp']
+            analytics = val.messages.filter(Message.kind == 'analytics').get()
+            if analytics and analytics.contents.get('timestamp'):
+                val.created = analytics['timestamp']
             else:
                 val.created = datetime.datetime.now()
             val.put()
+
+class Message(Base):
+    """ 
+    A message given to us from the client.
+
+    Ancestor of a Submission
+    """
+    contents = ndb.JsonProperty()
+    kind = ndb.StringProperty()
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        
+        if action == "index":
+            return False
+
+        return Submission._can(user, need, obj, query)
+
 
 
 class SubmissionDiff(Base):
