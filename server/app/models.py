@@ -301,7 +301,13 @@ class Submission(Base):
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
-    created = ndb.DateTimeProperty(auto_now_add=True)
+    _created = None
+
+    @property
+    def created(self):
+        if not self._created:
+            self._created = datetime.strptime(self.messages['analytics']['time'], "%Y-%m-%d %H:%M:%S.%f")
+        return self._created
 
     @property
     def group(self):
