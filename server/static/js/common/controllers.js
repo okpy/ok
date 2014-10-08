@@ -30,9 +30,13 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
             'display_name': true,
             'id': true,
           },
+          'messages': {
+            'file_contents': "presence"
+          }
         },
         page: page,
         num_page: $scope.itemsPerPage,
+        "messages.kind": "file_contents"
       }, function(response) {
         $scope.submissions = response.data.results;
         if (response.data.more) {

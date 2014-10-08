@@ -30,6 +30,12 @@ indexes:
 
 - kind: Submission
   properties:
+  - name: messages.kind
+  - name: created
+    direction: desc
+
+- kind: Submission
+  properties:
   - name: submitter
   - name: created
 

@@ -296,20 +296,44 @@ def validate_messages(_, messages):
         raise BadValueError(exc)
 
 
+class Message(Base):
+    """ 
+    A message given to us from the client.
+    """
+    contents = ndb.JsonProperty()
+    kind = ndb.StringProperty()
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        
+        if action == "index":
+            return False
+
+        return Submission._can(user, need, obj, query)
+
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
     created = ndb.DateTimeProperty()
+    messages = ndb.StructuredProperty(Message, repeated=True)
 
     @property
     def group(self):
         submitter = self.submitter.get()
         return submitter.groups(self.assignment.get()).get()
 
-    @property
-    def messages(self):
-        return Message.query(ancestor=self.key)
+    def to_json(self, fields=None):
+        json = super(Submission, self).to_json(fields)
+        if 'messages' in json:
+            message_fields = fields.get('messages', {})
+            messages = {message['kind']: message['contents'] for message in json['messages']}
+            json['messages'] = {kind:
+                (True if message_fields.get(kind) == "presence"
+                    else contents)
+                for kind, contents in messages.iteritems() if not message_fields or kind in message_fields.keys()}
+        return json
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -355,7 +379,7 @@ class Submission(Base):
             for group in user.groups():
                 filters.append(Submission.submitter.IN(group.members))
             filters.append(Submission.submitter == user.key)
-
+ 
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
             elif filters:
@@ -367,31 +391,14 @@ class Submission(Base):
     def _post_put_hook(self, future):
         val = future.get_result().get()
         if val and not val.created:
-            analytics = val.messages.filter(Message.kind == 'analytics').get()
-            if analytics and analytics.contents.get('timestamp'):
-                val.created = analytics['timestamp']
+            analytics = filter(None,
+                (message if message.kind == "analytics" else None
+                    for message in val.messages))
+            if analytics and analytics[0].contents.get('timestamp'):
+                val.created = analytics[0]['timestamp']
             else:
                 val.created = datetime.datetime.now()
             val.put()
-
-class Message(Base):
-    """ 
-    A message given to us from the client.
-
-    Ancestor of a Submission
-    """
-    contents = ndb.JsonProperty()
-    kind = ndb.StringProperty()
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        
-        if action == "index":
-            return False
-
-        return Submission._can(user, need, obj, query)
-
 
 
 class SubmissionDiff(Base):

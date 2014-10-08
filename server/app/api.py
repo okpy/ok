@@ -24,6 +24,15 @@ from google.appengine.ext.ndb import stats
 
 parser = FlaskParser()
 
+def parse_json_field(field):
+    if not field[0] == '{':
+        if field == "false":
+            return False
+        elif field == "true":
+            return True
+        return field
+    return json.loads(field)
+
 
 def DateTimeArg(**kwds):
     def parse_date(arg):
@@ -219,17 +228,8 @@ class APIResource(View):
         Parses the arguments to this API call.
         |index| is whether or not this is an index call.
         """
-        def use_fields(field):
-            if not field[0] == '{':
-                if field == "false":
-                    return False
-                elif field == "true":
-                    return True
-                return field
-            return json.loads(field)
-
         fields = parser.parse({
-            'fields': Arg(None, use=use_fields)
+            'fields': Arg(None, use=parse_json_field)
         })
         if fields['fields'] is None:
             fields['fields'] = {}
@@ -238,6 +238,15 @@ class APIResource(View):
         request.fields = fields
         return {k: v for k, v in parser.parse(web_args).iteritems()
                 if v is not None}
+
+    def filter_query(self, query, data):
+        query = filter_query(query, data, self.model)
+        created_prop = getattr(self.model, 'created', None)
+        if not query.orders and created_prop:
+            logging.info("Adding default ordering by creation time.")
+            query = query.order(-created_prop, self.model.key)
+
+        return query
 
     def index(self, user, data):
         """
@@ -252,11 +261,7 @@ class APIResource(View):
         if not result:
             raise need.exception()
 
-        query = filter_query(result, data, self.model)
-        created_prop = getattr(self.model, 'created', None)
-        if not query.orders and created_prop:
-            logging.info("Adding default ordering by creation time.")
-            query = query.order(-created_prop, self.model.key)
+        query = self.filter_query(result, data)
 
         page = int(request.args.get('page', 1))
         # default page length is 100
@@ -386,17 +391,14 @@ class SubmitNDBImplementation(object):
 
     def create_submission(self, user, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
-        submission = models.Submission(submitter=user.key,
-                                       assignment=assignment.key)
-        submission.put()
-
         db_messages = []
         for kind, message in messages.iteritems():
-            obj = models.Message(parent=submission.key,
-                kind=kind, contents=message)
-            obj.put()
-            db_messages.append(obj)
-        submission.messages = db_messages
+            if message:
+                db_messages.append(models.Message(kind=kind, contents=message))
+
+        submission = models.Submission(submitter=user.key,
+                                       assignment=assignment.key,
+                                       messages=db_messages)
         submission.put()
 
         return submission
@@ -425,6 +427,7 @@ class SubmissionAPI(APIResource):
                 'assignment': KeyArg('Assignment'),
                 'submitter': KeyArg('User'),
                 'created': DateTimeArg(),
+                'messages.kind': Arg(str, use=parse_json_field),
             }
         },
         'diff': {
