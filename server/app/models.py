@@ -312,12 +312,17 @@ class Message(Base):
 
         return Submission._can(user, need, obj, query)
 
+
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
     created = ndb.DateTimeProperty()
     messages = ndb.StructuredProperty(Message, repeated=True)
+
+    @classmethod
+    def _get_kind(cls):
+      return 'Submissionvtwo'
 
     @property
     def group(self):
@@ -399,6 +404,35 @@ class Submission(Base):
             else:
                 val.created = datetime.datetime.now()
             val.put()
+
+class OldSubmission(Base):
+    """A submission is generated each time a student runs the client."""
+    submitter = ndb.KeyProperty(User, required=True)
+    assignment = ndb.KeyProperty(Assignment)
+    messages = ndb.JsonProperty()
+    created = ndb.DateTimeProperty(auto_now_add=True)
+
+    @classmethod
+    def _get_kind(cls):
+      return 'Submission'
+
+    @property
+    def group(self):
+        submitter = self.submitter.get()
+        return submitter.groups(self.assignment.get()).get()
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        return False
+
+    def upgrade(self):
+        new_messages = [Message(kind=kind, contents=contents) for kind, contents in self.messages.iteritems()]
+        return Submission(
+            submitter=self.submitter,
+            assignment=self.assignment,
+            created=self.created,
+            messages=new_messages)
+
 
 
 class SubmissionDiff(Base):

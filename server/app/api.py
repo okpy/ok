@@ -447,6 +447,24 @@ class SubmissionAPI(APIResource):
         },
     }
 
+    def get_instance(self, key, user):
+        try:
+            return super(SubmissionAPI, self).get_instance(key, user)
+        except BadKeyError:
+            pass
+
+        old_obj = models.OldSubmission.get_by_id(key)
+        if not old_obj:
+            raise BadKeyError(key)
+        obj = old_obj.upgrade()
+        obj.put()
+        old_obj.key.delete()
+
+        need = Need('get')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+        return obj
+
     def download(self, obj, user, data):
         """
         Allows you to download a submission.
