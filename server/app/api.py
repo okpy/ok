@@ -239,15 +239,6 @@ class APIResource(View):
         return {k: v for k, v in parser.parse(web_args).iteritems()
                 if v is not None}
 
-    def filter_query(self, query, data):
-        query = filter_query(query, data, self.model)
-        created_prop = getattr(self.model, 'created', None)
-        if not query.orders and created_prop:
-            logging.info("Adding default ordering by creation time.")
-            query = query.order(-created_prop, self.model.key)
-
-        return query
-
     def index(self, user, data):
         """
         Index HTTP method. Should be called from GET when no key is provided.
@@ -261,7 +252,11 @@ class APIResource(View):
         if not result:
             raise need.exception()
 
-        query = self.filter_query(result, data)
+        query = filter_query(result, data, self.model)
+        created_prop = getattr(self.model, 'created', None)
+        if not query.orders and created_prop:
+            logging.info("Adding default ordering by creation time.")
+            query = query.order(-created_prop, self.model.key)
 
         page = int(request.args.get('page', 1))
         # default page length is 100
