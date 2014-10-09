@@ -44,3 +44,33 @@ indexes:
   - name: submitter
   - name: created
     direction: desc
+
+- kind: Submissionvtwo
+  properties:
+  - name: assignment
+  - name: created
+    direction: desc
+
+- kind: Submissionvtwo
+  properties:
+  - name: assignment
+  - name: submitter
+  - name: created
+    direction: desc
+
+- kind: Submissionvtwo
+  properties:
+  - name: messages.kind
+  - name: created
+    direction: desc
+
+- kind: Submissionvtwo
+  properties:
+  - name: submitter
+  - name: created
+
+- kind: Submissionvtwo
+  properties:
+  - name: submitter
+  - name: created
+    direction: desc
