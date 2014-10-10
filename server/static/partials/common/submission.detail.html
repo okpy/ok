@@ -2,6 +2,25 @@
   <div class="center-block">
     <h2>Submission: {{submission.created | amCalendar}} </h2>
   </div>
+  <h2>
+    Tags
+  </h2>
+  <div ng-if="submission.tags.length == 0">
+    No tags...
+  </div>
+  <ul ng-if="submission.tags.length > 0">
+    <li ng-repeat="tag in submission.tags" ng-controller="TagCtrl">
+      {{tag}}
+      <button type="button" ng-click="remove()" class="btn btn-danger btn-xs">
+        <span class="glyphicon glyphicon-remove"></span>
+      </button>
+    </li>
+  </ul>
+  <input type="text" ng-model="tagToAdd">
+  </input>
+  <button ng-click="add()">
+    Add tag
+  </button>
   <div ng-repeat="(file_name, contents) in submission.messages.file_contents">
     <snippet/>
   </div>

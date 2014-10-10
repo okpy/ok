@@ -52,6 +52,20 @@ app.factory('Submission', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
+        },
+        addTag: {
+          method: "PUT",
+          url: 'api/v1/submission/:id/add_tag',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        removeTag: {
+          method: "PUT",
+          url: 'api/v1/submission/:id/remove_tag',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
         }
       });
     }

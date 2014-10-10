@@ -10,6 +10,7 @@ import werkzeug
 from flask import render_template, session, request, Response
 
 from google.appengine.api import users
+from google.appengine.ext import deferred
 
 from app import app
 from app import api
@@ -18,6 +19,7 @@ from app import models
 from app import utils
 from app.constants import API_PREFIX
 from app.exceptions import *
+
 
 @app.route("/")
 def dashboard():
@@ -40,6 +42,11 @@ def dashboard():
             force_account_chooser(users.create_login_url('/#/loginLanding')))
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
+
+@app.route("/upgrade")
+def upgrade():
+    deferred.defer(utils.upgrade_submissions)
+    return "Ok"
 
 ## Error handlers
 # Handle 404 errors

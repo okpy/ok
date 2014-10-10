@@ -50,7 +50,29 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
   function($scope, $location, $stateParams, $timeout, $anchorScroll, Submission) {
+    $scope.tagToAdd = "";
     $scope.submission = Submission.get({id: $stateParams.submissionId});
+    $scope.add = function() {
+      Submission.addTag({
+        id: $stateParams.submissionId,
+        tag: $scope.tagToAdd
+      }, function() {
+        $scope.submission.tags.push($scope.tagToAdd);
+      });
+    }
+  }]);
+
+app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams', 
+    function($scope, Submission, $stateParams) {
+      var submission = $scope.$parent.$parent.$parent.submission;
+      $scope.remove = function() {
+        Submission.removeTag({
+          id: $stateParams.submissionId,
+          tag: $scope.tag
+        });
+        var index = submission.tags.indexOf($scope.tag);
+        submission.tags.splice(index, 1);
+      }
   }]);
 
 // Course Controllers
