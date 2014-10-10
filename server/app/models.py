@@ -296,29 +296,13 @@ def validate_messages(_, messages):
         raise BadValueError(exc)
 
 
-class Message(Base):
-    """ 
-    A message given to us from the client.
-    """
-    contents = ndb.JsonProperty()
-    kind = ndb.StringProperty()
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        
-        if action == "index":
-            return False
-
-        return Submission._can(user, need, obj, query)
-
-
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
     created = ndb.DateTimeProperty()
     messages = ndb.StructuredProperty(Message, repeated=True)
+    tags = ndb.StringProperty(repeated=True)
 
     @classmethod
     def _get_kind(cls):
@@ -388,7 +372,7 @@ class Submission(Base):
             for group in user.groups():
                 filters.append(Submission.submitter.IN(group.members))
             filters.append(Submission.submitter == user.key)
- 
+
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
             elif filters:
@@ -396,47 +380,6 @@ class Submission(Base):
             else:
                 return query
         return False
-
-    def _post_put_hook(self, future):
-        val = future.get_result().get()
-        if val and not val.created:
-            analytics = filter(None,
-                (message if message.kind == "analytics" else None
-                    for message in val.messages))
-            if analytics and analytics[0].contents.get('timestamp'):
-                val.created = analytics[0]['timestamp']
-            else:
-                val.created = datetime.datetime.now()
-            val.put()
-
-class OldSubmission(Base):
-    """A submission is generated each time a student runs the client."""
-    submitter = ndb.KeyProperty(User, required=True)
-    assignment = ndb.KeyProperty(Assignment)
-    messages = ndb.JsonProperty()
-    created = ndb.DateTimeProperty(auto_now_add=True)
-
-    @classmethod
-    def _get_kind(cls):
-      return 'Submission'
-
-    @property
-    def group(self):
-        submitter = self.submitter.get()
-        return submitter.groups(self.assignment.get()).get()
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        return False
-
-    def upgrade(self):
-        new_messages = [Message(kind=kind, contents=contents) for kind, contents in self.messages.iteritems()]
-        return Submission(
-            submitter=self.submitter,
-            assignment=self.assignment,
-            created=self.created,
-            messages=new_messages)
-
 
 
 class SubmissionDiff(Base):
