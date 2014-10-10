@@ -69,6 +69,9 @@ def prettyjson(json, indentation='  '):
     json        -- Python object that is serializable into json.
     indentation -- str; represents one level of indentation
 
+    NOTES:
+    All multiline strings are treated as raw strings.
+
     RETURNS:
     str; the formatted json-like string.
     """
@@ -76,7 +79,7 @@ def prettyjson(json, indentation='  '):
         return str(json)
     elif isinstance(json, str):
         if '\n' in json:
-            return '"""\n' + dedent(json) + '\n"""'
+            return 'r"""\n' + dedent(json) + '\n"""'
         return repr(json)
     elif isinstance(json, list):
         lst = [indent(prettyjson(el, indentation), indentation) for el in json]
