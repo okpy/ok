@@ -17,3 +17,5 @@ gaenv/
 # pip-related files
 *.egg-info
 dist
+*.ok_refresh
+*.ok_messages
