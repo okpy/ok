@@ -261,6 +261,9 @@ def main():
             with open(BACKUP_FILE, 'wb') as fp:
                 pickle.dump(dump_list, fp)
 
+            if len(dump_list) == 0:
+                print("Server submission successful")
+
     except KeyboardInterrupt:
         if timer_thread:
             timer_thread.terminate()
