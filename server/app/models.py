@@ -137,6 +137,11 @@ class User(Base):
     def courses(self):
         return [group.assignment.get().course for group in self.groups()]
 
+    def get_selected_submission(self, assignment):
+        return Submission.query(
+            Submission.assignment == assignment).order(
+                -Submission.created).get()
+
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
@@ -300,13 +305,33 @@ class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
-    messages = ndb.JsonProperty()
-    created = ndb.DateTimeProperty(auto_now_add=True)
+    created = ndb.DateTimeProperty()
+    messages = ndb.StructuredProperty(Message, repeated=True)
+    tags = ndb.StringProperty(repeated=True)
+
+    @classmethod
+    def _get_kind(cls):
+      return 'Submissionvtwo'
+
+    def get_messages(self, fields={}):
+        message_fields = fields.get('messages', {})
+        messages = {message.kind: message.contents for message in self.messages}
+        return {kind:
+            (True if message_fields.get(kind) == "presence"
+                else contents)
+            for kind, contents in messages.iteritems()
+                if not message_fields or kind in message_fields.keys()}
 
     @property
     def group(self):
         submitter = self.submitter.get()
         return submitter.groups(self.assignment.get()).get()
+
+    def to_json(self, fields=None):
+        json = super(Submission, self).to_json(fields)
+        if 'messages' in json:
+            json['messages'] = self.get_messages(fields)
+        return json
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -514,3 +539,24 @@ class AuditLog(Base):
     user = ndb.KeyProperty('User', required=True, validator=anon_converter)
     description = ndb.StringProperty()
     obj = ndb.KeyProperty()
+
+class Queue(Base):
+    submissions = ndb.KeyProperty(Submission, repeated=True)
+    assignment = ndb.KeyProperty(Assignment, required=True)
+    assigned_staff = ndb.KeyProperty(User, repeated=True)
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        if not user.logged_in:
+            return False
+
+        if action == "index":
+            if user.is_admin:
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
+        return False

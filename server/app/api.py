@@ -24,6 +24,15 @@ from google.appengine.ext.ndb import stats
 
 parser = FlaskParser()
 
+def parse_json_field(field):
+    if not field[0] == '{':
+        if field == "false":
+            return False
+        elif field == "true":
+            return True
+        return field
+    return json.loads(field)
+
 
 def DateTimeArg(**kwds):
     def parse_date(arg):
@@ -219,17 +228,8 @@ class APIResource(View):
         Parses the arguments to this API call.
         |index| is whether or not this is an index call.
         """
-        def use_fields(field):
-            if not field[0] == '{':
-                if field == "false":
-                    return False
-                elif field == "true":
-                    return True
-                return field
-            return json.loads(field)
-
         fields = parser.parse({
-            'fields': Arg(None, use=use_fields)
+            'fields': Arg(None, use=parse_json_field)
         })
         if fields['fields'] is None:
             fields['fields'] = {}
@@ -386,10 +386,16 @@ class SubmitNDBImplementation(object):
 
     def create_submission(self, user, assignment, messages):
         """Create submission using user as parent to ensure ordering."""
+        db_messages = []
+        for kind, message in messages.iteritems():
+            if message:
+                db_messages.append(models.Message(kind=kind, contents=message))
+
         submission = models.Submission(submitter=user.key,
                                        assignment=assignment.key,
-                                       messages=messages)
+                                       messages=db_messages)
         submission.put()
+
         return submission
 
 
@@ -416,6 +422,7 @@ class SubmissionAPI(APIResource):
                 'assignment': KeyArg('Assignment'),
                 'submitter': KeyArg('User'),
                 'created': DateTimeArg(),
+                'messages.kind': Arg(str, use=parse_json_field),
             }
         },
         'diff': {
@@ -440,14 +447,34 @@ class SubmissionAPI(APIResource):
         },
     }
 
+    def get_instance(self, key, user):
+        try:
+            return super(SubmissionAPI, self).get_instance(key, user)
+        except BadKeyError:
+            pass
+
+        old_obj = models.OldSubmission.get_by_id(key)
+        if not old_obj:
+            raise BadKeyError(key)
+        obj = old_obj.upgrade()
+        obj.put()
+        old_obj.key.delete()
+
+        need = Need('get')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+        return obj
+
     def download(self, obj, user, data):
         """
         Allows you to download a submission.
         """
-        if 'file_contents' not in obj.messages:
+        messages = obj.get_messages()
+        if 'file_contents' not in messages:
             raise BadValueError("Submission has no contents to download")
+        file_contents = messages['file_contents']
 
-        response = make_response(create_zip(obj.messages['file_contents']))
+        response = make_response(create_zip(file_contents))
         response.headers["Content-Disposition"] = (
             "attachment; filename=submission-%s.zip" % str(obj.created))
         response.headers["Content-Type"] = "application/zip"
@@ -457,8 +484,11 @@ class SubmissionAPI(APIResource):
         """
         Gets the associated diff for a submission
         """
-        if 'file_contents' not in obj.messages:
+        messages = obj.get_messages()
+        if 'file_contents' not in obj.get_messages():
             raise BadValueError("Submission has no contents to diff")
+
+        file_contents = messages['file_contents']
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
@@ -471,7 +501,7 @@ class SubmissionAPI(APIResource):
                                 please contact course staff")
 
         templates = json.loads(templates)
-        for filename, contents in obj.messages['file_contents'].items():
+        for filename, contents in file_contents.items():
             diff[filename] = compare.diff(templates[filename], contents)
 
         diff = self.diff_model(id=obj.key.id(),
@@ -832,3 +862,24 @@ class GroupAPI(APIResource):
             raise need.exception()
         group.invited_members.remove(user.key)
         group.put()
+
+class QueueAPI(APIResource):
+    """The API resource for the Assignment Object"""
+    model = models.Queue
+
+    methods = {
+        'post': {
+            'web_args': {
+                'course': KeyArg('Assignment', required=True),
+                'assigned_staff': KeyArg('User'),
+            }
+        },
+        'get': {
+        },
+        'index': {
+            'web_args': {
+                'assignment': KeyArg('Assigment'),
+                'assigned_staff': KeyArg('User'),
+            }
+        },
+    }
