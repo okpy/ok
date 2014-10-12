@@ -134,15 +134,21 @@ def paginate(entries, page, num_per_page):
 
 def _apply_filter(query, model, arg, value, op):
     """
-    Applies a filter on |model| of |arg| == |value| to |query|.
+    Applies a filter on |model| of |arg| |op| |value| to |query|.
     """
-    field = getattr(model, arg, None)
-    if not field:
-        # Silently swallow for now
-        # TODO(martinis) cause an error
-        return query
+    if '.' in arg:
+        arg = arg.split('.')
+    else:
+        arg = [arg]
 
-    # Only equals for now
+    field = model
+    while arg:
+        field = getattr(field, arg.pop(0), None)
+        if not field:
+            # Silently swallow for now
+            # TODO(martinis) cause an error
+            return query
+
     if op == "==":
         filtered = field == value
     elif op == "<":
@@ -175,7 +181,6 @@ def filter_query(query, args, model):
         query = _apply_filter(query, model, arg, value, op)
 
     return query
-
 
 BATCH_SIZE = 100
 
