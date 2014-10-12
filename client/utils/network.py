@@ -32,10 +32,7 @@ def send_to_server(access_token, messages, name, server, version, log,
         log.warning('Server error message: %s', response_json['message'])
         try:
             if ex.code == 403:
-                log.info('403 error -- client version is outdated')
-                log.info('Retrieving latest version from %s',
-                         response_json['data']['download_link'])
-                software_update(response_json['data']['download_link'])
+                software_update(response_json['data']['download_link'], log)
             return {}
         except Exception as e:
             log.warn('Could not connect to %s', server)
@@ -60,21 +57,23 @@ def server_timer():
 # Software Updating #
 #####################
 
-def software_update(download_link):
+def software_update(download_link, log):
     """Check for the latest version of ok and update this file accordingly."""
-    #print("We detected that you are running an old version of ok.py: {0}".format(VERSION))
+    log.info('Retrieving latest version from %s', download_link)
 
-    # Get server version
-
+    file_destination = 'ok'
     try:
         req = request.Request(download_link)
+        log.info('Sending request to %s', download_link)
         response = request.urlopen(req)
 
         zip_binary = response.read()
-        with open('ok', 'wb') as f:
+        log.info('Writing new version to %s', file_destination)
+        with open(file_destination, 'wb') as f:
             f.write(zip_binary)
-        #print("Done updating!")
-    except error.HTTPError:
-        # print("Error when downloading new version")
-        pass
+        log.info('Successfully wrote to %s', file_destination)
+    except error.HTTPError as e:
+        log.warn('Error when downloading new version of ok: %s', str(e))
+    except IOError as e:
+        log.warn('Error writing to %s: %s', file_destination, str(e))
 
