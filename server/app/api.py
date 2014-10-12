@@ -862,3 +862,24 @@ class GroupAPI(APIResource):
             raise need.exception()
         group.invited_members.remove(user.key)
         group.put()
+
+class QueueAPI(APIResource):
+    """The API resource for the Assignment Object"""
+    model = models.Queue
+
+    methods = {
+        'post': {
+            'web_args': {
+                'course': KeyArg('Assignment', required=True),
+                'assigned_staff': KeyArg('User'),
+            }
+        },
+        'get': {
+        },
+        'index': {
+            'web_args': {
+                'assignment': KeyArg('Assigment'),
+                'assigned_staff': KeyArg('User'),
+            }
+        },
+    }

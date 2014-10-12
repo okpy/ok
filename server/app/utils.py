@@ -2,6 +2,7 @@
 Utility functions used by API and other services
 """
 import collections
+import logging
 
 try:
     from cStringIO import StringIO
@@ -11,6 +12,10 @@ import zipfile as zf
 from flask import jsonify, request, Response, json
 
 from google.appengine.api import memcache
+from google.appengine.ext import db
+from google.appengine.ext import deferred
+
+from app import models
 
 def coerce_to_json(data, fields):
     """
@@ -171,20 +176,16 @@ def filter_query(query, args, model):
 
     return query
 
-from google.appengine.ext import deferred
 
 BATCH_SIZE = 100
 
 def upgrade_submissions(cursor=None, num_updated=0):
     query = models.OldSubmission.query()
     if cursor:
-        query.with_cursor(cursor)
+        query = query.with_cursor(cursor)
 
     to_put = []
     for old in query.fetch(limit=BATCH_SIZE):
-        # In this example, the default values of 0 for num_votes and avg_rating
-        # are acceptable, so we don't need this loop.  If we wanted to manually
-        # manipulate property values, it might go something like this:
         new = old.upgrade()
         to_put.append(new)
         old.key.delete()
@@ -200,4 +201,33 @@ def upgrade_submissions(cursor=None, num_updated=0):
     else:
         logging.debug(
             'UpdateSchema complete with %d updates!', num_updated)
+
+def assign_work(assignment, cursor=None, num_updated=0):
+    query = models.User.query()
+    if cursor:
+        query = query.with_cursor(cursor)
+
+    queues = list(models.Queue.query(models.Queue.assignment == assignment))
+
+    to_put = 0
+    for user in query.fetch(limit=BATCH_SIZE):
+        queues.sort(key=lambda x: len(x.submissions))
+
+        subm = user.get_selected_submission(assignment)
+        queues[0].submissions.append(subm)
+
+        to_put += 1
+
+    if to_put:
+        num_updated += to_put
+        db.put(queues)
+        logging.debug(
+            'Put %d entities to Datastore for a total of %d',
+            to_put, num_updated)
+        deferred.defer(
+            assign_work, assignment, cursor=query.cursor(),
+            num_updated=num_updated)
+    else:
+        logging.debug(
+            'assign_work complete with %d updates!', num_updated)
 

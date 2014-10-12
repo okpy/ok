@@ -137,6 +137,11 @@ class User(Base):
     def courses(self):
         return [group.assignment.get().course for group in self.groups()]
 
+    def get_selected_submission(self, assignment):
+        return Submission.query(
+            Submission.assignment == assignment).order(
+                -Submission.created).get()
+
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
@@ -537,6 +542,8 @@ class AuditLog(Base):
 
 class Queue(Base):
     submissions = ndb.KeyProperty(Submission, repeated=True)
+    assignment = ndb.KeyProperty(Assignment, required=True)
+    assigned_staff = ndb.KeyProperty(User, repeated=True)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
