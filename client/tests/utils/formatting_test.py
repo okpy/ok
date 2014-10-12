@@ -17,19 +17,35 @@ class PrettyJsonTest(unittest.TestCase):
 
     def testString_multipleLines(self):
         self.assertFormat("""
-        \"\"\"
+        r\"\"\"
         hello
         world
         \"\"\"
         """, "hello\nworld")
 
-    def testString_multipleLines(self):
+    def testString_multipleLinesSurroundingNewlines(self):
         self.assertFormat("""
-        \"\"\"
+        r\"\"\"
         hello
         world
         \"\"\"
         """, "\nhello\nworld\n")
+
+    def testString_rawStringSingleLine(self):
+        self.assertFormat(r"""
+        'hello \\ there'
+        """, r"hello \ there")
+
+    def testString_rawStringMultiLine(self):
+        self.assertFormat("""
+        r\"\"\"
+        hello \\
+            there
+        \"\"\"
+        """, r"""
+        hello \
+            there
+        """)
 
     def testList_onlyPrimitives(self):
         self.assertFormat("""
@@ -37,7 +53,7 @@ class PrettyJsonTest(unittest.TestCase):
           42,
           3.14,
           'hello world',
-          \"\"\"
+          r\"\"\"
           hello
           world
           \"\"\"
@@ -66,7 +82,7 @@ class PrettyJsonTest(unittest.TestCase):
         self.assertFormat("""
         {
           'answer': 'hello world',
-          'multi': \"\"\"
+          'multi': r\"\"\"
           answer
           here
           \"\"\",

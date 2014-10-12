@@ -44,7 +44,7 @@ def dump_to_server(access_token, msg_queue, name, server, insecure, staging_queu
         message = msg_queue.get()
         staging_queue.put(message)
         try:
-            if send_to_server(access_token, message, name, server, version, insecure) == None:
+            if send_to_server(access_token, message, name, server, version, insecure) != None:
                 staging_queue.get() #throw away successful message
         except error.URLError as ex:
             pass
