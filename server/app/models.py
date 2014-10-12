@@ -324,6 +324,15 @@ class Submission(Base):
     def _get_kind(cls):
       return 'Submissionvtwo'
 
+    def get_messages(self, fields={}):
+        message_fields = fields.get('messages', {})
+        messages = {message.kind: message.contents for message in self.messages}
+        return {kind:
+            (True if message_fields.get(kind) == "presence"
+                else contents)
+            for kind, contents in messages.iteritems()
+                if not message_fields or kind in message_fields.keys()}
+
     @property
     def group(self):
         submitter = self.submitter.get()
@@ -332,12 +341,7 @@ class Submission(Base):
     def to_json(self, fields=None):
         json = super(Submission, self).to_json(fields)
         if 'messages' in json:
-            message_fields = fields.get('messages', {})
-            messages = {message['kind']: message['contents'] for message in json['messages']}
-            json['messages'] = {kind:
-                (True if message_fields.get(kind) == "presence"
-                    else contents)
-                for kind, contents in messages.iteritems() if not message_fields or kind in message_fields.keys()}
+            json['messages'] = self.get_messages(fields)
         return json
 
     @classmethod

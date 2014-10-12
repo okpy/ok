@@ -469,10 +469,12 @@ class SubmissionAPI(APIResource):
         """
         Allows you to download a submission.
         """
-        if 'file_contents' not in obj.messages:
+        messages = obj.get_messages()
+        if 'file_contents' not in messages:
             raise BadValueError("Submission has no contents to download")
+        file_contents = messages['file_contents']
 
-        response = make_response(create_zip(obj.messages['file_contents']))
+        response = make_response(create_zip(file_contents))
         response.headers["Content-Disposition"] = (
             "attachment; filename=submission-%s.zip" % str(obj.created))
         response.headers["Content-Type"] = "application/zip"
@@ -482,8 +484,11 @@ class SubmissionAPI(APIResource):
         """
         Gets the associated diff for a submission
         """
-        if 'file_contents' not in obj.messages:
+        messages = obj.get_messages()
+        if 'file_contents' not in obj.get_messages():
             raise BadValueError("Submission has no contents to diff")
+
+        file_contents = messages['file_contents']
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
@@ -496,7 +501,7 @@ class SubmissionAPI(APIResource):
                                 please contact course staff")
 
         templates = json.loads(templates)
-        for filename, contents in obj.messages['file_contents'].items():
+        for filename, contents in file_contents.items():
             diff[filename] = compare.diff(templates[filename], contents)
 
         diff = self.diff_model(id=obj.key.id(),
