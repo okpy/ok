@@ -36,10 +36,10 @@ BACKUP_FILE = ".ok_messages"
 
 from client import config
 from client.models import *
-from client.network import auth
-from client.network import server
 from client.protocols import *
+from client.utils import auth
 from client.utils import loading
+from client.utils import network
 from client.utils import output
 from datetime import datetime
 from urllib import error
@@ -109,7 +109,7 @@ def main():
     try:
         print("You are running version {0} of ok.py".format(client.__version__))
         if not args.local:
-            timer_thread = multiprocessing.Process(target=server.server_timer,
+            timer_thread = multiprocessing.Process(target=network.server_timer,
                                                    args=())
             timer_thread.start()
         cases = {case.type: case for case in core.get_testcases(config.cases)}
@@ -147,7 +147,7 @@ def main():
                 msg_queue.put(messages)
                 staging_queue = multiprocessing.Queue()
                 server_thread = multiprocessing.Process(
-                    target=server.dump_to_server,
+                    target=network.dump_to_server,
                     args=(access_token, msg_queue, assignment['name'],
                           args.server, args.insecure, staging_queue,
                           client.__version__))
