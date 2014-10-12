@@ -20,6 +20,7 @@ setup(
         'client',
         'client.cli',
         'client.models',
+        'client.network',
         'client.protocols',
         'client.sanction',
         'client.utils',
