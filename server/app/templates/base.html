@@ -51,9 +51,6 @@
 
         <script src="/static/js/dashboard/controllers.js"></script>
 
-
-
-
     </head>
     <body class="skin-black">
         <!-- header logo: style can be found in header.less -->
@@ -124,6 +121,7 @@
         {% if user %}
         <script>
           window.user = "{{user.email}}";
+          window.reloginLink = "{{relogin_link}}";
         </script>
           <div ui-view></div>
         {% else %}
