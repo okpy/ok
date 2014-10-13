@@ -202,7 +202,7 @@ def upgrade_submissions(cursor=None, num_updated=0):
             'Put %d entities to Datastore for a total of %d',
             len(to_put), num_updated)
         deferred.defer(
-            UpdateSchema, cursor=query.cursor(), num_updated=num_updated)
+            upgrade_submissions, cursor=query.cursor(), num_updated=num_updated)
     else:
         logging.debug(
             'UpdateSchema complete with %d updates!', num_updated)
