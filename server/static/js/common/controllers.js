@@ -411,3 +411,14 @@ app.controller("LandingPageCtrl", ["$window", "$state",
       }
     }
 ]);
+
+app.controller("QueueListCtrl", ['$scope', 'Queue',
+  function($scope, Queue) {
+    $scope.queues = Queue.query();
+  }]);
+
+app.controller("QueueDetailCtrl", ["$scope", "Queue",
+    function ($scope, Queue) {
+      $scope.queue = Queue.get({id: $stateParams.queueId});
+    }
+  ]);

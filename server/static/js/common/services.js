@@ -175,3 +175,21 @@ app.factory('Version', ['$resource',
     }
   ]);
 
+app.factory('Queue', ['$resource',
+    function($resource) {
+      return $resource('api/v1/queue/:id', {
+        format: "json",
+        id: "@id",
+      }, {
+        query: {
+        },
+        get: {
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+      });
+    }
+  ]);
+
+
