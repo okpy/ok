@@ -170,11 +170,12 @@ def main():
 
                 msg_queue.put(messages)
                 staging_queue = multiprocessing.Queue()
+                interceptor = output.LogInterceptor()
                 server_thread = multiprocessing.Process(
                     target=network.dump_to_server,
                     args=(access_token, msg_queue, assignment['name'],
                           args.server, args.insecure, staging_queue,
-                          client.__version__, log))
+                          client.__version__, interceptor))
                 server_thread.start()
             except error.URLError as ex:
                 log.warning('on_start messages not sent to server: %s', str(e))
@@ -199,6 +200,8 @@ def main():
                 server_thread.terminate()
             else:
                 server_thread.join()
+
+            interceptor.dump_to_logger(log)
 
             dump_list = []
             while not msg_queue.empty():
