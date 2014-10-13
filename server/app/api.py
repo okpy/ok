@@ -532,8 +532,8 @@ class SubmissionAPI(APIResource):
 
     def add_tag(self, obj, user, data):
         """
-        Adds a tag to this submission.
-        Validates uniqueness.
+        Removes a tag from the submission.
+        Validates existence.
         """
         tag = data['tag']
         if tag in obj.tags:
