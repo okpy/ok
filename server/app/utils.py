@@ -193,7 +193,9 @@ def upgrade_submissions(cursor=None, num_updated=0):
     for old in query.fetch(limit=BATCH_SIZE):
         new = old.upgrade()
         to_put.append(new)
-        old.key.delete()
+
+        #commented out so we don't lose data
+        #old.key.delete()
 
     if to_put:
         db.put(to_put)
