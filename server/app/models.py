@@ -302,6 +302,7 @@ class Submission(Base):
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
+    tags = ndb.StringProperty(repeated=True)
 
     @property
     def group(self):
