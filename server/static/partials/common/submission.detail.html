@@ -5,23 +5,31 @@
   <h2>
     Tags
   </h2>
-  <div ng-if="submission.tags.length == 0">
-    No tags...
+  <div class="row">
+    <div class="col-sm-12">
+        <div class="btn-group">
+        
+          <button ng-if="submission.tags.length > 0"ng-repeat="tag in submission.tags" ng-controller="TagCtrl" class="btn btn-flat btn-default">
+            {{tag}}
+            <a class="btn-red" style="color: #f56954;" ng-click="remove()">
+              <i class="fa fa-times-circle-o"></i>
+            </a>
+          </button>
+          <button class="btn btn-flat btn-primary" ng-hide="showInput && submission.tags.length > 0" ng-click="toggle(); tagToAdd = ''"><span class="glyphicon glyphicon-plus-sign"></span></button>
+
+        <div class="input-group input-group-md" ng-show="showInput || submission.tags.length == 0" style="max-width: 400px;">
+            <input id="typeaheadField" typeahead="tag['text'] for tag in validTags | limitTo:5"  type="text" class="form-control" ng-model="tagToAdd" placeholder="Valid Tags are: Submission, Bugs, Comments"> </input>
+            <span class="input-group-btn">
+                <button class="btn btn-info btn-flat" ng-disabled="$" ng-click="add()" type="button">Add Tag</button>
+            </span>
+      </div>
+
+      </div>
+    </div>
   </div>
-  <ul ng-if="submission.tags.length > 0">
-    <li ng-repeat="tag in submission.tags" ng-controller="TagCtrl">
-      {{tag}}
-      <button type="button" ng-click="remove()" class="btn btn-danger btn-xs">
-        <span class="glyphicon glyphicon-remove"></span>
-      </button>
-    </li>
-  </ul>
-  <input type="text" ng-model="tagToAdd">
-  </input>
-  <button ng-click="add()">
-    Add tag
-  </button>
+
   <div ng-repeat="(file_name, contents) in submission.messages.file_contents">
     <snippet/>
   </div>
+
 </div>

@@ -25,6 +25,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
           'submitter': {
             'id': true
           },
+          'tags': true,
           'assignment': {
             'name': true,
             'display_name': true,
@@ -52,6 +53,18 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
   function($scope, $location, $stateParams, $timeout, $anchorScroll, Submission) {
     $scope.tagToAdd = "";
     $scope.submission = Submission.get({id: $stateParams.submissionId});
+    $scope.validTags = [
+        { text: 'Submission' },
+        { text: 'Bugs' },
+        { text: 'Comments' }
+      ];;
+
+    $scope.showInput = false;
+
+    $scope.toggle = function() {
+        $scope.showInput = !$scope.showInput;
+    };
+
     $scope.add = function() {
       Submission.addTag({
         id: $stateParams.submissionId,
@@ -59,6 +72,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
       }, function() {
         $scope.submission.tags.push($scope.tagToAdd);
       });
+      $scope.toggle();
     }
   }]);
 
