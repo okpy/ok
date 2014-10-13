@@ -438,6 +438,18 @@ class SubmissionAPI(APIResource):
                 'comment': KeyArg('Comment', required=True)
             }
         },
+        'add_tag': {
+            'methods': set(["PUT"]),
+            'web_args': {
+                'tag': Arg(str, required=True)
+            }
+        },
+        'remove_tag': {
+            'methods': set(["PUT"]),
+            'web_args': {
+                'tag': Arg(str, required=True)
+            }
+        },
     }
 
     def download(self, obj, user, data):
@@ -518,6 +530,30 @@ class SubmissionAPI(APIResource):
             raise need.exception()
         comment.key.delete()
 
+    def add_tag(self, obj, user, data):
+        """
+        Adds a tag to this submission.
+        Validates uniqueness.
+        """
+        tag = data['tag']
+        if tag in obj.tags:
+            raise BadValueError("Tag already exists")
+
+        obj.tags.append(tag)
+        obj.put()
+
+    def remove_tag(self, obj, user, data):
+        """
+        Adds a tag to this submission.
+        Validates uniqueness.
+        """
+        tag = data['tag']
+        if tag not in obj.tags:
+            raise BadValueError("Tag does not exists")
+
+        obj.tags.remove(tag)
+        obj.put()
+
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
         assignments = self.db.lookup_assignments_by_name(name)
@@ -539,6 +575,7 @@ class SubmissionAPI(APIResource):
     def post(self, user, data):
         return self.submit(user, data['assignment'],
                            data['messages'])
+    
 
 
 class VersionAPI(APIResource):

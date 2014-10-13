@@ -10,6 +10,7 @@ import werkzeug
 from flask import render_template, session, request, Response
 
 from google.appengine.api import users
+from google.appengine.ext import deferred
 
 from app import app
 from app import api
@@ -18,6 +19,7 @@ from app import models
 from app import utils
 from app.constants import API_PREFIX
 from app.exceptions import *
+
 
 @app.route("/")
 def dashboard():
@@ -29,7 +31,8 @@ def dashboard():
     user = users.get_current_user()
     params = {}
     if user is None:
-        params['users_link'] = force_account_chooser(users.create_login_url('/#/loginLanding'))
+        params['users_link'] = force_account_chooser(
+            users.create_login_url('/#/loginLanding'))
         params['users_title'] = "Sign In"
     else:
         logging.info("User is %s", user.email())
@@ -41,7 +44,7 @@ def dashboard():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
 
-## Error handlers
+# Error handlers
 # Handle 404 errors
 @app.errorhandler(404)
 def page_not_found(e):
@@ -57,7 +60,7 @@ def args_error(e):
     raise BadValueError(e.message)
 
 def check_version(client):
-    latest = models.Version.query(models.Version.name=='ok').get()
+    latest = models.Version.query(models.Version.name == 'ok').get()
 
     if latest is None or latest.current_version is None:
         raise APIException('Current version of ok not found')
@@ -92,7 +95,8 @@ def register_api(view, endpoint, url):
 
             rval = view(*args, **kwds)
 
-            if isinstance(rval, Response) or isinstance(rval, werkzeug.wrappers.Response):
+            if (isinstance(rval, Response) or
+                    isinstance(rval, werkzeug.wrappers.Response)):
                 pass
             elif isinstance(rval, list):
                 rval = utils.create_api_response(200, message, rval)
@@ -111,9 +115,9 @@ def register_api(view, endpoint, url):
             return utils.create_api_response(500, 'internal server error :(')
 
     app.add_url_rule('%s' % url, view_func=api_wrapper, defaults={'path': None},
-            methods=['GET', 'POST'])
+                     methods=['GET', 'POST'])
     app.add_url_rule('%s/<path:path>' % url, view_func=api_wrapper,
-            methods=['GET', 'POST', 'DELETE', 'PUT'])
+                     methods=['GET', 'POST', 'DELETE', 'PUT'])
 
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
