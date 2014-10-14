@@ -56,3 +56,25 @@ class OutputLogger(object):
     def __getattr__(self, attr):
         return getattr(self._current_stream, attr)
 
+class LogInterceptor(object):
+    """A serializable interceptor object that relays output to a logger object"""
+    def __init__(self):
+        self._msgs = []
+
+    def info(self, *args):
+        self._msgs.append(('info', args))
+
+    def warning(self, *args):
+        self._msgs.append(('warning', args))
+
+    def error(self, *args):
+        self._msgs.append(('error', args))
+
+    def dump_to_logger(self, log):
+        for msg_type, msg in self._msgs:
+            if msg_type == 'info':
+                log.info(*msg)
+            elif msg_type == 'warning':
+                log.warning(*msg)
+            elif msg_type == 'error':
+                log.error(*msg)
