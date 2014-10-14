@@ -41,6 +41,11 @@ def dashboard():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
 
+@app.route("/upgrade")
+def upgrade():
+    utils.upgrade_submissions()
+    return "OK", 200
+
 ## Error handlers
 # Handle 404 errors
 @app.errorhandler(404)

@@ -12,7 +12,7 @@ import zipfile as zf
 from flask import jsonify, request, Response, json
 
 from google.appengine.api import memcache
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 
 from app import models
@@ -186,11 +186,15 @@ BATCH_SIZE = 100
 
 def upgrade_submissions(cursor=None, num_updated=0):
     query = models.OldSubmission.query()
-    if cursor:
-        query = query.with_cursor(cursor)
 
     to_put = []
-    for old in query.fetch(limit=BATCH_SIZE):
+    kwargs = {}
+
+    if cursor:
+        kwargs['start_cursor'] = cursor
+
+    results, cursor, more = query.fetch_page(BATCH_SIZE, **kwargs)
+    for old in results:
         new = old.upgrade()
         to_put.append(new)
 
@@ -198,16 +202,16 @@ def upgrade_submissions(cursor=None, num_updated=0):
         #old.key.delete()
 
     if to_put:
-        db.put(to_put)
+        ndb.put_multi(to_put)
         num_updated += len(to_put)
-        logging.debug(
+        logging.info(
             'Put %d entities to Datastore for a total of %d',
             len(to_put), num_updated)
         deferred.defer(
-            upgrade_submissions, cursor=query.cursor(), num_updated=num_updated)
+            upgrade_submissions, cursor=cursor, num_updated=num_updated)
     else:
-        logging.debug(
-            'UpdateSchema complete with %d updates!', num_updated)
+        logging.info(
+            'upgrade_submissions complete with %d updates!', num_updated)
 
 def assign_work(assignment, cursor=None, num_updated=0):
     query = models.User.query()
