@@ -3,6 +3,7 @@ Utility functions used by API and other services
 """
 import collections
 import logging
+import datetime
 
 try:
     from cStringIO import StringIO
@@ -15,7 +16,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 
-from app import models
+from app import models, app
 
 def coerce_to_json(data, fields):
     """
@@ -251,3 +252,9 @@ def assign_work(assignment, cursor=None, num_updated=0):
         logging.debug(
             'assign_work complete with %d updates!', num_updated)
 
+
+def parse_date(date):
+    date = datetime.datetime.strptime(
+        date, app.config["GAE_DATETIME_FORMAT"])
+    delta = datetime.timedelta(hours=7)
+    return datetime.datetime.combine(date.date(), date.time()) + delta

@@ -16,6 +16,7 @@ from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip, assign_work
+from app import utils
 
 from app.exceptions import *
 
@@ -402,11 +403,7 @@ class SubmitNDBImplementation(object):
         if messages.get('analytics'):
             date = messages['analytics']['time']
             if date:
-                date = datetime.datetime.strptime(date,
-                                                  app.config["GAE_DATETIME_FORMAT"])
-                delta = datetime.timedelta(hours=7)
-                date = (datetime.datetime.combine(date.date(), date.time()) + delta)
-                created = date
+                created = utils.parse_date(date)
 
         submission = models.Submission(submitter=user.key,
                                        assignment=assignment.key,

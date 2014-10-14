@@ -6,6 +6,7 @@ import datetime
 
 from flask import Blueprint
 from app import constants
+from app import utils
 
 MODEL_BLUEPRINT = Blueprint('models', __name__)
 
@@ -16,7 +17,6 @@ from flask import json
 from flask.json import JSONEncoder as old_json
 
 from google.appengine.ext import db, ndb
-
 
 # To deal with circular imports
 class APIProxy(object):
@@ -438,7 +438,9 @@ class OldSubmission(Base):
 
         analytics = self.messages.get('analytics')
         if analytics:
-            created = analytics.get('time') or created
+            date = analytics.get('time') or created
+            if not date == created:
+                created = utils.parse_date(date)
 
         new_messages = [Message(kind=kind, contents=contents)
                         for kind, contents in self.messages.iteritems()]
