@@ -417,8 +417,8 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
     $scope.queues = Queue.query();
   }]);
 
-app.controller("QueueDetailCtrl", ["$scope", "Queue",
-    function ($scope, Queue) {
+app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
+    function ($scope, Queue, $stateParams) {
       $scope.queue = Queue.get({id: $stateParams.queueId});
     }
   ]);

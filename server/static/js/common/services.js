@@ -182,6 +182,10 @@ app.factory('Queue', ['$resource',
         id: "@id",
       }, {
         query: {
+          isArray: true,
+          transformResponse: function(data) {
+            return JSON.parse(data).data.results;
+          }
         },
         get: {
           transformResponse: function(data) {

@@ -214,29 +214,38 @@ def upgrade_submissions(cursor=None, num_updated=0):
             'upgrade_submissions complete with %d updates!', num_updated)
 
 def assign_work(assignment, cursor=None, num_updated=0):
-    query = models.User.query()
-    if cursor:
-        query = query.with_cursor(cursor)
+    query = models.User.query(models.User.role == "student")
 
     queues = list(models.Queue.query(models.Queue.assignment == assignment))
+    if not queues:
+        logging.error("Tried to assign work, but no queues existed")
+        return
+
+    kwargs = {}
+
+    if cursor:
+        kwargs['start_cursor'] = cursor
 
     to_put = 0
-    for user in query.fetch(limit=BATCH_SIZE):
+    results, cursor, more = query.fetch_page(BATCH_SIZE, **kwargs)
+    for user in results:
+        if not user.logged_in:
+            continue
         queues.sort(key=lambda x: len(x.submissions))
 
         subm = user.get_selected_submission(assignment)
-        queues[0].submissions.append(subm)
-
-        to_put += 1
+        if subm:
+            queues[0].submissions.append(subm.key)
+            to_put += 1
 
     if to_put:
         num_updated += to_put
-        db.put(queues)
+        ndb.put_multi(queues)
         logging.debug(
             'Put %d entities to Datastore for a total of %d',
             to_put, num_updated)
         deferred.defer(
-            assign_work, assignment, cursor=query.cursor(),
+            assign_work, assignment, cursor=cursor,
             num_updated=num_updated)
     else:
         logging.debug(

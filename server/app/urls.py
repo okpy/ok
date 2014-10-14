@@ -10,6 +10,7 @@ import werkzeug
 from flask import render_template, session, request, Response
 
 from google.appengine.api import users
+from google.appengine.ext import deferred
 
 from app import app
 from app import api
@@ -43,7 +44,7 @@ def dashboard():
 
 @app.route("/upgrade")
 def upgrade():
-    utils.upgrade_submissions()
+    deferred.defer(utils.upgrade_submissions)
     return "OK", 200
 
 ## Error handlers

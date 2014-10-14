@@ -138,9 +138,11 @@ class User(Base):
         return [group.assignment.get().course for group in self.groups()]
 
     def get_selected_submission(self, assignment):
-        return Submission.query(
-            Submission.assignment == assignment).order(
-                -Submission.created).get()
+        query = Submission.query()
+        query = Submission.can(self, Need('index'), query=query)
+        query = query.filter(Submission.assignment == assignment)
+        query = query.order(-Submission.created)
+        return query.get()
 
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
@@ -330,6 +332,9 @@ class Submission(Base):
       return 'Submissionvtwo'
 
     def get_messages(self, fields={}):
+        if not fields:
+            fields = {}
+
         message_fields = fields.get('messages', {})
         messages = {message.kind: message.contents for message in self.messages}
         return {kind:

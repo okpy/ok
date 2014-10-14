@@ -14,9 +14,14 @@
 
     <tr ng-repeat="queue in queues">
       <td>
-        <div ng-repeat="user in assigned_staff">
-          {{user}}
-        <div>
+        <div ng-if="queue.assigned_staff.length > 0">
+          <div ng-repeat="user in queue.assigned_staff">
+            {{user}}
+          </div>
+        </div>
+        <div ng-if="queue.assigned_staff.length <= 0">
+          <strong>No staff assigned</strong>
+        </div>
       </td>
       <td>
         <a ui-sref='queue.detail({queueId:queue.id})'>
