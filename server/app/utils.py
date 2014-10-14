@@ -2,6 +2,7 @@
 Utility functions used by API and other services
 """
 import collections
+import logging
 
 try:
     from cStringIO import StringIO
@@ -11,6 +12,10 @@ import zipfile as zf
 from flask import jsonify, request, Response, json
 
 from google.appengine.api import memcache
+from google.appengine.ext import ndb
+from google.appengine.ext import deferred
+
+from app import models
 
 def coerce_to_json(data, fields):
     """
@@ -129,15 +134,21 @@ def paginate(entries, page, num_per_page):
 
 def _apply_filter(query, model, arg, value, op):
     """
-    Applies a filter on |model| of |arg| == |value| to |query|.
+    Applies a filter on |model| of |arg| |op| |value| to |query|.
     """
-    field = getattr(model, arg, None)
-    if not field:
-        # Silently swallow for now
-        # TODO(martinis) cause an error
-        return query
+    if '.' in arg:
+        arg = arg.split('.')
+    else:
+        arg = [arg]
 
-    # Only equals for now
+    field = model
+    while arg:
+        field = getattr(field, arg.pop(0), None)
+        if not field:
+            # Silently swallow for now
+            # TODO(martinis) cause an error
+            return query
+
     if op == "==":
         filtered = field == value
     elif op == "<":
@@ -170,3 +181,73 @@ def filter_query(query, args, model):
         query = _apply_filter(query, model, arg, value, op)
 
     return query
+
+BATCH_SIZE = 100
+
+def upgrade_submissions(cursor=None, num_updated=0):
+    query = models.OldSubmission.query()
+
+    to_put = []
+    kwargs = {}
+
+    if cursor:
+        kwargs['start_cursor'] = cursor
+
+    results, cursor, more = query.fetch_page(BATCH_SIZE, **kwargs)
+    for old in results:
+        new = old.upgrade()
+        to_put.append(new)
+
+        #commented out so we don't lose data
+        #old.key.delete()
+
+    if to_put:
+        ndb.put_multi(to_put)
+        num_updated += len(to_put)
+        logging.info(
+            'Put %d entities to Datastore for a total of %d',
+            len(to_put), num_updated)
+        deferred.defer(
+            upgrade_submissions, cursor=cursor, num_updated=num_updated)
+    else:
+        logging.info(
+            'upgrade_submissions complete with %d updates!', num_updated)
+
+def assign_work(assignment, cursor=None, num_updated=0):
+    query = models.User.query(models.User.role == "student")
+
+    queues = list(models.Queue.query(models.Queue.assignment == assignment))
+    if not queues:
+        logging.error("Tried to assign work, but no queues existed")
+        return
+
+    kwargs = {}
+
+    if cursor:
+        kwargs['start_cursor'] = cursor
+
+    to_put = 0
+    results, cursor, more = query.fetch_page(BATCH_SIZE, **kwargs)
+    for user in results:
+        if not user.logged_in:
+            continue
+        queues.sort(key=lambda x: len(x.submissions))
+
+        subm = user.get_selected_submission(assignment)
+        if subm:
+            queues[0].submissions.append(subm.key)
+            to_put += 1
+
+    if to_put:
+        num_updated += to_put
+        ndb.put_multi(queues)
+        logging.debug(
+            'Put %d entities to Datastore for a total of %d',
+            to_put, num_updated)
+        deferred.defer(
+            assign_work, assignment, cursor=cursor,
+            num_updated=num_updated)
+    else:
+        logging.debug(
+            'assign_work complete with %d updates!', num_updated)
+
