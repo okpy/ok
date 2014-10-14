@@ -398,9 +398,20 @@ class SubmitNDBImplementation(object):
             if message:
                 db_messages.append(models.Message(kind=kind, contents=message))
 
+        created = datetime.datetime.now()
+        if messages.get('analytics'):
+            date = messages['analytics']['time']
+            if date:
+                date = datetime.datetime.strptime(date,
+                                                  app.config["GAE_DATETIME_FORMAT"])
+                delta = datetime.timedelta(hours=7)
+                date = (datetime.datetime.combine(date.date(), date.time()) + delta)
+                created = date
+
         submission = models.Submission(submitter=user.key,
                                        assignment=assignment.key,
-                                       messages=db_messages)
+                                       messages=db_messages,
+                                       created=created)
         submission.put()
 
         return submission

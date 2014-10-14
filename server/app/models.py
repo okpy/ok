@@ -47,8 +47,8 @@ class JSONEncoder(old_json):
 app.json_encoder = JSONEncoder
 
 def convert_timezone(utc_dt):
-    delta = datetime.timedelta(hours = -7)
-    return (datetime.datetime.combine(utc_dt.date(),utc_dt.time()) + delta)
+    delta = datetime.timedelta(hours=-7)
+    return (datetime.datetime.combine(utc_dt.date(), utc_dt.time()) + delta)
 
 
 class Base(ndb.Model):
@@ -108,7 +108,8 @@ class Base(ndb.Model):
 
 class User(Base):
     """Users."""
-    email = ndb.StringProperty(required=True) # Must be associated with some OAuth login.
+    # Must be associated with some OAuth login.
+    email = ndb.StringProperty(required=True) 
     login = ndb.StringProperty() # TODO(denero) Legacy of glookup system
     role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
@@ -225,8 +226,12 @@ class Assignment(Base):
     """
     The Assignment Model
     """
-    name = ndb.StringProperty(required=True) # Must be unique to support submission.
-    display_name = ndb.StringProperty(required=True) # Name displayed to students
+
+    # Must be unique to support submission.
+    name = ndb.StringProperty(required=True) 
+
+    # Name displayed to students
+    display_name = ndb.StringProperty(required=True) 
     points = ndb.FloatProperty(required=True)
     creator = ndb.KeyProperty(User, required=True)
     templates = ndb.JsonProperty(required=True)
@@ -304,7 +309,7 @@ def validate_messages(_, messages):
 
 
 class Message(Base):
-    """ 
+    """
     A message given to us from the client.
     """
     contents = ndb.JsonProperty()
@@ -313,7 +318,7 @@ class Message(Base):
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
         action = need.action
-        
+
         if action == "index":
             return False
 
@@ -325,6 +330,7 @@ class Submission(Base):
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
     created = ndb.DateTimeProperty()
+    db_created = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
 
     @classmethod
@@ -337,11 +343,11 @@ class Submission(Base):
 
         message_fields = fields.get('messages', {})
         messages = {message.kind: message.contents for message in self.messages}
-        return {kind:
-            (True if message_fields.get(kind) == "presence"
-                else contents)
+        return {
+            kind: (True if message_fields.get(kind) == "presence"
+                   else contents)
             for kind, contents in messages.iteritems()
-                if not message_fields or kind in message_fields.keys()}
+            if not message_fields or kind in message_fields.keys()}
 
     @property
     def group(self):
@@ -407,18 +413,6 @@ class Submission(Base):
                 return query
         return False
 
-    def _post_put_hook(self, future):
-        val = future.get_result().get()
-        if val and not val.created:
-            analytics = filter(None,
-                (message if message.kind == "analytics" else None
-                    for message in val.messages))
-            if analytics and analytics[0].contents.get('timestamp'):
-                val.created = analytics[0]['timestamp']
-            else:
-                val.created = datetime.datetime.now()
-            val.put()
-
 class OldSubmission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User, required=True)
@@ -440,11 +434,18 @@ class OldSubmission(Base):
         return False
 
     def upgrade(self):
-        new_messages = [Message(kind=kind, contents=contents) for kind, contents in self.messages.iteritems()]
+        created = self.created
+
+        analytics = self.messages.get('analytics')
+        if analytics:
+            created = analytics['timestamp']
+        new_messages = [Message(kind=kind, contents=contents)
+                        for kind, contents in self.messages.iteritems()]
+
         return Submission(
             submitter=self.submitter,
             assignment=self.assignment,
-            created=self.created,
+            created=created,
             messages=new_messages)
 
 
