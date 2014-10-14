@@ -89,7 +89,7 @@ def _get_tests(directory, assignment, case_map):
 # Assignment dumping #
 ######################
 
-def dump_tests(test_dir, assignment):
+def dump_tests(test_dir, assignment, log=None):
     """Writes an assignment into the given test directory.
 
     PARAMETERS:
@@ -101,6 +101,8 @@ def dump_tests(test_dir, assignment):
     # TODO(albert): verify that assign_copy is serializable into json.
     info = formatting.prettyjson(assignment.serialize())
     with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
+        if log:
+            log.info('Dumping %s', INFO_FILE)
         f.write('info = ' + info)
 
     # TODO(albert): writing causes an error halfway, the tests
@@ -110,4 +112,6 @@ def dump_tests(test_dir, assignment):
     for test in assignment.tests:
         test_json = formatting.prettyjson(test.serialize())
         with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
+            if log:
+                log.info('Dumping %s', test.name)
             f.write('test = ' + test_json)

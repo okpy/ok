@@ -21,7 +21,7 @@ setup(
         'client.cli',
         'client.models',
         'client.protocols',
-        'client.sanction',
+        'client.utils.sanction',
         'client.utils',
     ]),
     # install_requires=[],

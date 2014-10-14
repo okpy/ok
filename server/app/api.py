@@ -15,11 +15,12 @@ from app import models, app
 from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip
+from app.utils import paginate, filter_query, create_zip, assign_work
 
 from app.exceptions import *
 
 from google.appengine.ext import ndb
+from google.appengine.ext import deferred
 from google.appengine.ext.ndb import stats
 
 parser = FlaskParser()
@@ -365,6 +366,9 @@ class AssignmentAPI(APIResource):
                 'points': Arg(int)
             }
         },
+        'assign': {
+            'methods': set(['POST'])
+        }
     }
 
     def post(self, user, data):
@@ -374,6 +378,9 @@ class AssignmentAPI(APIResource):
         if len(assignments) > 0:
             raise BadValueError("assignment with name %s exists already" % data["name"])
         return super(AssignmentAPI, self).post(user, data)
+
+    def assign(self, obj, user, data):
+        deferred.defer(assign_work, obj.key)
 
 
 class SubmitNDBImplementation(object):
@@ -862,3 +869,24 @@ class GroupAPI(APIResource):
             raise need.exception()
         group.invited_members.remove(user.key)
         group.put()
+
+class QueueAPI(APIResource):
+    """The API resource for the Assignment Object"""
+    model = models.Queue
+
+    methods = {
+        'post': {
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True),
+                'assigned_staff': KeyRepeatedArg('User'),
+            }
+        },
+        'get': {
+        },
+        'index': {
+            'web_args': {
+                'assignment': KeyArg('Assigment'),
+                'assigned_staff': KeyRepeatedArg('User'),
+            }
+        },
+    }
