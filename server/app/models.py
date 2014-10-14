@@ -438,7 +438,8 @@ class OldSubmission(Base):
 
         analytics = self.messages.get('analytics')
         if analytics:
-            created = analytics['timestamp']
+            created = analytics.get('time') or created
+
         new_messages = [Message(kind=kind, contents=contents)
                         for kind, contents in self.messages.iteritems()]
 
