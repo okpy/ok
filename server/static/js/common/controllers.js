@@ -54,7 +54,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
     $scope.tagToAdd = "";
     $scope.submission = Submission.get({id: $stateParams.submissionId});
     $scope.validTags = [
-        { text: 'Submission' },
+        { text: 'Submit' },
         { text: 'Bugs' },
         { text: 'Comments' }
       ];;

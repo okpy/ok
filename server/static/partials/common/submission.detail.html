@@ -18,7 +18,7 @@
           <button class="btn btn-flat btn-primary" ng-hide="showInput && submission.tags.length > 0" ng-click="toggle(); tagToAdd = ''"><span class="glyphicon glyphicon-plus-sign"></span></button>
 
         <div class="input-group input-group-md" ng-show="showInput || submission.tags.length == 0" style="max-width: 400px;">
-            <input id="typeaheadField" typeahead="tag['text'] for tag in validTags | limitTo:5"  type="text" class="form-control" ng-model="tagToAdd" placeholder="Valid Tags are: Submission, Bugs, Comments"> </input>
+            <input id="typeaheadField" typeahead="tag['text'] for tag in validTags | filter:$viewValue | limitTo:5"  type="text" class="form-control" ng-model="tagToAdd" placeholder="Valid Tags are: Submit, Bugs, Comments"> </input>
             <span class="input-group-btn">
                 <button class="btn btn-info btn-flat" ng-disabled="$" ng-click="add()" type="button">Add Tag</button>
             </span>
