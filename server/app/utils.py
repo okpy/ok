@@ -37,7 +37,9 @@ def coerce_to_json(data, fields):
                 else coerce_to_json(mdl, fields) for mdl in data]
     elif isinstance(data, dict):
         if hasattr(data, 'to_json'):
-            return {k: mdl.to_json(fields.get(k, {})) for k, mdl in data.iteritems()}
+            return {
+                k: mdl.to_json(fields.get(k, {}))
+                for k, mdl in data.iteritems()}
         else:
             return {k: coerce_to_json(mdl, fields.get(k, {}))
                     for k, mdl in data.iteritems()}
@@ -182,7 +184,8 @@ def filter_query(query, args, model):
     Returns a modified query with the appropriate filters.
     """
     for arg, value in args.iteritems():
-        if isinstance(value, collections.Iterable) and not isinstance(value, str):
+        if (isinstance(value, collections.Iterable)
+                and not isinstance(value, str)):
             op, value = value
         else:
             value, op = value, '=='
@@ -191,12 +194,11 @@ def filter_query(query, args, model):
 
     return query
 
-BATCH_SIZE = 100
+BATCH_SIZE = 500
 
 @ndb.toplevel
 def upgrade_submissions(cursor=None, num_updated=0):
-    query = ModelProxy.OldSubmission.query().filter(
-        ModelProxy.OldSubmission.converted == False)
+    query = ModelProxy.OldSubmission.query()
 
     to_put = []
     kwargs = {}
@@ -205,14 +207,19 @@ def upgrade_submissions(cursor=None, num_updated=0):
         kwargs['start_cursor'] = cursor
 
     results, cursor, more = query.fetch_page(BATCH_SIZE, **kwargs)
+    more = False
     for old in results:
+        if old.converted:
+            more = True
+            continue
+
         new = old.upgrade()
         to_put.append(new)
 
         old.converted = True
         old.put_async()
 
-    if to_put:
+    if to_put or more:
         ndb.put_multi(to_put)
         num_updated += len(to_put)
         logging.info(
@@ -227,7 +234,8 @@ def upgrade_submissions(cursor=None, num_updated=0):
 def assign_work(assignment, cursor=None, num_updated=0):
     query = ModelProxy.User.query(ModelProxy.User.role == "student")
 
-    queues = list(ModelProxy.Queue.query(ModelProxy.Queue.assignment == assignment))
+    queues = list(ModelProxy.Queue.query(
+        ModelProxy.Queue.assignment == assignment))
     if not queues:
         logging.error("Tried to assign work, but no queues existed")
         return

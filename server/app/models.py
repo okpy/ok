@@ -9,6 +9,7 @@ from app import constants
 from app import app
 from app.needs import Need
 from app.exceptions import *
+from app.utils import parse_date
 from flask import json
 from flask.json import JSONEncoder as old_json
 
@@ -437,7 +438,7 @@ class OldSubmission(Base):
         if analytics:
             date = analytics.get('time') or created
             if not date == created:
-                created = utils.parse_date(date)
+                created = parse_date(date)
 
         new_messages = [Message(kind=kind, contents=contents)
                         for kind, contents in self.messages.iteritems()]

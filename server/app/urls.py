@@ -30,7 +30,8 @@ def dashboard():
     user = users.get_current_user()
     params = {}
     if user is None:
-        params['users_link'] = force_account_chooser(users.create_login_url('/#/loginLanding'))
+        params['users_link'] = force_account_chooser(
+            users.create_login_url('/#/loginLanding'))
         params['users_title'] = "Sign In"
     else:
         logging.info("User is %s", user.email())
@@ -44,8 +45,10 @@ def dashboard():
 
 @app.route("/upgrade")
 def upgrade():
-    deferred.defer(utils.upgrade_submissions)
-    return "OK", 200
+    all_count = models.OldSubmission.query().count()
+    coverted_count = models.OldSubmission.query().filter(
+        models.OldSubmission.converted == True).count()
+    return "all {} converted {}".format(all_count, converted_count), 200
 
 ## Error handlers
 # Handle 404 errors
@@ -63,7 +66,7 @@ def args_error(e):
     raise BadValueError(e.message)
 
 def check_version(client):
-    latest = models.Version.query(models.Version.name=='ok').get()
+    latest = models.Version.query(models.Version.name == 'ok').get()
 
     if latest is None or latest.current_version is None:
         raise APIException('Current version of ok not found')
@@ -116,10 +119,12 @@ def register_api(view, endpoint, url):
             logging.exception(e.message)
             return utils.create_api_response(500, 'internal server error :(')
 
-    app.add_url_rule('%s' % url, view_func=api_wrapper, defaults={'path': None},
-            methods=['GET', 'POST'])
-    app.add_url_rule('%s/<path:path>' % url, view_func=api_wrapper,
-            methods=['GET', 'POST', 'DELETE', 'PUT'])
+    app.add_url_rule(
+        '%s' % url, view_func=api_wrapper, defaults={'path': None},
+        methods=['GET', 'POST'])
+    app.add_url_rule(
+        '%s/<path:path>' % url, view_func=api_wrapper,
+        methods=['GET', 'POST', 'DELETE', 'PUT'])
 
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
