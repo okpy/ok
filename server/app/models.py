@@ -4,11 +4,7 @@
 
 import datetime
 
-from flask import Blueprint
 from app import constants
-from app import utils
-
-MODEL_BLUEPRINT = Blueprint('models', __name__)
 
 from app import app
 from app.needs import Need
@@ -419,6 +415,7 @@ class OldSubmission(Base):
     assignment = ndb.KeyProperty(Assignment)
     messages = ndb.JsonProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
+    converted = ndb.BooleanProperty(default=False)
 
     @classmethod
     def _get_kind(cls):

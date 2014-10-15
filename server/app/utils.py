@@ -16,7 +16,15 @@ from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 
-from app import models, app
+from app import app
+
+# To deal with circular imports
+class ModelProxy(object):
+    def __getattribute__(self, key):
+        import app
+        return app.models.__getattribute__(key)
+
+ModelProxy = ModelProxy()
 
 def coerce_to_json(data, fields):
     """
@@ -185,8 +193,10 @@ def filter_query(query, args, model):
 
 BATCH_SIZE = 100
 
+@ndb.toplevel
 def upgrade_submissions(cursor=None, num_updated=0):
-    query = models.OldSubmission.query()
+    query = ModelProxy.OldSubmission.query().filter(
+        ModelProxy.OldSubmission.converted == False)
 
     to_put = []
     kwargs = {}
@@ -199,8 +209,8 @@ def upgrade_submissions(cursor=None, num_updated=0):
         new = old.upgrade()
         to_put.append(new)
 
-        #commented out so we don't lose data
-        #old.key.delete()
+        old.converted = True
+        old.put_async()
 
     if to_put:
         ndb.put_multi(to_put)
@@ -215,9 +225,9 @@ def upgrade_submissions(cursor=None, num_updated=0):
             'upgrade_submissions complete with %d updates!', num_updated)
 
 def assign_work(assignment, cursor=None, num_updated=0):
-    query = models.User.query(models.User.role == "student")
+    query = ModelProxy.User.query(ModelProxy.User.role == "student")
 
-    queues = list(models.Queue.query(models.Queue.assignment == assignment))
+    queues = list(ModelProxy.Queue.query(ModelProxy.Queue.assignment == assignment))
     if not queues:
         logging.error("Tried to assign work, but no queues existed")
         return
@@ -254,7 +264,12 @@ def assign_work(assignment, cursor=None, num_updated=0):
 
 
 def parse_date(date):
-    date = datetime.datetime.strptime(
-        date, app.config["GAE_DATETIME_FORMAT"])
+    try:
+        date = datetime.datetime.strptime(
+            date, app.config["GAE_DATETIME_FORMAT"])
+    except ValueError:
+        date = datetime.datetime.strptime(
+            date, "%Y-%m-%d %H:%M:%S")
+
     delta = datetime.timedelta(hours=7)
     return datetime.datetime.combine(date.date(), date.time()) + delta

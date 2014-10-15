@@ -3,7 +3,6 @@ The public API
 """
 import datetime
 import logging
-import datetime
 
 from flask.views import View
 from flask.app import request, json
@@ -15,8 +14,7 @@ from app import models, app
 from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, assign_work
-from app import utils
+from app.utils import paginate, filter_query, create_zip, assign_work, parse_date
 
 from app.exceptions import *
 
@@ -403,7 +401,7 @@ class SubmitNDBImplementation(object):
         if messages.get('analytics'):
             date = messages['analytics']['time']
             if date:
-                created = utils.parse_date(date)
+                created = parse_date(date)
 
         submission = models.Submission(submitter=user.key,
                                        assignment=assignment.key,
