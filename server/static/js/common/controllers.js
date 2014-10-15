@@ -21,6 +21,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
       Submission.query({
         fields: {
           'created': true,
+          'db_created': true,
           'id': true,
           'submitter': {
             'id': true
