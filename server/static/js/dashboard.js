@@ -28,6 +28,14 @@ app.directive('submissionList', function() {
         };
     });
 
+app.directive('courseModule', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/static/partials/dashboard/course.module.html',
+        };
+    });
+
+
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/");

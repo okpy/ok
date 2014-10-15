@@ -8,7 +8,6 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
     }
   ]);
 
-
 app.controller("SubmissionDashboardController", ["$scope", "Submission",
     function ($scope, Submission) {
       $scope.itemsPerPage = 2;
@@ -55,6 +54,13 @@ app.controller("SubmissionModuleController", ["$scope", "Submission",
       }, function(response) {
         $scope.num_submissions = response.data.statistics.total;
       });
+    }
+  ]);
+
+app.controller("CourseModuleController", ["$scope",
+    function ($scope) {
+      $scope.course_name = "CS 61A";
+      $scope.course_desc = "Structure and Interpretation of Computer Programs";
     }
   ]);
 
