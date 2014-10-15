@@ -57,7 +57,8 @@ def seed():
         return models.Submission(
             messages=messages,
             assignment=assignment.key,
-            submitter=submitter.key)
+            submitter=submitter.key,
+            created=datetime.datetime.now())
 
     def make_version(current_version):
         return models.Version(
