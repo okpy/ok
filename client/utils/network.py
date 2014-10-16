@@ -32,7 +32,8 @@ def send_to_server(access_token, messages, name, server, version, log,
         log.warning('Server error message: %s', response_json['message'])
         try:
             if ex.code == 403:
-                software_update(response_json['data']['download_link'], log)
+                if software_update(response_json['data']['download_link'], log):
+                    raise SoftwareUpdated
             return {}
         except Exception as e:
             log.warn('Could not connect to %s', server)
@@ -47,6 +48,10 @@ def dump_to_server(access_token, msg_queue, name, server, insecure, staging_queu
                 staging_queue.get() #throw away successful message
             else:
                 msg_queue.put(staging_queue.get())
+        except SoftwareUpdated:
+            log.info('ok was updated. Abort now; messages will be sent '
+                     'to server on next invocation')
+            return
         except error.URLError as ex:
             log.warning('URLError: %s', str(ex))
     return
@@ -59,8 +64,16 @@ def server_timer():
 # Software Updating #
 #####################
 
+class SoftwareUpdated(BaseException):
+    pass
+
 def software_update(download_link, log):
-    """Check for the latest version of ok and update this file accordingly."""
+    """Check for the latest version of ok and update this file accordingly.
+
+    RETURN:
+    bool; True if the newest version of ok was written to the filesystem, False
+    otherwise.
+    """
     log.info('Retrieving latest version from %s', download_link)
 
     file_destination = 'ok'
@@ -74,8 +87,9 @@ def software_update(download_link, log):
         with open(file_destination, 'wb') as f:
             f.write(zip_binary)
         log.info('Successfully wrote to %s', file_destination)
+        return True
     except error.HTTPError as e:
         log.warn('Error when downloading new version of ok: %s', str(e))
     except IOError as e:
         log.warn('Error writing to %s: %s', file_destination, str(e))
-
+    return False
