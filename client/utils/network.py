@@ -85,7 +85,7 @@ def software_update(download_link, log):
         zip_binary = response.read()
         log.info('Writing new version to %s', file_destination)
         with open(file_destination, 'wb') as f:
-            f.write(zip_binary)
+            os.fsync(f)
         log.info('Successfully wrote to %s', file_destination)
         return True
     except error.HTTPError as e:
