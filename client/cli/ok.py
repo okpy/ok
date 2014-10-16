@@ -102,7 +102,7 @@ def main():
 
     if os.path.isfile(OK_LOCK):
         password = input("You might have ok running in another tab- if you are"
-                "sure that this isn't the case, please type 'Run ok anyway'"
+                " sure that this isn't the case, please type 'Run ok anyway'"
                 " EXACTLY on the next line:\n")
         if password != 'Run ok anyway':
             exit(0)
