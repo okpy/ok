@@ -45,12 +45,14 @@ from urllib import error
 import argparse
 import client
 import multiprocessing
+import os
 import pickle
 import sys
 import logging
 
 BACKUP_FILE = ".ok_messages"
 LOGGING_FORMAT = '%(levelname)-10s | pid %(process)d | %(filename)s, line %(lineno)d: %(message)s'
+OK_LOCK = ".ok_lock"
 
 ##########################
 # Command-line Interface #
@@ -97,6 +99,16 @@ def parse_input():
 def main():
     """Run all relevant aspects of ok.py."""
     args = parse_input()
+
+    if os.path.isfile(OK_LOCK):
+        password = input("You might have ok running in another tab- if you are
+                sure that this isn't the case, please type 'Run ok anyway'
+                EXACTLY on the following line:")
+        if password != 'Run ok anyway':
+            exit(0)
+    else:
+        with open(OK_LOCK, "wb") as fp:
+            os.fsync(fp)
 
     logging.basicConfig(format=LOGGING_FORMAT)
     log = logging.getLogger(__name__)
@@ -222,6 +234,7 @@ def main():
         if server_thread:
             server_thread.terminate()
     finally:
+        os.unlink(OK_LOCK)
         if assignment:
             log.info('Dump tests for %s to %s', assignment['name'], args.tests)
             loading.dump_tests(args.tests, assignment, log)
