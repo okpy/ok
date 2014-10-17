@@ -13,7 +13,7 @@ from app.utils import parse_date
 from flask import json
 from flask.json import JSONEncoder as old_json
 
-from google.appengine.ext import db, ndb
+from google.appengine.ext import ndb
 
 # To deal with circular imports
 class APIProxy(object):
@@ -142,6 +142,9 @@ class User(Base):
         query = query.order(-Submission.created)
         return query.get()
 
+    def is_final_submission(self, subm, assignment):
+        pass
+
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
@@ -169,10 +172,6 @@ class User(Base):
     def get_by_id(cls, id, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for users"
         return super(User, cls).get_by_id(id, **kwargs)
-
-    @property
-    def logged_in(self):
-        return True
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -321,6 +320,12 @@ class Message(Base):
 
         return Submission._can(user, need, obj, query)
 
+class Score(Base):
+    """
+    The score for a submission.
+    """
+    score = ndb.IntegerProperty()
+    message = ndb.StringProperty()
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
@@ -329,6 +334,7 @@ class Submission(Base):
     created = ndb.DateTimeProperty()
     db_created = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
+    score = ndb.KeyProperty(Score)
 
     @classmethod
     def _get_kind(cls):
