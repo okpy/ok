@@ -20,6 +20,7 @@ from app import utils
 from app.constants import API_PREFIX
 from app.exceptions import *
 
+
 @app.route("/")
 def dashboard():
     def force_account_chooser(url):
@@ -101,7 +102,8 @@ def register_api(view, endpoint, url):
 
             rval = view(*args, **kwds)
 
-            if isinstance(rval, Response) or isinstance(rval, werkzeug.wrappers.Response):
+            if (isinstance(rval, Response) or
+                    isinstance(rval, werkzeug.wrappers.Response)):
                 pass
             elif isinstance(rval, list):
                 rval = utils.create_api_response(200, message, rval)
