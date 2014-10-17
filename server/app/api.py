@@ -470,6 +470,13 @@ class SubmissionAPI(APIResource):
                 'tag': Arg(str, required=True)
             }
         },
+        'score': {
+            'methods': set(["POST"]),
+            'web_args': {
+                'score': Arg(int, required=True),
+                'message': Arg(str, required=True),
+            }
+        }
     }
 
     def get_instance(self, key, user):
@@ -596,6 +603,16 @@ class SubmissionAPI(APIResource):
 
         obj.tags.remove(tag)
         obj.put()
+
+    def score(self, obj, user, data):
+        score = models.Score(
+            score=data['score'],
+            message=data['score'])
+        score.put()
+
+        obj.score = score.key
+        obj.put()
+        return score
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
@@ -832,13 +849,16 @@ class GroupAPI(APIResource):
 
     def post(self, user, data):
         # no permissions necessary, anyone can create a group
-        current_group = list(user.groups(data['assignment']))
-        if len(current_group) == 1:
-            raise BadValueError("already in a group")
-        if len(current_group) > 1:
-            raise BadValueError("in multiple groups")
+        for user_key in data.get('members', ()):
+            user = user_key.get()
+            current_group = list(user.groups(data['assignment']))
+
+            if len(current_group) == 1:
+                raise BadValueError("{} already in a group".format(user_key.id))
+            if len(current_group) > 1:
+                raise BadValueError("{} in multiple groups".format(user_key.id))
+
         group = self.new_entity(data)
-        group.members.append(user.key)
         group.put()
 
 
