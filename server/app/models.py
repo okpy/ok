@@ -115,6 +115,8 @@ class User(Base):
     def __repr__(self):
         return '<User %r>' % self.email
 
+    ## Properties and getters
+
     @property
     def is_admin(self):
         return self.role == constants.ADMIN_ROLE
@@ -134,17 +136,7 @@ class User(Base):
     @property
     def courses(self):
         return [group.assignment.get().course for group in self.groups()]
-
-    def get_selected_submission(self, assignment):
-        query = Submission.query()
-        query = Submission.can(self, Need('index'), query=query)
-        query = query.filter(Submission.assignment == assignment)
-        query = query.order(-Submission.created)
-        return query.get()
-
-    def is_final_submission(self, subm, assignment):
-        pass
-
+        
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
@@ -152,6 +144,40 @@ class User(Base):
                 assignment = assignment.key
             query = query.filter(Group.assignment == assignment)
         return query
+
+    ## Utilities for submission grading and selection
+
+    def get_selected_submission(self, assign_key, keys_only=False):
+        def make_query():
+            query = Submission.query()
+            query = Submission.can(self, Need('index'), query=query)
+            query = query.filter(Submission.assignment == assign_key)
+            query = query.order(-Submission.created)
+            return query
+
+        query = make_query()
+        query = query.filter(Submission.tags == Submission.SUBMITTED_TAG)
+        subm = query.get(keys_only=keys_only)
+        if subm:
+            return subm
+
+        query = make_query()
+        return query.get(keys_only=keys_only)
+
+    def is_final_submission(self, subm, assign_key):
+        groups = self.groups(assign_key)
+        if not groups:
+            return True
+        if len(groups) > 1:
+            raise Exception("Invalid groups for user {}".format(self.id))
+
+        group = groups[0]
+        for other in group.members():
+            if other is not self:
+                latest = other.get_selected_submission(assign_key, keys_only=True)
+                if latest.created > subm.created:
+                    return False
+        return True
 
     @classmethod
     def from_dict(cls, values):
@@ -336,6 +362,8 @@ class Submission(Base):
     messages = ndb.StructuredProperty(Message, repeated=True)
     score = ndb.KeyProperty(Score)
     tags = ndb.StringProperty(repeated=True)
+
+    SUBMITTED_TAG = "Submit"
 
     @classmethod
     def _get_kind(cls):
