@@ -44,7 +44,14 @@ def dashboard():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
 
-# Error handlers
+@app.route("/upgrade")
+def upgrade():
+    all_count = models.OldSubmission.query().count()
+    coverted_count = models.OldSubmission.query().filter(
+        models.OldSubmission.converted == True).count()
+    return "all {} converted {}".format(all_count, converted_count), 200
+
+## Error handlers
 # Handle 404 errors
 @app.errorhandler(404)
 def page_not_found(e):
@@ -114,10 +121,12 @@ def register_api(view, endpoint, url):
             logging.exception(e.message)
             return utils.create_api_response(500, 'internal server error :(')
 
-    app.add_url_rule('%s' % url, view_func=api_wrapper, defaults={'path': None},
-                     methods=['GET', 'POST'])
-    app.add_url_rule('%s/<path:path>' % url, view_func=api_wrapper,
-                     methods=['GET', 'POST', 'DELETE', 'PUT'])
+    app.add_url_rule(
+        '%s' % url, view_func=api_wrapper, defaults={'path': None},
+        methods=['GET', 'POST'])
+    app.add_url_rule(
+        '%s/<path:path>' % url, view_func=api_wrapper,
+        methods=['GET', 'POST', 'DELETE', 'PUT'])
 
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
@@ -125,3 +134,4 @@ register_api(api.VersionAPI, 'version_api', 'version')
 register_api(api.CourseAPI, 'course_api', 'course')
 register_api(api.GroupAPI, 'group_api', 'group')
 register_api(api.UserAPI, 'user_api', 'user')
+register_api(api.QueueAPI, 'queue_api', 'queue')

@@ -9,15 +9,14 @@ from werkzeug.debug import DebuggedApplication
 
 app = Flask('app') #pylint: disable=invalid-name
 
-from app.models import MODEL_BLUEPRINT
 from app import constants
-from app import exceptions
+from app import models
 from app import utils
+from app import exceptions
 from app import api
 from app import auth
 from app.seed import seed
 
-app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          if 'SERVER_SOFTWARE' in os.environ
          else True)

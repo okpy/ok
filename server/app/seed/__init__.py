@@ -51,10 +51,14 @@ def seed():
             messages['file_contents'] = {
                 'hog.py': fp.read()
             }
+
+        messages = [models.Message(kind=kind, contents=contents)
+                    for kind, contents in messages.items()]
         return models.Submission(
             messages=messages,
             assignment=assignment.key,
-            submitter=submitter.key)
+            submitter=submitter.key,
+            created=datetime.datetime.now())
 
     def make_version(current_version):
         return models.Version(
@@ -66,13 +70,13 @@ def seed():
         )
 
     c = models.User(
-                    key=ndb.Key("User", "dummy@admin.com"),
-                    email="dummy@admin.com",
-                    first_name="Admin",
-                    last_name="Jones",
-                    login="albert",
-                    role="admin"
-                )
+        key=ndb.Key("User", "dummy@admin.com"),
+        email="dummy@admin.com",
+        first_name="Admin",
+        last_name="Jones",
+        login="albert",
+        role="admin"
+    )
     version = make_version('v1.0.11')
     version.put()
     c.put()

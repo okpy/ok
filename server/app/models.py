@@ -4,19 +4,16 @@
 
 import datetime
 
-from flask import Blueprint
 from app import constants
-
-MODEL_BLUEPRINT = Blueprint('models', __name__)
 
 from app import app
 from app.needs import Need
 from app.exceptions import *
+from app.utils import parse_date
 from flask import json
 from flask.json import JSONEncoder as old_json
 
 from google.appengine.ext import db, ndb
-
 
 # To deal with circular imports
 class APIProxy(object):
@@ -47,8 +44,8 @@ class JSONEncoder(old_json):
 app.json_encoder = JSONEncoder
 
 def convert_timezone(utc_dt):
-    delta = datetime.timedelta(hours = -7)
-    return (datetime.datetime.combine(utc_dt.date(),utc_dt.time()) + delta)
+    delta = datetime.timedelta(hours=-7)
+    return (datetime.datetime.combine(utc_dt.date(), utc_dt.time()) + delta)
 
 
 class Base(ndb.Model):
@@ -108,7 +105,8 @@ class Base(ndb.Model):
 
 class User(Base):
     """Users."""
-    email = ndb.StringProperty(required=True) # Must be associated with some OAuth login.
+    # Must be associated with some OAuth login.
+    email = ndb.StringProperty(required=True) 
     login = ndb.StringProperty() # TODO(denero) Legacy of glookup system
     role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
@@ -136,6 +134,13 @@ class User(Base):
     @property
     def courses(self):
         return [group.assignment.get().course for group in self.groups()]
+
+    def get_selected_submission(self, assignment):
+        query = Submission.query()
+        query = Submission.can(self, Need('index'), query=query)
+        query = query.filter(Submission.assignment == assignment)
+        query = query.order(-Submission.created)
+        return query.get()
 
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
@@ -218,8 +223,12 @@ class Assignment(Base):
     """
     The Assignment Model
     """
-    name = ndb.StringProperty(required=True) # Must be unique to support submission.
-    display_name = ndb.StringProperty(required=True) # Name displayed to students
+
+    # Must be unique to support submission.
+    name = ndb.StringProperty(required=True) 
+
+    # Name displayed to students
+    display_name = ndb.StringProperty(required=True) 
     points = ndb.FloatProperty(required=True)
     creator = ndb.KeyProperty(User, required=True)
     templates = ndb.JsonProperty(required=True)
@@ -296,18 +305,57 @@ def validate_messages(_, messages):
         raise BadValueError(exc)
 
 
+class Message(Base):
+    """
+    A message given to us from the client.
+    """
+    contents = ndb.JsonProperty()
+    kind = ndb.StringProperty()
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+
+        if action == "index":
+            return False
+
+        return Submission._can(user, need, obj, query)
+
+
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
     submitter = ndb.KeyProperty(User, required=True)
     assignment = ndb.KeyProperty(Assignment)
-    messages = ndb.JsonProperty()
-    created = ndb.DateTimeProperty(auto_now_add=True)
-    tags = ndb.StringProperty(repeated=True)
+    created = ndb.DateTimeProperty()
+    db_created = ndb.DateTimeProperty(auto_now_add=True)
+    messages = ndb.StructuredProperty(Message, repeated=True)
+
+    @classmethod
+    def _get_kind(cls):
+      return 'Submissionvtwo'
+
+    def get_messages(self, fields={}):
+        if not fields:
+            fields = {}
+
+        message_fields = fields.get('messages', {})
+        messages = {message.kind: message.contents for message in self.messages}
+        return {
+            kind: (True if message_fields.get(kind) == "presence"
+                   else contents)
+            for kind, contents in messages.iteritems()
+            if not message_fields or kind in message_fields.keys()}
 
     @property
     def group(self):
         submitter = self.submitter.get()
         return submitter.groups(self.assignment.get()).get()
+
+    def to_json(self, fields=None):
+        json = super(Submission, self).to_json(fields)
+        if 'messages' in json:
+            json['messages'] = self.get_messages(fields)
+        return json
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -353,7 +401,7 @@ class Submission(Base):
             for group in user.groups():
                 filters.append(Submission.submitter.IN(group.members))
             filters.append(Submission.submitter == user.key)
-
+ 
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
             elif filters:
@@ -361,6 +409,46 @@ class Submission(Base):
             else:
                 return query
         return False
+
+class OldSubmission(Base):
+    """A submission is generated each time a student runs the client."""
+    submitter = ndb.KeyProperty(User, required=True)
+    assignment = ndb.KeyProperty(Assignment)
+    messages = ndb.JsonProperty()
+    created = ndb.DateTimeProperty(auto_now_add=True)
+    converted = ndb.BooleanProperty(default=False)
+
+    @classmethod
+    def _get_kind(cls):
+      return 'Submission'
+
+    @property
+    def group(self):
+        submitter = self.submitter.get()
+        return submitter.groups(self.assignment.get()).get()
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        return False
+
+    def upgrade(self):
+        created = self.created
+
+        analytics = self.messages.get('analytics')
+        if analytics:
+            date = analytics.get('time') or created
+            if not date == created:
+                created = parse_date(date)
+
+        new_messages = [Message(kind=kind, contents=contents)
+                        for kind, contents in self.messages.iteritems()]
+
+        return Submission(
+            submitter=self.submitter,
+            assignment=self.assignment,
+            created=created,
+            messages=new_messages)
+
 
 
 class SubmissionDiff(Base):
@@ -515,3 +603,24 @@ class AuditLog(Base):
     user = ndb.KeyProperty('User', required=True, validator=anon_converter)
     description = ndb.StringProperty()
     obj = ndb.KeyProperty()
+
+class Queue(Base):
+    submissions = ndb.KeyProperty(Submission, repeated=True)
+    assignment = ndb.KeyProperty(Assignment, required=True)
+    assigned_staff = ndb.KeyProperty(User, repeated=True)
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        if not user.logged_in:
+            return False
+
+        if action == "index":
+            if user.is_admin:
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
+        return False

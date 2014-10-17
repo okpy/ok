@@ -28,6 +28,14 @@ app.directive('submissionList', function() {
         };
     });
 
+app.directive('courseModule', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/static/partials/dashboard/course.module.html',
+        };
+    });
+
+
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/");
@@ -150,6 +158,27 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "VersionNewCtrl"
     }
 
+    var queues = {
+      name: 'queue',
+      abstract: true,
+      url: '/queue',
+      templateUrl: '/static/partials/queue/base.html',
+    }
+
+    var queueList = {
+      name: 'queue.list',
+      url: '/',
+      templateUrl: '/static/partials/queue/list.html',
+      controller: "QueueListCtrl"
+    }
+
+    var queueDetail = {
+      name: 'queue.detail',
+      url: '/:queueId',
+      templateUrl: '/static/partials/queue/detail.html',
+      controller: "QueueDetailCtrl"
+    }
+
     var loginLanding = {
       name: 'loginLanding',
       url: '/loginLanding',
@@ -173,6 +202,9 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(versionDetail).
       state(versionUpdate).
       state(versionNew).
+      state(queues).
+      state(queueList).
+      state(queueDetail).
       state(loginLanding)
       ;
   }]);
