@@ -21,6 +21,7 @@ app.controller("SubmissionDashboardController", ["$scope", "Submission",
             'submitter': {
               'id': true
             },
+            'tags': true,
             'assignment': {
               'name': true,
               'display_name': true,
