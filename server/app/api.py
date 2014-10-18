@@ -839,9 +839,9 @@ class GroupAPI(APIResource):
                 current_group = list(user.groups(data['assignment']))
 
                 if len(current_group) == 1:
-                    raise BadValueError("{} already in a group".format(user_key.id))
+                    raise BadValueError("{} already in a group".format(user_key.id()))
                 if len(current_group) > 1:
-                    raise BadValueError("{} in multiple groups".format(user_key.id))
+                    raise BadValueError("{} in multiple groups".format(user_key.id()))
             else:
                 models.User.get_or_insert(user_key.id())
 
