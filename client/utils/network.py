@@ -6,7 +6,7 @@ import time
 import datetime
 import socket
 
-TIMEOUT = 1000
+TIMEOUT = 500
 
 def send_to_server(access_token, messages, name, server, version, log,
         insecure=False):
@@ -27,7 +27,7 @@ def send_to_server(access_token, messages, name, server, version, log,
         log.info('Sending data to %s', address)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
-        response = request.urlopen(req, serialized)
+        response = request.urlopen(req, serialized, 0.4)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         log.warning('Error while sending to server: %s', str(ex))
@@ -50,7 +50,7 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
         prefix = "http" if insecure else "https"
         address = prefix + "://" + server + "/api/v1/nothing"
         address += "?access_token={0}&ok_messages={1}".format(access_token,
-                len(msg_queue))
+                len(msg_list))
         req = request.Request(address)
         response = request.urlopen(req, b"", 0.4)
     except Exception as e:
@@ -61,13 +61,13 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
     while msg_list:
         if not send_all and datetime.datetime.now() > stop_time:
             break
-        message = msg_queue[-1]
+        message = msg_list[-1]
         try:
             response = send_to_server(access_token, message, name, server, version, log, insecure)
             if response:
-                msg_queue.pop()
+                msg_list.pop()
             if send_all:
-                print("Submitting project... {0}% complete".format(len(msg_queue)*100/initial_length))
+                print("Submitting project... {0}% complete".format(len(msg_list)*100/initial_length))
         except SoftwareUpdated:
             print("ok was updated. We will now terminate this run of ok.")
             log.info('ok was updated. Abort now; messages will be sent '
