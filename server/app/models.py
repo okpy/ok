@@ -329,6 +329,7 @@ class Submission(Base):
     created = ndb.DateTimeProperty()
     db_created = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
+    tags = ndb.StringProperty(repeated=True)
 
     @classmethod
     def _get_kind(cls):

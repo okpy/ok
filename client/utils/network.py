@@ -36,7 +36,7 @@ def send_to_server(access_token, messages, name, server, version, log,
                     raise SoftwareUpdated
             return {}
         except Exception as e:
-            log.warn('Could not connect to %s', server)
+            log.warning('Could not connect to %s', server)
 
 def dump_to_server(access_token, msg_queue, name, server, insecure, version, log, send_all=False):
     stop_time = datetime.now() + datetime.timedelta(microseconds=500)
@@ -104,7 +104,7 @@ def software_update(download_link, log):
         log.info('Successfully wrote to %s', file_destination)
         return True
     except error.HTTPError as e:
-        log.warn('Error when downloading new version of ok: %s', str(e))
+        log.warning('Error when downloading new version of ok: %s', str(e))
     except IOError as e:
-        log.warn('Error writing to %s: %s', file_destination, str(e))
+        log.warning('Error writing to %s: %s', file_destination, str(e))
     return False

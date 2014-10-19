@@ -458,6 +458,18 @@ class SubmissionAPI(APIResource):
                 'comment': KeyArg('Comment', required=True)
             }
         },
+        'add_tag': {
+            'methods': set(["PUT"]),
+            'web_args': {
+                'tag': Arg(str, required=True)
+            }
+        },
+        'remove_tag': {
+            'methods': set(["PUT"]),
+            'web_args': {
+                'tag': Arg(str, required=True)
+            }
+        },
     }
 
     def get_instance(self, key, user):
@@ -561,6 +573,30 @@ class SubmissionAPI(APIResource):
             raise need.exception()
         comment.key.delete()
 
+    def add_tag(self, obj, user, data):
+        """
+        Removes a tag from the submission.
+        Validates existence.
+        """
+        tag = data['tag']
+        if tag in obj.tags:
+            raise BadValueError("Tag already exists")
+
+        obj.tags.append(tag)
+        obj.put()
+
+    def remove_tag(self, obj, user, data):
+        """
+        Adds a tag to this submission.
+        Validates uniqueness.
+        """
+        tag = data['tag']
+        if tag not in obj.tags:
+            raise BadValueError("Tag does not exists")
+
+        obj.tags.remove(tag)
+        obj.put()
+
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
         assignments = self.db.lookup_assignments_by_name(name)
@@ -582,6 +618,7 @@ class SubmissionAPI(APIResource):
     def post(self, user, data):
         return self.submit(user, data['assignment'],
                            data['messages'])
+    
 
 
 class VersionAPI(APIResource):
@@ -763,7 +800,8 @@ class GroupAPI(APIResource):
     methods = {
         'post': {
             'web_args': {
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True),
+                'members': KeyRepeatedArg('User')
             }
         },
         'get': {
@@ -795,13 +833,19 @@ class GroupAPI(APIResource):
 
     def post(self, user, data):
         # no permissions necessary, anyone can create a group
-        current_group = list(user.groups(data['assignment']))
-        if len(current_group) == 1:
-            raise BadValueError("already in a group")
-        if len(current_group) > 1:
-            raise BadValueError("in multiple groups")
+        for user_key in data.get('members', ()):
+            user = user_key.get()
+            if user:
+                current_group = list(user.groups(data['assignment']))
+
+                if len(current_group) == 1:
+                    raise BadValueError("{} already in a group".format(user_key.id()))
+                if len(current_group) > 1:
+                    raise BadValueError("{} in multiple groups".format(user_key.id()))
+            else:
+                models.User.get_or_insert(user_key.id())
+
         group = self.new_entity(data)
-        group.members.append(user.key)
         group.put()
 
 
