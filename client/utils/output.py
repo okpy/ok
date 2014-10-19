@@ -69,6 +69,9 @@ class LogInterceptor(object):
 
     def error(self, *args):
         self._msgs.append(('error', args))
+    
+    def warn(self, *args):
+        self._msgs.append(('warn', args))
 
     def dump_to_logger(self, log):
         for msg_type, msg in self._msgs:
@@ -78,3 +81,5 @@ class LogInterceptor(object):
                 log.warning(*msg)
             elif msg_type == 'error':
                 log.error(*msg)
+            elif msg_type == 'warn':
+                log.warn(*msg)
