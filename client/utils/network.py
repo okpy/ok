@@ -3,9 +3,11 @@
 from urllib import request, error
 import json
 import time
+import datetime
+import socket
 
 def send_to_server(access_token, messages, name, server, version, log,
-        insecure=False, timeout=0):
+        insecure=False):
     """Send messages to server, along with user authentication."""
     data = {
         'assignment': name,
@@ -23,7 +25,7 @@ def send_to_server(access_token, messages, name, server, version, log,
         log.info('Sending data to %s', address)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
-        response = request.urlopen(req, serialized, timeout)
+        response = request.urlopen(req, serialized)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         log.warning('Error while sending to server: %s', str(ex))
@@ -39,7 +41,6 @@ def send_to_server(access_token, messages, name, server, version, log,
             log.warning('Could not connect to %s', server)
 
 def dump_to_server(access_token, msg_queue, name, server, insecure, version, log, send_all=False):
-    stop_time = datetime.now() + datetime.timedelta(microseconds=500)
     #TODO(soumya) Change after we get data on ok_messages
     send_all = False
     try:
@@ -52,13 +53,14 @@ def dump_to_server(access_token, msg_queue, name, server, insecure, version, log
     except Exception as e:
         pass
 
-    while not msg_queue.empty():
-        if not send_all and datetime.now() < stop_time:
+    stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=1000)
+    while msg_queue:
+        if not send_all and datetime.datetime.now() > stop_time:
             break
         message = msg_queue[-1]
         try:
-            delta = stop_time - datetime.now()
-            if not send_to_server(access_token, message, name, server, version, log, insecure, timeout=delta.seconds+delta.microseconds/1e6):
+            response = send_to_server(access_token, message, name, server, version, log, insecure)
+            if response:
                 msg_queue.pop()
             if send_all:
                 print("You have {0} messages left to send.".format(len(msg_queue)))
@@ -69,6 +71,8 @@ def dump_to_server(access_token, msg_queue, name, server, insecure, version, log
             return
         except error.URLError as ex:
             log.warning('URLError: %s', str(ex))
+        except socket.timeout as ex:
+            log.warning("socket timed out")
     return
 
 def server_timer():
