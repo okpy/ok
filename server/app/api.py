@@ -470,6 +470,13 @@ class SubmissionAPI(APIResource):
                 'tag': Arg(str, required=True)
             }
         },
+        'score': {
+            'methods': set(["POST"]),
+            'web_args': {
+                'score': Arg(int, required=True),
+                'message': Arg(str, required=True),
+            }
+        }
     }
 
     def get_instance(self, key, user):
@@ -596,6 +603,16 @@ class SubmissionAPI(APIResource):
 
         obj.tags.remove(tag)
         obj.put()
+
+    def score(self, obj, user, data):
+        score = models.Score(
+            score=data['score'],
+            message=data['score'])
+        score.put()
+
+        obj.score = score.key
+        obj.put()
+        return score
 
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""

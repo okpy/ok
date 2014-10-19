@@ -13,7 +13,7 @@ from app.utils import parse_date
 from flask import json
 from flask.json import JSONEncoder as old_json
 
-from google.appengine.ext import db, ndb
+from google.appengine.ext import ndb
 
 # To deal with circular imports
 class APIProxy(object):
@@ -115,6 +115,8 @@ class User(Base):
     def __repr__(self):
         return '<User %r>' % self.email
 
+    ## Properties and getters
+
     @property
     def is_admin(self):
         return self.role == constants.ADMIN_ROLE
@@ -134,14 +136,7 @@ class User(Base):
     @property
     def courses(self):
         return [group.assignment.get().course for group in self.groups()]
-
-    def get_selected_submission(self, assignment):
-        query = Submission.query()
-        query = Submission.can(self, Need('index'), query=query)
-        query = query.filter(Submission.assignment == assignment)
-        query = query.order(-Submission.created)
-        return query.get()
-
+        
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
@@ -149,6 +144,40 @@ class User(Base):
                 assignment = assignment.key
             query = query.filter(Group.assignment == assignment)
         return query
+
+    ## Utilities for submission grading and selection
+
+    def get_selected_submission(self, assign_key, keys_only=False):
+        def make_query():
+            query = Submission.query()
+            query = Submission.can(self, Need('index'), query=query)
+            query = query.filter(Submission.assignment == assign_key)
+            query = query.order(-Submission.created)
+            return query
+
+        query = make_query()
+        query = query.filter(Submission.tags == Submission.SUBMITTED_TAG)
+        subm = query.get(keys_only=keys_only)
+        if subm:
+            return subm
+
+        query = make_query()
+        return query.get(keys_only=keys_only)
+
+    def is_final_submission(self, subm, assign_key):
+        groups = self.groups(assign_key)
+        if not groups:
+            return True
+        if len(groups) > 1:
+            raise Exception("Invalid groups for user {}".format(self.id))
+
+        group = groups[0]
+        for other in group.members():
+            if other is not self:
+                latest = other.get_selected_submission(assign_key, keys_only=True)
+                if latest.created > subm.created:
+                    return False
+        return True
 
     @classmethod
     def from_dict(cls, values):
@@ -169,10 +198,6 @@ class User(Base):
     def get_by_id(cls, id, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for users"
         return super(User, cls).get_by_id(id, **kwargs)
-
-    @property
-    def logged_in(self):
-        return True
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -321,6 +346,13 @@ class Message(Base):
 
         return Submission._can(user, need, obj, query)
 
+class Score(Base):
+    """
+    The score for a submission.
+    """
+    score = ndb.IntegerProperty()
+    message = ndb.StringProperty()
+    created = ndb.DateTimeProperty(auto_now_add=True)
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
@@ -329,7 +361,10 @@ class Submission(Base):
     created = ndb.DateTimeProperty()
     db_created = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
+    score = ndb.KeyProperty(Score)
     tags = ndb.StringProperty(repeated=True)
+
+    SUBMITTED_TAG = "Submit"
 
     @classmethod
     def _get_kind(cls):
