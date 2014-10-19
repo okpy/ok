@@ -191,7 +191,7 @@ def main():
                 print("Server submission successful")
 
     except KeyboardInterrupt:
-        pass
+        print("Quitting ok.")
 
     finally:
         if assignment:
