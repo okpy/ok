@@ -50,18 +50,6 @@ app.controller("SubmissionDashboardController", ["$scope", "Submission",
     }
   ]);
 
-app.controller("SubmissionModuleController", ["$scope", "Submission",
-    function ($scope, Submission) {
-      Submission.query({
-        fields: false,
-        num_page: 1,
-        page: 1,
-        stats: true
-      }, function(response) {
-        $scope.num_submissions = response.data.statistics.total;
-      });
-    }
-  ]);
 
 app.controller("CourseModuleController", ["$scope",
     function ($scope) {

@@ -17,7 +17,7 @@ app.directive('assignmentList', function() {
 app.directive('submissionModule', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/dashboard/submission.module.html',
+            templateUrl: '/static/partials/admin/submission.module.html',
         };
     });
 
@@ -35,6 +35,13 @@ app.directive('courseModule', function() {
         };
     });
 
+app.directive('sidebarModule', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/static/partials/admin/sidebar.module.html',
+        };
+    });
+
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
@@ -44,6 +51,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
       name: 'dashboard',
       url: '/',
       templateUrl: '/static/partials/dashboard/dashboard.html',
+    }
+
+    var admin = {
+      name: 'admin',
+      url: '/admin',
+      templateUrl: '/static/partials/admin/admin.html',
     }
 
     var submissions = {
@@ -187,6 +200,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
     $stateProvider.
       state(dashboard).
+      state(admin).
       state(submissions).
       state(submissionList).
       state(submissionDetail).

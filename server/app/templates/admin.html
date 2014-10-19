@@ -2,7 +2,7 @@
 <html class="no-js" ng-app="dashboard">
     <head>
         <meta charset="UTF-8">
-        <title>ok dashboard</title>
+        <title>ok admin</title>
 
         <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
@@ -55,53 +55,63 @@
     <body class="skin-black">
         <!-- header logo: style can be found in header.less -->
         <header class="header">
-            <a ui-sref="dashboard" class="logo">
+            <a ui-sref="admin" class="logo">
                 <!-- Add the class icon to your logo image or logo icon to add the margining -->
                 ok
             </a>
             <!-- Header Navbar: style can be found in header.less -->
             <nav class="navbar navbar-static-top" role="navigation">
                 <!-- Sidebar toggle button-->
+                <a href="#" class="navbar-btn sidebar-toggle" data-toggle="offcanvas" role="button">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </a>
+
                 <div class="navbar-right">
                     <ul class="nav navbar-nav">
                         <!-- User Account: style can be found in dropdown.less -->
-                      {% if user %}
-
-                        <a href="#" class="dropdown-toggle" style="display:inline;">
-
+                      {% if admin %}
+                      <a href="#" class="dropdown-toggle" style="display:inline;">
                           <li class="dropdown user user-menu" >
                             <span class="navbar-text">
                             <i class="glyphicon glyphicon-user"></i>
                               <span> {{user.first_name | default(user.email, true)}} <i class="caret"></i></span>
                             </span>
                         </a>
-                                  <ul class="dropdown-menu">
-                                      <!-- Menu Body -->
-                                      <li class="user-body">
-                                          <div class="col-xs-4 text-center">
-                                                <!-- Very bad linking --> 
-                                                <a id="submissions-button" ui-sref="submission.list">Submissions</a>
-                                          </div>
-                                          <div class="col-xs-4 text-center">
-                                                  <!-- Very bad linking --> 
-                                                  <a id="assignments-button" ui-sref="assignment.list">Assignments</a>
-                                          </div>
-                                          <div class="col-xs-4 text-center">
-                                                  <!-- Very bad linking --> 
-                                                  <a id="assignments-button" ui-sref="course.list">Course</a>
-                                          </div>
-                                      </li>
-                                      <!-- Menu Footer-->
-                                      <li class="user-footer">
-                                          <div class="pull-right">
-                                              <a id="login-button" type="button" class="btn btn-default btn-flat" href={{users_link}}>{{users_title}}</a>
-                                          </div>
-                                          <div class="pull-left">
-                                              <a type="button" class="btn btn-default btn-flat" href='/'>Dashboard</a>
-                                          </div>
-                                      </li>
-                                  </ul>
-                              </li>
+                    <ul class="dropdown-menu">
+                    <!-- Body -->
+              <li class="user-header bg-light-blue">
+                  <img src="http://avatars.io/email/{{user.email}}?size=large" class="img-circle" alt="User Image">
+                  <p>
+                      Course: CS61A
+                  </p>
+              </li>
+                        <!-- Menu Body -->
+
+                        <li class="user-body">
+                            <div class="col-xs-4 text-center">
+                                  <a id="submissions-button" ui-sref="submission.list">Submissions</a>
+                              </div>
+                            <div class="col-xs-4 text-center">
+                              <a id="assignments-button" ui-sref="assignment.list">Assignments</a>
+                            </div>
+                            <div class="col-xs-4 text-center">
+                              <a id="assignments-button" ui-sref="course.list">Course</a>
+                            </div>
+                        </li>
+                        <!-- Menu Footer-->
+                        <li class="user-footer">
+                            <div class="pull-right">
+                                <a id="login-button" type="button" class="btn btn-default btn-flat" href={{users_link}}>{{users_title}}</a>
+                            </div>
+                            <div class="pull-left">
+                                <a type="button" class="btn btn-default btn-flat" href='/'>Student Dashboard</a>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
                           {% else %}
                           <li class="user">
                               <a href={{users_link}}>Login</a>
@@ -111,16 +121,43 @@
                 </div>
             </nav>
         </header>
-      
-        {% if admin %}
-          <!-- Todo --> 
-        {% endif %}
 
-        <aside class="right-side student-main dashview">
+          {% if user %}
+          <script>
+            window.user = "{{user.email}}";
+            window.reloginLink = "{{relogin_link}}";
+          </script>
+        
+        <div class="wrapper row-offcanvas row-offcanvas-left">
+            <!-- Left side column. contains the logo and sidebar -->
+            <aside class="left-side sidebar-offcanvas">                
+                <!-- sidebar: style can be found in sidebar.less -->
+                <sidebar-module/>
+                <!-- /.sidebar -->
+            </aside>
 
-
-        </aside>
             <!-- Right side column. Contains the navbar and content of the page -->
+            <aside class="right-side">                
+
+              <div ui-view></div>
+
+            </aside>
+            <!-- /.right-side -->
+
+        </div>
+          {% else %}
+            <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">Login</h3>
+            </div>
+            <div class="box-body">
+                <a href={{users_link}} class="btn btn-lg btn-primary btn-block">Login</a>
+
+            </div>
+            </div>
+          {% endif %}
+
+
         </div><!-- ./wrapper -->
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
         {% if not DEBUG %}
@@ -138,5 +175,8 @@
 
         <!-- AdminLTE/Framework Code App -->
         <script src="/static/admin/js/AdminLTE/app.js" type="text/javascript"></script>
+            <script src="/static/admin/js/ok/admin.js" type="text/javascript"></script>
+
+
      </body>
 </html>

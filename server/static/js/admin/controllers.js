@@ -1,19 +1,3 @@
-app.controller("SidebarCntrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
-      Assignment.query(function(response) {
-        $scope.assignments = response.results;
-      });
-      $scope.course_name = "CS61A Fall 2014"
-  }]);
-
-// Submission Controllers
-app.controller("SubmissionModuleController", ["$scope", "Submission",
-    function ($scope, Submission) {
-      $scope.num_submissions = 100;
-      $scope.hi = "bye";
-      console.log("woo");
-    }
-]);
 
 // Assignment Controllers
 app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
@@ -29,7 +13,7 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
     }
   ]);
 
-// Submission Controllers
+
 app.controller("SubmissionListCtrl", ['$scope', 'Submission',
   function($scope, Submission) {
     $scope.itemsPerPage = 20;

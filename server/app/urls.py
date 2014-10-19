@@ -7,10 +7,11 @@ import traceback
 import collections
 
 import werkzeug
-from flask import render_template, session, request, Response
+from flask import render_template, session, request, Response, redirect, url_for
 
 from google.appengine.api import users
 from google.appengine.ext import deferred
+from google.appengine.ext import ndb
 
 from app import app
 from app import api
@@ -20,6 +21,9 @@ from app import utils
 from app.constants import API_PREFIX
 from app.exceptions import *
 
+#Temporary staff list
+
+staff_list = ['dummy@admin.com', 'sumukh@berkeley.edu']
 
 @app.route("/")
 def dashboard():
@@ -43,6 +47,38 @@ def dashboard():
             force_account_chooser(users.create_login_url('/#/loginLanding')))
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
+
+
+@app.route("/manage")
+def admin():
+    def force_account_chooser(url):
+        if 'ServiceLogin' in url:
+            return url.replace('ServiceLogin', 'AccountChooser')
+        return url
+
+    user = users.get_current_user()
+    params = {}
+    if user is None:
+        params['users_link'] = force_account_chooser(
+            users.create_login_url('/#/loginLanding'))
+        params['users_title'] = "Sign In"
+    else:
+        logging.info("Staff Login Attempt from %s", user.email())
+        # q = ndb.gql("SELECT * FROM User WHERE email = :1 LIMIT 1", user.email())
+        # adminobj = q.get()
+        # if adminobj.is_staff: 
+        if user.email() in staff_list: 
+            logging.info("Staff Login Success from %s", user.email())
+            params["user"] = {'email': user.email()}
+            params["admin"] = {'email': user.email()}
+            params['users_link'] = users.create_logout_url('/')
+            params['users_title'] = "Log Out"
+            params['relogin_link'] = users.create_logout_url(
+                force_account_chooser(users.create_login_url('/#/loginLanding')))
+            return render_template("admin.html", **params)
+        else:
+            logging.info("Staff Login Failure from %s", user.email())
+    return redirect(url_for('dashboard'))
 
 @app.route("/upgrade")
 def upgrade():
