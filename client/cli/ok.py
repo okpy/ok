@@ -143,20 +143,16 @@ def main():
                      for p in protocol.get_protocols(config.protocols)]
 
         messages = dict()
-        msg_queue = multiprocessing.Queue()
-        file_contents = []
+        msg_queue = []
 
         try:
             with open(BACKUP_FILE, 'rb') as fp:
-                file_contents = pickle.load(fp)
+                msg_queue = pickle.load(fp)
                 log.info('Loaded %d backed up messages from %s',
                          len(file_contents), BACKUP_FILE)
         except (IOError, EOFError) as e:
             log.info('Error reading from ' + BACKUP_FILE \
                     + ', assume nothing backed up')
-
-        for message in file_contents:
-            msg_queue.put(message)
 
         for proto in protocols:
             log.info('Execute %s.on_start()', proto.name)
@@ -168,15 +164,12 @@ def main():
                 access_token = auth.authenticate(args.authenticate)
                 log.info('Authenticated with access token %s', access_token)
 
-                msg_queue.put(messages)
+                msg_queue.append(messages)
                 staging_queue = multiprocessing.Queue()
-                interceptor = output.LogInterceptor()
-                server_thread = multiprocessing.Process(
-                    target=network.dump_to_server,
-                    args=(access_token, msg_queue, assignment['name'],
-                          args.server, args.insecure, staging_queue,
-                          client.__version__, interceptor))
-                server_thread.start()
+                dump_to_server(access_token, msg_queue, assignment['name'],
+                        args.server, args.insecure, staging_queue,
+                        client.__version, log, send_all=args.submit)
+
             except error.URLError as ex:
                 log.warning('on_start messages not sent to server: %s', str(e))
 
@@ -191,36 +184,21 @@ def main():
         # TODO(denero) Print server responses.
 
         if not args.local:
-            msg_queue.put(interact_msg)
+            msg_queue.append(interact_msg)
 
-            while timer_thread.is_alive():
-                pass
-
-            if not args.submit:
-                server_thread.terminate()
-            else:
-                server_thread.join()
-
-            interceptor.dump_to_logger(log)
-
-            dump_list = []
-            while not msg_queue.empty():
-                dump_list.append(msg_queue.get_nowait())
-            while not staging_queue.empty():
-                dump_list.append(staging_queue.get_nowait())
             with open(BACKUP_FILE, 'wb') as fp:
-                log.info('Save %d unsent messages to %s', len(dump_list),
+                log.info('Save %d unsent messages to %s', len(msg_queue),
                          BACKUP_FILE)
-                pickle.dump(dump_list, fp)
+
+                pickle.dump(msg_queue, fp)
+                os.fsync(fp)
 
             if len(dump_list) == 0:
                 print("Server submission successful")
 
     except KeyboardInterrupt:
-        if timer_thread:
-            timer_thread.terminate()
-        if server_thread:
-            server_thread.terminate()
+        pass
+
     finally:
         if assignment:
             log.info('Dump tests for %s to %s', assignment['name'], args.tests)

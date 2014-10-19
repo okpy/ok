@@ -5,7 +5,7 @@ import json
 import time
 
 def send_to_server(access_token, messages, name, server, version, log,
-        insecure=False):
+        insecure=False, timeout=0):
     """Send messages to server, along with user authentication."""
     data = {
         'assignment': name,
@@ -23,7 +23,7 @@ def send_to_server(access_token, messages, name, server, version, log,
         log.info('Sending data to %s', address)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
-        response = request.urlopen(req, serialized)
+        response = request.urlopen(req, serialized, timeout)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         log.warning('Error while sending to server: %s', str(ex))
@@ -38,17 +38,32 @@ def send_to_server(access_token, messages, name, server, version, log,
         except Exception as e:
             log.warn('Could not connect to %s', server)
 
-def dump_to_server(access_token, msg_queue, name, server, insecure, staging_queue,
-        version, log):
+def dump_to_server(access_token, msg_queue, name, server, insecure, version, log, send_all=False):
+    stop_time = datetime.now() + datetime.timedelta(microseconds=500)
+    #TODO(soumya) Change after we get data on ok_messages
+    send_all = False
+    try:
+        prefix = "http" if insecure else "https"
+        address = prefix + "://" + server + "/api/v1/nothing"
+        address += "?access_token={0}&ok_messages={1}".format(access_token,
+                len(msg_queue))
+        req = request.Request(address)
+        response = request.urlopen(req, b"", 0.4)
+    except Exception as e:
+        pass
+
     while not msg_queue.empty():
-        message = msg_queue.get()
-        staging_queue.put(message)
+        if not send_all and datetime.now() < stop_time:
+            break
+        message = msg_queue[-1]
         try:
-            if not send_to_server(access_token, message, name, server, version, log, insecure):
-                staging_queue.get() #throw away successful message
-            else:
-                msg_queue.put(staging_queue.get())
+            delta = stop_time - datetime.now()
+            if not send_to_server(access_token, message, name, server, version, log, insecure, timeout=delta.seconds+delta.microseconds/1e6):
+                msg_queue.pop()
+            if send_all:
+                print("You have {0} messages left to send.".format(len(msg_queue)))
         except SoftwareUpdated:
+            print("ok was updated. We will now terminate this run of ok.")
             log.info('ok was updated. Abort now; messages will be sent '
                      'to server on next invocation')
             return
