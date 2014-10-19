@@ -27,7 +27,7 @@ def send_to_server(access_token, messages, name, server, version, log,
         log.info('Sending data to %s', address)
         req = request.Request(address)
         req.add_header("Content-Type", "application/json")
-        response = request.urlopen(req, serialized, 0.4)
+        response = request.urlopen(req, serialized, TIMEOUT)
         return json.loads(response.read().decode('utf-8'))
     except error.HTTPError as ex:
         log.warning('Error while sending to server: %s', str(ex))
