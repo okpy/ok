@@ -173,7 +173,7 @@ def main():
                 log.info('Authenticated with access token %s', access_token)
 
                 msg_list.append(messages)
-                print("Attempting to send files to server...")
+                print("Attempting to back up your work to the server")
                 network.dump_to_server(access_token, msg_list,
                         assignment['name'], args.server, args.insecure,
                         client.__version__, log, send_all=args.submit)

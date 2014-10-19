@@ -45,7 +45,6 @@ def send_to_server(access_token, messages, name, server, version, log,
 def dump_to_server(access_token, msg_list, name, server, insecure, version, log, send_all=False):
     #TODO(soumya) Change after we get data on ok_messages
     # This request is temporary- it'll be removed in the next day or two.
-    send_all = False
     try:
         prefix = "http" if insecure else "https"
         address = prefix + "://" + server + "/api/v1/nothing"
@@ -67,7 +66,7 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
             if response:
                 msg_list.pop()
             if send_all:
-                print("Submitting project... {0}% complete".format(len(msg_list)*100/initial_length))
+                print("Submitting project... {0}% complete".format(round(len(msg_list)*100/initial_length), 2))
         except SoftwareUpdated:
             print("ok was updated. We will now terminate this run of ok.")
             log.info('ok was updated. Abort now; messages will be sent '
