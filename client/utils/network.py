@@ -6,6 +6,8 @@ import time
 import datetime
 import socket
 
+TIMEOUT = 1000
+
 def send_to_server(access_token, messages, name, server, version, log,
         insecure=False):
     """Send messages to server, along with user authentication."""
@@ -40,7 +42,7 @@ def send_to_server(access_token, messages, name, server, version, log,
         except Exception as e:
             log.warning('Could not connect to %s', server)
 
-def dump_to_server(access_token, msg_queue, name, server, insecure, version, log, send_all=False):
+def dump_to_server(access_token, msg_list, name, server, insecure, version, log, send_all=False):
     #TODO(soumya) Change after we get data on ok_messages
     send_all = False
     try:
@@ -53,8 +55,9 @@ def dump_to_server(access_token, msg_queue, name, server, insecure, version, log
     except Exception as e:
         pass
 
-    stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=1000)
-    while msg_queue:
+    stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=TIMEOUT)
+    initial_length = len(msg_list)
+    while msg_list:
         if not send_all and datetime.datetime.now() > stop_time:
             break
         message = msg_queue[-1]
@@ -63,7 +66,7 @@ def dump_to_server(access_token, msg_queue, name, server, insecure, version, log
             if response:
                 msg_queue.pop()
             if send_all:
-                print("You have {0} messages left to send.".format(len(msg_queue)))
+                print("Submitting project... {0}% complete".format(len(msg_queue)*100/initial_length))
         except SoftwareUpdated:
             print("ok was updated. We will now terminate this run of ok.")
             log.info('ok was updated. Abort now; messages will be sent '
@@ -72,7 +75,7 @@ def dump_to_server(access_token, msg_queue, name, server, insecure, version, log
         except error.URLError as ex:
             log.warning('URLError: %s', str(ex))
         except socket.timeout as ex:
-            log.warning("socket timed out")
+            log.warning("socket.timeout: %s", str(ex))
     return
 
 def server_timer():

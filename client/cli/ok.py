@@ -139,13 +139,13 @@ def main():
                      for p in protocol.get_protocols(config.protocols)]
 
         messages = dict()
-        msg_queue = []
+        msg_list= []
 
         try:
             with open(BACKUP_FILE, 'rb') as fp:
-                msg_queue = pickle.load(fp)
+                msg_list = pickle.load(fp)
                 log.info('Loaded %d backed up messages from %s',
-                         len(msg_queue), BACKUP_FILE)
+                         len(msg_list), BACKUP_FILE)
         except (IOError, EOFError) as e:
             log.info('Error reading from ' + BACKUP_FILE \
                     + ', assume nothing backed up')
@@ -166,14 +166,14 @@ def main():
         # TODO(denero) Print server responses.
 
         if not args.local:
-            msg_queue.append(interact_msg)
+            msg_list.append(interact_msg)
 
             try:
                 access_token = auth.authenticate(args.authenticate)
                 log.info('Authenticated with access token %s', access_token)
 
-                msg_queue.append(messages)
-                network.dump_to_server(access_token, msg_queue,
+                msg_list.append(messages)
+                network.dump_to_server(access_token, msg_list,
                         assignment['name'], args.server, args.insecure,
                         client.__version__, log, send_all=args.submit)
 
@@ -181,13 +181,13 @@ def main():
                 log.warning('on_start messages not sent to server: %s', str(e))
 
             with open(BACKUP_FILE, 'wb') as fp:
-                log.info('Save %d unsent messages to %s', len(msg_queue),
+                log.info('Save %d unsent messages to %s', len(msg_list),
                          BACKUP_FILE)
 
-                pickle.dump(msg_queue, fp)
+                pickle.dump(msg_list, fp)
                 os.fsync(fp)
 
-            if len(msg_queue) == 0:
+            if len(msg_list) == 0:
                 print("Server submission successful")
 
     except KeyboardInterrupt:
