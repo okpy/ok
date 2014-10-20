@@ -40,6 +40,11 @@ def send_to_server(access_token, messages, name, server, version, log,
                 if software_update(response_json['data']['download_link'], log):
                     raise SoftwareUpdated
             return {}
+        except SoftwareUpdated as e:
+            raise e
+        #TODO(soumya) Figure out what exceptions can happen here specifically
+        # I'll fix this after the ants project is over so we don't risk breaking
+        # anything.
         except Exception as e:
             log.warning('Could not connect to %s', server)
 
