@@ -57,16 +57,24 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
 
     stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=TIMEOUT)
     initial_length = len(msg_list)
+    retries = 10
     while msg_list:
         if not send_all and datetime.datetime.now() > stop_time:
             break
         message = msg_list[-1]
         try:
             response = send_to_server(access_token, message, name, server, version, log, insecure)
+
             if response:
                 msg_list.pop()
+            elif retries > 0:
+                retries -= 1
+            else:
+                print("Submission failed. Please check your network connection and try again")
+
             if send_all:
                 print("Submitting project... {0}% complete".format(100 - round(len(msg_list)*100/initial_length), 2))
+
         except SoftwareUpdated:
             print("ok was updated. We will now terminate this run of ok.")
             log.info('ok was updated. Abort now; messages will be sent '
