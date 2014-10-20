@@ -7,6 +7,7 @@ import datetime
 import socket
 
 TIMEOUT = 500
+RETRY_LIMIT = 10
 
 def send_to_server(access_token, messages, name, server, version, log,
         insecure=False):
@@ -57,7 +58,7 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
 
     stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=TIMEOUT)
     initial_length = len(msg_list)
-    retries = 10
+    retries = RETRY_LIMIT
     while msg_list:
         if not send_all and datetime.datetime.now() > stop_time:
             break
