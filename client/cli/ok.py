@@ -44,7 +44,7 @@ from datetime import datetime
 from urllib import error
 import argparse
 import client
-import multiprocessing
+import os
 import pickle
 import sys
 import logging
@@ -122,10 +122,6 @@ def main():
     server_thread, timer_thread = None, None
     try:
         print("You are running version {0} of ok.py".format(client.__version__))
-        if not args.local:
-            timer_thread = multiprocessing.Process(target=network.server_timer,
-                                                   args=())
-            timer_thread.start()
 
         cases = {case.type: case for case in core.get_testcases(config.cases)}
         assignment = None
@@ -143,42 +139,21 @@ def main():
                      for p in protocol.get_protocols(config.protocols)]
 
         messages = dict()
-        msg_queue = multiprocessing.Queue()
-        file_contents = []
+        msg_list= []
 
         try:
             with open(BACKUP_FILE, 'rb') as fp:
-                file_contents = pickle.load(fp)
+                msg_list = pickle.load(fp)
                 log.info('Loaded %d backed up messages from %s',
-                         len(file_contents), BACKUP_FILE)
+                         len(msg_list), BACKUP_FILE)
         except (IOError, EOFError) as e:
             log.info('Error reading from ' + BACKUP_FILE \
                     + ', assume nothing backed up')
-
-        for message in file_contents:
-            msg_queue.put(message)
 
         for proto in protocols:
             log.info('Execute %s.on_start()', proto.name)
             messages[proto.name] = proto.on_start()
         messages['timestamp'] = str(datetime.now())
-
-        if not args.local:
-            try:
-                access_token = auth.authenticate(args.authenticate)
-                log.info('Authenticated with access token %s', access_token)
-
-                msg_queue.put(messages)
-                staging_queue = multiprocessing.Queue()
-                interceptor = output.LogInterceptor()
-                server_thread = multiprocessing.Process(
-                    target=network.dump_to_server,
-                    args=(access_token, msg_queue, assignment['name'],
-                          args.server, args.insecure, staging_queue,
-                          client.__version__, interceptor))
-                server_thread.start()
-            except error.URLError as ex:
-                log.warning('on_start messages not sent to server: %s', str(e))
 
         interact_msg = {}
 
@@ -191,36 +166,34 @@ def main():
         # TODO(denero) Print server responses.
 
         if not args.local:
-            msg_queue.put(interact_msg)
+            msg_list.append(interact_msg)
 
-            while timer_thread.is_alive():
-                pass
+            try:
+                access_token = auth.authenticate(args.authenticate)
+                log.info('Authenticated with access token %s', access_token)
 
-            if not args.submit:
-                server_thread.terminate()
-            else:
-                server_thread.join()
+                msg_list.append(messages)
+                print("Attempting to back up your work on the server")
+                network.dump_to_server(access_token, msg_list,
+                        assignment['name'], args.server, args.insecure,
+                        client.__version__, log, send_all=args.submit)
 
-            interceptor.dump_to_logger(log)
+            except error.URLError as ex:
+                log.warning('on_start messages not sent to server: %s', str(e))
 
-            dump_list = []
-            while not msg_queue.empty():
-                dump_list.append(msg_queue.get_nowait())
-            while not staging_queue.empty():
-                dump_list.append(staging_queue.get_nowait())
             with open(BACKUP_FILE, 'wb') as fp:
-                log.info('Save %d unsent messages to %s', len(dump_list),
+                log.info('Save %d unsent messages to %s', len(msg_list),
                          BACKUP_FILE)
-                pickle.dump(dump_list, fp)
 
-            if len(dump_list) == 0:
+                pickle.dump(msg_list, fp)
+                os.fsync(fp)
+
+            if len(msg_list) == 0:
                 print("Server submission successful")
 
     except KeyboardInterrupt:
-        if timer_thread:
-            timer_thread.terminate()
-        if server_thread:
-            server_thread.terminate()
+        print("Quitting ok.")
+
     finally:
         if assignment:
             log.info('Dump tests for %s to %s', assignment['name'], args.tests)

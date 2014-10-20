@@ -10,27 +10,31 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
 
 app.controller("SubmissionDashboardController", ["$scope", "Submission",
     function ($scope, Submission) {
-      $scope.itemsPerPage = 2;
+      $scope.itemsPerPage = 3;
       $scope.currentPage = 1;
       $scope.getPage = function(page) {
-        Submission.query({
-          fields: {
-            'created': true,
-            'db_created': true,
-            'id': true,
-            'submitter': {
-              'id': true
-            },
-            'tags': true,
-            'assignment': {
-              'name': true,
-              'display_name': true,
-              'id': true,
-            },
+      Submission.query({
+        fields: {
+          'created': true,
+          'db_created': true,
+          'id': true,
+          'submitter': {
+            'id': true
           },
-          page: page,
-          num_page: $scope.itemsPerPage,
-        }, function(response) {
+          'tags': true,
+          'assignment': {
+            'name': true,
+            'display_name': true,
+            'id': true,
+          },
+          'messages': {
+            'file_contents': "presence"
+          }
+        },
+        page: page,
+        num_page: $scope.itemsPerPage,
+        "messages.kind": "file_contents"
+      }, function(response) {
           $scope.submissions = response.data.results;
           if (response.data.more) {
             $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
