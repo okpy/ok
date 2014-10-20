@@ -66,7 +66,7 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
             if response:
                 msg_list.pop()
             if send_all:
-                print("Submitting project... {0}% complete".format(round(len(msg_list)*100/initial_length), 2))
+                print("Submitting project... {0}% complete".format(100 - round(len(msg_list)*100/initial_length), 2))
         except SoftwareUpdated:
             print("ok was updated. We will now terminate this run of ok.")
             log.info('ok was updated. Abort now; messages will be sent '
