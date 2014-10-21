@@ -1,3 +1,20 @@
+// Admin Sidebar
+app.controller("SidebarCntrl", ['$scope', 'Assignment',
+  function($scope, Assignment) {
+      Assignment.query(function(response) {
+        $scope.assignments = response.results;
+      });
+      $scope.course_name = "CS61A Fall 2014"
+  }]);
+
+// Submission Controllers
+app.controller("SubmissionModuleController", ["$scope", "Submission",
+    function ($scope, Submission) {
+      Submission.query(function(response) {
+        $scope.num_submissions = response.results.length;
+      });
+    }
+]);
 
 // Assignment Controllers
 app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
@@ -10,6 +27,49 @@ app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
     function ($scope, $stateParams, Assignment) {
       $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
+    }
+  ]);
+app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
+    function ($scope, $state, Submission) {
+      $scope.itemsPerPage = 3;
+      $scope.currentPage = 1;
+      $scope.getPage = function(page) {
+      Submission.query({
+        fields: {
+          'created': true,
+          'db_created': true,
+          'id': true,
+          'submitter': {
+            'id': true
+          },
+          'tags': true,
+          'assignment': {
+            'name': true,
+            'display_name': true,
+            'id': true,
+          },
+          'messages': {
+            'file_contents': "presence"
+          }
+        },
+        page: page,
+        num_page: $scope.itemsPerPage,
+        "messages.kind": "file_contents"
+      }, function(response) {
+          $scope.submissions = response.data.results;
+          $scope.clicked = false;
+          if (response.data.more) {
+            $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
+          } else {
+            $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
+          }
+        });
+      }
+
+      $scope.pageChanged = function() {
+        $scope.getPage($scope.currentPage);
+      }
+      $scope.getPage(1);
     }
   ]);
 
@@ -120,16 +180,36 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
   ]);
 
 // Diff Controllers
-app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
-  function($scope, $stateParams, Submission, $timeout) {
+app.controller("SubmissionDiffCtrl", ['$scope', '$window', '$stateParams',  'Submission', '$timeout',
+  function($scope, $window, $stateParams, Submission, $timeout) {
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
     $scope.submission = Submission.get({
       fields: {
-        created: true
+        created: true,
+        compScore: true,
+        tags: true,
+        message: true
       }
     }, {
       id: $stateParams.submissionId
+    }, function () {
+      $scope.compScore = $scope.submission.compScore.score;
+      $scope.compMessage = $scope.submission.compScore.message;
     });
+
+    $scope.submitGrade = function() {
+        Submission.addScore({
+            id: $stateParams.submissionId,
+            score: $scope.compScore,
+            message: $scope.compMessage
+        }, $scope.backPage);
+    }
+    // Todo. This currently just refreshes the page. 
+    $scope.backPage = function () {
+        $timeout(function() {
+           $window.history.back();;
+        }, 300);
+    }
     $scope.refreshDiff = function() {
         $timeout(function() {
           $scope.diff = Submission.diff({id: $stateParams.submissionId});
@@ -450,9 +530,34 @@ app.controller("LandingPageCtrl", ["$window", "$state",
     }
 ]);
 
+app.controller("QueueModuleController", ["$scope", "Queue", 
+    function ($scope, Queue) {
+      $scope.queues = Queue.query(function (response) {
+        $scope.num_submissions = 0;
+
+        if (response.length > 0) {
+          for (var i = 0; i < response.length; i++) {
+            $scope.num_submissions += response[i].submissions.length;
+          }
+        } else {
+          $scope.num_submissions = 0;
+        }
+      });
+
+      // Not working right now. 
+      //$scope.my_queues = Queue.query({assigned_staff: $window.user});
+    }
+]);
+
 app.controller("QueueListCtrl", ['$scope', 'Queue',
   function($scope, Queue) {
     $scope.queues = Queue.query();
+  }]);
+
+app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
+  function($scope, Queue, $window, $state) {
+    //Todo: Needs two queries - but the API needs both right now. 
+        $scope.queues = Queue.query({'assigned_staff': $window.user});
   }]);
 
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",

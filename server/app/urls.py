@@ -21,10 +21,6 @@ from app import utils
 from app.constants import API_PREFIX
 from app.exceptions import *
 
-#Temporary staff list
-
-staff_list = ['dummy@admin.com', 'sumukh@berkeley.edu']
-
 @app.route("/")
 def dashboard():
     def force_account_chooser(url):
@@ -64,10 +60,8 @@ def admin():
         params['users_title'] = "Sign In"
     else:
         logging.info("Staff Login Attempt from %s", user.email())
-        # q = ndb.gql("SELECT * FROM User WHERE email = :1 LIMIT 1", user.email())
-        # adminobj = q.get()
-        # if adminobj.is_staff: 
-        if user.email() in staff_list: 
+        userobj = models.User.get_by_id(user.email())
+        if userobj.is_admin: 
             logging.info("Staff Login Success from %s", user.email())
             params["user"] = {'email': user.email()}
             params["admin"] = {'email': user.email()}

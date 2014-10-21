@@ -69,6 +69,13 @@ def seed():
             current_version=current_version
         )
 
+
+    def make_queue(assignment, submissions, asignee):
+        return models.Queue(
+            submissions=submissions,
+            assignment=assignment.key,
+            assigned_staff=[asignee.key])
+
     c = models.User(
         key=ndb.Key("User", "dummy@admin.com"),
         email="dummy@admin.com",
@@ -77,6 +84,7 @@ def seed():
         login="albert",
         role="admin"
     )
+
     version = make_version('v1.0.11')
     version.put()
     c.put()
@@ -86,6 +94,14 @@ def seed():
     assign.put()
     assign2 = make_past_assignment(course, c)
     assign2.put()
-    subm = make_fake_submission(assign, c)
-    subm.put()
+
+    subms = []
+    for i in range(5):
+        subm = make_fake_submission(assign, c)
+        subm.put()
+        subms.append(subm.key)
+
+    q = make_queue(assign, subms, c)
+    q.put()
+
 

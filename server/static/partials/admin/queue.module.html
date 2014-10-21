@@ -1,0 +1,22 @@
+<div class="small-box bg-blue" ng-controller="QueueModuleController" ng-cloak>
+
+    <div class="inner">
+        <h3 ng-cloak>
+          {{num_submissions}}
+        </h3>
+        <p ng-if="num_submissions != 1">
+            submissions in the queue
+        </p>
+        <p ng-if="num_submissions == 1">
+            submission in the queue
+        </p>
+        </div>
+        <div class="icon">
+            <i class="ion ion-archive"></i>
+        </div>
+        <a ui-sref="submission.list" class="small-box-footer">
+            More info <i class="fa fa-arrow-circle-right"></i>
+        </a>
+    </div>
+
+</div>

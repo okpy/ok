@@ -47,3 +47,14 @@
     background-color: #f9f9f9;
     margin-left: 20px;
 }
+
+.admin-center {
+    margin-right: 20px;
+    margin-left: 240px;
+    margin-top: 20px;
+}
+.admin-center.right-side.strech {
+    margin-right: 20px;
+    margin-left: 20px;
+    margin-top: 20px;
+}

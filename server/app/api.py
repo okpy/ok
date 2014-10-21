@@ -497,6 +497,11 @@ class SubmissionAPI(APIResource):
             raise need.exception()
         return obj
 
+    def graded(self, obj, user, data):
+        """
+        Gets the users graded submissions
+        """
+
     def download(self, obj, user, data):
         """
         Allows you to download a submission.
@@ -607,10 +612,13 @@ class SubmissionAPI(APIResource):
     def score(self, obj, user, data):
         score = models.Score(
             score=data['score'],
-            message=data['score'])
+            message=data['message'])
         score.put()
 
-        obj.score = score.key
+        if 'Composition' not in obj.tags:
+            obj.tags.append('Composition')
+
+        obj.compScore = score.key
         obj.put()
         return score
 

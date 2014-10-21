@@ -1,19 +1,11 @@
-app.controller("SidebarCntrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
-      Assignment.query(function(response) {
-        $scope.assignments = response.results;
-      });
-      $scope.course_name = "CS61A Fall 2014"
-  }]);
 
-// Submission Controllers
-app.controller("SubmissionModuleController", ["$scope", "Submission",
-    function ($scope, Submission) {
-      $scope.num_submissions = 100;
-      $scope.hi = "bye";
-      console.log("woo");
+app.controller("CourseModuleController", ["$scope",
+    function ($scope) {
+      $scope.course_name = "CS 61A";
+      $scope.course_desc = "Structure and Interpretation of Computer Programs";
     }
-]);
+  ]);
+
 
 // Assignment Controllers
 app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
@@ -23,6 +15,17 @@ app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
       });
   }]);
 
+app.controller("AssignmentModuleController", ["$scope", "Assignment",
+    function ($scope, Assignment) {
+      Assignment.query({
+        active: true,
+      }, function(response) {
+        $scope.assignments = response.results;
+      });
+    }
+  ]);
+
+
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
     function ($scope, $stateParams, Assignment) {
       $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
@@ -30,8 +33,8 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   ]);
 
 // Submission Controllers
-app.controller("SubmissionListCtrl", ['$scope', 'Submission',
-  function($scope, Submission) {
+app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
+    function ($scope, $state, Submission) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
     $scope.getPage = function(page) {
@@ -48,6 +51,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
             'name': true,
             'display_name': true,
             'id': true,
+            'active': true,
           },
           'messages': {
             'file_contents': "presence"
@@ -65,11 +69,37 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
         }
       });
     }
+      $scope.clicked = false;
+
+      $scope.submitVersion = function(subm) {
+        $scope.clicked = true;
+        Submission.addTag({
+          id: subm,
+          tag: "Submit"
+        },$scope.refreshDash);
+      }
+      $scope.unSubmit = function(subm) {
+        $scope.clicked = true;
+
+        Submission.removeTag({
+          id: subm,
+          tag: "Submit"
+        }, $scope.refreshDash);
+      }
+
+    $scope.refreshDash = function() {
+        $state.go($state.current, {}, {reload: true});
+      }
+
+
+
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
     $scope.getPage(1);
   }]);
+
+
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
   function($scope, $location, $stateParams, $timeout, $anchorScroll, Submission) {
@@ -141,7 +171,17 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
     $scope.submission = Submission.get({
       fields: {
-        created: true
+        created: true,
+        compScore: true,
+        tags: true,
+        'assignment': {
+          'name': true,
+          'display_name': true,
+          'id': true,
+        },
+        'submitter': {
+          'id': true
+        }
       }
     }, {
       id: $stateParams.submissionId

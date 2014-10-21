@@ -39,6 +39,13 @@ app.factory('Submission', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        addScore: {
+          method: "POST",
+          url: 'api/v1/submission/:id/score',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         addComment: {
           method: "POST",
           url: 'api/v1/submission/:id/add_comment',

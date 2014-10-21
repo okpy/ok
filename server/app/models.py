@@ -361,7 +361,7 @@ class Submission(Base):
     created = ndb.DateTimeProperty()
     db_created = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
-    score = ndb.KeyProperty(Score)
+    compScore = ndb.KeyProperty(Score)
     tags = ndb.StringProperty(repeated=True)
 
     SUBMITTED_TAG = "Submit"
