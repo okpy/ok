@@ -400,7 +400,8 @@ class Submission(Base):
                     [assign.key for assign in assignments]))
 
             for group in user.groups():
-                filters.append(Submission.submitter.IN(group.members))
+                filters.append(ndb.AND(Submission.submitter.IN(group.members),
+                    Submission.assignment == group.assignment))
             filters.append(Submission.submitter == user.key)
  
             if len(filters) > 1:
