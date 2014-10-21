@@ -370,7 +370,7 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
-            groups = list(user.groups())
+            groups = list(user.groups(obj.assignment))
             my_group = obj.group
 
             if groups and my_group and my_group.key in [g.key for g in groups]:
