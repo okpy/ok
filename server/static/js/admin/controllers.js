@@ -193,8 +193,13 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$window', '$stateParams',  'Sub
     }, {
       id: $stateParams.submissionId
     }, function () {
-      $scope.compScore = $scope.submission.compScore.score;
-      $scope.compMessage = $scope.submission.compScore.message;
+      if ($scope.submission.compScore == null) {
+        $scope.compScore = null;
+        $scope.compMessage = null;
+      } else {
+        $scope.compScore = $scope.submission.compScore.score;
+        $scope.compMessage = $scope.submission.compScore.message;
+      }
     });
 
     $scope.submitGrade = function() {
