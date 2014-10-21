@@ -7,6 +7,7 @@ import datetime
 import socket
 
 TIMEOUT = 500
+RETRY_LIMIT = 5
 
 def send_to_server(access_token, messages, name, server, version, log,
         insecure=False):
@@ -39,13 +40,17 @@ def send_to_server(access_token, messages, name, server, version, log,
                 if software_update(response_json['data']['download_link'], log):
                     raise SoftwareUpdated
             return {}
+        except SoftwareUpdated as e:
+            raise e
+        #TODO(soumya) Figure out what exceptions can happen here specifically
+        # I'll fix this after the ants project is over so we don't risk breaking
+        # anything.
         except Exception as e:
             log.warning('Could not connect to %s', server)
 
 def dump_to_server(access_token, msg_list, name, server, insecure, version, log, send_all=False):
     #TODO(soumya) Change after we get data on ok_messages
     # This request is temporary- it'll be removed in the next day or two.
-    send_all = False
     try:
         prefix = "http" if insecure else "https"
         address = prefix + "://" + server + "/api/v1/nothing"
@@ -58,16 +63,24 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
 
     stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=TIMEOUT)
     initial_length = len(msg_list)
+    retries = RETRY_LIMIT
     while msg_list:
         if not send_all and datetime.datetime.now() > stop_time:
             break
         message = msg_list[-1]
         try:
             response = send_to_server(access_token, message, name, server, version, log, insecure)
+
             if response:
                 msg_list.pop()
+            elif retries > 0:
+                retries -= 1
+            else:
+                print("Submission failed. Please check your network connection and try again")
+
             if send_all:
-                print("Submitting project... {0}% complete".format(len(msg_list)*100/initial_length))
+                print("Submitting project... {0}% complete".format(100 - round(len(msg_list)*100/initial_length), 2))
+
         except SoftwareUpdated:
             print("ok was updated. We will now terminate this run of ok.")
             log.info('ok was updated. Abort now; messages will be sent '

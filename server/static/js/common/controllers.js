@@ -311,6 +311,7 @@ app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeou
       $scope.createGroup = function() {
         Group.save({
           assignment: $stateParams.assignmentId,
+          members: $window.user
         }, $scope.refreshGroup);
       }
     }
