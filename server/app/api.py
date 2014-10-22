@@ -397,8 +397,18 @@ class SubmitNDBImplementation(object):
         by_name = models.Assignment.name == name
         return list(models.Assignment.query().filter(by_name))
 
-    def create_submission(self, user, assignment, messages):
+    def create_submission(self, user, assignment, messages, submit):
         """Create submission using user as parent to ensure ordering."""
+        if submit:
+            group = user.groups(assignment.key)
+            members = group[0].members if (group and group[0]) else [user.key]
+            previous = models.Submission.query().filter(
+                models.Submission.submitter.IN(group.members))
+            previous = previous.get(keys_only=True)
+            if previous:
+                raise BadValueError(
+                    "Already have a final submission: {}".format(previous.id()))
+
         db_messages = []
         for kind, message in messages.iteritems():
             if message:
@@ -414,6 +424,8 @@ class SubmitNDBImplementation(object):
                                        assignment=assignment.key,
                                        messages=db_messages,
                                        created=created)
+        if submit:
+            submission.tags = [models.Submission.SUBMITTED_TAG]
         submission.put()
 
         return submission
@@ -431,6 +443,7 @@ class SubmissionAPI(APIResource):
             'web_args': {
                 'assignment': Arg(str, required=True),
                 'messages': Arg(None, required=True),
+                'submit': BooleanArg()
             }
         },
         'get': {
@@ -601,6 +614,14 @@ class SubmissionAPI(APIResource):
         if tag in obj.tags:
             raise BadValueError("Tag already exists")
 
+        if tag == models.Submission.SUBMITTED_TAG:
+            previous = models.Submission.query().filter(
+                models.Submission.assignment == obj.assignment).filter(
+                    models.Submission.tags == models.Submission.SUBMITTED_TAG)
+            previous = previous.get(keys_only=True)
+            if previous:
+                raise BadValueError("Only one final submission allowed")
+
         obj.tags.append(tag)
         obj.put()
 
@@ -639,18 +660,18 @@ class SubmissionAPI(APIResource):
             raise BadValueError('Multiple assignments named \'%s\'' % name)
         return assignments[0]
 
-    def submit(self, user, assignment, messages):
+    def submit(self, user, assignment, messages, submit):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment,
-                                               messages)
+                                               messages, submit)
         return (201, "success", {
             'key': submission.key.id()
         })
 
     def post(self, user, data):
         return self.submit(user, data['assignment'],
-                           data['messages'])
+                           data['messages'], data.get('submit', False))
     
 
 
