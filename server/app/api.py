@@ -308,6 +308,9 @@ class UserAPI(APIResource):
                 'assignment': KeyArg('Assignment')
             }
         },
+        'queues': {
+            'methods': set(['GET'])
+        },
     }
 
     def new_entity(self, attributes):
@@ -325,6 +328,10 @@ class UserAPI(APIResource):
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
         return list(query)
+
+    def queues(self, user, obj, data):
+        return list(models.Queue.query().filter(
+            models.Queue.assigned_staff == user.key))
 
 
 class AssignmentAPI(APIResource):
@@ -612,7 +619,8 @@ class SubmissionAPI(APIResource):
     def score(self, obj, user, data):
         score = models.Score(
             score=data['score'],
-            message=data['message'])
+            message=data['message'],
+            grader=user.key)
         score.put()
 
         if 'Composition' not in obj.tags:

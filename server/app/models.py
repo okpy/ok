@@ -353,6 +353,7 @@ class Score(Base):
     score = ndb.IntegerProperty()
     message = ndb.StringProperty()
     created = ndb.DateTimeProperty(auto_now_add=True)
+    grader = ndb.KeyProperty('User')
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
