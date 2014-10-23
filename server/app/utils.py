@@ -231,11 +231,11 @@ def upgrade_submissions(cursor=None, num_updated=0):
         logging.info(
             'upgrade_submissions complete with %d updates!', num_updated)
 
-def assign_work(assignment, cursor=None, num_updated=0):
+def assign_work(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.User.query(ModelProxy.User.role == "student")
 
     queues = list(ModelProxy.Queue.query(
-        ModelProxy.Queue.assignment == assignment))
+        ModelProxy.Queue.assignment == assign_key))
     if not queues:
         logging.error("Tried to assign work, but no queues existed")
         return
@@ -252,8 +252,8 @@ def assign_work(assignment, cursor=None, num_updated=0):
             continue
         queues.sort(key=lambda x: len(x.submissions))
 
-        subm = user.get_selected_submission(assignment)
-        if subm:
+        subm = user.get_selected_submission(assign_key, keys_only=True)
+        if subm and user.is_final_submission(subm, assign_key):
             queues[0].submissions.append(subm.key)
             to_put += 1
 
