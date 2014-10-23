@@ -1,4 +1,6 @@
 from app import models
+from app import utils
+
 import json
 
 def seed():
@@ -84,10 +86,29 @@ def seed():
         login="albert",
         role="admin"
     )
+    s = models.User(
+        key=ndb.Key("User", "dummy@student.com"),
+        email="dummy@student.com",
+        first_name="Ben",
+        last_name="Bitdiddle",
+        login="student",
+        role="student"
+    )
+    k = models.User(
+        key=ndb.Key("User", "dummy2@admin.com"),
+        email="dummy2@admin.com",
+        first_name="John",
+        last_name="Jones",
+        login="john",
+        role="admin"
+    )
 
     version = make_version('v1.0.11')
     version.put()
+    s.put()
     c.put()
+    k.put()
+
     course = make_fake_course(c)
     course.put()
     assign = make_future_assignment(course, c)
@@ -97,11 +118,18 @@ def seed():
 
     subms = []
     for i in range(5):
-        subm = make_fake_submission(assign, c)
+        subm = make_fake_submission(assign, s)
         subm.put()
         subms.append(subm.key)
 
-    q = make_queue(assign, subms, c)
+    q = make_queue(assign, [], c)
     q.put()
+    q = make_queue(assign, [], k)
+    q.put()
+
+    utils.assign_work(assign.key)
+    
+
+
 
 
