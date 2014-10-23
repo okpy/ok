@@ -336,25 +336,16 @@ class Submission(Base):
       return 'Submissionvtwo'
 
     def get_messages(self, fields={}):
+        if not fields:
+            fields = {}
+
         message_fields = fields.get('messages', {})
-        if isinstance(message_fields, (str, unicode)):
-            message_fields = (True if message_fields == "true" else False)
-
         messages = {message.kind: message.contents for message in self.messages}
-        def test(x):
-            if not message_fields:
-                return False
-
-            if isinstance(message_fields, bool):
-                return message_fields
-
-            return kind in message_fields
-
         return {
             kind: (True if message_fields.get(kind) == "presence"
                    else contents)
             for kind, contents in messages.iteritems()
-            if test(x)}
+            if not message_fields or kind in message_fields.keys()}
 
     @property
     def group(self):
