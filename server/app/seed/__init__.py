@@ -86,14 +86,21 @@ def seed():
         login="albert",
         role="admin"
     )
-    s = models.User(
-        key=ndb.Key("User", "dummy@student.com"),
-        email="dummy@student.com",
-        first_name="Ben",
-        last_name="Bitdiddle",
-        login="student",
-        role="student"
-    )
+
+    students = []
+    for i in range(0,10):
+        s = models.User(
+            key=ndb.Key("User", "dummy@student.com"),
+            email="dummy@student.com",
+            first_name="Ben",
+            last_name="Bitdiddle",
+            login="student",
+            role="student"
+        )
+        s.put()
+        students += [s]
+
+
     k = models.User(
         key=ndb.Key("User", "dummy2@admin.com"),
         email="dummy2@admin.com",
@@ -105,7 +112,7 @@ def seed():
 
     version = make_version('v1.0.11')
     version.put()
-    s.put()
+
     c.put()
     k.put()
 
@@ -117,8 +124,9 @@ def seed():
     assign2.put()
 
     subms = []
-    for i in range(5):
-        subm = make_fake_submission(assign, s)
+    
+    for i in range(10):
+        subm = make_fake_submission(assign, students[i])
         subm.put()
         subms.append(subm.key)
 
@@ -128,7 +136,7 @@ def seed():
     q.put()
 
     utils.assign_work(assign.key)
-    
+
 
 
 
