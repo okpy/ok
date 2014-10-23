@@ -254,7 +254,7 @@ def assign_work(assign_key, cursor=None, num_updated=0):
 
         subm = user.get_selected_submission(assign_key, keys_only=True)
         if subm and user.is_final_submission(subm, assign_key):
-            queues[0].submissions.append(subm.key)
+            queues[0].submissions.append(subm)
             to_put += 1
 
     if to_put:
@@ -264,7 +264,7 @@ def assign_work(assign_key, cursor=None, num_updated=0):
             'Put %d entities to Datastore for a total of %d',
             to_put, num_updated)
         deferred.defer(
-            assign_work, assignment, cursor=cursor,
+            assign_work, assign_key, cursor=cursor,
             num_updated=num_updated)
     else:
         logging.debug(

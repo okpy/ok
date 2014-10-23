@@ -165,7 +165,7 @@ class User(Base):
         return query.get(keys_only=keys_only)
 
     def is_final_submission(self, subm, assign_key):
-        groups = self.groups(assign_key)
+        groups = list(self.groups(assign_key))
         if not groups:
             return True
         if len(groups) > 1:
@@ -372,9 +372,9 @@ class Submission(Base):
       return 'Submissionvtwo'
 
     def get_messages(self, fields={}):
-       if not fields:
+        if not fields:
             fields = {}
-        
+
         message_fields = fields.get('messages', {})
         messages = {message.kind: message.contents for message in self.messages}
         return {
