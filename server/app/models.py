@@ -354,7 +354,7 @@ class Submission(Base):
             kind: (True if message_fields.get(kind) == "presence"
                    else contents)
             for kind, contents in messages.iteritems()
-            if test(x)}
+            if test(kind)}
 
     @property
     def group(self):
