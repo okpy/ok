@@ -348,7 +348,7 @@ class Submission(Base):
             if isinstance(message_fields, bool):
                 return message_fields
 
-            return x in message_fields
+            return kind in message_fields
 
         return {
             kind: (True if message_fields.get(kind) == "presence"
