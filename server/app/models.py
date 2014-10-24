@@ -394,8 +394,7 @@ class Submission(Base):
             return contents
 
         return {
-            kind: (True if message_fields.get(kind) == "presence"
-                   else contents)
+            kind: get_contents(kind, contents)
             for kind, contents in messages.iteritems()
             if test(kind)}
 
