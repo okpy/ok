@@ -617,7 +617,9 @@ class SubmissionAPI(APIResource):
         if tag == models.Submission.SUBMITTED_TAG:
             previous = models.Submission.query().filter(
                 models.Submission.assignment == obj.assignment).filter(
-                    models.Submission.tags == models.Submission.SUBMITTED_TAG)
+                    models.Submission.submitter == obj.submitter).filter(
+                        models.Submission.tags == models.Submission.SUBMITTED_TAG)
+
             previous = previous.get(keys_only=True)
             if previous:
                 raise BadValueError("Only one final submission allowed")
