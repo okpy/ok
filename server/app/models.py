@@ -378,13 +378,20 @@ class Submission(Base):
 
         messages = {message.kind: message.contents for message in self.messages}
         def test(x):
-            if not message_fields:
-                return False
-
             if isinstance(message_fields, bool):
                 return message_fields
 
+            if not message_fields:
+                return True
             return x in message_fields
+
+        def get_contents(kind, contents):
+            if isinstance(message_fields, bool):
+                return contents
+
+            if message_fields.get(kind) == "presence":
+                return True
+            return contents
 
         return {
             kind: (True if message_fields.get(kind) == "presence"
