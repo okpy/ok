@@ -521,9 +521,7 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
             "last_name": true,
             "role": true
           },
-          "submissions": {
-            "id": true,
-          }
+          "submissions": true
         }
     });
   }]);
@@ -542,9 +540,7 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
             "last_name": true,
             "role": true
           },
-          "submissions": {
-            "id": true,
-          }
+          "submissions": true
         }
     });
   }

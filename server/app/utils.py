@@ -231,7 +231,7 @@ def upgrade_submissions(cursor=None, num_updated=0):
         logging.info(
             'upgrade_submissions complete with %d updates!', num_updated)
 
-ASSIGN_BATCH_SIZE = 200
+ASSIGN_BATCH_SIZE = 100
 def assign_work(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.User.query(ModelProxy.User.role == "student")
 
@@ -252,7 +252,6 @@ def assign_work(assign_key, cursor=None, num_updated=0):
     for queue in queues:
         for subm in queue.submissions:
             seen.add(subm.get().submitter.id())
-    seen = set()
 
     for user in results:
         if not user.logged_in or user.key.id() in seen:
@@ -262,7 +261,7 @@ def assign_work(assign_key, cursor=None, num_updated=0):
         subm = user.get_selected_submission(assign_key, keys_only=True)
         if subm and user.is_final_submission(subm, assign_key):
             queues[0].submissions.append(subm)
-            seen.add(user)
+            seen.add(user.key.id())
             to_put += 1
 
     if to_put:
