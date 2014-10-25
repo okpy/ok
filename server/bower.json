@@ -59,6 +59,7 @@
   },
   "directory": "js",
   "resolutions": {
-    "datatables": ">=1.9"
+    "datatables": ">=1.9",
+    "angular": ">=1"
   }
 }

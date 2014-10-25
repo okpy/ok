@@ -82,6 +82,13 @@ class Base(ndb.Model):
                     result[key] = value.to_json(fields.get(key))
                 else:
                     result[key] = None
+            elif isinstance(value, list) and len(value) > 0 and isinstance(value[0], ndb.Key):
+                new_list = []
+                for value in value:
+                    value = value.get()
+                    if value:
+                        new_list.append(value.to_json(fields.get(key)))
+                result[key] = new_list
             else:
                 try:
                     new_value = app.json_encoder().default(value)
@@ -165,6 +172,7 @@ class User(Base):
         return query.get(keys_only=keys_only)
 
     def is_final_submission(self, subm, assign_key):
+        subm = subm.get()
         groups = list(self.groups(assign_key))
         if not groups:
             return True
@@ -172,9 +180,14 @@ class User(Base):
             raise Exception("Invalid groups for user {}".format(self.id))
 
         group = groups[0]
-        for other in group.members():
+        for other in group.members:
             if other is not self:
-                latest = other.get_selected_submission(assign_key, keys_only=True)
+                latest = other.get().get_selected_submission(assign_key, keys_only=True)
+                if isinstance(latest, ndb.Key):
+                    latest = latest.get()
+                if isinstance(subm, ndb.Key):
+                    subm = subm.get()
+
                 if latest.created > subm.created:
                     return False
         return True
@@ -371,18 +384,35 @@ class Submission(Base):
     def _get_kind(cls):
       return 'Submissionvtwo'
 
-    def get_messages(self, fields={}):
+    def get_messages(self, fields=None):
         if not fields:
             fields = {}
 
         message_fields = fields.get('messages', {})
+        if isinstance(message_fields, (str, unicode)):
+            message_fields = (True if message_fields == "true" else False)
+
         messages = {message.kind: message.contents for message in self.messages}
+        def test(x):
+            if isinstance(message_fields, bool):
+                return message_fields
+
+            if not message_fields:
+                return True
+            return x in message_fields
+
+        def get_contents(kind, contents):
+            if isinstance(message_fields, bool):
+                return contents
+
+            if message_fields.get(kind) == "presence":
+                return True
+            return contents
+
         return {
-            kind: (True if message_fields.get(kind) == "presence"
-                   else contents)
+            kind: get_contents(kind, contents)
             for kind, contents in messages.iteritems()
-            if not message_fields or kind in message_fields.keys()}
- 
+            if test(kind)}
 
     @property
     def group(self):
