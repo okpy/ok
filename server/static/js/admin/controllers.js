@@ -555,9 +555,6 @@ app.controller("QueueModuleController", ["$scope", "Queue",
         }
       });
 
-      // Not working right now. 
-      //$scope.my_queues = Queue.query({assigned_staff: $window.user});
-    }
 ]);
 
 app.controller("QueueListCtrl", ['$scope', 'Queue',
@@ -574,9 +571,7 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
             "last_name": true,
             "role": true
           },
-          "submissions": {
-            "id": true,
-          }
+          "submissions": true
         }
     });
   }]);
@@ -617,9 +612,7 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
             "last_name": true,
             "role": true
           },
-          "submissions": {
-            "id": true,
-          }
+          "submissions": true
         }
     });
   }

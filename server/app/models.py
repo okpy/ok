@@ -85,9 +85,13 @@ class Base(ndb.Model):
             elif isinstance(value, list) and len(value) > 0 and isinstance(value[0], ndb.Key):
                 new_list = []
                 for value in value:
-                    value = value.get()
-                    if value:
-                        new_list.append(value.to_json(fields.get(key)))
+                    if not isinstance(fields.get(key), dict):
+                        if fields.get(key):
+                            new_list.append(value)
+                    else:
+                        value = value.get()
+                        if value:
+                            new_list.append(value.to_json(fields.get(key)))
                 result[key] = new_list
             else:
                 try:
@@ -188,6 +192,8 @@ class User(Base):
                 if isinstance(subm, ndb.Key):
                     subm = subm.get()
 
+                if not latest or not subm:
+                    continue
                 if latest.created > subm.created:
                     return False
         return True
