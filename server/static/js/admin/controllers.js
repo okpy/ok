@@ -17,11 +17,23 @@ app.controller("SubmissionModuleController", ["$scope", "Submission",
 ]);
 
 // Assignment Controllers
-app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
+app.controller("AssignmentListCtrl", ['$scope', '$http', 'Assignment',
+  function($scope, $http, Assignment) {
       Assignment.query(function(response) {
         $scope.assignments = response.results;
       });
+
+      $scope.assign = function (assignmentId) {
+         // if (confirm('Are you sure you want to assign this to staff? Only submit if you are sure. ')) {
+         //      $http({
+         //          url: '/api/v1/assignment/'+assignmentId+'/assign',
+         //          method: "POST",
+         //          data: { 'message' : 'hello' }
+         //      })
+         // }
+         console.log('Unsupported for now');
+      }
+
   }]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",

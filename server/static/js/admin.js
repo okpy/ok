@@ -1,4 +1,4 @@
-var app = angular.module('admin', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'angularMoment']);
+var app = angular.module('admin', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'angularMoment', 'oitozero.ngSweetAlert']);
 
 app.directive('assignmentModule', function() {
         return {
@@ -10,7 +10,7 @@ app.directive('assignmentModule', function() {
 app.directive('assignmentList', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/common/assignment.list.html',
+            templateUrl: '/static/partials/admin/assignment.list.html',
         };
     });
 
@@ -119,14 +119,14 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var assignmentList = {
       name: 'assignment.list',
       url: '/',
-      templateUrl: '/static/partials/common/assignment.list.html',
+      templateUrl: '/static/partials/admin/assignment.list.html',
       controller: "AssignmentListCtrl"
     }
 
     var assignmentDetail = {
       name: 'assignment.detail',
       url: '/:assignmentId',
-      templateUrl: '/static/partials/common/assignment.detail.html',
+      templateUrl: '/static/partials/admin/assignment.detail.html',
       controller: "AssignmentDetailCtrl"
     }
 
