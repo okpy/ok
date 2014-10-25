@@ -183,6 +183,11 @@ class User(Base):
         for other in group.members:
             if other is not self:
                 latest = other.get().get_selected_submission(assign_key, keys_only=True)
+                if isinstance(latest, ndb.Key):
+                    latest = latest.get()
+                if isinstance(subm, ndb.Key):
+                    subm = subm.get()
+
                 if latest.created > subm.created:
                     return False
         return True
