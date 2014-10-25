@@ -1,12 +1,12 @@
 <div>
   <h2> Queue for {{queue.assignment.display_name}} </h2>
-    <div ng-if="queue.assigned_staff.length > 0">
+    <div ng-if="queue.$resolved && queue.assigned_staff.length > 0 ">
     Staff: 
       <span ng-repeat="user in queue.assigned_staff">
-        {{user.first_name}} {{user.last_name}} {{$last ? '' : ', '}}
+        {{user.id}} {{$last ? '' : ', '}}
       </span>
     </div>
-    <div ng-if="queue.assigned_staff.length <= 0">
+    <div ng-if="queue.$resolved && queue.assigned_staff.length <= 0">
       <strong>No staff assigned</strong>
     </div>
   <div class="box-body no-padding table-responsive">

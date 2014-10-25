@@ -571,7 +571,8 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
             "last_name": true,
             "role": true
           },
-          "submissions": true
+          "submissions": true,
+          'id': true
         }
     });
   }]);
@@ -592,7 +593,8 @@ app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
           },
           "submissions": {
             "id": true,
-          }
+          },
+          'id': true
         },
         "assigned_staff": $window.user
     });
@@ -600,7 +602,7 @@ app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
 
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
     function ($scope, Queue, $stateParams) {
-      $scope.queue = Queue.get({id: $stateParams.queueId}, {
+      $scope.queue = Queue.get({
         "fields": {
           "assignment": {
             "id": true,
@@ -613,7 +615,8 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
             "role": true
           },
           "submissions": true
-        }
+        },
+        id: $stateParams.queueId
     });
   }
   ]);
