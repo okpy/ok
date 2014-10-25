@@ -539,16 +539,6 @@ app.controller("QueueModuleController", ["$scope", "Queue",
     function ($scope, Queue) {
       $scope.queues = Queue.query({
           "fields": {
-            "assignment": {
-              "id": true,
-              "display_name": true
-            },
-            "assigned_staff": {
-              "id": true,
-              "first_name": true,
-              "last_name": true,
-              "role": true
-            },
             "submissions": {
               "id": true,
             }
@@ -593,8 +583,24 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
 
 app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
   function($scope, Queue, $window, $state) {
-    //Todo: Needs two queries - but the API needs both right now. 
-        $scope.queues = Queue.query({'assigned_staff': $window.user});
+    $scope.queues = Queue.query({
+        "fields": {
+          "assignment": {
+            "id": true,
+            "display_name": true
+          },
+          "assigned_staff": {
+            "id": true,
+            "first_name": true,
+            "last_name": true,
+            "role": true
+          },
+          "submissions": {
+            "id": true,
+          }
+        },
+        "assigned_staff.id": $window.user
+    });
   }]);
 
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
