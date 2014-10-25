@@ -371,7 +371,10 @@ class Submission(Base):
     def _get_kind(cls):
       return 'Submissionvtwo'
 
-    def get_messages(self, fields={}):
+    def get_messages(self, fields=None):
+        if not fields:
+            fields = {}
+
         message_fields = fields.get('messages', {})
         if isinstance(message_fields, (str, unicode)):
             message_fields = (True if message_fields == "true" else False)

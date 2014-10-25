@@ -996,3 +996,9 @@ class QueueAPI(APIResource):
             }
         },
     }
+
+    def new_entity(self, attributes):
+        ent = super(QueueAPI, self).new_entity(attributes)
+        for user in ent.assigned_staff:
+            models.User.get_or_insert(user.id())
+        return ent
