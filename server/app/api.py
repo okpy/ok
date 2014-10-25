@@ -989,6 +989,11 @@ class QueueAPI(APIResource):
         },
         'get': {
         },
+        'put': {
+            'web_args': {
+                'assigned_staff': KeyRepeatedArg('User'),
+            }
+        },
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assigment'),

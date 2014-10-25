@@ -231,7 +231,7 @@ def upgrade_submissions(cursor=None, num_updated=0):
         logging.info(
             'upgrade_submissions complete with %d updates!', num_updated)
 
-ASSIGN_BATCH_SIZE = 100
+ASSIGN_BATCH_SIZE = 20
 def assign_work(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.User.query(ModelProxy.User.role == "student")
 
