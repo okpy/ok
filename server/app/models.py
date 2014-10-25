@@ -82,6 +82,13 @@ class Base(ndb.Model):
                     result[key] = value.to_json(fields.get(key))
                 else:
                     result[key] = None
+            elif isinstance(value, list) and len(value) > 0 and isinstance(value[0], ndb.Key):
+                new_list = []
+                for value in value:
+                    value = value.get()
+                    if value:
+                        new_list.append(value.to_json(fields.get(key)))
+                result[key] = new_list
             else:
                 try:
                     new_value = app.json_encoder().default(value)
@@ -165,6 +172,7 @@ class User(Base):
         return query.get(keys_only=keys_only)
 
     def is_final_submission(self, subm, assign_key):
+        subm = subm.get()
         groups = list(self.groups(assign_key))
         if not groups:
             return True
@@ -172,9 +180,9 @@ class User(Base):
             raise Exception("Invalid groups for user {}".format(self.id))
 
         group = groups[0]
-        for other in group.members():
+        for other in group.members:
             if other is not self:
-                latest = other.get_selected_submission(assign_key, keys_only=True)
+                latest = other.get().get_selected_submission(assign_key, keys_only=True)
                 if latest.created > subm.created:
                     return False
         return True

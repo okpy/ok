@@ -509,11 +509,43 @@ app.controller("LandingPageCtrl", ["$window", "$state",
 
 app.controller("QueueListCtrl", ['$scope', 'Queue',
   function($scope, Queue) {
-    $scope.queues = Queue.query();
+    $scope.queues = Queue.query({
+        "fields": {
+          "assignment": {
+            "id": true,
+            "display_name": true
+          },
+          "assigned_staff": {
+            "id": true,
+            "first_name": true,
+            "last_name": true,
+            "role": true
+          },
+          "submissions": {
+            "id": true,
+          }
+        }
+    });
   }]);
 
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
     function ($scope, Queue, $stateParams) {
-      $scope.queue = Queue.get({id: $stateParams.queueId});
-    }
+      $scope.queue = Queue.get({id: $stateParams.queueId}, {
+        "fields": {
+          "assignment": {
+            "id": true,
+            "display_name": true
+          },
+          "assigned_staff": {
+            "id": true,
+            "first_name": true,
+            "last_name": true,
+            "role": true
+          },
+          "submissions": {
+            "id": true,
+          }
+        }
+    });
+  }
   ]);
