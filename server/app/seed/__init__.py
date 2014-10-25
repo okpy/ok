@@ -88,11 +88,11 @@ def seed():
     )
 
     students = []
-    for i in range(0,10):
+    for i in range(0,9):
         s = models.User(
-            key=ndb.Key("User", "dummy@student.com"),
-            email="dummy@student.com",
-            first_name="Ben",
+            key=ndb.Key("User", "dummy"  + str(i) + "@student.com"),
+            email="dummy" + str(i) + "@student.com",
+            first_name="Ben"+ str(i),
             last_name="Bitdiddle",
             login="student",
             role="student"
@@ -124,8 +124,8 @@ def seed():
     assign2.put()
 
     subms = []
-    
-    for i in range(10):
+
+    for i in range(9):
         subm = make_fake_submission(assign, students[i])
         subm.put()
         subms.append(subm.key)

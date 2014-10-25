@@ -56,6 +56,13 @@ app.directive('queueList', function() {
         };
     });
 
+app.directive('userqueueList', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/static/partials/admin/userqueue.list.html',
+        };
+    });
+
 
 
 
@@ -85,8 +92,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissionList = {
       name: 'submission.list',
       url: '/',
-      templateUrl: '/static/partials/common/submission.list.html',
-      controller: "SubmissionListCtrl"
+      templateUrl: '/static/partials/common/submission.list.html'
     }
 
     var submissionDetail = {
@@ -197,8 +203,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var queueList = {
       name: 'queue.list',
       url: '/',
-      templateUrl: '/static/partials/queue/list.html',
-      controller: "QueueListCtrl"
+      templateUrl: '/static/partials/queue/list.html'
     }
 
     var queueDetail = {
@@ -211,8 +216,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var userQueueList = {
       name: 'userqueue',
       url: '/userqueue',
-      templateUrl: '/static/partials/queue/user.queue.list.html',
-      controller: "UserQueueListCtrl"
+      templateUrl: '/static/partials/admin/userqueue.list.html',
     }
 
     var loginLanding = {

@@ -47,6 +47,7 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission
             'name': true,
             'display_name': true,
             'id': true,
+            'active': true
           },
           'messages': {
             'file_contents': "presence"
@@ -554,8 +555,7 @@ app.controller("QueueModuleController", ["$scope", "Queue",
           $scope.num_submissions = 0;
         }
       });
-
-]);
+    }]);
 
 app.controller("QueueListCtrl", ['$scope', 'Queue',
   function($scope, Queue) {
@@ -594,7 +594,7 @@ app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
             "id": true,
           }
         },
-        "assigned_staff.id": $window.user
+        "assigned_staff": $window.user
     });
   }]);
 

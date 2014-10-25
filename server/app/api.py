@@ -992,7 +992,7 @@ class QueueAPI(APIResource):
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assigment'),
-                'assigned_staff': KeyRepeatedArg('User'),
+                'assigned_staff': KeyArg('User'),
             }
         },
     }
