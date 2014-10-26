@@ -92,6 +92,9 @@ def seed():
             assignment=assignment.key,
             assigned_staff=[asignee.key])
 
+
+    # Start putting things in the DB. 
+    
     c = models.User(
         key=ndb.Key("User", "test@example.com"),
         email="test@example.com",
@@ -101,7 +104,6 @@ def seed():
         role="admin"
     )
     c.put()
-
 
     a = models.User(
         key=ndb.Key("User", "dummy@admin.com"),
@@ -161,7 +163,8 @@ def seed():
 
     # Put a few members on staff
     course.staff.append(c.key)
-    course.staff.append(k.key)
+    course.put()
+    course.staff.append(a.key)
     course.put()
 
 

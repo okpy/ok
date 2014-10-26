@@ -1,0 +1,14 @@
+<div>
+  <h2>Course: {{course.name}}</h2>
+  {{course}}
+  <br>
+
+    <a ui-sref='course.detail.staff.list({courseId:course.id})'>
+      Staff List
+    </a>
+
+    <a ui-sref='course.detail.staff.new({courseId:course.id})'>
+      New Staff Member
+    </a>
+
+</div>

@@ -171,7 +171,7 @@ app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams',
 // Course Controllers
 app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
-    $scope.courses = Course.query();
+    $scope.courses = Course.query({});
   }]);
 
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
@@ -468,6 +468,30 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
     }
   ]);
 
+// Staff Controllers
+app.controller("StaffListCtrl", ["$scope", "$stateParams", "Course",
+  function($scope, $stateParams, Course) {
+      $scope.course = Course.get({id: $stateParams.courseId});
+      $scope.members = $scope.course.staff;
+  }]);
+
+app.controller("StaffDetailCtrl", ["$scope", "$stateParams", "Course",
+    function ($scope, $stateParams, Course) {
+      $scope.staff = Course.get({id: $stateParams.StaffId});
+    }
+  ]);
+
+app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
+    function ($scope, $stateParams, Course) {
+      $scope.course = {};
+      $scope.test = {'test':3};
+
+      $scope.save = function() {
+      };
+    }
+  ]);
+
+
 
 // Version Controllers
 app.controller("VersionListCtrl", ['$scope', 'Version',
@@ -587,6 +611,8 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
           'id': true
         }
     });
+      alert($scope.queues.length);
+
   }]);
 
 app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
@@ -626,9 +652,13 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
             "last_name": true,
             "role": true
           },
-          "submissions": true
+          "submissions": {
+            "id": true,
+            "assignment": true,
+            "created": true,
+            "compScore": true
+          }
         },
         id: $stateParams.queueId
     });
-  }
-  ]);
+  }]);

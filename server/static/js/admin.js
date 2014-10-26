@@ -134,28 +134,63 @@ app.config(['$stateProvider', '$urlRouterProvider',
       name: 'course',
       abstract: true,
       url: '/course',
-      templateUrl: '/static/partials/common/course.base.html',
+      templateUrl: '/static/partials/admin/course.base.html',
     }
 
     var courseList = {
       name: 'course.list',
       url: '/',
-      templateUrl: '/static/partials/common/course.list.html',
+      templateUrl: '/static/partials/admin/course.list.html',
       controller: "CourseListCtrl"
-    }
-
-    var courseDetail = {
-      name: 'course.detail',
-      url: '/:courseId',
-      templateUrl: '/static/partials/common/course.detail.html',
-      controller: "CourseDetailCtrl"
     }
 
     var courseNew = {
       name: 'course.new',
       url: '/new',
-      templateUrl: '/static/partials/common/course.new.html',
+      templateUrl: '/static/partials/admin/course.new.html',
       controller: "CourseNewCtrl"
+    }
+
+    var courseBase = {
+      name: 'course.detail',
+      url: '/:courseId',
+      abstract: true,
+      templateUrl: '/static/partials/admin/course.base.html',
+    }
+    
+    var courseDetail = {
+      name: 'course.detail.stats',
+      url: '/',
+      templateUrl: '/static/partials/admin/course.detail.html',
+      controller: "CourseDetailCtrl"
+    }
+
+    var staff = {
+      name: 'course.detail.staff',
+      abstract: true,
+      url: '/staff',
+      templateUrl: '/static/partials/admin/staff.base.html',
+    }
+
+    var staffList = {
+      name: 'course.detail.staff.list',
+      url: '/',
+      templateUrl: '/static/partials/admin/staff.list.html',
+      controller: "StaffListCtrl"
+    }
+
+    var staffDetail = {
+      name: 'course.detail.staff.detail',
+      url: '/:staffId',
+      templateUrl: '/static/partials/admin/staff.detail.html',
+      controller: "StaffDetailCtrl"
+    }
+
+    var staffNew = {
+      name: 'course.detail.staff.new',
+      url: '/new',
+      templateUrl: '/static/partials/admin/staff.new.html',
+      controller: "StaffNewCtrl"
     }
 
     var versions = {
@@ -236,8 +271,14 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(assignmentList).
       state(assignmentDetail).
       state(courses).
+      state(courseBase).
       state(courseList).
+      state(courseDetail).
       state(courseNew).
+      state(staff).
+      state(staffList).
+      state(staffDetail).
+      state(staffNew).
       state(versions).
       state(versionList).
       state(versionDetail).

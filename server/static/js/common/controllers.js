@@ -525,10 +525,10 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
         }
     });
   }]);
-
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
     function ($scope, Queue, $stateParams) {
-      $scope.queue = Queue.get({id: $stateParams.queueId}, {
+      alert($stateParams.queueId);
+      $scope.queue = Queue.get({
         "fields": {
           "assignment": {
             "id": true,
@@ -540,8 +540,13 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
             "last_name": true,
             "role": true
           },
-          "submissions": true
-        }
+          "submissions": {
+            "id": true,
+            "assignment": true,
+            "compScore": true
+          }
+        },
+        'id': $stateParams.queueId
     });
   }
   ]);
