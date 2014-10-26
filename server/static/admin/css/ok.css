@@ -49,11 +49,11 @@
         border-radius: 0;
     }
 }
+
 .student-main {
     background-color: #f9f9f9;
     margin-left: 20px;
 }
-
 .admin-center {
     margin-right: 20px;
     margin-left: 240px;
@@ -64,3 +64,12 @@
     margin-left: 20px;
     margin-top: 20px;
 }
+
+@media screen and (max-width: 992px) {
+    .admin-center.right-side {
+        margin-right: 20px;
+        margin-left: 20px;
+        margin-top: 20px;
+    }
+}
+

@@ -24,6 +24,7 @@ $(function() {
             $('.left-side').removeClass("collapse-left");
             $(".right-side").removeClass("strech");
             $('.row-offcanvas').toggleClass("relative");
+            $('.right-side').removeClass("admin-center");
         } else {
             //Else, enable content streching
             $('.left-side').toggleClass("collapse-left");
