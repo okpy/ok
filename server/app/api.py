@@ -329,17 +329,19 @@ class UserAPI(APIResource):
         entity = self.model.from_dict(attributes)
         return entity
 
-    def invitations(self, user, obj, data):
+    def invitations(self, obj, user, data):
         query = models.Group.query(models.Group.invited_members == user.key)
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
         return list(query)
 
-    def queues(self, user, obj, data):
+    def queues(self, obj, user, data):
         return list(models.Queue.query().filter(
             models.Queue.assigned_staff == user.key))
 
-    def final_submission(self, user, obj, data):
+    def final_submission(self, obj, user, data):
+        import pdb
+        pdb.set_trace()
         return obj.get_selected_submission(data['assignment'])
 
 
