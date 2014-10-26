@@ -9,6 +9,12 @@
 .skin-black .logo:hover {
     background: #ffffff;
 }
+
+
+.login-box {
+    max-width: 65%;
+}
+
 .pager {
     padding-left: 0;
     margin: 10px 20px 20px;

@@ -540,7 +540,6 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
   }]);
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
     function ($scope, Queue, $stateParams) {
-      alert($stateParams.queueId);
       $scope.queue = Queue.get({
         "fields": {
           "assignment": {

@@ -611,8 +611,6 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
           'id': true
         }
     });
-      alert($scope.queues.length);
-
   }]);
 
 app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
