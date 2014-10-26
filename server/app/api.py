@@ -311,6 +311,12 @@ class UserAPI(APIResource):
         'queues': {
             'methods': set(['GET'])
         },
+        'final_submission': {
+            'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
+        }
     }
 
     def new_entity(self, attributes):
@@ -332,6 +338,9 @@ class UserAPI(APIResource):
     def queues(self, user, obj, data):
         return list(models.Queue.query().filter(
             models.Queue.assigned_staff == user.key))
+
+    def final_submission(self, user, obj, data):
+        return obj.get_selected_submission(data['assignment'])
 
 
 class AssignmentAPI(APIResource):
@@ -865,6 +874,7 @@ class GroupAPI(APIResource):
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assignment'),
+                'members': KeyArg('User'),
             }
         },
         'add_member': {
@@ -985,6 +995,7 @@ class QueueAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True),
                 'assigned_staff': KeyRepeatedArg('User'),
+                'submissions': KeyRepeatedArg('Submissionvtwo')
             }
         },
         'get': {
@@ -992,6 +1003,7 @@ class QueueAPI(APIResource):
         'put': {
             'web_args': {
                 'assigned_staff': KeyRepeatedArg('User'),
+                'submissions': KeyRepeatedArg('Submissionvtwo')
             }
         },
         'index': {

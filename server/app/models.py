@@ -167,7 +167,7 @@ class User(Base):
             return query
 
         query = make_query()
-        query = query.filter(Submission.tags == Submission.SUBMITTED_TAG)
+        #query = query.filter(Submission.tags == Submission.SUBMITTED_TAG)
         subm = query.get(keys_only=keys_only)
         if subm:
             return subm
@@ -194,6 +194,9 @@ class User(Base):
 
                 if not latest or not subm:
                     continue
+                if not latest.get_messages()['file_contents']:
+                    continue
+
                 if latest.created > subm.created:
                     return False
         return True
