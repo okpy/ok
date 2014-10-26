@@ -231,7 +231,7 @@ def upgrade_submissions(cursor=None, num_updated=0):
         logging.info(
             'upgrade_submissions complete with %d updates!', num_updated)
 
-ASSIGN_BATCH_SIZE = 100
+ASSIGN_BATCH_SIZE = 20
 def assign_work(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.User.query(ModelProxy.User.role == "student")
 
@@ -260,9 +260,11 @@ def assign_work(assign_key, cursor=None, num_updated=0):
 
         subm = user.get_selected_submission(assign_key, keys_only=True)
         if subm and user.is_final_submission(subm, assign_key):
-            queues[0].submissions.append(subm)
-            seen.add(user.key.id())
-            to_put += 1
+            subm_got = subm.get()
+            if subm_got.get_messages().get('file_contents'):
+                queues[0].submissions.append(subm)
+                seen.add(user.key.id())
+                to_put += 1
 
     if to_put:
         num_updated += to_put

@@ -167,7 +167,7 @@ class User(Base):
             return query
 
         query = make_query()
-        query = query.filter(Submission.tags == Submission.SUBMITTED_TAG)
+        #query = query.filter(Submission.tags == Submission.SUBMITTED_TAG)
         subm = query.get(keys_only=keys_only)
         if subm:
             return subm
@@ -194,6 +194,9 @@ class User(Base):
 
                 if not latest or not subm:
                     continue
+                if not latest.get_messages()['file_contents']:
+                    continue
+
                 if latest.created > subm.created:
                     return False
         return True
@@ -273,7 +276,8 @@ class Assignment(Base):
 
     # Name displayed to students
     display_name = ndb.StringProperty(required=True) 
-    points = ndb.FloatProperty(required=True)
+    # (martinis) made not required because weird
+    points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User, required=True)
     templates = ndb.JsonProperty(required=True)
     course = ndb.KeyProperty('Course', required=True)
@@ -698,3 +702,14 @@ class Queue(Base):
             return True
 
         return False
+
+    def to_json(self, fields=None):
+        if not fields:
+            fields = {}
+
+        return {
+            'submissions': [{'id': val.id()} for val in self.submissions],
+            'assignment': self.assignment.get(),
+            'assigned_staff': [val.get().to_json(fields.get('assigned_staff')) for val in self.assigned_staff],
+            'id': self.key.id()
+        }
