@@ -192,6 +192,42 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
     }
   ]);
 
+
+
+// Staff Controllers
+app.controller("StaffListCtrl", ["$scope", "$stateParams", "Course", "User",
+  function($scope, $stateParams, Course, User) {
+      $scope.members = Course.staff({id: $stateParams.courseId});
+      $scope.roles = ['staff', 'admin', 'user'];
+      $scope.newMember = {
+        role: 'staff'
+      }
+      $scope.save = function () {
+        //Todo: Create user or reassign role of user.
+        //Todo: Also Change User Role.
+      };
+
+  }]);
+
+app.controller("StaffDetailCtrl", ["$scope", "$stateParams", "Course", "User",
+    function ($scope, $stateParams, Course, User) {
+      $scope.course = Course.get({id: $stateParams.courseId});
+      $scope.staff = User.get({id: $stateParams.staffId});
+      $scope.roles = ['staff', 'admin', 'user'];
+      $scope.save = function () {
+
+
+      };
+
+  }]);
+
+app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
+    function ($scope, $stateParams, Course) {
+      alert('hi');
+    }
+  ]);
+
+
 // Diff Controllers
 app.controller("SubmissionDiffCtrl", ['$scope', '$window', '$stateParams',  'Submission', '$timeout',
   function($scope, $window, $stateParams, Submission, $timeout) {
@@ -467,30 +503,6 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
       }
     }
   ]);
-
-// Staff Controllers
-app.controller("StaffListCtrl", ["$scope", "$stateParams", "Course",
-  function($scope, $stateParams, Course) {
-      $scope.course = Course.get({id: $stateParams.courseId});
-      $scope.members = $scope.course.staff;
-  }]);
-
-app.controller("StaffDetailCtrl", ["$scope", "$stateParams", "Course",
-    function ($scope, $stateParams, Course) {
-      $scope.staff = Course.get({id: $stateParams.StaffId});
-    }
-  ]);
-
-app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
-    function ($scope, $stateParams, Course) {
-      $scope.course = {};
-      $scope.test = {'test':3};
-
-      $scope.save = function() {
-      };
-    }
-  ]);
-
 
 
 // Version Controllers

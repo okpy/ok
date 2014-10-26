@@ -118,13 +118,13 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
     };
 
     $scope.add = function() {
-      Submission.addTag({
-        id: $stateParams.submissionId,
-        tag: $scope.tagToAdd
-      }, function() {
-        $scope.submission.tags.push($scope.tagToAdd);
-      });
-      $scope.toggle();
+        Submission.addTag({
+          id: $stateParams.submissionId,
+          tag: $scope.tagToAdd
+        }, function() {
+          $scope.submission.tags.push($scope.tagToAdd);
+        });
+        $scope.toggle();
     }
   }]);
 
