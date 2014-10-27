@@ -701,8 +701,8 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParam
             });
           });
         }
-
         return submissions;
+
       }
 
       $scope.$storage = $sessionStorage;
@@ -727,6 +727,9 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParam
         },
         id: $stateParams.queueId
     }, function (result) {
+        result['submissions'].sort(function(a, b) {
+          return a.id - b.id;
+        });
         $scope.$storage.currentQueue = JSON.stringify(result);
         $scope.submList = $scope.getSubmissions($scope.queue.submissions);
     });
