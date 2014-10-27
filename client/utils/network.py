@@ -77,6 +77,7 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
                 retries -= 1
             else:
                 print("Submission failed. Please check your network connection and try again")
+                break
 
             if send_all:
                 print("Submitting project... {0}% complete".format(100 - round(len(msg_list)*100/initial_length), 2))

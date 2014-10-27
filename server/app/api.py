@@ -735,7 +735,7 @@ class VersionAPI(APIResource):
             }
         },
         'new': {
-            'methods': set(['POST']),
+            'methods': set(['PUT']),
             'web_args': {
                 'version': Arg(str, required=True),
                 'current': BooleanArg()
