@@ -428,7 +428,7 @@ class SubmitNDBImplementation(object):
         by_name = models.Assignment.name == name
         return list(models.Assignment.query().filter(by_name))
 
-    def create_submission(self, user, assignment, messages, submit):
+    def create_submission(self, user, assignment, messages, submit, submitter):
         """Create submission using user as parent to ensure ordering."""
         if submit:
             group = user.groups(assignment.key)
@@ -439,6 +439,9 @@ class SubmitNDBImplementation(object):
             if previous:
                 raise BadValueError(
                     "Already have a final submission: {}".format(previous.id()))
+
+        if not user.is_admin:
+            submitter = user.key
 
         db_messages = []
         for kind, message in messages.iteritems():
@@ -451,7 +454,7 @@ class SubmitNDBImplementation(object):
             if date:
                 created = parse_date(date)
 
-        submission = models.Submission(submitter=user.key,
+        submission = models.Submission(submitter=submitter,
                                        assignment=assignment.key,
                                        messages=db_messages,
                                        created=created)
@@ -474,7 +477,8 @@ class SubmissionAPI(APIResource):
             'web_args': {
                 'assignment': Arg(str, required=True),
                 'messages': Arg(None, required=True),
-                'submit': BooleanArg()
+                'submit': BooleanArg(),
+                'submitter': KeyArg('User')
             }
         },
         'get': {
@@ -693,18 +697,19 @@ class SubmissionAPI(APIResource):
             raise BadValueError('Multiple assignments named \'%s\'' % name)
         return assignments[0]
 
-    def submit(self, user, assignment, messages, submit):
+    def submit(self, user, assignment, messages, submit, submitter=None):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment,
-                                               messages, submit)
+                                               messages, submit, submitter)
         return (201, "success", {
             'key': submission.key.id()
         })
 
     def post(self, user, data):
         return self.submit(user, data['assignment'],
-                           data['messages'], data.get('submit', False))
+                           data['messages'], data.get('submit', False),
+                           data.get('submitter'))
     
 
 
