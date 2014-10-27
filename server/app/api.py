@@ -910,7 +910,7 @@ class GroupAPI(APIResource):
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assignment'),
-                'members': KeyArg('User'),
+                'members': KeyArg('User')
             }
         },
         'add_member': {

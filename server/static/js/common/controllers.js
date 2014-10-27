@@ -520,6 +520,8 @@ app.controller("LandingPageCtrl", ["$window", "$state",
                 $window.location.href = $window.reloginLink;
             }
         });
+      } else {
+          $window.location.hash = "";
       }
     }
 ]);
