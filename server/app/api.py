@@ -311,6 +311,13 @@ class UserAPI(APIResource):
         'queues': {
             'methods': set(['GET'])
         },
+        'create_staff': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True),
+                'role': Arg(str, required=True),
+            }
+        },
         'final_submission': {
             'methods': set(['GET']),
             'web_args': {
@@ -338,6 +345,17 @@ class UserAPI(APIResource):
     def queues(self, obj, user, data):
         return list(models.Queue.query().filter(
             models.Queue.assigned_staff == user.key))
+
+    def create_staff(self, obj, user, data):
+        # Must be a staff to create a staff user
+        need = Need("staff")
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        user = models.User.get_or_insert(data['email'].id())
+        user.role = data['role']
+        user.put()
+
 
     def final_submission(self, obj, user, data):
         return obj.get_selected_submission(data['assignment'])
@@ -395,6 +413,10 @@ class AssignmentAPI(APIResource):
         return super(AssignmentAPI, self).post(user, data)
 
     def assign(self, obj, user, data):
+        # Todo: Should make this have permissions! 
+        # need = Need('staff')
+        # if not obj.can(user, need, obj):
+        #     raise need.exception()
         deferred.defer(assign_work, obj.key)
 
 
@@ -812,6 +834,8 @@ class CourseAPI(APIResource):
         },
         'index': {
         },
+        'get_staff': {
+        },
         'add_staff': {
             'methods': set(['POST']),
             'web_args': {
@@ -847,6 +871,13 @@ class CourseAPI(APIResource):
             user = models.User.get_or_insert(data['staff_member'].id())
             course.staff.append(user.key)
             course.put()
+
+    def get_staff(self, course, user, data):
+        need = Need("staff")
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        return course.staff
 
     def remove_staff(self, course, user, data):
         need = Need("staff")

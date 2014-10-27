@@ -1,5 +1,5 @@
-app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
-    function ($scope, $state, Submission) {
+app.controller("SubmissionDashboardController", ["$scope", "$state", "$window", "Submission",
+    function ($scope, $state, $window, Submission) {
       $scope.itemsPerPage = 3;
       $scope.currentPage = 1;
       $scope.getPage = function(page) {
@@ -42,15 +42,20 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission
         Submission.addTag({
           id: subm,
           tag: "Submit"
-        },$scope.refreshDash);
-      }
+        }, function () {
+          $window.swal("Submitted!", "The Submit tag has been added to this submission", "success");
+          $scope.refreshDash();
+      })};
       $scope.unSubmit = function(subm) {
         $scope.clicked = true;
 
         Submission.removeTag({
           id: subm,
           tag: "Submit"
-        }, $scope.refreshDash);
+        }, function () {
+          $window.swal("Submission Tag Removed", "The submission tag has been removed", "info");
+          $scope.refreshDash() 
+        });
       }
 
     $scope.refreshDash = function() {

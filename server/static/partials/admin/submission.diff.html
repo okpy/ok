@@ -5,6 +5,16 @@
       {{tag}}
     </span>
   </div>
+    <div class='text-center'>
+      <ul class="pager">
+        <li ng-class="{disabled: prevId == undefined, previous: align}" class="previous">
+          <button ng-disabled="prevId == undefined" href="" ui-sref="submission.diff({submissionId:prevId})" class="ng-binding">« Previous</buttin>
+        </li>
+        <li ng-class="{disabled: nextId == undefined, next: align}" class="next">
+          <button ng-disabled="nextId == undefined" href="" ui-sref="submission.diff({submissionId:nextId})" class="ng-binding">Next »</buttin>
+        </li>
+      </ul>
+    </div>
 
   <div ng-repeat="(file_name, contents) in diff.diff">
     <diff/>
@@ -15,11 +25,12 @@
 	        <h3 class="box-title">Grading</h3>
 	    </div><!-- /.box-header -->
 	    <div class="box-body">
-	        <form role="form" ng-submit="submitGrade()" ng-controller="SubmissionDiffCtrl" >
+	        <form role="form" ng-submit="submitGrade()">
 	            <!-- select -->
 	            <div class="form-group">
 	                <label>Composition Grade</label>
 	                <select class="form-control" required name="compScore" ng-model="compScore">
+                      <option value="0">0</option>
 	                    <option value="1">1</option>
 	                    <option value="2">2</option>
 	                    <option value="3">3</option>

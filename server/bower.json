@@ -42,8 +42,8 @@
     "iCheck": "~1.0.1",
     "jquery.tablesorter": ">=2.17.8",
     "ionicons": ">=1.4.0",
-    "sweetalert": "~0.2.1",
-    "angular-sweetalert": "latest"
+    "sweetalert": "~0.3.1",
+    "ngstorage": "~0.3.0"
   },
   "devDependencies": {
     "jquery-ui": ">=1.10.3",

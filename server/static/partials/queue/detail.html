@@ -29,11 +29,11 @@
       <th>Action</th>
     </tr>
 
-    <tr ng-repeat="submission in queue.submissions">
+    <tr ng-repeat="submission in submList track by $index">
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}</a>
       </td>
-      <td>{{submission.submitter.id}}</td>
+      <td>{{submission.submitter.email}}</td>
       <td>
         {{submission.created | amCalendar}}
       </td>

@@ -118,13 +118,13 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
     };
 
     $scope.add = function() {
-      Submission.addTag({
-        id: $stateParams.submissionId,
-        tag: $scope.tagToAdd
-      }, function() {
-        $scope.submission.tags.push($scope.tagToAdd);
-      });
-      $scope.toggle();
+        Submission.addTag({
+          id: $stateParams.submissionId,
+          tag: $scope.tagToAdd
+        }, function() {
+          $scope.submission.tags.push($scope.tagToAdd);
+        });
+        $scope.toggle();
     }
   }]);
 
@@ -498,11 +498,24 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
 
 app.controller("LandingPageCtrl", ["$window", "$state",
     function ($window, $state) {
-      if ($window.user.indexOf("berkeley.edu") == -1 && !$window.confirm("Logging you in with your \"" + $window.user + "\" account... Hit cancel to log in with a different account.")) {
-        $window.location.href = $window.reloginLink;
-      }
-      else {
-        $window.location.hash = "";
+      if ($window.user.indexOf("berkeley.edu") == -1) {
+        $window.swal({
+            title: "Is this the right login?",
+            text: "Logging you in with your \"" + $window.user + "\" account...",
+            type: "info",
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Yes - that's correct!",
+            cancelButtonText: "No - log me out",
+            closeOnConfirm: true,
+            closeOnCancel: true
+        }, function(isConfirm) {
+            if (isConfirm) {
+                $window.location.hash = "";
+            } else {
+                $window.location.href = $window.reloginLink;
+            }
+        });
       }
     }
 ]);
@@ -525,10 +538,9 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
         }
     });
   }]);
-
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
     function ($scope, Queue, $stateParams) {
-      $scope.queue = Queue.get({id: $stateParams.queueId}, {
+      $scope.queue = Queue.get({
         "fields": {
           "assignment": {
             "id": true,
@@ -540,8 +552,13 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
             "last_name": true,
             "role": true
           },
-          "submissions": true
-        }
+          "submissions": {
+            "id": true,
+            "assignment": true,
+            "compScore": true
+          }
+        },
+        'id': $stateParams.queueId
     });
   }
   ]);

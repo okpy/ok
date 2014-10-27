@@ -9,6 +9,12 @@
 .skin-black .logo:hover {
     background: #ffffff;
 }
+
+
+.login-box {
+    max-width: 65%;
+}
+
 .pager {
     padding-left: 0;
     margin: 10px 20px 20px;
@@ -43,11 +49,11 @@
         border-radius: 0;
     }
 }
+
 .student-main {
     background-color: #f9f9f9;
     margin-left: 20px;
 }
-
 .admin-center {
     margin-right: 20px;
     margin-left: 240px;
@@ -58,3 +64,58 @@
     margin-left: 20px;
     margin-top: 20px;
 }
+
+@media screen and (max-width: 992px) {
+    .admin-center.right-side {
+        margin-right: 20px;
+        margin-left: 20px;
+        margin-top: 20px;
+    }
+}
+
+/**
+ *  Enable pager support for buttons
+ */
+
+.pager {
+  padding-left: 0;
+  margin: 20px 0;
+  text-align: center;
+  list-style: none;
+  margin-top: -30px;
+}
+.pager li {
+  display: inline;
+}
+.pager li > button,
+.pager li > span {
+  display: inline-block;
+  padding: 5px 14px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  color: #3c8dbc;
+}
+.pager li > button:hover,
+.pager li > button:focus {
+  text-decoration: none;
+  background-color: #eee;
+}
+.pager .next > button,
+.pager .next > span {
+  float: right;
+}
+.pager .previous > button,
+.pager .previous > span {
+  float: left;
+}
+.pager .disabled > button,
+.pager .disabled > button:hover,
+.pager .disabled > button:focus,
+.pager .disabled > span {
+  color: #777;
+  cursor: not-allowed;
+  background-color: #fff;
+}
+
+

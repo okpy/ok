@@ -9,6 +9,12 @@ app.factory('User', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        create: {
+          method: "POST",
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         invitations: {
           url: 'api/v1/user/:id/invitations',
           isArray: true,
@@ -166,6 +172,25 @@ app.factory('Course', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        staff: {
+          isArray: true,
+          url: 'api/v1/course/:id/get_staff',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        add_member: {
+          url: 'api/v1/course/:id/add_staff',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        remove_member: {
+          url: 'api/v1/course/:id/remove_staff',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
       });
     }
   ]);
@@ -216,5 +241,4 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
-
 

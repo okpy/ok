@@ -1,0 +1,25 @@
+<h2>Courses</h2>
+<div>
+  <div class="center-block" ng-if="!courses.$resolved">
+    <h3>Loading...</h3>
+  </div>
+  <div class="center-block" ng-if="courses.$resolved && courses.length == 0">
+    <h3>No courses found...</h3>
+  </div>
+  <table ng-if="courses.length > 0" class="table table-striped table-bordered table-responsive">
+    <tr>
+      <th>Name</th>
+      <th>Institution</th>
+      <th>Offering</th>
+    </tr>
+    <tr ng-repeat="course in courses">
+      <td>
+        <a ui-sref='course.detail.stats({courseId:course.id})'>
+          {{course.name}}
+        </a>
+      </td>
+      <td>{{course.institution}}</td>
+      <td>{{course.term}}&nbsp;{{course.year}}</td>
+    </tr>
+  </table>
+</div>
