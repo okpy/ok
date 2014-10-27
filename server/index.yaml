@@ -54,6 +54,14 @@ indexes:
 - kind: Submissionvtwo
   properties:
   - name: assignment
+  - name: messages.kind
+  - name: submitter
+  - name: created
+    direction: desc
+
+- kind: Submissionvtwo
+  properties:
+  - name: assignment
   - name: submitter
   - name: created
     direction: desc
@@ -76,6 +84,13 @@ indexes:
 - kind: Submissionvtwo
   properties:
   - name: messages.kind
+  - name: created
+    direction: desc
+
+- kind: Submissionvtwo
+  properties:
+  - name: messages.kind
+  - name: submitter
   - name: created
     direction: desc
 

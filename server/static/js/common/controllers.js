@@ -332,15 +332,19 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
 app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
     function ($scope, $stateParams, $window, $timeout, Group) {
       $scope.loadGroup = function() {
-        Group.query({assignment: $stateParams.assignmentId}, function(groups) {
-          if (groups.length == 1) {
-            $scope.group = groups[0];
-            $scope.inGroup = true;
-          } else {
-            $scope.group = undefined;
-            $scope.inGroup = false;
+        Group.query({
+            assignment: $stateParams.assignmentId,
+            members: $window.user
+          }, function(groups) {
+            if (groups.length == 1) {
+              $scope.group = groups[0];
+              $scope.inGroup = true;
+            } else {
+              $scope.group = undefined;
+              $scope.inGroup = false;
+            }
           }
-        });
+        );
       }
       $scope.refreshGroup = function() {
           $timeout(function() {

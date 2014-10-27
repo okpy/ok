@@ -737,7 +737,7 @@ class VersionAPI(APIResource):
             }
         },
         'new': {
-            'methods': set(['POST']),
+            'methods': set(['PUT']),
             'web_args': {
                 'version': Arg(str, required=True),
                 'current': BooleanArg()
@@ -907,7 +907,7 @@ class GroupAPI(APIResource):
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assignment'),
-                'members': KeyArg('User'),
+                'members': KeyArg('User')
             }
         },
         'add_member': {

@@ -447,7 +447,7 @@ class Submission(Base):
                 for course in user.staffed_courses:
                     if course.key in obj.submitter.get().courses:
                         return True
-            groups = list(user.groups())
+            groups = list(user.groups(obj.assignment))
             my_group = obj.group
 
             if groups and my_group and my_group.key in [g.key for g in groups]:
@@ -477,7 +477,8 @@ class Submission(Base):
                     [assign.key for assign in assignments]))
 
             for group in user.groups():
-                filters.append(Submission.submitter.IN(group.members))
+                filters.append(ndb.AND(Submission.submitter.IN(group.members),
+                    Submission.assignment == group.assignment))
             filters.append(Submission.submitter == user.key)
  
             if len(filters) > 1:
