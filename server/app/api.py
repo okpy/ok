@@ -340,8 +340,6 @@ class UserAPI(APIResource):
             models.Queue.assigned_staff == user.key))
 
     def final_submission(self, obj, user, data):
-        import pdb
-        pdb.set_trace()
         return obj.get_selected_submission(data['assignment'])
 
 
