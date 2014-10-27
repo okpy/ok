@@ -693,10 +693,26 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParam
         var submissions = [];
 
         for (var i = 0; i < ids.length; i++) {
-          Submission.get({id: ids[i].id}, function (result) {
-            submissions.push(result)
+          Submission.get({
+            "fields": {
+              "submitter": true,
+              "created": true,
+              "assignment": {
+                "display_name": true
+              }, 
+              "tags": true,
+              "compScore": true,
+              "id": true
+            },
+            id: ids[i].id
+          }, function (result) {
+            submissions.push(result);
+            submissions.sort(function(a, b) {
+              return a.id - b.id;
+            });
           });
         }
+
         return submissions;
       }
 
@@ -724,7 +740,6 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParam
     }, function (result) {
         $scope.$storage.currentQueue = JSON.stringify(result);
         $scope.submList = $scope.getSubmissions($scope.queue.submissions);
-        console.log($scope.submList);
     });
 
   }]);
