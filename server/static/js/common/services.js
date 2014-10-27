@@ -242,4 +242,3 @@ app.factory('Queue', ['$resource',
     }
   ]);
 
-

@@ -229,9 +229,11 @@ app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
 
 
 // Diff Controllers
-app.controller("SubmissionDiffCtrl", ['$scope', '$window', '$stateParams',  'Submission', '$timeout',
-  function($scope, $window, $stateParams, Submission, $timeout) {
+app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateParams',  'Submission',  "$sessionStorage", '$timeout',
+  function($scope, $location, $window, $stateParams, Submission, $sessionStorage, $timeout) {
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
+    $scope.storage = $sessionStorage;
+
     $scope.submission = Submission.get({
       fields: {
         created: true,
@@ -251,14 +253,49 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$window', '$stateParams',  'Sub
       }
     });
 
+    if ($scope.storage.currentQueue) {
+      var queue = JSON.parse($scope.storage.currentQueue);
+      submissions = [];
+      $scope.queueId = queue['id'];
+      var submDict = queue['submissions']
+      for (var key in submDict) {
+         submissions.push(submDict[key]['id']);
+      }
+      var currSubm = submissions.indexOf(parseInt($stateParams.submissionId));
+
+      $scope.allSubmissions = submissions;
+      $scope.currentPage = currSubm;
+      $scope.totalItems = submissions.length;
+      $scope.prevId = submissions[currSubm-1];
+      $scope.nextId = submissions[currSubm+1];
+
+    } else {
+      $scope.prevId = undefined;
+      $scope.nextId = undefined;
+    }
+
     $scope.submitGrade = function() {
         Submission.addScore({
             id: $stateParams.submissionId,
             score: $scope.compScore,
             message: $scope.compMessage
-        }, $scope.backPage);
+        }, $scope.nextSubm);
     }
-    // Todo. This currently just refreshes the page. 
+
+    // Goes to the next submission 
+    $scope.nextSubm = function () {
+      if ($scope.nextId != undefined) {
+       $location.path('/submission/'+$scope.nextId+'/diff');
+      } else if ($scope.queueId != undefined) {
+        // No more items. Show a success message.
+        $window.swal({ title: "Nice work!", type: 'success',  text: "You've reached the end of the queue!",   timer: 2500 });
+       $location.path('/queue/'+$scope.queueId)
+      } else {
+        $location.path('/queue/');
+      }
+    }
+
+    // Goes back a page.
     $scope.backPage = function () {
         $timeout(function() {
            $window.history.back();;
@@ -584,7 +621,7 @@ app.controller("LandingPageCtrl", ["$window", "$state",
     }
 ]);
 
-app.controller("QueueModuleController", ["$scope", "Queue", 
+app.controller("QueueModuleController", ["$scope", "Queue",
     function ($scope, Queue) {
       $scope.queues = Queue.query({
           "fields": {
@@ -627,29 +664,43 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
 
 app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
   function($scope, Queue, $window, $state) {
-    $scope.queues = Queue.query({
-        "fields": {
-          "assignment": {
-            "id": true,
-            "display_name": true
+  
+        $scope.queues = Queue.query({
+          "fields": {
+            "assignment": {
+              "id": true,
+              "display_name": true
+            },
+            "assigned_staff": {
+              "id": true,
+              "first_name": true,
+              "last_name": true,
+              "role": true
+            },
+            "submissions": {
+              "id": true,
+            },
+            'id': true
           },
-          "assigned_staff": {
-            "id": true,
-            "first_name": true,
-            "last_name": true,
-            "role": true
-          },
-          "submissions": {
-            "id": true,
-          },
-          'id': true
-        },
-        "assigned_staff": $window.user
-    });
+          "assigned_staff": $window.user
+      });
+
   }]);
 
-app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
-    function ($scope, Queue, $stateParams) {
+app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParams", "$sessionStorage",
+    function ($scope, Queue, Submission, $stateParams, $sessionStorage) {
+      $scope.getSubmissions = function(ids) {
+        var submissions = [];
+
+        for (var i = 0; i < ids.length; i++) {
+          Submission.get({id: ids[i].id}, function (result) {
+            submissions.push(result)
+          });
+        }
+        return submissions;
+      }
+
+      $scope.$storage = $sessionStorage;
       $scope.queue = Queue.get({
         "fields": {
           "assignment": {
@@ -670,5 +721,10 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
           }
         },
         id: $stateParams.queueId
+    }, function (result) {
+        $scope.$storage.currentQueue = JSON.stringify(result);
+        $scope.submList = $scope.getSubmissions($scope.queue.submissions);
+        console.log($scope.submList);
     });
+
   }]);

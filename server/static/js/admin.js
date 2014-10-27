@@ -1,4 +1,4 @@
-var app = angular.module('admin', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'angularMoment', 'oitozero.ngSweetAlert']);
+var app = angular.module('admin', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'angularMoment', 'ngStorage']);
 
 app.directive('assignmentModule', function() {
         return {

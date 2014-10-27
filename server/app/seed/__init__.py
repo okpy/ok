@@ -203,10 +203,10 @@ def seed():
 
     # Seed a queue. This should be auto-generated. 
     
-    # q = make_queue(assign, [], c)
-    # q.put()
-    # q = make_queue(assign, [], k)
-    # q.put()
+    q = make_queue(assign, [], c)
+    q.put()
+    q = make_queue(assign, [], k)
+    q.put()
 
     # utils.assign_work(assign.key)
 
