@@ -163,6 +163,7 @@ class User(Base):
             query = Submission.query()
             query = Submission.can(self, Need('index'), query=query)
             query = query.filter(Submission.assignment == assign_key)
+            query = query.filter(Submission.messages.kind == "file_contents")
             query = query.order(-Submission.created)
             return query
 

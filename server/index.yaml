@@ -96,13 +96,6 @@ indexes:
 
 - kind: Submissionvtwo
   properties:
-  - name: messages.kind
-  - name: submitter
-  - name: created
-    direction: desc
-
-- kind: Submissionvtwo
-  properties:
   - name: submitter
   - name: created
 
