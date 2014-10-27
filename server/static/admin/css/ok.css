@@ -76,13 +76,15 @@
 /**
  *  Enable pager support for buttons
  */
+.submControl {
+  margin-top: -30px !important;
+}
 
 .pager {
   padding-left: 0;
   margin: 20px 0;
   text-align: center;
   list-style: none;
-  margin-top: -30px;
 }
 .pager li {
   display: inline;
