@@ -1,7 +1,7 @@
-<div class="box" ng-controller="QueueListCtrl" >
+<div class="box" ng-controller="UserQueueListCtrl">
 <div class="box-header">
-  <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >No Queues</h3>
-  <h3 class="box-title" ng-if="queues.length > 0">Coursewide Queue</h3>
+  <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >No Assigned Queues</h3>
+  <h3 class="box-title" ng-if="queues.length > 0">My Queue</h3>
 </div><!-- /.box-header -->
 
 <div class="box-body no-padding table-responsive">

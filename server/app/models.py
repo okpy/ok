@@ -13,7 +13,7 @@ from app.utils import parse_date
 from flask import json
 from flask.json import JSONEncoder as old_json
 
-from google.appengine.ext import db, ndb
+from google.appengine.ext import ndb
 
 # To deal with circular imports
 class APIProxy(object):
@@ -82,6 +82,17 @@ class Base(ndb.Model):
                     result[key] = value.to_json(fields.get(key))
                 else:
                     result[key] = None
+            elif isinstance(value, list) and len(value) > 0 and isinstance(value[0], ndb.Key):
+                new_list = []
+                for value in value:
+                    if not isinstance(fields.get(key), dict):
+                        if fields.get(key):
+                            new_list.append(value)
+                    else:
+                        value = value.get()
+                        if value:
+                            new_list.append(value.to_json(fields.get(key)))
+                result[key] = new_list
             else:
                 try:
                     new_value = app.json_encoder().default(value)
@@ -115,6 +126,8 @@ class User(Base):
     def __repr__(self):
         return '<User %r>' % self.email
 
+    ## Properties and getters
+
     @property
     def is_admin(self):
         return self.role == constants.ADMIN_ROLE
@@ -134,14 +147,7 @@ class User(Base):
     @property
     def courses(self):
         return [group.assignment.get().course for group in self.groups()]
-
-    def get_selected_submission(self, assignment):
-        query = Submission.query()
-        query = Submission.can(self, Need('index'), query=query)
-        query = query.filter(Submission.assignment == assignment)
-        query = query.order(-Submission.created)
-        return query.get()
-
+        
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
@@ -149,6 +155,52 @@ class User(Base):
                 assignment = assignment.key
             query = query.filter(Group.assignment == assignment)
         return query
+
+    ## Utilities for submission grading and selection
+
+    def get_selected_submission(self, assign_key, keys_only=False):
+        def make_query():
+            query = Submission.query()
+            query = Submission.can(self, Need('index'), query=query)
+            query = query.filter(Submission.assignment == assign_key)
+            query = query.filter(Submission.messages.kind == "file_contents")
+            query = query.order(-Submission.created)
+            return query
+
+        query = make_query()
+        #query = query.filter(Submission.tags == Submission.SUBMITTED_TAG)
+        subm = query.get(keys_only=keys_only)
+        if subm:
+            return subm
+
+        query = make_query()
+        return query.get(keys_only=keys_only)
+
+    def is_final_submission(self, subm, assign_key):
+        subm = subm.get()
+        groups = list(self.groups(assign_key))
+        if not groups:
+            return True
+        if len(groups) > 1:
+            raise Exception("Invalid groups for user {}".format(self.id))
+
+        group = groups[0]
+        for other in group.members:
+            if other is not self:
+                latest = other.get().get_selected_submission(assign_key, keys_only=True)
+                if isinstance(latest, ndb.Key):
+                    latest = latest.get()
+                if isinstance(subm, ndb.Key):
+                    subm = subm.get()
+
+                if not latest or not subm:
+                    continue
+                if not latest.get_messages()['file_contents']:
+                    continue
+
+                if latest.created > subm.created:
+                    return False
+        return True
 
     @classmethod
     def from_dict(cls, values):
@@ -169,10 +221,6 @@ class User(Base):
     def get_by_id(cls, id, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for users"
         return super(User, cls).get_by_id(id, **kwargs)
-
-    @property
-    def logged_in(self):
-        return True
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -229,7 +277,8 @@ class Assignment(Base):
 
     # Name displayed to students
     display_name = ndb.StringProperty(required=True) 
-    points = ndb.FloatProperty(required=True)
+    # (martinis) made not required because weird
+    points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User, required=True)
     templates = ndb.JsonProperty(required=True)
     course = ndb.KeyProperty('Course', required=True)
@@ -321,6 +370,14 @@ class Message(Base):
 
         return Submission._can(user, need, obj, query)
 
+class Score(Base):
+    """
+    The score for a submission.
+    """
+    score = ndb.IntegerProperty()
+    message = ndb.StringProperty()
+    created = ndb.DateTimeProperty(auto_now_add=True)
+    grader = ndb.KeyProperty('User')
 
 class Submission(Base):
     """A submission is generated each time a student runs the client."""
@@ -329,23 +386,44 @@ class Submission(Base):
     created = ndb.DateTimeProperty()
     db_created = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
+    compScore = ndb.KeyProperty(Score)
     tags = ndb.StringProperty(repeated=True)
+
+    SUBMITTED_TAG = "Submit"
 
     @classmethod
     def _get_kind(cls):
       return 'Submissionvtwo'
 
-    def get_messages(self, fields={}):
+    def get_messages(self, fields=None):
         if not fields:
             fields = {}
 
         message_fields = fields.get('messages', {})
+        if isinstance(message_fields, (str, unicode)):
+            message_fields = (True if message_fields == "true" else False)
+
         messages = {message.kind: message.contents for message in self.messages}
+        def test(x):
+            if isinstance(message_fields, bool):
+                return message_fields
+
+            if not message_fields:
+                return True
+            return x in message_fields
+
+        def get_contents(kind, contents):
+            if isinstance(message_fields, bool):
+                return contents
+
+            if message_fields.get(kind) == "presence":
+                return True
+            return contents
+
         return {
-            kind: (True if message_fields.get(kind) == "presence"
-                   else contents)
+            kind: get_contents(kind, contents)
             for kind, contents in messages.iteritems()
-            if not message_fields or kind in message_fields.keys()}
+            if test(kind)}
 
     @property
     def group(self):
@@ -626,3 +704,14 @@ class Queue(Base):
             return True
 
         return False
+
+    def to_json(self, fields=None):
+        if not fields:
+            fields = {}
+
+        return {
+            'submissions': [{'id': val.id()} for val in self.submissions],
+            'assignment': self.assignment.get(),
+            'assigned_staff': [val.get().to_json(fields.get('assigned_staff')) for val in self.assigned_staff],
+            'id': self.key.id()
+        }

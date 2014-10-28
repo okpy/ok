@@ -1,5 +1,21 @@
 <div>
-  <h2>Work Queue</h2>
+  <div class="center-block"> 
+    <h2> Queue for {{queue.assignment.display_name}} </h2>
+      <div ng-if="queue.$resolved && queue.assigned_staff.length > 0 ">
+      Staff: 
+        <span ng-repeat="user in queue.assigned_staff" class="badge bg-info">
+          {{user.id}} {{$last ? '' : ', '}}
+        </span>
+      </ul>
+      </div>
+      <div ng-if="queue.$resolved && queue.assigned_staff.length <= 0">
+        <strong>No staff assigned</strong>
+      </div>
+      <div ng-if="queue.submissions.length == 0"> 
+        <h3>  No submissions </h3>
+      </div>
+      <br>
+  </div>
 
   <div class="box-body no-padding table-responsive">
     <table ng-if="queue.submissions.length > 0" class="table table-responsive table-striped table-bordered">
@@ -8,19 +24,37 @@
       <th style="width: 10px">Assignment</th>
       <th>Submitter</th>
       <th>Time</th>
-      <th style="width: 15%">Label</th>
+      <th style="width: 15%">Tags</th>
+      <th>Grade</th>
+      <th>Action</th>
     </tr>
 
-    <tr ng-repeat="submission in queue.submissions">
+    <tr ng-repeat="submission in submList track by $index">
       <td>
-        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
+        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}</a>
       </td>
-      <td>{{submission.submitter.id}}</td>
+      <td>{{submission.submitter.email}}</td>
       <td>
         {{submission.created | amCalendar}}
       </td>
-      <!-- Future Progress Bar -->                 
-      <td><span class="badge bg-info">{{submission.assignment.display_name}}</span></td>
+      <td >
+          <span class="badge bg-info">{{submission.assignment.display_name}}</span>
+          <span ng-repeat="tag in submission.tags" class="badge bg-blue">
+            {{ tag }}
+          </span>
+      </td>
+      <td>
+        <p ng-if="submission.compScore == null"> Ungraded </p>
+        <p ng-if="submission.compScore != null"> {{submission.compScore.score}} </p>
+      </td>
+      <td>
+          <a ui-sref='submission.diff({submissionId:submission.id})' type="button" ng-if="submission.compScore == null"
+            class="btn btn-block btn-flat btn-info">Grade</a>
+
+          <a ui-sref='submission.diff({submissionId:submission.id})' type="button" ng-if="submission.compScore != null"
+            class="btn btn-block btn-flat btn-warning">Re-grade</a>
+      </td>
+
     </tr>
         </tbody>
       </table>
