@@ -7,10 +7,6 @@
 
 /* Your customizations here */
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.42857143;
-  color: #333;
 }
 
 .menu-button {
@@ -52,6 +48,8 @@ h2 {
   border-radius: 3px;
   width: 100%;
   text-shadow: 0 1px 0 #fff;
+  background-color: white;
+  border-collapse: separate;
 }
 
 .diff-line-code {
@@ -135,10 +133,122 @@ h2 {
   color: rgba(0,0,0,0.3);
 }
 
+.group {
+}
+
+.member {
+  background-color: #f7f7f9;
+}
+
+.add-member-form {
+  text-align: right;
+}
+
+.center-block {
+  text-align: center;
+}
+
+.tab-wrapper {
+  padding: 10px 10px 10px 10px;
+}
+
 input.ng-invalid.ng-dirty {
   background-color: #FA787E;
 }
 
 input.ng-valid.ng-dirty {
   background-color: #78FA89;
+}
+
+.tab-body {
+  margin: 10px 0 0;
+  padding-left:10px;
+  padding-right:10px;
+}
+
+.tabset-background {
+  padding: 5px 5px 15px;
+  border-bottom: 1px solid #eee;
+  background-color: transparent;
+}
+
+.comment-button {
+  position: relative;
+  z-index: 5;
+  float: left;
+  width: 20px;
+  height: 20px;
+  margin: -1px -10px -1px -20px;
+  line-height: 20px;
+  color: #fff;
+  text-align: center;
+  text-indent: 0;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.comment-input {
+  height: 150px !important;
+}
+.comment-preview {
+  padding: 5px 5px 15px;
+  border-bottom: 1px solid #eee;
+  background-color: transparent;
+}
+.comment-box {
+  padding: 10px 10px 10px 10px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+.comment-holder {
+  max-width: 780px;
+}
+.comment {
+  margin-bottom: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+.comment-text {
+  padding-top: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.comment-header {
+  padding-left: 15px;
+  padding-right: 15px;
+  line-height: 40px;
+  color: #8e9597;
+  background-color: #f2f8fa;
+  border-bottom-color: #e1edf1;
+  border-bottom: 1px solid #eee;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+.comment-form {
+  border: 1px solid #ddd;
+  max-width: 780px;
+  border-radius: 3px;
+}
+
+.comment-tabset {
+  background: #f7f7f7;
+  padding: 6px 10px 0;
+  border-radius: 3px 3px 0 0;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.comment-buttons {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }

@@ -47,12 +47,18 @@ class GradingProtocol(protocol.Protocol):
     name = 'grading'
 
     def on_interact(self):
-        """Run gradeable tests and print results."""
+        """Run gradeable tests and print results and return analytics.
+
+        For this protocol, analytics consists of a dictionary whose key(s) are
+        the questions being tested and the value is the number of test cases
+        that they passed.
+        """
         if self.args.score:
             return
         formatting.print_title('Running tests for {}'.format(
             self.assignment['name']))
         self._grade_all()
+        return self.analytics
 
     def _grade_all(self):
         """Grades the specified test (from the command line), 
@@ -68,6 +74,7 @@ class GradingProtocol(protocol.Protocol):
             if not self.args.question or self.args.question in test['names']:
                 passed, total = self._handle_test(test)
                 any_graded = True
+                self.analytics[test.name] = passed
                 if total > 0:
                     print('-- {} cases passed ({}%) for {} --'.format(
                         passed, round(100 * passed / total, 2), test.name))

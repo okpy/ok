@@ -1,0 +1,62 @@
+<div class="box" ng-controller="SubmissionListCtrl" ng-cloak>
+<div class="box-header">
+  <h3 class="box-title" ng-if="submissions.length > 0">All Submissions</h3>
+  <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
+</div>
+<!-- /.box-header -->
+
+<div class="box-body no-padding table-responsive">
+
+    <div class='text-center'>
+      <pager items-per-page="itemsPerPage" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()"></pager>
+    </div>
+  <table ng-if="submissions.length > 0" class="table table-striped table-bordered table-responsive ">
+
+  <tbody>
+  
+    <tr>
+      <th style="width: 10px">Assignment</th>
+      <th>Submitter</th>
+      <th>Time</th>
+      <th style="width: 20%">View Code</th>
+      <th style="width: 15%">Tags</th>
+      <th style="width: 10%">Submit</th>
+    </tr>
+
+    <tr ng-repeat="submission in submissions">
+      <td>
+        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
+      </td>
+      <td>{{submission.submitter.id}}</td>
+      <td>
+        {{submission.created | amCalendar}}
+      </td>
+      <td>
+          <div class="btn-group download-btn-group">
+              <a ui-sref='submission.detail({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">View</a>
+              <a href='/api/v1/submission/{{submission.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
+              <a ui-sref='submission.diff({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">Diff</a>
+          </div>
+      </td>    
+      <!-- Future Progress Bar -->                 
+      <td >
+        <span class="badge bg-info">{{submission.assignment.display_name}}</span>
+        <span ng-repeat="tag in submission.tags" class="badge bg-blue">
+          {{ tag }}
+        </span>
+
+      </td>
+      <td ng-show="submission.assignment.active">
+          <button ng-click='submitVersion(submission.id);' ng-disabled="clicked" type="button" class="btn btn-flat btn-success" ng-if="submission.tags.indexOf('Submit') <= -1">Submit</button>
+          <button ng-click='unSubmit(submission.id);' ng-disabled="clicked" type="button" class="btn btn-flat btn-danger" ng-if="submission.tags.indexOf('Submit') > -1">Un-submit</button>
+      </td>
+
+    </tr>
+  </tbody>
+</table>
+
+    <div class='text-center'>
+      <pager items-per-page="itemsPerPage" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()"></pager>
+    </div>
+  </div><!-- /.box-body -->
+</div><!-- /.box -->

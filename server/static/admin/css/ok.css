@@ -1,0 +1,123 @@
+.skin-black .logo {
+    background: #ffffff;
+    color: #333333;
+    border-bottom: 1px solid #eee;
+}
+.skin-black .logo > a {
+    color: #333333;
+}
+.skin-black .logo:hover {
+    background: #ffffff;
+}
+
+
+.login-box {
+    max-width: 65%;
+}
+
+.pager {
+    padding-left: 0;
+    margin: 10px 20px 20px;
+    padding-bottom: 10px;
+    text-align: center;
+    list-style: none;
+}
+.navbar-text {
+    float: left;
+}
+.dashview {
+    margin-top: 20px;
+    margin-right: 20px;
+}
+@media screen and (min-width: 480px) {
+    .download-btn-group {
+        width: 20%;
+        min-width: 200px;
+    }
+}
+@media screen and (max-width: 480px) {
+    .download-btn-group {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 0px;
+    }
+    .download-btn-group .btn {
+        width: 100%;
+    }
+    .download-btn-group .btn.btn-flat:first-of-type, .download-btn-group .btn.btn-flat:last-of-type {
+        border-radius: 0;
+    }
+}
+
+.student-main {
+    background-color: #f9f9f9;
+    margin-left: 20px;
+}
+.admin-center {
+    margin-right: 20px;
+    margin-left: 240px;
+    margin-top: 20px;
+}
+.admin-center.right-side.strech {
+    margin-right: 20px;
+    margin-left: 20px;
+    margin-top: 20px;
+}
+
+@media screen and (max-width: 992px) {
+    .admin-center.right-side {
+        margin-right: 20px;
+        margin-left: 20px;
+        margin-top: 20px;
+    }
+}
+
+/**
+ *  Enable pager support for buttons
+ */
+.submControl {
+  margin-top: -30px !important;
+}
+
+.pager {
+  padding-left: 0;
+  margin: 20px 0;
+  text-align: center;
+  list-style: none;
+}
+.pager li {
+  display: inline;
+}
+.pager li > button,
+.pager li > span {
+  display: inline-block;
+  padding: 5px 14px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  color: #3c8dbc;
+}
+.pager li > button:hover,
+.pager li > button:focus {
+  text-decoration: none;
+  background-color: #eee;
+}
+.pager .next > button,
+.pager .next > span {
+  float: right;
+}
+.pager .previous > button,
+.pager .previous > span {
+  float: left;
+}
+.pager .disabled > button,
+.pager .disabled > button:hover,
+.pager .disabled > button:focus,
+.pager .disabled > span {
+  color: #777;
+  cursor: not-allowed;
+  background-color: #fff;
+}
+
+

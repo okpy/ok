@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from client.sanction import Client
+from client.utils.sanction import Client
 from urllib.parse import urlparse, parse_qs
 import http.server
 import pickle

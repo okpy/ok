@@ -2,6 +2,8 @@
 Utility functions used by API and other services
 """
 import collections
+import logging
+import datetime
 
 try:
     from cStringIO import StringIO
@@ -11,19 +13,33 @@ import zipfile as zf
 from flask import jsonify, request, Response, json
 
 from google.appengine.api import memcache
+from google.appengine.ext import ndb
+from google.appengine.ext import deferred
+
+from app import app
+
+# To deal with circular imports
+class ModelProxy(object):
+    def __getattribute__(self, key):
+        import app
+        return app.models.__getattribute__(key)
+
+ModelProxy = ModelProxy()
 
 def coerce_to_json(data, fields):
     """
-    Coerces |data| to json, using on the allowed |fields|
+    Coerces |data| to json, using only the allowed |fields|
     """
     if hasattr(data, 'to_json'):
         return data.to_json(fields)
     elif isinstance(data, list):
-        return [mdl.to_json(fields) if hasattr(data, 'to_json')
+        return [mdl.to_json(fields) if hasattr(mdl, 'to_json')
                 else coerce_to_json(mdl, fields) for mdl in data]
     elif isinstance(data, dict):
         if hasattr(data, 'to_json'):
-            return {k: mdl.to_json(fields.get(k, {})) for k, mdl in data.iteritems()}
+            return {
+                k: mdl.to_json(fields.get(k, {}))
+                for k, mdl in data.iteritems()}
         else:
             return {k: coerce_to_json(mdl, fields.get(k, {}))
                     for k, mdl in data.iteritems()}
@@ -38,6 +54,8 @@ def create_api_response(status, message, data=None):
     if isinstance(data, dict) and 'results' in data:
         data['results'] = (
             coerce_to_json(data['results'], request.fields.get('fields', {})))
+    else:
+        data = coerce_to_json(data, request.fields.get('fields', {}))
 
     if request.args.get('format', 'default') == 'raw':
         response = Response(json.dumps(data))
@@ -92,18 +110,21 @@ def paginate(entries, page, num_per_page):
 
     query_serialized = (
         '_'.join(str(x) for x in (
-            entries.kind, entries.filters, entries.orders, num_per_page)))
+            entries.kind, entries.filters, entries.orders)))
     query_serialized = query_serialized.replace(' ', '_')
     def get_mem_key(page):
-        return "cp_%s_%s" % (query_serialized, page)
+        offset = (page - 1) * num_per_page
+        return "cp_%s_%s" % (query_serialized, offset)
     this_page_key = get_mem_key(page)
     next_page_key = get_mem_key(page + 1)
 
     cursor = None
+    store_cache = True
     if page > 1:
         cursor = memcache.get(this_page_key) # pylint: disable=no-member
         if not cursor:
             page = 1 # Reset to the front, since memcached failed
+            store_cache = False
 
     pages_to_fetch = int(num_per_page)
     if cursor is not None:
@@ -112,7 +133,8 @@ def paginate(entries, page, num_per_page):
     else:
         results, forward_cursor, more = entries.fetch_page(pages_to_fetch)
 
-    memcache.set(next_page_key, forward_cursor) # pylint: disable=no-member
+    if store_cache:
+        memcache.set(next_page_key, forward_cursor) # pylint: disable=no-member
 
     return {
         'results': results,
@@ -123,15 +145,21 @@ def paginate(entries, page, num_per_page):
 
 def _apply_filter(query, model, arg, value, op):
     """
-    Applies a filter on |model| of |arg| == |value| to |query|.
+    Applies a filter on |model| of |arg| |op| |value| to |query|.
     """
-    field = getattr(model, arg, None)
-    if not field:
-        # Silently swallow for now
-        # TODO(martinis) cause an error
-        return query
+    if '.' in arg:
+        arg = arg.split('.')
+    else:
+        arg = [arg]
 
-    # Only equals for now
+    field = model
+    while arg:
+        field = getattr(field, arg.pop(0), None)
+        if not field:
+            # Silently swallow for now
+            # TODO(martinis) cause an error
+            return query
+
     if op == "==":
         filtered = field == value
     elif op == "<":
@@ -156,7 +184,8 @@ def filter_query(query, args, model):
     Returns a modified query with the appropriate filters.
     """
     for arg, value in args.iteritems():
-        if isinstance(value, collections.Iterable):
+        if (isinstance(value, collections.Iterable)
+                and not isinstance(value, str)):
             op, value = value
         else:
             value, op = value, '=='
@@ -164,3 +193,100 @@ def filter_query(query, args, model):
         query = _apply_filter(query, model, arg, value, op)
 
     return query
+
+BATCH_SIZE = 500
+
+@ndb.toplevel
+def upgrade_submissions(cursor=None, num_updated=0):
+    query = ModelProxy.OldSubmission.query()
+
+    to_put = []
+    kwargs = {}
+
+    if cursor:
+        kwargs['start_cursor'] = cursor
+
+    results, cursor, more = query.fetch_page(BATCH_SIZE, **kwargs)
+    more = False
+    for old in results:
+        if old.converted:
+            more = True
+            continue
+
+        new = old.upgrade()
+        to_put.append(new)
+
+        old.converted = True
+        old.put_async()
+
+    if to_put or more:
+        ndb.put_multi(to_put)
+        num_updated += len(to_put)
+        logging.info(
+            'Put %d entities to Datastore for a total of %d',
+            len(to_put), num_updated)
+        deferred.defer(
+            upgrade_submissions, cursor=cursor, num_updated=num_updated)
+    else:
+        logging.info(
+            'upgrade_submissions complete with %d updates!', num_updated)
+
+ASSIGN_BATCH_SIZE = 20
+def assign_work(assign_key, cursor=None, num_updated=0):
+    query = ModelProxy.User.query(ModelProxy.User.role == "student")
+
+    queues = list(ModelProxy.Queue.query(
+        ModelProxy.Queue.assignment == assign_key))
+    if not queues:
+        logging.error("Tried to assign work, but no queues existed")
+        return
+
+    kwargs = {}
+
+    if cursor:
+        kwargs['start_cursor'] = cursor
+
+    to_put = 0
+    results, cursor, more = query.fetch_page(ASSIGN_BATCH_SIZE, **kwargs)
+    seen = set()
+    for queue in queues:
+        for subm in queue.submissions:
+            seen.add(subm.get().submitter.id())
+
+    for user in results:
+        if not user.logged_in or user.key.id() in seen:
+            continue
+        queues.sort(key=lambda x: len(x.submissions))
+
+        subm = user.get_selected_submission(assign_key, keys_only=True)
+        if subm and user.is_final_submission(subm, assign_key):
+            subm_got = subm.get()
+            if subm_got.get_messages().get('file_contents'):
+                queues[0].submissions.append(subm)
+                seen.add(user.key.id())
+                to_put += 1
+
+    if to_put:
+        num_updated += to_put
+        ndb.put_multi(queues)
+        logging.debug(
+            'Put %d entities to Datastore for a total of %d',
+            to_put, num_updated)
+        deferred.defer(
+            assign_work, assign_key, cursor=cursor,
+            num_updated=num_updated)
+    else:
+        logging.debug(
+            'assign_work complete with %d updates!', num_updated)
+
+
+def parse_date(date):
+    try:
+        date = datetime.datetime.strptime(
+            date, app.config["GAE_DATETIME_FORMAT"])
+    except ValueError:
+        date = datetime.datetime.strptime(
+            date, "%Y-%m-%d %H:%M:%S")
+
+    delta = datetime.timedelta(hours=7)
+    return datetime.datetime.combine(date.date(), date.time()) + delta

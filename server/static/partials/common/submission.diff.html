@@ -1,0 +1,23 @@
+<div>
+  <div class="center-block">
+    <h2>{{submission.assignment.display_name}} Submission: {{submission.created | amCalendar}} </h2>
+  </div>
+  <div class="box box-primary" ng-if="submission.compScore != null">
+	    <div class="box-header">
+	        <h3 class="box-title">Score</h3>
+	    </div>
+	    <!-- /.box-header -->
+	    <div class="box-body">
+	    	<div class="callout callout-info">
+                <h4>Composition: {{submission.compScore.score}} </h4>
+                <p>{{submission.compScore.message}}</p>
+            </div>
+            <p>Scroll down to see comments</p>
+    	</div>
+    	<!-- /.box-body -->
+	</div>
+
+  <div ng-repeat="(file_name, contents) in diff.diff">
+    <diff/>
+  </div>
+</div>

@@ -126,8 +126,14 @@ class APIBaseTestCase(BaseTestCase):
         Makes a post request, with json.
         """
         kwds.setdefault('content_type', 'application/json')
+        method = kwds.pop('method', None)
+        if method:
+            mthd = getattr(self.client, method.lower())
+        else:
+            mthd = self.client.post
+
         url = API_PREFIX + '/' + self.api_version + url
-        self.response = self.client.post(url, *args, **kwds)
+        self.response = mthd(url, *args, **kwds)
         try:
             response_json = json.loads(self.response.data)
             self.response_json = models.json.loads(
@@ -141,7 +147,8 @@ class APIBaseTestCase(BaseTestCase):
         """
         data = kwds.get('data', {})
         if isinstance(data, models.Base):
-            data = data.to_dict()
+            data = data.to_json()
+
         if isinstance(data, dict):
             data = models.json.dumps(data)
         kwds['data'] = data
@@ -158,7 +165,7 @@ class APIBaseTestCase(BaseTestCase):
                 self.assertEqual(inst.key.id(), self.response_json['key'])
             else:
                 inst.key = models.ndb.Key(self.model, self.response_json['key'])
-        self.assertStatusCode(200)
+        self.assertStatusCode(201)
 
     ## ASSERTS ##
     def assertHeader(self, header, value): #pylint: disable=invalid-name

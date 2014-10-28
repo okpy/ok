@@ -1,0 +1,45 @@
+<div class="box" ng-controller="UserQueueListCtrl">
+<div class="box-header">
+  <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >No Assigned Queues</h3>
+  <h3 class="box-title" ng-if="queues.length > 0">My Queue</h3>
+</div><!-- /.box-header -->
+
+<div class="box-body no-padding table-responsive">
+  <table id="queuetable" ng-if="queues.length > 0" class="table table-responsive table-striped table-bordered">
+    <thead>
+      <tr>
+        <th>Assignment</th>
+        <th>Staff</th>
+        <th>Submissions</th>
+        <th>View</th>
+      </tr>
+    </thead>
+  <tbody>
+
+    <tr ng-repeat="queue in queues">
+      <td>
+        {{queue.assignment.display_name}}
+      </td>
+      <td>
+        <div ng-if="queue.assigned_staff.length > 0">
+          <div ng-repeat="user in queue.assigned_staff">
+            {{user.id}} {{$last ? '' : ', '}}
+          </div>
+        </div>
+        <div ng-if="queue.assigned_staff.length <= 0">
+          <strong>No staff assigned</strong>
+        </div>
+      </td>
+      <td>
+        {{queue.submissions.length}}
+      </td>
+      <td>
+        <a class="btn btn-primary btn-sm" ui-sref='queue.detail({queueId:queue.id})'>
+          View Queue
+        </a> 
+      </td>
+    </tr>
+      </tbody>
+    </table>
+  </div><!-- /.box-body -->
+</div><!-- /.box -->

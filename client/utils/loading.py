@@ -41,11 +41,11 @@ def load_tests(test_dir, case_map):
             'Directory {} must have a file called {}'.format(
                 test_dir, INFO_FILE))
     sys.path.insert(0, os.path.abspath(test_dir))
-    assignment = _get_info()
+    assignment = _get_info(case_map)
     _get_tests(test_dir, assignment, case_map)
     return assignment
 
-def _get_info():
+def _get_info(case_map):
     """Loads information from an INFO file, given by the filepath.
 
     PARAMETERS:
@@ -58,7 +58,7 @@ def _get_info():
     # found.
     module_name, _ = os.path.splitext(INFO_FILE)
     info_json = import_module(module_name).info
-    return core.Assignment.deserialize(info_json)
+    return core.Assignment.deserialize(info_json, case_map)
 
 def _get_tests(directory, assignment, case_map):
     """Loads all tests in a tests directory and adds them to the given
@@ -89,7 +89,7 @@ def _get_tests(directory, assignment, case_map):
 # Assignment dumping #
 ######################
 
-def dump_tests(test_dir, assignment):
+def dump_tests(test_dir, assignment, log=None):
     """Writes an assignment into the given test directory.
 
     PARAMETERS:
@@ -101,6 +101,8 @@ def dump_tests(test_dir, assignment):
     # TODO(albert): verify that assign_copy is serializable into json.
     info = formatting.prettyjson(assignment.serialize())
     with open(os.path.join(test_dir, INFO_FILE), 'w') as f:
+        if log:
+            log.info('Dumping %s', INFO_FILE)
         f.write('info = ' + info)
 
     # TODO(albert): writing causes an error halfway, the tests
@@ -110,4 +112,6 @@ def dump_tests(test_dir, assignment):
     for test in assignment.tests:
         test_json = formatting.prettyjson(test.serialize())
         with open(os.path.join(test_dir, test.name + '.py'), 'w') as f:
+            if log:
+                log.info('Dumping %s', test.name)
             f.write('test = ' + test_json)

@@ -13,7 +13,7 @@ class InteractTest(unittest.TestCase):
     def setUp(self):
         mock_verify = lambda x, y: self.encode(x) == y
         self.logger = output.OutputLogger()
-        self.console = unlock.UnlockConsole(self.logger, '')
+        self.console = unlock.UnlockConsole(self.logger, '', analytics={'current':'q1', 'q1': []})
         self.console._verify = mock.Mock(side_effect=mock_verify)
         self.register_choices()
 
@@ -45,16 +45,27 @@ class InteractTest(unittest.TestCase):
             return {str(i): choice for i, choice in enumerate(choices)}
         self.console._display_choices = display_choices
 
+    def check_analytics(self, expected):
+        self.assertEqual(self.console._analytics['q1'][-1], expected)
+
     def encode(self, text):
         return '---' + text
 
     def testSuccessOnFirstTry(self):
         self.register_input(self.ANSWER, self.EXIT)
         self.calls_interact(self.ANSWER, self.encode(self.ANSWER))
+        self.check_analytics((1, True))
 
     def testRun_codeFailedFirstTry(self):
         self.register_input('9', self.ANSWER, self.EXIT)
         self.calls_interact(self.ANSWER, self.encode(self.ANSWER))
+        self.check_analytics((2, True))
+
+    def testRun_codeNeverPasses(self):
+        self.register_input('9', '2', '3', self.EXIT)
+        self.calls_interact(self.ANSWER, self.encode(self.ANSWER),
+                aborts=True)
+        self.check_analytics((3, False))
 
     def testAbort_exitInput(self):
         self.register_input(self.EXIT)
@@ -176,7 +187,7 @@ class LockTest(unittest.TestCase):
         self.assignment = core.Assignment.deserialize({
             'name': 'dummy',
             'version': '1.0',
-        })
+        }, {})
         self.logger = mock.Mock()
         self.proto = unlock.LockProtocol(self.args, self.assignment,
                                          self.logger)
@@ -210,6 +221,20 @@ class LockTest(unittest.TestCase):
         self.proto.on_start()
         self.assertFalse(self.mock_case.on_lock.called)
         self.assertEqual(0, self.test.num_cases)
+
+    def testHiddenParamsInTest(self):
+        self.test['hidden_params'] = {
+            'foo': 'bar'
+        }
+        self.proto.on_start()
+        self.assertEqual({}, self.test['hidden_params'])
+
+    def testHiddenParamsInAssignment(self):
+        self.assignment['hidden_params'] = {
+            'foo': 'bar'
+        }
+        self.proto.on_start()
+        self.assertEqual({}, self.test['hidden_params'])
 
 class MockUnlockCase(unlock.UnlockTestCase):
     def on_onlock(self, logger, interact_fn):

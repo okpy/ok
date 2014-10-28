@@ -27,7 +27,6 @@ REQUIRED_FILES = [
     'exceptions',
 ]
 REQUIRED_FOLDERS = [
-    'sanction',
     'utils',
 ]
 COMMAND_LINE = [

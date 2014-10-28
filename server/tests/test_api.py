@@ -21,6 +21,28 @@ from app.constants import ADMIN_ROLE
 
 from ddt import ddt, data, unpack
 
+def make_fake_course(creator):
+    return models.Course(
+        name="cs61a",
+        institution="UC Soumya",
+        term="Fall",
+        year="2014",
+        creator=creator.key,
+        staff=[],
+        active=True)
+
+def make_fake_assignment(course, creator):
+    return models.Assignment(
+        name='hw1',
+        points=3,
+        display_name="CS 61A",
+        templates="[]",
+        course=course.key,
+        creator=creator.key,
+        max_group_size=4,
+        due_date=datetime.datetime.now())
+
+
 @ddt
 class APITest(object): #pylint: disable=no-init
     """
@@ -146,10 +168,9 @@ class APITest(object): #pylint: disable=no-init
                 num_instances <= num_page,
                 "There are too many instances returned. There are " +
                 str(num_instances) + " instances")
-            self.assertTrue(
-                num_instances == min(total_objects, num_page),
-                "Not right number returned: {} vs. {} {}".format(
-                    total_objects, num_instances, self.response_json))
+            self.assertTrue(num_instances == min(total_objects, num_page),
+                "Not right number returned: " + str(total_objects) +
+                " vs. " +str(num_instances) + str(self.response_json))
             total_objects -= num_page
             self.page += 1
 
@@ -186,7 +207,6 @@ class APITest(object): #pylint: disable=no-init
         """Tests creating an empty entity."""
         inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
-        self.assertStatusCode(200)
 
         gotten = self.model.get_by_id(self.response_json['key'])
         self.assertEqual(gotten.key, inst.key)
@@ -194,12 +214,12 @@ class APITest(object): #pylint: disable=no-init
     def test_create_two_entities(self):
         inst = self.get_basic_instance(mutate=True)
         self.post_entity(inst)
-        self.assertStatusCode(200)
+        self.assertStatusCode(201)
         gotten = self.model.get_by_id(self.response_json['key'])
 
         inst2 = self.get_basic_instance(mutate=True)
         self.post_entity(inst2)
-        self.assertStatusCode(200)
+        self.assertStatusCode(201)
         gotten2 = self.model.get_by_id(self.response_json['key'])
 
         self.assertEqual(gotten.key, inst.key)
@@ -218,15 +238,32 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
     def setUp(self):
         super(AssignmentAPITest, self).setUp()
-        self.course = models.Course(name="test")
 
     def get_basic_instance(self, mutate=True):
         name = 'proj'
         if mutate:
             name += str(self.num)
             self.num += 1
-        rval = models.Assignment(name=name, points=3, course=self.course.key)
+
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assignment = rval = make_fake_assignment(self._course, self.user)
+        rval.name = name
         return rval
+
+    def post_entity(self, inst, *args, **kwds):
+        """Posts an entity to the server."""
+        data = inst.to_json()
+        data['course'] = data['course']['id']
+
+        self.post_json('/{}'.format(self.name),
+                       data=data, *args, **kwds)
+        if self.response_json and 'key' in self.response_json:
+            if inst.key:
+                self.assertEqual(inst.key.id(), self.response_json['key'])
+            else:
+                inst.key = models.ndb.Key(self.model,
+                                          self.response_json.get('key'))
 
 
 class SubmissionAPITest(APITest, APIBaseTestCase):
@@ -238,19 +275,20 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
     def setUp(self):
         super(SubmissionAPITest, self).setUp()
         self.assignment_name = u'test assignment'
-        self._assign = models.Assignment(name=self.assignment_name, points=3)
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assign = make_fake_assignment(self._course, self.user)
+        self._assign.name = self.assignment_name
         self._assign.put()
+
         self._submitter = self.accounts['dummy_student']
+        self._submitter.put()
         self.logout()
         self.login('dummy_student')
 
     def get_basic_instance(self, mutate=True):
-        message = "{}"
-        if mutate:
-            message = '{"value":' + str(self.num) + '}'
-            self.num += 1
         rval = models.Submission(
-            messages=message, submitter=self._submitter.key,
+            submitter=self._submitter.key,
             assignment=self._assign.key)
         return rval
 
@@ -259,7 +297,6 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         data = inst.to_json()
         data['assignment'] = self.assignment_name
         data['submitter'] = data['submitter']['id']
-        del data['created']
 
         self.post_json('/{}'.format(self.name),
                        data=data, *args, **kwds)
@@ -310,7 +347,8 @@ class CourseAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        rval = self.model(name=name)
+        rval = make_fake_course(self.user)
+        rval.name = name
         return rval
 
 class VersionAPITest(APITest, APIBaseTestCase):
@@ -325,7 +363,62 @@ class VersionAPITest(APITest, APIBaseTestCase):
             name += str(self.num)
             self.num += 1
         return self.model(key=ndb.Key('Version', name),
-            name=name, versions=['1.0.0', '1.1.0'])
+            name=name, versions=['1.0.0', '1.1.0'], base_url="https://www.baseurl.com")
+
+class GroupAPITest(APITest, APIBaseTestCase):
+    model = models.Group
+    name = 'group'
+    num = 1
+    access_token = 'dummy_admin'
+
+    def setUp(self):
+        super(GroupAPITest, self).setUp()
+        self.course = make_fake_course(self.user)
+        self.course.put()
+        self.assignment = make_fake_assignment(self.course, self.user)
+        self.assignment.put()
+
+    def get_basic_instance(self, mutate=True):
+        name = 'testversion'
+        if mutate:
+            name += str(self.num)
+            self.num += 1
+        return self.model(assignment=self.assignment.key)
+
+    def test_add_member(self):
+        members = [self.accounts['dummy_student'].key]
+        inst = self.get_basic_instance()
+        inst.put()
+
+        self.post_json(
+            '/{}/{}/add_member'.format(self.name, inst.key.id()),
+            data={'member': members[0].id()},
+            method='PUT')
+
+        inst = self.model.get_by_id(inst.key.id())
+        self.assertEqual(inst.invited_members, members)
+
+    def test_remove_member(self):
+        members = [self.accounts['dummy_student'].key]
+        inst = self.get_basic_instance()
+        inst.members = members
+        inst.put()
+
+        self.post_json(
+            '/{}/{}/remove_member'.format(self.name, inst.key.id()),
+            data={'member': members[0].id()},
+            method='PUT')
+
+        self.assertEquals(None, self.model.get_by_id(inst.key.id()))
+
+    def test_entity_create_basic(self):
+        # No entity create for Groups
+        pass
+
+    def test_create_two_entities(self):
+        # No entity create for Groups
+        pass
+
 
 
 if __name__ == '__main__':

@@ -1,0 +1,22 @@
+<div class="small-box bg-blue" ng-controller="SubmissionModuleController" ng-cloak>
+
+    <div class="inner">
+        <h3 ng-cloak>
+          {{num_submissions}}
+        </h3>
+        <p ng-if="num_submissions != 1">
+            submissions
+        </p>
+        <p ng-if="num_submissions == 1">
+            submission
+        </p>
+        </div>
+        <div class="icon">
+            <i class="ion ion-stats-bars"></i>
+        </div>
+        <a ui-sref="submission.list" class="small-box-footer">
+            More info <i class="fa fa-arrow-circle-right"></i>
+        </a>
+    </div>
+
+</div>

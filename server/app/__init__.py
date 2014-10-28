@@ -9,17 +9,21 @@ from werkzeug.debug import DebuggedApplication
 
 app = Flask('app') #pylint: disable=invalid-name
 
-from app.models import MODEL_BLUEPRINT
 from app import constants
+from app import models
 from app import utils
+from app import exceptions
 from app import api
 from app import auth
+from app.seed import seed
 
-
-app.register_blueprint(MODEL_BLUEPRINT)
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
-            if 'SERVER_SOFTWARE' in os.environ
-            else True)
+         if 'SERVER_SOFTWARE' in os.environ
+         else True)
+
+TESTING = os.environ["FLASK_CONF"] == "TEST" if "FLASK_CONF" in os.environ else False
+if DEBUG and not TESTING and len(list(models.Course.query().filter(models.Course.name == 'CS 61A'))) == 0:
+    seed()
 
 if DEBUG:
     app.config.from_object('app.settings.Debug')
@@ -36,5 +40,5 @@ app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 # Pull in URL dispatch routes
 import urls
 
-# Import the authenticator. Central usage place. 
+# Import the authenticator. Central usage place.
 import authenticator

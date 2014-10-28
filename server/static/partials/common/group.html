@@ -1,0 +1,92 @@
+<div class='group'>
+  <div class='row'>
+    <div class= 'col-md-6'>
+      <h4>Current Group<span ng-if="inGroup !== false ">: {{group.id}}</span> </h4>
+      <div ng-if="inGroup === false">
+        <div class='alert alert-info' style="margin-bottom:0px">
+          You don't seem to be in a group. People in your group will share submissions with you. Want to create one? &nbsp;&nbsp;
+          <div class='center-block'>
+            <button ng-click="createGroup()" class='btn btn-primary'>Create group</button>
+          </div>
+        </div>
+      </div>
+      <div ng-if="inGroup !== false">
+        <div class='alert alert-info'>
+          <div ng-repeat="member in group.members">
+            <div class='list-group-item list-group-item-primary' ng-controller="MemberController">
+              {{member.email}}
+              <span class='pull-right'>
+                <button ng-click="remove()" type="button" class="btn btn-xs btn-danger">
+                  <span class="glyphicon glyphicon-remove"></span>
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div ng-if="group.invited_members.length > 0">
+          <h4>Pending Invitations</h4>
+          <div class='alert alert-info'>
+            <div ng-repeat="member in group.invited_members">
+              <div class='list-group-item list-group-item-warning' ng-controller="MemberController">
+                {{member.email}}
+                <span class='pull-right'>
+                  <button ng-click="remove()" type="button" class="btn btn-xs btn-danger">
+                    <span class="glyphicon glyphicon-remove"></span>
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div ng-if="inGroup !== false && group.members.length < assignment.max_group_size">
+        <form class="add-member-form form-inline" ng-submit="add()" ng-controller="AddMemberController">
+          <div class="form-group">
+            <div class="input-group">
+              <div class="input-group-addon">Email:</div>
+              <input ng-model="newMember" class="form-control col-md-9" type="email" placeholder="Enter email address">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Invite member</button>
+        </form>
+      </div>
+    </div>
+    <div class= 'col-md-6'>
+      <h4>Invitations</h4>
+      <div id="invitations" ng-controller="InvitationsController">
+        <div ng-if="invitations.length === 0">
+          <div class='alert alert-success' style="margin-bottom:0px">
+            You have no current group invitations.
+          </div>
+        </div>
+        <accordion ng-if="invitations.length !== 0" close-others="oneAtATime">
+          <accordion-group ng-repeat="invitation in invitations" heading="Group ID: {{invitation.id}}">
+            <accordion-heading>
+            Group Members: <span ng-repeat="member in invitation.members">{{member.email}}{{$last ? '' : ', '}} </span>
+   
+              <span class="pull-right">
+                <span style="margin-right: 2px">
+                  <button ng-if="inGroup === false" ng-click="accept(invitation, $event)" type="button" class="btn btn-xs btn-success">
+                    <span class="glyphicon glyphicon-ok"></span>
+                  </button>
+                  <button ng-if="inGroup !== false" popover-placement="top" popover-title="Cannot accept" popover="You are already in a group." type="button" class="btn btn-xs btn-success">
+                    <span class="glyphicon glyphicon-ok"></span>
+                  </button>
+                </span>
+                <span>
+                  <button ng-click="reject(invitation, $event)" type="button" class="btn btn-xs btn-danger">
+                    <span class="glyphicon glyphicon-remove"></span>
+                  </button>
+                </span>
+              </span>
+            </accordion-heading>
+            <strong>Members:</strong>
+            <ul>
+              <li ng-repeat="group_member in invitation.members">{{group_member.email}}</li>
+            </ul>
+          </accordion-group>
+        </div>
+      </accordion>
+    </div>
+  </div>
+</div>

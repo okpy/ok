@@ -16,7 +16,7 @@ script:
   - if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then nosetests; fi
 
 before_script:
-  - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.11.zip -nv -O gae_sdk.zip; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.14.zip -nv -O gae_sdk.zip; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then unzip -q gae_sdk.zip; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then mv google_appengine gae_sdk; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then export GAE_SDK=$PWD/gae_sdk; fi
