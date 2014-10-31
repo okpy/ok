@@ -14,24 +14,37 @@ class DisplayBreakdownTest(unittest.TestCase):
         self.assertEqual(expect, scoring.display_breakdown(scores_as_dict))
 
     def testNoScores(self):
-        self.display(0, [])
+        self.display({}, [])
 
     def testFullPoints(self):
-        self.display(5, [
-            ('q1', (2, 2)),
-            ('q2', (3, 3)),
+        self.display({core.Test.DEFAULT_PARTNER: 5}, [
+            (('q1', core.Test.DEFAULT_PARTNER), (2, 2)),
+            (('q2', core.Test.DEFAULT_PARTNER), (3, 3)),
         ])
 
     def testPartialPoints(self):
-        self.display(2, [
-            ('q1', (1, 2)),
-            ('q2', (1, 9)),
+        self.display({core.Test.DEFAULT_PARTNER: 2}, [
+            (('q1', core.Test.DEFAULT_PARTNER), (1, 2)),
+            (('q2', core.Test.DEFAULT_PARTNER), (1, 9)),
         ])
 
     def testZeroPoints(self):
-        self.display(0, [
-            ('q1', (0, 2)),
-            ('q2', (0, 9)),
+        self.display({core.Test.DEFAULT_PARTNER: 0}, [
+            (('q1', core.Test.DEFAULT_PARTNER), (0, 2)),
+            (('q2', core.Test.DEFAULT_PARTNER), (0, 9)),
+        ])
+
+    def testPartnerPoints_noDefault(self):
+        self.display({'A': 2, 'B': 7}, [
+            (('q1', 'A'), (2, 2)),
+            (('q2', 'B'), (7, 9)),
+        ])
+
+    def testPartnerPoints_default(self):
+        self.display({core.Test.DEFAULT_PARTNER: 3, 'A': 2, 'B': 4}, [
+            (('q1', 'A'), (2, 2)),
+            (('q2', 'B'), (4, 9)),
+            (('q3', core.Test.DEFAULT_PARTNER), (3, 3)),
         ])
 
 class ScoreTest(unittest.TestCase):
