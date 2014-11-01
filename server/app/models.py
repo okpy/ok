@@ -685,9 +685,12 @@ class AuditLog(Base):
     obj = ndb.KeyProperty()
 
 class Queue(Base):
-    submissions = ndb.KeyProperty(Submission, repeated=True)
     assignment = ndb.KeyProperty(Assignment, required=True)
     assigned_staff = ndb.KeyProperty(User, repeated=True)
+
+    @property
+    def submissions(self):
+        return FinalSubmission.query().filter(FinalSubmission.queue == self.key)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -715,3 +718,14 @@ class Queue(Base):
             'assigned_staff': [val.get().to_json(fields.get('assigned_staff')) for val in self.assigned_staff],
             'id': self.key.id()
         }
+
+class FinalSubmission(Base):
+    assignment = ndb.KeyProperty(Assignment, required=True)
+    group = ndb.KeyProperty(Group, required=True)
+    submission = ndb.KeyProperty(Submission, required=True)
+    published = ndb.BooleanProperty()
+    queue = ndb.KeyProperty(Queue)
+
+    @property
+    def assigned(self):
+        return bool(self.queue)

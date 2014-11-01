@@ -233,7 +233,8 @@ def upgrade_submissions(cursor=None, num_updated=0):
 
 ASSIGN_BATCH_SIZE = 20
 def assign_work(assign_key, cursor=None, num_updated=0):
-    query = ModelProxy.User.query(ModelProxy.User.role == "student")
+    query = ModelProxy.FinalSubmission.query().filter(
+        ModelProxy.FinalSubmission.assignment == assign_key)
 
     queues = list(ModelProxy.Queue.query(
         ModelProxy.Queue.assignment == assign_key))
