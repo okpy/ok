@@ -64,6 +64,8 @@ class Assignment(serialize.Serializable):
 class Test(serialize.Serializable):
     """Represents all suites for a single test in an assignment."""
 
+    DEFAULT_PARTNER = ''
+
     REQUIRED = {
         'names': serialize.SerializeArray(serialize.STR),
         'points': serialize.FLOAT,
@@ -74,6 +76,7 @@ class Test(serialize.Serializable):
         'hidden_params': serialize.DICT,    # Hidden from students.
         'note': serialize.STR,
         'extra': serialize.BOOL_FALSE,
+        'partner': serialize.SerializePrimitive(DEFAULT_PARTNER, str),
     }
 
     def __init__(self, **fields):
