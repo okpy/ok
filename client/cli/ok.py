@@ -173,10 +173,13 @@ def main():
                 log.info('Authenticated with access token %s', access_token)
 
                 msg_list.append(messages)
-                print("Attempting to back up your work on the server")
-                network.dump_to_server(access_token, msg_list,
-                        assignment['name'], args.server, args.insecure,
-                        client.__version__, log, send_all=args.submit)
+                print("Backing up your work...")
+                response = network.dump_to_server(access_token, msg_list,
+                                   assignment['name'], args.server, args.insecure,
+                                   client.__version__, log, send_all=args.submit)
+
+                if response:
+                    print("Back-up successful: https://ok-server.appspot.com/#/submission/{0}".format(response['data']['key']))
 
             except error.URLError as ex:
                 log.warning('on_start messages not sent to server: %s', str(e))
