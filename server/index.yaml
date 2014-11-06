@@ -68,6 +68,21 @@ indexes:
 
 - kind: Submissionvtwo
   properties:
+  - name: assignment
+  - name: submitter
+  - name: tags
+  - name: created
+    direction: desc
+
+- kind: Submissionvtwo
+  properties:
+  - name: assignment
+  - name: tags
+  - name: created
+    direction: desc
+
+- kind: Submissionvtwo
+  properties:
   - name: messages.kind
   - name: created
     direction: desc

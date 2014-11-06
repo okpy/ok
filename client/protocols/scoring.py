@@ -35,9 +35,8 @@ class ScoringProtocol(grading.GradingProtocol):
         points, passed, total = score(test, self.logger, self.args.interactive,
             self.args.verbose, self.args.timeout)
 
-        self.scores[test.name] = (points, test['points'])
+        self.scores[(test.name, test['partner'])] = (points, test['points'])
         return passed, total
-        print()
 
 def display_breakdown(scores):
     """Prints the point breakdown given a dictionary of scores.
@@ -45,16 +44,26 @@ def display_breakdown(scores):
     RETURNS:
     int; the total score for the assignment
     """
+    partner_totals = {}
+
     formatting.underline('Point breakdown')
-    for name, (score, total) in scores.items():
+    for (name, partner), (score, total) in scores.items():
         print(name + ': ' + '{}/{}'.format(score, total))
+        partner_totals[partner] = partner_totals.get(partner, 0) + score
     print()
+    if len(partner_totals) == 1:
+        # If only one partner.
+        print('Total score:')
+        print(partner_totals[core.Test.DEFAULT_PARTNER])
+    else:
+        for partner, total in sorted(partner_totals.items()):
+            if partner == core.Test.DEFAULT_PARTNER:
+                continue
+            print('Partner {} score:'.format(partner))
+            # Add partner-specific score with partner-agnostic score.
+            print(total + partner_totals.get(core.Test.DEFAULT_PARTNER, 0))
 
-    total = sum(score for score, _ in scores.values())
-    print('Total score:')
-    print(total)
-
-    return total
+    return partner_totals
 
 def score(test, logger, interactive=False, verbose=False, timeout=10):
     """Grades all suites for the specified test.

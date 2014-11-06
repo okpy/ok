@@ -28,7 +28,7 @@ ModelProxy = ModelProxy()
 
 def coerce_to_json(data, fields):
     """
-    Coerces |data| to json, using on the allowed |fields|
+    Coerces |data| to json, using only the allowed |fields|
     """
     if hasattr(data, 'to_json'):
         return data.to_json(fields)
@@ -231,11 +231,12 @@ def upgrade_submissions(cursor=None, num_updated=0):
         logging.info(
             'upgrade_submissions complete with %d updates!', num_updated)
 
-def assign_work(assignment, cursor=None, num_updated=0):
+ASSIGN_BATCH_SIZE = 20
+def assign_work(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.User.query(ModelProxy.User.role == "student")
 
     queues = list(ModelProxy.Queue.query(
-        ModelProxy.Queue.assignment == assignment))
+        ModelProxy.Queue.assignment == assign_key))
     if not queues:
         logging.error("Tried to assign work, but no queues existed")
         return
@@ -246,16 +247,24 @@ def assign_work(assignment, cursor=None, num_updated=0):
         kwargs['start_cursor'] = cursor
 
     to_put = 0
-    results, cursor, more = query.fetch_page(BATCH_SIZE, **kwargs)
+    results, cursor, more = query.fetch_page(ASSIGN_BATCH_SIZE, **kwargs)
+    seen = set()
+    for queue in queues:
+        for subm in queue.submissions:
+            seen.add(subm.get().submitter.id())
+
     for user in results:
-        if not user.logged_in:
+        if not user.logged_in or user.key.id() in seen:
             continue
         queues.sort(key=lambda x: len(x.submissions))
 
-        subm = user.get_selected_submission(assignment)
-        if subm:
-            queues[0].submissions.append(subm.key)
-            to_put += 1
+        subm = user.get_selected_submission(assign_key, keys_only=True)
+        if subm and user.is_final_submission(subm, assign_key):
+            subm_got = subm.get()
+            if subm_got.get_messages().get('file_contents'):
+                queues[0].submissions.append(subm)
+                seen.add(user.key.id())
+                to_put += 1
 
     if to_put:
         num_updated += to_put
@@ -264,7 +273,7 @@ def assign_work(assignment, cursor=None, num_updated=0):
             'Put %d entities to Datastore for a total of %d',
             to_put, num_updated)
         deferred.defer(
-            assign_work, assignment, cursor=cursor,
+            assign_work, assign_key, cursor=cursor,
             num_updated=num_updated)
     else:
         logging.debug(

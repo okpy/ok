@@ -308,6 +308,22 @@ class UserAPI(APIResource):
                 'assignment': KeyArg('Assignment')
             }
         },
+        'queues': {
+            'methods': set(['GET'])
+        },
+        'create_staff': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True),
+                'role': Arg(str, required=True),
+            }
+        },
+        'final_submission': {
+            'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
+        }
     }
 
     def new_entity(self, attributes):
@@ -320,11 +336,29 @@ class UserAPI(APIResource):
         entity = self.model.from_dict(attributes)
         return entity
 
-    def invitations(self, user, obj, data):
+    def invitations(self, obj, user, data):
         query = models.Group.query(models.Group.invited_members == user.key)
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
         return list(query)
+
+    def queues(self, obj, user, data):
+        return list(models.Queue.query().filter(
+            models.Queue.assigned_staff == user.key))
+
+    def create_staff(self, obj, user, data):
+        # Must be a staff to create a staff user
+        need = Need("staff")
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        user = models.User.get_or_insert(data['email'].id())
+        user.role = data['role']
+        user.put()
+
+
+    def final_submission(self, obj, user, data):
+        return obj.get_selected_submission(data['assignment'])
 
 
 class AssignmentAPI(APIResource):
@@ -379,6 +413,10 @@ class AssignmentAPI(APIResource):
         return super(AssignmentAPI, self).post(user, data)
 
     def assign(self, obj, user, data):
+        # Todo: Should make this have permissions! 
+        # need = Need('staff')
+        # if not obj.can(user, need, obj):
+        #     raise need.exception()
         deferred.defer(assign_work, obj.key)
 
 
@@ -390,8 +428,21 @@ class SubmitNDBImplementation(object):
         by_name = models.Assignment.name == name
         return list(models.Assignment.query().filter(by_name))
 
-    def create_submission(self, user, assignment, messages):
+    def create_submission(self, user, assignment, messages, submit, submitter):
         """Create submission using user as parent to ensure ordering."""
+        if submit:
+            group = user.groups(assignment.key)
+            members = group[0].members if (group and group[0]) else [user.key]
+            previous = models.Submission.query().filter(
+                models.Submission.submitter.IN(group.members))
+            previous = previous.get(keys_only=True)
+            if previous:
+                raise BadValueError(
+                    "Already have a final submission: {}".format(previous.id()))
+
+        if not user.is_admin:
+            submitter = user.key
+
         db_messages = []
         for kind, message in messages.iteritems():
             if message:
@@ -403,10 +454,12 @@ class SubmitNDBImplementation(object):
             if date:
                 created = parse_date(date)
 
-        submission = models.Submission(submitter=user.key,
+        submission = models.Submission(submitter=submitter,
                                        assignment=assignment.key,
                                        messages=db_messages,
                                        created=created)
+        if submit:
+            submission.tags = [models.Submission.SUBMITTED_TAG]
         submission.put()
 
         return submission
@@ -424,6 +477,8 @@ class SubmissionAPI(APIResource):
             'web_args': {
                 'assignment': Arg(str, required=True),
                 'messages': Arg(None, required=True),
+                'submit': BooleanArg(),
+                'submitter': KeyArg('User')
             }
         },
         'get': {
@@ -470,6 +525,13 @@ class SubmissionAPI(APIResource):
                 'tag': Arg(str, required=True)
             }
         },
+        'score': {
+            'methods': set(["POST"]),
+            'web_args': {
+                'score': Arg(int, required=True),
+                'message': Arg(str, required=True),
+            }
+        }
     }
 
     def get_instance(self, key, user):
@@ -489,6 +551,11 @@ class SubmissionAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
         return obj
+
+    def graded(self, obj, user, data):
+        """
+        Gets the users graded submissions
+        """
 
     def download(self, obj, user, data):
         """
@@ -582,6 +649,16 @@ class SubmissionAPI(APIResource):
         if tag in obj.tags:
             raise BadValueError("Tag already exists")
 
+        if tag == models.Submission.SUBMITTED_TAG:
+            previous = models.Submission.query().filter(
+                models.Submission.assignment == obj.assignment).filter(
+                    models.Submission.submitter == obj.submitter).filter(
+                        models.Submission.tags == models.Submission.SUBMITTED_TAG)
+
+            previous = previous.get(keys_only=True)
+            if previous:
+                raise BadValueError("Only one final submission allowed")
+
         obj.tags.append(tag)
         obj.put()
 
@@ -597,6 +674,20 @@ class SubmissionAPI(APIResource):
         obj.tags.remove(tag)
         obj.put()
 
+    def score(self, obj, user, data):
+        score = models.Score(
+            score=data['score'],
+            message=data['message'],
+            grader=user.key)
+        score.put()
+
+        if 'Composition' not in obj.tags:
+            obj.tags.append('Composition')
+
+        obj.compScore = score.key
+        obj.put()
+        return score
+
     def get_assignment(self, name):
         """Look up an assignment by name or raise a validation error."""
         assignments = self.db.lookup_assignments_by_name(name)
@@ -606,18 +697,19 @@ class SubmissionAPI(APIResource):
             raise BadValueError('Multiple assignments named \'%s\'' % name)
         return assignments[0]
 
-    def submit(self, user, assignment, messages):
+    def submit(self, user, assignment, messages, submit, submitter=None):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
         submission = self.db.create_submission(user, valid_assignment,
-                                               messages)
+                                               messages, submit, submitter)
         return (201, "success", {
             'key': submission.key.id()
         })
 
     def post(self, user, data):
         return self.submit(user, data['assignment'],
-                           data['messages'])
+                           data['messages'], data.get('submit', False),
+                           data.get('submitter'))
     
 
 
@@ -747,6 +839,8 @@ class CourseAPI(APIResource):
         },
         'index': {
         },
+        'get_staff': {
+        },
         'add_staff': {
             'methods': set(['POST']),
             'web_args': {
@@ -782,6 +876,13 @@ class CourseAPI(APIResource):
             user = models.User.get_or_insert(data['staff_member'].id())
             course.staff.append(user.key)
             course.put()
+
+    def get_staff(self, course, user, data):
+        need = Need("staff")
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        return course.staff
 
     def remove_staff(self, course, user, data):
         need = Need("staff")
@@ -930,14 +1031,27 @@ class QueueAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True),
                 'assigned_staff': KeyRepeatedArg('User'),
+                'submissions': KeyRepeatedArg('Submissionvtwo')
             }
         },
         'get': {
         },
+        'put': {
+            'web_args': {
+                'assigned_staff': KeyRepeatedArg('User'),
+                'submissions': KeyRepeatedArg('Submissionvtwo')
+            }
+        },
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assigment'),
-                'assigned_staff': KeyRepeatedArg('User'),
+                'assigned_staff': KeyArg('User'),
             }
         },
     }
+
+    def new_entity(self, attributes):
+        ent = super(QueueAPI, self).new_entity(attributes)
+        for user in ent.assigned_staff:
+            models.User.get_or_insert(user.id())
+        return ent

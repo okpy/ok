@@ -1,40 +1,94 @@
-
-app.controller("CourseModuleController", ["$scope",
-    function ($scope) {
-      $scope.course_name = "CS 61A";
-      $scope.course_desc = "Structure and Interpretation of Computer Programs";
-    }
-  ]);
-
-
-// Assignment Controllers
-app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
+// Admin Sidebar
+app.controller("SidebarCntrl", ['$scope', 'Assignment',
   function($scope, Assignment) {
       Assignment.query(function(response) {
         $scope.assignments = response.results;
       });
+      $scope.course_name = "CS61A Fall 2014"
   }]);
 
-app.controller("AssignmentModuleController", ["$scope", "Assignment",
-    function ($scope, Assignment) {
-      Assignment.query({
-        active: true,
-      }, function(response) {
-        $scope.assignments = response.results;
+// Submission Controllers
+app.controller("SubmissionModuleController", ["$scope", "Submission",
+    function ($scope, Submission) {
+      Submission.query(function(response) {
+        $scope.num_submissions = response.results.length;
       });
     }
-  ]);
+]);
 
+// Assignment Controllers
+app.controller("AssignmentListCtrl", ['$scope', '$http', 'Assignment',
+  function($scope, $http, Assignment) {
+      Assignment.query(function(response) {
+        $scope.assignments = response.results;
+      });
+
+      $scope.assign = function (assignmentId) {
+         // if (confirm('Are you sure you want to assign this to staff? Only submit if you are sure. ')) {
+         //      $http({
+         //          url: '/api/v1/assignment/'+assignmentId+'/assign',
+         //          method: "POST",
+         //          data: { 'message' : 'hello' }
+         //      })
+         // }
+         console.log('Unsupported for now');
+      }
+
+  }]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
     function ($scope, $stateParams, Assignment) {
       $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
     }
   ]);
-
-// Submission Controllers
-app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
+app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
     function ($scope, $state, Submission) {
+      $scope.itemsPerPage = 3;
+      $scope.currentPage = 1;
+      $scope.getPage = function(page) {
+      Submission.query({
+        fields: {
+          'created': true,
+          'db_created': true,
+          'id': true,
+          'submitter': {
+            'id': true
+          },
+          'tags': true,
+          'assignment': {
+            'name': true,
+            'display_name': true,
+            'id': true,
+            'active': true
+          },
+          'messages': {
+            'file_contents': "presence"
+          }
+        },
+        page: page,
+        num_page: $scope.itemsPerPage,
+        "messages.kind": "file_contents"
+      }, function(response) {
+          $scope.submissions = response.data.results;
+          $scope.clicked = false;
+          if (response.data.more) {
+            $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
+          } else {
+            $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
+          }
+        });
+      }
+
+      $scope.pageChanged = function() {
+        $scope.getPage($scope.currentPage);
+      }
+      $scope.getPage(1);
+    }
+  ]);
+
+
+app.controller("SubmissionListCtrl", ['$scope', 'Submission',
+  function($scope, Submission) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
     $scope.getPage = function(page) {
@@ -51,7 +105,6 @@ app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
             'name': true,
             'display_name': true,
             'id': true,
-            'active': true,
           },
           'messages': {
             'file_contents': "presence"
@@ -69,37 +122,11 @@ app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
         }
       });
     }
-      $scope.clicked = false;
-
-      $scope.submitVersion = function(subm) {
-        $scope.clicked = true;
-        Submission.addTag({
-          id: subm,
-          tag: "Submit"
-        },$scope.refreshDash);
-      }
-      $scope.unSubmit = function(subm) {
-        $scope.clicked = true;
-
-        Submission.removeTag({
-          id: subm,
-          tag: "Submit"
-        }, $scope.refreshDash);
-      }
-
-    $scope.refreshDash = function() {
-        $state.go($state.current, {}, {reload: true});
-      }
-
-
-
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
     $scope.getPage(1);
   }]);
-
-
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
   function($scope, $location, $stateParams, $timeout, $anchorScroll, Submission) {
@@ -118,13 +145,13 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
     };
 
     $scope.add = function() {
-        Submission.addTag({
-          id: $stateParams.submissionId,
-          tag: $scope.tagToAdd
-        }, function() {
-          $scope.submission.tags.push($scope.tagToAdd);
-        });
-        $scope.toggle();
+      Submission.addTag({
+        id: $stateParams.submissionId,
+        tag: $scope.tagToAdd
+      }, function() {
+        $scope.submission.tags.push($scope.tagToAdd);
+      });
+      $scope.toggle();
     }
   }]);
 
@@ -144,7 +171,7 @@ app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams',
 // Course Controllers
 app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
-    $scope.courses = Course.query();
+    $scope.courses = Course.query({});
   }]);
 
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
@@ -165,27 +192,115 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
     }
   ]);
 
+
+
+// Staff Controllers
+app.controller("StaffListCtrl", ["$scope", "$stateParams", "Course", "User",
+  function($scope, $stateParams, Course, User) {
+      $scope.members = Course.staff({id: $stateParams.courseId});
+      $scope.roles = ['staff', 'admin', 'user'];
+      $scope.newMember = {
+        role: 'staff'
+      }
+      $scope.save = function () {
+        //Todo: Create user or reassign role of user.
+        //Todo: Also Change User Role.
+      };
+
+  }]);
+
+app.controller("StaffDetailCtrl", ["$scope", "$stateParams", "Course", "User",
+    function ($scope, $stateParams, Course, User) {
+      $scope.course = Course.get({id: $stateParams.courseId});
+      $scope.staff = User.get({id: $stateParams.staffId});
+      $scope.roles = ['staff', 'admin', 'user'];
+      $scope.save = function () {
+
+
+      };
+
+  }]);
+
+app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
+    function ($scope, $stateParams, Course) {
+      alert('hi');
+    }
+  ]);
+
+
 // Diff Controllers
-app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
-  function($scope, $stateParams, Submission, $timeout) {
+app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateParams',  'Submission',  "$sessionStorage", '$timeout',
+  function($scope, $location, $window, $stateParams, Submission, $sessionStorage, $timeout) {
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
+    $scope.storage = $sessionStorage;
+
     $scope.submission = Submission.get({
       fields: {
         created: true,
         compScore: true,
         tags: true,
-        'assignment': {
-          'name': true,
-          'display_name': true,
-          'id': true,
-        },
-        'submitter': {
-          'id': true
-        }
+        message: true
       }
     }, {
       id: $stateParams.submissionId
+    }, function () {
+      if ($scope.submission.compScore == null) {
+        $scope.compScore = null;
+        $scope.compMessage = null;
+      } else {
+        $scope.compScore = $scope.submission.compScore.score;
+        $scope.compMessage = $scope.submission.compScore.message;
+      }
     });
+
+    if ($scope.storage.currentQueue) {
+      var queue = JSON.parse($scope.storage.currentQueue);
+      submissions = [];
+      $scope.queueId = queue['id'];
+      var submDict = queue['submissions']
+      for (var key in submDict) {
+         submissions.push(submDict[key]['id']);
+      }
+      var currSubm = submissions.indexOf(parseInt($stateParams.submissionId));
+
+      $scope.allSubmissions = submissions;
+      $scope.currentPage = currSubm;
+      $scope.totalItems = submissions.length;
+      $scope.prevId = submissions[currSubm-1];
+      $scope.nextId = submissions[currSubm+1];
+
+    } else {
+      $scope.prevId = undefined;
+      $scope.nextId = undefined;
+    }
+
+    $scope.submitGrade = function() {
+        Submission.addScore({
+            id: $stateParams.submissionId,
+            score: $scope.compScore,
+            message: $scope.compMessage
+        }, $scope.nextSubm);
+    }
+
+    // Goes to the next submission 
+    $scope.nextSubm = function () {
+      if ($scope.nextId != undefined) {
+       $location.path('/submission/'+$scope.nextId+'/diff');
+      } else if ($scope.queueId != undefined) {
+        // No more items. Show a success message.
+        $window.swal({ title: "Nice work!", type: 'success',  text: "You've reached the end of the queue!",   timer: 2500 });
+       $location.path('/queue/'+$scope.queueId)
+      } else {
+        $location.path('/queue/');
+      }
+    }
+
+    // Goes back a page.
+    $scope.backPage = function () {
+        $timeout(function() {
+           $window.history.back();;
+        }, 300);
+    }
     $scope.refreshDiff = function() {
         $timeout(function() {
           $scope.diff = Submission.diff({id: $stateParams.submissionId});
@@ -332,19 +447,15 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
 app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
     function ($scope, $stateParams, $window, $timeout, Group) {
       $scope.loadGroup = function() {
-        Group.query({
-            assignment: $stateParams.assignmentId,
-            members: $window.user
-          }, function(groups) {
-            if (groups.length == 1) {
-              $scope.group = groups[0];
-              $scope.inGroup = true;
-            } else {
-              $scope.group = undefined;
-              $scope.inGroup = false;
-            }
+        Group.query({assignment: $stateParams.assignmentId}, function(groups) {
+          if (groups.length == 1) {
+            $scope.group = groups[0];
+            $scope.inGroup = true;
+          } else {
+            $scope.group = undefined;
+            $scope.inGroup = false;
           }
-        );
+        });
       }
       $scope.refreshGroup = function() {
           $timeout(function() {
@@ -355,7 +466,6 @@ app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeou
       $scope.createGroup = function() {
         Group.save({
           assignment: $stateParams.assignmentId,
-          members: $window.user
         }, $scope.refreshGroup);
       }
     }
@@ -500,31 +610,26 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
     }
   ]);
 
-app.controller("LandingPageCtrl", ["$window", "$state",
-    function ($window, $state) {
-      if ($window.user.indexOf("berkeley.edu") == -1) {
-        $window.swal({
-            title: "Is this the right login?",
-            text: "Logging you in with your \"" + $window.user + "\" account...",
-            type: "info",
-            showCancelButton: true,
-            confirmButtonColor: "#DD6B55",
-            confirmButtonText: "Yes - that's correct!",
-            cancelButtonText: "No - log me out",
-            closeOnConfirm: true,
-            closeOnCancel: true
-        }, function(isConfirm) {
-            if (isConfirm) {
-                $window.location.hash = "";
-            } else {
-                $window.location.href = $window.reloginLink;
+app.controller("QueueModuleController", ["$scope", "Queue",
+    function ($scope, Queue) {
+      $scope.queues = Queue.query({
+          "fields": {
+            "submissions": {
+              "id": true,
             }
-        });
-      } else {
-          $window.location.hash = "";
-      }
-    }
-]);
+          }
+      }, function (response) {
+        $scope.num_submissions = 0;
+
+        if (response.length > 0) {
+          for (var i = 0; i < response.length; i++) {
+            $scope.num_submissions += response[i].submissions.length;
+          }
+        } else {
+          $scope.num_submissions = 0;
+        }
+      });
+    }]);
 
 app.controller("QueueListCtrl", ['$scope', 'Queue',
   function($scope, Queue) {
@@ -540,12 +645,67 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
             "last_name": true,
             "role": true
           },
-          "submissions": true
+          "submissions": true,
+          'id': true
         }
     });
   }]);
-app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
-    function ($scope, Queue, $stateParams) {
+
+app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
+  function($scope, Queue, $window, $state) {
+  
+        $scope.queues = Queue.query({
+          "fields": {
+            "assignment": {
+              "id": true,
+              "display_name": true
+            },
+            "assigned_staff": {
+              "id": true,
+              "first_name": true,
+              "last_name": true,
+              "role": true
+            },
+            "submissions": {
+              "id": true,
+            },
+            'id': true
+          },
+          "assigned_staff": $window.user
+      });
+
+  }]);
+
+app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParams", "$sessionStorage",
+    function ($scope, Queue, Submission, $stateParams, $sessionStorage) {
+      $scope.getSubmissions = function(ids) {
+        var submissions = [];
+
+        for (var i = 0; i < ids.length; i++) {
+          Submission.get({
+            "fields": {
+              "submitter": true,
+              "created": true,
+              "assignment": {
+                "display_name": true
+              }, 
+              "tags": true,
+              "compScore": true,
+              "id": true
+            },
+            id: ids[i].id
+          }, function (result) {
+            submissions.push(result);
+            submissions.sort(function(a, b) {
+              return a.id - b.id;
+            });
+          });
+        }
+        return submissions;
+
+      }
+
+      $scope.$storage = $sessionStorage;
       $scope.queue = Queue.get({
         "fields": {
           "assignment": {
@@ -561,10 +721,17 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$stateParams",
           "submissions": {
             "id": true,
             "assignment": true,
+            "created": true,
             "compScore": true
           }
         },
-        'id': $stateParams.queueId
+        id: $stateParams.queueId
+    }, function (result) {
+        result['submissions'].sort(function(a, b) {
+          return a.id - b.id;
+        });
+        $scope.$storage.currentQueue = JSON.stringify(result);
+        $scope.submList = $scope.getSubmissions($scope.queue.submissions);
     });
-  }
-  ]);
+
+  }]);

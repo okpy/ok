@@ -1,6 +1,6 @@
 <div class="box" ng-controller="SubmissionListCtrl" ng-cloak>
 <div class="box-header">
-  <h3 class="box-title" ng-if="submissions.length > 0">Recent Submissions</h3>
+  <h3 class="box-title" ng-if="submissions.length > 0">All Submissions</h3>
   <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
 </div>
 <!-- /.box-header -->
@@ -19,7 +19,8 @@
       <th>Submitter</th>
       <th>Time</th>
       <th style="width: 20%">View Code</th>
-      <th style="width: 15%">Label</th>
+      <th style="width: 15%">Tags</th>
+      <th style="width: 10%">Submit</th>
     </tr>
 
     <tr ng-repeat="submission in submissions">
@@ -38,11 +39,18 @@
           </div>
       </td>    
       <!-- Future Progress Bar -->                 
-      <td>
-        <span ng-repeat="tag in submission.tags" class="badge bg-info">
-          {{tag}}
+      <td >
+        <span class="badge bg-info">{{submission.assignment.display_name}}</span>
+        <span ng-repeat="tag in submission.tags" class="badge bg-blue">
+          {{ tag }}
         </span>
+
       </td>
+      <td ng-show="submission.assignment.active">
+          <button ng-click='submitVersion(submission.id);' ng-disabled="clicked" type="button" class="btn btn-flat btn-success" ng-if="submission.tags.indexOf('Submit') <= -1">Submit</button>
+          <button ng-click='unSubmit(submission.id);' ng-disabled="clicked" type="button" class="btn btn-flat btn-danger" ng-if="submission.tags.indexOf('Submit') > -1">Un-submit</button>
+      </td>
+
     </tr>
   </tbody>
 </table>
