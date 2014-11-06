@@ -325,6 +325,8 @@ class UnlockConsole(object):
             if not correct:
                 print("-- Not quite. Try again! --")
                 print()
+            else:
+                print("OK!")
         self._analytics[self._analytics['current']].append((attempts, correct))
         return student_input
 
