@@ -319,6 +319,8 @@ class UnlockConsole(object):
             if choices:
                 if student_input in choice_map:
                     student_input = normalize(choice_map[student_input])
+                else:
+                    student_input = normalize(student_input)
             correct = self._verify(student_input, answer)
             if not correct:
                 print("-- Not quite. Try again! --")
