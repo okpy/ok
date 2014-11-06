@@ -14,7 +14,7 @@ from app import models, app
 from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, assign_work, parse_date
+from app.utils import paginate, filter_query, create_zip, assign_work, parse_date, assign_submission
 
 from app.exceptions import *
 
@@ -461,6 +461,7 @@ class SubmitNDBImplementation(object):
         if submit:
             submission.tags = [models.Submission.SUBMITTED_TAG]
         submission.put()
+        deferred.defer(assign_submission, submission.key.id())
 
         return submission
 

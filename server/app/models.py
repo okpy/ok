@@ -156,6 +156,15 @@ class User(Base):
             query = query.filter(Group.assignment == assignment)
         return query
 
+    def get_group(self, assignment):
+        group = self.groups(assignment).get()
+        if not group:
+            group = Group(
+                members=[self.key],
+                assignment=assignment)
+            group.put()
+        return group
+
     ## Utilities for submission grading and selection
 
     def get_selected_submission(self, assign_key, keys_only=False):
@@ -723,7 +732,7 @@ class FinalSubmission(Base):
     assignment = ndb.KeyProperty(Assignment, required=True)
     group = ndb.KeyProperty(Group, required=True)
     submission = ndb.KeyProperty(Submission, required=True)
-    published = ndb.BooleanProperty()
+    published = ndb.BooleanProperty(default=False)
     queue = ndb.KeyProperty(Queue)
 
     @property

@@ -87,10 +87,16 @@ def seed():
 
 
     def make_queue(assignment, submissions, asignee):
-        return models.Queue(
-            submissions=submissions,
+        queue = models.Queue(
             assignment=assignment.key,
             assigned_staff=[asignee.key])
+        queue = queue.put()
+        for subm in submissions:
+            fs = models.FinalSubmission(
+                assignment=assignment.key,
+                group=subm.submitter.get().get_group(assignment.key),
+                submission=subm)
+            fs.put()
 
 
     # Start putting things in the DB. 
@@ -204,9 +210,7 @@ def seed():
     # Seed a queue. This should be auto-generated. 
     
     q = make_queue(assign, [], c)
-    q.put()
     q = make_queue(assign, [], k)
-    q.put()
 
     # utils.assign_work(assign.key)
 
