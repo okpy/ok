@@ -430,7 +430,8 @@ class SubmitNDBImplementation(object):
 
     def create_submission(self, user, assignment, messages, submit, submitter):
         """Create submission using user as parent to ensure ordering."""
-        if submit:
+        if submit:            
+            submitter = user.key
             group = user.groups(assignment.key)
             members = group[0].members if (group and group[0]) else [user.key]
             previous = models.Submission.query().filter(
@@ -442,6 +443,7 @@ class SubmitNDBImplementation(object):
 
         if not user.is_admin:
             submitter = user.key
+        # TODO - Choose member of group if the user is an admin. 
 
         db_messages = []
         for kind, message in messages.iteritems():
