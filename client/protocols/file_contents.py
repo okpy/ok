@@ -9,6 +9,8 @@ class FileContents(protocol.Protocol):
     def on_start(self):
         """Find all source files and return their complete contents."""
         contents = {}
+        if self.args.submit:
+            contents['submit'] = True
         for path in self.assignment['src_files']:
             key = os.path.normpath(os.path.split(path)[1])
             with open(path, 'r', encoding='utf-8') as lines:

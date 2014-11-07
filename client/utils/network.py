@@ -64,20 +64,23 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
     stop_time = datetime.datetime.now() + datetime.timedelta(milliseconds=TIMEOUT)
     initial_length = len(msg_list)
     retries = RETRY_LIMIT
+    first_response = None
     while msg_list:
         if not send_all and datetime.datetime.now() > stop_time:
-            break
+            return
         message = msg_list[-1]
         try:
             response = send_to_server(access_token, message, name, server, version, log, insecure)
 
             if response:
+                if not first_response:
+                    first_response = response
                 msg_list.pop()
             elif retries > 0:
                 retries -= 1
             else:
                 print("Submission failed. Please check your network connection and try again")
-                break
+                return
 
             if send_all:
                 print("Submitting project... {0}% complete".format(100 - round(len(msg_list)*100/initial_length), 2))
@@ -91,7 +94,10 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
             log.warning('URLError: %s', str(ex))
         except socket.timeout as ex:
             log.warning("socket.timeout: %s", str(ex))
-    return
+
+    # Assumption is that msg_list is ordered in chronogical order of creation. The last item in the list
+    # is the stuff from this run, so the response from there contains the id that we can then display.
+    return first_response
 
 def server_timer():
     """Timeout for the server."""
