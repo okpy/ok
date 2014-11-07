@@ -114,6 +114,9 @@ def authenticate(force=False):
             self.end_headers()
             self.wfile.write(bytes(SUCCESS_HTML, "utf-8"))
 
+        def log_message(self, format, *args):
+            return
+
     server_address = (host_name, port_number)
     httpd = http.server.HTTPServer(server_address, CodeHandler)
     httpd.handle_request()
