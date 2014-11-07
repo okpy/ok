@@ -94,6 +94,9 @@ def dump_to_server(access_token, msg_list, name, server, insecure, version, log,
             log.warning('URLError: %s', str(ex))
         except socket.timeout as ex:
             log.warning("socket.timeout: %s", str(ex))
+
+    # Assumption is that msg_list is ordered in chronogical order of creation. The last item in the list
+    # is the stuff from this run, so the response from there contains the id that we can then display.
     return first_response
 
 def server_timer():
