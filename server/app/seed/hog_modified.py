@@ -21,6 +21,7 @@ def roll_dice(num_rolls, dice=six_sided):
     assert num_rolls > 0, 'Must roll at least once.'
     "*** YOUR CODE HERE ***"
     print("IM PUTTING CODE HERE :(")
+    print("I'm testing an em-dash —")
 
 def take_turn(num_rolls, opponent_score, dice=six_sided):
     """Simulate a turn rolling NUM_ROLLS dice, which may be 0 (Free bacon).
