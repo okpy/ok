@@ -660,6 +660,8 @@ class SubmissionAPI(APIResource):
             previous = previous.get(keys_only=True)
             if previous:
                 raise BadValueError("Only one final submission allowed")
+                # Why not remove the tag from previous submission? 
+                # previous.tags.remove(models.Submission.SUBMITTED_TAG)
 
         obj.tags.append(tag)
         obj.put()
