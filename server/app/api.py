@@ -567,10 +567,7 @@ class SubmissionAPI(APIResource):
         if 'file_contents' not in messages:
             raise BadValueError("Submission has no contents to download")
         file_contents = messages['file_contents']
-        try:
-            response = make_response(create_zip(file_contents))
-        except:
-            response = make_response(create_zip(file_contents.decode('utf-8')))
+        response = make_response(create_zip(file_contents.decode('utf-8')))
         
         response.headers["Content-Disposition"] = (
             "attachment; filename=submission-%s.zip" % str(obj.created))
@@ -705,6 +702,10 @@ class SubmissionAPI(APIResource):
     def submit(self, user, assignment, messages, submit, submitter=None):
         """Process submission messages for an assignment from a user."""
         valid_assignment = self.get_assignment(assignment)
+
+        if submitter is None:
+            submitter = user.key
+
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
         return (201, "success", {
