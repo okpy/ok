@@ -85,7 +85,8 @@ class Base(ndb.Model):
             elif isinstance(value, list) and len(value) > 0 and isinstance(value[0], ndb.Key):
                 new_list = []
                 for value in value:
-                    if not isinstance(fields.get(key), dict):
+                    fields_key = fields.get(key)
+                    if fields_key and not isinstance(fields_key, dict):
                         if fields.get(key):
                             new_list.append(value)
                     else:
