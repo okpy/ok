@@ -739,3 +739,19 @@ class FinalSubmission(Base):
     @property
     def assigned(self):
         return bool(self.queue)
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        if not user.logged_in:
+            return False
+
+        if action == "index":
+            if user.is_admin:
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
+        return False
