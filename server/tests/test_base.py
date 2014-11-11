@@ -48,6 +48,7 @@ class BaseTestCase(unittest.TestCase): #pylint: disable=no-init
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_user_stub()
         self.testbed.init_memcache_stub()
+        self.testbed.init_taskqueue_stub()
 
     def tearDown(self): #pylint: disable=invalid-name, missing-docstring
         self.testbed.deactivate()
