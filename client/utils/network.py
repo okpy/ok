@@ -16,6 +16,13 @@ def send_to_server(access_token, messages, name, server, version, log,
         'assignment': name,
         'messages': messages,
     }
+
+    # Hack for server submissions.
+    if 'file_contents' in messages:
+        data['submit'] = messages['file_contents']['submit']
+    else:
+        data['submit'] = False
+
     try:
         prefix = "http" if insecure else "https"
         address = prefix + '://' + server + '/api/v1/submission'
