@@ -432,6 +432,7 @@ class SubmitNDBImplementation(object):
         """Create submission using user as parent to ensure ordering."""
         if not user.is_admin:
             submitter = user.key
+        # TODO - Choose member of group if the user is an admin. 
 
         db_messages = []
         for kind, message in messages.iteritems():

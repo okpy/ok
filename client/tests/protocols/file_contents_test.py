@@ -20,6 +20,5 @@ class TestFileContentsProtocol(unittest.TestCase):
 
     def test_on_start(self):
         contents = self.proto.on_start()
-        self.assertEqual(1, len(contents))
         self.assertIn('hw1.py', contents)
         self.assertIn('def square(x):', contents['hw1.py'])
