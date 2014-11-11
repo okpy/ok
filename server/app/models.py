@@ -147,7 +147,7 @@ class User(Base):
     @property
     def courses(self):
         return [group.assignment.get().course for group in self.groups()]
-        
+
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:

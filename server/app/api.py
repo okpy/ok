@@ -430,16 +430,6 @@ class SubmitNDBImplementation(object):
 
     def create_submission(self, user, assignment, messages, submit, submitter):
         """Create submission using user as parent to ensure ordering."""
-        if submit:
-            group = user.groups(assignment.key)
-            members = group[0].members if (group and group[0]) else [user.key]
-            previous = models.Submission.query().filter(
-                models.Submission.submitter.IN(group.members))
-            previous = previous.get(keys_only=True)
-            if previous:
-                raise BadValueError(
-                    "Already have a final submission: {}".format(previous.id()))
-
         if not user.is_admin:
             submitter = user.key
 
