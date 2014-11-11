@@ -14,7 +14,7 @@ from app import models, app
 from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, assign_work, parse_date
+from app.utils import paginate, filter_query, create_zip, assign_work, parse_date, assign_submission
 
 from app.exceptions import *
 
@@ -430,17 +430,6 @@ class SubmitNDBImplementation(object):
 
     def create_submission(self, user, assignment, messages, submit, submitter):
         """Create submission using user as parent to ensure ordering."""
-        if submit:            
-            submitter = user.key
-            group = user.groups(assignment.key)
-            members = group[0].members if (group and group[0]) else [user.key]
-            previous = models.Submission.query().filter(
-                models.Submission.submitter.IN(group.members))
-            previous = previous.get(keys_only=True)
-            if previous:
-                raise BadValueError(
-                    "Already have a final submission: {}".format(previous.id()))
-
         if not user.is_admin:
             submitter = user.key
         # TODO - Choose member of group if the user is an admin. 
@@ -463,6 +452,7 @@ class SubmitNDBImplementation(object):
         if submit:
             submission.tags = [models.Submission.SUBMITTED_TAG]
         submission.put()
+        deferred.defer(assign_submission, submission.key.id())
 
         return submission
 

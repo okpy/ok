@@ -11,7 +11,6 @@ from flask import render_template, session, request, Response, redirect, url_for
 
 from google.appengine.api import users
 from google.appengine.ext import deferred
-from google.appengine.ext import ndb
 
 from app import app
 from app import api
@@ -61,14 +60,15 @@ def admin():
     else:
         logging.info("Staff Login Attempt from %s", user.email())
         userobj = models.User.get_by_id(user.email())
-        if userobj.is_admin: 
+        if userobj.is_admin:
             logging.info("Staff Login Success from %s", user.email())
             params["user"] = {'email': user.email()}
             params["admin"] = {'email': user.email()}
             params['users_link'] = users.create_logout_url('/')
             params['users_title'] = "Log Out"
             params['relogin_link'] = users.create_logout_url(
-                force_account_chooser(users.create_login_url('/#/loginLanding')))
+                force_account_chooser(
+                    users.create_login_url('/#/loginLanding')))
             return render_template("admin.html", **params)
         else:
             logging.info("Staff Login Failure from %s", user.email())
@@ -77,7 +77,7 @@ def admin():
 @app.route("/upgrade")
 def upgrade():
     all_count = models.OldSubmission.query().count()
-    coverted_count = models.OldSubmission.query().filter(
+    converted_count = models.OldSubmission.query().filter(
         models.OldSubmission.converted == True).count()
     return "all {} converted {}".format(all_count, converted_count), 200
 

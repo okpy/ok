@@ -147,7 +147,7 @@ class User(Base):
     @property
     def courses(self):
         return [group.assignment.get().course for group in self.groups()]
-        
+
     def groups(self, assignment=None):
         query = Group.query(Group.members == self.key)
         if assignment:
@@ -155,6 +155,15 @@ class User(Base):
                 assignment = assignment.key
             query = query.filter(Group.assignment == assignment)
         return query
+
+    def get_group(self, assignment):
+        group = self.groups(assignment).get()
+        if not group:
+            group = Group(
+                members=[self.key],
+                assignment=assignment)
+            group.put()
+        return group
 
     ## Utilities for submission grading and selection
 
@@ -685,9 +694,12 @@ class AuditLog(Base):
     obj = ndb.KeyProperty()
 
 class Queue(Base):
-    submissions = ndb.KeyProperty(Submission, repeated=True)
     assignment = ndb.KeyProperty(Assignment, required=True)
     assigned_staff = ndb.KeyProperty(User, repeated=True)
+
+    @property
+    def submissions(self):
+        return FinalSubmission.query().filter(FinalSubmission.queue == self.key)
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -715,3 +727,14 @@ class Queue(Base):
             'assigned_staff': [val.get().to_json(fields.get('assigned_staff')) for val in self.assigned_staff],
             'id': self.key.id()
         }
+
+class FinalSubmission(Base):
+    assignment = ndb.KeyProperty(Assignment, required=True)
+    group = ndb.KeyProperty(Group, required=True)
+    submission = ndb.KeyProperty(Submission, required=True)
+    published = ndb.BooleanProperty(default=False)
+    queue = ndb.KeyProperty(Queue)
+
+    @property
+    def assigned(self):
+        return bool(self.queue)

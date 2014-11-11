@@ -233,7 +233,8 @@ def upgrade_submissions(cursor=None, num_updated=0):
 
 ASSIGN_BATCH_SIZE = 20
 def assign_work(assign_key, cursor=None, num_updated=0):
-    query = ModelProxy.User.query(ModelProxy.User.role == "student")
+    query = ModelProxy.FinalSubmission.query().filter(
+        ModelProxy.FinalSubmission.assignment == assign_key)
 
     queues = list(ModelProxy.Queue.query(
         ModelProxy.Queue.assignment == assign_key))
@@ -279,6 +280,28 @@ def assign_work(assign_key, cursor=None, num_updated=0):
         logging.debug(
             'assign_work complete with %d updates!', num_updated)
 
+def assign_submission(subm_id):
+    subm = ModelProxy.Submission.get_by_id(subm_id)
+    assign_key = subm.assignment
+
+    if not subm.get_messages().get('file_contents'):
+        logging.info("Submission had no file_contents, not processing")
+        return
+
+    group = subm.submitter.get().get_group(assign_key)
+
+    FS = ModelProxy.FinalSubmission
+    current = FS.query()
+    current = current.filter(FS.assignment == assign_key)
+    current = current.filter(FS.group == group.key)
+    current = current.get()
+    if not current:
+        current = FS(
+            assignment=assign_key,
+            group=group.key)
+
+    current.submission = subm.key
+    current.put()
 
 def parse_date(date):
     try:
