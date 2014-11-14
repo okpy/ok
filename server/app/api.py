@@ -557,8 +557,12 @@ class SubmissionAPI(APIResource):
         if 'file_contents' not in messages:
             raise BadValueError("Submission has no contents to download")
         file_contents = messages['file_contents']
-        response = make_response(create_zip(file_contents.decode('utf-8')))
         
+        try:
+            response = make_response(create_zip(file_contents))
+        except:
+            response = make_response(create_zip(file_contents.decode('utf-8')))
+
         response.headers["Content-Disposition"] = (
             "attachment; filename=submission-%s.zip" % str(obj.created))
         response.headers["Content-Type"] = "application/zip"
