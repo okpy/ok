@@ -14,7 +14,8 @@ from app import models, app
 from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, assign_work, parse_date, assign_submission
+from app.utils import paginate, filter_query, create_zip
+from app.utils import assign_work, parse_date, assign_submission
 
 from app.exceptions import *
 
@@ -407,9 +408,11 @@ class AssignmentAPI(APIResource):
     def post(self, user, data):
         data['creator'] = user.key
         # check if there is a duplicate assignment
-        assignments = list(models.Assignment.query(models.Assignment.name == data['name']))
+        assignments = list(
+            models.Assignment.query(models.Assignment.name == data['name']))
         if len(assignments) > 0:
-            raise BadValueError("assignment with name %s exists already" % data["name"])
+            raise BadValueError(
+                "assignment with name %s exists already" % data["name"])
         return super(AssignmentAPI, self).post(user, data)
 
     def assign(self, obj, user, data):
@@ -788,7 +791,8 @@ class VersionAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
         if not obj.current_version:
-            raise BadValueError("Invalid version resource. Contact an administrator.")
+            raise BadValueError(
+                "Invalid version resource. Contact an administrator.")
         return obj.current_version
 
     def download(self, obj, user, data):
@@ -808,7 +812,8 @@ class VersionAPI(APIResource):
             raise need.exception()
         current_version = data['version']
         if current_version not in obj.versions:
-            raise BadValueError("Invalid version. Cannot update to current.")
+            raise BadValueError(
+                "Invalid version. Cannot update to current.")
         obj.current_version = current_version
         obj.put()
 
@@ -943,9 +948,11 @@ class GroupAPI(APIResource):
                 current_group = list(user.groups(data['assignment']))
 
                 if len(current_group) == 1:
-                    raise BadValueError("{} already in a group".format(user_key.id()))
+                    raise BadValueError(
+                        "{} already in a group".format(user_key.id()))
                 if len(current_group) > 1:
-                    raise BadValueError("{} in multiple groups".format(user_key.id()))
+                    raise BadValueError(
+                        "{} in multiple groups".format(user_key.id()))
             else:
                 models.User.get_or_insert(user_key.id())
 
@@ -1046,7 +1053,7 @@ class QueueAPI(APIResource):
         },
         'index': {
             'web_args': {
-                'assignment': KeyArg('Assigment'),
+                'assignment': KeyArg('Assignment'),
                 'assigned_staff': KeyArg('User'),
             }
         },

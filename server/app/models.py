@@ -700,7 +700,8 @@ class Queue(Base):
 
     @property
     def submissions(self):
-        return FinalSubmission.query().filter(FinalSubmission.queue == self.key)
+        return [fs.submission for fs in
+            FinalSubmission.query().filter(FinalSubmission.queue == self.key)]
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
