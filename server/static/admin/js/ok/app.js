@@ -19,3 +19,18 @@ var indexOf = function(needle) {
 
     return indexOf.call(this, needle);
 };
+
+// Customize the time format. 
+moment.locale('en', {
+    // customizations
+    calendar : {
+        lastDay : '[Yesterday at] LT',
+        sameDay : '[Today at] LT',
+        nextDay : '[Tomorrow at] LT',
+        lastWeek : '[Last] dddd [at] LT',
+        nextWeek : 'dddd [at] LT',
+        sameElse : 'L [at] LT'
+    }
+});
+
+
