@@ -6,6 +6,7 @@ import json
 def seed():
     import os
     import datetime
+    import random
     from google.appengine.ext import ndb
 
     def make_fake_course(creator):
@@ -62,6 +63,8 @@ def seed():
 
 
     def make_fake_submission(assignment, submitter):
+        sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
+
         with open('app/seed/hog_modified.py') as fp:
             messages = {}
             messages['file_contents'] = {
@@ -74,7 +77,7 @@ def seed():
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
-            created=datetime.datetime.now())
+            created=sdate)
 
     def make_version(current_version):
         return models.Version(
