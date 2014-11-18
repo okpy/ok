@@ -9,6 +9,8 @@ analysis of student progress based on logging sent from the client script.
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
+[![Build Status](https://travis-ci.org/Cal-CS-61A-Staff/ok.svg?branch=master)](https://travis-ci.org/Cal-CS-61A-Staff/ok)
+
 Installation
 -------------
 * Clone this repo
