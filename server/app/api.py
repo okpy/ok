@@ -25,6 +25,7 @@ from google.appengine.ext.ndb import stats
 
 parser = FlaskParser()
 
+
 def parse_json_field(field):
     if not field[0] == '{':
         if field == "false":
@@ -70,6 +71,7 @@ def KeyRepeatedArg(klass, **kwds):
         return [ndb.Key(klass, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
 
+
 def BooleanArg(**kwargs):
     def parse_bool(arg):
         if isinstance(arg, bool):
@@ -78,10 +80,13 @@ def BooleanArg(**kwargs):
             return False
         if arg == "true":
             return True
-        raise BadValueError("malformed boolean %s: either 'true' or 'false'" % arg)
+        raise BadValueError(
+            "malformed boolean %s: either 'true' or 'false'" % arg)
     return Arg(None, use=parse_bool, **kwargs)
 
+
 class APIResource(View):
+
     """The base class for API resources.
 
     Set the model for each subclass.
@@ -270,7 +275,8 @@ class APIResource(View):
         return query_results
 
     def statistics(self):
-        stat = stats.KindStat.query(stats.KindStat.kind_name == self.model.__name__).get()
+        stat = stats.KindStat.query(
+            stats.KindStat.kind_name == self.model.__name__).get()
         if stat:
             return {
                 'total': stat.count
@@ -279,6 +285,7 @@ class APIResource(View):
 
 
 class UserAPI(APIResource):
+
     """The API resource for the User Object"""
     model = models.User
     key_type = str
@@ -357,12 +364,12 @@ class UserAPI(APIResource):
         user.role = data['role']
         user.put()
 
-
     def final_submission(self, obj, user, data):
         return obj.get_selected_submission(data['assignment'])
 
 
 class AssignmentAPI(APIResource):
+
     """The API resource for the Assignment Object"""
     model = models.Assignment
 
@@ -416,7 +423,7 @@ class AssignmentAPI(APIResource):
         return super(AssignmentAPI, self).post(user, data)
 
     def assign(self, obj, user, data):
-        # Todo: Should make this have permissions! 
+        # Todo: Should make this have permissions!
         # need = Need('staff')
         # if not obj.can(user, need, obj):
         #     raise need.exception()
@@ -424,6 +431,7 @@ class AssignmentAPI(APIResource):
 
 
 class SubmitNDBImplementation(object):
+
     """Implementation of DB calls required by submission using Google NDB"""
 
     def lookup_assignments_by_name(self, name):
@@ -435,7 +443,7 @@ class SubmitNDBImplementation(object):
         """Create submission using user as parent to ensure ordering."""
         if not user.is_admin:
             submitter = user.key
-        # TODO - Choose member of group if the user is an admin. 
+        # TODO - Choose member of group if the user is an admin.
 
         db_messages = []
         for kind, message in messages.iteritems():
@@ -461,6 +469,7 @@ class SubmitNDBImplementation(object):
 
 
 class SubmissionAPI(APIResource):
+
     """The API resource for the Submission Object"""
     model = models.Submission
     diff_model = models.SubmissionDiff
@@ -560,11 +569,12 @@ class SubmissionAPI(APIResource):
         if 'file_contents' not in messages:
             raise BadValueError("Submission has no contents to download")
         file_contents = messages['file_contents']
-        
-        try:
-            response = make_response(create_zip(file_contents))
-        except:
-            response = make_response(create_zip(file_contents.decode('utf-8')))
+
+        # Need to encode every file before it is.
+        for key in file_contents.keys():
+            file_contents[key] = file_contents[key].encode('utf-8')
+
+        response = make_response(create_zip(file_contents))
 
         response.headers["Content-Disposition"] = (
             "attachment; filename=submission-%s.zip" % str(obj.created))
@@ -580,6 +590,8 @@ class SubmissionAPI(APIResource):
             raise BadValueError("Submission has no contents to diff")
 
         file_contents = messages['file_contents']
+        for key in file_contents.keys():
+            file_contents[key] = file_contents[key].encode('utf-8')
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
@@ -631,7 +643,8 @@ class SubmissionAPI(APIResource):
         if not diff_obj:
             raise BadValueError("Diff doesn't exist yet")
 
-        comment = models.Comment.get_by_id(data['comment'].id(), parent=diff_obj.key)
+        comment = models.Comment.get_by_id(
+            data['comment'].id(), parent=diff_obj.key)
         if not comment:
             raise BadKeyError(data['comment'])
         need = Need('delete')
@@ -648,17 +661,16 @@ class SubmissionAPI(APIResource):
         if tag in obj.tags:
             raise BadValueError("Tag already exists")
 
-        if tag == models.Submission.SUBMITTED_TAG:
+        submit_tag = models.Submission.SUBMITTED_TAG
+        if tag == submit_tag:
             previous = models.Submission.query().filter(
                 models.Submission.assignment == obj.assignment).filter(
                     models.Submission.submitter == obj.submitter).filter(
-                        models.Submission.tags == models.Submission.SUBMITTED_TAG)
+                        models.Submission.tags == submit_tag)
 
             previous = previous.get(keys_only=True)
             if previous:
                 raise BadValueError("Only one final submission allowed")
-                # Why not remove the tag from previous submission? 
-                # previous.tags.remove(models.Submission.SUBMITTED_TAG)
 
         obj.tags.append(tag)
         obj.put()
@@ -715,7 +727,6 @@ class SubmissionAPI(APIResource):
         return self.submit(user, data['assignment'],
                            data['messages'], data.get('submit', False),
                            data.get('submitter'))
-    
 
 
 class VersionAPI(APIResource):
@@ -804,7 +815,6 @@ class VersionAPI(APIResource):
         else:
             download_link = obj.download_link(data['version'])
         return redirect(download_link)
-
 
     def set_current(self, obj, user, data):
         need = Need('update')
@@ -902,6 +912,7 @@ class CourseAPI(APIResource):
     def assignments(self, course, user, data):
         return list(course.assignments)
 
+
 class GroupAPI(APIResource):
     model = models.Group
 
@@ -959,7 +970,6 @@ class GroupAPI(APIResource):
         group = self.new_entity(data)
         group.put()
 
-
     def add_member(self, group, user, data):
         # can only add a member if you are a member
         need = Need('member')
@@ -980,7 +990,7 @@ class GroupAPI(APIResource):
             user=user.key,
             description="Added member {} to group".format(data['member']),
             obj=group.key
-            )
+        )
         audit_log_message.put()
 
     def remove_member(self, group, user, data):
@@ -1006,7 +1016,7 @@ class GroupAPI(APIResource):
             user=user.key,
             obj=group.key,
             description=description
-            )
+        )
         audit_log_message.put()
 
     def accept_invitation(self, group, user, data):
@@ -1031,7 +1041,9 @@ class GroupAPI(APIResource):
         group.invited_members.remove(user.key)
         group.put()
 
+
 class QueueAPI(APIResource):
+
     """The API resource for the Assignment Object"""
     model = models.Queue
 

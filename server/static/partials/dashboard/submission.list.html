@@ -1,8 +1,8 @@
 <div class="box" ng-controller="SubmissionDashboardController" ng-cloak>
 <div class="box-header">
-  <h3 class="box-title" ng-if="submissions.length > 0">Recent Submissions </h3>
+  <h3 class="box-title" ng-if="submissions.length > 0">Recent Backups </h3>
 
-  <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
+  <h4 class="box-title" ng-if="submissions.length == 0" >No backups found</h3>
   <div class="box-tools">
     <ul class="pagination pagination-sm no-margin pull-right">
       <a ui-sref="submission.list" class="btn btn-default">View All</a>
@@ -23,12 +23,13 @@
       <th style="width: 10px">Assignment</th>
       <th>Submitter</th>
       <th>Time</th>
-      <th style="width: 20%">View Code</th>
       <th style="width: 15%">Tags</th>
+      <th style="width: 20%">View Code</th>
+
 <!--       <th style="width: 10%">Submit</th> -->
     </tr>
 
-    <tr ng-repeat="submission in submissions">
+    <tr ng-repeat="submission in submissions" ng-if='submission.messages.file_contents'>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
       </td>
@@ -36,26 +37,16 @@
       <td>
         {{submission.created | amCalendar}}
       </td>
-      <td>
-          <div class="btn-group download-btn-group">
-              <a ui-sref='submission.detail({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">View</a>
-              <a href='/api/v1/submission/{{submission.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
-              <a ui-sref='submission.diff({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">Diff</a>
-          </div>
-      </td>    
       <!-- Future Progress Bar -->                 
       <td >
         <span class="badge bg-info">{{submission.assignment.display_name}}</span>
         <span ng-repeat="tag in submission.tags" class="badge bg-blue">
           {{ tag }}
         </span>
-
       </td>
-<!--       <td ng-show="submission.assignment.active == true">
-          <button ng-click='submitVersion(submission.id);' ng-disabled="clicked" type="button" class="btn btn-flat btn-success" ng-if="submission.tags.indexOf('Submit') <= -1">Submit</button>
-          <button ng-click='unSubmit(submission.id);' ng-disabled="clicked" type="button" class="btn btn-flat btn-danger" ng-if="submission.tags.indexOf('Submit') > -1">Un-submit</button>
-      </td>
- -->
+      <td>
+          <a ui-sref='submission.diff({submissionId:submission.id})' type="button" class="btn btn-flat btn-block btn-info">View Code</a>
+      </td>    
     </tr>
 </table>
 

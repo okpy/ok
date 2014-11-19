@@ -12,8 +12,10 @@
     <th>Course</th>
     <th>Due Date</th>
     <!-- Future Progress Bar --> 
-    <th>Points</th>
-    <th style="width: 15%">Label</th>
+    <th>Possible Points</th>
+    <th style="width: 15%">Tags</th>
+    <th>Final Submission</th>
+
   </tr>
 
     <tr ng-repeat="assignment in assignments">
@@ -27,9 +29,16 @@
         {{assignment.due_date | amCalendar}}
       </td>
       <td>{{assignment.points}}</td>
+
       <td>
         <span class="badge bg-info">{{assignment.display_name}}</span>
       </td>
+      <td>
+          <div ng-show="assignment.finalsub != undefined">
+              <a ui-sref='submission.diff({submissionId:assignment.finalsub})' type="button" class="btn btn-flat btn-block btn-info">View Submission</a>
+          </div>           
+          <span class="badge bg-yellow" ng-show="assignment.finalsub == undefined" > No Final Submission Found </span> 
+       </td>
 
         <!-- Future Progress Bar -->                                         
         </tr>

@@ -8,11 +8,27 @@ app.controller("CourseModuleController", ["$scope",
 
 
 // Assignment Controllers
-app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
+app.controller("AssignmentListCtrl", ['$scope', 'Assignment', 'User', '$timeout',
+  function($scope, Assignment, User, $timeout) {
       Assignment.query(function(response) {
         $scope.assignments = response.results;
+        $scope.finalsubs = [];
+        for (var i = 0; i < $scope.assignments.length; i++) {
+              $scope.finalsubs[i] = User.finalsub({
+                assignment: $scope.assignments[i].id
+              });
+        }
+        $timeout(function() {
+
+        for (var i = 0; i < $scope.finalsubs.length; i++) {
+            if ($scope.finalsubs[i]) {
+              $scope.assignments[i].finalsub = $scope.finalsubs[i].id;
+            }
+        }
+        }, 500);
+
       });
+
   }]);
 
 app.controller("AssignmentModuleController", ["$scope", "Assignment",
@@ -99,8 +115,6 @@ app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
     $scope.getPage(1);
   }]);
 
-
-
 app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
   function($scope, $location, $stateParams, $timeout, $anchorScroll, Submission) {
     $scope.tagToAdd = "";
@@ -141,6 +155,7 @@ app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams',
       }
   }]);
 
+
 // Course Controllers
 app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
@@ -171,8 +186,10 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
     $scope.submission = Submission.get({
       fields: {
+        id: true,
         created: true,
         compScore: true,
+        db_created: true,
         tags: true,
         'assignment': {
           'name': true,
@@ -180,7 +197,8 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '
           'id': true,
         },
         'submitter': {
-          'id': true
+          'id': true,
+          'email': true,
         }
       }
     }, {
