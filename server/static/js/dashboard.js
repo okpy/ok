@@ -49,7 +49,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var dashboard = {
       name: 'dashboard',
       url: '/',
-      templateUrl: '/static/partials/dashboard/dashboard.html',
+      templateUrl: '/static/partials/dashboard/dashboard.html?cache=0',
     }
 
     var submissions = {
@@ -90,7 +90,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var assignmentList = {
       name: 'assignment.list',
       url: '/',
-      templateUrl: '/static/partials/common/assignment.list.html',
+      templateUrl: '/static/partials/common/assignment.list.html?cache=0',
       controller: "AssignmentListCtrl"
     }
 
