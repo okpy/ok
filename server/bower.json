@@ -43,7 +43,8 @@
     "jquery.tablesorter": ">=2.17.8",
     "ionicons": ">=1.4.0",
     "sweetalert": "~0.3.1",
-    "ngstorage": "~0.3.0"
+    "ngstorage": "~0.3.0",
+    "moment-timezone": "~0.2.5"
   },
   "devDependencies": {
     "jquery-ui": ">=1.10.3",

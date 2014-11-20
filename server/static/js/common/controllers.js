@@ -70,7 +70,7 @@ app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
             'active': true,
           },
           'messages': {
-            'file_contents': "presence"
+            'file_contents': true
           }
         },
         page: page,
@@ -199,7 +199,8 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '
         'submitter': {
           'id': true,
           'email': true,
-        }
+        },
+        'messages': true,
       }
     }, {
       id: $stateParams.submissionId

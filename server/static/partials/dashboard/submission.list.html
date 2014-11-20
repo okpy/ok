@@ -40,6 +40,7 @@
       <!-- Future Progress Bar -->                 
       <td >
         <span class="badge bg-info">{{submission.assignment.display_name}}</span>
+        <span class="badge bg-green" ng-if="submission.messages.file_contents.submit">Marked As Submit</span>
         <span ng-repeat="tag in submission.tags" class="badge bg-blue">
           {{ tag }}
         </span>

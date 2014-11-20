@@ -42,7 +42,6 @@ app.directive('sidebarModule', function() {
         };
     });
 
-
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/");

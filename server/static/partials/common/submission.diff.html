@@ -1,10 +1,12 @@
 <div>
   <div class="center-block">
-    <h2>{{submission.assignment.display_name }} Submission: {{submission.db_created | amCalendar}} </h2>
+    <h2>{{submission.assignment.display_name }} Submission: {{ submission.created | amCalendar}} </h2>
        <p>Submitted by: {{submission.submitter.id}}</p>
 
 
        <span class="badge bg-info">{{submission.assignment.display_name}}</span>
+       <span class="badge bg-green" ng-if="submission.messages.file_contents.submit">Marked As Submit</span>
+
        <a ui-sref='submission.detail({submissionId:submission.id})'>
         <span class="badge bg-yellow"> View Plain</span>
        </a>
@@ -12,13 +14,9 @@
         <span class="badge bg-blue"> Download this Submission</span>
        </a>
 
-        <div ng-repeat='tag in submission.tags'>
-          <span class="badge bg-info">{{tag}}</span>
-        </div>
-        <br>
-        <div class="btn-group">
-           
-        </div>
+      <div ng-repeat='tag in submission.tags'>
+        <span class="badge bg-info">{{tag}}</span>
+      </div>
 
   </div>
 
