@@ -52,12 +52,6 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/dashboard/dashboard.html',
     }
 
-    var admin = {
-      name: 'admin',
-      url: '/admin',
-      templateUrl: '/static/partials/admin/admin.html',
-    }
-
     var submissions = {
       name: 'submission',
       abstract: true,
