@@ -618,11 +618,9 @@ class SubmissionAPI(APIResource):
         templates = json.loads(templates)
         for filename, contents in file_contents.items():
             try:
-                contents = contents.encode('utf-8')
-                templates[filename] = templates[filename].encode('utf-8')
+                diff[filename] = compare.diff(templates[filename], contents)
             except:
-                pass
-            diff[filename] = compare.diff(templates[filename], contents)
+                diff[filename] = compare.fake(contents)
 
         diff = self.diff_model(id=obj.key.id(),
                                diff=diff)
@@ -755,7 +753,6 @@ class SubmissionAPI(APIResource):
             if 'submit' in data['messages']['file_contents']:
                 submit_flag = data['messages']['file_contents']['submit'] 
 
-        print("Submit Flag", submit_flag)
         return self.submit(user, data['assignment'],
                            data['messages'], submit_flag,
                            data.get('submitter'))
