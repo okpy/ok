@@ -1104,29 +1104,13 @@ class QueueAPI(APIResource):
             models.User.get_or_insert(user.id())
         return ent
 
-class FinalSubmission(Base):
-    assignment = ndb.KeyProperty(Assignment, required=True)
-    group = ndb.KeyProperty(Group, required=True)
-    submission = ndb.KeyProperty(Submission, required=True)
-    published = ndb.BooleanProperty(default=False)
-    queue = ndb.KeyProperty(Queue)
+class FinalSubmissionAPI(APIResource):
+    """The API resource for the Assignment Object"""
+    model = models.FinalSubmission
 
-    @property
-    def assigned(self):
-        return bool(self.queue)
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        if not user.logged_in:
-            return False
-
-        if action == "index":
-            if user.is_admin:
-                return query
-            return False
-
-        if user.is_admin:
-            return True
-
-        return False
+    methods = {
+        'get': {
+        },
+        'index': {
+        },
+    }
