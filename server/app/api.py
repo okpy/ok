@@ -1088,3 +1088,14 @@ class QueueAPI(APIResource):
         for user in ent.assigned_staff:
             models.User.get_or_insert(user.id())
         return ent
+
+class FinalSubmissionAPI(APIResource):
+    """The API resource for the Assignment Object"""
+    model = models.FinalSubmission
+
+    methods = {
+        'get': {
+        },
+        'index': {
+        },
+    }
