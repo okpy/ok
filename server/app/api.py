@@ -460,8 +460,8 @@ class SubmitNDBImplementation(object):
                                        assignment=assignment.key,
                                        messages=db_messages,
                                        created=created)
-        if submit:
-            submission.tags = [models.Submission.SUBMITTED_TAG]
+        # if submit:
+        #     submission.tags = [models.Submission.SUBMITTED_TAG]
         submission.put()
         deferred.defer(assign_submission, submission.key.id())
 
