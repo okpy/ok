@@ -729,6 +729,15 @@ class SubmissionAPI(APIResource):
         if submitter is None:
             submitter = user.key
 
+        late_flag = datetime.datetime.now() - datetime.timedelta(3) >= valid_assignment.due_date
+
+        if (submit and late_flag):
+            # Late submission. Do Not allow them to submit
+            logging.info("Rejecting Late Submission", submitter)
+            return (403, "late", {
+                'late': True,
+            })
+
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
         return (201, "success", {
@@ -736,8 +745,14 @@ class SubmissionAPI(APIResource):
         })
 
     def post(self, user, data):
+        submit_flag = False
+        if 'file_contents' in data['messages'] and data['messages']['file_contents']:
+            if 'submit' in data['messages']['file_contents']:
+                submit_flag = data['messages']['file_contents']['submit'] 
+
+        print("Submit Flag", submit_flag)
         return self.submit(user, data['assignment'],
-                           data['messages'], data.get('submit', False),
+                           data['messages'], submit_flag,
                            data.get('submitter'))
 
 
@@ -1089,13 +1104,29 @@ class QueueAPI(APIResource):
             models.User.get_or_insert(user.id())
         return ent
 
-class FinalSubmissionAPI(APIResource):
-    """The API resource for the Assignment Object"""
-    model = models.FinalSubmission
+class FinalSubmission(Base):
+    assignment = ndb.KeyProperty(Assignment, required=True)
+    group = ndb.KeyProperty(Group, required=True)
+    submission = ndb.KeyProperty(Submission, required=True)
+    published = ndb.BooleanProperty(default=False)
+    queue = ndb.KeyProperty(Queue)
 
-    methods = {
-        'get': {
-        },
-        'index': {
-        },
-    }
+    @property
+    def assigned(self):
+        return bool(self.queue)
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        if not user.logged_in:
+            return False
+
+        if action == "index":
+            if user.is_admin:
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
+        return False

@@ -39,9 +39,9 @@ def seed():
             templates = {}
             templates['hog.py'] = fp.read()
         return models.Assignment(
-            name='proj2',
+            name='cal/61A/fa14/proj4',
             points=20,
-            display_name="Trends",
+            display_name="Scheme",
             templates=json.dumps(templates),
             course=course.key,
             creator=creator.key,
@@ -163,7 +163,7 @@ def seed():
     )
     k.put()
 
-    version = make_version('v1.0.11')
+    version = make_version('v1.3.0')
     version.put()
 
     # Create a course
