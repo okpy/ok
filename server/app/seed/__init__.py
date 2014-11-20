@@ -62,13 +62,14 @@ def seed():
         )
 
 
-    def make_fake_submission(assignment, submitter):
+    def make_fake_submission(assignment, submitter, final=False):
         sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
 
         with open('app/seed/hog_modified.py') as fp:
             messages = {}
             messages['file_contents'] = {
-                'hog.py': fp.read()
+                'hog.py': fp.read(),
+                'submit': final
             }
 
         messages = [models.Message(kind=kind, contents=contents)
@@ -100,7 +101,6 @@ def seed():
                 group=subm.submitter.get().get_group(assignment.key),
                 submission=subm)
             fs.put()
-
 
     # Start putting things in the DB. 
     
@@ -200,11 +200,17 @@ def seed():
     for member in group_members:
         subm = make_fake_submission(assign, member)
         subm.put()
-        subms.append(subm.key)
+
+    # Make this one be a final submission though. 
+    subm = make_fake_submission(assign, group_members[1], True)
+    subm.put()
+    subms.append(subm.key)
 
     # Now create indiviual submission
     for i in range(9):
         subm = make_fake_submission(assign, students[i])
+        subm.put()
+        subm = make_fake_submission(assign, students[i], True)
         subm.put()
         subms.append(subm.key)
 

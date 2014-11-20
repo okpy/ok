@@ -570,10 +570,15 @@ class SubmissionAPI(APIResource):
             raise BadValueError("Submission has no contents to download")
         file_contents = messages['file_contents']
 
+        if 'submit' in file_contents:
+            del file_contents['submit']
+
         # Need to encode every file before it is.
         for key in file_contents.keys():
-            file_contents[key] = file_contents[key].encode('utf-8')
-
+            try:
+                file_contents[key] = file_contents[key].encode('utf-8')
+            except:
+                pass
         response = make_response(create_zip(file_contents))
 
         response.headers["Content-Disposition"] = (
@@ -590,8 +595,15 @@ class SubmissionAPI(APIResource):
             raise BadValueError("Submission has no contents to diff")
 
         file_contents = messages['file_contents']
+
+        if 'submit' in file_contents:
+            del file_contents['submit']
+
         for key in file_contents.keys():
-            file_contents[key] = file_contents[key].encode('utf-8')
+            try:
+                file_contents[key] = file_contents[key].encode('utf-8')
+            except:
+                pass
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
