@@ -617,6 +617,11 @@ class SubmissionAPI(APIResource):
 
         templates = json.loads(templates)
         for filename, contents in file_contents.items():
+            try:
+                contents = contents.encode('utf-8')
+                templates[filename] = templates[filename].encode('utf-8')
+            except:
+                pass
             diff[filename] = compare.diff(templates[filename], contents)
 
         diff = self.diff_model(id=obj.key.id(),

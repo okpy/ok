@@ -23,6 +23,7 @@ def seed():
         with open('app/seed/hog_template.py') as fp:
             templates = {}
             templates['hog.py'] = fp.read()
+            templates['hogq.scm'] = fp.read()
         return models.Assignment(
             name='proj1',
             points=20,
@@ -39,6 +40,7 @@ def seed():
         with open('app/seed/hog_template.py') as fp:
             templates = {}
             templates['hog.py'] = fp.read()
+            templates['hogq.scm'] = fp.read()
         return models.Assignment(
             name='cal/61A/fa14/proj4',
             points=20,
@@ -70,6 +72,7 @@ def seed():
             messages = {}
             messages['file_contents'] = {
                 'hog.py': fp.read(),
+                'hogq.scm': 'Blank Stuff',
                 'submit': final
             }
 
