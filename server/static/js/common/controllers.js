@@ -12,21 +12,26 @@ app.controller("AssignmentListCtrl", ['$scope', 'Assignment', 'User', '$timeout'
   function($scope, Assignment, User, $timeout) {
       Assignment.query(function(response) {
         $scope.assignments = response.results;
-        $scope.finalsubs = [];
+        var assign_ids = [];
+
+        // hack to store the ids. There is a much better way to do this. 
+        for (var i = 0; i < response.results.length; i++) {
+          assign_ids.push(response.results[i].id);
+        }
         for (var i = 0; i < $scope.assignments.length; i++) {
-              $scope.finalsubs[i] = User.finalsub({
+              User.finalsub({
                 assignment: $scope.assignments[i].id
+              }, function (data) {
+                  if (data.assignment){
+                    var q = assign_ids.indexOf(data.assignment.id);
+
+                    if (q != -1){
+                      $scope.assignments[q].finalsub = data.id;
+                    }
+                  }
               });
-        }
-        $timeout(function() {
 
-        for (var i = 0; i < $scope.finalsubs.length; i++) {
-            if ($scope.finalsubs[i]) {
-              $scope.assignments[i].finalsub = $scope.finalsubs[i].id;
-            }
         }
-        }, 500);
-
       });
 
   }]);

@@ -33,6 +33,7 @@ def seed():
             max_group_size=4,
             due_date=date)
 
+    # Will reject all scheme submissions
     def make_past_assignment(course, creator):
         date = (datetime.datetime.now() - datetime.timedelta(days=365))
         with open('app/seed/hog_template.py') as fp:
