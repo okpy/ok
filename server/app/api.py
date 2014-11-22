@@ -460,8 +460,6 @@ class SubmitNDBImplementation(object):
                                        assignment=assignment.key,
                                        messages=db_messages,
                                        created=created)
-        # if submit:
-        #     submission.tags = [models.Submission.SUBMITTED_TAG]
         submission.put()
         deferred.defer(assign_submission, submission.key.id())
 
@@ -749,7 +747,7 @@ class SubmissionAPI(APIResource):
 
     def post(self, user, data):
         submit_flag = False
-        if 'file_contents' in data['messages'] and data['messages']['file_contents']:
+        if data['messages'].get('file_contents'):
             if 'submit' in data['messages']['file_contents']:
                 submit_flag = data['messages']['file_contents']['submit'] 
 
