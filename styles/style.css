@@ -183,6 +183,7 @@ h1.title {
 	.bar {
 		position:absolute;
 		bottom:0;
+	  	min-height: 100px;
 		width:100%;
 		left:0;
 		background-color:rgba(0,0,0,0.5);
@@ -194,10 +195,23 @@ h1.title {
 	  	-moz-animation:    rise-up 3s ease;
 	  	-o-animation:      rise-up 3s ease;
 	  	animation:         rise-up 3s ease;
+
+
 	}
 		.bar .input {
 			display:inline-block;
 			float:none;
+		}
+		.bar a {
+			background:transparent;
+			color:#FFF;
+			font-size:2em;
+			font-family:'Raleway';
+			font-weight:100;
+			opacity:0.5;
+			text-align:center;
+			outline:none;
+			border:none;
 		}
 		.bar input {
 			background:transparent;
