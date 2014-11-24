@@ -34,3 +34,6 @@ app.directive('comments', function() {
         };
     });
 
+app.directive('datatableSetup', function () {
+    return { link: function (scope, elm, attrs) { console.log(Sortable.init());  } }
+});

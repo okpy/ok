@@ -1,4 +1,4 @@
-var app = angular.module('dashboard', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'angularMoment']);
+var app = angular.module('dashboard', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'angularMoment', 'tableSort']);
 
 app.directive('assignmentModule', function() {
         return {

@@ -97,8 +97,9 @@ def seed():
         for subm in submissions:
             fs = models.FinalSubmission(
                 assignment=assignment.key,
-                group=subm.submitter.get().get_group(assignment.key),
-                submission=subm)
+                group=subm.submitter.get().get_group(assignment.key).key,
+                submission=subm.key,
+                queue=queue)
             fs.put()
 
 
@@ -200,22 +201,22 @@ def seed():
     for member in group_members:
         subm = make_fake_submission(assign, member)
         subm.put()
-        subms.append(subm.key)
+        subms.append(subm)
 
     # Now create indiviual submission
     for i in range(9):
         subm = make_fake_submission(assign, students[i])
         subm.put()
-        subms.append(subm.key)
+        subms.append(subm)
 
 
 
     # Seed a queue. This should be auto-generated. 
     
-    q = make_queue(assign, [], c)
-    q = make_queue(assign, [], k)
+    q = make_queue(assign, subms, c)
+    q = make_queue(assign, subms, k)
 
-    # utils.assign_work(assign.key)
+    #utils.assign_work(assign.key)
 
 
 

@@ -15,20 +15,19 @@
 
 <div class="box-body no-padding table-responsive">
 
-  <table ng-if="submissions.length > 0" class="table table-striped table-bordered table-responsive ">
+  <table ts-wrapper ng-if="submissions.length > 0" class="table table-striped table-bordered table-responsive ">
 
   <tbody>
   
     <tr>
-      <th style="width: 10px">Assignment</th>
-      <th>Submitter</th>
-      <th>Time</th>
+      <th ts-criteria="assignment.display_name"∂>Assignment</th>
+      <th ts-criteria="submitter.id" >Submitter</th>
+      <th ts-criteria="created">Time</th>
       <th style="width: 20%">View Code</th>
-      <th style="width: 15%">Tags</th>
-<!--       <th style="width: 10%">Submit</th> -->
+      <th ts-criteria="tags.length | parseInt" style="width: 15%">Tags</th>
     </tr>
 
-    <tr ng-repeat="submission in submissions">
+    <tr ng-repeat="submission in submissions" ts-repeat>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
       </td>

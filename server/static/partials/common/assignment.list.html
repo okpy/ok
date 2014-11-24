@@ -5,23 +5,19 @@
 </div><!-- /.box-header -->
 
 <div class="box-body no-padding table-responsive">
-  <table ng-if="assignments.length > 0" class="table table-responsive table-striped table-bordered">
+  <table ts-wrapper ng-if="assignments.length > 0" class="table table-responsive table-striped table-bordered">
   <tbody>
   <tr>
-    <th>Name</th>
-    <th>Course</th>
-    <th>Due Date</th>
+    <th ts-criteria="display_name">Name</th>
+    <th ts-criteria="due_date" ts-default>Due Date</th>
     <!-- Future Progress Bar --> 
-    <th>Points</th>
+    <th ts-criteria="points | parseFloat">Points</th>
     <th style="width: 15%">Label</th>
   </tr>
 
-    <tr ng-repeat="assignment in assignments">
+    <tr ng-repeat="assignment in assignments" ts-repeat>
       <td>
         <a ui-sref='assignment.detail({assignmentId:assignment.id})'>{{assignment.display_name}} </a> 
-      </td>
-      <td>
-        {{assignment.course.name}}
       </td>
       <td>
         {{assignment.due_date | amCalendar}}
