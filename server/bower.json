@@ -44,7 +44,6 @@
     "ionicons": ">=1.4.0",
     "sweetalert": "~0.3.1",
     "ngstorage": "~0.3.0",
-    "sortable": "https://github.com/HubSpot/sortable/archive/v0.5.1.zip",
     "angular-tablesort": "~1.0.5"
   },
   "devDependencies": {
