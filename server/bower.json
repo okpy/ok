@@ -44,6 +44,7 @@
     "ionicons": ">=1.4.0",
     "sweetalert": "~0.3.1",
     "ngstorage": "~0.3.0",
+    "angular-tablesort": "~1.0.5",
     "moment-timezone": "~0.2.5"
   },
   "devDependencies": {

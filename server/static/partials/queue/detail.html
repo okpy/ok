@@ -1,6 +1,6 @@
 <div>
   <div class="center-block"> 
-    <h2> Queue for {{queue.assignment.display_name}} </h2>
+    <h2> Queues for {{queue.assignment.display_name}} </h2>
       <div ng-if="queue.$resolved && queue.assigned_staff.length > 0 ">
       Staff: 
         <span ng-repeat="user in queue.assigned_staff" class="badge bg-info">
@@ -18,18 +18,18 @@
   </div>
 
   <div class="box-body no-padding table-responsive">
-    <table ng-if="queue.submissions.length > 0" class="table table-responsive table-striped table-bordered">
+    <table ts-wrapper id="queuedetail"  ng-if="queue.submissions.length > 0" class="table table-responsive table-striped table-bordered">
     <tbody>
     <tr>
-      <th style="width: 10px">Assignment</th>
-      <th>Submitter</th>
-      <th>Time</th>
+      <th ts-criteria="assignment.display_name" >Assignment</th>
+      <th ts-criteria="submitter.email">Submitter</th>
+      <th ts-criteria="submission.created">Time</th>
       <th style="width: 15%">Tags</th>
-      <th>Grade</th>
-      <th>Action</th>
+      <th ts-criteria="compScore.score" >Grade</th>
+      <th ts-criteria="-compScore.score" >Action</th>
     </tr>
 
-    <tr ng-repeat="submission in submList track by $index">
+    <tr ng-repeat="submission in submList " ts-repeat>
       <td>
         <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}</a>
       </td>

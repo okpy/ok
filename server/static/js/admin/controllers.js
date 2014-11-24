@@ -288,7 +288,7 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
        $location.path('/submission/'+$scope.nextId+'/diff');
       } else if ($scope.queueId != undefined) {
         // No more items. Show a success message.
-        $window.swal({ title: "Nice work!", type: 'success',  text: "You've reached the end of the queue!",   timer: 2500 });
+        $window.swal({ title: "Nice work!", type: 'success',  text: "Great progress so far!",   timer: 2500 });
        $location.path('/queue/'+$scope.queueId)
       } else {
         $location.path('/queue/');
