@@ -22,6 +22,13 @@ app.factory('User', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        finalsub: {
+          method: "GET",
+          url: 'api/v1/user/:id/final_submission',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
       });
     }
   ]);

@@ -8,11 +8,32 @@ app.controller("CourseModuleController", ["$scope",
 
 
 // Assignment Controllers
-app.controller("AssignmentListCtrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
+app.controller("AssignmentListCtrl", ['$scope', 'Assignment', 'User', '$timeout',
+  function($scope, Assignment, User, $timeout) {
       Assignment.query(function(response) {
         $scope.assignments = response.results;
+        var assign_ids = [];
+
+        // hack to store the ids. There is a much better way to do this. 
+        for (var i = 0; i < response.results.length; i++) {
+          assign_ids.push(response.results[i].id);
+        }
+        for (var i = 0; i < $scope.assignments.length; i++) {
+              User.finalsub({
+                assignment: $scope.assignments[i].id
+              }, function (data) {
+                  if (data.assignment){
+                    var q = assign_ids.indexOf(data.assignment.id);
+
+                    if (q != -1){
+                      $scope.assignments[q].finalsub = data.id;
+                    }
+                  }
+              });
+
+        }
       });
+
   }]);
 
 app.controller("AssignmentModuleController", ["$scope", "Assignment",
@@ -54,7 +75,7 @@ app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
             'active': true,
           },
           'messages': {
-            'file_contents': "presence"
+            'file_contents': true
           }
         },
         page: page,
@@ -99,8 +120,6 @@ app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
     $scope.getPage(1);
   }]);
 
-
-
 app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
   function($scope, $location, $stateParams, $timeout, $anchorScroll, Submission) {
     $scope.tagToAdd = "";
@@ -141,6 +160,7 @@ app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams',
       }
   }]);
 
+
 // Course Controllers
 app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
@@ -171,8 +191,10 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
     $scope.submission = Submission.get({
       fields: {
+        id: true,
         created: true,
         compScore: true,
+        db_created: true,
         tags: true,
         'assignment': {
           'name': true,
@@ -180,8 +202,10 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '
           'id': true,
         },
         'submitter': {
-          'id': true
-        }
+          'id': true,
+          'email': true,
+        },
+        'messages': true,
       }
     }, {
       id: $stateParams.submissionId

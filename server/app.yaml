@@ -5,7 +5,7 @@ api_version: 1
 threadsafe: true
 instance_class: F2
 
-default_expiration: "5d"
+default_expiration: "10m"
 
 builtins:
 - appstats: on
@@ -26,6 +26,7 @@ handlers:
 - url: /favicon.ico
   static_files: app/static/img/favicon.ico
   upload: app/static/img/favicon.ico
+
 
 - url: /robots.txt
   static_files: app/static/robots.txt

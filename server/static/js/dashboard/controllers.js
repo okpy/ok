@@ -19,7 +19,7 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "$window", 
             'active': true,
           },
           'messages': {
-            'file_contents': "presence"
+            'file_contents': true
           }
         },
         page: page,
