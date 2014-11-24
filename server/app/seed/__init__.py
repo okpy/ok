@@ -23,6 +23,7 @@ def seed():
         with open('app/seed/hog_template.py') as fp:
             templates = {}
             templates['hog.py'] = fp.read()
+            templates['hogq.scm'] = fp.read()
         return models.Assignment(
             name='proj1',
             points=20,
@@ -33,15 +34,17 @@ def seed():
             max_group_size=4,
             due_date=date)
 
+    # Will reject all scheme submissions
     def make_past_assignment(course, creator):
         date = (datetime.datetime.now() - datetime.timedelta(days=365))
         with open('app/seed/hog_template.py') as fp:
             templates = {}
             templates['hog.py'] = fp.read()
+            templates['hogq.scm'] = fp.read()
         return models.Assignment(
-            name='proj2',
+            name='cal/61A/fa14/proj4',
             points=20,
-            display_name="Trends",
+            display_name="Scheme",
             templates=json.dumps(templates),
             course=course.key,
             creator=creator.key,
@@ -62,13 +65,15 @@ def seed():
         )
 
 
-    def make_fake_submission(assignment, submitter):
+    def make_fake_submission(assignment, submitter, final=False):
         sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
 
         with open('app/seed/hog_modified.py') as fp:
             messages = {}
             messages['file_contents'] = {
-                'hog.py': fp.read()
+                'hog.py': fp.read(),
+                'hogq.scm': 'Blank Stuff',
+                'submit': final
             }
 
         messages = [models.Message(kind=kind, contents=contents)
@@ -101,7 +106,6 @@ def seed():
                 submission=subm.key,
                 queue=queue)
             fs.put()
-
 
     # Start putting things in the DB. 
     
@@ -164,7 +168,7 @@ def seed():
     )
     k.put()
 
-    version = make_version('v1.0.11')
+    version = make_version('v1.3.0')
     version.put()
 
     # Create a course
@@ -201,11 +205,20 @@ def seed():
     for member in group_members:
         subm = make_fake_submission(assign, member)
         subm.put()
-        subms.append(subm)
+        #subms.append(subm)
+
+    # Make this one be a final submission though. 
+    subm = make_fake_submission(assign, group_members[1], True)
+    subm.put()
+    subms.append(subm)
 
     # Now create indiviual submission
     for i in range(9):
         subm = make_fake_submission(assign, students[i])
+        subm.put()
+        #subms.append(subm)
+
+        subm = make_fake_submission(assign, students[i], True)
         subm.put()
         subms.append(subm)
 

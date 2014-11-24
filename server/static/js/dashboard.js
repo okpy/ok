@@ -10,7 +10,7 @@ app.directive('assignmentModule', function() {
 app.directive('assignmentList', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/common/assignment.list.html',
+            templateUrl: '/static/partials/common/assignment.list.html?cacheprevent1021',
         };
     });
 
@@ -24,7 +24,7 @@ app.directive('submissionModule', function() {
 app.directive('submissionList', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/dashboard/submission.list.html',
+            templateUrl: '/static/partials/dashboard/submission.list.html?cacheprevent1021',
         };
     });
 
@@ -42,7 +42,6 @@ app.directive('sidebarModule', function() {
         };
     });
 
-
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/");
@@ -50,13 +49,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var dashboard = {
       name: 'dashboard',
       url: '/',
-      templateUrl: '/static/partials/dashboard/dashboard.html',
-    }
-
-    var admin = {
-      name: 'admin',
-      url: '/admin',
-      templateUrl: '/static/partials/admin/admin.html',
+      templateUrl: '/static/partials/dashboard/dashboard.html?cache=0',
     }
 
     var submissions = {
@@ -69,21 +62,21 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissionList = {
       name: 'submission.list',
       url: '/',
-      templateUrl: '/static/partials/common/submission.list.html',
+      templateUrl: '/static/partials/common/submission.list.html?cacheprevent1022',
       controller: "SubmissionListCtrl"
     }
 
     var submissionDetail = {
       name: 'submission.detail',
       url: '/:submissionId',
-      templateUrl: '/static/partials/common/submission.detail.html',
+      templateUrl: '/static/partials/common/submission.detail.html?cacheprevent1022',
       controller: "SubmissionDetailCtrl"
     }
 
     var submissionDiff = {
       name: 'submission.diff',
       url: '/:submissionId/diff',
-      templateUrl: '/static/partials/common/submission.diff.html',
+      templateUrl: '/static/partials/common/submission.diff.html?cacheprevent1022',
       controller: "SubmissionDiffCtrl"
     }
 
@@ -91,13 +84,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       name: 'assignment',
       abstract: true,
       url: '/assignment',
-      templateUrl: '/static/partials/common/assignment.base.html',
+      templateUrl: '/static/partials/common/assignment.base.html?cacheprevent1022',
     }
 
     var assignmentList = {
       name: 'assignment.list',
       url: '/',
-      templateUrl: '/static/partials/common/assignment.list.html',
+      templateUrl: '/static/partials/common/assignment.list.html?cacheprevent1022',
       controller: "AssignmentListCtrl"
     }
 
@@ -200,7 +193,6 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
     $stateProvider.
       state(dashboard).
-      state(admin).
       state(submissions).
       state(submissionList).
       state(submissionDetail).
