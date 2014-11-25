@@ -944,12 +944,12 @@ class GroupAPI(APIResource):
     model = models.Group
 
     methods = {
-        'post': {
-            'web_args': {
-                'assignment': KeyArg('Assignment', required=True),
-                'members': KeyRepeatedArg('User')
-            }
-        },
+        # 'post': {
+        #     'web_args': {
+        #         'assignment': KeyArg('Assignment', required=True),
+        #         'members': KeyRepeatedArg('User')
+        #     }
+        # },
         'get': {
         },
         'index': {
@@ -958,24 +958,24 @@ class GroupAPI(APIResource):
                 'members': KeyArg('User')
             }
         },
-        'add_member': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'member': KeyArg('User', required=True),
-            },
-        },
-        'remove_member': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'member': KeyArg('User', required=True),
-            },
-        },
-        'accept_invitation': {
-            'methods': set(['PUT']),
-        },
-        'reject_invitation': {
-            'methods': set(['PUT']),
-        }
+        # 'add_member': {
+        #     'methods': set(['PUT']),
+        #     'web_args': {
+        #         'member': KeyArg('User', required=True),
+        #     },
+        # },
+        # 'remove_member': {
+        #     'methods': set(['PUT']),
+        #     'web_args': {
+        #         'member': KeyArg('User', required=True),
+        #     },
+        # },
+        # 'accept_invitation': {
+        #     'methods': set(['PUT']),
+        # },
+        # 'reject_invitation': {
+        #     'methods': set(['PUT']),
+        # }
     }
 
     def post(self, user, data):

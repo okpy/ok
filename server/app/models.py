@@ -160,10 +160,11 @@ class User(Base):
     def get_group(self, assignment):
         group = self.groups(assignment).get()
         if not group:
+            return None
             group = Group(
                 members=[self.key],
                 assignment=assignment)
-            group.put()
+            #group.put()
         return group
 
     ## Utilities for submission grading and selection

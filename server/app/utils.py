@@ -301,7 +301,9 @@ def assign_submission(subm_id):
             group=group.key)
 
     current.submission = subm.key
-    current.put()
+    #current.put()
+    message = "Final submission modification disallowed for now"
+    logging.error(message)
 
 def parse_date(date):
     try:
