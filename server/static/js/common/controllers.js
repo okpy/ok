@@ -56,7 +56,7 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
 // Submission Controllers
 app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
     function ($scope, $state, Submission) {
-    $scope.itemsPerPage = 20;
+    $scope.itemsPerPage = 50;
     $scope.currentPage = 1;
     $scope.getPage = function(page) {
       Submission.query({
