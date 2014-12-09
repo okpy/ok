@@ -279,26 +279,16 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
       }
       $scope.contents = contents;
       $timeout(function() {
-        $anchorScroll();
-      });
-
-
-      if ($scope.$last === true) {
-        $timeout(function () {
           $(".diff-line-code").each(function(i, elem) {
             hljs.highlightBlock(elem);
           })
-          $anchorScroll();
-        });
-      }
-
+      });
     }
   ]);
 
 app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce", "$modal",
     function ($scope, $timeout, $location, $anchorScroll, $sce, $modal) {
       var converter = new Showdown.converter();
-      $scope.f = false;
       $scope.convertMarkdown = function(text) {
         if (text == "" || text === undefined) {
           return $sce.trustAsHtml("")
