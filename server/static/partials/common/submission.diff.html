@@ -6,18 +6,10 @@
 
        <span class="badge bg-info">{{submission.assignment.display_name}}</span>
        <span class="badge bg-green" ng-if="submission.messages.file_contents.submit">Marked As Submit</span>
-
-       <a ui-sref='submission.detail({submissionId:submission.id})'>
-        <span class="badge bg-yellow"> View Plain</span>
-       </a>
-       <a href='/api/v1/submission/{{submission.id}}/download'>
-        <span class="badge bg-blue"> Download this Submission</span>
-       </a>
-
-      <div ng-repeat='tag in submission.tags'>
-        <span class="badge bg-info">{{tag}}</span>
-      </div>
-
+        <div ng-repeat='tag in submission.tags'>
+          <span class="badge bg-info">{{tag}}</span>
+        </div>
+        <br> 
   </div>
 
   <div class="box box-primary" ng-if="submission.compScore != null">
@@ -34,6 +26,20 @@
     	</div>
     	<!-- /.box-body -->
 	</div>
+
+  <div class="center-block">
+        <br>
+        <div class="btn-group">
+          <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
+          <button class="btn btn-flat btn-info" ui-sref='submission.detail({submissionId:submission.id})'> 
+            <i class="fa fa-fw fa-code"></i> View Plain           
+          </button>
+
+          <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.id}}/download'> 
+            <i class="fa fa-fw fa- cloud-download"></i> Download </button>
+        </div>
+
+  </div>
 
   <div ng-repeat="(file_name, contents) in diff.diff">
     <diff/>

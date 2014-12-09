@@ -65,11 +65,15 @@ h2 {
 }
 
 .diff-line-code-pos {
-  background-color: #dfd;
+  background: #dfd !important;
+}
+
+.diff-line-code-empty {
+  background: #fff;
 }
 
 .diff-line-code-neg {
-  background-color: #fdd;
+  background: #fdd !important;
 }
 
 .diff-line-num {
@@ -99,10 +103,11 @@ h2 {
 }
 .hljs {
   display: block;
-  padding: 0.0em;
+  padding: 0.05em;
   color: #333;
   background: white;
 }
+
 
 .file {
   position: relative;
@@ -119,6 +124,11 @@ h2 {
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
 }
+
+.file .meta .expander {
+  float: right
+}
+
 .snippet-wrapper {
   overflow-x: auto;
   overflow-y: hidden;

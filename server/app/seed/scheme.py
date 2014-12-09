@@ -6,10 +6,6 @@ from scheme_primitives import *
 from scheme_reader import *
 from ucb import main, trace
 
-##############
-# Eval/Apply #
-##############
-
 def scheme_eval(expr, env):
     """Evaluate Scheme expression EXPR in environment ENV.
 
@@ -152,6 +148,13 @@ class LambdaProcedure:
 class MuProcedure:
     """A procedure defined by a mu expression, which has dynamic scope.
      _________________
+    < Scheme is cool! >
+     -----------------
+            \   ^__^
+             \  (oo)\_______
+                (__)\       )\
+                    ||----w |
+                    ||     ||
     < Scheme is cool! >
      -----------------
             \   ^__^
