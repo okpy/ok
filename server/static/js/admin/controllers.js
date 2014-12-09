@@ -295,6 +295,11 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
       }
     }
 
+    $scope.hideEmpty = true;
+    $scope.toggleBlank = function () {
+      $scope.hideEmpty = !$scope.hideEmpty;
+    }
+
     // Goes back a page.
     $scope.backPage = function () {
         $timeout(function() {
@@ -362,7 +367,10 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
       }
       $scope.contents = contents;
       $timeout(function() {
-        $anchorScroll();
+          $(".diff-line-code").each(function(i, elem) {
+            hljs.highlightBlock(elem);
+          });
+          $anchorScroll();
       });
     }
   ]);

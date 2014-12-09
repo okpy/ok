@@ -13,8 +13,20 @@
         <li ng-class="{disabled: nextId == undefined, next: align}" class="next">
           <button ng-disabled="nextId == undefined" href="" ui-sref="submission.diff({submissionId:nextId})" class="ng-binding">Next »</buttin>
         </li>
+
       </ul>
+
     </div>
+  <div class="center-block">
+
+          <div class="btn-group">
+          <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
+
+          <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.id}}/download'> 
+            <i class="fa fa-fw fa-cloud-download"></i> Download </button>
+        </div>
+  </div>
+
 
   <div ng-repeat="(file_name, contents) in diff.diff">
     <diff/>
