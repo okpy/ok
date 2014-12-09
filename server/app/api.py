@@ -618,6 +618,7 @@ class SubmissionAPI(APIResource):
             temp = templates[filename]
             if type(templates[filename]) == list:
                 temp = templates[filename][0]
+
             diff[filename] = compare.diff(temp, contents)
 
         diff = self.diff_model(id=obj.key.id(),
