@@ -210,11 +210,18 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '
     }, {
       id: $stateParams.submissionId
     });
+
+    $scope.hideEmpty = false;
+    $scope.toggleBlank = function () {
+      $scope.hideEmpty = !$scope.hideEmpty;
+    }
+
     $scope.refreshDiff = function() {
         $timeout(function() {
           $scope.diff = Submission.diff({id: $stateParams.submissionId});
         }, 300);
     }
+
   }]);
 
 app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$anchorScroll",
@@ -241,6 +248,7 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
     function ($scope, $timeout, $location, $anchorScroll, $sce) {
       contents = [];
       var leftNum = 0, rightNum = 0;
+
       for (var i = 0; i < $scope.contents.length; i++) {
         codeline = {"type": "line"};
         codeline.start = $scope.contents[i][0];
@@ -253,11 +261,11 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
         if (codeline.start == "+") {
           rightNum++;
           codeline.rightNum = rightNum;
-          codeline.leftNum = "";
+          codeline.leftNum = "+";
         } else if (codeline.start == "-") {
           leftNum++;
           codeline.leftNum = leftNum;;
-          codeline.rightNum = "";
+          codeline.rightNum = "-";
         } else if (codeline.start == "?") {
           // TODO: add in-line coloring
           continue;
@@ -271,7 +279,9 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
       }
       $scope.contents = contents;
       $timeout(function() {
-        $anchorScroll();
+          $(".diff-line-code").each(function(i, elem) {
+            hljs.highlightBlock(elem);
+          })
       });
     }
   ]);

@@ -24,6 +24,7 @@ def seed():
             templates = {}
             templates['hog.py'] = fp.read()
             templates['hogq.scm'] = fp.read()
+
         return models.Assignment(
             name='proj1',
             points=20,
@@ -37,10 +38,16 @@ def seed():
     # Will reject all scheme submissions
     def make_past_assignment(course, creator):
         date = (datetime.datetime.now() - datetime.timedelta(days=365))
-        with open('app/seed/hog_template.py') as fp:
+        with open('app/seed/scheme_templates/scheme.py') as sc, \
+            open('app/seed/scheme_templates/scheme_reader.py') as sr, \
+            open('app/seed/scheme_templates/tests.scm') as tests, \
+            open('app/seed/scheme_templates/questions.scm') as quest :
             templates = {}
-            templates['hog.py'] = fp.read()
-            templates['hogq.scm'] = fp.read()
+            templates['scheme.py'] = sc.read(),
+            templates['scheme_reader.py'] = sr.read(),
+            templates['tests.scm'] = tests.read(),
+            templates['questsions.scm'] = quest.read(),
+
         return models.Assignment(
             name='cal/61A/fa14/proj4',
             points=20,
@@ -73,6 +80,31 @@ def seed():
             messages['file_contents'] = {
                 'hog.py': fp.read(),
                 'hogq.scm': 'Blank Stuff',
+                'submit': final
+            }
+
+        messages = [models.Message(kind=kind, contents=contents)
+                    for kind, contents in messages.items()]
+        return models.Submission(
+            messages=messages,
+            assignment=assignment.key,
+            submitter=submitter.key,
+            created=sdate)
+
+
+    def make_fake_scheme_submission(assignment, submitter, final=False):
+        sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
+
+        with open('app/seed/scheme.py') as sc, \
+            open('app/seed/scheme_reader.py') as sr, \
+            open('app/seed/tests.scm') as tests, \
+            open('app/seed/questions.scm') as quest :
+            messages = {}
+            messages['file_contents'] = {
+                'scheme.py': sc.read(),
+                'scheme_reader.py': sr.read(),
+                'tests.scm': tests.read(),
+                'questsions.scm': quest.read(),
                 'submit': final
             }
 
@@ -205,12 +237,20 @@ def seed():
     for member in group_members:
         subm = make_fake_submission(assign, member)
         subm.put()
-        #subms.append(subm)
+
+    for member in group_members:
+        subm = make_fake_scheme_submission(assign2, member)
+        subm.put()
 
     # Make this one be a final submission though. 
     subm = make_fake_submission(assign, group_members[1], True)
     subm.put()
     subms.append(subm)
+
+    # scheme final
+    subm = make_fake_scheme_submission(assign2, group_members[1], True)
+    subm.put()
+
 
     # Now create indiviual submission
     for i in range(9):
@@ -220,7 +260,7 @@ def seed():
 
         subm = make_fake_submission(assign, students[i], True)
         subm.put()
-        subms.append(subm)
+        #subms.append(subm)
 
 
 
