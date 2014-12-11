@@ -3,6 +3,7 @@ The public API
 """
 import datetime
 import logging
+import ast 
 
 from flask.views import View
 from flask.app import request, json
@@ -22,6 +23,7 @@ from app.exceptions import *
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 from google.appengine.ext.ndb import stats
+
 
 parser = FlaskParser()
 
@@ -605,20 +607,27 @@ class SubmissionAPI(APIResource):
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            return diff_obj
+            if 'scheme.py' in diff_obj.diff.keys():
+                logging.debug("Deleting existing scheme submission")
+                diff_obj.key.delete()
+            else:
+                return diff_obj
 
         diff = {}
         templates = obj.assignment.get().templates
         if not templates:
             raise BadValueError("no templates for assignment, \
                                 please contact course staff")
-
+        
         templates = json.loads(templates)
+        if type(templates) == unicode:
+            logging.debug("performing ast")
+            templates = ast.literal_eval(templates)
+
         for filename, contents in file_contents.items():
             temp = templates[filename]
             if type(templates[filename]) == list:
                 temp = templates[filename][0]
-
             diff[filename] = compare.diff(temp, contents)
 
         diff = self.diff_model(id=obj.key.id(),

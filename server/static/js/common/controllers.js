@@ -211,7 +211,7 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '
       id: $stateParams.submissionId
     });
 
-    $scope.hideEmpty = true;
+    $scope.hideEmpty = false;
     $scope.toggleBlank = function () {
       $scope.hideEmpty = !$scope.hideEmpty;
     }
