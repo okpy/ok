@@ -48,6 +48,17 @@ indexes:
 - kind: Submissionvtwo
   properties:
   - name: assignment
+  - name: compScore
+
+- kind: Submissionvtwo
+  properties:
+  - name: assignment
+  - name: compScore
+  - name: submitter
+
+- kind: Submissionvtwo
+  properties:
+  - name: assignment
   - name: created
     direction: desc
 
