@@ -63,7 +63,7 @@ def parse_input():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-q', '--question', type=str,
                         help="focus on a specific question")
-    parser.add_argument('-s', '--server', type=str,
+    parser.add_argument('--server', type=str,
                         default='ok-server.appspot.com',
                         help="server address")
     parser.add_argument('-t', '--tests', metavar='A', default='tests', type=str,
