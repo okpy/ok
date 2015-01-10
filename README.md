@@ -1,9 +1,8 @@
 ok.py
 =====
 
-The ok.py client script supports programming projects by running tests, tracking
-progress, and assisting in debugging. The ok.py server performs and displays
-analysis of student progress based on logging sent from the client script.
+The ok.py server performs and displays analysis of student progress
+based on logging sent from client scripts.
 
 (Coming soon) Visit http://okpy.org to use our hosted service for your course.
 
