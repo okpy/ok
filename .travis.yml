@@ -6,9 +6,9 @@ env:
 python:
   - "2.7"
 
-install: pip install -r server_requirements.txt; fi
+install: pip install -r server_requirements.txt
 
-script: FLASK_CONF=TEST python $CMD; fi
+script: FLASK_CONF=TEST python $CMD
 
 before_script:
   - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.15.zip -o gae_sdk.zip
