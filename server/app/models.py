@@ -306,6 +306,7 @@ class Message(Base):
 
         return Backup._can(user, need, obj, query)
 
+
 class Score(Base):
     """
     The score for a submission.
@@ -314,6 +315,7 @@ class Score(Base):
     message = ndb.StringProperty()
     grader = ndb.KeyProperty('User')
     # TODO How do we handle scores assigned by autograders?
+
 
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
@@ -425,8 +427,17 @@ class Backup(Base):
         return False
 
 
-class BackupDiff(Base):
+class Submission(Base):
+    """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
+
+    # TODO Set model name to avoid conflict with legacy submission structures.
+
+
+class BackupDiff(Base):
+    """A diff between two versions of the same project, with comments."""
+    before = ndb.KeyProperty(Backup) # Set to None to compare to template
+    after = ndb.KeyProperty(Backup)
     diff = ndb.JsonProperty()
 
     @property
@@ -444,7 +455,9 @@ class BackupDiff(Base):
         data['comments'] = all_comments
         return data
 
+
 class Comment(Base):
+    # TODO describe key & ancestor scheme.
     author = ndb.KeyProperty('User')
     filename = ndb.StringProperty()
     line = ndb.IntegerProperty()
@@ -516,9 +529,9 @@ class Version(Base):
         return super(cls, Version).get_by_id(key, **kwargs)
 
 class Group(Base):
-    """
-    A group is a collection of users who all submit submissions.
-    They all can see submissions for an assignment all as a group.
+    """A group is a collection of users who are either active or pending.
+
+    Active members of a group can view each other's submissions.
     """
     members = ndb.KeyProperty(kind='User', repeated=True)
     invited_members = ndb.KeyProperty(kind='User', repeated=True)
