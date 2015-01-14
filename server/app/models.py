@@ -431,7 +431,9 @@ class Submission(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
 
-    # TODO Set model name to avoid conflict with legacy submission structures.
+    @classmethod
+    def _get_kind(cls):
+        return "Submissionv3"
 
 
 class BackupDiff(Base):
