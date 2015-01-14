@@ -1,9 +1,10 @@
 """
 The public API
 """
+
 import datetime
 import logging
-import ast 
+import ast
 
 from flask.views import View
 from flask.app import request, json
@@ -30,9 +31,9 @@ parser = FlaskParser()
 
 def parse_json_field(field):
     if not field[0] == '{':
-        if field == "false":
+        if field == 'false':
             return False
-        elif field == "true":
+        elif field == 'true':
             return True
         return field
     return json.loads(field)
@@ -45,24 +46,24 @@ def DateTimeArg(**kwds):
             op, arg = arg.split('|', 1)
 
         date = datetime.datetime.strptime(arg,
-                                          app.config["GAE_DATETIME_FORMAT"])
+                                          app.config['GAE_DATETIME_FORMAT'])
         delta = datetime.timedelta(hours=7)
         date = (datetime.datetime.combine(date.date(), date.time()) + delta)
         return (op, date) if op else date
     return Arg(None, use=parse_date, **kwds)
 
 
-def KeyArg(klass, **kwds):
+def KeyArg(cls, **kwds):
     def parse_key(key):
         try:
             key = int(key)
         except (ValueError, TypeError):
             pass
-        return {'pairs': [(klass, key)]}
+        return {'pairs': [(cls, key)]}
     return Arg(ndb.Key, use=parse_key, **kwds)
 
 
-def KeyRepeatedArg(klass, **kwds):
+def KeyRepeatedArg(cls, **kwds):
     def parse_list(key_list):
         staff_lst = key_list
         if not isinstance(key_list, list):
@@ -70,7 +71,7 @@ def KeyRepeatedArg(klass, **kwds):
                 staff_lst = key_list.split(',')
             else:
                 staff_lst = [key_list]
-        return [ndb.Key(klass, x) for x in staff_lst]
+        return [ndb.Key(cls, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
 
 
@@ -78,9 +79,9 @@ def BooleanArg(**kwargs):
     def parse_bool(arg):
         if isinstance(arg, bool):
             return arg
-        if arg == "false":
+        if arg == 'false':
             return False
-        if arg == "true":
+        if arg == 'true':
             return True
         raise BadValueError(
             "malformed boolean %s: either 'true' or 'false'" % arg)
@@ -88,7 +89,6 @@ def BooleanArg(**kwargs):
 
 
 class APIResource(View):
-
     """The base class for API resources.
 
     Set the model for each subclass.
@@ -118,10 +118,10 @@ class APIResource(View):
         if method_name not in self.methods:
             raise BadMethodError('Unimplemented method %s' % method_name)
         constraints = self.methods[method_name]
-        if "methods" in constraints:
+        if 'methods' in constraints:
             if http_method is None:
                 raise IncorrectHTTPMethodError('Need to specify HTTP method')
-            if http_method not in constraints["methods"]:
+            if http_method not in constraints['methods']:
                 raise IncorrectHTTPMethodError('Bad HTTP Method: %s'
                                                % http_method)
         data = {}
@@ -137,13 +137,11 @@ class APIResource(View):
         user = session['user']
 
         if path is None:  # Index
-            if http_method not in ("GET", "POST"):
-                raise IncorrectHTTPMethodError('Incorrect HTTP method: %s'
-                                               % http_method)
-            method_name = ("index" if http_method == "GET"
-                           else http_method.lower())
+            if http_method not in ('GET', 'POST'):
+                raise IncorrectHTTPMethodError('Incorrect HTTP method: %s')
+            method_name = {'GET': 'index', 'POST': 'post'}[http_method]
             return self.call_method(method_name, user, http_method,
-                                    is_index=(method_name == "index"))
+                                    is_index=(method_name == 'index'))
 
         path = path.split('/')
         if len(path) == 1:
@@ -151,7 +149,7 @@ class APIResource(View):
             try:
                 key = self.key_type(entity_id)
             except (ValueError, AssertionError):
-                raise BadValueError("Invalid key. Needs to be of type: %s"
+                raise BadValueError('Invalid key. Needs to be of type: %s'
                                     % self.key_type)
             instance = self.get_instance(key, user)
             method_name = http_method.lower()
@@ -162,7 +160,7 @@ class APIResource(View):
         try:
             key = self.key_type(entity_id)
         except (ValueError, AssertionError):
-            raise BadValueError("Invalid key. Needs to be of type: %s"
+            raise BadValueError('Invalid key. Needs to be of type: %s'
                                 % self.key_type)
         instance = self.get_instance(key, user)
         return self.call_method(method_name, user, http_method,
@@ -187,7 +185,7 @@ class APIResource(View):
         for key, value in data.iteritems():
             old_val = getattr(obj, key, blank_val)
             if old_val == blank_val:
-                return 400, "{} is not a valid field.".format(key)
+                return 400, '{} is not a valid field.'.format(key)
 
             setattr(obj, key, value)
             changed = True
@@ -209,7 +207,7 @@ class APIResource(View):
 
         entity.put()
 
-        return (201, "success", {
+        return (201, 'success', {
             'key': entity.key.id()
         })
 
@@ -242,7 +240,7 @@ class APIResource(View):
         if fields['fields'] is None:
             fields['fields'] = {}
         if type(fields['fields']) != dict and type(fields['fields']) != bool:
-            raise BadValueError("fields should be dictionary or boolean")
+            raise BadValueError('fields should be dictionary or boolean')
         request.fields = fields
         return {k: v for k, v in parser.parse(web_args).iteritems()
                 if v is not None}
@@ -263,7 +261,7 @@ class APIResource(View):
         query = filter_query(result, data, self.model)
         created_prop = getattr(self.model, 'created', None)
         if not query.orders and created_prop:
-            logging.info("Adding default ordering by creation time.")
+            logging.info('Adding default ordering by creation time.')
             query = query.order(-created_prop, self.model.key)
 
         page = int(request.args.get('page', 1))
@@ -342,7 +340,7 @@ class UserAPI(APIResource):
         """
         entity = self.model.get_by_id(attributes['email'])
         if entity:
-            raise BadValueError("user already exists")
+            raise BadValueError('user already exists')
         entity = self.model.from_dict(attributes)
         return entity
 
@@ -358,7 +356,7 @@ class UserAPI(APIResource):
 
     def create_staff(self, obj, user, data):
         # Must be a staff to create a staff user
-        need = Need("staff")
+        need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
 
@@ -421,7 +419,7 @@ class AssignmentAPI(APIResource):
             models.Assignment.query(models.Assignment.name == data['name']))
         if len(assignments) > 0:
             raise BadValueError(
-                "assignment with name %s exists already" % data["name"])
+                'assignment with name %s exists already' % data['name'])
         return super(AssignmentAPI, self).post(user, data)
 
     def assign(self, obj, user, data):
@@ -498,13 +496,13 @@ class SubmissionAPI(APIResource):
             }
         },
         'diff': {
-            'methods': set(["GET"]),
+            'methods': set(['GET']),
         },
         'download': {
-            'methods': set(["GET"]),
+            'methods': set(['GET']),
         },
         'add_comment': {
-            'methods': set(["POST"]),
+            'methods': set(['POST']),
             'web_args': {
                 'index': Arg(int, required=True),
                 'file': Arg(str, required=True),
@@ -512,25 +510,25 @@ class SubmissionAPI(APIResource):
             }
         },
         'delete_comment': {
-            'methods': set(["POST"]),
+            'methods': set(['POST']),
             'web_args': {
                 'comment': KeyArg('Comment', required=True)
             }
         },
         'add_tag': {
-            'methods': set(["PUT"]),
+            'methods': set(['PUT']),
             'web_args': {
                 'tag': Arg(str, required=True)
             }
         },
         'remove_tag': {
-            'methods': set(["PUT"]),
+            'methods': set(['PUT']),
             'web_args': {
                 'tag': Arg(str, required=True)
             }
         },
         'score': {
-            'methods': set(["POST"]),
+            'methods': set(['POST']),
             'web_args': {
                 'score': Arg(int, required=True),
                 'message': Arg(str, required=True),
@@ -567,7 +565,7 @@ class SubmissionAPI(APIResource):
         """
         messages = obj.get_messages()
         if 'file_contents' not in messages:
-            raise BadValueError("Submission has no contents to download")
+            raise BadValueError('Submission has no contents to download')
         file_contents = messages['file_contents']
 
         if 'submit' in file_contents:
@@ -581,9 +579,9 @@ class SubmissionAPI(APIResource):
                 pass
         response = make_response(create_zip(file_contents))
 
-        response.headers["Content-Disposition"] = (
-            "attachment; filename=submission-%s.zip" % str(obj.created))
-        response.headers["Content-Type"] = "application/zip"
+        response.headers['Content-Disposition'] = (
+            'attachment; filename=submission-%s.zip' % str(obj.created))
+        response.headers['Content-Type'] = 'application/zip'
         return response
 
     def diff(self, obj, user, data):
@@ -592,7 +590,7 @@ class SubmissionAPI(APIResource):
         """
         messages = obj.get_messages()
         if 'file_contents' not in obj.get_messages():
-            raise BadValueError("Submission has no contents to diff")
+            raise BadValueError('Submission has no contents to diff')
 
         file_contents = messages['file_contents']
 
@@ -608,7 +606,7 @@ class SubmissionAPI(APIResource):
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
             if 'scheme.py' in diff_obj.diff.keys():
-                logging.debug("Deleting existing scheme submission")
+                logging.debug('Deleting existing scheme submission')
                 diff_obj.key.delete()
             else:
                 return diff_obj
@@ -616,12 +614,12 @@ class SubmissionAPI(APIResource):
         diff = {}
         templates = obj.assignment.get().templates
         if not templates:
-            raise BadValueError("no templates for assignment, \
-                                please contact course staff")
-        
+            raise BadValueError('no templates for assignment, \
+                                please contact course staff')
+
         templates = json.loads(templates)
         if type(templates) == unicode:
-            logging.debug("performing ast")
+            logging.debug('performing ast')
             templates = ast.literal_eval(templates)
 
         for filename, contents in file_contents.items():
@@ -643,12 +641,12 @@ class SubmissionAPI(APIResource):
         if not diff_obj:
             raise BadValueError("Diff doesn't exist yet")
 
-        index = data["index"]
-        message = data["message"]
-        filename = data["file"]
+        index = data['index']
+        message = data['message']
+        filename = data['file']
 
-        if message.strip() == "":
-            raise BadValueError("Cannot make empty comment")
+        if message.strip() == '':
+            raise BadValueError('Cannot make empty comment')
 
         comment = models.Comment(
             filename=filename,
@@ -682,7 +680,7 @@ class SubmissionAPI(APIResource):
         """
         tag = data['tag']
         if tag in obj.tags:
-            raise BadValueError("Tag already exists")
+            raise BadValueError('Tag already exists')
 
         submit_tag = models.Submission.SUBMITTED_TAG
         if tag == submit_tag:
@@ -693,7 +691,7 @@ class SubmissionAPI(APIResource):
 
             previous = previous.get(keys_only=True)
             if previous:
-                raise BadValueError("Only one final submission allowed")
+                raise BadValueError('Only one final submission allowed')
 
         obj.tags.append(tag)
         obj.put()
@@ -705,7 +703,7 @@ class SubmissionAPI(APIResource):
         """
         tag = data['tag']
         if tag not in obj.tags:
-            raise BadValueError("Tag does not exists")
+            raise BadValueError('Tag does not exists')
 
         obj.tags.remove(tag)
         obj.put()
@@ -740,18 +738,19 @@ class SubmissionAPI(APIResource):
         if submitter is None:
             submitter = user.key
 
-        late_flag = datetime.datetime.now() - datetime.timedelta(3) >= valid_assignment.due_date
+        due = valid_assignment.due_date
+        late_flag = datetime.datetime.now() - datetime.timedelta(3) >= due
 
-        if (submit and late_flag):
+        if submit and late_flag:
             # Late submission. Do Not allow them to submit
-            logging.info("Rejecting Late Submission", submitter)
-            return (403, "late", {
+            logging.info('Rejecting Late Submission', submitter)
+            return (403, 'late', {
                 'late': True,
             })
 
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
-        return (201, "success", {
+        return (201, 'success', {
             'key': submission.key.id()
         })
 
@@ -759,7 +758,7 @@ class SubmissionAPI(APIResource):
         submit_flag = False
         if data['messages'].get('file_contents'):
             if 'submit' in data['messages']['file_contents']:
-                submit_flag = data['messages']['file_contents']['submit'] 
+                submit_flag = data['messages']['file_contents']['submit']
 
         return self.submit(user, data['assignment'],
                            data['messages'], submit_flag,
@@ -826,7 +825,7 @@ class VersionAPI(APIResource):
         new_version = data['version']
 
         if new_version in obj.versions:
-            raise BadValueError("Duplicate version: {}".format(new_version))
+            raise BadValueError('Duplicate version: {}'.format(new_version))
 
         obj.versions.append(new_version)
         if 'current' in data and data['current']:
@@ -840,7 +839,7 @@ class VersionAPI(APIResource):
             raise need.exception()
         if not obj.current_version:
             raise BadValueError(
-                "Invalid version resource. Contact an administrator.")
+                'Invalid version resource. Contact an administrator.')
         return obj.current_version
 
     def download(self, obj, user, data):
@@ -860,7 +859,7 @@ class VersionAPI(APIResource):
         current_version = data['version']
         if current_version not in obj.versions:
             raise BadValueError(
-                "Invalid version. Cannot update to current.")
+                'Invalid version. Cannot update to current.')
         obj.current_version = current_version
         obj.put()
 
@@ -922,7 +921,7 @@ class CourseAPI(APIResource):
         return super(CourseAPI, self).post(user, data)
 
     def add_staff(self, course, user, data):
-        need = Need("staff")
+        need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
 
@@ -932,14 +931,14 @@ class CourseAPI(APIResource):
             course.put()
 
     def get_staff(self, course, user, data):
-        need = Need("staff")
+        need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
 
         return course.staff
 
     def remove_staff(self, course, user, data):
-        need = Need("staff")
+        need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
         if data['staff_member'] in course.staff:
@@ -997,10 +996,10 @@ class GroupAPI(APIResource):
 
                 if len(current_group) == 1:
                     raise BadValueError(
-                        "{} already in a group".format(user_key.id()))
+                        '{} already in a group'.format(user_key.id()))
                 if len(current_group) > 1:
                     raise BadValueError(
-                        "{} in multiple groups".format(user_key.id()))
+                        '{} in multiple groups'.format(user_key.id()))
             else:
                 models.User.get_or_insert(user_key.id())
 
@@ -1014,9 +1013,9 @@ class GroupAPI(APIResource):
             raise need.exception()
 
         if data['member'] in group.invited_members:
-            raise BadValueError("user has already been invited")
+            raise BadValueError('user has already been invited')
         if data['member'] in group.members:
-            raise BadValueError("user already part of group")
+            raise BadValueError('user already part of group')
 
         user_to_add = models.User.get_or_insert(data['member'].id())
         group.invited_members.append(user_to_add.key)
@@ -1025,7 +1024,7 @@ class GroupAPI(APIResource):
         audit_log_message = models.AuditLog(
             event_type='Group.add_member',
             user=user.key,
-            description="Added member {} to group".format(data['member']),
+            description='Added member {} to group'.format(data['member']),
             obj=group.key
         )
         audit_log_message.put()
@@ -1043,10 +1042,10 @@ class GroupAPI(APIResource):
 
         if len(group.members) == 0:
             group.key.delete()
-            description = "Deleted group"
+            description = 'Deleted group'
         else:
             group.put()
-            description = "Changed group"
+            description = 'Changed group'
 
         audit_log_message = models.AuditLog(
             event_type='Group.remove_member',
@@ -1068,7 +1067,7 @@ class GroupAPI(APIResource):
             group.members.append(user.key)
             group.put()
         else:
-            raise BadValueError("too many people in group")
+            raise BadValueError('too many people in group')
 
     def reject_invitation(self, group, user, data):
         # can only reject an invitation if you are in the invited_members
