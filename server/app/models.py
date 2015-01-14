@@ -1,4 +1,5 @@
 #pylint: disable=no-member
+#pylint: disable=unused-argument
 
 """Data models."""
 
@@ -52,7 +53,7 @@ class Base(ndb.Model):
     def from_dict(cls, values):
         """Creates an instance from the given values."""
         inst = cls()
-        inst.populate(**values) #pylint: disable=star-args
+        inst.populate(**values)
         return inst
 
     def to_json(self, fields=None):
@@ -113,13 +114,11 @@ class Base(ndb.Model):
 
 
 class User(Base):
-    """Users."""
-    # Must be associated with some OAuth login.
-    email = ndb.StringProperty(required=True)
-    login = ndb.StringProperty() # TODO(denero) Legacy of glookup system
-    role = ndb.StringProperty(default=constants.STUDENT_ROLE)
-    first_name = ndb.StringProperty()
-    last_name = ndb.StringProperty()
+    """Users may have multiple email addresses. Note: the built-in user model
+    in appengine associates a different user object with each email."""
+    email = ndb.StringProperty(repeated=True)
+    # TODO add a name
+    # TODO add a student ID
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -127,108 +126,23 @@ class User(Base):
     ## Properties and getters
 
     @property
-    def is_admin(self):
-        return self.role == constants.ADMIN_ROLE
-
-    @property
     def logged_in(self):
-        return self.email != "_anon"
-
-    @property
-    def is_staff(self):
-        return self.role == constants.STAFF_ROLE
-
-    @property
-    def staffed_courses(self):
-        return Course.query(Course.staff == self.key)
-
-    @property
-    def courses(self):
-        return [group.assignment.get().course for group in self.groups()]
-
-    def groups(self, assignment=None):
-        query = Group.query(Group.members == self.key)
-        if assignment:
-            if not isinstance(assignment, ndb.Key):
-                assignment = assignment.key
-            query = query.filter(Group.assignment == assignment)
-        return query
-
-    def get_group(self, assignment):
-        group = self.groups(assignment).get()
-        if not group:
-            return None
-            group = Group(
-                members=[self.key],
-                assignment=assignment)
-            #group.put()
-        return group
-
-    ## Utilities for submission grading and selection
-
-    def get_selected_submission(self, assign_key, keys_only=False):
-        def make_query():
-            query = Submission.query()
-            query = Submission.can(self, Need('index'), query=query)
-            query = query.filter(Submission.assignment == assign_key)
-            query = query.filter(Submission.messages.kind == "file_contents")
-            query = query.order(-Submission.created)
-            return query
-
-        query = make_query()
-        #query = query.filter(Submission.tags == Submission.SUBMITTED_TAG)
-        subm = query.get(keys_only=keys_only)
-        if subm:
-            return subm
-
-        query = make_query()
-        return query.get(keys_only=keys_only)
-
-    def is_final_submission(self, subm, assign_key):
-        subm = subm.get()
-        groups = list(self.groups(assign_key))
-        if not groups:
-            return True
-        if len(groups) > 1:
-            raise Exception("Invalid groups for user {}".format(self.id))
-
-        group = groups[0]
-        for other in group.members:
-            if other is not self:
-                latest = other.get().get_selected_submission(assign_key, keys_only=True)
-                if isinstance(latest, ndb.Key):
-                    latest = latest.get()
-                if isinstance(subm, ndb.Key):
-                    subm = subm.get()
-
-                if not latest or not subm:
-                    continue
-                if not latest.get_messages()['file_contents']:
-                    continue
-
-                if latest.created > subm.created:
-                    return False
-        return True
+        return self.email != ["_anon"]
 
     @classmethod
-    def from_dict(cls, values):
-        """Creates an instance from the given values."""
-        if 'email' not in values:
-            raise ValueError("Need to specify an email")
-        inst = cls(key=ndb.Key('User', values['email']))
-        inst.populate(**values) #pylint: disable=star-args
-        return inst
-
-    @classmethod
-    def get_or_insert(cls, email, **kwargs):
-        assert not isinstance(id, int), "Only string keys allowed for users"
-        kwargs['email'] = email
-        return super(User, cls).get_or_insert(email, **kwargs)
-
-    @classmethod
-    def get_by_id(cls, id, **kwargs):
-        assert not isinstance(id, int), "Only string keys allowed for users"
-        return super(User, cls).get_by_id(id, **kwargs)
+    @ndb.transactional
+    def get_or_insert(cls, email):
+        """Retrieve a user by email."""
+        assert isinstance(email, str), "bad email:" + str(email)
+        users = cls.query().filter(cls.email == email).get()
+        if len(users) > 1:
+            raise ValueError("Multiple users for email: " + email)
+        elif len(users) == 1:
+            return users[0]
+        else:
+            user = cls(email=[email])
+            user.put()
+            return user
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -236,7 +150,7 @@ class User(Base):
             return False
 
         action = need.action
-        if action == "get":
+        if need.action == "get":
             if user.is_admin:
                 return True
             if obj:
@@ -275,24 +189,21 @@ def AnonymousUser():
         _AnonUser = User.get_or_insert("_anon")
     return _AnonUser
 
+
 class Assignment(Base):
+    """Assignments are particular to courses, keyed by a unique string that
+    should start with the course offering. E.g., cal/cs61a/fa14/proj1.
     """
-    The Assignment Model
-    """
-
-    # Must be unique to support submission.
-    name = ndb.StringProperty(required=True)
-
-    # Name displayed to students
-    display_name = ndb.StringProperty(required=True)
-    # (martinis) made not required because weird
+    display_name = ndb.StringProperty()
     points = ndb.FloatProperty()
-    creator = ndb.KeyProperty(User, required=True)
-    templates = ndb.JsonProperty(required=True)
-    course = ndb.KeyProperty('Course', required=True)
-    max_group_size = ndb.IntegerProperty(required=True)
-    due_date = ndb.DateTimeProperty(required=True)
-    active = ndb.ComputedProperty(lambda a: datetime.datetime.now() <= a.due_date)
+    templates = ndb.JsonProperty()
+    creator = ndb.KeyProperty(User)
+    course = ndb.KeyProperty('Course')
+    max_group_size = ndb.IntegerProperty()
+    due_date = ndb.DateTimeProperty()
+    lock_date = ndb.DateTimeProperty() # no submissions after this date
+    active = ndb.ComputedProperty(lambda a: datetime.datetime.now() <= a.lock_date)
+    # TODO Add services requested
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -307,14 +218,10 @@ class Assignment(Base):
 
 
 class Course(Base):
-    """Courses have enrolled students and assignment lists with due dates."""
-    institution = ndb.StringProperty(required=True) # E.g., 'UC Berkeley'
-    name = ndb.StringProperty(required=True) # E.g., 'CS 61A'
-    term = ndb.StringProperty(required=True)
-    year = ndb.StringProperty(required=True)
-    # TODO: validate offering
-    creator = ndb.KeyProperty(User, required=True)
-    staff = ndb.KeyProperty(User, repeated=True)
+    """Courses are keyed by offering, e.g. cal/cs61a/fa14."""
+    institution = ndb.StringProperty() # E.g., 'UC Berkeley'
+    display_name = ndb.StringProperty()
+    instructor = ndb.KeyProperty(User, repeated=True)
     active = ndb.BooleanProperty(default=True)
 
     @classmethod
@@ -342,25 +249,45 @@ class Course(Base):
 
     @property
     def assignments(self):
+        """Return a query for assignments."""
         return Assignment.query(Assignment.course == self.key)
 
 
-def validate_messages(_, messages):
-    """Messages is a JSON string encoding a map from protocols to data."""
-    if not messages:
+class Participant(Base):
+    """Tracks participation of students & staff in courses."""
+    user = ndb.KeyProperty(User)
+    course = ndb.KeyProperty(Course)
+    role = ndb.StringProperty() # See constants.py for roles
+
+    @classmethod
+    def _can(cls, user, need, course=None, query=None):
+        # TODO
+        pass
+
+    @classmethod
+    def has_role(self, user, course, role):
+        if isinstance(user, User):
+            user = user.key
+        if isinstance(course, Course):
+            course = course.key
+        return Participant.query(Participant.user == user,
+                                 Participant.course == course,
+                                 Participant.role == role).get()
+
+
+def validate_messages(_, message_str):
+    """message_str is a JSON string encoding a map from protocols to data."""
+    if not message_str:
         raise BadValueError('Empty messages')
     try:
-        files = json.loads(messages)
-        if not isinstance(files, dict):
+        messages = json.loads(message_str)
+        if not isinstance(messages, dict):
             raise BadValueError('messages is not a JSON map')
-        for k in files:
-            if not isinstance(k, (str, unicode)):
-                raise BadValueError('key %r is not a string' % k)
-        # TODO(denero) Check that each key corresponds to a known protocol,
-        #              and call protocol-specific validators on each value.
     except Exception as exc:
         raise BadValueError(exc)
 
+
+# TODO CONTINUE HERE
 
 class Message(Base):
     """
