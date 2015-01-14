@@ -17,7 +17,6 @@ def main():
     check_pythons()
     check_gae()
     setup_envs()
-    shell_with_env('client', 'pip install -r client_requirements.txt')
     shell_with_env('server', 'pip install -r server_requirements.txt')
     shell_with_env('server', 'server/app/generate_keys.py')
     run_linkenv()
@@ -61,7 +60,7 @@ def shell_with_env(env_name, *args):
 def check_pythons():
     """Check Python versions."""
     version_list = lambda version_str: [int(n) for n in version_str.split('.')]
-    for python, min_version in [('python', '2.7'), ('python3', '3.3')]:
+    for python, min_version in [('python', '2.7')]:
         if which(python) is None:
             raise Exception('Command "{}" not found')
         redirect_err_to_out = '2>&1'
@@ -80,7 +79,7 @@ def check_gae():
 def setup_envs():
     """Set up virtual environments for each part of the system."""
     client, server = [os.path.join(ENV_DIR, d) for d in ('client', 'server')]
-    for env_path, python in [(client, 'python3'), (server, 'python')]:
+    for env_path, python in [(server, 'python')]:
         if not os.path.exists(os.path.join(env_path, 'bin')):
             shell('virtualenv', '-p', which(python), env_path)
     print('Virtual environments are created')
