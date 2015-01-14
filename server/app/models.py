@@ -47,7 +47,8 @@ def convert_timezone(utc_dt):
 
 
 class Base(ndb.Model):
-    """Shared utilities."""
+    """Shared utility methods and properties."""
+    created = ndb.DateTimeProperty(auto_now_add=True)
 
     @classmethod
     def from_dict(cls, values):
@@ -303,7 +304,7 @@ class Message(Base):
         if action == "index":
             return False
 
-        return Submission._can(user, need, obj, query)
+        return Backup._can(user, need, obj, query)
 
 class Score(Base):
     """
@@ -311,34 +312,31 @@ class Score(Base):
     """
     score = ndb.IntegerProperty()
     message = ndb.StringProperty()
-    created = ndb.DateTimeProperty(auto_now_add=True)
     grader = ndb.KeyProperty('User')
+    # TODO How do we handle scores assigned by autograders?
 
-class Submission(Base):
-    """A submission is generated each time a student runs the client."""
-    submitter = ndb.KeyProperty(User, required=True)
+class Backup(Base):
+    """A backup is sent each time a student runs the client."""
+    submitter = ndb.KeyProperty(User)
     assignment = ndb.KeyProperty(Assignment)
-    created = ndb.DateTimeProperty()
-    db_created = ndb.DateTimeProperty(auto_now_add=True)
+    client_time = ndb.DateTimeProperty()
     messages = ndb.StructuredProperty(Message, repeated=True)
-    compScore = ndb.KeyProperty(Score)
+    score = ndb.StructuredProperty(Score, repeated=True)
     tags = ndb.StringProperty(repeated=True)
 
     SUBMITTED_TAG = "Submit"
 
-    @classmethod
-    def _get_kind(cls):
-      return 'Submissionvtwo'
-
     def get_messages(self, fields=None):
+        # TODO Needs a docstring. what does this method do and what is fields?
+
         if not fields:
             fields = {}
 
         message_fields = fields.get('messages', {})
         if isinstance(message_fields, (str, unicode)):
-            message_fields = (True if message_fields == "true" else False)
+            message_fields = message_fields == "true"
 
-        messages = {message.kind: message.contents for message in self.messages}
+        messages = {m.kind: m.contents for m in self.messages}
         def test(x):
             if isinstance(message_fields, bool):
                 return message_fields
@@ -363,10 +361,11 @@ class Submission(Base):
     @property
     def group(self):
         submitter = self.submitter.get()
-        return submitter.groups(self.assignment.get()).get()
+        # TODO return group
+        # return submitter.groups(self.assignment.get()).get()
 
     def to_json(self, fields=None):
-        json = super(Submission, self).to_json(fields)
+        json = super(Backup, self).to_json(fields)
         if 'messages' in json:
             json['messages'] = self.get_messages(fields)
         return json
@@ -398,7 +397,7 @@ class Submission(Base):
 
             if not query:
                 raise ValueError(
-                    "Need query instance for Submission index action")
+                    "Need query instance for Backup index action")
 
             if user.is_admin:
                 return query
@@ -409,13 +408,13 @@ class Submission(Base):
                 assignments = Assignment.query().filter(
                     Assignment.course == course).fetch()
 
-                filters.append(Submission.assignment.IN(
+                filters.append(Backup.assignment.IN(
                     [assign.key for assign in assignments]))
 
             for group in user.groups():
-                filters.append(ndb.AND(Submission.submitter.IN(group.members),
-                    Submission.assignment == group.assignment))
-            filters.append(Submission.submitter == user.key)
+                filters.append(ndb.AND(Backup.submitter.IN(group.members),
+                    Backup.assignment == group.assignment))
+            filters.append(Backup.submitter == user.key)
 
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
@@ -425,49 +424,9 @@ class Submission(Base):
                 return query
         return False
 
-class OldSubmission(Base):
-    """A submission is generated each time a student runs the client."""
-    submitter = ndb.KeyProperty(User, required=True)
-    assignment = ndb.KeyProperty(Assignment)
-    messages = ndb.JsonProperty()
-    created = ndb.DateTimeProperty(auto_now_add=True)
-    converted = ndb.BooleanProperty(default=False)
 
-    @classmethod
-    def _get_kind(cls):
-      return 'Submission'
-
-    @property
-    def group(self):
-        submitter = self.submitter.get()
-        return submitter.groups(self.assignment.get()).get()
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        return False
-
-    def upgrade(self):
-        created = self.created
-
-        analytics = self.messages.get('analytics')
-        if analytics:
-            date = analytics.get('time') or created
-            if not date == created:
-                created = parse_date(date)
-
-        new_messages = [Message(kind=kind, contents=contents)
-                        for kind, contents in self.messages.iteritems()]
-
-        return Submission(
-            submitter=self.submitter,
-            assignment=self.assignment,
-            created=created,
-            messages=new_messages)
-
-
-
-class SubmissionDiff(Base):
-    submission = ndb.KeyProperty(Submission)
+class BackupDiff(Base):
+    backup = ndb.KeyProperty(Backup)
     diff = ndb.JsonProperty()
 
     @property
@@ -475,26 +434,21 @@ class SubmissionDiff(Base):
         return Comment.query(ancestor=self.key).order(Comment.created)
 
     def to_json(self, fields=None):
-        dct = super(SubmissionDiff, self).to_json(fields)
+        data = super(BackupDiff, self).to_json(fields)
         comments = list(self.comments)
-        comment_dict = {}
+        all_comments = {}
         for comment in comments:
-            if comment.filename not in comment_dict:
-                comment_dict[comment.filename] = {}
-            if comment.line not in comment_dict[comment.filename]:
-                comment_dict[comment.filename][comment.line] = []
-            comment_dict[comment.filename][comment.line].append(comment)
+            file_comments = all_comments.set_default(comment.filename, {})
+            file_comments.set_default(comment.line, []).append(comment)
 
-        dct['comments'] = comment_dict
-        return dct
+        data['comments'] = all_comments
+        return data
 
 class Comment(Base):
-    author = ndb.KeyProperty('User', required=True)
-    created = ndb.DateTimeProperty(auto_now_add=True)
-    line = ndb.IntegerProperty(required=True)
-    message = ndb.TextProperty(required=True)
-    draft = ndb.BooleanProperty(required=True, default=True)
-    filename = ndb.StringProperty(required=True)
+    author = ndb.KeyProperty('User')
+    filename = ndb.StringProperty()
+    line = ndb.IntegerProperty()
+    message = ndb.TextProperty()
 
     @classmethod
     def _can(cls, user, need, comment=None, query=None):
@@ -626,7 +580,7 @@ class Queue(Base):
     @property
     def submissions(self):
         return [fs.submission for fs in
-            FinalSubmission.query().filter(FinalSubmission.queue == self.key)]
+            FinalBackup.query().filter(FinalBackup.queue == self.key)]
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -655,10 +609,10 @@ class Queue(Base):
             'id': self.key.id()
         }
 
-class FinalSubmission(Base):
+class FinalBackup(Base):
     assignment = ndb.KeyProperty(Assignment, required=True)
     group = ndb.KeyProperty(Group, required=True)
-    submission = ndb.KeyProperty(Submission, required=True)
+    submission = ndb.KeyProperty(Backup, required=True)
     published = ndb.BooleanProperty(default=False)
     queue = ndb.KeyProperty(Queue)
 
