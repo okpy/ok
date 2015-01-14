@@ -1,7 +1,4 @@
-"""
-App Engine config
-
-"""
+"""App Engine config"""
 
 appstats_MAX_STACK = 20
 

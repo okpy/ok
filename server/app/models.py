@@ -15,20 +15,12 @@ from flask.json import JSONEncoder as old_json
 
 from google.appengine.ext import ndb
 
-# To deal with circular imports
-class APIProxy(object):
-    def __getattribute__(self, key):
-        import app
-        return app.api.__getattribute__(key)
-
-APIProxy = APIProxy()
-
 class JSONEncoder(old_json):
     """
     Wrapper class to try calling an object's to_dict() method. This allows
     us to JSONify objects coming from the ORM. Also handles dates & datetimes.
     """
-    def default(self, obj): #pylint: disable=E0202
+    def default(self, obj):
         if isinstance(obj, ndb.Key):
             got = obj.get()
             if not got:
@@ -44,8 +36,13 @@ class JSONEncoder(old_json):
 app.json_encoder = JSONEncoder
 
 def convert_timezone(utc_dt):
+    """Convert times to PST/PDT."""
+    # This looks like a hack... is it even right? What about daylight savings?
+    # Correct approach: each course should have a timezone. All times should be
+    # stored in UTC for easy comparison. Dates should be converted to
+    # course-local time when displayed.
     delta = datetime.timedelta(hours=-7)
-    return (datetime.datetime.combine(utc_dt.date(), utc_dt.time()) + delta)
+    return datetime.datetime.combine(utc_dt.date(), utc_dt.time()) + delta
 
 
 class Base(ndb.Model):
@@ -118,7 +115,7 @@ class Base(ndb.Model):
 class User(Base):
     """Users."""
     # Must be associated with some OAuth login.
-    email = ndb.StringProperty(required=True) 
+    email = ndb.StringProperty(required=True)
     login = ndb.StringProperty() # TODO(denero) Legacy of glookup system
     role = ndb.StringProperty(default=constants.STUDENT_ROLE)
     first_name = ndb.StringProperty()
@@ -284,10 +281,10 @@ class Assignment(Base):
     """
 
     # Must be unique to support submission.
-    name = ndb.StringProperty(required=True) 
+    name = ndb.StringProperty(required=True)
 
     # Name displayed to students
-    display_name = ndb.StringProperty(required=True) 
+    display_name = ndb.StringProperty(required=True)
     # (martinis) made not required because weird
     points = ndb.FloatProperty()
     creator = ndb.KeyProperty(User, required=True)
@@ -492,7 +489,7 @@ class Submission(Base):
                 filters.append(ndb.AND(Submission.submitter.IN(group.members),
                     Submission.assignment == group.assignment))
             filters.append(Submission.submitter == user.key)
- 
+
             if len(filters) > 1:
                 return query.filter(ndb.OR(*filters))
             elif filters:

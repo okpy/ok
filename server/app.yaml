@@ -27,7 +27,6 @@ handlers:
   static_files: app/static/img/favicon.ico
   upload: app/static/img/favicon.ico
 
-
 - url: /robots.txt
   static_files: app/static/robots.txt
   upload: app/static/robots.txt

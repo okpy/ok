@@ -1,6 +1,9 @@
 """
 Utility functions used by API and other services
 """
+
+# pylint: disable=no-member
+
 import collections
 import logging
 import datetime
@@ -18,6 +21,7 @@ from google.appengine.ext import deferred
 
 from app import app
 
+# TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
 class ModelProxy(object):
     def __getattribute__(self, key):
@@ -121,7 +125,7 @@ def paginate(entries, page, num_per_page):
     cursor = None
     store_cache = True
     if page > 1:
-        cursor = memcache.get(this_page_key) # pylint: disable=no-member
+        cursor = memcache.get(this_page_key)
         if not cursor:
             page = 1 # Reset to the front, since memcached failed
             store_cache = False
@@ -134,7 +138,7 @@ def paginate(entries, page, num_per_page):
         results, forward_cursor, more = entries.fetch_page(pages_to_fetch)
 
     if store_cache:
-        memcache.set(next_page_key, forward_cursor) # pylint: disable=no-member
+        memcache.set(next_page_key, forward_cursor)
 
     return {
         'results': results,
@@ -248,7 +252,7 @@ def assign_work(assign_key, cursor=None, num_updated=0):
         kwargs['start_cursor'] = cursor
 
     to_put = 0
-    results, cursor, more = query.fetch_page(ASSIGN_BATCH_SIZE, **kwargs)
+    results, cursor, _ = query.fetch_page(ASSIGN_BATCH_SIZE, **kwargs)
     seen = set()
     for queue in queues:
         for subm in queue.submissions:
@@ -301,7 +305,7 @@ def assign_submission(subm_id):
             group=group.key)
 
     current.submission = subm.key
-    #current.put()
+    current.put()
     message = "Final submission modification disallowed for now"
     logging.error(message)
 
