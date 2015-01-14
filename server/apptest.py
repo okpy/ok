@@ -1,6 +1,8 @@
-#!/usr/bin/python
+"""
+Run server tests.
 
-"""Run server tests."""
+Usage:
+"""
 
 import sys, os
 import unittest2
@@ -10,15 +12,14 @@ import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 
 USAGE = """
-Path to your sdk must be the first argument. To run type:
+FLASK_CONF=TEST python apptest.py [GAE_SDK]
 
-$ apptest.py path/to/your/appengine/installation
+You may add the path to your appengine SDK as an argument.
+Otherwise, it is loaded from GAE_SDK.
 
-Remember to set environment variable FLASK_CONF to TEST.
 Loading configuration depending on the value of
 environment variable allows you to add your own
-testing configuration in src/app/settings.py
-
+testing configuration in app/settings.py
 """
 
 def main(sdk_path, test_path):
@@ -34,14 +35,14 @@ def main(sdk_path, test_path):
 
 
 if __name__ == '__main__':
-    #See: code.google.com/appengine/docs/python/tools/localunittesting.html
+    # See: code.google.com/appengine/docs/python/tools/localunittesting.html
     try:
-        #Path to the SDK installation
+        # Path to the SDK installation
         if 'GAE_SDK' in os.environ:
             SDK_PATH = os.environ['GAE_SDK']
         else:
             SDK_PATH = sys.argv[1] # ...or hardcoded path
-        #Path to tests folder
+        # Path to tests folder
         dir_of_file = os.path.dirname(os.path.abspath(__file__))
         TEST_PATH = os.path.join(dir_of_file, 'tests')
         main(SDK_PATH, TEST_PATH)
