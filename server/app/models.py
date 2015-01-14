@@ -15,20 +15,12 @@ from flask.json import JSONEncoder as old_json
 
 from google.appengine.ext import ndb
 
-# To deal with circular imports
-class APIProxy(object):
-    def __getattribute__(self, key):
-        import app
-        return app.api.__getattribute__(key)
-
-APIProxy = APIProxy()
-
 class JSONEncoder(old_json):
     """
     Wrapper class to try calling an object's to_dict() method. This allows
     us to JSONify objects coming from the ORM. Also handles dates & datetimes.
     """
-    def default(self, obj): #pylint: disable=E0202
+    def default(self, obj):
         if isinstance(obj, ndb.Key):
             got = obj.get()
             if not got:
@@ -45,7 +37,10 @@ app.json_encoder = JSONEncoder
 
 def convert_timezone(utc_dt):
     """Convert times to PST/PDT."""
-    # TODO Looks like a hack... is it even right? What about daylight savings?
+    # This looks like a hack... is it even right? What about daylight savings?
+    # Correct approach: each course should have a timezone. All times should be
+    # stored in UTC for easy comparison. Dates should be converted to
+    # course-local time when displayed.
     delta = datetime.timedelta(hours=-7)
     return datetime.datetime.combine(utc_dt.date(), utc_dt.time()) + delta
 
