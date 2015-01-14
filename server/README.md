@@ -1,3 +1,5 @@
+TODO Merge with ../README.md
+
 Permissions
 ===========
 Permissions to Create, Read, Update, and Delete records are determined by the
@@ -5,6 +7,8 @@ Model classes. Each ``Model`` class has a ``can`` method that receives a
 ``User`` instance, a declared ``Need``, and optionally the object being
 accessed. This object must be retrieved from the database before the
 permissions can be checked.
+
+See https://github.com/Cal-CS-61A-Staff/ok/wiki/Permissions
 
 App Files
 ========
@@ -30,8 +34,9 @@ forms.py
 
 models.py
 ---------
-Implements the models described on the Wiki and their permissions.
-TODO(denero): Add links to Wiki or external documentation here.
+Implements the models described on the Wiki.
+
+https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 
 urls.py
 -------
