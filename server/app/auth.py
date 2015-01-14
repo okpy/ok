@@ -1,6 +1,5 @@
 """Convert access tokens to user records."""
 
-# Because pylint doesn't understand memcache for some reason
 # pylint: disable=no-member
 
 from app import models
