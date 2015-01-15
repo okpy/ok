@@ -135,11 +135,9 @@ class User(Base):
     def get_or_insert(cls, email):
         """Retrieve a user by email."""
         assert isinstance(email, str), "bad email:" + str(email)
-        users = cls.query().filter(cls.email == email).get()
-        if len(users) > 1:
-            raise ValueError("Multiple users for email: " + email)
-        elif len(users) == 1:
-            return users[0]
+        user = cls.query().filter(cls.email == email).get()
+        if user:
+            return user
         else:
             user = cls(email=[email])
             user.put()
@@ -189,7 +187,7 @@ class Assignment(Base):
     def _can(cls, user, need, obj, query):
         if need.action == "get":
             return True
-        elif action == "index":
+        elif need.action == "index":
             return query
         else:
             return False
@@ -231,6 +229,7 @@ class Participant(Base):
 
     @classmethod
     def _can(cls, user, need, course, query):
+        action = need.action
         if action == "get":
             return True
         elif action == "index":
@@ -245,9 +244,10 @@ class Participant(Base):
             user_key = user_key.key
         if isinstance(course_key, Course):
             course_key = course_key.key
-        return cls.query(cls.user == user_key,
-                         cls.course == course_key,
-                         cls.role == role).get()
+        query = cls.query(cls.user == user_key,
+                          cls.course == course_key,
+                          cls.role == role)
+        return query.get() is not None
 
     @classmethod
     def courses(cls, user_key, role=None):
@@ -256,8 +256,7 @@ class Participant(Base):
         query = cls.query(cls.user == user_key)
         if role:
             query.filter(cls.role == role)
-        return query
-
+        return query.fetch()
 
 
 def validate_messages(_, message_str):
@@ -287,6 +286,14 @@ class Message(Base):
         return Backup._can(user, need, obj, query)
 
 
+def disjunction(query, filters):
+    """Return a query in which at least one filter is true."""
+    assert filters, "No filters"
+    if len(filters) > 1:
+        return query.filter(ndb.OR(*filters))
+    else:
+        return query.filter(filters[0])
+
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
@@ -298,11 +305,13 @@ class Backup(Base):
     SUBMITTED_TAG = "Submit"
 
     def get_messages(self, fields=None):
-        # TODO Needs a docstring. what does this method do and what is fields?
+        # TODO This docstring is probably inaccurate b/c I don't get this fn.
+        """Create a dictionary from message kind to message contents."""
 
         if not fields:
             fields = {}
 
+        # TODO What does this do and why? Please add a comment.
         message_fields = fields.get('messages', {})
         if isinstance(message_fields, (str, unicode)):
             message_fields = message_fields == "true"
@@ -331,7 +340,7 @@ class Backup(Base):
 
     @property
     def group(self):
-        return Group.lookup(self.submitter)
+        return Group.lookup(self.submitter, self.assignment)
 
     def to_json(self, fields=None):
         json = super(Backup, self).to_json(fields)
@@ -340,57 +349,34 @@ class Backup(Base):
         return json
 
     @classmethod
-    def _can(cls, user, need, obj=None, query=None):
+    def _can(cls, user, need, backup, query):
+        """A user can access a backup as staff or through a group."""
         action = need.action
         if action == "get":
-            if not obj:
-                raise ValueError("Need instance for get action.")
-            if user.is_admin or obj.submitter == user.key:
+            if not backup or not isinstance(backup, Backup):
+                raise ValueError("Need Backup instance for get action.")
+            if backup.submitter == user.key:
                 return True
-            if user.is_staff:
-                for course in user.staffed_courses:
-                    if course.key in obj.submitter.get().courses:
-                        return True
-            groups = list(user.groups(obj.assignment))
-            my_group = obj.group
-
-            if groups and my_group and my_group.key in [g.key for g in groups]:
+            course_key = backup.assignment.course
+            if Participant.has_role(user, course_key, STAFF_ROLE):
+                return True
+            group = backup.group
+            if group and user.key in group.member:
                 return True
             return False
         if action in ("create", "put"):
-            return user.logged_in
-
+            return user.logged_in and user.key == backup.submitter
         if action == "index":
             if not user.logged_in:
                 return False
-
-            if not query:
-                raise ValueError(
-                    "Need query instance for Backup index action")
-
-            if user.is_admin:
-                return query
-
-            filters = []
-            courses = Course.query().filter(Course.staff == user.key)
-            for course in courses:
-                assignments = Assignment.query().filter(
-                    Assignment.course == course).fetch()
-
-                filters.append(Backup.assignment.IN(
-                    [assign.key for assign in assignments]))
-
-            for group in user.groups():
+            filters = [Backup.submitter == user.key]
+            for course in Participant.courses(user, STAFF_ROLE):
+                assigns = Assignment.query(Assignment.course == course).fetch()
+                filters.append(Backup.assignment.IN([a.key for a in assigns]))
+            if backup.group:
                 filters.append(ndb.AND(Backup.submitter.IN(group.members),
                                        Backup.assignment == group.assignment))
-            filters.append(Backup.submitter == user.key)
-
-            if len(filters) > 1:
-                return query.filter(ndb.OR(*filters))
-            elif filters:
-                return query.filter(filters[0])
-            else:
-                return query
+            return disjunction(query, filters)
         return False
 
 
@@ -447,10 +433,8 @@ class Comment(Base):
 
     @classmethod
     def _can(cls, user, need, comment=None, query=None):
-        if need.action == "get":
-            return user.is_admin or comment.author == user.key
-        if need.action == "delete":
-            return user.is_admin or comment.author == user.key
+        if need.action in ["get", "modify", "delete"]:
+            return comment.author == user.key
         return False
 
 
@@ -520,19 +504,17 @@ class Group(Base):
     assignment = ndb.KeyProperty('Assignment', required=True)
 
     @classmethod
-    def lookup(cls, user_key):
+    def lookup(cls, user_key, assignment_key):
         """Return the group for a user key."""
         if isinstance(user_key, User):
             user_key = user_key.key()
-        groups = Group.query(Group.member == user_key).get()
-        assert len(groups) <= 1, "A user has multiple groups!: " + str(groups)
-        if len(groups) == 1:
-            return groups[0]
-        else:
-            return None
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key()
+        return Group.query(Group.member == user_key,
+                           Group.assignment == assignment_key).get()
 
     @classmethod
-    def _can(cls, user, need, obj=None, query=None):
+    def _can(cls, user, need, group, query):
         action = need.action
         if not user.logged_in:
             return False
@@ -548,17 +530,16 @@ class Group(Base):
         if action == "delete":
             return False
         if action == "invitation":
-            return user.key in obj.invited_members
+            return user.key in group.invited
         if action == "member":
-            return user.key in obj.members
+            return user.key in group.members
         if action == "get":
-            return user.key in obj.members or user.key in obj.invited_members
-
+            return user.key in group.members or user.key in group.invited
         if action in ("create", "put"):
             #TODO(martinis) make sure other students are ok with this group
-            if not obj:
+            if not group:
                 raise ValueError("Need instance for get action.")
-            return user.key in obj.members
+            return user.key in group.members
         return False
 
     def _pre_put_hook(self):
