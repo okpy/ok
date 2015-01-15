@@ -133,9 +133,8 @@ class User(Base):
     @classmethod
     @ndb.transactional
     def get_or_insert(cls, email):
-        """Retrieve a user by email."""
-        assert isinstance(email, str), "bad email:" + str(email)
-        user = cls.query().filter(cls.email == email).get()
+        """Retrieve a user by email or create that user."""
+        user = cls.lookup(email)
         if user:
             return user
         else:
@@ -144,10 +143,18 @@ class User(Base):
             return user
 
     @classmethod
+    def lookup(cls, email):
+        """Retrieve a user by email or return None."""
+        assert isinstance(email, str), "Invalid email: " + str(email)
+        return cls.query(cls.email == email).get()
+
+    @classmethod
     def _can(cls, user, need, obj, query):
         if not user.logged_in:
             return False
 
+        if need.action == "lookup":
+            return True
         if need.action == "get":
             if not obj or not isinstance(obj, User):
                 return False
@@ -413,7 +420,7 @@ class Diff(Base):
 
     @property
     def comments(self):
-        return Comment.query(parent=self.key).order(Comment.created)
+        return Comment.query(ancestor=self.key).order(Comment.created)
 
     def to_json(self, fields=None):
         data = super(Diff, self).to_json(fields)
@@ -520,6 +527,66 @@ class Group(Base):
                            Group.assignment == assignment_key).get()
 
     @classmethod
+    def lookup_or_create(cls, user_key, assignment_key):
+        """Retrieve a group for user or create a group. Group is *not* put."""
+        group = cls.lookup(user_key, assignment_key)
+        if group:
+            return group
+        if isinstance(user_key, User):
+            user_key = user_key.key()
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key()
+        return Group(member=[user_key], invited=[], assignment=assignment_key)
+
+    @ndb.transactional
+    def invite(self, email):
+        """Invites a user to the group. Returns an error message or None."""
+        user = User.lookup(email)
+        if not user:
+            return "That user does not exist"
+        course = self.assignment.get().course
+        if not Participant.has_role(user, course, STUDENT_ROLE):
+            return "That user is not enrolled in this course"
+        if user.key in self.member or user.key in self.invited:
+            return "That user is already in the group"
+        has_user = ndb.Or(Group.member == user.key, Group.invited == user.key)
+        if Group.query(has_user, Group.assignment == self.assignment).get():
+            return "That user is already in some other group"
+        max_group_size = self.assignment.get().max_group_size
+        total_members = len(self.members) + len(self.invited)
+        if total_members + 1 > max_group_size:
+            return "The group is full"
+        self.invited.append(user.key)
+        self.put()
+
+    @classmethod
+    @ndb.transactional
+    def invite_to_group(cls, user_key, email, assignment_key):
+        """User invites email to join his/her group."""
+        group = cls.lookup_or_create(user_key, assignment_key)
+        group.invite(email)
+
+    @ndb.transactional
+    def accept(self, user_key):
+        """User accepts an invitation to join. Returns error or None."""
+        if user_key not in self.invited:
+            return "That user is not invited to the group"
+        if user_key in self.member:
+            return "That user has already accepted."
+        self.invited.remove(user_key)
+        self.member.append(user_key)
+        self.put()
+
+    @ndb.transactional
+    def exit(self, user_key):
+        """User leaves the group. Empty groups are deleted."""
+        for users in [self.members, self.invited]:
+            if user_key in users:
+                users.remove(user_key)
+        if not self.validate():
+            self.delete()
+
+    @classmethod
     def _can(cls, user, need, group, query):
         action = need.action
         if not user.logged_in:
@@ -548,13 +615,23 @@ class Group(Base):
             return user.key in group.members
         return False
 
-    def _pre_put_hook(self):
-        """Ensure that the group is well-formed before put."""
+    def validate(self):
+        """Return an error string if group is invalid."""
         max_group_size = self.assignment.get().max_group_size
         total_members = len(self.members) + len(self.invited)
         if max_group_size and total_members > max_group_size:
             sizes = (total_members, max_group_size)
-            raise BadValueError("%s members; at most %s allowed" % sizes)
+            return "%s members found; at most %s allowed" % sizes
+        if total_members < 2:
+            return "No group can have %s total members" % total_members
+        if not self.members:
+            return "A group must have an active member"
+
+    def _pre_put_hook(self):
+        """Ensure that the group is well-formed before put."""
+        error = self.validate()
+        if error:
+            raise BadValueError(error)
 
 
 class FinalSubmission(Base):
