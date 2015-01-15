@@ -1198,24 +1198,30 @@ class FinalSubmission(Base):
 
 
 class Notification(Base):
-    """
-    Notification for a course.
-    """
-    message = ndb.StringProperty()
+    """Notification to send out to users or to all members of a course"""
+    message = ndb.StringProperty(required=True)
     URL = ndb.StringProperty()
     count = ndb.FloatProperty()
     expiration = ndb.DateTimeProperty()
     course = ndb.KeyProperty(Course)
     status = ndb.IntegerProperty()
     written = ndb.DateTimeProperty()
+    users = ndb.KeyProperty(kind='User', repeated=True)
 
     @classmethod
-    def _can(cls, user, need, course, query):
+    def _can(cls, user, need, obj=None, query=None):
         action = need.action
-        if action == "add":
+        if not user.logged_in:
+            return False
+
+        if action == "index":
             if user.is_admin:
-                return True
-            return user.key in course.staff
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
         return False
 
 
