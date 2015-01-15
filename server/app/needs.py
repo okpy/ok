@@ -4,7 +4,10 @@ from app.exceptions import PermissionError
 class Need(object):
     """A need represents an action taken on an object, such as getting it."""
 
+    legal_actions = ["get", "index", "create", "delete", "put", "modify"]
+
     def __init__(self, action):
+        assert action in self.legal_actions, str(action)
         self.action = action
         self.obj = None
 

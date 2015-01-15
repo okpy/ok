@@ -6,6 +6,7 @@
 import datetime
 
 from app import app
+from app.constants import STUDENT_ROLE, STAFF_ROLE
 from app.exceptions import *
 from flask import json
 from flask.json import JSONEncoder as old_json
@@ -33,7 +34,7 @@ class JSONEncoder(old_json):
 app.json_encoder = JSONEncoder
 
 def convert_timezone(utc_dt):
-    """Convert times to PST/PDT."""
+    """Convert times to Pacific time."""
     # This looks like a hack... is it even right? What about daylight savings?
     # Correct approach: each course should have a timezone. All times should be
     # stored in UTC for easy comparison. Dates should be converted to
@@ -99,14 +100,20 @@ class Base(ndb.Model):
 
     @classmethod
     def can(cls, user, need, obj=None, query=None):
+        """Whether user satisfies the given need for this object.
+
+        The index action requires a query that gets filtered and returned.
         """
-        Tells you if the |user| satisfies the given |need| for this object.
-        """
+        if need.action == "index":
+            assert query, "No query for index"
         need.set_object(obj or cls)
-        return cls._can(user, need, obj, query)
+        if user.is_admin:
+            return query or True
+        else:
+            return cls._can(user, need, obj, query)
 
     @classmethod
-    def _can(cls, user, need, obj=None, query=None):
+    def _can(cls, user, need, obj, query):
         return False
 
 
@@ -115,13 +122,9 @@ class User(Base):
     in appengine associates a different user object with each email.
     """
     email = ndb.StringProperty(repeated=True)
+    is_admin = ndb.BooleanProperty(default=False)
     # TODO add a name
     # TODO add a student ID
-
-    def __repr__(self):
-        return '<User %r>' % self.email
-
-    ## Properties and getters
 
     @property
     def logged_in(self):
@@ -143,52 +146,39 @@ class User(Base):
             return user
 
     @classmethod
-    def _can(cls, user, need, obj=None, query=None):
+    def _can(cls, user, need, obj, query):
         if not user.logged_in:
             return False
 
-        action = need.action
         if need.action == "get":
-            if user.is_admin:
+            if not obj or not isinstance(obj, User):
+                return False
+            elif obj.key == user.key:
                 return True
-            if obj:
-                if obj.key == user.key:
-                    return True
-
-            if user.is_staff:
-                for course in user.staffed_courses:
-                    if course.key in obj.courses:
-                        return True
-        elif action == "index":
-            if user.is_admin:
-                return query
-
-            filters = []
-            for course in user.courses:
-                if user.key in course.staff:
-                    filters.append(User.query().filter(
-                        User.courses == course.key))
-
-            filters.append(User.key == user.key)
-
-            if len(filters) > 1:
-                return query.filter(ndb.OR(*filters))
             else:
-                return query.filter(filters[0])
-        elif action in ("create", "put"):
-            return user.is_admin
-        return False
+                for course in Participant.courses(user, STAFF_ROLE):
+                    if Participant.has_role(obj, course, STUDENT_ROLE):
+                        return True
+                return False
+        elif need.action == "index":
+            # TODO Update documentation: users can only index themselves.
+            #      See Participant for listing users by course
+            return query.filter(User.key == user.key)
+        else:
+            return False
 
 
 class Assignment(Base):
     """Assignments are particular to courses, keyed by a unique string that
     should start with the course offering. E.g., cal/cs61a/fa14/proj1.
+
+    Assignment keys do *not* have course keys as parents.
     """
     display_name = ndb.StringProperty()
     points = ndb.FloatProperty()
     templates = ndb.JsonProperty()
     creator = ndb.KeyProperty(User)
-    course = ndb.KeyProperty('Course')
+    course = ndb.KeyProperty(Course)
     max_group_size = ndb.IntegerProperty()
     due_date = ndb.DateTimeProperty()
     lock_date = ndb.DateTimeProperty() # no submissions after this date
@@ -196,15 +186,13 @@ class Assignment(Base):
     # TODO Add services requested
 
     @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        if action == "get":
+    def _can(cls, user, need, obj, query):
+        if need.action == "get":
             return True
         elif action == "index":
             return query
-        elif action in ("create", "put"):
-            return user.is_admin
-        return False
+        else:
+            return False
 
 
 class Course(Base):
@@ -215,22 +203,14 @@ class Course(Base):
     active = ndb.BooleanProperty(default=True)
 
     @classmethod
-    def _can(cls, user, need, course=None, query=None):
+    def _can(cls, user, need, course, query):
         action = need.action
         if action == "get":
-            if user.is_admin:
-                return True
             return True
         elif action == "index":
             return query
-        elif action in ("create", "delete", "put"):
-            return user.is_admin
         elif action == "modify":
-            if user.is_admin:
-                return True
-            if not course:
-                raise ValueError("Need instance for get action.")
-            return user.key in course.staff
+            return course
         elif action == "staff":
             if user.is_admin:
                 return True
@@ -250,19 +230,34 @@ class Participant(Base):
     role = ndb.StringProperty() # See constants.py for roles
 
     @classmethod
-    def _can(cls, user, need, course=None, query=None):
-        # TODO
-        pass
+    def _can(cls, user, need, course, query):
+        if action == "get":
+            return True
+        elif action == "index":
+            if cls.has_role(user, course, STAFF_ROLE):
+                return query.filter(cls.course == course)
+            else:
+                return query.filter(cls.user == user)
 
     @classmethod
-    def has_role(self, user, course, role):
-        if isinstance(user, User):
-            user = user.key
-        if isinstance(course, Course):
-            course = course.key
-        return Participant.query(Participant.user == user,
-                                 Participant.course == course,
-                                 Participant.role == role).get()
+    def has_role(cls, user_key, course_key, role):
+        if isinstance(user_key, User):
+            user_key = user_key.key
+        if isinstance(course_key, Course):
+            course_key = course_key.key
+        return cls.query(cls.user == user_key,
+                         cls.course == course_key,
+                         cls.role == role).get()
+
+    @classmethod
+    def courses(cls, user_key, role=None):
+        if isinstance(user_key, User):
+            user_key = user_key.key
+        query = cls.query(cls.user == user_key)
+        if role:
+            query.filter(cls.role == role)
+        return query
+
 
 
 def validate_messages(_, message_str):
@@ -292,23 +287,12 @@ class Message(Base):
         return Backup._can(user, need, obj, query)
 
 
-class Score(Base):
-    """
-    The score for a submission.
-    """
-    score = ndb.IntegerProperty()
-    message = ndb.StringProperty() # Plain text
-    grader = ndb.KeyProperty('User')
-    # TODO How do we handle scores assigned by autograders?
-
-
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
     assignment = ndb.KeyProperty(Assignment)
     client_time = ndb.DateTimeProperty()
     messages = ndb.StructuredProperty(Message, repeated=True)
-    score = ndb.StructuredProperty(Score, repeated=True)
     tags = ndb.StringProperty(repeated=True)
 
     SUBMITTED_TAG = "Submit"
@@ -410,9 +394,20 @@ class Backup(Base):
         return False
 
 
-class Submitted(Base):
+class Score(Base):
+    """
+    The score for a submission.
+    """
+    score = ndb.IntegerProperty()
+    message = ndb.StringProperty() # Plain text
+    grader = ndb.KeyProperty('User')
+    # TODO How do we handle scores assigned by autograders?
+
+
+class Submission(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
+    score = ndb.StructuredProperty(Score, repeated=True)
 
 
 class Diff(Base):
