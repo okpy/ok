@@ -298,7 +298,11 @@ class Backup(Base):
     SUBMITTED_TAG = "Submit"
 
     def get_messages(self, fields=None):
-        # TODO Needs a docstring. what does this method do and what is fields?
+        """
+        Returns self.messages formatted as a dictionary.
+
+        fields: The selected fields of the dictionary.
+        """
 
         if not fields:
             fields = {}
@@ -402,6 +406,9 @@ class Score(Base):
     message = ndb.StringProperty() # Plain text
     grader = ndb.KeyProperty('User')
     # TODO How do we handle scores assigned by autograders?
+    # We just need to make sure that the permissions allow for autograders to
+    # be able to add scores. The autograding service that's being built should
+    # call into our endpoints to add a score for a submission.
 
 
 class Submission(Base):
@@ -608,6 +615,9 @@ def anon_converter(prop, value):
 
 class AuditLog(Base):
     # TODO What's an AuditLog?
+    # Keeps track of Group changes that are happening. That way, we can stop
+    # cases of cheating by temporary access. (e.g. A is C's partner for 10 min
+    # so A can copy off of C)
     created = ndb.DateTimeProperty(auto_now_add=True)
     event_type = ndb.StringProperty(required=True)
     user = ndb.KeyProperty('User', required=True, validator=anon_converter)
