@@ -5,12 +5,8 @@
 
 import datetime
 
-from app import constants
-
 from app import app
-from app.needs import Need
 from app.exceptions import *
-from app.utils import parse_date
 from flask import json
 from flask.json import JSONEncoder as old_json
 
@@ -116,7 +112,8 @@ class Base(ndb.Model):
 
 class User(Base):
     """Users may have multiple email addresses. Note: the built-in user model
-    in appengine associates a different user object with each email."""
+    in appengine associates a different user object with each email.
+    """
     email = ndb.StringProperty(repeated=True)
     # TODO add a name
     # TODO add a student ID
@@ -181,14 +178,6 @@ class User(Base):
         elif action in ("create", "put"):
             return user.is_admin
         return False
-
-
-_AnonUser = None
-def AnonymousUser():
-    global _AnonUser
-    if not _AnonUser:
-        _AnonUser = User.get_or_insert("_anon")
-    return _AnonUser
 
 
 class Assignment(Base):
@@ -288,12 +277,8 @@ def validate_messages(_, message_str):
         raise BadValueError(exc)
 
 
-# TODO CONTINUE HERE
-
 class Message(Base):
-    """
-    A message given to us from the client.
-    """
+    """A message given to us from the client (e.g., the contents of files)."""
     contents = ndb.JsonProperty()
     kind = ndb.StringProperty()
 
@@ -312,7 +297,7 @@ class Score(Base):
     The score for a submission.
     """
     score = ndb.IntegerProperty()
-    message = ndb.StringProperty()
+    message = ndb.StringProperty() # Plain text
     grader = ndb.KeyProperty('User')
     # TODO How do we handle scores assigned by autograders?
 
@@ -362,9 +347,7 @@ class Backup(Base):
 
     @property
     def group(self):
-        submitter = self.submitter.get()
-        # TODO return group
-        # return submitter.groups(self.assignment.get()).get()
+        return Group.lookup(self.submitter)
 
     def to_json(self, fields=None):
         json = super(Backup, self).to_json(fields)
@@ -415,7 +398,7 @@ class Backup(Base):
 
             for group in user.groups():
                 filters.append(ndb.AND(Backup.submitter.IN(group.members),
-                    Backup.assignment == group.assignment))
+                                       Backup.assignment == group.assignment))
             filters.append(Backup.submitter == user.key)
 
             if len(filters) > 1:
@@ -427,27 +410,26 @@ class Backup(Base):
         return False
 
 
-class Submission(Base):
+class Submitted(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
 
-    @classmethod
-    def _get_kind(cls):
-        return "Submissionv3"
 
-
-class BackupDiff(Base):
-    """A diff between two versions of the same project, with comments."""
+class Diff(Base):
+    """A diff between two versions of the same project, with comments.
+    A diff has three types of lines: insertions, deletions, and matches.
+    Every insertion line is associated with a diff line.
+    """
     before = ndb.KeyProperty(Backup) # Set to None to compare to template
     after = ndb.KeyProperty(Backup)
     diff = ndb.JsonProperty()
 
     @property
     def comments(self):
-        return Comment.query(ancestor=self.key).order(Comment.created)
+        return Comment.query(parent=self.key).order(Comment.created)
 
     def to_json(self, fields=None):
-        data = super(BackupDiff, self).to_json(fields)
+        data = super(Diff, self).to_json(fields)
         comments = list(self.comments)
         all_comments = {}
         for comment in comments:
@@ -459,11 +441,14 @@ class BackupDiff(Base):
 
 
 class Comment(Base):
-    # TODO describe key & ancestor scheme.
+    """A comment is part of a diff. The key has the diff as its parent."""
     author = ndb.KeyProperty('User')
     filename = ndb.StringProperty()
     line = ndb.IntegerProperty()
-    message = ndb.TextProperty()
+    # TODO Populate submission_line so that when diffs are changed, comments
+    #      don't move around.
+    submission_line = ndb.IntegerProperty()
+    message = ndb.TextProperty() # Markdown
 
     @classmethod
     def _can(cls, user, need, comment=None, query=None):
@@ -535,9 +520,21 @@ class Group(Base):
 
     Active members of a group can view each other's submissions.
     """
-    members = ndb.KeyProperty(kind='User', repeated=True)
-    invited_members = ndb.KeyProperty(kind='User', repeated=True)
+    member = ndb.KeyProperty(kind='User', repeated=True)
+    invited = ndb.KeyProperty(kind='User', repeated=True)
     assignment = ndb.KeyProperty('Assignment', required=True)
+
+    @classmethod
+    def lookup(cls, user_key):
+        """Return the group for a user key."""
+        if isinstance(user_key, User):
+            user_key = user_key.key()
+        groups = Group.query(Group.member == user_key).get()
+        assert len(groups) <= 1, "A user has multiple groups!: " + str(groups)
+        if len(groups) == 1:
+            return groups[0]
+        else:
+            return None
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -570,32 +567,67 @@ class Group(Base):
         return False
 
     def _pre_put_hook(self):
+        """Ensure that the group is well-formed before put."""
         max_group_size = self.assignment.get().max_group_size
-        if max_group_size and len(self.members) > max_group_size:
-            raise BadValueError("Too many members. Max allowed is %s" % (
-                max_group_size))
+        total_members = len(self.members) + len(self.invited)
+        if max_group_size and total_members > max_group_size:
+            sizes = (total_members, max_group_size)
+            raise BadValueError("%s members; at most %s allowed" % sizes)
 
+
+class FinalSubmission(Base):
+    assignment = ndb.KeyProperty(Assignment)
+    group = ndb.KeyProperty(Group)
+    submission = ndb.KeyProperty(Backup)
+    published = ndb.BooleanProperty(default=False)
+    queue = ndb.KeyProperty(Queue)
+
+    @property
+    def assigned(self):
+        return bool(self.queue)
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        if not user.logged_in:
+            return False
+
+        if action == "index":
+            if user.is_admin:
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
+        return False
+
+
+# TODO Can we get rid of this (and maybe the AuditLog, too)?
 def anon_converter(prop, value):
     if not value.get().logged_in:
         return None
 
     return value
 
+
 class AuditLog(Base):
+    # TODO What's an AuditLog?
     created = ndb.DateTimeProperty(auto_now_add=True)
     event_type = ndb.StringProperty(required=True)
     user = ndb.KeyProperty('User', required=True, validator=anon_converter)
     description = ndb.StringProperty()
     obj = ndb.KeyProperty()
 
+
 class Queue(Base):
-    assignment = ndb.KeyProperty(Assignment, required=True)
+    assignment = ndb.KeyProperty(Assignment)
     assigned_staff = ndb.KeyProperty(User, repeated=True)
 
     @property
     def submissions(self):
-        return [fs.submission for fs in
-            FinalBackup.query().filter(FinalBackup.queue == self.key)]
+        q = FinalSubmission.query().filter(FinalSubmission.queue == self.key)
+        return [fs.submission for fs in q]
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -624,29 +656,3 @@ class Queue(Base):
             'id': self.key.id()
         }
 
-class FinalBackup(Base):
-    assignment = ndb.KeyProperty(Assignment, required=True)
-    group = ndb.KeyProperty(Group, required=True)
-    submission = ndb.KeyProperty(Backup, required=True)
-    published = ndb.BooleanProperty(default=False)
-    queue = ndb.KeyProperty(Queue)
-
-    @property
-    def assigned(self):
-        return bool(self.queue)
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        if not user.logged_in:
-            return False
-
-        if action == "index":
-            if user.is_admin:
-                return query
-            return False
-
-        if user.is_admin:
-            return True
-
-        return False
