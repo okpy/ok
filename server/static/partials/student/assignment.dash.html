@@ -1,0 +1,57 @@
+<div class="screen" ng-controller="AssignmentDashController">
+
+  <div class="assign large active" id="1" ng-repeat="assign in assignments">
+    <div class="assign-main">
+      <img class="assign-bg" src="/static/student/images/bg-clock.png">
+       <h2 class="assign-title"> {{ assign.display_name }}</h2>
+      <div class="assign-deck">
+        <p><img src="/static/student/images/icon-clock.png">due {{ assign.due_date | amCalendar }}</p>
+        <p><span class="icon-question">?</span> {{assign.points}} points</p>
+        <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+      </div>
+    </div>
+
+    <div class="assign-progress">
+      <div class="assign-bar"><span class="assign-fill" ng-style="{'width' : '30%'}"></span></div>
+      <p class="assign-label"><c>30%</c>complete.<c> Not submitted</c></p>
+    </div>
+
+    <div class="assign-more" ng-show="assign.expand">
+      <div class="assign-text">
+        <div class="col left">
+          <h3 class="assign-subtitle">Group members</h3>
+          <ul class="sortable">
+            <li>
+              <span class="stripes dark">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              Alvin Wan
+            </li>
+            <li>
+              <span class="stripes dark">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              Angie Jodjana
+            </li>
+          </ul>
+          <a href="#" class="link view-group" id="1">view group &raquo;</a>
+        </div>
+        <div class="col right">
+          <h3 class="assign-subtitle">Latest Submission</h3>
+          <a href="#" class="link view-submission"><p>January 5 at 5:00 p.m. &raquo;</p></a>
+          <a href="#" class="link view-submissions">view submissions &raquo;</a>
+          <span class="clear"><a href="#" class="link view-backups">view backups &raquo;</a></span>
+        </div>
+      </div>
+    </div>
+    <a class="assign-expand" ng-click="assign.expand = !assign.expand">
+      <p>Expand</p>
+    </div>
+  </div>
+  </div>
+
+</div>

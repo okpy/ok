@@ -1,28 +1,27 @@
-<div class="block" ng-controller="AssignmentOverviewController" ng-cloak>
-  <div class="block-dom">
-    <h3 class="block-title">{{ assignments.length }}</h3>
-    <span>Active Assignments</span>
-  </div>
-  <div class="block-sub">
-    <div class="assign-block" ng-repeat="assign in assignments" >
-      <p class="block-label"><c>75%</c>{{ assign.name }}</p>
-      <div class="block-progress" progress="75"><span class="block-bar"></span>
+  <div class="block" ng-controller="AssignmentOverviewController" ng-cloak>
+    <div class="block-dom">
+      <h3 class="block-title">{{ assignments.length || '?' }}</h3>
+      <span>Active Assignments</span>
+    </div>
+    <div class="block-sub" >
+      <div class="assign-block" ng-repeat="assign in assignments">
+        <p class="block-label"><c>75%</c>{{ assign.name }}</p>
+        <div class="block-progress" progress="75"><span class="block-bar"></span>
+        </div>
       </div>
     </div>
+    <a href="{{course.website}}" class="block-link">
+      <span class="icon-link">8</span>
+      <p class="link-label">Course Website</p>
+    </a>
   </div>
-  <a href="{{course.website}}" class="block-link">
-    <span class="icon-link">8</span>
-    <p class="link-label">Course Website</p>
-  </a>
-</div>
-<div class="newblock">
-  <a href="#" class="block-link block-back">
-    <span class="arrow left dark"></span>
-    <p>Back</p>
-  </a>
-  <a href="#" class="block-link">
-    <span class="icon-link">8</span>
-    <p class="link-label">Course Website</p>
-  </a>
-</div>
-
+  <div class="newblock">
+    <a href="#" class="block-link block-back">
+      <span class="arrow left dark"></span>
+      <p>Back</p>
+    </a>
+    <a href="#" class="block-link">
+      <span class="icon-link">8</span>
+      <p class="link-label">Course Website</p>
+    </a>
+  </div>

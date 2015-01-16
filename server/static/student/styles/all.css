@@ -6,6 +6,7 @@
 	font-weight:300;
 	position:relative;
 }
+
 html,body,h1,h2,h3,h4,h5,h6,section,article,footer { width:100% }
 html,body { height:100% }
 h1,h2,h3,h4,h5,h6 { font-weight:lighter; text-align:center; }
@@ -324,6 +325,22 @@ body.course {
 				height:5px;
 				margin:5px 0 10px 0;
 			}
+
+  progress[value] {
+    /* Reset the default appearance */
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
+
+        /* Get rid of default border in Firefox. */
+        border: none;
+
+        width:100%;
+        height:5px;
+        margin:5px 0 10px 0;
+        background-color:#FFF;
+      }
+
 			.block-bar {
 				width:70%;
 				background-color:#006CD8;
@@ -488,7 +505,6 @@ body.course {
 			}
 		.assign-more {
 			background-color:#FFF;
-			height:0;
 			overflow:hidden;
 		}
 			.assign-more.active {
@@ -997,9 +1013,9 @@ body.course {
 			margin-top:-50%;
 			border:4px solid rgba(255,255,255,0.25);
 		}
-.course-progress {
-	background-color:#333;
-}
+  .course-progress {
+  	background-color:#333;
+  }
 	.course {
 		display:inline-block;
 	}

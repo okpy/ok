@@ -10,7 +10,7 @@ app.directive('assignmentModule', function() {
 app.directive('assignmentList', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/common/assignment.list.html?cacheprevent1021',
+            templateUrl: '/static/partials/student/assignment.dash.html',
         };
     });
 

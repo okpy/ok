@@ -10,7 +10,13 @@ app.controller("CourseModuleController", ["$scope",
 // Assignment Controllers
 app.controller("AssignmentOverviewController", ['$scope', 'Assignment', 'User', '$timeout',
   function($scope, Assignment, User, $timeout) {
-      alert("FOOO!!!!!");
+      Assignment.query(function(response) {
+        $scope.assignments = response.results;
+      })}
+]);
+
+app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', '$timeout',
+  function($scope, Assignment, User, $timeout) {
       Assignment.query(function(response) {
         $scope.assignments = response.results;
       })}
