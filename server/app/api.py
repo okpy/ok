@@ -342,6 +342,18 @@ class UserAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True)
             }
+        },
+        'get_backups': {
+            'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
+        }
+        'get_submissions' {
+            'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
         }
     }
 
@@ -410,7 +422,20 @@ class UserAPI(APIResource):
         user.put()
 
     def final_submission(self, obj, user, data):
-        return obj.get_selected_submission(data['assignment'])
+        query = models.Group.query(models.Group.members == user.key)
+        group = query.filter(models.Group.assignment == data['assignment'])
+        return models.FinalSubmission.query(models.FinalSubmission.group == group)
+
+    def get_backups(self, obj, user, data):
+        query = models.Group.query(models.Group.members == user.key)
+        group = query.filter(models.Group.assignment == data['assignment'])
+
+        all_backups = []
+        for member in group.members:
+            all_backups += list(models.Backup.query(models.Backup.submitter ==
+                member).filter(models.Backup.assignment == data['assignment']))
+
+        return all_backups
 
 
 class AssignmentAPI(APIResource):
