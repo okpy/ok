@@ -38,8 +38,10 @@ def parse_json_field(field):
         return field
     return json.loads(field)
 
+# Arguments to convert query strings to a python type
 
 def DateTimeArg(**kwds):
+    """Converts a webarg to a datetime object"""
     def parse_date(arg):
         op = None
         if '|' in arg:
@@ -54,6 +56,7 @@ def DateTimeArg(**kwds):
 
 
 def KeyArg(cls, **kwds):
+    """Converts a webarg to a key in Google's ndb."""
     def parse_key(key):
         try:
             key = int(key)
@@ -64,6 +67,7 @@ def KeyArg(cls, **kwds):
 
 
 def KeyRepeatedArg(cls, **kwds):
+    """Converts a repeated argument to a list"""
     def parse_list(key_list):
         staff_lst = key_list
         if not isinstance(key_list, list):
@@ -76,6 +80,7 @@ def KeyRepeatedArg(cls, **kwds):
 
 
 def BooleanArg(**kwargs):
+    """Converts a webarg to a boolean"""
     def parse_bool(arg):
         if isinstance(arg, bool):
             return arg
