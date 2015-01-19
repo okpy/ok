@@ -356,7 +356,7 @@ class UserAPI(APIResource):
         """
         Creates a new entity with given attributes.
         """
-        entity = self.model.get_by_id(attributes['email'])
+        entity = self.model.lookup(attributes['email'])
         if entity:
             raise BadValueError('user already exists')
         entity = self.model.from_dict(attributes)
@@ -414,7 +414,6 @@ class UserAPI(APIResource):
 
 
 class AssignmentAPI(APIResource):
-
     """The API resource for the Assignment Object"""
     model = models.Assignment
 
@@ -468,15 +467,13 @@ class AssignmentAPI(APIResource):
         return super(AssignmentAPI, self).post(user, data)
 
     def assign(self, obj, user, data):
-        # Todo: Should make this have permissions!
-        # need = Need('staff')
-        # if not obj.can(user, need, obj):
-        #     raise need.exception()
+        need = Need('put')
+        if not obj.can(user, need, obj):
+             raise need.exception()
         deferred.defer(assign_work, obj.key)
 
 
 class SubmitNDBImplementation(object):
-
     """Implementation of DB calls required by submission using Google NDB"""
 
     def lookup_assignments_by_name(self, name):
@@ -512,9 +509,8 @@ class SubmitNDBImplementation(object):
 
 
 class SubmissionAPI(APIResource):
-
     """The API resource for the Submission Object"""
-    model = models.Submission
+    model = models.Backup
     diff_model = models.SubmissionDiff
 
     db = SubmitNDBImplementation()
@@ -956,6 +952,14 @@ class CourseAPI(APIResource):
             'web_args': {
             }
         },
+        'get_students': {
+        },
+        'add_student': {
+            'methods': set(['POST']),
+            'web_args': {
+                'student': KeyArg('User', required=True)
+            }
+        },
     }
 
     def post(self, user, data):
@@ -989,6 +993,13 @@ class CourseAPI(APIResource):
         if data['staff_member'] in course.staff:
             course.staff.remove(data['staff_member'])
             course.put()
+
+    def get_students(self, course, user, data):
+        return list(models.Participant.query(models.Participant.course == course))
+
+    def add_student(self, course, user, data):
+        new_participant = models.Participant(user, course, 'student')
+        new_participant.put()
 
     def assignments(self, course, user, data):
         return list(course.assignments)
