@@ -69,7 +69,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissionDetail = {
       name: 'submission.detail',
       url: '/:submissionId',
-      templateUrl: '/static/partials/common/submission.detail.html?cacheprevent1022',
+      templateUrl: '/static/partials/student/submission.detail.html',
       controller: "SubmissionDetailCtrl"
     }
 

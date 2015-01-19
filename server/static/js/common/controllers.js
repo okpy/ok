@@ -14,7 +14,7 @@ app.controller("AssignmentListCtrl", ['$scope', 'Assignment', 'User', '$timeout'
         $scope.assignments = response.results;
         var assign_ids = [];
 
-        // hack to store the ids. There is a much better way to do this. 
+        // hack to store the ids. There is a much better way to do this.
         for (var i = 0; i < response.results.length; i++) {
           assign_ids.push(response.results[i].id);
         }
@@ -122,32 +122,11 @@ app.controller("SubmissionListCtrl", ['$scope', "$state", 'Submission',
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
   function($scope, $location, $stateParams, $timeout, $anchorScroll, Submission) {
-    $scope.tagToAdd = "";
     $scope.submission = Submission.get({id: $stateParams.submissionId});
-    $scope.validTags = [
-        { text: 'Submit' },
-        { text: 'Bugs' },
-        { text: 'Comments' }
-      ];;
 
-    $scope.showInput = false;
-
-    $scope.toggle = function() {
-        $scope.showInput = !$scope.showInput;
-    };
-
-    $scope.add = function() {
-        Submission.addTag({
-          id: $stateParams.submissionId,
-          tag: $scope.tagToAdd
-        }, function() {
-          $scope.submission.tags.push($scope.tagToAdd);
-        });
-        $scope.toggle();
-    }
   }]);
 
-app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams', 
+app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams',
     function($scope, Submission, $stateParams) {
       var submission = $scope.$parent.$parent.$parent.submission;
       $scope.remove = function() {

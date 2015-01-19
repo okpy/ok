@@ -7,6 +7,119 @@
 	position:relative;
 }
 
+/* testing */
+.snippet {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  width: 100%;
+  text-shadow: 0 1px 0 #fff;
+  border-collapse: separate;
+}
+.diff {
+  width: 100%;
+  border-collapse: separate;
+}
+
+.foo {
+  float:none;
+}
+.snippet {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  width: 100%;
+  text-shadow: 0 1px 0 #fff;
+  background-color: white;
+  border-collapse: separate;
+  float: none;
+}
+
+.diff-line-code {
+  position: relative;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 12px;
+  color: #333;
+  vertical-align: top;
+  white-space: pre;
+  overflow: visible;
+
+}
+
+.diff-line-code-pos {
+  background: #dfd !important;
+}
+
+.diff-line-code-empty {
+  background: #fff;
+}
+
+.diff-line-code-neg {
+  background: #fdd !important;
+}
+
+.diff-line-num {
+  width: 1%;
+  min-width: 50px;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(0,0,0,0.3);
+  vertical-align: top;
+  text-align: right;
+  border: solid #eee;
+  border-width: 0 1px 0 0;
+  cursor: pointer;
+}
+
+.diff-line-num-pos {
+  background-color: #ceffce;
+  border-color: #b4e2b4;
+}
+
+.diff-line-num-neg {
+  background-color: #f7c8c8;
+  border-color: #e9aeae;
+}
+
+.file {
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+.file .meta {
+  padding: 5px 10px;
+  text-shadow: 0 1px 0 #fff;
+  border-bottom: 1px solid #d8d8d8;
+  background-color: #f7f7f7;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.file .meta .expander {
+  float: right
+}
+
+.snippet-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+.file .meta .info {
+  line-height: 33px;
+}
+
+.line-number {
+  color: rgba(0,0,0,0.3);
+}
+
 html,body,h1,h2,h3,h4,h5,h6,section,article,footer { width:100% }
 html,body { height:100% }
 h1,h2,h3,h4,h5,h6 { font-weight:lighter; text-align:center; }
@@ -450,6 +563,8 @@ body.course {
 		.assign-expand {
 			width:100%;
 			background-color:#333;
+      display: inline-block;
+      float: left;
 		}
 			.assign-expand p {
 				width:100%;
@@ -566,6 +681,8 @@ body.course {
 				}
 				.sortable {
 					width:100%;
+          list-style-type: none;
+
 				}
 				.link {
 					color:#006CD8;

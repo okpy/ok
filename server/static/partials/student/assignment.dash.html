@@ -21,37 +21,235 @@
         <div class="col left">
           <h3 class="assign-subtitle">Group members</h3>
           <ul class="sortable">
-            <li>
+            <li ng-repeat="member in assign.group">
               <span class="stripes dark">
                 <span class="stripe"></span>
                 <span class="stripe"></span>
                 <span class="stripe"></span>
               </span>
-              Alvin Wan
-            </li>
-            <li>
-              <span class="stripes dark">
-                <span class="stripe"></span>
-                <span class="stripe"></span>
-                <span class="stripe"></span>
-              </span>
-              Angie Jodjana
+              {{member}}
             </li>
           </ul>
-          <a href="#" class="link view-group" id="1">view group &raquo;</a>
+          <a ng-click="showGroup(assign.id)" class="link view-group" id="1">view group &raquo;</a>
         </div>
-        <div class="col right">
-          <h3 class="assign-subtitle">Latest Submission</h3>
-          <a href="#" class="link view-submission"><p>January 5 at 5:00 p.m. &raquo;</p></a>
-          <a href="#" class="link view-submissions">view submissions &raquo;</a>
-          <span class="clear"><a href="#" class="link view-backups">view backups &raquo;</a></span>
+
+          <div class="col right">
+            <div ng-if="assign.latestSubm">
+              <h3 class="assign-subtitle"  >Latest Submission</h3>
+              <a ng-if="assign.latestSubm" ui-sref='submission.detail({submissionId:assign.latestSubm.id})' class="link view-submission"><p> {{ assign.latestSubm.time | amCalendar }} &raquo;</p></a>
+              <a ng-if="assign.latestSubm" ng-click="showSubms(assign.id)" class="link view-submissions">view submissions &raquo;</a>
+            </div>
+            <h3 class="assign-subtitle" ng-if="!assign.latestSubm" >No Submission</h3>
+
+            <span class="clear"><a ng-click="showBackups(assign.id)" class="link view-backups">view backups &raquo;</a></span>
+          </div>
+
+      </div>
+    </div>
+    <a class="assign-expand" ng-click="assign.expand = !assign.expand;">
+      <p ng-hide="assign.expand">Expand</p>
+      <p ng-show="assign.expand">Collapse</p>
+    </a>
+  </div>
+
+
+    <div class="popups">
+      <div class="popup group hide">
+        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+        <h2 class="popup-title">Group</h2>
+        <p class="popup-byline">created <b class="creation-date">Jan. 16</b> for <b class="assign-name">Scheme Interpreter</b></p>
+        <div class="pop-content">
+          <ul class="sortable">
+            <li class="pop-item">
+              <span class="item-no">0</span>
+              <span class="stripes">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              <p class="first-member">Alvin Wan</p>
+              <div class="remove-user"><span class="icon-x">+</span></div>
+            </li>
+            <li class="pop-item">
+              <span class="item-no">1</span>
+              <span class="stripes">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              <p class="second-member">Angie Jodjana</p>
+            </li>
+            <li class="pop-item">
+              <span class="item-no">2</span>
+              <span class="stripes">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              <p class="third-member">Person</p>
+              <div class="remove-user"><span class="icon-x">+</span></div>
+            </li>
+          </ul>
+          <a href="#" class="action leave-group">Leave</a>
+        </div>
+      </div>
+      <div class="popup submissions hide">
+        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+        <h2 class="popup-title">Submissions</h2>
+        <p class="popup-byline">for <b>Scheme Interpreter</b></p>
+        <div class="pop-content">
+          <li class="header">
+            <span class="col-1"><p>Date</p></span>
+            <span class="col-2"><p>By</p></span>
+          </li>
+          <li class="pop-item" id="1">
+            <a href="#" class="flag active">
+              <span class="label left"><p>Flagged for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="2">
+            <a href="#" class="flag">
+              <span class="label left"><p>Click to Flag for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="3">
+            <a href="#" class="flag">
+              <span class="label left"><p>Click to Flag for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="4">
+            <a href="#" class="flag">
+              <span class="label left"><p>Click to Flag for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <a href="#" class="flag">
+              <span class="label left"><p>Click to Flag for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <a href="#" class="flag">
+              <span class="label left"><p>Click to Flag for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <a href="#" class="flag">
+              <span class="label left"><p>Click to Flag for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <a href="#" class="flag">
+              <span class="label left"><p>Click to Flag for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <a href="#" class="flag">
+              <span class="label left"><p>Click to Flag for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+        </div>
+      </div>
+      <div class="popup backups hide">
+        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+        <h2 class="popup-title">Backups</h2>
+        <p class="popup-byline">for <b>Scheme Interpreter</b></p>
+        <div class="pop-content">
+          <li class="header">
+            <span class="col-1"><p>Date</p></span>
+            <span class="col-2"><p>By</p></span>
+          </li>
+          <li class="pop-item" id="1">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="2">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="3">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="4">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
+          <li class="pop-item" id="5">
+            <span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
+            <span class="col-2"><p>Alvin</p></span>
+            <a href="#" class="light link view-submission">view &raquo;</a>
+          </li>
         </div>
       </div>
     </div>
-    <a class="assign-expand" ng-click="assign.expand = !assign.expand">
-      <p>Expand</p>
-    </div>
-  </div>
-  </div>
 
 </div>
