@@ -20,13 +20,14 @@ from app import utils
 from app.constants import API_PREFIX
 from app.exceptions import *
 
+def force_account_chooser(url):
+    """Forces the user to choose a particular email account rather than assuming a default."""
+    if 'ServiceLogin' in url:
+        return url.replace('ServiceLogin', 'AccountChooser')
+    return url
+
 @app.route("/")
 def dashboard():
-    def force_account_chooser(url):
-        if 'ServiceLogin' in url:
-            return url.replace('ServiceLogin', 'AccountChooser')
-        return url
-
     user = users.get_current_user()
     params = {}
     if user is None:
@@ -43,14 +44,8 @@ def dashboard():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("base.html", **params)
 
-
 @app.route("/manage")
 def admin():
-    def force_account_chooser(url):
-        if 'ServiceLogin' in url:
-            return url.replace('ServiceLogin', 'AccountChooser')
-        return url
-
     user = users.get_current_user()
     params = {}
     if user is None:
@@ -73,13 +68,6 @@ def admin():
         else:
             logging.info("Staff Login Failure from %s", user.email())
     return redirect(url_for('dashboard'))
-
-@app.route("/upgrade")
-def upgrade():
-    all_count = models.OldSubmission.query().count()
-    converted_count = models.OldSubmission.query().filter(
-        models.OldSubmission.converted == True).count()
-    return "all {} converted {}".format(all_count, converted_count), 200
 
 ## Error handlers
 # Handle 404 errors
@@ -105,7 +93,6 @@ def check_version(client):
     if client != latest.current_version:
         raise IncorrectVersionError(client, latest)
 
-
 def register_api(view, endpoint, url):
     """
     Registers the given view at the endpoint, accessible by the given url.
@@ -117,7 +104,6 @@ def register_api(view, endpoint, url):
     def api_wrapper(*args, **kwds):
         #TODO(martinis) add tests
         # Any client can check for the latest version
-
         try:
             request.fields = {}
             message = "success"
@@ -125,8 +111,10 @@ def register_api(view, endpoint, url):
                 check_version(request.args['client_version'])
 
             user = auth.authenticate()
+
             if not isinstance(user, models.User):
                 return user
+
             session['user'] = user
             logging.info("User is %s.", user.email)
 
@@ -142,11 +130,12 @@ def register_api(view, endpoint, url):
                 rval = utils.create_api_response(*rval)
             else:
                 rval = utils.create_api_response(200, message, rval)
-
             return rval
+
         except APIException as e:
             logging.exception(e.message)
             return utils.create_api_response(e.code, e.message, e.data)
+
         except Exception as e: #pylint: disable=broad-except
             logging.exception(e.message)
             return utils.create_api_response(500, 'internal server error :(')
