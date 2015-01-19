@@ -290,25 +290,31 @@ class APIResource(View):
 
 
 class UserAPI(APIResource):
-
-    """The API resource for the User Object"""
+    """The API resource for the User Object
+    
+    model- the class in models.py that this API is for.
+    key_type- The type of the id of this model.
+    """
     model = models.User
-    key_type = str
+    key_type = int
 
     methods = {
         'post': {
             'web_args': {
-                'first_name': Arg(str),
-                'last_name': Arg(str),
-                'email': Arg(str, required=True),
-                'login': Arg(str),
+                'email': KeyRepeatedArg(str, required=True),
+                'name': Arg(str),
             }
         },
-        'put': {
+        'add_email': {
+            'methods': set(['PUT']),
             'web_args': {
-                'first_name': Arg(str),
-                'last_name': Arg(str),
-                'login': Arg(str),
+                'email': Arg(str)
+            }
+        },
+        'delete_email': {
+            'methods': set(['PUT']),
+            'web_args': {
+                'email': Arg(str)
             }
         },
         'get': {
@@ -339,6 +345,13 @@ class UserAPI(APIResource):
         }
     }
 
+    def get(self, obj, user, data):
+        """
+        Overwrite GET request for user class in order to send more data.
+        """
+        #TODO(soumya): Actually overwrite this- needed to get down to 1 request.
+        return obj
+
     def new_entity(self, attributes):
         """
         Creates a new entity with given attributes.
@@ -348,6 +361,33 @@ class UserAPI(APIResource):
             raise BadValueError('user already exists')
         entity = self.model.from_dict(attributes)
         return entity
+
+    def add_email(self, obj, user, data):
+        """
+        Adds an email for the user (represented by obj).
+        """
+        need = Need('get') # Anyone who can get the User object can add an email
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        new_user = obj.get()
+
+        if data['email'] not in new_user.emails:
+            new_user.emails.append(data['email'])
+            new_user.put()
+
+    def delete_email(self, obj, user, data):
+        """
+        Deletes an email for the user (represented by obj).
+        """
+        need = Need('get')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        new_user = obj.get()
+        if data['email'] in new_user.emails:
+            new_user.emails.remove(data['email'])
+            new_user.put()
 
     def invitations(self, obj, user, data):
         query = models.Group.query(models.Group.invited_members == user.key)
