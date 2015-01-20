@@ -5,7 +5,6 @@
 Tests for the permissions system
 """
 
-#from test_base import unittest #pylint: disable=relative-import
 import unittest
 from test_permissions import PermissionsUnitTest
 

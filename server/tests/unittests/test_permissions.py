@@ -43,6 +43,9 @@ class PermissionsUnitTest(BaseTestCase):
                 email=["dummy@admin.com"],
                 is_admin=True,
             ),
+            "anon": models.User(
+                email=["_anon"]
+            ),
         }
 
     def enroll(self, student, course, role):
@@ -101,7 +104,7 @@ class PermissionsUnitTest(BaseTestCase):
         for assign in self.assignments.values():
             assign.put()
 
-        self.submissions = {
+        self.backups = {
             "first": models.Backup(
                 submitter=self.accounts["student0"].key,
                 assignment=self.assignments["first"].key,
@@ -131,7 +134,16 @@ class PermissionsUnitTest(BaseTestCase):
         )
 
         group_submission.put()
-        self.submissions['group'] = group_submission
+        self.backups['group'] = group_submission
+
+        self.queues = {
+                "first": models.Queue(
+                    assignment=self.assignments["first"].key,
+                    assigned_staff=[self.accounts["staff"].key],
+                ),
+        }
+        for queue in self.queues.values():
+            queue.put()
 
         self.user = None
 
@@ -152,44 +164,6 @@ class PermissionsUnitTest(BaseTestCase):
             self.output = output
 
    #  permission_tests = [
-   #      PTest("student_get_own",
-   #            "student0", "Submission", "first", "get", True),
-   #      PTest("student_get_other",
-   #            "student1", "Submission", "third", "get", False),
-   #      PTest("student_get_group",
-   #            "student1", "Submission", "group", "get", True),
-   #      PTest("student_get_other_group",
-   #            "student2", "Submission", "group", "get", False),
-   #      PTest("student_index_group",
-   #            "student1", "Submission", "group", "index", True),
-   #      PTest("student_index_other_group",
-   #            "student2", "Submission", "group", "index", False),
-   #      PTest("anon_get_first_own",
-   #            "anon", "Submission", "first", "get", False),
-   #      PTest("anon_get_other",
-   #            "anon", "Submission", "second", "get", False),
-   #      PTest("anon_index_0",
-   #            "anon", "Submission", "first", "index", False),
-   #      PTest("anon_index_1",
-   #            "anon", "Submission", "second", "index", False),
-   #      PTest("staff_get_same_course",
-   #            "staff", "Submission", "first", "get", True),
-   #      PTest("staff_get_other_course",
-   #            "staff", "Submission", "third", "get", False),
-   #      PTest("admin_get_student0",
-   #            "admin", "Submission", "first", "get", True),
-   #      PTest("admin_get_student1",
-   #            "admin", "Submission", "third", "get", True),
-   #      PTest("admin_delete_own_student",
-   #            "admin", "Submission", "first", "delete", False),
-   #      PTest("staff_delete_own_student",
-   #            "admin", "Submission", "first", "delete", False),
-   #      PTest("anon_delete_own_student",
-   #            "anon", "Submission", "first", "delete", False),
-   #      PTest("student_delete_submission",
-   #            "student0", "Submission", "first", "delete", False),
-   #      PTest("student_modify_submission",
-   #            "student0", "Submission", "first", "modify", False),
    #      PTest("student_get_assignment",
    #            "student0", "Assignment", "first", "get", True),
    #      PTest("anon_get_assignment",
@@ -260,12 +234,14 @@ class PermissionsUnitTest(BaseTestCase):
         obj = None
         if model == "User":
             obj = self.accounts[obj_name]
-        elif model == "Submission":
-            obj = self.submissions[obj_name]
+        elif model == "Backup":
+            obj = self.backups[obj_name]
         elif model == "Assignment":
             obj = self.assignments[obj_name]
         elif model == "Course":
             obj = self.courses[obj_name]
+        elif model == "Queue":
+            obj = self.queues[obj_name]
 
         if not obj:
             self.assertTrue(False, "Invalid test arguments %s" % model)
