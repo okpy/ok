@@ -174,11 +174,8 @@ class User(Base):
 
 
 class Assignment(Base):
-    """Assignments are particular to courses, keyed by a unique string that
-    should start with the course offering. E.g., cal/cs61a/fa14/proj1.
-
-    Assignment keys do *not* have course keys as parents.
-    """
+    """Assignments are particular to courses and have unique names."""
+    name = ndb.StringProperty() # E.g., cal/cs61a/fa14/proj1
     display_name = ndb.StringProperty()
     points = ndb.FloatProperty()
     templates = ndb.JsonProperty()
@@ -201,7 +198,8 @@ class Assignment(Base):
 
 
 class Course(Base):
-    """Courses are keyed by offering, e.g. cal/cs61a/fa14."""
+    """Courses are expected to have a unique offering."""
+    offering = ndb.StringProperty() # E.g., 'cal/cs61a/fa14'
     institution = ndb.StringProperty() # E.g., 'UC Berkeley'
     display_name = ndb.StringProperty()
     instructor = ndb.KeyProperty(User, repeated=True)
@@ -301,6 +299,7 @@ def disjunction(query, filters):
     else:
         return query.filter(filters[0])
 
+
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
@@ -309,11 +308,8 @@ class Backup(Base):
     messages = ndb.StructuredProperty(Message, repeated=True)
     tags = ndb.StringProperty(repeated=True)
 
-    SUBMITTED_TAG = "Submit"
-
     def get_messages(self, fields=None):
-        """
-        Returns self.messages formatted as a dictionary.
+        """Returns self.messages formatted as a dictionary.
 
         fields: The selected fields of the dictionary.
         """
@@ -391,22 +387,21 @@ class Backup(Base):
 
 
 class Score(Base):
-    """
-    The score for a submission.
-    """
+    """The score for a submission, either from a grader or autograder."""
     score = ndb.IntegerProperty()
     message = ndb.StringProperty() # Plain text
     grader = ndb.KeyProperty('User')
-    # TODO How do we handle scores assigned by autograders?
-    # We just need to make sure that the permissions allow for autograders to
-    # be able to add scores. The autograding service that's being built should
-    # call into our endpoints to add a score for a submission.
+    autograder = ndb.StringProperty()
 
 
 class Submission(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
+
+    @classmethod
+    def _can(cls, user, need, submission, query):
+        return Backup._can(user, need, submission.backup.get(), query)
 
 
 class Diff(Base):
@@ -437,6 +432,7 @@ class Diff(Base):
 class Comment(Base):
     """A comment is part of a diff. The key has the diff as its parent."""
     author = ndb.KeyProperty('User')
+    diff = ndb.KeyProperty('Diff')
     filename = ndb.StringProperty()
     line = ndb.IntegerProperty()
     # TODO Populate submission_line so that when diffs are changed, comments
@@ -508,9 +504,9 @@ class Version(Base):
         return super(cls, Version).get_by_id(key, **kwargs)
 
 class Group(Base):
-    """A group is a collection of users who are either active or pending.
+    """A group is a collection of users who are either members or invited.
 
-    Active members of a group can view each other's submissions.
+    Members of a group can view each other's submissions.
     """
     member = ndb.KeyProperty(kind='User', repeated=True)
     invited = ndb.KeyProperty(kind='User', repeated=True)
@@ -527,7 +523,7 @@ class Group(Base):
                            Group.assignment == assignment_key).get()
 
     @classmethod
-    def lookup_or_create(cls, user_key, assignment_key):
+    def _lookup_or_create(cls, user_key, assignment_key):
         """Retrieve a group for user or create a group. Group is *not* put."""
         group = cls.lookup(user_key, assignment_key)
         if group:
@@ -562,9 +558,9 @@ class Group(Base):
     @classmethod
     @ndb.transactional
     def invite_to_group(cls, user_key, email, assignment_key):
-        """User invites email to join his/her group."""
-        group = cls.lookup_or_create(user_key, assignment_key)
-        group.invite(email)
+        """User invites email to join his/her group. Returns error or None."""
+        group = cls._lookup_or_create(user_key, assignment_key)
+        return group.invite(email)
 
     @ndb.transactional
     def accept(self, user_key):
@@ -602,14 +598,11 @@ class Group(Base):
 
         if action == "delete":
             return False
-        if action == "invitation":
-            return user.key in group.invited
-        if action == "member":
+        if action == "invite":
             return user.key in group.members
         if action == "get":
             return user.key in group.members or user.key in group.invited
         if action in ("create", "put"):
-            #TODO(martinis) make sure other students are ok with this group
             if not group:
                 raise ValueError("Need instance for get action.")
             return user.key in group.members
@@ -635,9 +628,10 @@ class Group(Base):
 
 
 class FinalSubmission(Base):
+    """The final submission for an assignment from a group."""
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
-    submission = ndb.KeyProperty(Backup)
+    submission = ndb.KeyProperty(Submission)
     published = ndb.BooleanProperty(default=False)
     queue = ndb.KeyProperty(Queue)
 
@@ -646,36 +640,21 @@ class FinalSubmission(Base):
         return bool(self.queue)
 
     @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        if not user.logged_in:
-            return False
-
-        if action == "index":
-            if user.is_admin:
-                return query
-            return False
-
-        if user.is_admin:
-            return True
-
-        return False
+    def _can(cls, user, need, final, query):
+        return Submission._can(user, need, final.submission.get(), query)
 
 
 # TODO Can we get rid of this (and maybe the AuditLog, too)?
 def anon_converter(prop, value):
     if not value.get().logged_in:
         return None
-
     return value
 
 
 class AuditLog(Base):
-    # TODO What's an AuditLog?
-    # Keeps track of Group changes that are happening. That way, we can stop
-    # cases of cheating by temporary access. (e.g. A is C's partner for 10 min
-    # so A can copy off of C)
-    created = ndb.DateTimeProperty(auto_now_add=True)
+    """Keeps track of Group changes that are happening. That way, we can stop
+    cases of cheating by temporary access. (e.g. A is C's partner for 10 min
+    so A can copy off of C)."""
     event_type = ndb.StringProperty(required=True)
     user = ndb.KeyProperty('User', required=True, validator=anon_converter)
     description = ndb.StringProperty()
@@ -683,6 +662,7 @@ class AuditLog(Base):
 
 
 class Queue(Base):
+    """A queue of submissions to grade."""
     assignment = ndb.KeyProperty(Assignment)
     assigned_staff = ndb.KeyProperty(User, repeated=True)
 
@@ -690,22 +670,6 @@ class Queue(Base):
     def submissions(self):
         q = FinalSubmission.query().filter(FinalSubmission.queue == self.key)
         return [fs.submission for fs in q]
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        if not user.logged_in:
-            return False
-
-        if action == "index":
-            if user.is_admin:
-                return query
-            return False
-
-        if user.is_admin:
-            return True
-
-        return False
 
     def to_json(self, fields=None):
         if not fields:
