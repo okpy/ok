@@ -1,0 +1,15 @@
+Assignment -- permissions
+FinalSubmission -- permissions (hook check at some point)
+Queue -- permissions, to_json
+AuditLog -- none
+Group -- permissions, classmethods, invitation, acceptance, leaving, validation
+Version -- download_link, to_json, permissions
+Comment -- permissions
+Diff -- permissions, to_json
+Submission -- permissions (same as backup)
+Score -- none
+Backup -- get_messages, to_json, permissions
+Message -- permissions (almost same as backup)
+Participant -- has_role (CM), courses (CM), permissions
+Course -- permissions
+User -- append_email, delete_email, get_final_submission, get_or_insert, lookup, permissions
