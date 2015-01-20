@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+#pylint: disable=no-init,invalid-name,missing-docstring,maybe-no-member
+
 """
 Server test case scaffolding
 """
@@ -29,14 +31,14 @@ from google.appengine.ext import ndb
 import app
 from app import models
 from app import auth
-from app.constants import API_PREFIX #pylint: disable=import-error
+from app.constants import API_PREFIX
 from app.authenticator import Authenticator, AuthenticationException
 
-class BaseTestCase(unittest.TestCase): #pylint: disable=no-init
+class BaseTestCase(unittest.TestCase):
     """
     Base test case.
     """
-    def setUp(self): #pylint: disable=invalid-name, missing-docstring
+    def setUp(self):
         # Flask apps testing. See: http://flask.pocoo.org/docs/testing/
         app.app.config.from_object('app.settings.Debug')
         self.app = app.app

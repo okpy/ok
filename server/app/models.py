@@ -173,30 +173,6 @@ class User(Base):
             return False
 
 
-class Assignment(Base):
-    """Assignments are particular to courses and have unique names."""
-    name = ndb.StringProperty() # E.g., cal/cs61a/fa14/proj1
-    display_name = ndb.StringProperty()
-    points = ndb.FloatProperty()
-    templates = ndb.JsonProperty()
-    creator = ndb.KeyProperty(User)
-    course = ndb.KeyProperty(Course)
-    max_group_size = ndb.IntegerProperty()
-    due_date = ndb.DateTimeProperty()
-    lock_date = ndb.DateTimeProperty() # no submissions after this date
-    active = ndb.ComputedProperty(lambda a: datetime.datetime.now() <= a.lock_date)
-    # TODO Add services requested
-
-    @classmethod
-    def _can(cls, user, need, obj, query):
-        if need.action == "get":
-            return True
-        elif need.action == "index":
-            return query
-        else:
-            return False
-
-
 class Course(Base):
     """Courses are expected to have a unique offering."""
     offering = ndb.StringProperty() # E.g., 'cal/cs61a/fa14'
@@ -224,6 +200,33 @@ class Course(Base):
     def assignments(self):
         """Return a query for assignments."""
         return Assignment.query(Assignment.course == self.key)
+
+
+class Assignment(Base):
+    """Assignments are particular to courses and have unique names."""
+    name = ndb.StringProperty() # E.g., cal/cs61a/fa14/proj1
+    display_name = ndb.StringProperty()
+    points = ndb.FloatProperty()
+    templates = ndb.JsonProperty()
+    creator = ndb.KeyProperty(User)
+    course = ndb.KeyProperty(Course)
+    max_group_size = ndb.IntegerProperty()
+    due_date = ndb.DateTimeProperty()
+    lock_date = ndb.DateTimeProperty() # no submissions after this date
+    active = ndb.ComputedProperty(lambda a: datetime.datetime.now() <= a.lock_date)
+    # TODO Add services requested
+
+    @classmethod
+    def _can(cls, user, need, obj, query):
+        if need.action == "get":
+            return True
+        elif need.action == "index":
+            return query
+        else:
+            return False
+
+
+
 
 
 class Participant(Base):
@@ -622,25 +625,6 @@ class Group(Base):
             raise BadValueError(error)
 
 
-class FinalSubmission(Base):
-    """The final submission for an assignment from a group."""
-    assignment = ndb.KeyProperty(Assignment)
-    group = ndb.KeyProperty(Group)
-    submission = ndb.KeyProperty(Submission)
-    published = ndb.BooleanProperty(default=False)
-    queue = ndb.KeyProperty(Queue)
-
-    @property
-    def assigned(self):
-        return bool(self.queue)
-
-    @classmethod
-    def _can(cls, user, need, final, query):
-        return Submission._can(user, need, final.submission.get(), query)
-
-    # TODO Add hook to update final submissions on submission or group change.
-
-
 def anon_converter(prop, value):
     """Convert anonymous user to None."""
     if not value.get().logged_in:
@@ -678,4 +662,27 @@ class Queue(Base):
             'assigned_staff': [val.get().to_json(fields.get('assigned_staff')) for val in self.assigned_staff],
             'id': self.key.id()
         }
+
+
+class FinalSubmission(Base):
+    """The final submission for an assignment from a group."""
+    assignment = ndb.KeyProperty(Assignment)
+    group = ndb.KeyProperty(Group)
+    submission = ndb.KeyProperty(Submission)
+    published = ndb.BooleanProperty(default=False)
+    queue = ndb.KeyProperty(Queue)
+
+    @property
+    def assigned(self):
+        return bool(self.queue)
+
+    @classmethod
+    def _can(cls, user, need, final, query):
+        return Submission._can(user, need, final.submission.get(), query)
+
+    # TODO Add hook to update final submissions on submission or group change.
+
+
+
+
 
