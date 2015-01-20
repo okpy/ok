@@ -381,12 +381,7 @@ class UserAPI(APIResource):
         need = Need('get') # Anyone who can get the User object can add an email
         if not obj.can(user, need, obj):
             raise need.exception()
-
-        new_user = obj.get()
-
-        if data['email'] not in new_user.emails:
-            new_user.emails.append(data['email'])
-            new_user.put()
+        obj.append_email(data['email'])
 
     def delete_email(self, obj, user, data):
         """
@@ -395,11 +390,7 @@ class UserAPI(APIResource):
         need = Need('get')
         if not obj.can(user, need, obj):
             raise need.exception()
-
-        new_user = obj.get()
-        if data['email'] in new_user.emails:
-            new_user.emails.remove(data['email'])
-            new_user.put()
+        obj.delete_email(data['email'])
 
     def invitations(self, obj, user, data):
         query = models.Group.query(models.Group.invited_members == user.key)
@@ -422,21 +413,10 @@ class UserAPI(APIResource):
         user.put()
 
     def final_submission(self, obj, user, data):
-        query = models.Group.query(models.Group.members == user.key)
-        group = query.filter(models.Group.assignment == data['assignment'])
-        return models.FinalSubmission.query(models.FinalSubmission.group == group)
+        return obj.get_final_submission(data['assignment'])
 
     def get_backups(self, obj, user, data):
-        query = models.Group.query(models.Group.members == user.key)
-        group = query.filter(models.Group.assignment == data['assignment'])
-
-        all_backups = []
-        for member in group.members:
-            all_backups += list(models.Backup.query(models.Backup.submitter ==
-                member).filter(models.Backup.assignment == data['assignment']))
-
-        return all_backups
-
+        return obj.get_backups(data['assignment'])
 
 class AssignmentAPI(APIResource):
     """The API resource for the Assignment Object"""

@@ -1,7 +1,7 @@
-"""Data models."""
-
 #pylint: disable=no-member
 #pylint: disable=unused-argument
+
+"""Data models."""
 
 import datetime
 
@@ -129,6 +129,30 @@ class User(Base):
     @property
     def logged_in(self):
         return self.email != ["_anon"]
+    
+    def append_email(self, email):
+        if email not in self.email:
+            self.email.append(email)
+
+    def delete_email(self, email):
+        if email not in self.email:
+            self.email.remove(email)
+
+    def get_final_submission(self, assignment):
+        query = models.Group.query(models.Group.members == user.key)
+        group = query.filter(models.Group.assignment == assignment) 
+        return models.FinalSubmission.query(models.FinalSubmission.group == group)
+    
+    def get_backups(self, assignment):
+        query = models.Group.query(models.Group.members == user.key)
+        group = query.filter(models.Group.assignment == assignment)
+        all_backups = []
+
+        for member in group.members:
+            all_backups += list(models.Backup.query(models.Backup.submitter ==
+                member).filter(models.Backup.assignment == assignment))
+
+        return all_backups
 
     @classmethod
     @ndb.transactional
@@ -224,6 +248,9 @@ class Assignment(Base):
             return query
         else:
             return False
+
+
+
 
 
 class Participant(Base):
