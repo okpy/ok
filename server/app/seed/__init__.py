@@ -3,20 +3,24 @@ from app import utils
 
 import json
 
+SEED_OFFERING="cal/cs61a/fa14"
+
+def is_seeded():
+    is_seed = models.Course.offering==SEED_OFFERING
+    return bool(models.Course.query(is_seed).get())
+
 def seed():
     import os
     import datetime
     import random
     from google.appengine.ext import ndb
 
-    def make_fake_course(creator):
+    def make_seed_course(creator):
         return models.Course(
-            name="CS 61A",
+            display_name="CS 61A",
             institution="UC Soumya",
-            term="Fall",
-            year="2014",
-            creator=creator.key,
-            staff=[])
+            offering=SEED_OFFERING,
+            instructor=[creator.key])
 
     def make_future_assignment(course, creator):
         date = (datetime.datetime.now() + datetime.timedelta(days=365))
@@ -27,13 +31,15 @@ def seed():
 
         return models.Assignment(
             name='proj1',
-            points=20,
             display_name="Hog",
+            points=20,
             templates=json.dumps(templates),
-            course=course.key,
             creator=creator.key,
+            course=course.key,
             max_group_size=4,
-            due_date=date)
+            due_date=date,
+            lock_date=date,
+            )
 
     # Will reject all scheme submissions
     def make_past_assignment(course, creator):
@@ -72,7 +78,7 @@ def seed():
         )
 
 
-    def make_fake_submission(assignment, submitter, final=False):
+    def make_seed_submission(assignment, submitter, final=False):
         sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
 
         with open('app/seed/hog_modified.py') as fp:
@@ -92,7 +98,7 @@ def seed():
             created=sdate)
 
 
-    def make_fake_scheme_submission(assignment, submitter, final=False):
+    def make_seed_scheme_submission(assignment, submitter, final=False):
         sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
 
         with open('app/seed/scheme.py') as sc, \
@@ -139,8 +145,8 @@ def seed():
                 queue=queue)
             fs.put()
 
-    # Start putting things in the DB. 
-    
+    # Start putting things in the DB.
+
     c = models.User(
         key=ndb.Key("User", "test@example.com"),
         email="test@example.com",
@@ -204,7 +210,7 @@ def seed():
     version.put()
 
     # Create a course
-    course = make_fake_course(c)
+    course = make_seed_course(c)
     course.put()
 
     # Put a few members on staff
@@ -221,7 +227,7 @@ def seed():
     assign2.put()
 
 
-    # Create submissions 
+    # Create submissions
     subms = []
 
     # Group submission
@@ -233,39 +239,39 @@ def seed():
     g2 = make_invited_group(assign, team2)
     g2.put()
 
-    # Have each member in the group submit one 
+    # Have each member in the group submit one
     for member in group_members:
-        subm = make_fake_submission(assign, member)
+        subm = make_seed_submission(assign, member)
         subm.put()
 
     for member in group_members:
-        subm = make_fake_scheme_submission(assign2, member)
+        subm = make_seed_scheme_submission(assign2, member)
         subm.put()
 
-    # Make this one be a final submission though. 
-    subm = make_fake_submission(assign, group_members[1], True)
+    # Make this one be a final submission though.
+    subm = make_seed_submission(assign, group_members[1], True)
     subm.put()
     subms.append(subm)
 
     # scheme final
-    subm = make_fake_scheme_submission(assign2, group_members[1], True)
+    subm = make_seed_scheme_submission(assign2, group_members[1], True)
     subm.put()
 
 
     # Now create indiviual submission
     for i in range(9):
-        subm = make_fake_submission(assign, students[i])
+        subm = make_seed_submission(assign, students[i])
         subm.put()
         #subms.append(subm)
 
-        subm = make_fake_submission(assign, students[i], True)
+        subm = make_seed_submission(assign, students[i], True)
         subm.put()
         #subms.append(subm)
 
 
 
-    # Seed a queue. This should be auto-generated. 
-    
+    # Seed a queue. This should be auto-generated.
+
     q = make_queue(assign, subms, c)
     q = make_queue(assign, subms, k)
 

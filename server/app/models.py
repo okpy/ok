@@ -1,7 +1,7 @@
+"""Data models."""
+
 #pylint: disable=no-member
 #pylint: disable=unused-argument
-
-"""Data models."""
 
 import datetime
 
@@ -224,9 +224,6 @@ class Assignment(Base):
             return query
         else:
             return False
-
-
-
 
 
 class Participant(Base):

@@ -1,6 +1,6 @@
-"""
-The public API
-"""
+"""The public API."""
+
+#pylint: disable=no-member,unused-argument
 
 import datetime
 import logging
@@ -291,7 +291,7 @@ class APIResource(View):
 
 class UserAPI(APIResource):
     """The API resource for the User Object
-    
+
     model- the class in models.py that this API is for.
     key_type- The type of the id of this model.
     """
@@ -348,8 +348,8 @@ class UserAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True)
             }
-        }
-        'get_submissions' {
+        },
+        'get_submissions': {
             'methods': set(['GET']),
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True)
@@ -536,7 +536,7 @@ class SubmitNDBImplementation(object):
 class SubmissionAPI(APIResource):
     """The API resource for the Submission Object"""
     model = models.Backup
-    diff_model = models.SubmissionDiff
+    diff_model = models.Diff
 
     db = SubmitNDBImplementation()
 
