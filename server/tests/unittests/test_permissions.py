@@ -179,34 +179,6 @@ class PermissionsUnitTest(BaseTestCase):
             self.input = (user, model, obj, need)
             self.output = output
 
-   #  permission_tests = [
-   #      PTest("anon_get_course",
-   #            "anon", "Course", "first", "get", True),
-   #      PTest("student_get_course",
-   #            "student0", "Course", "first", "get", True),
-   #      PTest("admin_get_course",
-   #            "admin", "Course", "first", "get", True),
-   #      PTest("student_create_course",
-   #            "student0", "Course", "first", "create", False),
-   #      PTest("student_delete_course",
-   #            "student0", "Course", "first", "delete", False),
-   #      PTest("staff_create_course",
-   #            "staff", "Course", "first", "create", False),
-   #      PTest("staff_delete_course",
-   #            "staff", "Course", "first", "delete", False),
-   #      PTest("admin_create_course",
-   #            "admin", "Course", "first", "create", True),
-   #      # TODO Perhaps admin shouldn't be able to delete a course so easily.
-   #      PTest("admin_delete_course",
-   #            "admin", "Course", "first", "delete", True),
-   #      PTest("anon_delete_course",
-   #            "anon", "Course", "first", "delete", False),
-   #      PTest("student_modify_course",
-   #            "student0", "Course", "first", "modify", False),
-   #      PTest("staff_modify_course",
-   #            "staff", "Course", "first", "modify", True),
-   #  ]
-
     def access(self, value):
         user_id, model, obj_name, need = value.input
         self.login(user_id) # sets self.user
