@@ -575,7 +575,7 @@ class Group(Base):
 
     @ndb.transactional
     def exit(self, user_key):
-        """User leaves the group. Empty groups are deleted."""
+        """User leaves the group. Empty/singleton groups are deleted."""
         for users in [self.members, self.invited]:
             if user_key in users:
                 users.remove(user_key)
@@ -589,23 +589,18 @@ class Group(Base):
             return False
 
         if action == "index":
-            if user.is_admin:
-                return query
-            return query.filter(Group.members == user.key)
-
-        if user.is_admin:
-            return True
-
-        if action == "delete":
+            return query.filter(ndb.Or(Group.members == user.key,
+                                       Group.invited == user.key))
+        if not group:
             return False
-        if action == "invite":
-            return user.key in group.members
         if action == "get":
             return user.key in group.members or user.key in group.invited
-        if action in ("create", "put"):
-            if not group:
-                raise ValueError("Need instance for get action.")
+        elif action in ("invite", "rescind"):
             return user.key in group.members
+        elif action == "accept":
+            return user.key in group.invited
+        elif action == "exit":
+            return user.key in group.members or user.key in group.invited
         return False
 
     def validate(self):
@@ -643,9 +638,11 @@ class FinalSubmission(Base):
     def _can(cls, user, need, final, query):
         return Submission._can(user, need, final.submission.get(), query)
 
+    # TODO Add hook to update final submissions on submission or group change.
 
-# TODO Can we get rid of this (and maybe the AuditLog, too)?
+
 def anon_converter(prop, value):
+    """Convert anonymous user to None."""
     if not value.get().logged_in:
         return None
     return value
