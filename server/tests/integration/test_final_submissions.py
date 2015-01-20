@@ -10,7 +10,6 @@ import datetime
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 
 from app import models, utils
-from app.constants import ADMIN_ROLE, STAFF_ROLE #pylint: disable=import-error
 
 from google.appengine.ext import ndb
 
@@ -37,8 +36,7 @@ class PermissionsUnitTest(APIBaseTestCase):
             ),
             "admin": models.User(
                 email=["dummy@admin.com"]
-            ),
-            "anon": models.AnonymousUser()
+            )
         }
 
     def setUp(self):
@@ -49,17 +47,11 @@ class PermissionsUnitTest(APIBaseTestCase):
 
         self.courses = {
             "first": models.Course(
-                name="first",
                 institution="UC Awesome",
-                year="2014",
-                term="Fall",
-                creator=self.accounts['admin'].key),
+                instructor=[self.accounts['admin'].key]),
             "second": models.Course(
-                name="second",
                 institution="UC Awesome",
-                year="2014",
-                term="Fall",
-                creator=self.accounts['admin'].key),
+                instructor=[self.accounts['admin'].key]),
             }
 
         for course in self.courses.values():
