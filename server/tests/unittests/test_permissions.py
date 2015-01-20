@@ -15,7 +15,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE #pylint: disable=import-error
 
 from ddt import ddt
 
-#pylint: disable=no-init, missing-docstring
+#pylint: disable=no-init, missing-docstring, no-member, too-many-instance-attributes
 @ddt
 class PermissionsUnitTest(BaseTestCase):
     @staticmethod
@@ -137,13 +137,29 @@ class PermissionsUnitTest(BaseTestCase):
         self.backups['group'] = group_submission
 
         self.queues = {
-                "first": models.Queue(
-                    assignment=self.assignments["first"].key,
-                    assigned_staff=[self.accounts["staff"].key],
-                ),
+            "first": models.Queue(
+                assignment=self.assignments["first"].key,
+                assigned_staff=[self.accounts["staff"].key],
+            ),
         }
         for queue in self.queues.values():
             queue.put()
+
+        self.diffs = {
+            "first": models.Diff()
+        }
+        for diff in self.diffs.values():
+            diff.put()
+
+        self.comments = {
+            "first": models.Comment(
+                author=self.accounts['student0'].key,
+                diff=self.diffs["first"].key,
+                message="First comment"
+            ),
+        }
+        for comment in self.comments.values():
+            comment.put()
 
         self.user = None
 
@@ -164,26 +180,6 @@ class PermissionsUnitTest(BaseTestCase):
             self.output = output
 
    #  permission_tests = [
-   #      PTest("student_get_assignment",
-   #            "student0", "Assignment", "first", "get", True),
-   #      PTest("anon_get_assignment",
-   #            "anon", "Assignment", "first", "get", True),
-   #      PTest("student_create_assignment",
-   #            "student0", "Assignment", "first", "create", False),
-   #      PTest("admin_create_assignment",
-   #            "admin", "Assignment", "first", "create", True),
-   #      PTest("anon_create_assignment",
-   #            "anon", "Assignment", "first", "create", False),
-   #      PTest("admin_delete_normal",
-   #            "admin", "Assignment", "first", "delete", False),
-   #      PTest("staff_delete_normal",
-   #            "staff", "Assignment", "first", "delete", False),
-   #      PTest("admin_delete_empty",
-   #            "admin", "Assignment", "empty", "delete", False),
-   #      PTest("staff_delete_empty",
-   #            "staff", "Assignment", "empty", "delete", False),
-   #      PTest("staff_delete_empty",
-   #            "empty_staff", "Assignment", "empty", "delete", False),
    #      PTest("anon_get_course",
    #            "anon", "Course", "first", "get", True),
    #      PTest("student_get_course",
@@ -242,12 +238,14 @@ class PermissionsUnitTest(BaseTestCase):
             obj = self.courses[obj_name]
         elif model == "Queue":
             obj = self.queues[obj_name]
+        elif model == "Comment":
+            obj = self.comments[obj_name]
 
         if not obj:
             self.assertTrue(False, "Invalid test arguments %s" % model)
 
         if need == "index":
-            query = obj.__class__.query()
+            query = obj.__class__.query() #pylint: disable=maybe-no-member
             query = obj.can(self.user, Need(need), obj, query=query)
 
             if not query:
