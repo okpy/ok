@@ -348,8 +348,8 @@ class UserAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True)
             }
-        }
-        'get_submissions' {
+        },
+        'get_submissions': {
             'methods': set(['GET']),
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True)
@@ -536,7 +536,7 @@ class SubmitNDBImplementation(object):
 class SubmissionAPI(APIResource):
     """The API resource for the Submission Object"""
     model = models.Backup
-    diff_model = models.SubmissionDiff
+    diff_model = models.Diff
 
     db = SubmitNDBImplementation()
 
