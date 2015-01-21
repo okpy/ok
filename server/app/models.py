@@ -213,6 +213,15 @@ class Course(Base):
     instructor = ndb.KeyProperty(User, repeated=True)
     active = ndb.BooleanProperty(default=True)
 
+    @property
+    def staff(self):
+        """
+        Returns all the staff of this course.
+        """
+        return [part.user for part in Participant.query(
+            Participant.course == self.key,
+            Participant.role == STAFF_ROLE).fetch()]
+
     @classmethod
     def _can(cls, user, need, course, query):
         action = need.action
@@ -221,11 +230,13 @@ class Course(Base):
         elif action == "index":
             return query
         elif action == "modify":
-            return bool(course)
+            return bool(course) and user.key in course.staff
         elif action == "staff":
             if user.is_admin:
                 return True
             return user.key in course.staff
+        elif action == "create":
+            return user.is_admin
         return False
 
     @property
