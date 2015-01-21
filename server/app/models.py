@@ -157,7 +157,7 @@ class User(Base):
         return all_backups
 
     def get_group(self, assignment):
-        query = Group.query(Group.member == self.key)
+        query = Group.query(Group.members == self.key)
         group = query.filter(Group.assignment == assignment)
         return group.get()
 
@@ -660,13 +660,13 @@ class Group(Base):
     def validate(self):
         """Return an error string if group is invalid."""
         max_group_size = self.assignment.get().max_group_size
-        total_members = len(self.member) + len(self.invited)
+        total_members = len(self.members) + len(self.invited)
         if max_group_size and total_members > max_group_size:
             sizes = (total_members, max_group_size)
             return "%s members found; at most %s allowed" % sizes
         if total_members < 2:
             return "No group can have %s total members" % total_members
-        if not self.member:
+        if not self.members:
             return "A group must have an active member"
 
     def _pre_put_hook(self):
