@@ -769,7 +769,8 @@ class SubmissionAPI(APIResource):
             submitter = user.key
 
         due = valid_assignment.due_date
-        late_flag = datetime.datetime.now() >= valid_assignment.lock_date
+        late_flag = valid_assignment.lock_date and \
+                datetime.datetime.now() >= valid_assignment.lock_date
 
         if submit and late_flag:
             # Late submission. Do Not allow them to submit

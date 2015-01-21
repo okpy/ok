@@ -430,7 +430,7 @@ class Backup(Base):
                     if assigns:
                         filters.append(
                             Backup.assignment.IN([a.key for a in assigns]))
-            grp = backup.group
+            grp = backup and backup.group
             if grp and user.key in grp.member:
                 filters.append(ndb.AND(
                     Backup.submitter.IN(grp.member),
