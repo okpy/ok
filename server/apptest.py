@@ -52,7 +52,6 @@ if __name__ == '__main__':
         dir_of_file = os.path.dirname(os.path.abspath(__file__))
         TEST_PATH = os.path.join(dir_of_file, 'tests')
         test_types = os.listdir(TEST_PATH)
-        print(test_types)
         failed = False
         for typ in test_types:
             test_dir = os.path.join(TEST_PATH, typ)
