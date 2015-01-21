@@ -488,6 +488,7 @@ class SubmitNDBImplementation(object):
 
     def create_submission(self, user, assignment, messages, submit, submitter):
         """Create submission using user as parent to ensure ordering."""
+
         if not user.is_admin:
             submitter = user.key
         # TODO - Choose member of group if the user is an admin.
@@ -503,12 +504,13 @@ class SubmitNDBImplementation(object):
             if date:
                 created = parse_date(date)
 
-        submission = models.Submission(submitter=submitter,
+        submission = models.Backup(submitter=submitter,
                                        assignment=assignment.key,
                                        messages=db_messages,
                                        created=created)
         submission.put()
-        deferred.defer(assign_submission, submission.key.id())
+
+        deferred.defer(assign_submission, submission.key.id(), submit)
 
         return submission
 
@@ -767,7 +769,7 @@ class SubmissionAPI(APIResource):
             submitter = user.key
 
         due = valid_assignment.due_date
-        late_flag = datetime.datetime.now() - datetime.timedelta(3) >= due
+        late_flag = datetime.datetime.now() >= valid_assignment.lock_date
 
         if submit and late_flag:
             # Late submission. Do Not allow them to submit

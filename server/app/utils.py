@@ -284,15 +284,20 @@ def assign_work(assign_key, cursor=None, num_updated=0):
         logging.debug(
             'assign_work complete with %d updates!', num_updated)
 
-def assign_submission(subm_id):
-    subm = ModelProxy.Submission.get_by_id(subm_id)
+def assign_submission(subm_id, submit):
+    backup = ModelProxy.Backup.get_by_id(subm_id)
     assign_key = subm.assignment
 
-    if not subm.get_messages().get('file_contents'):
+    if not backup.get_messages().get('file_contents'):
         logging.info("Submission had no file_contents, not processing")
         return
+    
+    if not submit:
+        return
+    
+    subm = ModelProxy.Submission(backup = backup)
 
-    group = subm.submitter.get().get_group(assign_key)
+    group = backup.submitter.get().get_group(assign_key)
 
     FS = ModelProxy.FinalSubmission
     current = FS.query()
@@ -306,8 +311,6 @@ def assign_submission(subm_id):
 
     current.submission = subm.key
     current.put()
-    message = "Final submission modification disallowed for now"
-    logging.error(message)
 
 def parse_date(date):
     try:
