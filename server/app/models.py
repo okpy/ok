@@ -306,7 +306,7 @@ class Participant(Base):
             user_key = user_key.key
         query = cls.query(cls.user == user_key)
         if role:
-            query.filter(cls.role == role)
+            query = query.filter(cls.role == role)
         return query.fetch()
 
 
@@ -417,15 +417,19 @@ class Backup(Base):
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
         if action == "index":
+            import pdb
+            pdb.set_trace()
             if not user.logged_in:
                 return False
             filters = [Backup.submitter == user.key]
-            for participant in Participant.courses(user, STAFF_ROLE):
-                course = participant.course
-                assigns = Assignment.query(Assignment.course == course).fetch()
-                if assigns:
-                    filters.append(
-                        Backup.assignment.IN([a.key for a in assigns]))
+            staff_list = Participant.courses(user, STAFF_ROLE)
+            if user.key in [part.user for part in staff_list]:
+                for participant in staff_list:
+                    course = participant.course
+                    assigns = Assignment.query(Assignment.course == course).fetch()
+                    if assigns:
+                        filters.append(
+                            Backup.assignment.IN([a.key for a in assigns]))
             if backup.group:
                 filters.append(ndb.AND(
                     Backup.submitter.IN(backup.group.member),
