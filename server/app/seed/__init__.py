@@ -79,7 +79,6 @@ def seed():
 
 
     def make_seed_submission(assignment, submitter, final=False):
-        #TODO(soumya): Change this to actually be a submission.
         sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
 
         with open('app/seed/hog_modified.py') as fp:
@@ -92,15 +91,18 @@ def seed():
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
-        return models.Backup(
+        backup = models.Backup(
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
             created=sdate)
 
+        backup.put()
+
+        return models.Submission(backup=backup.key)
+
 
     def make_seed_scheme_submission(assignment, submitter, final=False):
-        #TODO(soumya): Change this to actually be a submission
         sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
 
         with open('app/seed/scheme.py') as sc, \
@@ -118,11 +120,15 @@ def seed():
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
-        return models.Backup(
+        backup = models.Backup(
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
             created=sdate)
+        
+        backup.put()
+
+        return models.Submission(backup=backup.key)
 
     def make_version(current_version):
         return models.Version(
@@ -140,9 +146,10 @@ def seed():
             assigned_staff=[asignee.key])
         queue = queue.put()
         for subm in submissions:
+            backup = subm.backup.get()
             fs = models.FinalSubmission(
                 assignment=assignment.key,
-                group=subm.submitter.get().get_group(assignment.key).key,
+                group=backup.submitter.get().get_group(assignment.key).key,
                 submission=subm.key,
                 queue=queue)
             fs.put()
@@ -248,10 +255,10 @@ def seed():
 
 
 
-    # TODO(soumya): Seed a queue. This should be auto-generated.
+    # Seed a queue. This should be auto-generated.
 
-    # q = make_queue(assign, subms, c)
-    # q = make_queue(assign, subms, k)
+    q = make_queue(assign, subms, c)
+    q = make_queue(assign, subms, k)
 
     #utils.assign_work(assign.key)
 
