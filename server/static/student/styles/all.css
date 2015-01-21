@@ -7,6 +7,23 @@
 	position:relative;
 }
 
+/* button */
+.button {
+	background-color:#FF9326;
+	font-weight:700;
+	padding:15px 30px;
+	color:#FFF;
+	font-size:0.75em;
+	letter-spacing:2px;
+	border-radius:30px;
+	text-transform:uppercase;
+	display:inline-block;
+}
+	.button:hover {
+		background-color:rgba(255, 147, 38, 0.8);
+	}
+
+
 /* testing */
 .snippet {
   position: relative;
