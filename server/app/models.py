@@ -183,6 +183,8 @@ class User(Base):
     def _can(cls, user, need, obj, query):
         if not user.logged_in:
             return False
+        if user.is_admin:
+            return True
 
         if need.action == "lookup":
             return True
