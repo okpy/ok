@@ -5,6 +5,7 @@ Backup -- get_messages, to_json, permissions
 Comment -- permissions
 Queue -- permissions, to_json
 User -- append_email, delete_email, get_final_submission, get_or_insert, lookup, permissions
+Course -- permissions
 
 Not triaged yet
 
@@ -17,4 +18,3 @@ Submission -- permissions (same as backup)
 Score -- none
 Message -- permissions (almost same as backup)
 Participant -- has_role (CM), courses (CM), permissions
-Course -- permissions
