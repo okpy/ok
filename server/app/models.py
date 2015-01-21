@@ -183,6 +183,8 @@ class User(Base):
     def _can(cls, user, need, obj, query):
         if not user.logged_in:
             return False
+        if user.is_admin:
+            return True
 
         if need.action == "lookup":
             return True
@@ -306,7 +308,7 @@ class Participant(Base):
             user_key = user_key.key
         query = cls.query(cls.user == user_key)
         if role:
-            query.filter(cls.role == role)
+            query = query.filter(cls.role == role)
         return query.fetch()
 
 
@@ -407,29 +409,32 @@ class Backup(Base):
         if action == "get":
             if not backup or not isinstance(backup, Backup):
                 raise ValueError("Need Backup instance for get action.")
-            if backup.submitter == user.key:
+            if user.is_admin or backup.submitter == user.key:
                 return True
             course_key = backup.assignment.get().course
             if Participant.has_role(user, course_key, STAFF_ROLE):
                 return True
             group = backup.group
-            return group and user.key in group.member
+            return bool(group and user.key in group.member)
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
         if action == "index":
             if not user.logged_in:
                 return False
             filters = [Backup.submitter == user.key]
-            for participant in Participant.courses(user, STAFF_ROLE):
-                course = participant.course
-                assigns = Assignment.query(Assignment.course == course).fetch()
-                if assigns:
-                    filters.append(
-                        Backup.assignment.IN([a.key for a in assigns]))
-            if backup.group:
+            staff_list = Participant.courses(user, STAFF_ROLE)
+            if user.key in [part.user for part in staff_list]:
+                for participant in staff_list:
+                    course = participant.course
+                    assigns = Assignment.query(Assignment.course == course).fetch()
+                    if assigns:
+                        filters.append(
+                            Backup.assignment.IN([a.key for a in assigns]))
+            grp = backup.group
+            if grp and user.key in grp.member:
                 filters.append(ndb.AND(
-                    Backup.submitter.IN(backup.group.member),
-                    Backup.assignment == backup.group.assignment))
+                    Backup.submitter.IN(grp.member),
+                    Backup.assignment == grp.assignment))
             return disjunction(query, filters)
         return False
 

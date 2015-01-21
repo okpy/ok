@@ -64,10 +64,10 @@ class PermissionsUnitTest(BaseTestCase):
 
         self.courses = {
             "first": models.Course(
-                institution="UC Awesome",
+                institution="UC Awesome a",
                 instructor=[self.accounts['admin'].key]),
             "second": models.Course(
-                institution="UC Awesome",
+                institution="UC Awesome b",
                 instructor=[self.accounts['admin'].key]),
             }
 
@@ -86,6 +86,16 @@ class PermissionsUnitTest(BaseTestCase):
                 creator=self.accounts["admin"].key,
                 course=self.courses['first'].key,
                 display_name="first display",
+                templates="{}",
+                max_group_size=3,
+                due_date=datetime.datetime.now()
+                ),
+            "second": models.Assignment(
+                name="second",
+                points=3,
+                creator=self.accounts["admin"].key,
+                course=self.courses['second'].key,
+                display_name="second display",
                 templates="{}",
                 max_group_size=3,
                 due_date=datetime.datetime.now()
@@ -115,9 +125,11 @@ class PermissionsUnitTest(BaseTestCase):
                 ),
             "third": models.Backup(
                 submitter=self.accounts["student2"].key,
-                assignment=self.assignments["first"].key,
+                assignment=self.assignments["second"].key,
                 ),
             }
+        for backup in self.backups.values():
+            backup.put()
 
         self.groups = {
             'group1': models.Group(
