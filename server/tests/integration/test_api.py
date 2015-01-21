@@ -69,7 +69,13 @@ class APITest(object): #pylint: disable=no-init
             ),
             "dummy_student": models.User(
                 email=["dummy@student.com"],
-            )
+            ),
+            "dummy_student2": models.User(
+                email=["dummy2@student.com"],
+            ),
+            "dummy_student3": models.User(
+                email=["dummy3@student.com"],
+            ),
         }
 
     ## INDEX ##
@@ -372,7 +378,11 @@ class GroupAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        return self.model(assignment=self.assignment.key)
+        return self.model(
+            assignment=self.assignment.key,
+            members=[
+                self.accounts['dummy_student2'].key,
+                self.accounts['dummy_student3'].key])
 
     def test_add_member(self):
         members = [self.accounts['dummy_student'].key]
