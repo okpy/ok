@@ -24,6 +24,7 @@ def make_fake_course(creator):
     return models.Course(
         institution="UC Soumya",
         instructor=[creator.key],
+        display_name="CS 61A",
         active=True)
 
 def make_fake_assignment(course, creator):
