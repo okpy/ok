@@ -1,7 +1,8 @@
 #pylint: disable=no-member
 #pylint: disable=unused-argument
+#pylint: disable=too-many-return-statements
 
-"""Data models."""
+"""Data """
 
 import datetime
 
@@ -107,13 +108,13 @@ class Base(ndb.Model):
         if need.action == "index":
             assert query, "No query for index"
         need.set_object(obj or cls)
-        if user.is_admin:
-            return query or True
-        else:
-            return cls._can(user, need, obj, query)
+        return cls._can(user, need, obj, query)
 
     @classmethod
     def _can(cls, user, need, obj, query):
+        """
+        The internal permissions method. Overridden by subclasses.
+        """
         return False
 
 
@@ -129,7 +130,7 @@ class User(Base):
     @property
     def logged_in(self):
         return self.email != ["_anon"]
-    
+
     def append_email(self, email):
         if email not in self.email:
             self.email.append(email)
@@ -149,8 +150,9 @@ class User(Base):
         all_backups = []
 
         for member in group.members:
-            all_backups += list(Backup.query(models.Backup.submitter ==
-                member).filter(Backup.assignment == assignment))
+            all_backups += list(Backup.query(
+                Backup.submitter == member).filter(
+                    Backup.assignment == assignment))
 
         return all_backups
 
@@ -190,7 +192,8 @@ class User(Base):
             elif obj.key == user.key:
                 return True
             else:
-                for course in Participant.courses(user, STAFF_ROLE):
+                for part in Participant.courses(user, STAFF_ROLE):
+                    course = part.course
                     if Participant.has_role(obj, course, STUDENT_ROLE):
                         return True
                 return False
@@ -218,7 +221,7 @@ class Course(Base):
         elif action == "index":
             return query
         elif action == "modify":
-            return course
+            return bool(course)
         elif action == "staff":
             if user.is_admin:
                 return True
@@ -242,7 +245,8 @@ class Assignment(Base):
     max_group_size = ndb.IntegerProperty()
     due_date = ndb.DateTimeProperty()
     lock_date = ndb.DateTimeProperty() # no submissions after this date
-    active = ndb.ComputedProperty(lambda a: not a.lock_date or datetime.datetime.now() <= a.lock_date)
+    active = ndb.ComputedProperty(
+        lambda a: a.lock_date and datetime.datetime.now() <= a.lock_date)
     # TODO Add services requested
 
     @classmethod
@@ -251,11 +255,10 @@ class Assignment(Base):
             return True
         elif need.action == "index":
             return query
+        elif need.action == "create":
+            return user.is_admin
         else:
             return False
-
-
-
 
 
 class Participant(Base):
@@ -327,7 +330,7 @@ def disjunction(query, filters):
     """Return a query in which at least one filter is true."""
     assert filters, "No filters"
     if len(filters) > 1:
-        return query.filter(ndb.OR(*filters))
+        return query.filter(ndb.OR(*filters)) #pylint: disable=star-args
     else:
         return query.filter(filters[0])
 
@@ -355,13 +358,13 @@ class Backup(Base):
             message_fields = message_fields == "true"
 
         messages = {m.kind: m.contents for m in self.messages}
-        def test(x):
+        def test(item):
             if isinstance(message_fields, bool):
                 return message_fields
 
             if not message_fields:
                 return True
-            return x in message_fields
+            return item in message_fields
 
         def get_contents(kind, contents):
             if isinstance(message_fields, bool):
@@ -395,25 +398,27 @@ class Backup(Base):
                 raise ValueError("Need Backup instance for get action.")
             if backup.submitter == user.key:
                 return True
-            course_key = backup.assignment.course
+            course_key = backup.assignment.get().course
             if Participant.has_role(user, course_key, STAFF_ROLE):
                 return True
             group = backup.group
-            if group and user.key in group.member:
-                return True
-            return False
+            return group and user.key in group.member
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
         if action == "index":
             if not user.logged_in:
                 return False
             filters = [Backup.submitter == user.key]
-            for course in Participant.courses(user, STAFF_ROLE):
+            for participant in Participant.courses(user, STAFF_ROLE):
+                course = participant.course
                 assigns = Assignment.query(Assignment.course == course).fetch()
-                filters.append(Backup.assignment.IN([a.key for a in assigns]))
+                if assigns:
+                    filters.append(
+                        Backup.assignment.IN([a.key for a in assigns]))
             if backup.group:
-                filters.append(ndb.AND(Backup.submitter.IN(group.members),
-                                       Backup.assignment == group.assignment))
+                filters.append(ndb.AND(
+                    Backup.submitter.IN(backup.group.member),
+                    Backup.assignment == backup.group.assignment))
             return disjunction(query, filters)
         return False
 
@@ -447,6 +452,9 @@ class Diff(Base):
 
     @property
     def comments(self):
+        """
+        Returns all the comments for this diff.
+        """
         return Comment.query(ancestor=self.key).order(Comment.created)
 
     def to_json(self, fields=None):
@@ -497,11 +505,11 @@ class Version(Base):
         return '/'.join((self.base_url, version, self.name))
 
     def to_json(self, fields=None):
-        json = super(Version, self).to_json(fields)
+        converted = super(Version, self).to_json(fields)
         if self.current_version:
-            json['current_download_link'] = self.download_link()
+            converted['current_download_link'] = self.download_link()
 
-        return json
+        return converted
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -625,14 +633,12 @@ class Group(Base):
                                        Group.invited == user.key))
         if not group:
             return False
-        if action == "get":
+        if action in ("get", "exit"):
             return user.key in group.members or user.key in group.invited
         elif action in ("invite", "rescind"):
             return user.key in group.members
         elif action == "accept":
             return user.key in group.invited
-        elif action == "exit":
-            return user.key in group.members or user.key in group.invited
         return False
 
     def validate(self):
@@ -678,8 +684,11 @@ class Queue(Base):
 
     @property
     def submissions(self):
-        q = FinalSubmission.query().filter(FinalSubmission.queue == self.key)
-        return [fs.submission for fs in q]
+        """
+        Returns all the submissions in this queue.
+        """
+        query = FinalSubmission.query().filter(FinalSubmission.queue == self.key)
+        return [fs.submission for fs in query]
 
     def to_json(self, fields=None):
         if not fields:
@@ -703,6 +712,9 @@ class FinalSubmission(Base):
 
     @property
     def assigned(self):
+        """
+        Return whether or not this assignment has been assigned to a queue.
+        """
         return bool(self.queue)
 
     @classmethod
