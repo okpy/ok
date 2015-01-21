@@ -65,6 +65,14 @@
           <ul>
             <li><a href="mailto:questions@cs61a.org"><span class="icon-question">?</span></a></li>
             <li>
+          {% if user %}
+              <a href={{users_link}} class="show-menu">
+                {{users_title}}
+              </a>
+          {% else %}
+              <a href={{users_link}} class="show-menu">Login</a>
+          {% endif %}
+
               <a href="#" class="show-menu">
                 Menu
                 <span class="stripes">
@@ -86,12 +94,20 @@
             <li><a href="#">DumDum</a></li>
           </ul>
         </nav>
+          {% if user %}
+          <script>
+            window.user = "{{user.email}}";
+            window.reloginLink = "{{relogin_link}}";
+          </script>
+            <div ui-view></div>
+          {% else %}
+                    <a href={{users_link}} class="btn btn-lg btn-primary btn-block">Login</a>
+          {% endif %}
 
-        <div ui-view></div>
 
     </div>
 
-    <div class="loader active">
+    <div class="loader active done hide">
       <div class="center">
         <div class="circle">
           <span class="mask">
