@@ -1,6 +1,6 @@
-"""
-The public API
-"""
+"""The public API."""
+
+#pylint: disable=no-member,unused-argument
 
 import datetime
 import logging
@@ -291,7 +291,7 @@ class APIResource(View):
 
 class UserAPI(APIResource):
     """The API resource for the User Object
-    
+
     model- the class in models.py that this API is for.
     key_type- The type of the id of this model.
     """
@@ -342,6 +342,18 @@ class UserAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True)
             }
+        },
+        'get_backups': {
+            'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
+        },
+        'get_submissions': {
+            'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True)
+            }
         }
     }
 
@@ -369,12 +381,7 @@ class UserAPI(APIResource):
         need = Need('get') # Anyone who can get the User object can add an email
         if not obj.can(user, need, obj):
             raise need.exception()
-
-        new_user = obj.get()
-
-        if data['email'] not in new_user.emails:
-            new_user.emails.append(data['email'])
-            new_user.put()
+        obj.append_email(data['email'])
 
     def delete_email(self, obj, user, data):
         """
@@ -383,11 +390,7 @@ class UserAPI(APIResource):
         need = Need('get')
         if not obj.can(user, need, obj):
             raise need.exception()
-
-        new_user = obj.get()
-        if data['email'] in new_user.emails:
-            new_user.emails.remove(data['email'])
-            new_user.put()
+        obj.delete_email(data['email'])
 
     def invitations(self, obj, user, data):
         query = models.Group.query(models.Group.invited_members == user.key)
@@ -410,8 +413,10 @@ class UserAPI(APIResource):
         user.put()
 
     def final_submission(self, obj, user, data):
-        return obj.get_selected_submission(data['assignment'])
+        return obj.get_final_submission(data['assignment'])
 
+    def get_backups(self, obj, user, data):
+        return obj.get_backups(data['assignment'])
 
 class AssignmentAPI(APIResource):
     """The API resource for the Assignment Object"""
@@ -483,6 +488,7 @@ class SubmitNDBImplementation(object):
 
     def create_submission(self, user, assignment, messages, submit, submitter):
         """Create submission using user as parent to ensure ordering."""
+
         if not user.is_admin:
             submitter = user.key
         # TODO - Choose member of group if the user is an admin.
@@ -498,12 +504,13 @@ class SubmitNDBImplementation(object):
             if date:
                 created = parse_date(date)
 
-        submission = models.Submission(submitter=submitter,
+        submission = models.Backup(submitter=submitter,
                                        assignment=assignment.key,
                                        messages=db_messages,
                                        created=created)
         submission.put()
-        deferred.defer(assign_submission, submission.key.id())
+
+        deferred.defer(assign_submission, submission.key.id(), submit)
 
         return submission
 
@@ -511,7 +518,7 @@ class SubmitNDBImplementation(object):
 class SubmissionAPI(APIResource):
     """The API resource for the Submission Object"""
     model = models.Backup
-    diff_model = models.SubmissionDiff
+    diff_model = models.Diff
 
     db = SubmitNDBImplementation()
 
@@ -576,24 +583,6 @@ class SubmissionAPI(APIResource):
             }
         }
     }
-
-    def get_instance(self, key, user):
-        try:
-            return super(SubmissionAPI, self).get_instance(key, user)
-        except BadKeyError:
-            pass
-
-        old_obj = models.OldSubmission.get_by_id(key)
-        if not old_obj:
-            raise BadKeyError(key)
-        obj = old_obj.upgrade()
-        obj.put()
-        old_obj.key.delete()
-
-        need = Need('get')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-        return obj
 
     def graded(self, obj, user, data):
         """
@@ -780,7 +769,7 @@ class SubmissionAPI(APIResource):
             submitter = user.key
 
         due = valid_assignment.due_date
-        late_flag = datetime.datetime.now() - datetime.timedelta(3) >= due
+        late_flag = datetime.datetime.now() >= valid_assignment.lock_date
 
         if submit and late_flag:
             # Late submission. Do Not allow them to submit
@@ -911,10 +900,9 @@ class CourseAPI(APIResource):
     methods = {
         'post': {
             'web_args': {
-                'name': Arg(str, required=True),
+                'display_name': Arg(str),
                 'institution': Arg(str, required=True),
-                'term': Arg(str, required=True),
-                'year': Arg(str, required=True),
+                'offering': Arg(str, required=True),
                 'active': BooleanArg(),
             }
         },
@@ -966,7 +954,6 @@ class CourseAPI(APIResource):
         """
         The POST HTTP method
         """
-        data['creator'] = user.key
         return super(CourseAPI, self).post(user, data)
 
     def add_staff(self, course, user, data):
@@ -1009,12 +996,6 @@ class GroupAPI(APIResource):
     model = models.Group
 
     methods = {
-        'post': {
-            'web_args': {
-                'assignment': KeyArg('Assignment', required=True),
-                'members': KeyRepeatedArg('User')
-            }
-        },
         'get': {
         },
         'index': {
@@ -1023,59 +1004,43 @@ class GroupAPI(APIResource):
                 'members': KeyArg('User')
             }
         },
+        'invite': {
+            'web_args': {
+                'member': Arg(str, required=True)
+             }
+        },
         'add_member': {
             'methods': set(['PUT']),
             'web_args': {
-                'member': KeyArg('User', required=True),
+                'member': Arg(str, required=True),
             },
         },
         'remove_member': {
             'methods': set(['PUT']),
             'web_args': {
-                'member': KeyArg('User', required=True),
+                'member': Arg(str, required=True),
             },
         },
-        'accept_invitation': {
+        'accept': {
             'methods': set(['PUT']),
         },
-        'reject_invitation': {
+        'decline': {
             'methods': set(['PUT']),
         }
     }
 
-    def post(self, user, data):
-        # no permissions necessary, anyone can create a group
-        for user_key in data.get('members', ()):
-            user = user_key.get()
-            if user:
-                current_group = list(user.groups(data['assignment']))
-
-                if len(current_group) == 1:
-                    raise BadValueError(
-                        '{} already in a group'.format(user_key.id()))
-                if len(current_group) > 1:
-                    raise BadValueError(
-                        '{} in multiple groups'.format(user_key.id()))
-            else:
-                models.User.get_or_insert(user_key.id())
-
-        group = self.new_entity(data)
-        group.put()
-
     def add_member(self, group, user, data):
         # can only add a member if you are a member
-        need = Need('member')
+        need = Need('invite')
         if not group.can(user, need, group):
             raise need.exception()
 
-        if data['member'] in group.invited_members:
+        if data['member'] in group.invited:
             raise BadValueError('user has already been invited')
-        if data['member'] in group.members:
+        if data['member'] in group.member:
             raise BadValueError('user already part of group')
 
-        user_to_add = models.User.get_or_insert(data['member'].id())
-        group.invited_members.append(user_to_add.key)
-        group.put()
+        group.invite(data['member'])
 
         audit_log_message = models.AuditLog(
             event_type='Group.add_member',
@@ -1087,51 +1052,35 @@ class GroupAPI(APIResource):
 
     def remove_member(self, group, user, data):
         # can only remove a member if you are a member
-        need = Need('member')
+        need = Need('rescind')
         if not group.can(user, need, group):
             raise need.exception()
 
-        if data['member'] in group.members:
-            group.members.remove(data['member'])
-        elif data['member'] in group.invited_members:
-            group.invited_members.remove(data['member'])
-
-        if len(group.members) == 0:
-            group.key.delete()
-            description = 'Deleted group'
-        else:
-            group.put()
-            description = 'Changed group'
+        group.exit(data['member'])
 
         audit_log_message = models.AuditLog(
             event_type='Group.remove_member',
             user=user.key,
             obj=group.key,
-            description=description
+            description='Removed user from group'
         )
         audit_log_message.put()
 
-    def accept_invitation(self, group, user, data):
+    def accept(self, group, user, data):
         # can only accept an invitation if you are in the invited_members
-        need = Need('invitation')
+        need = Need('accept')
         if not group.can(user, need, group):
             raise need.exception()
+        
+        group.accept(user)
 
-        assignment = group.assignment.get()
-        if len(group.members) < assignment.max_group_size:
-            group.invited_members.remove(user.key)
-            group.members.append(user.key)
-            group.put()
-        else:
-            raise BadValueError('too many people in group')
-
-    def reject_invitation(self, group, user, data):
+    def decline(self, group, user, data):
         # can only reject an invitation if you are in the invited_members
-        need = Need('invitation')
+        need = Need('accept')
         if not group.can(user, need, group):
             raise need.exception()
-        group.invited_members.remove(user.key)
-        group.put()
+
+        group.exit(user)
 
 
 class QueueAPI(APIResource):

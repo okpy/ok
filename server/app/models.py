@@ -1,7 +1,8 @@
 #pylint: disable=no-member
 #pylint: disable=unused-argument
+#pylint: disable=too-many-return-statements
 
-"""Data models."""
+"""Data """
 
 import datetime
 
@@ -107,13 +108,13 @@ class Base(ndb.Model):
         if need.action == "index":
             assert query, "No query for index"
         need.set_object(obj or cls)
-        if user.is_admin:
-            return query or True
-        else:
-            return cls._can(user, need, obj, query)
+        return cls._can(user, need, obj, query)
 
     @classmethod
     def _can(cls, user, need, obj, query):
+        """
+        The internal permissions method. Overridden by subclasses.
+        """
         return False
 
 
@@ -129,6 +130,36 @@ class User(Base):
     @property
     def logged_in(self):
         return self.email != ["_anon"]
+
+    def append_email(self, email):
+        if email not in self.email:
+            self.email.append(email)
+
+    def delete_email(self, email):
+        if email not in self.email:
+            self.email.remove(email)
+
+    def get_final_submission(self, assignment):
+        query = Group.query(Group.members == self.key)
+        group = query.filter(Group.assignment == assignment) 
+        return FinalSubmission.query(FinalSubmission.group == group)
+    
+    def get_backups(self, assignment):
+        query = Group.query(Group.members == self.key)
+        group = query.filter(Group.assignment == assignment)
+        all_backups = []
+
+        for member in group.members:
+            all_backups += list(Backup.query(
+                Backup.submitter == member).filter(
+                    Backup.assignment == assignment))
+
+        return all_backups
+
+    def get_group(self, assignment):
+        query = Group.query(Group.members == self.key)
+        group = query.filter(Group.assignment == assignment)
+        return group.get()
 
     @classmethod
     @ndb.transactional
@@ -152,6 +183,8 @@ class User(Base):
     def _can(cls, user, need, obj, query):
         if not user.logged_in:
             return False
+        if user.is_admin:
+            return True
 
         if need.action == "lookup":
             return True
@@ -161,7 +194,8 @@ class User(Base):
             elif obj.key == user.key:
                 return True
             else:
-                for course in Participant.courses(user, STAFF_ROLE):
+                for part in Participant.courses(user, STAFF_ROLE):
+                    course = part.course
                     if Participant.has_role(obj, course, STUDENT_ROLE):
                         return True
                 return False
@@ -173,39 +207,22 @@ class User(Base):
             return False
 
 
-class Assignment(Base):
-    """Assignments are particular to courses, keyed by a unique string that
-    should start with the course offering. E.g., cal/cs61a/fa14/proj1.
-
-    Assignment keys do *not* have course keys as parents.
-    """
-    display_name = ndb.StringProperty()
-    points = ndb.FloatProperty()
-    templates = ndb.JsonProperty()
-    creator = ndb.KeyProperty(User)
-    course = ndb.KeyProperty(Course)
-    max_group_size = ndb.IntegerProperty()
-    due_date = ndb.DateTimeProperty()
-    lock_date = ndb.DateTimeProperty() # no submissions after this date
-    active = ndb.ComputedProperty(lambda a: datetime.datetime.now() <= a.lock_date)
-    # TODO Add services requested
-
-    @classmethod
-    def _can(cls, user, need, obj, query):
-        if need.action == "get":
-            return True
-        elif need.action == "index":
-            return query
-        else:
-            return False
-
-
 class Course(Base):
-    """Courses are keyed by offering, e.g. cal/cs61a/fa14."""
+    """Courses are expected to have a unique offering."""
+    offering = ndb.StringProperty() # E.g., 'cal/cs61a/fa14'
     institution = ndb.StringProperty() # E.g., 'UC Berkeley'
     display_name = ndb.StringProperty()
     instructor = ndb.KeyProperty(User, repeated=True)
     active = ndb.BooleanProperty(default=True)
+
+    @property
+    def staff(self):
+        """
+        Returns all the staff of this course.
+        """
+        return [part.user for part in Participant.query(
+            Participant.course == self.key,
+            Participant.role == STAFF_ROLE).fetch()]
 
     @classmethod
     def _can(cls, user, need, course, query):
@@ -215,17 +232,46 @@ class Course(Base):
         elif action == "index":
             return query
         elif action == "modify":
-            return course
+            return bool(course) and user.key in course.staff
         elif action == "staff":
             if user.is_admin:
                 return True
             return user.key in course.staff
+        elif action == "create":
+            return user.is_admin
         return False
 
     @property
     def assignments(self):
         """Return a query for assignments."""
         return Assignment.query(Assignment.course == self.key)
+
+
+class Assignment(Base):
+    """Assignments are particular to courses and have unique names."""
+    name = ndb.StringProperty() # E.g., cal/cs61a/fa14/proj1
+    display_name = ndb.StringProperty()
+    points = ndb.FloatProperty()
+    templates = ndb.JsonProperty()
+    creator = ndb.KeyProperty(User)
+    course = ndb.KeyProperty(Course)
+    max_group_size = ndb.IntegerProperty()
+    due_date = ndb.DateTimeProperty()
+    lock_date = ndb.DateTimeProperty() # no submissions after this date
+    active = ndb.ComputedProperty(
+        lambda a: a.lock_date and datetime.datetime.now() <= a.lock_date)
+    # TODO Add services requested
+
+    @classmethod
+    def _can(cls, user, need, obj, query):
+        if need.action == "get":
+            return True
+        elif need.action == "index":
+            return query
+        elif need.action == "create":
+            return user.is_admin
+        else:
+            return False
 
 
 class Participant(Base):
@@ -262,7 +308,7 @@ class Participant(Base):
             user_key = user_key.key
         query = cls.query(cls.user == user_key)
         if role:
-            query.filter(cls.role == role)
+            query = query.filter(cls.role == role)
         return query.fetch()
 
 
@@ -297,9 +343,10 @@ def disjunction(query, filters):
     """Return a query in which at least one filter is true."""
     assert filters, "No filters"
     if len(filters) > 1:
-        return query.filter(ndb.OR(*filters))
+        return query.filter(ndb.OR(*filters)) #pylint: disable=star-args
     else:
         return query.filter(filters[0])
+
 
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
@@ -309,11 +356,8 @@ class Backup(Base):
     messages = ndb.StructuredProperty(Message, repeated=True)
     tags = ndb.StringProperty(repeated=True)
 
-    SUBMITTED_TAG = "Submit"
-
     def get_messages(self, fields=None):
-        """
-        Returns self.messages formatted as a dictionary.
+        """Returns self.messages formatted as a dictionary.
 
         fields: The selected fields of the dictionary.
         """
@@ -327,13 +371,13 @@ class Backup(Base):
             message_fields = message_fields == "true"
 
         messages = {m.kind: m.contents for m in self.messages}
-        def test(x):
+        def test(item):
             if isinstance(message_fields, bool):
                 return message_fields
 
             if not message_fields:
                 return True
-            return x in message_fields
+            return item in message_fields
 
         def get_contents(kind, contents):
             if isinstance(message_fields, bool):
@@ -365,48 +409,52 @@ class Backup(Base):
         if action == "get":
             if not backup or not isinstance(backup, Backup):
                 raise ValueError("Need Backup instance for get action.")
-            if backup.submitter == user.key:
+            if user.is_admin or backup.submitter == user.key:
                 return True
-            course_key = backup.assignment.course
+            course_key = backup.assignment.get().course
             if Participant.has_role(user, course_key, STAFF_ROLE):
                 return True
             group = backup.group
-            if group and user.key in group.member:
-                return True
-            return False
+            return bool(group and user.key in group.member)
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
         if action == "index":
             if not user.logged_in:
                 return False
             filters = [Backup.submitter == user.key]
-            for course in Participant.courses(user, STAFF_ROLE):
-                assigns = Assignment.query(Assignment.course == course).fetch()
-                filters.append(Backup.assignment.IN([a.key for a in assigns]))
-            if backup.group:
-                filters.append(ndb.AND(Backup.submitter.IN(group.members),
-                                       Backup.assignment == group.assignment))
+            staff_list = Participant.courses(user, STAFF_ROLE)
+            if user.key in [part.user for part in staff_list]:
+                for participant in staff_list:
+                    course = participant.course
+                    assigns = Assignment.query(Assignment.course == course).fetch()
+                    if assigns:
+                        filters.append(
+                            Backup.assignment.IN([a.key for a in assigns]))
+            grp = backup.group
+            if grp and user.key in grp.member:
+                filters.append(ndb.AND(
+                    Backup.submitter.IN(grp.member),
+                    Backup.assignment == grp.assignment))
             return disjunction(query, filters)
         return False
 
 
 class Score(Base):
-    """
-    The score for a submission.
-    """
+    """The score for a submission, either from a grader or autograder."""
     score = ndb.IntegerProperty()
     message = ndb.StringProperty() # Plain text
     grader = ndb.KeyProperty('User')
-    # TODO How do we handle scores assigned by autograders?
-    # We just need to make sure that the permissions allow for autograders to
-    # be able to add scores. The autograding service that's being built should
-    # call into our endpoints to add a score for a submission.
+    autograder = ndb.StringProperty()
 
 
 class Submission(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
+
+    @classmethod
+    def _can(cls, user, need, submission, query):
+        return Backup._can(user, need, submission.backup.get(), query)
 
 
 class Diff(Base):
@@ -420,6 +468,9 @@ class Diff(Base):
 
     @property
     def comments(self):
+        """
+        Returns all the comments for this diff.
+        """
         return Comment.query(ancestor=self.key).order(Comment.created)
 
     def to_json(self, fields=None):
@@ -437,6 +488,7 @@ class Diff(Base):
 class Comment(Base):
     """A comment is part of a diff. The key has the diff as its parent."""
     author = ndb.KeyProperty('User')
+    diff = ndb.KeyProperty('Diff')
     filename = ndb.StringProperty()
     line = ndb.IntegerProperty()
     # TODO Populate submission_line so that when diffs are changed, comments
@@ -469,11 +521,11 @@ class Version(Base):
         return '/'.join((self.base_url, version, self.name))
 
     def to_json(self, fields=None):
-        json = super(Version, self).to_json(fields)
+        converted = super(Version, self).to_json(fields)
         if self.current_version:
-            json['current_download_link'] = self.download_link()
+            converted['current_download_link'] = self.download_link()
 
-        return json
+        return converted
 
     @classmethod
     def _can(cls, user, need, obj=None, query=None):
@@ -508,11 +560,11 @@ class Version(Base):
         return super(cls, Version).get_by_id(key, **kwargs)
 
 class Group(Base):
-    """A group is a collection of users who are either active or pending.
+    """A group is a collection of users who are either members or invited.
 
-    Active members of a group can view each other's submissions.
+    Members of a group can view each other's submissions.
     """
-    member = ndb.KeyProperty(kind='User', repeated=True)
+    members = ndb.KeyProperty(kind='User', repeated=True)
     invited = ndb.KeyProperty(kind='User', repeated=True)
     assignment = ndb.KeyProperty('Assignment', required=True)
 
@@ -523,11 +575,11 @@ class Group(Base):
             user_key = user_key.key()
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key()
-        return Group.query(Group.member == user_key,
+        return Group.query(Group.members == user_key,
                            Group.assignment == assignment_key).get()
 
     @classmethod
-    def lookup_or_create(cls, user_key, assignment_key):
+    def _lookup_or_create(cls, user_key, assignment_key):
         """Retrieve a group for user or create a group. Group is *not* put."""
         group = cls.lookup(user_key, assignment_key)
         if group:
@@ -536,7 +588,7 @@ class Group(Base):
             user_key = user_key.key()
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key()
-        return Group(member=[user_key], invited=[], assignment=assignment_key)
+        return Group(members=[user_key], invited=[], assignment=assignment_key)
 
     @ndb.transactional
     def invite(self, email):
@@ -547,9 +599,9 @@ class Group(Base):
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "That user is not enrolled in this course"
-        if user.key in self.member or user.key in self.invited:
+        if user.key in self.members or user.key in self.invited:
             return "That user is already in the group"
-        has_user = ndb.Or(Group.member == user.key, Group.invited == user.key)
+        has_user = ndb.OR(Group.members == user.key, Group.invited == user.key)
         if Group.query(has_user, Group.assignment == self.assignment).get():
             return "That user is already in some other group"
         max_group_size = self.assignment.get().max_group_size
@@ -562,24 +614,24 @@ class Group(Base):
     @classmethod
     @ndb.transactional
     def invite_to_group(cls, user_key, email, assignment_key):
-        """User invites email to join his/her group."""
-        group = cls.lookup_or_create(user_key, assignment_key)
-        group.invite(email)
+        """User invites email to join his/her group. Returns error or None."""
+        group = cls._lookup_or_create(user_key, assignment_key)
+        return group.invite(email)
 
     @ndb.transactional
     def accept(self, user_key):
         """User accepts an invitation to join. Returns error or None."""
         if user_key not in self.invited:
             return "That user is not invited to the group"
-        if user_key in self.member:
+        if user_key in self.members:
             return "That user has already accepted."
         self.invited.remove(user_key)
-        self.member.append(user_key)
+        self.members.append(user_key)
         self.put()
 
     @ndb.transactional
     def exit(self, user_key):
-        """User leaves the group. Empty groups are deleted."""
+        """User leaves the group. Empty/singleton groups are deleted."""
         for users in [self.members, self.invited]:
             if user_key in users:
                 users.remove(user_key)
@@ -593,26 +645,16 @@ class Group(Base):
             return False
 
         if action == "index":
-            if user.is_admin:
-                return query
-            return query.filter(Group.members == user.key)
-
-        if user.is_admin:
-            return True
-
-        if action == "delete":
+            return query.filter(ndb.OR(Group.members == user.key,
+                                       Group.invited == user.key))
+        if not group:
             return False
-        if action == "invitation":
-            return user.key in group.invited
-        if action == "member":
-            return user.key in group.members
-        if action == "get":
+        if action in ("get", "exit"):
             return user.key in group.members or user.key in group.invited
-        if action in ("create", "put"):
-            #TODO(martinis) make sure other students are ok with this group
-            if not group:
-                raise ValueError("Need instance for get action.")
+        elif action in ("invite", "rescind"):
             return user.key in group.members
+        elif action == "accept":
+            return user.key in group.invited
         return False
 
     def validate(self):
@@ -634,48 +676,17 @@ class Group(Base):
             raise BadValueError(error)
 
 
-class FinalSubmission(Base):
-    assignment = ndb.KeyProperty(Assignment)
-    group = ndb.KeyProperty(Group)
-    submission = ndb.KeyProperty(Backup)
-    published = ndb.BooleanProperty(default=False)
-    queue = ndb.KeyProperty(Queue)
-
-    @property
-    def assigned(self):
-        return bool(self.queue)
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        if not user.logged_in:
-            return False
-
-        if action == "index":
-            if user.is_admin:
-                return query
-            return False
-
-        if user.is_admin:
-            return True
-
-        return False
-
-
-# TODO Can we get rid of this (and maybe the AuditLog, too)?
 def anon_converter(prop, value):
+    """Convert anonymous user to None."""
     if not value.get().logged_in:
         return None
-
     return value
 
 
 class AuditLog(Base):
-    # TODO What's an AuditLog?
-    # Keeps track of Group changes that are happening. That way, we can stop
-    # cases of cheating by temporary access. (e.g. A is C's partner for 10 min
-    # so A can copy off of C)
-    created = ndb.DateTimeProperty(auto_now_add=True)
+    """Keeps track of Group changes that are happening. That way, we can stop
+    cases of cheating by temporary access. (e.g. A is C's partner for 10 min
+    so A can copy off of C)."""
     event_type = ndb.StringProperty(required=True)
     user = ndb.KeyProperty('User', required=True, validator=anon_converter)
     description = ndb.StringProperty()
@@ -683,29 +694,17 @@ class AuditLog(Base):
 
 
 class Queue(Base):
+    """A queue of submissions to grade."""
     assignment = ndb.KeyProperty(Assignment)
     assigned_staff = ndb.KeyProperty(User, repeated=True)
 
     @property
     def submissions(self):
-        q = FinalSubmission.query().filter(FinalSubmission.queue == self.key)
-        return [fs.submission for fs in q]
-
-    @classmethod
-    def _can(cls, user, need, obj=None, query=None):
-        action = need.action
-        if not user.logged_in:
-            return False
-
-        if action == "index":
-            if user.is_admin:
-                return query
-            return False
-
-        if user.is_admin:
-            return True
-
-        return False
+        """
+        Returns all the submissions in this queue.
+        """
+        query = FinalSubmission.query().filter(FinalSubmission.queue == self.key)
+        return [fs.submission for fs in query]
 
     def to_json(self, fields=None):
         if not fields:
@@ -717,4 +716,30 @@ class Queue(Base):
             'assigned_staff': [val.get().to_json(fields.get('assigned_staff')) for val in self.assigned_staff],
             'id': self.key.id()
         }
+
+
+class FinalSubmission(Base):
+    """The final submission for an assignment from a group."""
+    assignment = ndb.KeyProperty(Assignment)
+    group = ndb.KeyProperty(Group)
+    submission = ndb.KeyProperty(Submission)
+    published = ndb.BooleanProperty(default=False)
+    queue = ndb.KeyProperty(Queue)
+
+    @property
+    def assigned(self):
+        """
+        Return whether or not this assignment has been assigned to a queue.
+        """
+        return bool(self.queue)
+
+    @classmethod
+    def _can(cls, user, need, final, query):
+        return Submission._can(user, need, final.submission.get(), query)
+
+    # TODO Add hook to update final submissions on submission or group change.
+
+
+
+
 

@@ -17,18 +17,14 @@ from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 from google.appengine.ext import ndb
 
 from app import models
-from app.constants import ADMIN_ROLE
 
 from ddt import ddt, data, unpack
 
 def make_fake_course(creator):
     return models.Course(
-        name="cs61a",
         institution="UC Soumya",
-        term="Fall",
-        year="2014",
-        creator=creator.key,
-        staff=[],
+        instructor=[creator.key],
+        offering="cal/cs61a/fa14",
         active=True)
 
 def make_fake_assignment(course, creator):
@@ -65,19 +61,14 @@ class APITest(object): #pylint: disable=no-init
     def get_accounts(self):
         return {
             "dummy_admin": models.User(
-                key=ndb.Key("User", "dummy@admin.com"),
-                email="dummy@admin.com",
-                first_name="Admin",
-                last_name="Jones",
-                login="albert",
-                role=ADMIN_ROLE
+                email=["dummy@admin.com"],
+                is_admin=True
+            ),
+            "dummy_staff": models.User(
+                email=["brian@staff.com"],
             ),
             "dummy_student": models.User(
-                key=ndb.Key("User", "dummy@student.com"),
-                email="dummy@student.com",
-                first_name="Student",
-                last_name="Jones",
-                login="billy",
+                email=["dummy@student.com"],
             )
         }
 
@@ -267,7 +258,7 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
 
 class SubmissionAPITest(APITest, APIBaseTestCase):
-    model = models.Submission
+    model = models.Backup
     name = 'submission'
     access_token = "submitter"
 
@@ -332,8 +323,6 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
 
         self.get_index(created='<|%s' % str(time - datetime.timedelta(hours=7)))
         self.assertJson([inst.to_json()])
-
-
 
 
 class CourseAPITest(APITest, APIBaseTestCase):

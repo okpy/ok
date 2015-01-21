@@ -15,7 +15,6 @@ from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 from google.appengine.ext import ndb
 
 from app import models, api
-from app.constants import ADMIN_ROLE
 
 from test_api import make_fake_assignment, make_fake_course
 
@@ -38,31 +37,18 @@ class AuditTest(APIBaseTestCase): #pylint: disable=no-init
 
         self.group = models.Group(
             assignment=self.assignment.key)
-        self.group.put()
 
     def get_accounts(self):
         return {
             "dummy_admin": models.User(
-                key=ndb.Key("User", "dummy@admin.com"),
-                email="dummy@admin.com",
-                first_name="Admin",
-                last_name="Jones",
-                login="albert",
-                role=ADMIN_ROLE
+                email=["dummy@admin.com"],
+                is_admin=True
             ),
             "dummy_student": models.User(
-                key=ndb.Key("User", "dummy@student.com"),
-                email="dummy@student.com",
-                first_name="Student",
-                last_name="Jones",
-                login="billy",
+                email=["dummy@student.com"],
             ),
             "student2": models.User(
-                key=ndb.Key("User", "other@student.com"),
-                email="other@student.com",
-                first_name="Billy",
-                last_name="Jones",
-                login="biilly",
+                email=["other@student.com"],
             ),
         }
 
