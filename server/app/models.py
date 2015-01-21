@@ -640,7 +640,7 @@ class Group(Base):
             return False
 
         if action == "index":
-            return query.filter(ndb.Or(Group.members == user.key,
+            return query.filter(ndb.OR(Group.members == user.key,
                                        Group.invited == user.key))
         if not group:
             return False
