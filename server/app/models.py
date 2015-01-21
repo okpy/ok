@@ -417,8 +417,6 @@ class Backup(Base):
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
         if action == "index":
-            import pdb
-            pdb.set_trace()
             if not user.logged_in:
                 return False
             filters = [Backup.submitter == user.key]
@@ -430,10 +428,11 @@ class Backup(Base):
                     if assigns:
                         filters.append(
                             Backup.assignment.IN([a.key for a in assigns]))
-            if backup.group:
+            grp = backup.group
+            if grp and user.key in grp.member:
                 filters.append(ndb.AND(
-                    Backup.submitter.IN(backup.group.member),
-                    Backup.assignment == backup.group.assignment))
+                    Backup.submitter.IN(grp.member),
+                    Backup.assignment == grp.assignment))
             return disjunction(query, filters)
         return False
 

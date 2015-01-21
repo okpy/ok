@@ -118,6 +118,8 @@ class PermissionsUnitTest(BaseTestCase):
                 assignment=self.assignments["first"].key,
                 ),
             }
+        for backup in self.backups.values():
+            backup.put()
 
         self.groups = {
             'group1': models.Group(
