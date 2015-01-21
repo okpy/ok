@@ -22,16 +22,22 @@ environment variable allows you to add your own
 testing configuration in app/settings.py
 """
 
-def main(sdk_path, test_path):
+def main(sdk_path, test_root, test_path):
+    """
+    Runs the tests in the |test_path| directory.
+    Returns if these tests failed or succeeded.
+    """
     sys.path.insert(0, sdk_path)
+    sys.path.insert(0, test_root)
     import dev_appserver
     dev_appserver.fix_sys_path()
     sys.path.insert(1, os.path.join(os.path.abspath('.'), 'lib'))
     suite = unittest2.loader.TestLoader().discover(test_path)
     result = unittest2.TextTestRunner(verbosity=2).run(suite)
+
     if len(result.failures):
-        sys.exit(1)
-    sys.exit(0)
+        return True
+    return False
 
 
 if __name__ == '__main__':
@@ -45,7 +51,17 @@ if __name__ == '__main__':
         # Path to tests folder
         dir_of_file = os.path.dirname(os.path.abspath(__file__))
         TEST_PATH = os.path.join(dir_of_file, 'tests')
-        main(SDK_PATH, TEST_PATH)
+        test_types = os.listdir(TEST_PATH)
+        failed = False
+        for typ in test_types:
+            test_dir = os.path.join(TEST_PATH, typ)
+            if not os.path.isdir(test_dir):
+                continue
+            print '='*60
+            print "Doing {} testing".format(typ)
+            print '='*60
+            failed = failed or main(SDK_PATH, TEST_PATH, test_dir)
+        sys.exit(int(failed))
     except IndexError:
         # you probably forgot about path as first argument
         print USAGE
