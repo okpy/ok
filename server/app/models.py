@@ -407,13 +407,13 @@ class Backup(Base):
         if action == "get":
             if not backup or not isinstance(backup, Backup):
                 raise ValueError("Need Backup instance for get action.")
-            if backup.submitter == user.key:
+            if user.is_admin or backup.submitter == user.key:
                 return True
             course_key = backup.assignment.get().course
             if Participant.has_role(user, course_key, STAFF_ROLE):
                 return True
             group = backup.group
-            return group and user.key in group.member
+            return bool(group and user.key in group.member)
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
         if action == "index":
