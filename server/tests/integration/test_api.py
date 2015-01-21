@@ -64,6 +64,9 @@ class APITest(object): #pylint: disable=no-init
                 email=["dummy@admin.com"],
                 is_admin=True
             ),
+            "dummy_staff": models.User(
+                email=["brian@staff.com"],
+            ),
             "dummy_student": models.User(
                 email=["dummy@student.com"],
             )

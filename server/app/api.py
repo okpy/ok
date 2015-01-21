@@ -582,24 +582,6 @@ class SubmissionAPI(APIResource):
         }
     }
 
-    def get_instance(self, key, user):
-        try:
-            return super(SubmissionAPI, self).get_instance(key, user)
-        except BadKeyError:
-            pass
-
-        old_obj = models.OldSubmission.get_by_id(key)
-        if not old_obj:
-            raise BadKeyError(key)
-        obj = old_obj.upgrade()
-        obj.put()
-        old_obj.key.delete()
-
-        need = Need('get')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-        return obj
-
     def graded(self, obj, user, data):
         """
         Gets the users graded submissions
@@ -970,7 +952,6 @@ class CourseAPI(APIResource):
         """
         The POST HTTP method
         """
-        data['creator'] = user.key
         return super(CourseAPI, self).post(user, data)
 
     def add_staff(self, course, user, data):
@@ -1035,7 +1016,7 @@ class GroupAPI(APIResource):
         'remove_member': {
             'methods': set(['PUT']),
             'web_args': {
-                'member': (str, required=True),
+                'member': Arg(str, required=True),
             },
         },
         'accept': {

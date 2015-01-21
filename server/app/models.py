@@ -559,7 +559,7 @@ class Group(Base):
 
     Members of a group can view each other's submissions.
     """
-    member = ndb.KeyProperty(kind='User', repeated=True)
+    members = ndb.KeyProperty(kind='User', repeated=True)
     invited = ndb.KeyProperty(kind='User', repeated=True)
     assignment = ndb.KeyProperty('Assignment', required=True)
 
@@ -570,7 +570,7 @@ class Group(Base):
             user_key = user_key.key()
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key()
-        return Group.query(Group.member == user_key,
+        return Group.query(Group.members == user_key,
                            Group.assignment == assignment_key).get()
 
     @classmethod
@@ -583,7 +583,7 @@ class Group(Base):
             user_key = user_key.key()
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key()
-        return Group(member=[user_key], invited=[], assignment=assignment_key)
+        return Group(members=[user_key], invited=[], assignment=assignment_key)
 
     @ndb.transactional
     def invite(self, email):
@@ -594,9 +594,9 @@ class Group(Base):
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "That user is not enrolled in this course"
-        if user.key in self.member or user.key in self.invited:
+        if user.key in self.members or user.key in self.invited:
             return "That user is already in the group"
-        has_user = ndb.Or(Group.member == user.key, Group.invited == user.key)
+        has_user = ndb.OR(Group.members == user.key, Group.invited == user.key)
         if Group.query(has_user, Group.assignment == self.assignment).get():
             return "That user is already in some other group"
         max_group_size = self.assignment.get().max_group_size
@@ -618,10 +618,10 @@ class Group(Base):
         """User accepts an invitation to join. Returns error or None."""
         if user_key not in self.invited:
             return "That user is not invited to the group"
-        if user_key in self.member:
+        if user_key in self.members:
             return "That user has already accepted."
         self.invited.remove(user_key)
-        self.member.append(user_key)
+        self.members.append(user_key)
         self.put()
 
     @ndb.transactional
