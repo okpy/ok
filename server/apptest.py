@@ -60,7 +60,7 @@ if __name__ == '__main__':
             print '='*60
             print "Doing {} testing".format(typ)
             print '='*60
-            failed = failed or main(SDK_PATH, TEST_PATH, test_dir)
+            failed = main(SDK_PATH, TEST_PATH, test_dir) or failed
         sys.exit(int(failed))
     except IndexError:
         # you probably forgot about path as first argument
