@@ -66,19 +66,20 @@ def seed():
 
     def make_group(assign, members):
         return models.Group(
-            members=[m.key for m in members],
+            member=[m.key for m in members],
             assignment = assign.key
         )
 
     def make_invited_group(assign, members):
         return models.Group(
-            members=[members[0].key],
-            invited_members=[members[1].key],
+            member=[members[0].key],
+            invited=[members[1].key],
             assignment = assign.key
         )
 
 
     def make_seed_submission(assignment, submitter, final=False):
+        #TODO(soumya): Change this to actually be a submission.
         sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
 
         with open('app/seed/hog_modified.py') as fp:
@@ -91,7 +92,7 @@ def seed():
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
-        return models.Submission(
+        return models.Backup(
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
@@ -99,6 +100,7 @@ def seed():
 
 
     def make_seed_scheme_submission(assignment, submitter, final=False):
+        #TODO(soumya): Change this to actually be a submission
         sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
 
         with open('app/seed/scheme.py') as sc, \
@@ -116,7 +118,7 @@ def seed():
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
-        return models.Submission(
+        return models.Backup(
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
@@ -148,22 +150,13 @@ def seed():
     # Start putting things in the DB.
 
     c = models.User(
-        key=ndb.Key("User", "test@example.com"),
-        email="test@example.com",
-        first_name="Admin",
-        last_name="Example",
-        login="Adbert",
-        role="admin"
+        email=["test@example.com"],
+        is_admin=True
     )
     c.put()
 
     a = models.User(
-        key=ndb.Key("User", "dummy@admin.com"),
-        email="dummy@admin.com",
-        first_name="Admin",
-        last_name="Jones",
-        login="albert",
-        role="admin"
+        email=["dummy@admin.com"],
     )
     a.put()
 
@@ -172,12 +165,7 @@ def seed():
 
     for i in range(4):
         s = models.User(
-            key=ndb.Key("User", "partner"  + str(i) + "@teamwork.com"),
-            email="partner" + str(i) + "@teamwork.com",
-            first_name="partner"+ str(i),
-            last_name="learning",
-            login="student",
-            role="student"
+            email=["partner" + str(i) + "@teamwork.com"],
         )
         s.put()
         group_members += [s]
@@ -185,24 +173,14 @@ def seed():
 
     for i in range(0,9):
         s = models.User(
-            key=ndb.Key("User", "student"  + str(i) + "@student.com"),
-            email="student" + str(i) + "@student.com",
-            first_name="Ben"+ str(i),
-            last_name="Bitdiddle",
-            login="student",
-            role="student"
+            email=["student" + str(i) + "@student.com"],
         )
         s.put()
         students += [s]
 
 
     k = models.User(
-        key=ndb.Key("User", "dummy2@admin.com"),
-        email="dummy2@admin.com",
-        first_name="John",
-        last_name="Jones",
-        login="john",
-        role="admin"
+        email=["dummy2@admin.com"],
     )
     k.put()
 
@@ -214,9 +192,9 @@ def seed():
     course.put()
 
     # Put a few members on staff
-    course.staff.append(c.key)
+    course.instructor.append(c.key)
     course.put()
-    course.staff.append(a.key)
+    course.instructor.append(a.key)
     course.put()
 
 

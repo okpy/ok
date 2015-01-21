@@ -139,20 +139,25 @@ class User(Base):
             self.email.remove(email)
 
     def get_final_submission(self, assignment):
-        query = models.Group.query(models.Group.members == user.key)
-        group = query.filter(models.Group.assignment == assignment) 
-        return models.FinalSubmission.query(models.FinalSubmission.group == group)
+        query = Group.query(Group.members == self.key)
+        group = query.filter(Group.assignment == assignment) 
+        return FinalSubmission.query(FinalSubmission.group == group)
     
     def get_backups(self, assignment):
-        query = models.Group.query(models.Group.members == user.key)
-        group = query.filter(models.Group.assignment == assignment)
+        query = Group.query(Group.members == self.key)
+        group = query.filter(Group.assignment == assignment)
         all_backups = []
 
         for member in group.members:
-            all_backups += list(models.Backup.query(models.Backup.submitter ==
-                member).filter(models.Backup.assignment == assignment))
+            all_backups += list(Backup.query(models.Backup.submitter ==
+                member).filter(Backup.assignment == assignment))
 
         return all_backups
+
+    def get_group(self, assignment):
+        query = Group.query(Group.member == self.key)
+        group = query.filter(Group.assignment == assignment)
+        return group.get()
 
     @classmethod
     @ndb.transactional
@@ -237,7 +242,7 @@ class Assignment(Base):
     max_group_size = ndb.IntegerProperty()
     due_date = ndb.DateTimeProperty()
     lock_date = ndb.DateTimeProperty() # no submissions after this date
-    active = ndb.ComputedProperty(lambda a: datetime.datetime.now() <= a.lock_date)
+    active = ndb.ComputedProperty(lambda a: not a.lock_date or datetime.datetime.now() <= a.lock_date)
     # TODO Add services requested
 
     @classmethod
@@ -633,13 +638,13 @@ class Group(Base):
     def validate(self):
         """Return an error string if group is invalid."""
         max_group_size = self.assignment.get().max_group_size
-        total_members = len(self.members) + len(self.invited)
+        total_members = len(self.member) + len(self.invited)
         if max_group_size and total_members > max_group_size:
             sizes = (total_members, max_group_size)
             return "%s members found; at most %s allowed" % sizes
         if total_members < 2:
             return "No group can have %s total members" % total_members
-        if not self.members:
+        if not self.member:
             return "A group must have an active member"
 
     def _pre_put_hook(self):
