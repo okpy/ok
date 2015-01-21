@@ -1,8 +1,8 @@
+"""Data Models."""
+
 #pylint: disable=no-member
 #pylint: disable=unused-argument
 #pylint: disable=too-many-return-statements
-
-"""Data """
 
 import datetime
 
@@ -136,14 +136,14 @@ class User(Base):
             self.email.append(email)
 
     def delete_email(self, email):
-        if email not in self.email:
+        if email in self.email and len(self.email) > 1:
             self.email.remove(email)
 
     def get_final_submission(self, assignment):
         query = Group.query(Group.members == self.key)
-        group = query.filter(Group.assignment == assignment) 
+        group = query.filter(Group.assignment == assignment)
         return FinalSubmission.query(FinalSubmission.group == group)
-    
+
     def get_backups(self, assignment):
         query = Group.query(Group.members == self.key)
         group = query.filter(Group.assignment == assignment)
@@ -206,6 +206,10 @@ class User(Base):
         else:
             return False
 
+    def _pre_put_hook(self):
+        """Ensure that a user can be accessed by at least one email."""
+        if not self.email:
+            raise BadValueError("No email associated with " + str(self))
 
 class Course(Base):
     """Courses are expected to have a unique offering."""
@@ -269,7 +273,9 @@ class Assignment(Base):
         elif need.action == "index":
             return query
         elif need.action == "create":
-            return user.is_admin
+            return Participant.has_role(user, course, STAFF_ROLE)
+        elif need.action == "grade":
+            return Participant.has_role(user, course, STAFF_ROLE)
         else:
             return False
 

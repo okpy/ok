@@ -199,7 +199,7 @@ def filter_query(query, args, model):
     return query
 
 ASSIGN_BATCH_SIZE = 20
-def assign_work(assign_key, cursor=None, num_updated=0):
+def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.FinalSubmission.query().filter(
         ModelProxy.FinalSubmission.assignment == assign_key)
 
@@ -241,11 +241,11 @@ def assign_work(assign_key, cursor=None, num_updated=0):
             'Put %d entities to Datastore for a total of %d',
             to_put, num_updated)
         deferred.defer(
-            assign_work, assign_key, cursor=cursor,
+            add_to_grading_queues, assign_key, cursor=cursor,
             num_updated=num_updated)
     else:
         logging.debug(
-            'assign_work complete with %d updates!', num_updated)
+            'add_to_grading_queues complete with %d updates!', num_updated)
 
 def assign_submission(subm_id, submit):
     backup = ModelProxy.Backup.get_by_id(subm_id)
@@ -254,10 +254,10 @@ def assign_submission(subm_id, submit):
     if not backup.get_messages().get('file_contents'):
         logging.info("Submission had no file_contents, not processing")
         return
-    
+
     if not submit:
         return
-    
+
     subm = ModelProxy.Submission(backup = backup)
 
     group = backup.submitter.get().get_group(assign_key)
