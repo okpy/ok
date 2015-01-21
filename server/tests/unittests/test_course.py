@@ -28,9 +28,8 @@ COURSE_TESTS = [
           "staff", "Course", "first", "delete", False),
     PTest("admin_create_course",
           "admin", "Course", "first", "create", True),
-    # TODO Perhaps admin shouldn't be able to delete a course so easily.
     PTest("admin_delete_course",
-          "admin", "Course", "first", "delete", True),
+          "admin", "Course", "first", "delete", False),
     PTest("anon_delete_course",
           "anon", "Course", "first", "delete", False),
     PTest("student_modify_course",
