@@ -1,0 +1,56 @@
+<aside>
+
+            <div class="block">
+            <a href="#" class="block-link block-back">
+              <span class="arrow left dark"></span>
+              <p>Back</p>
+            </a>
+            <a href="#" class="block-link">
+              <span class="icon-link">8</span>
+              <p class="link-label">Course Website</p>
+            </a>
+          </div>
+
+</aside>
+
+<section>
+
+    <div class="assign code small inactive" id="2">
+      <div class="assign-main">
+        <h2 class="assign-title">{{submission.assignment.display_name}}
+          <span class="flag">
+            <span class="cloth"></span>
+            <span class="stem"></span>
+          </span>
+        </h2>
+        <div class="assign-deck">
+          <p><img src="/static/student/images/icon-clock.png">{{submission.created | amCalendar}}</p>
+          <!--  <p><span class="icon-question">?</span>Scores: 23/25 . 2/3</p> -->
+        <p>By: {{submission.submitter.email}}</p>
+        </div>
+      </div>
+
+              <div class="assign-code">
+
+                <div class="code-cont ">
+                  <pre>
+                    <code id="1" class="active" ng-repeat="(file_name, contents) in submission.messages.file_contents">
+                      <a ng-repeat='codeline in contents track by $index'>
+                        {{codeline}}
+                      </a>
+                    </code>
+                  </pre>
+                </div>
+
+
+
+    </div>
+
+
+
+    </div>
+
+
+
+
+</section>
