@@ -286,7 +286,7 @@ def assign_work(assign_key, cursor=None, num_updated=0):
 
 def assign_submission(subm_id, submit):
     backup = ModelProxy.Backup.get_by_id(subm_id)
-    assign_key = subm.assignment
+    assign_key = backup.assignment
 
     if not backup.get_messages().get('file_contents'):
         logging.info("Submission had no file_contents, not processing")

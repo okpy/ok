@@ -120,7 +120,7 @@ class PermissionsUnitTest(APIBaseTestCase):
 
         self.groups = {
             'group1': models.Group(
-                member=[self.accounts['student0'].key,
+                members=[self.accounts['student0'].key,
                          self.accounts['student1'].key],
                 assignment=self.assignments['first'].key
             )}
@@ -139,11 +139,11 @@ class PermissionsUnitTest(APIBaseTestCase):
         subms = FS.query()
         subms = subms.filter(FS.assignment == self.assign.key)
         subms = subms.filter(FS.group == self.user.get_group(self.assign.key).key)
-        subms = list(subms)
+        raise Exception(len(subms))
         self.assertEquals(num, len(subms))
 
     def submit(self, subm):
-        utils.assign_submission(subm.key.id())
+        utils.assign_submission(subm.key.id(), True)
 
     def testFirstSubmission(self):
         self.login('student0')

@@ -37,7 +37,6 @@ class AuditTest(APIBaseTestCase): #pylint: disable=no-init
 
         self.group = models.Group(
             assignment=self.assignment.key)
-        self.group.put()
 
     def get_accounts(self):
         return {

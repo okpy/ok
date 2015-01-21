@@ -258,7 +258,7 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
 
 class SubmissionAPITest(APITest, APIBaseTestCase):
-    model = models.Submission
+    model = models.Backup
     name = 'submission'
     access_token = "submitter"
 
@@ -323,8 +323,6 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
 
         self.get_index(created='<|%s' % str(time - datetime.timedelta(hours=7)))
         self.assertJson([inst.to_json()])
-
-
 
 
 class CourseAPITest(APITest, APIBaseTestCase):
