@@ -1013,12 +1013,6 @@ class GroupAPI(APIResource):
     model = models.Group
 
     methods = {
-        'post': {
-            'web_args': {
-                'assignment': KeyArg('Assignment', required=True),
-                'members': KeyRepeatedArg('User')
-            }
-        },
         'get': {
         },
         'index': {
@@ -1027,59 +1021,43 @@ class GroupAPI(APIResource):
                 'members': KeyArg('User')
             }
         },
+        'invite': {
+            'web_args': {
+                'member': Arg(str, required=True)
+             }
+        },
         'add_member': {
             'methods': set(['PUT']),
             'web_args': {
-                'member': KeyArg('User', required=True),
+                'member': Arg(str, required=True),
             },
         },
         'remove_member': {
             'methods': set(['PUT']),
             'web_args': {
-                'member': KeyArg('User', required=True),
+                'member': (str, required=True),
             },
         },
-        'accept_invitation': {
+        'accept': {
             'methods': set(['PUT']),
         },
-        'reject_invitation': {
+        'decline': {
             'methods': set(['PUT']),
         }
     }
 
-    def post(self, user, data):
-        # no permissions necessary, anyone can create a group
-        for user_key in data.get('members', ()):
-            user = user_key.get()
-            if user:
-                current_group = list(user.groups(data['assignment']))
-
-                if len(current_group) == 1:
-                    raise BadValueError(
-                        '{} already in a group'.format(user_key.id()))
-                if len(current_group) > 1:
-                    raise BadValueError(
-                        '{} in multiple groups'.format(user_key.id()))
-            else:
-                models.User.get_or_insert(user_key.id())
-
-        group = self.new_entity(data)
-        group.put()
-
     def add_member(self, group, user, data):
         # can only add a member if you are a member
-        need = Need('member')
+        need = Need('invite')
         if not group.can(user, need, group):
             raise need.exception()
 
-        if data['member'] in group.invited_members:
+        if data['member'] in group.invited:
             raise BadValueError('user has already been invited')
-        if data['member'] in group.members:
+        if data['member'] in group.member:
             raise BadValueError('user already part of group')
 
-        user_to_add = models.User.get_or_insert(data['member'].id())
-        group.invited_members.append(user_to_add.key)
-        group.put()
+        group.invite(data['member'])
 
         audit_log_message = models.AuditLog(
             event_type='Group.add_member',
@@ -1091,51 +1069,35 @@ class GroupAPI(APIResource):
 
     def remove_member(self, group, user, data):
         # can only remove a member if you are a member
-        need = Need('member')
+        need = Need('rescind')
         if not group.can(user, need, group):
             raise need.exception()
 
-        if data['member'] in group.members:
-            group.members.remove(data['member'])
-        elif data['member'] in group.invited_members:
-            group.invited_members.remove(data['member'])
-
-        if len(group.members) == 0:
-            group.key.delete()
-            description = 'Deleted group'
-        else:
-            group.put()
-            description = 'Changed group'
+        group.exit(data['member'])
 
         audit_log_message = models.AuditLog(
             event_type='Group.remove_member',
             user=user.key,
             obj=group.key,
-            description=description
+            description='Removed user from group'
         )
         audit_log_message.put()
 
-    def accept_invitation(self, group, user, data):
+    def accept(self, group, user, data):
         # can only accept an invitation if you are in the invited_members
-        need = Need('invitation')
+        need = Need('accept')
         if not group.can(user, need, group):
             raise need.exception()
+        
+        group.accept(user)
 
-        assignment = group.assignment.get()
-        if len(group.members) < assignment.max_group_size:
-            group.invited_members.remove(user.key)
-            group.members.append(user.key)
-            group.put()
-        else:
-            raise BadValueError('too many people in group')
-
-    def reject_invitation(self, group, user, data):
+    def decline(self, group, user, data):
         # can only reject an invitation if you are in the invited_members
-        need = Need('invitation')
+        need = Need('accept')
         if not group.can(user, need, group):
             raise need.exception()
-        group.invited_members.remove(user.key)
-        group.put()
+
+        group.exit(user)
 
 
 class QueueAPI(APIResource):
