@@ -257,14 +257,14 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
                                           self.response_json.get('key'))
 
 
-class SubmissionAPITest(APITest, APIBaseTestCase):
+class BackupAPITest(APITest, APIBaseTestCase):
     model = models.Backup
     name = 'submission'
     access_token = "submitter"
 
     num = 1
     def setUp(self):
-        super(SubmissionAPITest, self).setUp()
+        super(BackupAPITest, self).setUp()
         self.assignment_name = u'test assignment'
         self._course = make_fake_course(self.user)
         self._course.put()
@@ -278,7 +278,7 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         self.login('dummy_student')
 
     def get_basic_instance(self, mutate=True):
-        rval = models.Submission(
+        rval = models.Backup(
             submitter=self._submitter.key,
             assignment=self._assign.key)
         return rval
