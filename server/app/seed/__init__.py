@@ -66,13 +66,13 @@ def seed():
 
     def make_group(assign, members):
         return models.Group(
-            member=[m.key for m in members],
+            members=[m.key for m in members],
             assignment = assign.key
         )
 
     def make_invited_group(assign, members):
         return models.Group(
-            member=[members[0].key],
+            members=[members[0].key],
             invited=[members[1].key],
             assignment = assign.key
         )
