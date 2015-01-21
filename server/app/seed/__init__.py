@@ -248,10 +248,10 @@ def seed():
 
 
 
-    # Seed a queue. This should be auto-generated.
+    # TODO(soumya): Seed a queue. This should be auto-generated.
 
-    q = make_queue(assign, subms, c)
-    q = make_queue(assign, subms, k)
+    # q = make_queue(assign, subms, c)
+    # q = make_queue(assign, subms, k)
 
     #utils.assign_work(assign.key)
 
