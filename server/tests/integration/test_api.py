@@ -397,7 +397,6 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
     def test_assignment_group(self):
         self.user = self.accounts['dummy_student2']
-
         inst = self.get_basic_instance()
         inst.put()
 
@@ -406,7 +405,6 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
     def test_assignment_invite(self):
         self.user = self.accounts['dummy_student2']
-
         inst = self.get_basic_instance()
         inst.put()
 
@@ -421,7 +419,6 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
     def test_invite(self):
         self.user = self.accounts['dummy_student2']
-
         inst = self.get_basic_instance()
         inst.put()
 
@@ -436,13 +433,9 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
     def test_accept(self):
         self.user = self.accounts['dummy_student']
-        self.user.put()
-
         inst = self.get_basic_instance()
         inst.invited.append(self.user.key)
         inst.put()
-
-        self.assertEqual(inst.invited, [self.user.key])
 
         self.post_json('/{}/{}/accept'.format(self.name, inst.key.id()))
 
@@ -451,13 +444,9 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
     def test_exit_invited(self):
         self.user = self.accounts['dummy_student']
-        self.user.put()
-
         inst = self.get_basic_instance()
         inst.invited.append(self.user.key)
         inst.put()
-
-        self.assertEqual(inst.invited, [self.user.key])
 
         self.post_json('/{}/{}/exit'.format(self.name, inst.key.id()))
 
@@ -466,8 +455,6 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
     def test_exit_member(self):
         self.user = self.accounts['dummy_student']
-        self.user.put()
-
         inst = self.get_basic_instance()
         inst.member.append(self.user.key)
         inst.put()
