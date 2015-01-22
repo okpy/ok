@@ -617,14 +617,14 @@ class Group(Base):
         self.invited.append(user.key)
         self.put()
 
+    #@ndb.transactional
     @classmethod
-    @ndb.transactional
     def invite_to_group(cls, user_key, email, assignment_key):
         """User invites email to join his/her group. Returns error or None."""
         group = cls._lookup_or_create(user_key, assignment_key)
         return group.invite(email)
 
-    @ndb.transactional
+    #@ndb.transactional
     def accept(self, user_key):
         """User accepts an invitation to join. Returns error or None."""
         if user_key not in self.invited:
@@ -635,14 +635,14 @@ class Group(Base):
         self.members.append(user_key)
         self.put()
 
-    @ndb.transactional
+    #@ndb.transactional
     def exit(self, user_key):
         """User leaves the group. Empty/singleton groups are deleted."""
         for users in [self.members, self.invited]:
             if user_key in users:
                 users.remove(user_key)
         if not self.validate():
-            self.delete()
+            self.key.delete()
 
     @classmethod
     def _can(cls, user, need, group, query):
@@ -651,8 +651,13 @@ class Group(Base):
             return False
 
         if action == "index":
+            if user.is_admin:
+                return query
             return query.filter(ndb.OR(Group.members == user.key,
                                        Group.invited == user.key))
+
+        if user.is_admin:
+            return True
         if not group:
             return False
         if action in ("get", "exit"):
