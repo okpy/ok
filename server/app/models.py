@@ -143,7 +143,7 @@ class User(Base):
         query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
         group = group.get()
-        return FinalSubmission.query(FinalSubmission.group == group).get()
+        return FinalSubmission.query(FinalSubmission.group == group.key).get()
 
     def get_backups(self, assignment):
         query = Group.query(Group.member == self.key)
