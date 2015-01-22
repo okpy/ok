@@ -1039,6 +1039,8 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
         error = group.invite(data['email'])
+        if error:
+            raise BadValueError(error)
 
     def accept(self, group, user, data):
         need = Need('accept')
