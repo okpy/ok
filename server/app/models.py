@@ -142,14 +142,20 @@ class User(Base):
     def get_final_submission(self, assignment):
         query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
-        return FinalSubmission.query(FinalSubmission.group == group)
+        group = group.get()
+        return FinalSubmission.query(FinalSubmission.group == group).get()
 
     def get_backups(self, assignment):
         query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
+        group = group.get()
         all_backups = []
+        if not group:
+            members = [self.key]
+        else:
+            members = group.member
 
-        for member in group.member:
+        for member in members:
             all_backups += list(Backup.query(
                 Backup.submitter == member).filter(
                     Backup.assignment == assignment))
@@ -175,10 +181,11 @@ class User(Base):
         info = {'user': self}
         info['assignments'] = []
 
-        for assignment in course.assignments():
-            assign_info['group'] = self.get_group(assignment)
-            assign_info['final'] = self.get_final_submission(assignment)
-            assign_info['backups'] = self.get_backups(assignment)
+        for assignment in course.assignments:
+            assign_info = {}
+            assign_info['group'] = self.get_group(assignment.key)
+            assign_info['final'] = self.get_final_submission(assignment.key)
+            assign_info['backups'] = self.get_backups(assignment.key)
             assign_info['assignment'] = assignment
             info['assignments'].append(assign_info)
 

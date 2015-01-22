@@ -296,7 +296,7 @@ class UserAPI(APIResource):
     key_type- The type of the id of this model.
     """
     model = models.User
-    key_type = int
+    key_type = str # We will manually convert from email to UserIDs.
 
     methods = {
         'post': {
