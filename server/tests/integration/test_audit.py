@@ -10,6 +10,8 @@ tests.py
 
 """
 
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 
 from google.appengine.ext import ndb

@@ -5,6 +5,8 @@
 Tests for groups
 """
 
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 import unittest
 from test_permissions import PermissionsUnitTest
 
