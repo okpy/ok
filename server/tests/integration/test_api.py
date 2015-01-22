@@ -10,34 +10,14 @@ tests.py
 
 """
 
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 import datetime
-
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
-
+from test_base import make_fake_assignment, make_fake_course #pylint: disable=relative-import
 from google.appengine.ext import ndb
-
-from app import models
-
+from app import models, constants
 from ddt import ddt, data, unpack
-
-def make_fake_course(creator):
-    return models.Course(
-        institution="UC Soumya",
-        instructor=[creator.key],
-        offering="cal/cs61a/fa14",
-        active=True)
-
-def make_fake_assignment(course, creator):
-    return models.Assignment(
-        name='hw1',
-        points=3,
-        display_name="CS 61A",
-        templates="[]",
-        course=course.key,
-        creator=creator.key,
-        max_group_size=4,
-        due_date=datetime.datetime.now())
-
 
 @ddt
 class APITest(object): #pylint: disable=no-init
@@ -54,7 +34,8 @@ class APITest(object): #pylint: disable=no-init
     def setUp(self): #pylint: disable=super-on-old-class, invalid-name
         """Set up the API Test.
 
-        Sets up the authenticator stub, and logs you in as an admin."""
+        Sets up the authenticator stub, and logs you in as an admin.
+        """
         super(APITest, self).setUp()
         self.login('dummy_admin')
 
@@ -69,8 +50,24 @@ class APITest(object): #pylint: disable=no-init
             ),
             "dummy_student": models.User(
                 email=["dummy@student.com"],
-            )
+            ),
+            "dummy_student2": models.User(
+                email=["dummy2@student.com"],
+            ),
+            "dummy_student3": models.User(
+                email=["dummy3@student.com"],
+            ),
         }
+
+    def enroll_accounts(self, course):
+        accounts = self.get_accounts()
+        add_role = models.Participant.add_role
+        for instructor in course.instructor:
+            add_role(instructor, course, constants.STAFF_ROLE)
+        for staff in ["dummy_admin", "dummy_staff"]:
+            add_role(accounts[staff], course, constants.STAFF_ROLE)
+        for student in ["dummy_student", "dummy_student2", "dummy_student3"]:
+            add_role(accounts[student], course, constants.STUDENT_ROLE)
 
     ## INDEX ##
 
@@ -238,9 +235,10 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
         self._course = make_fake_course(self.user)
         self._course.put()
-        self._assignment = rval = make_fake_assignment(self._course, self.user)
-        rval.name = name
-        return rval
+        self.enroll_accounts(self._course)
+        self._assignment = make_fake_assignment(self._course, self.user)
+        self._assignment.name = name
+        return self._assignment
 
     def post_entity(self, inst, *args, **kwds):
         """Posts an entity to the server."""
@@ -340,6 +338,7 @@ class CourseAPITest(APITest, APIBaseTestCase):
         rval.name = name
         return rval
 
+
 class VersionAPITest(APITest, APIBaseTestCase):
     model = models.Version
     name = 'version'
@@ -354,6 +353,7 @@ class VersionAPITest(APITest, APIBaseTestCase):
         return self.model(key=ndb.Key('Version', name),
             name=name, versions=['1.0.0', '1.1.0'], base_url="https://www.baseurl.com")
 
+
 class GroupAPITest(APITest, APIBaseTestCase):
     model = models.Group
     name = 'group'
@@ -366,49 +366,116 @@ class GroupAPITest(APITest, APIBaseTestCase):
         self.course.put()
         self.assignment = make_fake_assignment(self.course, self.user)
         self.assignment.put()
+        for student_name in [a for a in self.accounts if 'student' in a]:
+            s = self.accounts[student_name]
+            models.Participant.add_role(s, self.course, constants.STUDENT_ROLE)
 
     def get_basic_instance(self, mutate=True):
-        name = 'testversion'
-        if mutate:
-            name += str(self.num)
-            self.num += 1
-        return self.model(assignment=self.assignment.key)
+        return self.model(
+            assignment=self.assignment.key,
+            member=[
+                self.accounts['dummy_student2'].key,
+                self.accounts['dummy_student3'].key])
 
-    def test_add_member(self):
-        members = [self.accounts['dummy_student'].key]
+    def test_assignment_group(self):
+        self.user = self.accounts['dummy_student2']
         inst = self.get_basic_instance()
         inst.put()
 
-        self.post_json(
-            '/{}/{}/add_member'.format(self.name, inst.key.id()),
-            data={'member': members[0].id()},
-            method='PUT')
+        self.get('/assignment/{}/group'.format(self.assignment.key.id()))
+        self.assertEqual(self.response_json['id'], inst.key.id())
 
-        inst = self.model.get_by_id(inst.key.id())
-        self.assertEqual(inst.invited_members, members)
-
-    def test_remove_member(self):
-        members = [self.accounts['dummy_student'].key]
+    def test_assignment_invite(self):
+        self.user = self.accounts['dummy_student2']
         inst = self.get_basic_instance()
-        inst.members = members
         inst.put()
 
+        to_invite = self.accounts['dummy_student']
+        to_invite.put()
+
         self.post_json(
-            '/{}/{}/remove_member'.format(self.name, inst.key.id()),
-            data={'member': members[0].id()},
-            method='PUT')
+            '/assignment/{}/invite'.format(self.assignment.key.id()),
+            data={'email': to_invite.email[0]})
 
-        self.assertEquals(None, self.model.get_by_id(inst.key.id()))
+        self.assertEqual(inst.invited, [to_invite.key])
 
-    def test_entity_create_basic(self):
-        # No entity create for Groups
-        pass
+        # Check audit log
+        audit_logs = models.AuditLog.query().fetch()
+        self.assertEqual(len(audit_logs), 1)
+        log = audit_logs[0]
+        self.assertEqual(log.user, self.user.key)
+        self.assertEqual('Group.invite', log.event_type)
+        self.assertIn(to_invite.email[0], log.description)
+
+    def test_invite(self):
+        self.user = self.accounts['dummy_student2']
+        inst = self.get_basic_instance()
+        inst.put()
+        to_invite = self.accounts['dummy_student']
+
+        self.post_json(
+            '/{}/{}/invite'.format(self.name, inst.key.id()),
+            data={'email': to_invite.email[0]})
+
+        self.assertEqual(inst.invited, [to_invite.key])
+
+    def test_accept(self):
+        self.user = self.accounts['dummy_student']
+        inst = self.get_basic_instance()
+        inst.invited.append(self.user.key)
+        inst.put()
+
+        self.post_json('/{}/{}/accept'.format(self.name, inst.key.id()))
+
+        self.assertEqual(inst.invited, [])
+        self.assertIn(self.user.key, inst.member)
+
+    def test_exit_invited(self):
+        self.user = self.accounts['dummy_student']
+        inst = self.get_basic_instance()
+        inst.invited.append(self.user.key)
+        inst.put()
+
+        self.post_json('/{}/{}/exit'.format(self.name, inst.key.id()))
+
+        self.assertEqual(inst.invited, [])
+        self.assertNotIn(self.user.key, inst.member)
+
+    def test_exit_member(self):
+        self.user = self.accounts['dummy_student']
+        inst = self.get_basic_instance()
+        inst.member.append(self.user.key)
+        inst.put()
+
+        self.post_json('/{}/{}/exit'.format(self.name, inst.key.id()))
+
+        self.assertNotIn(self.user.key, inst.member)
+
+    def test_invite_someone_in_a_group(self):
+        self.user = self.accounts['dummy_student2']
+        inst = self.get_basic_instance()
+        inst.put()
+
+        # Place dummy_student in another group
+        to_invite = self.accounts['dummy_student']
+        self.model(
+            assignment=self.assignment.key,
+            member=[to_invite.key, self.accounts['dummy_staff'].key]
+        ).put()
+
+        self.post_json(
+            '/{}/{}/invite'.format(self.name, inst.key.id()),
+            data={'email': to_invite.email[0]})
+
+        self.assertStatusCode(400)
+        self.assertEqual(inst.invited, [])
+
 
     def test_create_two_entities(self):
-        # No entity create for Groups
-        pass
+        pass # No creation
 
-
+    def test_entity_create_basic(self):
+        pass # No creation
 
 if __name__ == '__main__':
     unittest.main()

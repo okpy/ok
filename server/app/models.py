@@ -1,13 +1,13 @@
+"""Data Models."""
+
 #pylint: disable=no-member
 #pylint: disable=unused-argument
 #pylint: disable=too-many-return-statements
 
-"""Data """
-
 import datetime
 
 from app import app
-from app.constants import STUDENT_ROLE, STAFF_ROLE
+from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
 from app.exceptions import *
 from flask import json
 from flask.json import JSONEncoder as old_json
@@ -136,33 +136,98 @@ class User(Base):
             self.email.append(email)
 
     def delete_email(self, email):
-        if email not in self.email:
+        if email in self.email and len(self.email) > 1:
             self.email.remove(email)
 
     def get_final_submission(self, assignment):
-        query = Group.query(Group.members == self.key)
-        group = query.filter(Group.assignment == assignment) 
-        return FinalSubmission.query(FinalSubmission.group == group)
-    
-    def get_backups(self, assignment):
-        query = Group.query(Group.members == self.key)
+        query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
-        all_backups = []
+        group = group.get()
+        if group == None:
+            return FinalSubmission.query(FinalSubmission.submitter == self.key).get()
+        else:
+            return FinalSubmission.query(FinalSubmission.group == group.key).get()
 
-        for member in group.members:
-            all_backups += list(Backup.query(
-                Backup.submitter == member).filter(
+    def get_backups(self, assignment, num_backups=10):
+        group = self.get_group()
+        all_backups = []
+        if not group:
+            members = [self.key]
+        else:
+            members = group.member
+
+        for member in members:
+            all_backups += list(Backup.query( \
+                Backup.submitter == member).filter( \
                     Backup.assignment == assignment))
 
-        return all_backups
+        all_backups.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5))
+
+        for backup in all_backups[:num_backups]:
+            backup.messages = None
+
+        return all_backups[:num_backups]
+
+    def get_submissions(self, assignment, num_submissions=10):
+        group = self.get_group()
+        all_subms = []
+        if not group:
+            members = [self.key]
+        else:
+            members = group.member
+
+        for member in members:
+            all_subms += list(Submission.query(Submission.submitter == member).\
+                    filter(Backup.assignment == assignment)
+
+        all_subms.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5))
+
+        for subm in all_subms[:num_submissions]:
+            subm.messages = None
+
+        return all_subms[:num_submissions]
 
     def get_group(self, assignment):
-        query = Group.query(Group.members == self.key)
+        query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
         return group.get()
 
+    def get_course_info(self, course):
+        info = {'user': self}
+        info['assignments'] = []
+
+        for assignment in course.assignments:
+            assign_info = {}
+            assign_info['group'] = self.get_group(assignment.key)
+            assign_info['final'] = {}
+            assign_info['final']['final_submission'] = \
+                    self.get_final_submission(assignment.key)
+            assign_info['final']['submission'] = \
+                    assign_info['final']['final_submission'].submission.get()
+            assign_info['final']['backup'] = \
+                    assign_info['final']['submission'].backup.get()
+            
+            assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
+            assign_info['submissions'] = len(self.get_submissions(assignment.key)) > 0
+            assign_info['assignment'] = assignment
+
+            # Compute percentage here... feel free to delete if unnecessary
+            final = assign_info['final']['backup']
+            percent = None
+            for message in final.messages:
+                if message.kind == 'scoring' and 'total_score' in message.contents:
+                    percent = message.contents['total_score']/\
+                            assignment.total_points
+            if percent:
+                percent = round(percent*100, 0)
+                assign_info['percent'] = percent
+            
+            info['assignments'].append(assign_info)
+
+        return info
+
+    #@ndb.transactional
     @classmethod
-    @ndb.transactional
     def get_or_insert(cls, email):
         """Retrieve a user by email or create that user."""
         user = cls.lookup(email)
@@ -206,6 +271,10 @@ class User(Base):
         else:
             return False
 
+    def _pre_put_hook(self):
+        """Ensure that a user can be accessed by at least one email."""
+        if not self.email:
+            raise BadValueError("No email associated with " + str(self))
 
 class Course(Base):
     """Courses are expected to have a unique offering."""
@@ -264,14 +333,20 @@ class Assignment(Base):
 
     @classmethod
     def _can(cls, user, need, obj, query):
+        if need.action == "index":
+            return query
+        if user.is_admin and need.action != "delete":
+            return True
+
         if need.action == "get":
             return True
-        elif need.action == "index":
-            return query
         elif need.action == "create":
-            return user.is_admin
-        else:
-            return False
+            if obj and isinstance(obj, Assignment):
+                return Participant.has_role(user, obj.course, STAFF_ROLE)
+        elif need.action == "grade":
+            if obj and isinstance(obj, Assignment):
+                return Participant.has_role(user, obj.course, STAFF_ROLE)
+        return False
 
 
 class Participant(Base):
@@ -286,10 +361,20 @@ class Participant(Base):
         if action == "get":
             return True
         elif action == "index":
-            if cls.has_role(user, course, STAFF_ROLE):
+            if cls.has_role(user, self.course, STAFF_ROLE):
                 return query.filter(cls.course == course)
             else:
                 return query.filter(cls.user == user)
+
+    @classmethod
+    def add_role(cls, user_key, course_key, role):
+        if role not in VALID_ROLES:
+            raise BadValueError("Bad role: " + str(role))
+        if isinstance(user_key, User):
+            user_key = user_key.key
+        if isinstance(course_key, Course):
+            course_key = course_key.key
+        Participant(user=user_key, course=course_key, role=role).put()
 
     @classmethod
     def has_role(cls, user_key, course_key, role):
@@ -451,6 +536,14 @@ class Submission(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
+    submitter = ndb.ComputedProperty(labmda x: x.backup.get().submitter)
+
+    def mark_as_final(self):
+        final_submission = FinalSubmission(assignment=backup.assignment, \
+                                           group = backup.group, \
+                                           submitter = self.submitter,\
+                                           submission=self)
+        final_submission.put()
 
     @classmethod
     def _can(cls, user, need, submission, query):
@@ -564,7 +657,7 @@ class Group(Base):
 
     Members of a group can view each other's submissions.
     """
-    members = ndb.KeyProperty(kind='User', repeated=True)
+    member = ndb.KeyProperty(kind='User', repeated=True)
     invited = ndb.KeyProperty(kind='User', repeated=True)
     assignment = ndb.KeyProperty('Assignment', required=True)
 
@@ -572,10 +665,11 @@ class Group(Base):
     def lookup(cls, user_key, assignment_key):
         """Return the group for a user key."""
         if isinstance(user_key, User):
-            user_key = user_key.key()
+            user_key = user_key.key
         if isinstance(assignment_key, Assignment):
-            assignment_key = assignment_key.key()
-        return Group.query(Group.members == user_key,
+            assignment_key = assignment_key.key
+        return Group.query(ndb.OR(Group.member == user_key,
+                                  Group.invited == user_key),
                            Group.assignment == assignment_key).get()
 
     @classmethod
@@ -585,12 +679,12 @@ class Group(Base):
         if group:
             return group
         if isinstance(user_key, User):
-            user_key = user_key.key()
+            user_key = user_key.key
         if isinstance(assignment_key, Assignment):
-            assignment_key = assignment_key.key()
-        return Group(members=[user_key], invited=[], assignment=assignment_key)
+            assignment_key = assignment_key.key
+        return Group(member=[user_key], invited=[], assignment=assignment_key)
 
-    @ndb.transactional
+    #@ndb.transactional
     def invite(self, email):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
@@ -599,44 +693,56 @@ class Group(Base):
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "That user is not enrolled in this course"
-        if user.key in self.members or user.key in self.invited:
+        if user.key in self.member or user.key in self.invited:
             return "That user is already in the group"
-        has_user = ndb.OR(Group.members == user.key, Group.invited == user.key)
+        has_user = ndb.OR(Group.member == user.key, Group.invited == user.key)
         if Group.query(has_user, Group.assignment == self.assignment).get():
             return "That user is already in some other group"
         max_group_size = self.assignment.get().max_group_size
-        total_members = len(self.members) + len(self.invited)
-        if total_members + 1 > max_group_size:
+        total_member = len(self.member) + len(self.invited)
+        if total_member + 1 > max_group_size:
             return "The group is full"
         self.invited.append(user.key)
         self.put()
 
+
+    #@ndb.transactional
     @classmethod
-    @ndb.transactional
     def invite_to_group(cls, user_key, email, assignment_key):
         """User invites email to join his/her group. Returns error or None."""
         group = cls._lookup_or_create(user_key, assignment_key)
+        AuditLog(
+            event_type='Group.invite',
+            user=user_key,
+            assignment=assignment_key,
+            description='Added {} to group'.format(email),
+            obj=group.key,
+        ).put()
         return group.invite(email)
 
-    @ndb.transactional
+    #@ndb.transactional
     def accept(self, user_key):
         """User accepts an invitation to join. Returns error or None."""
+        if isinstance(user_key, User):
+            user_key = user_key.key
         if user_key not in self.invited:
             return "That user is not invited to the group"
-        if user_key in self.members:
+        if user_key in self.member:
             return "That user has already accepted."
         self.invited.remove(user_key)
-        self.members.append(user_key)
+        self.member.append(user_key)
         self.put()
 
-    @ndb.transactional
+    #@ndb.transactional
     def exit(self, user_key):
         """User leaves the group. Empty/singleton groups are deleted."""
-        for users in [self.members, self.invited]:
+        if isinstance(user_key, User):
+            user_key = user_key.key
+        for users in [self.member, self.invited]:
             if user_key in users:
                 users.remove(user_key)
         if not self.validate():
-            self.delete()
+            self.key.delete()
 
     @classmethod
     def _can(cls, user, need, group, query):
@@ -645,14 +751,19 @@ class Group(Base):
             return False
 
         if action == "index":
-            return query.filter(ndb.OR(Group.members == user.key,
+            if user.is_admin:
+                return query
+            return query.filter(ndb.OR(Group.member == user.key,
                                        Group.invited == user.key))
+
+        if user.is_admin:
+            return True
         if not group:
             return False
         if action in ("get", "exit"):
-            return user.key in group.members or user.key in group.invited
+            return user.key in group.member or user.key in group.invited
         elif action in ("invite", "rescind"):
-            return user.key in group.members
+            return user.key in group.member
         elif action == "accept":
             return user.key in group.invited
         return False
@@ -660,13 +771,13 @@ class Group(Base):
     def validate(self):
         """Return an error string if group is invalid."""
         max_group_size = self.assignment.get().max_group_size
-        total_members = len(self.members) + len(self.invited)
-        if max_group_size and total_members > max_group_size:
-            sizes = (total_members, max_group_size)
-            return "%s members found; at most %s allowed" % sizes
-        if total_members < 2:
-            return "No group can have %s total members" % total_members
-        if not self.members:
+        total_member = len(self.member) + len(self.invited)
+        if max_group_size and total_member > max_group_size:
+            sizes = (total_member, max_group_size)
+            return "%s member found; at most %s allowed" % sizes
+        if total_member < 2:
+            return "No group can have %s total member" % total_member
+        if not self.member:
             return "A group must have an active member"
 
     def _pre_put_hook(self):
@@ -676,19 +787,13 @@ class Group(Base):
             raise BadValueError(error)
 
 
-def anon_converter(prop, value):
-    """Convert anonymous user to None."""
-    if not value.get().logged_in:
-        return None
-    return value
-
-
 class AuditLog(Base):
     """Keeps track of Group changes that are happening. That way, we can stop
     cases of cheating by temporary access. (e.g. A is C's partner for 10 min
     so A can copy off of C)."""
-    event_type = ndb.StringProperty(required=True)
-    user = ndb.KeyProperty('User', required=True, validator=anon_converter)
+    event_type = ndb.StringProperty()
+    user = ndb.KeyProperty('User')
+    assignment = ndb.KeyProperty('Assignment')
     description = ndb.StringProperty()
     obj = ndb.KeyProperty()
 
@@ -722,6 +827,7 @@ class FinalSubmission(Base):
     """The final submission for an assignment from a group."""
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
+    submitter = ndb.KeyProperty(User)
     submission = ndb.KeyProperty(Submission)
     published = ndb.BooleanProperty(default=False)
     queue = ndb.KeyProperty(Queue)
@@ -739,7 +845,17 @@ class FinalSubmission(Base):
 
     # TODO Add hook to update final submissions on submission or group change.
 
+    def _pre_put_hook(self):
+        self.submitter = self.submission.backup.submitter
+        
+        old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
 
-
-
+        for submission in old.get():
+            if self.submitter == submission.submitter:
+                submission.delete() 
+                return # Should only have 1 final submission per submitter
+            for person in submission.group.member:
+                if self.submitter == person:
+                    submission.delete()
+                    return
 

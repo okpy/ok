@@ -5,6 +5,8 @@
 Tests for the permissions system
 """
 
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import

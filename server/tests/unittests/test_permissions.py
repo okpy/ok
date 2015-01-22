@@ -5,6 +5,8 @@
 Tests for the permissions system
 """
 
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 
 from test_base import BaseTestCase, unittest #pylint: disable=relative-import
@@ -208,6 +210,8 @@ class PermissionsUnitTest(BaseTestCase):
             obj = self.queues[obj_name]
         elif model == "Comment":
             obj = self.comments[obj_name]
+        elif model == "Group":
+            obj = self.groups[obj_name]
 
         if not obj:
             self.assertTrue(False, "Invalid test arguments %s" % model)

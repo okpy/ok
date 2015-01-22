@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 """
-Tests for the permissions system
+Tests for groups
 """
 
 import os
@@ -13,15 +13,17 @@ from test_permissions import PermissionsUnitTest
 from ddt import ddt, data
 
 PTest = PermissionsUnitTest.PTest
-PERMISSIONS_TESTS = [
-    PTest("student_get_comment",
-          "student0", "Comment", "first", "get", True),
+COURSE_TESTS = [
+    PTest("anon_get_group",
+          "anon", "Group", "group1", "get", False),
+    PTest("admin_get_group",
+          "admin", "Group", "group1", "get", True),
 ]
 
 #pylint: disable=no-init, missing-docstring
 @ddt
-class AssignmentPermissionsUnitTest(PermissionsUnitTest):
-    @data(*PERMISSIONS_TESTS) #pylint: disable=star-args
+class GroupPermissionsUnitTest(PermissionsUnitTest):
+    @data(*COURSE_TESTS) #pylint: disable=star-args
     def test_access(self, value):
         return PermissionsUnitTest.access(self, value)
 

@@ -1,12 +1,14 @@
+#pylint: disable=missing-docstring,invalid-name
+
 from app import models
 from app import utils
 
 import json
 
-SEED_OFFERING="cal/cs61a/fa14"
+SEED_OFFERING = "cal/cs61a/fa14"
 
 def is_seeded():
-    is_seed = models.Course.offering==SEED_OFFERING
+    is_seed = models.Course.offering == SEED_OFFERING
     return bool(models.Course.query(is_seed).get())
 
 def seed():
@@ -47,7 +49,7 @@ def seed():
         with open('app/seed/scheme_templates/scheme.py') as sc, \
             open('app/seed/scheme_templates/scheme_reader.py') as sr, \
             open('app/seed/scheme_templates/tests.scm') as tests, \
-            open('app/seed/scheme_templates/questions.scm') as quest :
+            open('app/seed/scheme_templates/questions.scm') as quest:
             templates = {}
             templates['scheme.py'] = sc.read(),
             templates['scheme_reader.py'] = sr.read(),
@@ -66,21 +68,23 @@ def seed():
 
     def make_group(assign, members):
         return models.Group(
-            members=[m.key for m in members],
-            assignment = assign.key
+            member=[m.key for m in members],
+            assignment=assign.key
         )
 
     def make_invited_group(assign, members):
         return models.Group(
-            members=[members[0].key],
+            member=[members[0].key],
             invited=[members[1].key],
-            assignment = assign.key
+            assignment=assign.key
         )
 
+    def random_date():
+        days, seconds = random.randint(0, 12), random.randint(0, 86399)
+        delta = datetime.timedelta(days=days, seconds=seconds)
+        sdate = (datetime.datetime.now() - delta)
 
     def make_seed_submission(assignment, submitter, final=False):
-        sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
-
         with open('app/seed/hog_modified.py') as fp:
             messages = {}
             messages['file_contents'] = {
@@ -95,7 +99,7 @@ def seed():
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
-            created=sdate)
+            created=random_date())
 
         backup.put()
 
@@ -103,12 +107,10 @@ def seed():
 
 
     def make_seed_scheme_submission(assignment, submitter, final=False):
-        sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
-
         with open('app/seed/scheme.py') as sc, \
-            open('app/seed/scheme_reader.py') as sr, \
-            open('app/seed/tests.scm') as tests, \
-            open('app/seed/questions.scm') as quest :
+             open('app/seed/scheme_reader.py') as sr, \
+             open('app/seed/tests.scm') as tests, \
+             open('app/seed/questions.scm') as quest:
             messages = {}
             messages['file_contents'] = {
                 'scheme.py': sc.read(),
@@ -124,8 +126,8 @@ def seed():
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
-            created=sdate)
-        
+            created=random_date())
+
         backup.put()
 
         return models.Submission(backup=backup.key)
@@ -178,7 +180,7 @@ def seed():
         group_members += [s]
 
 
-    for i in range(0,9):
+    for i in range(0, 9):
         s = models.User(
             email=["student" + str(i) + "@student.com"],
         )
@@ -253,14 +255,11 @@ def seed():
         subm.put()
         #subms.append(subm)
 
-
-
     # Seed a queue. This should be auto-generated.
+    make_queue(assign, subms, c)
+    make_queue(assign, subms, k)
 
-    q = make_queue(assign, subms, c)
-    q = make_queue(assign, subms, k)
-
-    #utils.assign_work(assign.key)
+    #utils.add_to_grading_queues(assign.key)
 
 
 
