@@ -538,6 +538,13 @@ class Submission(Base):
     score = ndb.StructuredProperty(Score, repeated=True)
     submitter = ndb.ComputedProperty(labmda x: x.backup.get().submitter)
 
+    def mark_as_final(self):
+        final_submission = FinalSubmission(assignment=backup.assignment, \
+                                           group = backup.group, \
+                                           submitter = self.submitter,\
+                                           submission=self)
+        final_submission.put()
+
     @classmethod
     def _can(cls, user, need, submission, query):
         return Backup._can(user, need, submission.backup.get(), query)
@@ -839,6 +846,16 @@ class FinalSubmission(Base):
     # TODO Add hook to update final submissions on submission or group change.
 
     def _pre_put_hook(self):
-        if not self.group and not self.submitter:
-            self.submitter = self.submission.backup.submitter
+        self.submitter = self.submission.backup.submitter
+        
+        old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
+
+        for submission in old.get():
+            if self.submitter == submission.submitter:
+                submission.delete() 
+                return # Should only have 1 final submission per submitter
+            for person in submission.group.member:
+                if self.submitter == person:
+                    submission.delete()
+                    return
 

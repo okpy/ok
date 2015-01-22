@@ -603,6 +603,12 @@ class SubmissionAPI(APIResource):
                 'score': Arg(int, required=True),
                 'message': Arg(str, required=True),
             }
+        },
+        'final': {
+            'methods': set(['PUT']),
+            'web_args': {
+                'submission': KeyArg(Submission, required=true)
+            }
         }
     }
 
@@ -719,6 +725,20 @@ class SubmissionAPI(APIResource):
         if not comment.can(user, need, comment):
             raise need.exception()
         comment.key.delete()
+
+    def final(self, obj, user, data):
+        """
+        Marks this submission as final.
+        """
+        need = Need('put')
+        submission = FinalSubmission(assignment=data['assignment'],
+                group=data['group'],
+                submission=data['submission'])
+        
+        if not submission.can(user, need, submission):
+            raise need.exception()
+
+        submission.put()
 
     def add_tag(self, obj, user, data):
         """
