@@ -596,7 +596,7 @@ class Group(Base):
             assignment_key = assignment_key.key()
         return Group(members=[user_key], invited=[], assignment=assignment_key)
 
-    @ndb.transactional
+    #@ndb.transactional
     def invite(self, email):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
