@@ -35,6 +35,7 @@
     <script src="/static/vendor/showdown/compressed/showdown.js"></script>
     <script src="/static/vendor/sweetalert/lib/sweet-alert.min.js"></script>
     <script src="/static/vendor/angular-tablesort/js/angular-tablesort.js"></script>
+    <script src="/static/vendor/angular-ui-sortable/sortable.js"></script>
 
     <script src="/static/js/student.js"></script>
     <script src="/static/js/common/main.js"></script>
@@ -73,7 +74,7 @@
               <a href={{users_link}} class="show-menu">Login</a>
           {% endif %}
 
-              <a href="#" class="show-menu">
+              <a class="show-menu">
                 Menu
                 <span class="stripes">
                   <span class="stripe"></span>
@@ -89,20 +90,20 @@
         <nav class="menu">
           <ul>
             <div class="close light close-menu"><span class="icon-x">+</span></div>
-            <li><a href="courses.html">Courses</a></li>
+            <li><a href="#">Courses</a></li>
             <li><a href="#">CS61A</a></li>
-            <li><a href="#">DumDum</a></li>
+            <li><a href={{users_link}}>{{users_title}}</a></li>
           </ul>
         </nav>
-          {% if user %}
-          <script>
-            window.user = "{{user.email}}";
-            window.reloginLink = "{{relogin_link}}";
-          </script>
+        {% if user %}
+            <script>
+              window.user = "{{user.email}}";
+              window.userId = "{{user.id}}";
+              window.reloginLink = "{{relogin_link}}";
+            </script>
             <div ui-view></div>
           {% else %}
-          <span class="break"><a href="all.html" class="button">Login</a></span>
-                    <a href={{users_link}} class="btn btn-lg btn-primary btn-block">Login</a>
+                <span class="break"><a href={{users_link}} class="button">Login</a></span>
           {% endif %}
 
     </div>
