@@ -7,6 +7,7 @@
 Server test case scaffolding
 """
 
+import os
 import sys
 import collections
 import urllib
