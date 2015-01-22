@@ -1018,7 +1018,43 @@ class GroupAPI(APIResource):
         },
         'index': {
         },
+        'delete': {
+        },
+        'invite': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
+        'accept': {
+            'methods': set(['POST']),
+        },
+        'exit': {
+            'methods': set(['POST']),
+        }
     }
+
+    def invite(self, group, user, data):
+        need = Need('invite')
+        if not group.can(user, need, group):
+            raise need.exception()
+        error = group.invite(data['email'])
+
+    def accept(self, group, user, data):
+        need = Need('accept')
+        if not group.can(user, need, group):
+            raise need.exception()
+        error = group.accept(user)
+        if error:
+            raise BadValueError(error)
+
+    def exit(self, group, user, data):
+        need = Need('exit')
+        if not group.can(user, need, group):
+            raise need.exception()
+        error = group.exit(user)
+        if error:
+            raise BadValueError(error)
 
 class QueueAPI(APIResource):
     """The API resource for the Assignment Object"""

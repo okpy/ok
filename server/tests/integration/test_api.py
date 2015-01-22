@@ -389,7 +389,6 @@ class GroupAPITest(APITest, APIBaseTestCase):
             models.Participant.add_role(s, self.course, constants.STUDENT_ROLE)
 
     def get_basic_instance(self, mutate=True):
-
         return self.model(
             assignment=self.assignment.key,
             member=[
@@ -397,17 +396,19 @@ class GroupAPITest(APITest, APIBaseTestCase):
                 self.accounts['dummy_student3'].key])
 
     def test_assignment_group(self):
+        self.user = self.accounts['dummy_student2']
+
         inst = self.get_basic_instance()
         inst.put()
-        self.user = self.accounts['dummy_student2']
 
         self.get('/assignment/{}/group'.format(self.assignment.key.id()))
         self.assertEqual(self.response_json['id'], inst.key.id())
 
     def test_assignment_invite(self):
+        self.user = self.accounts['dummy_student2']
+
         inst = self.get_basic_instance()
         inst.put()
-        self.user = self.accounts['dummy_student2']
 
         to_invite = self.accounts['dummy_student']
         to_invite.put()
@@ -418,12 +419,67 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
         self.assertEqual(inst.invited, [to_invite.key])
 
+    def test_invite(self):
+        self.user = self.accounts['dummy_student2']
+
+        inst = self.get_basic_instance()
+        inst.put()
+
+        to_invite = self.accounts['dummy_student']
+        to_invite.put()
+
+        self.post_json(
+            '/{}/{}/invite'.format(self.name, inst.key.id()),
+            data={'email': to_invite.email[0]})
+
+        self.assertEqual(inst.invited, [to_invite.key])
+
+    def test_accept(self):
+        self.user = self.accounts['dummy_student']
+        self.user.put()
+
+        inst = self.get_basic_instance()
+        inst.invited.append(self.user.key)
+        inst.put()
+
+        self.assertEqual(inst.invited, [self.user.key])
+
+        self.post_json('/{}/{}/accept'.format(self.name, inst.key.id()))
+
+        self.assertEqual(inst.invited, [])
+        self.assertIn(self.user.key, inst.member)
+
+    def test_exit_invited(self):
+        self.user = self.accounts['dummy_student']
+        self.user.put()
+
+        inst = self.get_basic_instance()
+        inst.invited.append(self.user.key)
+        inst.put()
+
+        self.assertEqual(inst.invited, [self.user.key])
+
+        self.post_json('/{}/{}/exit'.format(self.name, inst.key.id()))
+
+        self.assertEqual(inst.invited, [])
+        self.assertNotIn(self.user.key, inst.member)
+
+    def test_exit_member(self):
+        self.user = self.accounts['dummy_student']
+        self.user.put()
+
+        inst = self.get_basic_instance()
+        inst.member.append(self.user.key)
+        inst.put()
+
+        self.post_json('/{}/{}/exit'.format(self.name, inst.key.id()))
+
+        self.assertNotIn(self.user.key, inst.member)
+
     # TODO users:
     # - no group for different assignment
     # - group found when invited, not member
     # - many ways that invitations can fail
-    # - accepting, rejecting invitations
-    # - leaving groups
 
     def test_create_two_entities(self):
         pass # No creation
