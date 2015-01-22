@@ -7,7 +7,7 @@
 import datetime
 
 from app import app
-from app.constants import STUDENT_ROLE, STAFF_ROLE
+from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
 from app.exceptions import *
 from flask import json
 from flask.json import JSONEncoder as old_json
@@ -140,16 +140,16 @@ class User(Base):
             self.email.remove(email)
 
     def get_final_submission(self, assignment):
-        query = Group.query(Group.members == self.key)
+        query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
         return FinalSubmission.query(FinalSubmission.group == group)
 
     def get_backups(self, assignment):
-        query = Group.query(Group.members == self.key)
+        query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
         all_backups = []
 
-        for member in group.members:
+        for member in group.member:
             all_backups += list(Backup.query(
                 Backup.submitter == member).filter(
                     Backup.assignment == assignment))
@@ -157,7 +157,7 @@ class User(Base):
         return all_backups
 
     def get_group(self, assignment):
-        query = Group.query(Group.members == self.key)
+        query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
         return group.get()
 
@@ -285,11 +285,12 @@ class Assignment(Base):
         elif need.action == "index":
             return query
         elif need.action == "create":
-            return Participant.has_role(user, course, STAFF_ROLE)
+            if obj and isinstance(obj, Assignment):
+                return Participant.has_role(user, obj.course, STAFF_ROLE)
         elif need.action == "grade":
-            return Participant.has_role(user, course, STAFF_ROLE)
-        else:
-            return False
+            if obj and isinstance(obj, Assignment):
+                return Participant.has_role(user, obj.course, STAFF_ROLE)
+        return False
 
 
 class Participant(Base):
@@ -304,10 +305,20 @@ class Participant(Base):
         if action == "get":
             return True
         elif action == "index":
-            if cls.has_role(user, course, STAFF_ROLE):
+            if cls.has_role(user, self.course, STAFF_ROLE):
                 return query.filter(cls.course == course)
             else:
                 return query.filter(cls.user == user)
+
+    @classmethod
+    def add_role(cls, user_key, course_key, role):
+        if role not in VALID_ROLES:
+            raise BadValueError("Bad role: " + str(role))
+        if isinstance(user_key, User):
+            user_key = user_key.key
+        if isinstance(course_key, Course):
+            course_key = course_key.key
+        Participant(user=user_key, course=course_key, role=role).put()
 
     @classmethod
     def has_role(cls, user_key, course_key, role):
@@ -582,7 +593,7 @@ class Group(Base):
 
     Members of a group can view each other's submissions.
     """
-    members = ndb.KeyProperty(kind='User', repeated=True)
+    member = ndb.KeyProperty(kind='User', repeated=True)
     invited = ndb.KeyProperty(kind='User', repeated=True)
     assignment = ndb.KeyProperty('Assignment', required=True)
 
@@ -593,7 +604,7 @@ class Group(Base):
             user_key = user_key.key()
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key()
-        return Group.query(Group.members == user_key,
+        return Group.query(Group.member == user_key,
                            Group.assignment == assignment_key).get()
 
     @classmethod
@@ -606,7 +617,7 @@ class Group(Base):
             user_key = user_key.key()
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key()
-        return Group(members=[user_key], invited=[], assignment=assignment_key)
+        return Group(member=[user_key], invited=[], assignment=assignment_key)
 
     #@ndb.transactional
     def invite(self, email):
@@ -617,14 +628,14 @@ class Group(Base):
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "That user is not enrolled in this course"
-        if user.key in self.members or user.key in self.invited:
+        if user.key in self.member or user.key in self.invited:
             return "That user is already in the group"
-        has_user = ndb.OR(Group.members == user.key, Group.invited == user.key)
+        has_user = ndb.OR(Group.member == user.key, Group.invited == user.key)
         if Group.query(has_user, Group.assignment == self.assignment).get():
             return "That user is already in some other group"
         max_group_size = self.assignment.get().max_group_size
-        total_members = len(self.members) + len(self.invited)
-        if total_members + 1 > max_group_size:
+        total_member = len(self.member) + len(self.invited)
+        if total_member + 1 > max_group_size:
             return "The group is full"
         self.invited.append(user.key)
         self.put()
@@ -641,16 +652,16 @@ class Group(Base):
         """User accepts an invitation to join. Returns error or None."""
         if user_key not in self.invited:
             return "That user is not invited to the group"
-        if user_key in self.members:
+        if user_key in self.member:
             return "That user has already accepted."
         self.invited.remove(user_key)
-        self.members.append(user_key)
+        self.member.append(user_key)
         self.put()
 
     #@ndb.transactional
     def exit(self, user_key):
         """User leaves the group. Empty/singleton groups are deleted."""
-        for users in [self.members, self.invited]:
+        for users in [self.member, self.invited]:
             if user_key in users:
                 users.remove(user_key)
         if not self.validate():
@@ -665,7 +676,7 @@ class Group(Base):
         if action == "index":
             if user.is_admin:
                 return query
-            return query.filter(ndb.OR(Group.members == user.key,
+            return query.filter(ndb.OR(Group.member == user.key,
                                        Group.invited == user.key))
 
         if user.is_admin:
@@ -673,9 +684,9 @@ class Group(Base):
         if not group:
             return False
         if action in ("get", "exit"):
-            return user.key in group.members or user.key in group.invited
+            return user.key in group.member or user.key in group.invited
         elif action in ("invite", "rescind"):
-            return user.key in group.members
+            return user.key in group.member
         elif action == "accept":
             return user.key in group.invited
         return False
@@ -683,13 +694,13 @@ class Group(Base):
     def validate(self):
         """Return an error string if group is invalid."""
         max_group_size = self.assignment.get().max_group_size
-        total_members = len(self.members) + len(self.invited)
-        if max_group_size and total_members > max_group_size:
-            sizes = (total_members, max_group_size)
-            return "%s members found; at most %s allowed" % sizes
-        if total_members < 2:
-            return "No group can have %s total members" % total_members
-        if not self.members:
+        total_member = len(self.member) + len(self.invited)
+        if max_group_size and total_member > max_group_size:
+            sizes = (total_member, max_group_size)
+            return "%s member found; at most %s allowed" % sizes
+        if total_member < 2:
+            return "No group can have %s total member" % total_member
+        if not self.member:
             return "A group must have an active member"
 
     def _pre_put_hook(self):

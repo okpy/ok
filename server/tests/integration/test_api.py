@@ -11,14 +11,11 @@ tests.py
 """
 
 import datetime
-
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
-
 from google.appengine.ext import ndb
-
-from app import models
-
+from app import models, constants
 from ddt import ddt, data, unpack
+
 
 def make_fake_course(creator):
     return models.Course(
@@ -26,6 +23,7 @@ def make_fake_course(creator):
         instructor=[creator.key],
         offering="cal/cs61a/fa14",
         active=True)
+
 
 def make_fake_assignment(course, creator):
     return models.Assignment(
@@ -54,7 +52,8 @@ class APITest(object): #pylint: disable=no-init
     def setUp(self): #pylint: disable=super-on-old-class, invalid-name
         """Set up the API Test.
 
-        Sets up the authenticator stub, and logs you in as an admin."""
+        Sets up the authenticator stub, and logs you in as an admin.
+        """
         super(APITest, self).setUp()
         self.login('dummy_admin')
 
@@ -77,6 +76,16 @@ class APITest(object): #pylint: disable=no-init
                 email=["dummy3@student.com"],
             ),
         }
+
+    def _enroll_accounts(self, course):
+        accounts = self.get_accounts()
+        add_role = models.Participant.add_role
+        for instructor in course.instructor:
+            add_role(instructor, course, constants.STAFF_ROLE)
+        for staff in ["dummy_admin", "dummy_staff"]:
+            add_role(accounts[staff], course, constants.STAFF_ROLE)
+        for student in ["dummy_student", "dummy_student2", "dummy_student3"]:
+            add_role(accounts[student], course, constants.STUDENT_ROLE)
 
     ## INDEX ##
 
@@ -244,9 +253,10 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
         self._course = make_fake_course(self.user)
         self._course.put()
-        self._assignment = rval = make_fake_assignment(self._course, self.user)
-        rval.name = name
-        return rval
+        self._enroll_accounts(self._course)
+        self._assignment = make_fake_assignment(self._course, self.user)
+        self._assignment.name = name
+        return self._assignment
 
     def post_entity(self, inst, *args, **kwds):
         """Posts an entity to the server."""
@@ -346,6 +356,7 @@ class CourseAPITest(APITest, APIBaseTestCase):
         rval.name = name
         return rval
 
+
 class VersionAPITest(APITest, APIBaseTestCase):
     model = models.Version
     name = 'version'
@@ -359,6 +370,7 @@ class VersionAPITest(APITest, APIBaseTestCase):
             self.num += 1
         return self.model(key=ndb.Key('Version', name),
             name=name, versions=['1.0.0', '1.1.0'], base_url="https://www.baseurl.com")
+
 
 class GroupAPITest(APITest, APIBaseTestCase):
     model = models.Group
@@ -380,35 +392,54 @@ class GroupAPITest(APITest, APIBaseTestCase):
             self.num += 1
         return self.model(
             assignment=self.assignment.key,
-            members=[
+            member=[
                 self.accounts['dummy_student2'].key,
                 self.accounts['dummy_student3'].key])
 
     def test_add_member(self):
-        members = [self.accounts['dummy_student'].key]
+        invited = [self.accounts['dummy_student'].key]
         inst = self.get_basic_instance()
         inst.put()
 
         self.post_json(
             '/{}/{}/add_member'.format(self.name, inst.key.id()),
-            data={'member': members[0].id()},
+            data={'member': invited[0]},
             method='PUT')
 
-        inst = self.model.get_by_id(inst.key.id())
-        self.assertEqual(inst.invited_members, members)
+        inst = self.model.get_by_id(inst.key)
+        self.assertEqual(inst.invited, invited)
 
     def test_remove_member(self):
-        members = [self.accounts['dummy_student'].key]
         inst = self.get_basic_instance()
-        inst.members = members
+        remaining = inst.member[:]
+        to_remove = self.accounts['dummy_student']
+        inst.member.append(to_remove.key)
         inst.put()
 
         self.post_json(
             '/{}/{}/remove_member'.format(self.name, inst.key.id()),
-            data={'member': members[0].id()},
+            data={'member': to_remove.key},
             method='PUT')
 
-        self.assertEquals(None, self.model.get_by_id(inst.key.id()))
+        self.assertEqual(inst.member, remaining)
+
+    def test_no_empty_group(self):
+        pass # TODO
+
+    def test_no_singleton_group(self):
+        pass # TODO
+
+    def test_singleton_group_deleted(self):
+        inst = self.get_basic_instance()
+        inst.put()
+        to_remove = self.accounts['dummy_student2']
+
+        self.post_json(
+            '/{}/{}/remove_member'.format(self.name, inst.key.id()),
+            data={'member': to_remove.key},
+            method='PUT')
+
+        self.assertEqual(None, self.model.get_by_id(inst.key))
 
     def test_entity_create_basic(self):
         # No entity create for Groups
@@ -417,7 +448,6 @@ class GroupAPITest(APITest, APIBaseTestCase):
     def test_create_two_entities(self):
         # No entity create for Groups
         pass
-
 
 
 if __name__ == '__main__':

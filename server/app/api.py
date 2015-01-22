@@ -998,6 +998,7 @@ class CourseAPI(APIResource):
 
 
 class GroupAPI(APIResource):
+    # TODO This API doesn't include group formation using invite_to_group.
     model = models.Group
 
     methods = {
@@ -1040,12 +1041,9 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        if data['member'] in group.invited:
-            raise BadValueError('user has already been invited')
-        if data['member'] in group.member:
-            raise BadValueError('user already part of group')
-
-        group.invite(data['member'])
+        error = group.invite(data['member'])
+        if error:
+            raise BadValueError(error)
 
         audit_log_message = models.AuditLog(
             event_type='Group.add_member',
