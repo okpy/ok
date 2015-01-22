@@ -148,10 +148,8 @@ class User(Base):
         else:
             return FinalSubmission.query(FinalSubmission.group == group.key).get()
 
-    def get_backups(self, assignment):
-        query = Group.query(Group.member == self.key)
-        group = query.filter(Group.assignment == assignment)
-        group = group.get()
+    def get_backups(self, assignment, num_backups=10):
+        group = self.get_group()
         all_backups = []
         if not group:
             members = [self.key]
@@ -159,11 +157,35 @@ class User(Base):
             members = group.member
 
         for member in members:
-            all_backups += list(Backup.query(
-                Backup.submitter == member).filter(
+            all_backups += list(Backup.query( \
+                Backup.submitter == member).filter( \
                     Backup.assignment == assignment))
 
-        return all_backups
+        all_backups.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5))
+
+        for backup in all_backups[:num_backups]:
+            backup.messages = None
+
+        return all_backups[:num_backups]
+
+    def get_submissions(self, assignment, num_submissions=10):
+        group = self.get_group()
+        all_subms = []
+        if not group:
+            members = [self.key]
+        else:
+            members = group.member
+
+        for member in members:
+            all_subms += list(Submission.query(Submission.submitter == member).\
+                    filter(Backup.assignment == assignment)
+
+        all_subms.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5))
+
+        for subm in all_subms[:num_submissions]:
+            subm.messages = None
+
+        return all_subms[:num_submissions]
 
     def get_group(self, assignment):
         query = Group.query(Group.member == self.key)
@@ -511,6 +533,7 @@ class Submission(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
+    submitter = ndb.ComputedProperty(labmda x: x.backup.get().submitter)
 
     @classmethod
     def _can(cls, user, need, submission, query):
