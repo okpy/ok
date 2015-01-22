@@ -495,7 +495,7 @@ class AssignmentAPI(APIResource):
 
     def invite(self, obj, user, data):
         """User ask invited to join his/her current group for assignment."""
-        err = models.Group.invite_to_group(user, data['email'], obj)
+        err = models.Group.invite_to_group(user.key, data['email'], obj.key)
         if err:
             raise BadValueError(err)
 
