@@ -97,8 +97,8 @@
         </nav>
         {% if user %}
             <script>
-              window.user = "{{user.id}}";
-              window.userEmail = "{{user.email}}";
+              window.user = "{{user.email}}";
+              window.userId = "{{user.id}}";
               window.reloginLink = "{{relogin_link}}";
             </script>
             <div ui-view></div>
