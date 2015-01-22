@@ -68,7 +68,7 @@ def seed():
 
     def make_group(assign, members):
         return models.Group(
-            members=[m.key for m in members],
+            member=[m.key for m in members],
             assignment=assign.key
         )
 
