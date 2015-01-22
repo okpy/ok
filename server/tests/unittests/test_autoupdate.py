@@ -3,6 +3,8 @@
 """
 Tests api auto updating
 """
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 import datetime 
 
 

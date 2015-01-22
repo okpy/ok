@@ -10,6 +10,8 @@ tests.py
 
 """
 
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 from google.appengine.ext import ndb
@@ -417,13 +419,19 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
         self.assertEqual(inst.invited, [to_invite.key])
 
+        # Check audit log
+        audit_logs = models.AuditLog.query().fetch()
+        self.assertEqual(len(audit_logs), 1)
+        log = audit_logs[0]
+        self.assertEqual(log.user, self.user.key)
+        self.assertEqual('Group.invite', log.event_type)
+        self.assertIn(to_invite.email[0], log.description)
+
     def test_invite(self):
         self.user = self.accounts['dummy_student2']
         inst = self.get_basic_instance()
         inst.put()
-
         to_invite = self.accounts['dummy_student']
-        to_invite.put()
 
         self.post_json(
             '/{}/{}/invite'.format(self.name, inst.key.id()),
@@ -463,10 +471,25 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
         self.assertNotIn(self.user.key, inst.member)
 
-    # TODO users:
-    # - no group for different assignment
-    # - group found when invited, not member
-    # - many ways that invitations can fail
+    def test_invite_someone_in_a_group(self):
+        self.user = self.accounts['dummy_student2']
+        inst = self.get_basic_instance()
+        inst.put()
+
+        # Place dummy_student in another group
+        to_invite = self.accounts['dummy_student']
+        self.model(
+            assignment=self.assignment.key,
+            member=[to_invite.key, self.accounts['dummy_staff'].key]
+        ).put()
+
+        self.post_json(
+            '/{}/{}/invite'.format(self.name, inst.key.id()),
+            data={'email': to_invite.email[0]})
+
+        self.assertStatusCode(400)
+        self.assertEqual(inst.invited, [])
+
 
     def test_create_two_entities(self):
         pass # No creation

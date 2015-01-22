@@ -495,7 +495,7 @@ class AssignmentAPI(APIResource):
 
     def invite(self, obj, user, data):
         """User ask invited to join his/her current group for assignment."""
-        err = models.Group.invite_to_group(user, data['email'], obj)
+        err = models.Group.invite_to_group(user.key, data['email'], obj.key)
         if err:
             raise BadValueError(err)
 
@@ -1030,7 +1030,7 @@ class GroupAPI(APIResource):
             'methods': set(['POST']),
         },
         'exit': {
-            'methods': set(['POST']),
+            'methods': set(['PUT']),
         }
     }
 
@@ -1039,6 +1039,8 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
         error = group.invite(data['email'])
+        if error:
+            raise BadValueError(error)
 
     def accept(self, group, user, data):
         need = Need('accept')
