@@ -10,6 +10,8 @@ tests.py
 
 """
 
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 from google.appengine.ext import ndb
@@ -416,6 +418,14 @@ class GroupAPITest(APITest, APIBaseTestCase):
             data={'email': to_invite.email[0]})
 
         self.assertEqual(inst.invited, [to_invite.key])
+
+        # Check audit log
+        audit_logs = models.AuditLog.query().fetch()
+        self.assertEqual(len(audit_logs), 1)
+        log = audit_logs[0]
+        self.assertEqual(log.user, self.user.key)
+        self.assertEqual('Group.invite', log.event_type)
+        self.assertIn(to_invite.email[0], log.description)
 
     def test_invite(self):
         self.user = self.accounts['dummy_student2']

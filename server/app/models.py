@@ -652,11 +652,19 @@ class Group(Base):
         self.invited.append(user.key)
         self.put()
 
+
     #@ndb.transactional
     @classmethod
     def invite_to_group(cls, user_key, email, assignment_key):
         """User invites email to join his/her group. Returns error or None."""
         group = cls._lookup_or_create(user_key, assignment_key)
+        AuditLog(
+            event_type='Group.invite',
+            user=user_key,
+            assignment=assignment_key,
+            description='Added {} to group'.format(email),
+            obj=group.key,
+        ).put()
         return group.invite(email)
 
     #@ndb.transactional
@@ -726,19 +734,13 @@ class Group(Base):
             raise BadValueError(error)
 
 
-def anon_converter(prop, value):
-    """Convert anonymous user to None."""
-    if not value.get().logged_in:
-        return None
-    return value
-
-
 class AuditLog(Base):
     """Keeps track of Group changes that are happening. That way, we can stop
     cases of cheating by temporary access. (e.g. A is C's partner for 10 min
     so A can copy off of C)."""
-    event_type = ndb.StringProperty(required=True)
-    user = ndb.KeyProperty('User', required=True, validator=anon_converter)
+    event_type = ndb.StringProperty()
+    user = ndb.KeyProperty('User')
+    assignment = ndb.KeyProperty('Assignment')
     description = ndb.StringProperty()
     obj = ndb.KeyProperty()
 
