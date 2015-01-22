@@ -161,7 +161,7 @@ class User(Base):
                 Backup.submitter == member).filter( \
                     Backup.assignment == assignment))
 
-        all_backups.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5))
+        all_backups.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5)))
 
         for backup in all_backups[:num_backups]:
             backup.messages = None
@@ -178,9 +178,9 @@ class User(Base):
 
         for member in members:
             all_subms += list(Submission.query(Submission.submitter == member).\
-                    filter(Backup.assignment == assignment)
+                    filter(Backup.assignment == assignment))
 
-        all_subms.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5))
+        all_subms.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5)))
 
         for subm in all_subms[:num_submissions]:
             subm.messages = None
@@ -536,7 +536,7 @@ class Submission(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
-    submitter = ndb.ComputedProperty(labmda x: x.backup.get().submitter)
+    submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
 
     def mark_as_final(self):
         final_submission = FinalSubmission(assignment=backup.assignment, \
