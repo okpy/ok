@@ -601,10 +601,11 @@ class Group(Base):
     def lookup(cls, user_key, assignment_key):
         """Return the group for a user key."""
         if isinstance(user_key, User):
-            user_key = user_key.key()
+            user_key = user_key.key
         if isinstance(assignment_key, Assignment):
-            assignment_key = assignment_key.key()
-        return Group.query(Group.member == user_key,
+            assignment_key = assignment_key.key
+        return Group.query(ndb.OR(Group.member == user_key,
+                                  Group.invited == user_key),
                            Group.assignment == assignment_key).get()
 
     @classmethod
@@ -614,9 +615,9 @@ class Group(Base):
         if group:
             return group
         if isinstance(user_key, User):
-            user_key = user_key.key()
+            user_key = user_key.key
         if isinstance(assignment_key, Assignment):
-            assignment_key = assignment_key.key()
+            assignment_key = assignment_key.key
         return Group(member=[user_key], invited=[], assignment=assignment_key)
 
     #@ndb.transactional

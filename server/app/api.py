@@ -324,12 +324,6 @@ class UserAPI(APIResource):
         },
         'index': {
         },
-        'invitations': {
-            'methods': set(['GET']),
-            'web_args': {
-                'assignment': KeyArg('Assignment')
-            }
-        },
         'queues': {
             'methods': set(['GET'])
         },
@@ -396,11 +390,7 @@ class UserAPI(APIResource):
             raise need.exception()
         obj.delete_email(data['email'])
 
-    def invitations(self, obj, user, data):
-        query = models.Group.query(models.Group.invited_members == user.key)
-        if 'assignment' in data:
-            query = query.filter(models.Group.assignment == data['assignment'])
-        return list(query)
+
 
     def queues(self, obj, user, data):
         return list(models.Queue.query().filter(
@@ -462,7 +452,16 @@ class AssignmentAPI(APIResource):
         },
         'grade': {
             'methods': set(['POST'])
-        }
+        },
+        'group': {
+            'methods': set(['GET']),
+        },
+        'invite': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
     }
 
     def post(self, user, data):
@@ -480,6 +479,16 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
              raise need.exception()
         deferred.defer(add_to_grading_queues, obj.key)
+
+    def group(self, obj, user, data):
+        """User's current group for assignment."""
+        return models.Group.lookup(user, obj)
+
+    def invite(self, obj, user, data):
+        """User ask invited to join his/her current group for assignment."""
+        err = models.Group.invite_to_group(user, data['email'], obj)
+        if err:
+            raise BadValueError(err)
 
 
 class SubmitNDBImplementation(object):
@@ -996,99 +1005,20 @@ class CourseAPI(APIResource):
     def assignments(self, course, user, data):
         return list(course.assignments)
 
-
 class GroupAPI(APIResource):
-    # TODO This API doesn't include group formation using invite_to_group.
+    """The API resource for Group Object"""
     model = models.Group
 
     methods = {
         'get': {
         },
         'index': {
-            'web_args': {
-                'assignment': KeyArg('Assignment'),
-                'members': KeyArg('User')
-            }
         },
-        'invite': {
-            'web_args': {
-                'member': Arg(str, required=True)
-             }
-        },
-        'add_member': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'member': Arg(str, required=True),
-            },
-        },
-        'remove_member': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'member': Arg(str, required=True),
-            },
-        },
-        'accept': {
-            'methods': set(['PUT']),
-        },
-        'decline': {
-            'methods': set(['PUT']),
-        }
     }
 
-    def add_member(self, group, user, data):
-        # can only add a member if you are a member
-        need = Need('invite')
-        if not group.can(user, need, group):
-            raise need.exception()
-
-        error = group.invite(data['member'])
-        if error:
-            raise BadValueError(error)
-
-        audit_log_message = models.AuditLog(
-            event_type='Group.add_member',
-            user=user.key,
-            description='Added member {} to group'.format(data['member']),
-            obj=group.key
-        )
-        audit_log_message.put()
-
-    def remove_member(self, group, user, data):
-        # can only remove a member if you are a member
-        need = Need('rescind')
-        if not group.can(user, need, group):
-            raise need.exception()
-
-        group.exit(data['member'])
-
-        audit_log_message = models.AuditLog(
-            event_type='Group.remove_member',
-            user=user.key,
-            obj=group.key,
-            description='Removed user from group'
-        )
-        audit_log_message.put()
-
-    def accept(self, group, user, data):
-        # can only accept an invitation if you are in the invited_members
-        need = Need('accept')
-        if not group.can(user, need, group):
-            raise need.exception()
-
-        group.accept(user)
-
-    def decline(self, group, user, data):
-        # can only reject an invitation if you are in the invited_members
-        need = Need('accept')
-        if not group.can(user, need, group):
-            raise need.exception()
-
-        group.exit(user)
-
-
 class QueueAPI(APIResource):
-
     """The API resource for the Assignment Object"""
+
     model = models.Queue
 
     methods = {
@@ -1122,7 +1052,7 @@ class QueueAPI(APIResource):
         return ent
 
 class FinalSubmissionAPI(APIResource):
-    """The API resource for the Assignment Object"""
+    """The API resource for the FinalSubmission Object"""
     model = models.FinalSubmission
 
     methods = {
