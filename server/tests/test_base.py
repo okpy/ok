@@ -11,6 +11,7 @@ import os
 import sys
 import collections
 import urllib
+import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..')))
@@ -33,6 +34,25 @@ from app import models
 from app import auth
 from app.constants import API_PREFIX
 from app.authenticator import Authenticator, AuthenticationException
+
+def make_fake_course(creator):
+    return models.Course(
+        institution="UC Soumya",
+        instructor=[creator.key],
+        offering="cal/cs61a/fa14",
+        active=True)
+
+
+def make_fake_assignment(course, creator):
+    return models.Assignment(
+        name='hw1',
+        points=3,
+        display_name="CS 61A",
+        templates="[]",
+        course=course.key,
+        creator=creator.key,
+        max_group_size=4,
+        due_date=datetime.datetime.now())
 
 class BaseTestCase(unittest.TestCase):
     """

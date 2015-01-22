@@ -14,30 +14,10 @@ import os
 os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
+from test_base import make_fake_assignment, make_fake_course #pylint: disable=relative-import
 from google.appengine.ext import ndb
 from app import models, constants
 from ddt import ddt, data, unpack
-
-
-def make_fake_course(creator):
-    return models.Course(
-        institution="UC Soumya",
-        instructor=[creator.key],
-        offering="cal/cs61a/fa14",
-        active=True)
-
-
-def make_fake_assignment(course, creator):
-    return models.Assignment(
-        name='hw1',
-        points=3,
-        display_name="CS 61A",
-        templates="[]",
-        course=course.key,
-        creator=creator.key,
-        max_group_size=4,
-        due_date=datetime.datetime.now())
-
 
 @ddt
 class APITest(object): #pylint: disable=no-init

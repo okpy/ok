@@ -291,10 +291,13 @@ class Assignment(Base):
 
     @classmethod
     def _can(cls, user, need, obj, query):
+        if need.action == "index":
+            return query
+        if user.is_admin and need.action != "delete":
+            return True
+
         if need.action == "get":
             return True
-        elif need.action == "index":
-            return query
         elif need.action == "create":
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
