@@ -15,7 +15,22 @@
 
 <section>
 
-    <div class="assign code small inactive" id="2">
+    <div class="assign code small inactive" ng-if="!submission.$resolved">
+      <div class="assign-main">
+        <h2 class="assign-title">Loading
+        </h2>
+              <div class="assign-deck">
+              ...
+              </div>
+            </div>
+            <p id="1" class="active" >
+                      <a>
+                        Loading Code
+                      </a>
+            <p>
+
+    </div>
+    <div class="assign code small inactive" ng-if="submission.$resolved">
       <div class="assign-main">
         <h2 class="assign-title">{{submission.assignment.display_name}}
           <span class="flag">
@@ -23,24 +38,18 @@
             <span class="stem"></span>
           </span>
         </h2>
-        <div class="assign-deck">
-          <p><img src="/static/student/images/icon-clock.png">{{submission.created | amCalendar}}</p>
-          <!--  <p><span class="icon-question">?</span>Scores: 23/25 . 2/3</p> -->
-        <p>By: {{submission.submitter.email}}</p>
-        </div>
-      </div>
+              <div class="assign-deck">
+                <p><img src="/static/student/images/icon-clock.png">{{submission.created | amCalendar}}. Due {{submission.assignment.due_date | amCalendar}} </p>
+                <!--  <p><span class="icon-question">?</span>Scores: 23/25 . 2/3</p> -->
+              <p>By: {{submission.submitter.email[0]}}</p>
+              </div>
+            </div>
 
-              <div class="assign-code">
-
-                <div class="code-cont ">
-                  <pre>
-                    <code id="1" class="active" ng-repeat="(file_name, contents) in submission.messages.file_contents">
+                    <p id="1" class="active" ng-repeat="(file_name, contents) in submission.messages.file_contents">
                       <a ng-repeat='codeline in contents track by $index'>
                         {{codeline}}
                       </a>
-                    </code>
-                  </pre>
-                </div>
+                    <p>
 
 
 

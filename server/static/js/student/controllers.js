@@ -51,18 +51,11 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Group', '$timeout',
   function($scope, Assignment, User, Group, $timeout) {
     $scope.courseId = 5699868278390784;
-      User.query({
+      User.get({
         course: 5699868278390784,
       }, function (response) {
-        console.log(response.data)
-      });
+        $scope.assignments = response.assignments
 
-      Assignment.query(function(response) {
-        $scope.assignments = response.results;
-        for (var i = 0; i < response.results.length; i++) {
-          $scope.assignments[i].group = ['Alvin', 'Angie']
-          $scope.assignments[i].latestSubm = {'id': 4855443348258816 , 'time': '2016-01-14 18:54:49.591784'}
-        }
         $scope.currGroupMembers = ['Alvin', 'Angie']
 
         $scope.removeMember = function(member) {
