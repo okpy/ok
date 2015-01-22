@@ -156,6 +156,16 @@ class User(Base):
 
         return all_backups
 
+    def get_submissions(self, assignment):
+        all_submissions = []
+
+        for backup in self.get_backups(assignment):
+            if len(Submission.query(Submission.backup == backup.key)) > 0:
+                all_submissions.append(backup)
+
+        return all_submissions
+
+
     def get_group(self, assignment):
         query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
@@ -168,6 +178,7 @@ class User(Base):
         for assignment in course.assignments():
             assign_info['group'] = self.get_group(assignment)
             assign_info['final'] = self.get_final_submission(assignment)
+            assign_info['backups'] = self.get_backups(assignment)
             assign_info['assignment'] = assignment
             info['assignments'].append(assign_info)
 

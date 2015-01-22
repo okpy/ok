@@ -422,6 +422,9 @@ class UserAPI(APIResource):
     def get_backups(self, obj, user, data):
         return obj.get_backups(data['assignment'])
 
+    def get_submissions(self, obj, user, data):
+        return obj.get_submissions(data['assignment'])
+
 class AssignmentAPI(APIResource):
     """The API resource for the Assignment Object"""
     model = models.Assignment
@@ -587,11 +590,6 @@ class SubmissionAPI(APIResource):
             }
         }
     }
-
-    def graded(self, obj, user, data):
-        """
-        Gets the users graded submissions
-        """
 
     def download(self, obj, user, data):
         """
