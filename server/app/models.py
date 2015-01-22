@@ -173,8 +173,8 @@ class User(Base):
 
         return info
 
+    #@ndb.transactional
     @classmethod
-    @ndb.transactional
     def get_or_insert(cls, email):
         """Retrieve a user by email or create that user."""
         user = cls.lookup(email)
