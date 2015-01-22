@@ -67,17 +67,37 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
 
       $scope.reloadAssignments()
 
-        $scope.removeMember = function(currGroup, member) {
-              Group.removeMember({
-                member: member.key,
-                id: currGroup.id
-              }, function (err) {
-                alert("BYEBYE!")
-                $scope.currGroup = null;
-                $scope.hideGroup();
-                $scope.currAssign.group = null
-              });
-        };
+      $scope.removeMember = function(currGroup, member) {
+            Group.removeMember({
+              member: member.key,
+              id: currGroup.id
+            }, function (err) {
+              alert("BYEBYE!")
+              $scope.currGroup = null;
+              $scope.hideGroup();
+              $scope.currAssign.group = null
+            });
+      };
+
+      $scope.getSubmissions = function (assignId) {
+            User.getSubmissions({
+              assignment: assignId
+            }), function (response) {
+              $scope.currAssign.submissions = response;
+            }
+            $scope.showSubms();
+      }
+
+      $scope.getBackups = function (assignId) {
+          console.log("getBackusp")
+          console.log(assignId)
+            User.getBackups({
+              assignment: assignId
+            }), function (response) {
+              $scope.currAssign.backups = response;
+            }
+        $scope.showBackups();
+      }
 
         $scope.addMember = function(assignmentId, member) {
             console.log("TRYING")

@@ -29,6 +29,22 @@ app.factory('User', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        getBackups: {
+          method: "GET",
+          isArray: true,
+          url: 'api/v1/user/:id/get_backups',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        getSubmissions: {
+          method: "GET",
+          isArray: true,
+          url: 'api/v1/user/:id/get_submissions',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
       });
     }
   ]);
