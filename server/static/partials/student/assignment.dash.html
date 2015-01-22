@@ -57,42 +57,25 @@
       <div class="popup group hide">
         <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
         <h2 class="popup-title">Group</h2>
-        <p class="popup-byline">created <b class="creation-date">Jan. 16</b> for <b class="assign-name">Scheme Interpreter</b></p>
+        <p class="popup-byline"> <b class="assign-name">{{ currAssign.title }}</b></p>
         <div class="pop-content">
-          <ul class="sortable">
-            <li class="pop-item">
-              <span class="item-no">0</span>
+          <ul ui-sortable ng-model="currGroupMembers">
+
+            <li ng-repeat="member in currGroupMembers" class="pop-item">
               <span class="stripes">
                 <span class="stripe"></span>
                 <span class="stripe"></span>
                 <span class="stripe"></span>
               </span>
-              <p class="first-member">Alvin Wan</p>
-              <div class="remove-user"><span class="icon-x">+</span></div>
-            </li>
-            <li class="pop-item">
-              <span class="item-no">1</span>
-              <span class="stripes">
-                <span class="stripe"></span>
-                <span class="stripe"></span>
-                <span class="stripe"></span>
-              </span>
-              <p class="second-member">Angie Jodjana</p>
-            </li>
-            <li class="pop-item">
-              <span class="item-no">2</span>
-              <span class="stripes">
-                <span class="stripe"></span>
-                <span class="stripe"></span>
-                <span class="stripe"></span>
-              </span>
-              <p class="third-member">Person</p>
-              <div class="remove-user"><span class="icon-x">+</span></div>
+              <span class="item-no">{{ $index }}</span>
+              <p class="first-member">{{ member }} </p>
+              <div class="remove-user" ng-click="removeMember(currGroupMember, member)"><span class="icon-x">+</span></div>
             </li>
           </ul>
-          <a href="#" class="action leave-group">Leave</a>
+          <a ng-click="test()" class="action leave-group">Save</a>
         </div>
       </div>
+
       <div class="popup submissions hide">
         <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
         <h2 class="popup-title">Submissions</h2>

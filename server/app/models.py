@@ -142,29 +142,25 @@ class User(Base):
     def get_final_submission(self, assignment):
         query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
-        return FinalSubmission.query(FinalSubmission.group == group)
+        group = group.get()
+        return FinalSubmission.query(FinalSubmission.group == group.key).get()
 
     def get_backups(self, assignment):
         query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
+        group = group.get()
         all_backups = []
+        if not group:
+            members = [self.key]
+        else:
+            members = group.member
 
-        for member in group.member:
+        for member in members:
             all_backups += list(Backup.query(
                 Backup.submitter == member).filter(
                     Backup.assignment == assignment))
 
         return all_backups
-
-    def get_submissions(self, assignment):
-        all_submissions = []
-
-        for backup in self.get_backups(assignment):
-            if len(Submission.query(Submission.backup == backup.key)) > 0:
-                all_submissions.append(backup)
-
-        return all_submissions
-
 
     def get_group(self, assignment):
         query = Group.query(Group.member == self.key)
@@ -175,10 +171,11 @@ class User(Base):
         info = {'user': self}
         info['assignments'] = []
 
-        for assignment in course.assignments():
-            assign_info['group'] = self.get_group(assignment)
-            assign_info['final'] = self.get_final_submission(assignment)
-            assign_info['backups'] = self.get_backups(assignment)
+        for assignment in course.assignments:
+            assign_info = {}
+            assign_info['group'] = self.get_group(assignment.key)
+            assign_info['final'] = self.get_final_submission(assignment.key)
+            assign_info['backups'] = self.get_backups(assignment.key)
             assign_info['assignment'] = assignment
             info['assignments'].append(assign_info)
 
@@ -612,10 +609,11 @@ class Group(Base):
     def lookup(cls, user_key, assignment_key):
         """Return the group for a user key."""
         if isinstance(user_key, User):
-            user_key = user_key.key()
+            user_key = user_key.key
         if isinstance(assignment_key, Assignment):
-            assignment_key = assignment_key.key()
-        return Group.query(Group.member == user_key,
+            assignment_key = assignment_key.key
+        return Group.query(ndb.OR(Group.member == user_key,
+                                  Group.invited == user_key),
                            Group.assignment == assignment_key).get()
 
     @classmethod
@@ -625,9 +623,9 @@ class Group(Base):
         if group:
             return group
         if isinstance(user_key, User):
-            user_key = user_key.key()
+            user_key = user_key.key
         if isinstance(assignment_key, Assignment):
-            assignment_key = assignment_key.key()
+            assignment_key = assignment_key.key
         return Group(member=[user_key], invited=[], assignment=assignment_key)
 
     #@ndb.transactional
@@ -661,6 +659,8 @@ class Group(Base):
     #@ndb.transactional
     def accept(self, user_key):
         """User accepts an invitation to join. Returns error or None."""
+        if isinstance(user_key, User):
+            user_key = user_key.key
         if user_key not in self.invited:
             return "That user is not invited to the group"
         if user_key in self.member:
@@ -672,6 +672,8 @@ class Group(Base):
     #@ndb.transactional
     def exit(self, user_key):
         """User leaves the group. Empty/singleton groups are deleted."""
+        if isinstance(user_key, User):
+            user_key = user_key.key
         for users in [self.member, self.invited]:
             if user_key in users:
                 users.remove(user_key)

@@ -1,4 +1,4 @@
-var app = angular.module('student', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'angularMoment', 'tableSort']);
+var app = angular.module('student', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'ui.sortable', 'angularMoment', 'tableSort']);
 
 app.directive('assignmentModule', function() {
         return {
@@ -28,10 +28,10 @@ app.directive('submissionList', function() {
         };
     });
 
-app.directive('courseModule', function() {
+app.directive('courseList', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/dashboard/course.module.html',
+            templateUrl: '/static/partials/student/course.list.html',
         };
     });
 
@@ -50,6 +50,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
       name: 'student',
       url: '/',
       templateUrl: '/static/partials/student/student.html',
+    }
+
+    var courseLanding = {
+      name: 'courseLanding',
+      url: '/courseLanding',
+      templateUrl: '/static/partials/student/courseLanding.html',
     }
 
     var submissions = {
@@ -188,11 +194,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var loginLanding = {
       name: 'loginLanding',
       url: '/loginLanding',
-      templateUrl: '/static/partials/common/loginLanding.html'
+      templateUrl: '/static/partials/student/loginLanding.html'
     }
 
     $stateProvider.
       state(student).
+      state(courseLanding).
       state(submissions).
       state(submissionList).
       state(submissionDetail).
