@@ -148,10 +148,8 @@ class User(Base):
         else:
             return FinalSubmission.query(FinalSubmission.group == group.key).get()
 
-    def get_backups(self, assignment):
-        query = Group.query(Group.member == self.key)
-        group = query.filter(Group.assignment == assignment)
-        group = group.get()
+    def get_backups(self, assignment, num_backups=10):
+        group = self.get_group()
         all_backups = []
         if not group:
             members = [self.key]
@@ -159,11 +157,35 @@ class User(Base):
             members = group.member
 
         for member in members:
-            all_backups += list(Backup.query(
-                Backup.submitter == member).filter(
+            all_backups += list(Backup.query( \
+                Backup.submitter == member).filter( \
                     Backup.assignment == assignment))
 
-        return all_backups
+        all_backups.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5)))
+
+        for backup in all_backups[:num_backups]:
+            backup.messages = None
+
+        return all_backups[:num_backups]
+
+    def get_submissions(self, assignment, num_submissions=10):
+        group = self.get_group()
+        all_subms = []
+        if not group:
+            members = [self.key]
+        else:
+            members = group.member
+
+        for member in members:
+            all_subms += list(Submission.query(Submission.submitter == member).\
+                    filter(Backup.assignment == assignment))
+
+        all_subms.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5)))
+
+        for subm in all_subms[:num_submissions]:
+            subm.messages = None
+
+        return all_subms[:num_submissions]
 
     def get_group(self, assignment):
         query = Group.query(Group.member == self.key)
@@ -177,9 +199,29 @@ class User(Base):
         for assignment in course.assignments:
             assign_info = {}
             assign_info['group'] = self.get_group(assignment.key)
-            assign_info['final'] = self.get_final_submission(assignment.key)
-            assign_info['backups'] = self.get_backups(assignment.key)
+            assign_info['final'] = {}
+            assign_info['final']['final_submission'] = \
+                    self.get_final_submission(assignment.key)
+            assign_info['final']['submission'] = \
+                    assign_info['final']['final_submission'].submission.get()
+            assign_info['final']['backup'] = \
+                    assign_info['final']['submission'].backup.get()
+            
+            assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
+            assign_info['submissions'] = len(self.get_submissions(assignment.key)) > 0
             assign_info['assignment'] = assignment
+
+            # Compute percentage here... feel free to delete if unnecessary
+            final = assign_info['final']['backup']
+            percent = None
+            for message in final.messages:
+                if message.kind == 'scoring' and 'total_score' in message.contents:
+                    percent = message.contents['total_score']/\
+                            assignment.total_points
+            if percent:
+                percent = round(percent*100, 0)
+                assign_info['percent'] = percent
+            
             info['assignments'].append(assign_info)
 
         return info
@@ -291,10 +333,13 @@ class Assignment(Base):
 
     @classmethod
     def _can(cls, user, need, obj, query):
+        if need.action == "index":
+            return query
+        if user.is_admin and need.action != "delete":
+            return True
+
         if need.action == "get":
             return True
-        elif need.action == "index":
-            return query
         elif need.action == "create":
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
@@ -491,6 +536,14 @@ class Submission(Base):
     """A backup that may be scored."""
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
+    submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
+
+    def mark_as_final(self):
+        final_submission = FinalSubmission(assignment=backup.assignment, \
+                                           group = backup.group, \
+                                           submitter = self.submitter,\
+                                           submission=self)
+        final_submission.put()
 
     @classmethod
     def _can(cls, user, need, submission, query):
@@ -793,6 +846,16 @@ class FinalSubmission(Base):
     # TODO Add hook to update final submissions on submission or group change.
 
     def _pre_put_hook(self):
-        if not self.group and not self.submitter:
-            self.submitter = self.submission.backup.submitter
+        self.submitter = self.submission.backup.submitter
+        
+        old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
+
+        for submission in old.get():
+            if self.submitter == submission.submitter:
+                submission.delete() 
+                return # Should only have 1 final submission per submitter
+            for person in submission.group.member:
+                if self.submitter == person:
+                    submission.delete()
+                    return
 
