@@ -1030,7 +1030,7 @@ class GroupAPI(APIResource):
             'methods': set(['POST']),
         },
         'exit': {
-            'methods': set(['POST']),
+            'methods': set(['PUT']),
         }
     }
 
