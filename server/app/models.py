@@ -143,7 +143,10 @@ class User(Base):
         query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment)
         group = group.get()
-        return FinalSubmission.query(FinalSubmission.group == group.key).get()
+        if group == None:
+            return FinalSubmission.query(FinalSubmission.submitter == self.key).get()
+        else:
+            return FinalSubmission.query(FinalSubmission.group == group.key).get()
 
     def get_backups(self, assignment):
         query = Group.query(Group.member == self.key)
@@ -769,6 +772,7 @@ class FinalSubmission(Base):
     """The final submission for an assignment from a group."""
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
+    submitter = ndb.KeyProperty(User)
     submission = ndb.KeyProperty(Submission)
     published = ndb.BooleanProperty(default=False)
     queue = ndb.KeyProperty(Queue)
@@ -786,7 +790,7 @@ class FinalSubmission(Base):
 
     # TODO Add hook to update final submissions on submission or group change.
 
-
-
-
+    def _pre_put_hook(self):
+        if not self.group and not self.submitter:
+            self.submitter = self.submission.backup.submitter
 
