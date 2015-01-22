@@ -45,10 +45,11 @@
     "sweetalert": "~0.3.1",
     "ngstorage": "~0.3.0",
     "angular-tablesort": "~1.0.5",
-    "moment-timezone": "~0.2.5"
+    "moment-timezone": "~0.2.5",
+    "jquery-ui": ">=1.10.3",
+    "angular-ui-sortable": "~0.13.3"
   },
   "devDependencies": {
-    "jquery-ui": ">=1.10.3",
     "sparkline": "http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js",
     "datatables": ">=1.9",
     "datatables-bootstrap3": "latest",

@@ -6,7 +6,7 @@ $(document).ready(function() {
 		hideLoader()
 		checkForAlerts();
 		hljs.initHighlightingOnLoad();
-		addSortable();
+		// addSortable();
 		fixSortable();
 	}
 
@@ -169,9 +169,9 @@ $(document).ready(function() {
 		}
 	}
 
-	function addSortable() {
-		$( ".sortable" ).sortable();
-	}
+	// function addSortable() {
+	// 	$( ".sortable" ).sortable();
+	// }
 
 	// assignment views
 
@@ -245,7 +245,7 @@ $(document).ready(function() {
 	}
 
 	// code
-	
+
 	$('.file').on('click',function() {
 		that = $(this);
 		selectFile(that);
@@ -306,7 +306,7 @@ $(document).ready(function() {
 		});
 	}
 
-	// menu 
+	// menu
 
 	$('.show-menu').on('click',function() {
 		showMenu();
