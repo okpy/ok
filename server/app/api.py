@@ -318,6 +318,9 @@ class UserAPI(APIResource):
             }
         },
         'get': {
+            'web_args': {
+                'course': KeyArg('Course')
+            }
         },
         'index': {
         },
@@ -361,7 +364,8 @@ class UserAPI(APIResource):
         """
         Overwrite GET request for user class in order to send more data.
         """
-        #TODO(soumya): Actually overwrite this- needed to get down to 1 request.
+        if 'course' in data:
+            return obj.get_course_info(data['course'].get())
         return obj
 
     def new_entity(self, attributes):

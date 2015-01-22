@@ -161,6 +161,18 @@ class User(Base):
         group = query.filter(Group.assignment == assignment)
         return group.get()
 
+    def get_course_info(self, course):
+        info = {'user': self}
+        info['assignments'] = []
+
+        for assignment in course.assignments():
+            assign_info['group'] = self.get_group(assignment)
+            assign_info['final'] = self.get_final_submission(assignment)
+            assign_info['assignment'] = assignment
+            info['assignments'].append(assign_info)
+
+        return info
+
     @classmethod
     @ndb.transactional
     def get_or_insert(cls, email):
