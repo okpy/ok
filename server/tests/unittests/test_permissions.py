@@ -133,7 +133,7 @@ class PermissionsUnitTest(BaseTestCase):
 
         self.groups = {
             'group1': models.Group(
-                member=[self.accounts['student0'].key,
+                members=[self.accounts['student0'].key,
                         self.accounts['student1'].key],
                 assignment=self.assignments['first'].key
             )}
