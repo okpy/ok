@@ -77,7 +77,7 @@ class APITest(object): #pylint: disable=no-init
             ),
         }
 
-    def _enroll_accounts(self, course):
+    def enroll_accounts(self, course):
         accounts = self.get_accounts()
         add_role = models.Participant.add_role
         for instructor in course.instructor:
@@ -253,7 +253,7 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
         self._course = make_fake_course(self.user)
         self._course.put()
-        self._enroll_accounts(self._course)
+        self.enroll_accounts(self._course)
         self._assignment = make_fake_assignment(self._course, self.user)
         self._assignment.name = name
         return self._assignment
@@ -384,71 +384,52 @@ class GroupAPITest(APITest, APIBaseTestCase):
         self.course.put()
         self.assignment = make_fake_assignment(self.course, self.user)
         self.assignment.put()
+        for student_name in [a for a in self.accounts if 'student' in a]:
+            s = self.accounts[student_name]
+            models.Participant.add_role(s, self.course, constants.STUDENT_ROLE)
 
     def get_basic_instance(self, mutate=True):
-        name = 'testversion'
-        if mutate:
-            name += str(self.num)
-            self.num += 1
+
         return self.model(
             assignment=self.assignment.key,
             member=[
                 self.accounts['dummy_student2'].key,
                 self.accounts['dummy_student3'].key])
 
-    def test_add_member(self):
-        invited = [self.accounts['dummy_student'].key]
+    def test_assignment_group(self):
         inst = self.get_basic_instance()
         inst.put()
+        self.user = self.accounts['dummy_student2']
 
-        self.post_json(
-            '/{}/{}/add_member'.format(self.name, inst.key.id()),
-            data={'member': invited[0]},
-            method='PUT')
+        self.get('/assignment/{}/group'.format(self.assignment.key.id()))
+        self.assertEqual(self.response_json['id'], inst.key.id())
 
-        inst = self.model.get_by_id(inst.key)
-        self.assertEqual(inst.invited, invited)
-
-    def test_remove_member(self):
-        inst = self.get_basic_instance()
-        remaining = inst.member[:]
-        to_remove = self.accounts['dummy_student']
-        inst.member.append(to_remove.key)
-        inst.put()
-
-        self.post_json(
-            '/{}/{}/remove_member'.format(self.name, inst.key.id()),
-            data={'member': to_remove.key},
-            method='PUT')
-
-        self.assertEqual(inst.member, remaining)
-
-    def test_no_empty_group(self):
-        pass # TODO
-
-    def test_no_singleton_group(self):
-        pass # TODO
-
-    def test_singleton_group_deleted(self):
+    def test_assignment_invite(self):
         inst = self.get_basic_instance()
         inst.put()
-        to_remove = self.accounts['dummy_student2']
+        self.user = self.accounts['dummy_student2']
+
+        to_invite = self.accounts['dummy_student']
+        to_invite.put()
 
         self.post_json(
-            '/{}/{}/remove_member'.format(self.name, inst.key.id()),
-            data={'member': to_remove.key},
-            method='PUT')
+            '/assignment/{}/invite'.format(self.assignment.key.id()),
+            data={'email': to_invite.email[0]})
 
-        self.assertEqual(None, self.model.get_by_id(inst.key))
+        self.assertEqual(inst.invited, [to_invite.key])
 
-    def test_entity_create_basic(self):
-        # No entity create for Groups
-        pass
+    # TODO users:
+    # - no group for different assignment
+    # - group found when invited, not member
+    # - many ways that invitations can fail
+    # - accepting, rejecting invitations
+    # - leaving groups
 
     def test_create_two_entities(self):
-        # No entity create for Groups
-        pass
+        pass # No creation
 
+    def test_entity_create_basic(self):
+        pass # No creation
 
 if __name__ == '__main__':
     unittest.main()
