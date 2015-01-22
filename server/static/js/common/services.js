@@ -93,7 +93,10 @@ app.factory('Submission', ['$resource',
 
 app.factory('Assignment', ['$resource',
     function($resource) {
-      return $resource('api/v1/assignment/:id', {format: "json"}, {
+      return $resource('api/v1/assignment/:id', {
+        format: "json",
+        id: "@id"
+      }, {
         query: {
           isArray: false,
           transformResponse: function(data) {
@@ -105,55 +108,45 @@ app.factory('Assignment', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        invite: {
+          method: "POST",
+          url: 'api/v1/assignment/:id/invite',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        }
       });
     }
   ]);
 
 app.factory('Group', ['$resource',
     function($resource) {
-      return $resource('api/v1/group/:id', {
-        format: "json",
-        id: "@id",
+      return $resource('api/v1/group', {
+        format: "json"
       }, {
-        query: {
-          isArray: true,
-          transformResponse: function(response) {
-            response = JSON.parse(response);
-            if (response.status != 200) {
-              return []
-            }
-            data = response.data
-            return data.results;
-          }
-        },
-        get: {
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
         addMember: {
-          url: 'api/v1/group/:id/add_member',
+          url: 'api/v1/group/invite',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         removeMember: {
-          url: 'api/v1/group/:id/remove_member',
+          url: 'api/v1/group/:id/exit',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         acceptInvitation: {
-          url: 'api/v1/group/:id/accept_invitation',
+          url: 'api/v1/group/:id/accept',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         rejectInvitation: {
-          url: 'api/v1/group/:id/reject_invitation',
+          url: 'api/v1/group/:id/exit',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;

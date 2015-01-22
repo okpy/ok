@@ -9,7 +9,7 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
       if ($window.user.indexOf("berkeley.edu") == -1) {
         $window.swal({
             title: "Is this the right login?",
-            text: "Logging you in with your \"" + $window.userEmail + "\" account...",
+            text: "Logging you in with your \"" + $window.user + "\" account...",
             type: "info",
             showCancelButton: true,
             confirmButtonColor: "#DD6B55",
@@ -50,57 +50,60 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 // Eeek.
 app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Group', '$timeout',
   function($scope, Assignment, User, Group, $timeout) {
-    $scope.courseId = 5699868278390784;
-      User.get({
-        course: 5699868278390784,
-      }, function (response) {
-        $scope.assignments = response.assignments
+      $scope.courseId = 5699868278390784;
 
-        $scope.currGroupMembers = ['Alvin', 'Angie']
+      $scope.toggleAssign = function (assign) {
+        $scope.currAssign = assign;
+      }
 
-        $scope.removeMember = function(member) {
+      $scope.reloadAssignments = function () {
+          User.get({
+            course: 5699868278390784,
+          }, function (response) {
+            console.log(response.assignments)
+            $scope.assignments = response.assignments
+          })
+      }
+
+      $scope.reloadAssignments()
+
+        $scope.removeMember = function(currGroup, member) {
               Group.removeMember({
                 member: member.key,
-                id: $scope.currGroup.id
+                id: currGroup.id
               }, function (err) {
-                if ($scope.currGroupMembers.length == 2) {
-                  $scope.currGroupMembers = []
-                  //$scope.currAssign.group = []
-                }
-                // TODO: Change the assignment group.
-                membersArr = []
-                ind = membersArr.indexOf(member)
-                if (ind != -1) {
-                  membersArr.splice(ind, 1);
-                }
-                $scope.hidePopups();
+                alert("BYEBYE!")
+                $scope.currGroup = null;
+                $scope.hideGroup();
+                $scope.currAssign.group = null
               });
         };
 
-        $scope.addMember = function(assign, member) {
-          if ($scope.currGroupMembers.length == 0 && member != '') {
-            Group.addMember({
-              member: member,
-              id: $scope.group.id
+        $scope.addMember = function(assignmentId, member) {
+            console.log("TRYING")
+            console.log(assignmentId)
+          if (member != '') {
+            Assignment.invite({
+              id: assignmentId,
+              email: member
             }, function (response) {
               // TODO  Check for error.
-              $scope.currGroupMembers.push(member+'(invited)')
+              console.log(response)
             });
           }
         };
 
-        $scope.showGroup = function showGroup(id) {
+        $scope.showGroup = function showGroup(group) {
             $('.popups').addClass('active');
             $('.popup').removeClass('active');
             $('.popup.group').addClass('active').removeClass('hide');
-            $( ".sortable" ).sortable();
+            $scope.currGroup = group
         }
 
-        $scope.hideGroup = function hideGroup(id) {
-            $('.popups').addClass('active');
+        $scope.hideGroup = function hideGroup() {
+            $('.popups').removeClass('active');
             $('.popup').removeClass('active');
-            $('.popup.group').addClass('active').removeClass('hide');
-            $( ".sortable" ).sortable();
+            $('.popup.group').addClass('active').addClass('hide');
         }
 
         $scope.showBackups = function showGroup(id) {
@@ -135,8 +138,7 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
           },800)
         }
 
-      })
-    }
+      }
 ]);
 
 // Group Controllers

@@ -3,52 +3,60 @@
   <div class="assign large active" id="1" ng-repeat="assign in assignments">
     <div class="assign-main">
       <img class="assign-bg" src="/static/student/images/bg-clock.png">
-       <h2 class="assign-title"> {{ assign.display_name }}</h2>
+       <h2 class="assign-title"> {{ assign.assignment.display_name }}</h2>
       <div class="assign-deck">
-        <p><img src="/static/student/images/icon-clock.png">due {{ assign.due_date | amCalendar }}</p>
-        <p><span class="icon-question">?</span> {{assign.points}} points</p>
+        <p><img src="/static/student/images/icon-clock.png">due {{ assign.assignment.due_date | amCalendar }}</p>
+        <p><span class="icon-question">?</span> {{assign.assignment.points}} points</p>
         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
       </div>
     </div>
 
     <div class="assign-progress">
-      <div class="assign-bar"><span class="assign-fill" ng-style="{'width' : '30%'}"></span></div>
-      <p class="assign-label"><c>30%</c>complete.<c> Not submitted</c></p>
+      <div class="assign-bar" ng-if="assign.final"><span class="assign-fill" ng-if="assign.final" ng-style="{'width' : '30%'}"></span></div>
+      <p class="assign-label" ng-if="assign.final"><c>30%</c>complete.<c> Submitted  </c></p>
+      <p class="assign-label" ng-if="!assign.final"><c> Not submitted</c></p>
     </div>
 
-    <div class="assign-more" ng-show="assign.expand">
+    <div class="assign-more" ng-show="currAssign == assign">
       <div class="assign-text">
         <div class="col left">
-          <h3 class="assign-subtitle">Group members</h3>
-          <ul class="sortable">
-            <li ng-repeat="member in assign.group">
-              <span class="stripes dark">
-                <span class="stripe"></span>
-                <span class="stripe"></span>
-                <span class="stripe"></span>
-              </span>
-              {{member}}
-            </li>
-          </ul>
-          <a ng-click="showGroup(assign.id)" class="link view-group" id="1">view group &raquo;</a>
+          <div ng-if="assign.group">
+            <h3 class="assign-subtitle">Group members</h3>
+            <ul class="sortable">
+              <li ng-repeat="member in assign.group.member">
+                <span class="stripes dark">
+                  <span class="stripe"></span>
+                  <span class="stripe"></span>
+                  <span class="stripe"></span>
+                </span>
+                {{member.email[0]}}
+              </li>
+            </ul>
+          <a ng-click="showGroup(assign.group)" class="link view-group" id="1">view group &raquo;</a>
+          </div>
+          <div ng-if="!assign.group">
+            <h3 class="assign-subtitle">No Group</h3>
+
+          </div>
         </div>
 
           <div class="col right">
-            <div ng-if="assign.latestSubm">
+            <div ng-if="assign.final">
               <h3 class="assign-subtitle"  >Latest Submission</h3>
-              <a ng-if="assign.latestSubm" ui-sref='submission.detail({submissionId:assign.latestSubm.id})' class="link view-submission"><p> {{ assign.latestSubm.time | amCalendar }} &raquo;</p></a>
-              <a ng-if="assign.latestSubm" ng-click="showSubms(assign.id)" class="link view-submissions">view submissions &raquo;</a>
-            </div>
-            <h3 class="assign-subtitle" ng-if="!assign.latestSubm" >No Submission</h3>
+              <a ui-sref='submission.detail({submissionId:assign.final.submission.backup.id})' class="link view-submission"><p> {{ assign.final.created | amCalendar }} &raquo;</p></a> <br>
 
-            <span class="clear"><a ng-click="showBackups(assign.id)" class="link view-backups">view backups &raquo;</a></span>
+              <a ng-click="showSubms(assign.final.id)" class="link view-submissions">view submissions &raquo;</a>
+            </div>
+            <h3 class="assign-subtitle" ng-if="!assign.final" >No Submission</h3>
+
+            <span class="clear"><a ng-click="showBackups(assign)" ng-if="assign.backups" class="link view-backups">view backups &raquo;</a></span>
           </div>
 
       </div>
     </div>
-    <a class="assign-expand" ng-click="assign.expand = !assign.expand;">
-      <p ng-hide="assign.expand">Expand</p>
-      <p ng-show="assign.expand">Collapse</p>
+    <a class="assign-expand" ng-click="toggleAssign(assign)">
+      <p ng-if="assign != currAssign">Expand</p>
+      <p ng-if="assign == currAssign">Collapse</p>
     </a>
   </div>
 
@@ -57,22 +65,23 @@
       <div class="popup group hide">
         <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
         <h2 class="popup-title">Group</h2>
-        <p class="popup-byline"> <b class="assign-name">{{ currAssign.title }}</b></p>
+        <p class="popup-byline"> <b class="assign-name">{{ currGroup.assignment.display_name }}</b></p>
         <div class="pop-content">
-          <ul ui-sortable ng-model="currGroupMembers">
 
-            <li ng-repeat="member in currGroupMembers" class="pop-item">
+          <ul ui-sortable ng-model="currGroup.member">
+
+            <li ng-repeat="member in currGroup.member" class="pop-item">
               <span class="stripes">
                 <span class="stripe"></span>
                 <span class="stripe"></span>
                 <span class="stripe"></span>
               </span>
               <span class="item-no">{{ $index }}</span>
-              <p class="first-member">{{ member }} </p>
-              <div class="remove-user" ng-click="removeMember(currGroupMember, member)"><span class="icon-x">+</span></div>
+              <p class="first-member">{{ member.email[0] }} </p>
+              <div class="remove-user" ng-click="removeMember(currGroup, member)"><span class="icon-x">+</span></div>
             </li>
           </ul>
-          <a ng-click="test()" class="action leave-group">Save</a>
+          <a ng-click="addMember(currGroup.assignment.id, 'test@example.com')" class="action">Save</a>
         </div>
       </div>
 

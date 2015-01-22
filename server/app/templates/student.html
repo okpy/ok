@@ -64,16 +64,10 @@
 
         <nav class="tools">
           <ul>
-            <li><a href="mailto:questions@cs61a.org"><span class="icon-question">?</span></a></li>
-            <li>
           {% if user %}
-              <a href={{users_link}} class="show-menu">
-                {{users_title}}
-              </a>
-          {% else %}
-              <a href={{users_link}} class="show-menu">Login</a>
-          {% endif %}
+            <li><a href="mailto:questions@cs61a.org"><span class="icon-question">?</span></a></li>
 
+            <li>
               <a class="show-menu">
                 Menu
                 <span class="stripes">
@@ -82,6 +76,12 @@
                   <span class="stripe"></span>
                 </span>
               </a>
+          {% else %}
+            <li>
+              <a href={{users_link}}>{{users_title}}</a>
+            </li>
+          {% endif %}
+
             </li>
           </ul>
         </nav>
