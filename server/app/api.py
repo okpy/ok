@@ -30,6 +30,12 @@ parser = FlaskParser()
 
 
 def parse_json_field(field):
+    """
+    Parses field or returns appropriate boolean value.
+    
+    :param field: (string)
+    :return: (string) parsed JSON
+    """
     if not field[0] == '{':
         if field == 'false':
             return False
@@ -41,7 +47,12 @@ def parse_json_field(field):
 # Arguments to convert query strings to a python type
 
 def DateTimeArg(**kwds):
-    """Converts a webarg to a datetime object"""
+    """
+    Converts a webarg to a datetime object
+    
+    :param kwds: (dictionary) set of parameters
+    :return: (Arg) type of argument 
+    """
     def parse_date(arg):
         op = None
         if '|' in arg:
@@ -56,7 +67,13 @@ def DateTimeArg(**kwds):
 
 
 def KeyArg(cls, **kwds):
-    """Converts a webarg to a key in Google's ndb."""
+    """
+    Converts a webarg to a key in Google's ndb.
+    
+    :param cls: (string) class
+    :param kwds: (dictionary) -- unused --
+    :return: (Arg) type of argument
+    """
     def parse_key(key):
         try:
             key = int(key)
@@ -67,7 +84,13 @@ def KeyArg(cls, **kwds):
 
 
 def KeyRepeatedArg(cls, **kwds):
-    """Converts a repeated argument to a list"""
+    """
+    Converts a repeated argument to a list
+    
+    :param cls: (string)
+    :param kwds: (dictionary) -- unused --
+    :return: (Arg) type of argument
+    """
     def parse_list(key_list):
         staff_lst = key_list
         if not isinstance(key_list, list):
@@ -80,7 +103,12 @@ def KeyRepeatedArg(cls, **kwds):
 
 
 def BooleanArg(**kwargs):
-    """Converts a webarg to a boolean"""
+    """
+    Converts a webarg to a boolean.
+    
+    :param kwargs: (dictionary) -- unused --
+    :return: (Arg) type of argument
+    """
     def parse_bool(arg):
         if isinstance(arg, bool):
             return arg
@@ -94,9 +122,8 @@ def BooleanArg(**kwargs):
 
 
 class APIResource(View):
-    """The base class for API resources.
-
-    Set the model for each subclass.
+    """
+    Base class for API Resource. Set models for each.
     """
 
     model = None
@@ -109,6 +136,13 @@ class APIResource(View):
         return self.model.__name__
 
     def get_instance(self, key, user):
+        """
+        Get instance of the object, checking against user privileges.
+        
+        :param key: (int) ID of object
+        :param user: (object) user object
+        :return: (object, Exception)
+        """
         obj = self.model.get_by_id(key)
         if not obj:
             raise BadKeyError(key)
@@ -120,6 +154,16 @@ class APIResource(View):
 
     def call_method(self, method_name, user, http_method,
                     instance=None, is_index=False):
+        """
+        Call method if it exists and if it's properly called.
+        
+        :param method_name: (string) name of desired method
+        :param user: (object) caller
+        :param http_method: (string) get, post, put, or delete
+        :param instance: (string)
+        :param is_index: (bool) whether or not this is an index call
+        :return: result of called method
+        """
         if method_name not in self.methods:
             raise BadMethodError('Unimplemented method %s' % method_name)
         constraints = self.methods[method_name]
@@ -138,6 +182,17 @@ class APIResource(View):
         return method(user, data)
 
     def dispatch_request(self, path, *args, **kwargs):
+        """
+        "Does the request dispatching. Matches the URL and returns
+        the return value of the view or error handler. This does
+        not have to be a response object."
+        - http://flask.pocoo.org/docs/0.10/api/
+        
+        :param path: (string) full URL
+        :param args: (list)
+        :param kwargs: (dictionary)
+        :return: result of an attempt to call method
+        """
         http_method = request.method.upper()
         user = session['user']
 
@@ -173,7 +228,12 @@ class APIResource(View):
 
     def get(self, obj, user, data):
         """
-        The GET HTTP method
+        GET HTTP method
+        
+        :param obj: (object) target
+        :param user: -- unused --
+        :param data: -- unused --
+        :return: target object
         """
         return obj
 
@@ -202,7 +262,12 @@ class APIResource(View):
 
     def post(self, user, data):
         """
-        The POST HTTP method
+        PUT HTTP method
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: -- unused --
+        :return: target
         """
         entity = self.new_entity(data)
 
@@ -219,14 +284,21 @@ class APIResource(View):
     def new_entity(self, attributes):
         """
         Creates a new entity with given attributes.
-        Returns (entity, error_response) should be ignored if error_response
-        is a True value.
+
+        :param attributes: (dictionary)
+        :return: (entity, error_response) should be ignored if error_response
+        is a True value
         """
         return self.model.from_dict(attributes)
 
     def delete(self, obj, user, data):
         """
-        The DELETE HTTP method
+        DELETE HTTP method
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: -- unused --
+        :return: None
         """
         need = Need('delete')
         if not self.model.can(user, need, obj=obj):
@@ -237,7 +309,11 @@ class APIResource(View):
     def parse_args(self, web_args, user, is_index=False):
         """
         Parses the arguments to this API call.
-        |index| is whether or not this is an index call.
+        
+        :param web_args: (string) arguments passed as querystring
+        :param user: (object) caller
+        :param is_index: (bool) whether or not this is an index call
+        :return: (dictionary) mapping keys to values in web arguments
         """
         fields = parser.parse({
             'fields': Arg(None, use=parse_json_field)
@@ -255,6 +331,10 @@ class APIResource(View):
         Index HTTP method. Should be called from GET when no key is provided.
 
         Processes cursor and num_page URL arguments for pagination support.
+        
+        :param user: (object) caller
+        :param data: (dictionary)
+        :return: results for query
         """
         query = self.model.query()
         need = Need('index')
@@ -280,6 +360,11 @@ class APIResource(View):
         return query_results
 
     def statistics(self):
+        """
+        Provide statistics for any entity.
+        
+        :return: (dictionary) empty or a 'total' count
+        """
         stat = stats.KindStat.query(
             stats.KindStat.kind_name == self.model.__name__).get()
         if stat:
@@ -290,10 +375,8 @@ class APIResource(View):
 
 
 class UserAPI(APIResource):
-    """The API resource for the User Object
-
-    model- the class in models.py that this API is for.
-    key_type- The type of the id of this model.
+    """
+    The API resource for the User Object
     """
     model = models.User
     key_type = int
@@ -360,6 +443,11 @@ class UserAPI(APIResource):
     def get(self, obj, user, data):
         """
         Overwrite GET request for user class in order to send more data.
+        
+        :param obj: (object) target
+        :param user: -- unused --
+        :param data: -- unused --
+        :return: target object
         """
         #TODO(soumya): Actually overwrite this- needed to get down to 1 request.
         return obj
@@ -367,6 +455,9 @@ class UserAPI(APIResource):
     def new_entity(self, attributes):
         """
         Creates a new entity with given attributes.
+        
+        :param attributes: (dictionary) default values loaded on object instantiation
+        :return: entity with loaded attributes
         """
         entity = self.model.lookup(attributes['email'])
         if entity:
@@ -376,7 +467,12 @@ class UserAPI(APIResource):
 
     def add_email(self, obj, user, data):
         """
-        Adds an email for the user (represented by obj).
+        Adds an email for the user - modified in place.
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: -- unused --
+        :return: None
         """
         need = Need('get') # Anyone who can get the User object can add an email
         if not obj.can(user, need, obj):
@@ -385,7 +481,12 @@ class UserAPI(APIResource):
 
     def delete_email(self, obj, user, data):
         """
-        Deletes an email for the user (represented by obj).
+        Deletes an email for the user - modified in place.
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) key "email" deleted
+        :return: None
         """
         need = Need('get')
         if not obj.can(user, need, obj):
@@ -393,17 +494,40 @@ class UserAPI(APIResource):
         obj.delete_email(data['email'])
 
     def invitations(self, obj, user, data):
+        """
+        Fetches list of all invitations for the caller.
+        
+        :param obj: -- unused --
+        :param user: (object) caller
+        :param data: (dictionary) key assignment called
+        :return: None
+        """
         query = models.Group.query(models.Group.invited_members == user.key)
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
         return list(query)
 
     def queues(self, obj, user, data):
+        """
+        Retrieve all assignments given to the caller on staff
+        
+        :param obj: -- unused --
+        :param user: (object) caller
+        :param data: -- unused --
+        :return: None
+        """
         return list(models.Queue.query().filter(
             models.Queue.assigned_staff == user.key))
 
     def create_staff(self, obj, user, data):
-        # Must be a staff to create a staff user
+        """
+        Checks the caller is on staff, to then create staff.
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) key email called
+        :return: None
+        """
         need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
@@ -413,13 +537,31 @@ class UserAPI(APIResource):
         user.put()
 
     def final_submission(self, obj, user, data):
+        """
+        Get the final submission for grading.
+        
+        :param obj: -- unused --
+        :param user: (object) caller
+        :param data: (dictionary) key assignment called
+        :return: None
+        """
         return obj.get_final_submission(data['assignment'])
 
     def get_backups(self, obj, user, data):
+        """
+        Get all backups for a user, based on group.
+
+        :param obj: -- unused --
+        :param user: (object) caller
+        :param data: (dictionary) key assignment called
+        :return: None
+        """
         return obj.get_backups(data['assignment'])
 
 class AssignmentAPI(APIResource):
-    """The API resource for the Assignment Object"""
+    """
+    The API resource for the Assignment Object
+    """
     model = models.Assignment
 
     methods = {
@@ -462,6 +604,13 @@ class AssignmentAPI(APIResource):
     }
 
     def post(self, user, data):
+        """
+        
+        
+        :param user: 
+        :param data: 
+        :return:
+        """
         data['creator'] = user.key
         # check if there is a duplicate assignment
         assignments = list(
@@ -479,15 +628,31 @@ class AssignmentAPI(APIResource):
 
 
 class SubmitNDBImplementation(object):
-    """Implementation of DB calls required by submission using Google NDB"""
+    """
+    Implementation of DB calls required by submission using Google NDB
+    """
 
     def lookup_assignments_by_name(self, name):
-        """Look up all assignments of a given name."""
+        """
+        Look up all assignments of a given name.
+        
+        :param name: (string) name to search for
+        :return: (list) assignments
+        """
         by_name = models.Assignment.name == name
         return list(models.Assignment.query().filter(by_name))
 
     def create_submission(self, user, assignment, messages, submit, submitter):
-        """Create submission using user as parent to ensure ordering."""
+        """
+        Create submission using user as parent to ensure ordering.
+        
+        :param user: (object) caller
+        :param assignment: (Assignment) 
+        :param messages: 
+        :param submit: 
+        :param submitter: (object) caller
+        :return: (Backup) submission
+        """
 
         if not user.is_admin:
             submitter = user.key
@@ -516,7 +681,9 @@ class SubmitNDBImplementation(object):
 
 
 class SubmissionAPI(APIResource):
-    """The API resource for the Submission Object"""
+    """
+    The API resource for the Submission Object
+    """
     model = models.Backup
     diff_model = models.Diff
 
@@ -586,12 +753,22 @@ class SubmissionAPI(APIResource):
 
     def graded(self, obj, user, data):
         """
-        Gets the users graded submissions
+        Gets the user's graded submissions
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: 
         """
 
     def download(self, obj, user, data):
         """
-        Allows you to download a submission.
+        Download submission, but check if it has content and encode all files.
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: file contents in utf-8
         """
         messages = obj.get_messages()
         if 'file_contents' not in messages:
@@ -617,6 +794,11 @@ class SubmissionAPI(APIResource):
     def diff(self, obj, user, data):
         """
         Gets the associated diff for a submission
+        
+        :param obj: (object) target
+        :param user: -- unused --
+        :param data: -- unused --
+        :return: (Diff) object with differences
         """
         messages = obj.get_messages()
         if 'file_contents' not in obj.get_messages():
@@ -666,6 +848,11 @@ class SubmissionAPI(APIResource):
     def add_comment(self, obj, user, data):
         """
         Adds a comment to this diff.
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: result of putting comment
         """
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if not diff_obj:
@@ -689,6 +876,11 @@ class SubmissionAPI(APIResource):
     def delete_comment(self, obj, user, data):
         """
         Deletes a comment on this diff.
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: result of deleting comment
         """
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if not diff_obj:
@@ -707,6 +899,11 @@ class SubmissionAPI(APIResource):
         """
         Removes a tag from the submission.
         Validates existence.
+        
+        :param obj: (object) target
+        :param user: -- unused --
+        :param data: (dictionary) data
+        :return: result of adding tag
         """
         tag = data['tag']
         if tag in obj.tags:
@@ -730,15 +927,28 @@ class SubmissionAPI(APIResource):
         """
         Adds a tag to this submission.
         Validates uniqueness.
+        
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: result of removing tag
         """
         tag = data['tag']
         if tag not in obj.tags:
-            raise BadValueError('Tag does not exists')
+            raise BadValueError('Tag does not exist.')
 
         obj.tags.remove(tag)
         obj.put()
 
     def score(self, obj, user, data):
+        """
+        Sets composition score
+        
+         :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
+        """
         score = models.Score(
             score=data['score'],
             message=data['message'],
@@ -753,7 +963,12 @@ class SubmissionAPI(APIResource):
         return score
 
     def get_assignment(self, name):
-        """Look up an assignment by name or raise a validation error."""
+        """
+        Look up an assignment by name
+        
+        :param name: (string) name of assignment 
+        :return: (object, Error) the assignment object or raise a validation error
+        """
         assignments = self.db.lookup_assignments_by_name(name)
         if not assignments:
             raise BadValueError('Assignment \'%s\' not found' % name)
@@ -762,7 +977,9 @@ class SubmissionAPI(APIResource):
         return assignments[0]
 
     def submit(self, user, assignment, messages, submit, submitter=None):
-        """Process submission messages for an assignment from a user."""
+        """
+        Process submission messages for an assignment from a user.
+        """
         valid_assignment = self.get_assignment(assignment)
 
         if submitter is None:
@@ -1085,8 +1302,9 @@ class GroupAPI(APIResource):
 
 
 class QueueAPI(APIResource):
-
-    """The API resource for the Assignment Object"""
+    """
+    The API resource for the Assignment Object
+    """
     model = models.Queue
 
     methods = {
@@ -1114,13 +1332,21 @@ class QueueAPI(APIResource):
     }
 
     def new_entity(self, attributes):
+        """
+        Request to define a new entity
+
+        :param attributes: entity attributes, to be loaded on entity instantiation
+        :return: entity
+        """
         ent = super(QueueAPI, self).new_entity(attributes)
         for user in ent.assigned_staff:
             models.User.get_or_insert(user.id())
         return ent
 
 class FinalSubmissionAPI(APIResource):
-    """The API resource for the Assignment Object"""
+    """
+    The API resource for the Assignment Object
+    """
     model = models.FinalSubmission
 
     methods = {
