@@ -354,6 +354,12 @@ class UserAPI(APIResource):
         }
     }
 
+    def get_instance(self, email, user):
+        """
+        Override get_instance from the API in order to convert emails to our User model.
+        """
+        return self.model.lookup(email)
+
     def get(self, obj, user, data):
         """
         Overwrite GET request for user class in order to send more data.
