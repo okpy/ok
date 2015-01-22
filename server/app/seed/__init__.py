@@ -74,7 +74,7 @@ def seed():
 
     def make_invited_group(assign, members):
         return models.Group(
-            members=[members[0].key],
+            member=[members[0].key],
             invited=[members[1].key],
             assignment=assign.key
         )
