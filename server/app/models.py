@@ -1,8 +1,8 @@
+"""Data Models."""
+
 #pylint: disable=no-member
 #pylint: disable=unused-argument
 #pylint: disable=too-many-return-statements
-
-"""Data """
 
 import datetime
 
@@ -136,14 +136,14 @@ class User(Base):
             self.email.append(email)
 
     def delete_email(self, email):
-        if email not in self.email:
+        if email in self.email and len(self.email) > 1:
             self.email.remove(email)
 
     def get_final_submission(self, assignment):
         query = Group.query(Group.members == self.key)
-        group = query.filter(Group.assignment == assignment) 
+        group = query.filter(Group.assignment == assignment)
         return FinalSubmission.query(FinalSubmission.group == group)
-    
+
     def get_backups(self, assignment):
         query = Group.query(Group.members == self.key)
         group = query.filter(Group.assignment == assignment)
@@ -218,6 +218,10 @@ class User(Base):
         else:
             return False
 
+    def _pre_put_hook(self):
+        """Ensure that a user can be accessed by at least one email."""
+        if not self.email:
+            raise BadValueError("No email associated with " + str(self))
 
 class Course(Base):
     """Courses are expected to have a unique offering."""
@@ -281,7 +285,9 @@ class Assignment(Base):
         elif need.action == "index":
             return query
         elif need.action == "create":
-            return user.is_admin
+            return Participant.has_role(user, course, STAFF_ROLE)
+        elif need.action == "grade":
+            return Participant.has_role(user, course, STAFF_ROLE)
         else:
             return False
 
@@ -442,7 +448,7 @@ class Backup(Base):
                     if assigns:
                         filters.append(
                             Backup.assignment.IN([a.key for a in assigns]))
-            grp = backup.group
+            grp = backup and backup.group
             if grp and user.key in grp.member:
                 filters.append(ndb.AND(
                     Backup.submitter.IN(grp.member),
@@ -602,7 +608,7 @@ class Group(Base):
             assignment_key = assignment_key.key()
         return Group(members=[user_key], invited=[], assignment=assignment_key)
 
-    @ndb.transactional
+    #@ndb.transactional
     def invite(self, email):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
@@ -623,14 +629,14 @@ class Group(Base):
         self.invited.append(user.key)
         self.put()
 
+    #@ndb.transactional
     @classmethod
-    @ndb.transactional
     def invite_to_group(cls, user_key, email, assignment_key):
         """User invites email to join his/her group. Returns error or None."""
         group = cls._lookup_or_create(user_key, assignment_key)
         return group.invite(email)
 
-    @ndb.transactional
+    #@ndb.transactional
     def accept(self, user_key):
         """User accepts an invitation to join. Returns error or None."""
         if user_key not in self.invited:
@@ -641,14 +647,14 @@ class Group(Base):
         self.members.append(user_key)
         self.put()
 
-    @ndb.transactional
+    #@ndb.transactional
     def exit(self, user_key):
         """User leaves the group. Empty/singleton groups are deleted."""
         for users in [self.members, self.invited]:
             if user_key in users:
                 users.remove(user_key)
         if not self.validate():
-            self.delete()
+            self.key.delete()
 
     @classmethod
     def _can(cls, user, need, group, query):
@@ -657,8 +663,13 @@ class Group(Base):
             return False
 
         if action == "index":
+            if user.is_admin:
+                return query
             return query.filter(ndb.OR(Group.members == user.key,
                                        Group.invited == user.key))
+
+        if user.is_admin:
+            return True
         if not group:
             return False
         if action in ("get", "exit"):

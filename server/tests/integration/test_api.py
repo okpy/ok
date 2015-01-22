@@ -69,7 +69,13 @@ class APITest(object): #pylint: disable=no-init
             ),
             "dummy_student": models.User(
                 email=["dummy@student.com"],
-            )
+            ),
+            "dummy_student2": models.User(
+                email=["dummy2@student.com"],
+            ),
+            "dummy_student3": models.User(
+                email=["dummy3@student.com"],
+            ),
         }
 
     ## INDEX ##
@@ -257,14 +263,14 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
                                           self.response_json.get('key'))
 
 
-class SubmissionAPITest(APITest, APIBaseTestCase):
+class BackupAPITest(APITest, APIBaseTestCase):
     model = models.Backup
     name = 'submission'
     access_token = "submitter"
 
     num = 1
     def setUp(self):
-        super(SubmissionAPITest, self).setUp()
+        super(BackupAPITest, self).setUp()
         self.assignment_name = u'test assignment'
         self._course = make_fake_course(self.user)
         self._course.put()
@@ -278,7 +284,7 @@ class SubmissionAPITest(APITest, APIBaseTestCase):
         self.login('dummy_student')
 
     def get_basic_instance(self, mutate=True):
-        rval = models.Submission(
+        rval = models.Backup(
             submitter=self._submitter.key,
             assignment=self._assign.key)
         return rval
@@ -372,7 +378,11 @@ class GroupAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        return self.model(assignment=self.assignment.key)
+        return self.model(
+            assignment=self.assignment.key,
+            members=[
+                self.accounts['dummy_student2'].key,
+                self.accounts['dummy_student3'].key])
 
     def test_add_member(self):
         members = [self.accounts['dummy_student'].key]

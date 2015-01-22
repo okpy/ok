@@ -17,7 +17,7 @@ from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
-from app.utils import assign_work, parse_date, assign_submission
+from app.utils import add_to_grading_queues, parse_date, assign_submission
 
 from app.exceptions import *
 
@@ -460,7 +460,7 @@ class AssignmentAPI(APIResource):
                 'points': Arg(int)
             }
         },
-        'assign': {
+        'grade': {
             'methods': set(['POST'])
         }
     }
@@ -475,11 +475,11 @@ class AssignmentAPI(APIResource):
                 'assignment with name %s exists already' % data['name'])
         return super(AssignmentAPI, self).post(user, data)
 
-    def assign(self, obj, user, data):
-        need = Need('put')
+    def grade(self, obj, user, data):
+        need = Need('grade')
         if not obj.can(user, need, obj):
              raise need.exception()
-        deferred.defer(assign_work, obj.key)
+        deferred.defer(add_to_grading_queues, obj.key)
 
 
 class SubmitNDBImplementation(object):
@@ -773,7 +773,8 @@ class SubmissionAPI(APIResource):
             submitter = user.key
 
         due = valid_assignment.due_date
-        late_flag = datetime.datetime.now() >= valid_assignment.lock_date
+        late_flag = valid_assignment.lock_date and \
+                datetime.datetime.now() >= valid_assignment.lock_date
 
         if submit and late_flag:
             # Late submission. Do Not allow them to submit
@@ -1075,7 +1076,7 @@ class GroupAPI(APIResource):
         need = Need('accept')
         if not group.can(user, need, group):
             raise need.exception()
-        
+
         group.accept(user)
 
     def decline(self, group, user, data):

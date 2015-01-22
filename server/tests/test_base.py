@@ -74,6 +74,8 @@ class APIBaseTestCase(BaseTestCase):
     def setUp(self):
         super(APIBaseTestCase, self).setUp()
         APIBaseTestCase.accounts = self.get_accounts()
+        for acc in APIBaseTestCase.accounts.values():
+            acc.put()
         self.user = None
         auth.authenticate = self.authenticate
 
