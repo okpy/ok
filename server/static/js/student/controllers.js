@@ -53,7 +53,11 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
       $scope.courseId = 5699868278390784;
 
       $scope.toggleAssign = function (assign) {
-        $scope.currAssign = assign;
+        if ($scope.currAssign == assign) {
+          $scope.currAssign = null
+        } else {
+          $scope.currAssign = assign;
+        }
       }
 
       $scope.reloadAssignments = function () {
