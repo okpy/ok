@@ -402,7 +402,7 @@ class UserAPI(APIResource):
         },
         'get': {
             'web_args': {
-                'course': KeyArg(Course)
+                'course': KeyArg('Course')
              }
         },
         'index': {
