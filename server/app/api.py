@@ -32,7 +32,7 @@ parser = FlaskParser()
 def parse_json_field(field):
     """
     Parses field or returns appropriate boolean value.
-    
+
     :param field: (string)
     :return: (string) parsed JSON
     """
@@ -49,7 +49,7 @@ def parse_json_field(field):
 def DateTimeArg(**kwds):
     """
     Converts a webarg to a datetime object
-    
+
     :param kwds: (dictionary) set of parameters
     :return: (Arg) type of argument 
     """
@@ -65,11 +65,12 @@ def DateTimeArg(**kwds):
         return (op, date) if op else date
     return Arg(None, use=parse_date, **kwds)
 
+MODEL_VERSION = 'v2'
 
 def KeyArg(cls, **kwds):
     """
     Converts a webarg to a key in Google's ndb.
-    
+
     :param cls: (string) class
     :param kwds: (dictionary) -- unused --
     :return: (Arg) type of argument
@@ -79,14 +80,14 @@ def KeyArg(cls, **kwds):
             key = int(key)
         except (ValueError, TypeError):
             pass
-        return {'pairs': [(cls, key)]}
+        return {'pairs': [(cls + MODEL_VERSION, key)]}
     return Arg(ndb.Key, use=parse_key, **kwds)
 
 
 def KeyRepeatedArg(cls, **kwds):
     """
     Converts a repeated argument to a list
-    
+
     :param cls: (string)
     :param kwds: (dictionary) -- unused --
     :return: (Arg) type of argument
@@ -98,14 +99,14 @@ def KeyRepeatedArg(cls, **kwds):
                 staff_lst = key_list.split(',')
             else:
                 staff_lst = [key_list]
-        return [ndb.Key(cls, x) for x in staff_lst]
+        return [ndb.Key(cls + MODEL_VERSION, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
 
 
 def BooleanArg(**kwargs):
     """
     Converts a webarg to a boolean.
-    
+
     :param kwargs: (dictionary) -- unused --
     :return: (Arg) type of argument
     """
@@ -138,7 +139,7 @@ class APIResource(View):
     def get_instance(self, key, user):
         """
         Get instance of the object, checking against user privileges.
-        
+
         :param key: (int) ID of object
         :param user: (object) user object
         :return: (object, Exception)
@@ -156,7 +157,7 @@ class APIResource(View):
                     instance=None, is_index=False):
         """
         Call method if it exists and if it's properly called.
-        
+
         :param method_name: (string) name of desired method
         :param user: (object) caller
         :param http_method: (string) get, post, put, or delete
@@ -187,7 +188,7 @@ class APIResource(View):
         the return value of the view or error handler. This does
         not have to be a response object."
         - http://flask.pocoo.org/docs/0.10/api/
-        
+
         :param path: (string) full URL
         :param args: (list)
         :param kwargs: (dictionary)
@@ -229,7 +230,7 @@ class APIResource(View):
     def get(self, obj, user, data):
         """
         GET HTTP method
-        
+
         :param obj: (object) target
         :param user: -- unused --
         :param data: -- unused --
@@ -263,7 +264,7 @@ class APIResource(View):
     def post(self, user, data):
         """
         PUT HTTP method
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: -- unused --
@@ -294,7 +295,7 @@ class APIResource(View):
     def delete(self, obj, user, data):
         """
         DELETE HTTP method
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: -- unused --
@@ -309,7 +310,7 @@ class APIResource(View):
     def parse_args(self, web_args, user, is_index=False):
         """
         Parses the arguments to this API call.
-        
+
         :param web_args: (string) arguments passed as querystring
         :param user: (object) caller
         :param is_index: (bool) whether or not this is an index call
@@ -331,7 +332,7 @@ class APIResource(View):
         Index HTTP method. Should be called from GET when no key is provided.
 
         Processes cursor and num_page URL arguments for pagination support.
-        
+
         :param user: (object) caller
         :param data: (dictionary)
         :return: results for query
@@ -362,7 +363,7 @@ class APIResource(View):
     def statistics(self):
         """
         Provide statistics for any entity.
-        
+
         :return: (dictionary) empty or a 'total' count
         """
         stat = stats.KindStat.query(
@@ -446,7 +447,7 @@ class UserAPI(APIResource):
     def get(self, obj, user, data):
         """
         Overwrite GET request for user class in order to send more data.
-        
+
         :param obj: (object) target
         :param user: -- unused --
         :param data: -- unused --
@@ -473,8 +474,9 @@ class UserAPI(APIResource):
     def new_entity(self, attributes):
         """
         Creates a new entity with given attributes.
-        
-        :param attributes: (dictionary) default values loaded on object instantiation
+
+        :param attributes: (dictionary) default values
+            loaded on object instantiation
         :return: entity with loaded attributes
         """
         entity = self.model.lookup(attributes['email'])
@@ -486,7 +488,7 @@ class UserAPI(APIResource):
     def add_email(self, obj, user, data):
         """
         Adds an email for the user - modified in place.
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: -- unused --
@@ -500,7 +502,7 @@ class UserAPI(APIResource):
     def delete_email(self, obj, user, data):
         """
         Deletes an email for the user - modified in place.
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) key "email" deleted
@@ -514,7 +516,7 @@ class UserAPI(APIResource):
     def invitations(self, obj, user, data):
         """
         Fetches list of all invitations for the caller.
-        
+
         :param obj: -- unused --
         :param user: (object) caller
         :param data: (dictionary) key assignment called
@@ -528,7 +530,7 @@ class UserAPI(APIResource):
     def queues(self, obj, user, data):
         """
         Retrieve all assignments given to the caller on staff
-        
+
         :param obj: -- unused --
         :param user: (object) caller
         :param data: -- unused --
@@ -540,7 +542,7 @@ class UserAPI(APIResource):
     def create_staff(self, obj, user, data):
         """
         Checks the caller is on staff, to then create staff.
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) key email called
@@ -557,7 +559,7 @@ class UserAPI(APIResource):
     def final_submission(self, obj, user, data):
         """
         Get the final submission for grading.
-        
+
         :param obj: -- unused --
         :param user: (object) caller
         :param data: (dictionary) key assignment called
@@ -626,10 +628,8 @@ class AssignmentAPI(APIResource):
 
     def post(self, user, data):
         """
-        
-        
-        :param user: 
-        :param data: 
+        :param user:
+        :param data:
         :return:
         """
         data['creator'] = user.key
@@ -656,7 +656,7 @@ class SubmitNDBImplementation(object):
     def lookup_assignments_by_name(self, name):
         """
         Look up all assignments of a given name.
-        
+
         :param name: (string) name to search for
         :return: (list) assignments
         """
@@ -666,11 +666,11 @@ class SubmitNDBImplementation(object):
     def create_submission(self, user, assignment, messages, submit, submitter):
         """
         Create submission using user as parent to ensure ordering.
-        
+
         :param user: (object) caller
-        :param assignment: (Assignment) 
-        :param messages: 
-        :param submit: 
+        :param assignment: (Assignment)
+        :param messages:
+        :param submit:
         :param submitter: (object) caller
         :return: (Backup) submission
         """
@@ -775,17 +775,17 @@ class SubmissionAPI(APIResource):
     def graded(self, obj, user, data):
         """
         Gets the user's graded submissions
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) data
-        :return: 
+        :return:
         """
 
     def download(self, obj, user, data):
         """
         Download submission, but check if it has content and encode all files.
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) data
@@ -815,7 +815,7 @@ class SubmissionAPI(APIResource):
     def diff(self, obj, user, data):
         """
         Gets the associated diff for a submission
-        
+
         :param obj: (object) target
         :param user: -- unused --
         :param data: -- unused --
@@ -869,7 +869,7 @@ class SubmissionAPI(APIResource):
     def add_comment(self, obj, user, data):
         """
         Adds a comment to this diff.
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) data
@@ -897,7 +897,7 @@ class SubmissionAPI(APIResource):
     def delete_comment(self, obj, user, data):
         """
         Deletes a comment on this diff.
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) data
@@ -920,7 +920,7 @@ class SubmissionAPI(APIResource):
         """
         Removes a tag from the submission.
         Validates existence.
-        
+
         :param obj: (object) target
         :param user: -- unused --
         :param data: (dictionary) data
@@ -934,8 +934,8 @@ class SubmissionAPI(APIResource):
         if tag == submit_tag:
             previous = models.Submission.query().filter(
                 models.Submission.assignment == obj.assignment).filter(
-                models.Submission.submitter == obj.submitter).filter(
-                models.Submission.tags == submit_tag)
+                    models.Submission.submitter == obj.submitter).filter(
+                        models.Submission.tags == submit_tag)
 
             previous = previous.get(keys_only=True)
             if previous:
@@ -948,7 +948,7 @@ class SubmissionAPI(APIResource):
         """
         Adds a tag to this submission.
         Validates uniqueness.
-        
+
         :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) data
@@ -964,7 +964,7 @@ class SubmissionAPI(APIResource):
     def score(self, obj, user, data):
         """
         Sets composition score
-        
+
          :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) data
@@ -986,9 +986,10 @@ class SubmissionAPI(APIResource):
     def get_assignment(self, name):
         """
         Look up an assignment by name
-        
-        :param name: (string) name of assignment 
-        :return: (object, Error) the assignment object or raise a validation error
+
+        :param name: (string) name of assignment
+        :return: (object, Error) the assignment object or
+            raise a validation error
         """
         assignments = self.db.lookup_assignments_by_name(name)
         if not assignments:

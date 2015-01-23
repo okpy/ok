@@ -55,6 +55,10 @@ class Base(ndb.Model):
         inst.populate(**values)
         return inst
 
+    @classmethod
+    def _get_kind(cls):
+        return cls.__name__ + 'v2'
+
     def to_json(self, fields=None):
         """Converts this model to a json dictionary."""
         if fields == True:
@@ -532,7 +536,7 @@ class Score(Base):
     """The score for a submission, either from a grader or autograder."""
     score = ndb.IntegerProperty()
     message = ndb.StringProperty() # Plain text
-    grader = ndb.KeyProperty('User')
+    grader = ndb.KeyProperty(User)
     autograder = ndb.StringProperty()
 
 
@@ -584,8 +588,8 @@ class Diff(Base):
 
 class Comment(Base):
     """A comment is part of a diff. The key has the diff as its parent."""
-    author = ndb.KeyProperty('User')
-    diff = ndb.KeyProperty('Diff')
+    author = ndb.KeyProperty(User)
+    diff = ndb.KeyProperty(Diff)
     filename = ndb.StringProperty()
     line = ndb.IntegerProperty()
     # TODO Populate submission_line so that when diffs are changed, comments
@@ -641,7 +645,7 @@ class Version(Base):
         """Creates an instance from the given values."""
         if 'name' not in values:
             raise ValueError("Need to specify a name")
-        inst = cls(key=ndb.Key('Version', values['name']))
+        inst = cls(key=ndb.Key(cls._get_kind(), values['name']))
         inst.populate(**values) #pylint: disable=star-args
         return inst
 
@@ -661,9 +665,9 @@ class Group(Base):
 
     Members of a group can view each other's submissions.
     """
-    member = ndb.KeyProperty(kind='User', repeated=True)
-    invited = ndb.KeyProperty(kind='User', repeated=True)
-    assignment = ndb.KeyProperty('Assignment', required=True)
+    member = ndb.KeyProperty(User, repeated=True)
+    invited = ndb.KeyProperty(User, repeated=True)
+    assignment = ndb.KeyProperty(Assignment, required=True)
 
     @classmethod
     def lookup(cls, user_key, assignment_key):
@@ -796,8 +800,8 @@ class AuditLog(Base):
     cases of cheating by temporary access. (e.g. A is C's partner for 10 min
     so A can copy off of C)."""
     event_type = ndb.StringProperty()
-    user = ndb.KeyProperty('User')
-    assignment = ndb.KeyProperty('Assignment')
+    user = ndb.KeyProperty(User)
+    assignment = ndb.KeyProperty(Assignment)
     description = ndb.StringProperty()
     obj = ndb.KeyProperty()
 
