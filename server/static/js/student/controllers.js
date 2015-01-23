@@ -50,7 +50,7 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 // Eeek.
 app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Group', '$timeout',
   function($scope, Assignment, User, Group, $timeout) {
-      $scope.courseId = 5699868278390784;
+      $scope.courseId = 5165212546105344;
 
       $scope.toggleAssign = function (assign) {
         if ($scope.currAssign == assign) {
@@ -62,7 +62,7 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
 
       $scope.reloadAssignments = function () {
           User.get({
-            course: 5699868278390784,
+            course: $scope.courseId,
           }, function (response) {
             console.log(response.assignments)
             $scope.assignments = response.assignments
