@@ -99,7 +99,7 @@ def seed():
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
-            created=random_date())
+            client_time=random_date())
 
         backup.put()
 
@@ -126,7 +126,7 @@ def seed():
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
-            created=random_date())
+            client_time=random_date())
 
         backup.put()
 

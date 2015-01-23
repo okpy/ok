@@ -43,7 +43,7 @@
           <div class="col right">
             <div ng-if="assign.final">
               <h3 class="assign-subtitle"  >Latest Submission</h3>
-              <a ui-sref='submission.detail({submissionId:assign.final.submission.backup.id})' class="link view-submission"><p> {{ assign.final.created | amCalendar }} &raquo;</p></a> <br>
+              <a ui-sref='submission.detail({submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
 
               <a ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
             </div>

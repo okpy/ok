@@ -149,7 +149,7 @@ class User(Base):
             return FinalSubmission.query(FinalSubmission.group == group.key).get()
 
     def get_backups(self, assignment, num_backups=10):
-        group = self.get_group()
+        group = self.get_group(assignment)
         all_backups = []
         if not group:
             members = [self.key]
@@ -161,15 +161,15 @@ class User(Base):
                 Backup.submitter == member).filter( \
                     Backup.assignment == assignment))
 
-        all_backups.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5)))
+        all_backups.sort(lambda x, y: int(5*(int(x.created > y.created) - 0.5)))
 
         for backup in all_backups[:num_backups]:
-            backup.messages = None
+            backup.messages =()
 
         return all_backups[:num_backups]
 
     def get_submissions(self, assignment, num_submissions=10):
-        group = self.get_group()
+        group = self.get_group(assignment)
         all_subms = []
         if not group:
             members = [self.key]
@@ -180,7 +180,7 @@ class User(Base):
             all_subms += list(Submission.query(Submission.submitter == member).\
                     filter(Backup.assignment == assignment))
 
-        all_subms.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5)))
+        all_subms.sort(lambda x, y: int(5*(int(x.created > y.created) - 0.5)))
 
         for subm in all_subms[:num_submissions]:
             subm.messages = None
@@ -207,7 +207,7 @@ class User(Base):
                         assign_info['final']['final_submission'].submission.get()
                 assign_info['final']['backup'] = \
                         assign_info['final']['submission'].backup.get()
-            
+
             # Compute percentage here... feel free to delete if unnecessary
                 final = assign_info['final']['backup']
                 percent = None
@@ -218,7 +218,7 @@ class User(Base):
                 if percent:
                     percent = round(percent*100, 0)
                     assign_info['percent'] = percent
-            
+
             assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
             assign_info['submissions'] = len(self.get_submissions(assignment.key)) > 0
             assign_info['assignment'] = assignment
@@ -848,7 +848,7 @@ class FinalSubmission(Base):
 
     def _pre_put_hook(self):
         self.submitter = self.submission.get().backup.get().submitter
-        
+
         old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
         old_submissions = old.get()
 
@@ -857,7 +857,7 @@ class FinalSubmission(Base):
 
         for submission in old_submissions:
             if self.submitter == submission.submitter:
-                submission.delete() 
+                submission.delete()
                 return # Should only have 1 final submission per submitter
             for person in submission.group.member:
                 if self.submitter == person:
