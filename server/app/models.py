@@ -202,26 +202,27 @@ class User(Base):
             assign_info['final'] = {}
             assign_info['final']['final_submission'] = \
                     self.get_final_submission(assignment.key)
-            assign_info['final']['submission'] = \
-                    assign_info['final']['final_submission'].submission.get()
-            assign_info['final']['backup'] = \
-                    assign_info['final']['submission'].backup.get()
+            if assign_info['final']['final_submission']:
+                assign_info['final']['submission'] = \
+                        assign_info['final']['final_submission'].submission.get()
+                assign_info['final']['backup'] = \
+                        assign_info['final']['submission'].backup.get()
+            
+            # Compute percentage here... feel free to delete if unnecessary
+                final = assign_info['final']['backup']
+                percent = None
+                for message in final.messages:
+                    if message.kind == 'scoring' and 'total_score' in message.contents:
+                        percent = message.contents['total_score']/\
+                                assignment.total_points
+                if percent:
+                    percent = round(percent*100, 0)
+                    assign_info['percent'] = percent
             
             assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
             assign_info['submissions'] = len(self.get_submissions(assignment.key)) > 0
             assign_info['assignment'] = assignment
 
-            # Compute percentage here... feel free to delete if unnecessary
-            final = assign_info['final']['backup']
-            percent = None
-            for message in final.messages:
-                if message.kind == 'scoring' and 'total_score' in message.contents:
-                    percent = message.contents['total_score']/\
-                            assignment.total_points
-            if percent:
-                percent = round(percent*100, 0)
-                assign_info['percent'] = percent
-            
             info['assignments'].append(assign_info)
 
         return info
