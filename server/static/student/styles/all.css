@@ -899,7 +899,7 @@ body.course {
 		float:none;
 	}
 	.popup {
-		width:250px;
+		width:450px;
 		background:url('../images/bg-home.png') #333 center no-repeat;
 		background-size:cover;
 		padding:50px;
@@ -1000,25 +1000,30 @@ body.course {
 			color:#FFF;
 		}
 	.popup.submissions {
-		width:350px;
+		width:450px;
 	}
+		.popup .label {
+			display:none
+		}
 		.col-1 {
-			width:55%;
+			width:35%;
 		}
 		.col-2 {
-			width:15%;
+			width:50%;
 		}
 		.flag {
 			position:absolute;
-			left:10%;
+			left:5%;
 			top:0;
 			padding-top:15px;
 		}
 		.submissions .pop-item,.header {
-			padding-left:20%;
+			padding-left:12.5%;
 		}
 		.pop-item p {
 			font-weight:700;
+			overflow-x:scroll;
+			white-space:nowrap;
 		}
 			.pop-item .col-1 span {
 				float:right;

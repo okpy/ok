@@ -414,105 +414,43 @@ return access_token
 					<a href="#" class="action leave-group">Leave</a>
 				</div>
 			</div>
-			<div class="popup submissions hide">
-				<div class="close"><span class="icon-x">+</span></div>
+			<div class="popup submissions active">
+				<div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
 				<h2 class="popup-title">Submissions</h2>
-				<p class="popup-byline">for <b>Scheme Interpreter</b></p>
+				<p class="popup-byline">for <b class="ng-binding"></b></p>
 				<div class="pop-content">
 					<li class="header">
 						<span class="col-1"><p>Date</p></span>
 						<span class="col-2"><p>By</p></span>
 					</li>
-					<li class="pop-item" id="1">
-						<a href="#" class="flag active">
-							<span class="label left"><p>Flagged for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
-					<li class="pop-item" id="2">
-						<a href="#" class="flag">
-							<span class="label left"><p>Click to Flag for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
-					<li class="pop-item" id="3">
-						<a href="#" class="flag">
-							<span class="label left"><p>Click to Flag for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
-					<li class="pop-item" id="4">
-						<a href="#" class="flag">
-							<span class="label left"><p>Click to Flag for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
-					<li class="pop-item" id="5">
-						<a href="#" class="flag">
-							<span class="label left"><p>Click to Flag for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
-					<li class="pop-item" id="5">
-						<a href="#" class="flag">
-							<span class="label left"><p>Click to Flag for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
-					<li class="pop-item" id="5">
-						<a href="#" class="flag">
-							<span class="label left"><p>Click to Flag for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
-					<li class="pop-item" id="5">
-						<a href="#" class="flag">
-							<span class="label left"><p>Click to Flag for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
-					<li class="pop-item" id="5">
-						<a href="#" class="flag">
-							<span class="label left"><p>Click to Flag for Grading</p></span>
-							<span class="cloth"></span>
-							<span class="stem"></span>
-						</a>
-						<span class="col-1"><p>Jan. 16 <span>5:00 p.m.</span></p></span>
-						<span class="col-2"><p>Alvin</p></span>
-						<a href="#" class="light link view-submission">view &raquo;</a>
-					</li>
+					<!-- ngRepeat: subm in currAssign.submissions --><li class="pop-item ng-scope" id="1" ng-repeat="subm in currAssign.submissions">
+					<a class="flag" ng-class=" {active: currAssign.final &amp;&amp; subm.id == currAssign.final.backup.id }">
+						<span class="label left"><p>Flagged for Grading</p></span>
+						<span class="cloth"></span>
+						<span class="stem"></span>
+					</a>
+					<span class="col-1"><p class="ng-binding">Today at 2:56 AM</p></span>
+					<span class="col-2"><p class="ng-binding">partner0@teamwork.com</p></span>
+					<a ui-sref="submission.detail({submissionId:subm.id})" class="light link view-submission" href="#/submission/5418393301680128">view »</a>
+				</li><!-- end ngRepeat: subm in currAssign.submissions --><li class="pop-item ng-scope" id="1" ng-repeat="subm in currAssign.submissions">
+					<a class="flag" ng-class=" {active: currAssign.final &amp;&amp; subm.id == currAssign.final.backup.id }">
+						<span class="label left"><p>Flagged for Grading</p></span>
+						<span class="cloth"></span>
+						<span class="stem"></span>
+					</a>
+					<span class="col-1"><p class="ng-binding">Today at 2:56 AM</p></span>
+					<span class="col-2"><p class="ng-binding">partner1@teamwork.com</p></span>
+					<a ui-sref="submission.detail({submissionId:subm.id})" class="light link view-submission" href="#/submission/4714705859903488">view »</a>
+				</li><!-- end ngRepeat: subm in currAssign.submissions --><li class="pop-item ng-scope" id="1" ng-repeat="subm in currAssign.submissions">
+					<a class="flag active" ng-class=" {active: currAssign.final &amp;&amp; subm.id == currAssign.final.backup.id }">
+						<span class="label left"><p>Flagged for Grading</p></span>
+						<span class="cloth"></span>
+						<span class="stem"></span>
+					</a>
+					<span class="col-1"><p class="ng-binding">Today at 2:56 AM</p></span>
+					<span class="col-2"><p class="ng-binding">partner1@teamwork.com</p></span>
+					<a ui-sref="submission.detail({submissionId:subm.id})" class="light link view-submission" href="#/submission/5383208929591296">view »</a>
+				</li><!-- end ngRepeat: subm in currAssign.submissions -->
 				</div>
 			</div>
 			<div class="popup backups hide">
