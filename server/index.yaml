@@ -10,6 +10,19 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+- kind: Backup
+  properties:
+  - name: messages.kind
+  - name: submitter
+  - name: created
+    direction: desc
+
+- kind: Backup
+  properties:
+  - name: submitter
+  - name: created
+    direction: desc
+
 - kind: Comment
   ancestor: yes
   properties:

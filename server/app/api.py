@@ -576,6 +576,9 @@ class UserAPI(APIResource):
         """
         return obj.get_backups(data['assignment'])
 
+    def get_submissions(self, obj, user, data):
+        return obj.get_backups(data['assignment'])
+
 class AssignmentAPI(APIResource):
     """
     The API resource for the Assignment Object
