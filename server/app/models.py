@@ -846,11 +846,15 @@ class FinalSubmission(Base):
     # TODO Add hook to update final submissions on submission or group change.
 
     def _pre_put_hook(self):
-        self.submitter = self.submission.backup.submitter
+        self.submitter = self.submission.get().backup.get().submitter
         
         old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
+        old_submissions = old.get()
 
-        for submission in old.get():
+        if not old_submissions:
+            return
+
+        for submission in old_submissions:
             if self.submitter == submission.submitter:
                 submission.delete() 
                 return # Should only have 1 final submission per submitter

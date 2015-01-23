@@ -17,7 +17,7 @@ from app.codereview import compare
 from app.constants import API_PREFIX
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
-from app.utils import assign_work, parse_date, assign_submission
+from app.utils import add_to_grading_queues, parse_date, assign_submission
 
 from app.exceptions import *
 
@@ -379,7 +379,7 @@ class UserAPI(APIResource):
     The API resource for the User Object
     """
     model = models.User
-    key_type = int
+    key_type = str # get_instance will convert this to an int
 
     methods = {
         'post': {
@@ -449,7 +449,22 @@ class UserAPI(APIResource):
         :param data: -- unused --
         :return: target object
         """
-        #TODO(soumya): Actually overwrite this- needed to get down to 1 request.
+        if 'course' in data:
+            return obj.get_course_info(data['course'].get())
+        return obj
+
+    def get_instance(self, key, user):
+        """
+        Convert key from email to UserKey
+        """
+        obj = self.model.lookup(key)
+        if not obj:
+            raise BadKeyError(key)
+
+        need = Need('get')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
         return obj
 
     def new_entity(self, attributes):
@@ -624,7 +639,7 @@ class AssignmentAPI(APIResource):
         need = Need('put')
         if not obj.can(user, need, obj):
             raise need.exception()
-        deferred.defer(assign_work, obj.key)
+        deferred.defer(add_to_grading_queues, obj.key)
 
 
 class SubmitNDBImplementation(object):
