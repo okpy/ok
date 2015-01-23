@@ -31,7 +31,7 @@ def authenticate():
         try:
             email = authenticator.authenticate(access_token)
         except AuthenticationException:
-            return models.AnonymousUser()
+            return models.User.get_or_insert('_anon')
         user = models.User.get_or_insert(email)
         mc.set("%s-%s" % (MC_NAMESPACE, access_token), user)
     return user
