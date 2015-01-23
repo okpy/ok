@@ -249,7 +249,7 @@ class User(Base):
     @classmethod
     def lookup(cls, email):
         """Retrieve a user by email or return None."""
-        assert isinstance(email, str), "Invalid email: " + str(email)
+        assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
         return cls.query(cls.email == email).get()
 
     @classmethod
