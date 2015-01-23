@@ -360,6 +360,7 @@ body.course {
 		z-index:1000;
 		padding:25px 50px;
 		box-sizing:border-box;
+    list-style-type: none;
 	}
 	header h1 {
 		margin-left:5px;
