@@ -350,7 +350,7 @@ class VersionAPITest(APITest, APIBaseTestCase):
         if mutate:
             name += str(self.num)
             self.num += 1
-        return self.model(key=ndb.Key('Version', name),
+        return self.model(key=ndb.Key(self.model._get_kind(), name),
             name=name, versions=['1.0.0', '1.1.0'], base_url="https://www.baseurl.com")
 
 
