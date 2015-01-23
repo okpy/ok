@@ -189,8 +189,11 @@ class User(Base):
 
     def get_group(self, assignment):
         query = Group.query(Group.member == self.key)
-        group = query.filter(Group.assignment == assignment)
-        return group.get()
+        group = query.filter(Group.assignment == assignment).get()
+        if not group: # Might be invited to a group
+            query = Group.query(Group.invited == self.key)
+            group = query.filter(Group.assignment == assignment).get()
+        return group
 
     def get_course_info(self, course):
         info = {'user': self}
