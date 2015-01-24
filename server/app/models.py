@@ -216,9 +216,9 @@ class User(Base):
                     self.get_final_submission(assignment.key)
             if assign_info['final']['final_submission']:
                 assign_info['final']['submission'] = \
-                        assign_info['final']['final_submission'].submission.fetch()
+                        assign_info['final']['final_submission'].submission.get()
                 assign_info['final']['backup'] = \
-                        assign_info['final']['submission'].backup.fetch()
+                        assign_info['final']['submission'].backup.get()
 
             # Compute percentage here... feel free to delete if unnecessary
                 final = assign_info['final']['backup']
