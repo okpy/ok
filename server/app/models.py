@@ -383,7 +383,7 @@ class Participant(Base):
         if isinstance(course_key, Course):
             course_key = course_key.key
 
-        query = cls.query(cls.user == user.key,
+        query = cls.query(cls.user == user_key,
                           cls.course == course_key,
                           cls.role == role)
         current = query.get()

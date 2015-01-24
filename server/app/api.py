@@ -1038,8 +1038,7 @@ class SubmissionAPI(APIResource):
                 'late': True,
                 })
 
-        if not models.Participant.has_role(user, assignment.course, STUDENT_ROLE):
-            models.Participant.add_role(user, assignment.course STUDENT_ROLE)
+        models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)
 
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
