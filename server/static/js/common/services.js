@@ -126,6 +126,7 @@ app.factory('Assignment', ['$resource',
         },
         invite: {
           method: "POST",
+          isArray: false,
           url: 'api/v1/assignment/:id/invite',
           transformResponse: function(data) {
             return JSON.parse(data).data;

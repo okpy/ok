@@ -51,6 +51,7 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Group', '$timeout',
   function($scope, Assignment, User, Group, $timeout) {
       $scope.courseId = 5165212546105344;
+      $scope.courseIdL = 5699868278390784;
 
       $scope.toggleAssign = function (assign) {
         if ($scope.currAssign == assign) {
@@ -66,6 +67,15 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
           }, function (response) {
             console.log(response.assignments)
             $scope.assignments = response.assignments
+          })
+      }
+
+      $scope.reloadAssignGroup = function (assignId) {
+          Assignment.group({
+            id: assignId,
+          }, function (response) {
+            console.log(response.assignments)
+            $scope.currAssign.group = response.data
           })
       }
 
@@ -100,16 +110,28 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
             });
       }
 
-        $scope.addMember = function(assignmentId, member) {
-          if (member != '') {
-            Assignment.invite({
-              id: assignmentId,
-              email: member
-            }, function (response) {
-              // TODO  Check for error.
-              console.log(response)
-            });
-          }
+      $scope.addMember = function(assignmentId, member) {
+        if (member && member != '') {
+          console.log("POSTING ")
+          Assignment.invite({
+            id: assignmentId,
+            email: member
+          }, function (response) {
+            // TODO  Check for error.
+            console.log("Got a response")
+            if (response.data != null) {
+              $scope.errorMessage = response.message
+              $window.swal("Oops...", "Something went wrong! "+response.message, "error");
+            } else {
+              $window.swal({
+                  title: "Invitation Sent!",
+                  text: "They will need to login to okpy.org and accept the invite.",
+                  timer: 1500,
+                  type: "success"
+                })
+            }
+          });
+        }
         };
 
         $scope.showGroup = function showGroup(group) {

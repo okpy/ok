@@ -51,7 +51,7 @@ def DateTimeArg(**kwds):
     Converts a webarg to a datetime object
 
     :param kwds: (dictionary) set of parameters
-    :return: (Arg) type of argument 
+    :return: (Arg) type of argument
     """
     def parse_date(arg):
         op = None
@@ -621,6 +621,15 @@ class AssignmentAPI(APIResource):
                 'points': Arg(int)
             }
         },
+        'invite': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
+        'group': {
+          'methods': set(['GET']),
+        },
         'assign': {
             'methods': set(['POST'])
         }
@@ -646,6 +655,16 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
         deferred.defer(add_to_grading_queues, obj.key)
+
+    def group(self, obj, user, data):
+        """User's current group for assignment."""
+        return models.Group.lookup(user, obj)
+
+    def invite(self, obj, user, data):
+        """User ask invited to join his/her current group for assignment."""
+        err = models.Group.invite_to_group(user.key, data['email'], obj.key)
+        if err:
+            raise BadValueError(err)
 
 
 class SubmitNDBImplementation(object):
@@ -1242,11 +1261,6 @@ class GroupAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment'),
                 'members': KeyArg('User')
-            }
-        },
-        'invite': {
-            'web_args': {
-                'member': Arg(str, required=True)
             }
         },
         'add_member': {

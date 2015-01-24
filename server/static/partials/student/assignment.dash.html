@@ -36,8 +36,11 @@
           </div>
           <div ng-if="!assign.group">
             <h3 class="assign-subtitle">Invite to Group</h3>
-            <input type="email" class="invite" placeholder="ok@cs61a.org" ng-model="assign.invitee">
-            <a ng-click="" class="button">Submit</a>
+          <form name="inviteGroup">
+
+            <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
+            <a ng-click="addMember(assign.assignment.id, assign.invitee)" class="button">Submit</a>
+          </form>
           </div>
         </div>
 
