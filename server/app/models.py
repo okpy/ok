@@ -720,7 +720,6 @@ class Group(Base):
         self.invited.append(user.key)
         self.put()
 
-
     #@ndb.transactional
     @classmethod
     def invite_to_group(cls, user_key, email, assignment_key):
@@ -756,7 +755,9 @@ class Group(Base):
         for users in [self.member, self.invited]:
             if user_key in users:
                 users.remove(user_key)
-        if not self.validate():
+
+        error = self.validate()
+        if error:
             self.key.delete()
         else:
             self.put()
