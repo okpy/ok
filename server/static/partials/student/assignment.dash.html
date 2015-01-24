@@ -35,14 +35,14 @@
             </ul>
             <ul class="plainList" ng-if="assign.group.invited.length > 0">
               <h3 class="assign-subtitle">Invited:</h3>
-
               <li ng-repeat="invited in assign.group.invited">
-                <span class="stripes dark">
-                  <span class="stripe"></span>
-                  <span class="stripe"></span>
-                  <span class="stripe"></span>
-                </span>
                 {{invited.email[0]}}
+              <br>
+
+              <a class="link" ng-click="acceptInvite(assign.group)"> (Accept) </a> or
+              <a class="link" ng-click="rejectInvite(assign.group)"> (Reject)</a>
+
+
               </li>
             </ul>
 
@@ -98,6 +98,22 @@
               <span class="item-no">{{ $index }}</span>
               <p class="first-member">{{ member.email[0] }} </p>
               <div class="remove-user" ng-click="removeMember(currGroup, member)"><span class="icon-x">+</span></div>
+            </li>
+          </ul>
+          <hr>
+        <p  ng-if="currGroup.invited.length > 0" class="popup-byline"> Invited Members: </p>
+
+          <ul class="list-view">
+
+            <li ng-repeat="invited in currGroup.invited" class="pop-item">
+              <span class="stripes">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              <span class="item-no">{{ $index }}</span>
+              <p class="first-member">{{ invited.email[0] }} </p>
+              <div class="remove-user" ng-click="removeMember(currGroup, invited)"><span class="icon-x">+</span></div>
             </li>
           </ul>
           <a ng-click class="action">Save</a>

@@ -169,7 +169,7 @@ app.factory('Group', ['$resource',
           }
         },
         rejectInvitation: {
-          url: 'api/v1/group/:id/exit',
+          url: 'api/v1/group/:id/decline',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
