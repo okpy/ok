@@ -50,15 +50,19 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 // Eeek.
 app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Group', '$timeout',
   function($scope, Assignment, User, Group, $timeout) {
-      $scope.courseId = 5699868278390784;
+      $scope.courseId = 5165212546105344;
 
       $scope.toggleAssign = function (assign) {
-        $scope.currAssign = assign;
+        if ($scope.currAssign == assign) {
+          $scope.currAssign = null
+        } else {
+          $scope.currAssign = assign;
+        }
       }
 
       $scope.reloadAssignments = function () {
           User.get({
-            course: 5699868278390784,
+            course: $scope.courseId,
           }, function (response) {
             console.log(response.assignments)
             $scope.assignments = response.assignments
@@ -72,7 +76,6 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
               member: member.key,
               id: currGroup.id
             }, function (err) {
-              alert("BYEBYE!")
               $scope.currGroup = null;
               $scope.hideGroup();
               $scope.currAssign.group = null
@@ -82,26 +85,22 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
       $scope.getSubmissions = function (assignId) {
             User.getSubmissions({
               assignment: assignId
-            }), function (response) {
+            }, function (response) {
               $scope.currAssign.submissions = response;
-            }
-            $scope.showSubms();
+              $scope.showSubms();
+            });
       }
 
       $scope.getBackups = function (assignId) {
-          console.log("getBackusp")
-          console.log(assignId)
             User.getBackups({
               assignment: assignId
-            }), function (response) {
+            }, function (response) {
               $scope.currAssign.backups = response;
-            }
-        $scope.showBackups();
+              $scope.showBackups();
+            });
       }
 
         $scope.addMember = function(assignmentId, member) {
-            console.log("TRYING")
-            console.log(assignmentId)
           if (member != '') {
             Assignment.invite({
               id: assignmentId,
