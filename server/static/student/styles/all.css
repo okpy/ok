@@ -1,12 +1,11 @@
 * {
-	float:left;
-	margin:0;
-	padding:0;
-	font-family:'Open Sans';
-	font-weight:300;
-	position:relative;
+  float: left;
+  margin:0;
+  padding:0;
+  font-family:'Open Sans';
+  font-weight:300;
+  position:relative;
 }
-
 
 
 /* button */
@@ -24,6 +23,10 @@
 	.button:hover {
 		background-color:rgba(255, 147, 38, 0.8);
 	}
+
+.sweet-alert * {
+  float: none;
+}
 
 
 /* testing */
@@ -72,9 +75,13 @@ transition: background-color .2s ease,box-shadow .2s ease
     background-size: 20px;
   }
 
-.foo {
-  float:none;
+.sweet-alert {
+  float:none !important;
 }
+.sweet-alert button {
+  float: none;
+}
+
 .snippet {
   position: relative;
   border: 1px solid #ddd;

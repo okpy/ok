@@ -48,8 +48,8 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 
 
 // Eeek.
-app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Group', '$timeout',
-  function($scope, Assignment, User, Group, $timeout) {
+app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', 'User', 'Group', '$timeout',
+  function($scope, $window,Assignment, User, Group, $timeout) {
       $scope.courseId = 5165212546105344;
       $scope.courseIdL = 5699868278390784;
 
@@ -70,12 +70,11 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
           })
       }
 
-      $scope.reloadAssignGroup = function (assignId) {
+      $scope.reloadAssignGroup = function (assign) {
           Assignment.group({
-            id: assignId,
+            id: assign.assignment.id,
           }, function (response) {
-            console.log(response.assignments)
-            $scope.currAssign.group = response.data
+            assign.group = response.data
           })
       }
 
@@ -110,29 +109,29 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
             });
       }
 
-      $scope.addMember = function(assignmentId, member) {
+      $scope.addMember = function(assign, member) {
         if (member && member != '') {
+          assignId = assign.assignment.id
           console.log("POSTING ")
           Assignment.invite({
-            id: assignmentId,
+            id: assignId,
             email: member
           }, function (response) {
             // TODO  Check for error.
-            console.log("Got a response")
-            if (response.data != null) {
-              $scope.errorMessage = response.message
-              $window.swal("Oops...", "Something went wrong! "+response.message, "error");
-            } else {
               $window.swal({
                   title: "Invitation Sent!",
                   text: "They will need to login to okpy.org and accept the invite.",
-                  timer: 1500,
+                  timer: 3500,
                   type: "success"
-                })
-            }
-          });
+                });
+              $scope.reloadAssignGroup(assign)
+          }, function (err, data) {
+            console.log(err)
+              $window.swal("Oops...", "That user/email isn't in this course.", "error");
+            $scope.reloadAssignGroup(assign)
+         });
         }
-        };
+      };
 
         $scope.showGroup = function showGroup(group) {
             $('.popups').addClass('active');
