@@ -26,7 +26,7 @@ def force_account_chooser(url):
         return url.replace('ServiceLogin', 'AccountChooser')
     return url
 
-@app.route("/")
+@app.route("/ok")
 def student():
     def force_account_chooser(url):
         if 'ServiceLogin' in url:
@@ -37,7 +37,7 @@ def student():
     params = {}
     if user is None:
         params['users_link'] = force_account_chooser(
-            users.create_login_url('/#'))
+            users.create_login_url('/ok'))
         params['users_title'] = "Sign In"
     else:
         logging.info("User is %s", user.email())
@@ -45,9 +45,32 @@ def student():
         params['users_link'] = users.create_logout_url('/')
         params['users_title'] = "Log Out"
         params['relogin_link'] = users.create_logout_url(
-            force_account_chooser(users.create_login_url('/#/loginLanding')))
+            force_account_chooser(users.create_login_url('/ok/#')))
     params['DEBUG'] = app.config['DEBUG']
     return render_template("student.html", **params)
+
+@app.route("/")
+def landing():
+    def force_account_chooser(url):
+        if 'ServiceLogin' in url:
+            return url.replace('ServiceLogin', 'AccountChooser')
+        return url
+
+    user = users.get_current_user()
+    params = {}
+    if user is None:
+        params['users_link'] = force_account_chooser(
+            users.create_login_url('/ok'))
+        params['users_title'] = "Sign In"
+    else:
+        logging.info("User is %s", user.email())
+        params["user"] = {'id': user.user_id(), 'email' : user.email()}
+        params['users_link'] = users.create_logout_url('/')
+        params['users_title'] = "Log Out"
+        params['relogin_link'] = users.create_logout_url(
+            force_account_chooser(users.create_login_url('/ok')))
+    params['DEBUG'] = app.config['DEBUG']
+    return render_template("landing.html", **params)
 
 @app.route("/old")
 def dashboard():
