@@ -23,6 +23,12 @@ indexes:
   - name: created
     direction: desc
 
+- kind: Backupv2
+  properties:
+  - name: submitter
+  - name: created
+    direction: desc
+
 - kind: Comment
   ancestor: yes
   properties:

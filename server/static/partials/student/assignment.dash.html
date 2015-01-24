@@ -12,7 +12,7 @@
     </div>
 
     <div class="assign-progress">
-      <div class="assign-bar" ng-if="assign.progress"><span class="assign-fill" ng-if="assign.final" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
+      <div class="assign-bar" ng-if="assign.progress"><span class="assign-fill" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
       <p class="assign-label" ng-if="assign.final.final_submission"><c>Assignment submitted!</c> </p>
       <p class="assign-label" ng-if="!assign.final.final_submission"><c> Not submitted yet</c></p>
     </div>
@@ -45,15 +45,14 @@
 
               </li>
             </ul>
-          <br>
-          <a ng-click="showGroup(assign.group.group_info)" class="link view-group" id="1">view group &raquo;</a>
           </div>
+          <a ng-if="assign.group.group_info" ng-click="showGroup(assign.group.group_info)" class="link view-group" id="1">view group &raquo;</a>
           <div ng-if="!assign.group.group_info">
             <h3 class="assign-subtitle">Invite to Group</h3>
             <form name="inviteGroup">
 
             <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
-            <a ng-click="addMember(assign, assign.invitee)" class="button">Submit</a>
+            <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
           </form>
           </div>
         </div>
@@ -62,13 +61,13 @@
             <div ng-if="assign.final.final_submission">
               <h3 class="assign-subtitle"  >Latest Submission</h3>
               <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
-
-              <a ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
             </div>
-            <h3 class="assign-subtitle" ng-if="!assign.final.final_submission" >No Submissions</h3>
 
+            <h3 class="assign-subtitle" ng-if="!assign.submissions" >No Submissions</h3>
+            <a ng-if="assign.submissions" ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
 
             <span class="clear"><a ng-click="getBackups(assign.assignment.id)" ng-if="assign.backups" class="link view-backups">view backups &raquo;</a></span>
+            <span class="clear" ng-if="!assign.backups">No backups found. Have you run ok?</a></span>
           </div>
 
       </div>
@@ -129,15 +128,15 @@
             <span class="col-1"><p>Date</p></span>
             <span class="col-2"><p>By</p></span>
           </li>
-          <li class="pop-item" id="1" ng-repeat="subm in currAssign.submissions">
-            <a class="flag" ng-class=" {active: currAssign.final && subm.id == currAssign.final.backup.id }">
+          <li class="pop-item" id="1" ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
+            <a class="flag" ng-class=" {active: currAssign.final.final_submission && subm.id == currAssign.final.backup.id }">
               <span class="label left"><p>Flagged for Grading</p></span>
               <span class="cloth"></span>
               <span class="stem"></span>
             </a>
             <span class="col-1"><p>{{ subm.created | amCalendar }}</p></span>
             <span class="col-2"><p>{{ subm.submitter.email[0] }}</p></span>
-            <a ui-sref='submission.detail({submissionId:subm.id})' class="light link view-submission">view &raquo;</a>
+            <a ui-sref='submission.detail({courseId: courseId, submissionId:subm.id})' class="light link view-submission">view &raquo;</a>
           </li>
         </div>
       </div>
@@ -151,7 +150,7 @@
             <span class="col-1"><p>Date</p></span>
             <span class="col-2"><p>By</p></span>
           </li>
-          <li class="pop-item" ng-repeat="backup in currAssign.backups">
+          <li class="pop-item" ng-repeat="backup in currAssign.backups | orderBy:'created':true">
             <span class="col-1"><p>{{ backup.created | amCalendar }} </p></span>
             <span class="col-2"><p>{{ backup.submitter.email[0] }}</p></span>
             <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})" class="light link view-submission">view &raquo;</a>

@@ -1,5 +1,10 @@
 var app = angular.module('student', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'ui.sortable', 'angularMoment', 'tableSort']);
 
+angular.module('student').constant('angularMomentConfig', {
+    timezone: 'America/Los_Angeles'
+});
+
+
 app.directive('assignmentModule', function() {
         return {
             restrict: 'E',

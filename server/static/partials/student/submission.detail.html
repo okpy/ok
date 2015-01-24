@@ -39,7 +39,7 @@
           </span>
         </h2>
               <div class="assign-deck">
-                <p><img src="/static/student/images/icon-clock.png">{{submission.created | amCalendar}}. Due {{submission.assignment.due_date | amCalendar}} </p>
+                <p><img src="/static/student/images/icon-clock.png">{{submission.server_time | amCalendar}}. Due {{submission.assignment.due_date | amCalendar}} </p>
                 <br>
                 <p>By: {{submission.submitter.email[0]}}</p>
               </div>
@@ -50,11 +50,7 @@
           <hr class="fullWidth">
           <h2 class="code-title">{{file_name}}</h2> <br> <br>
           <hr class="fullWidth">
-          <pre >
-            <code class="hljs code-contents">
-              {{contents}}
-            </code>
-          </pre>
+          <pre ><code class="hljs code-contents">{{contents}}</code></pre>
       <div class="files">
                 </div>
       </div>

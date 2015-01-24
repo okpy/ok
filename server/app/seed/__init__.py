@@ -67,6 +67,22 @@ def seed():
             max_group_size=4,
             due_date=date)
 
+    def make_hw_assignment(course, creator):
+        date = (datetime.datetime.now() + datetime.timedelta(days=2))
+        with open('app/seed/scheme_templates/scheme.py') as sc:
+            templates = {}
+            templates['scheme.py'] = sc.read(),
+
+        return models.Assignment(
+            name='cal/CS61A/sp15/hw1',
+            points=2,
+            display_name="Homework 1",
+            templates=json.dumps(templates),
+            course=course.key,
+            creator=creator.key,
+            max_group_size=4,
+            due_date=date)
+
     def make_group(assign, members):
         return models.Group(
             member=[m.key for m in members],
@@ -201,7 +217,7 @@ def seed():
     k.put()
     models.Participant.add_role(k.key, course.key, STUDENT_ROLE)
 
-    version = make_version('v1.3.0')
+    version = make_version('v1.3.2')
     version.put()
 
     # Put a few members on staff
@@ -215,6 +231,8 @@ def seed():
     assign.put()
     assign2 = make_past_assignment(course, c)
     assign2.put()
+    assignHW = make_hw_assignment(course, c)
+    assignHW.put()
 
     # Create submissions
     subms = []
