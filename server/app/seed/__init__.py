@@ -185,10 +185,7 @@ def seed():
         )
         s.put()
         models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
-
-
         group_members += [s]
-
 
     for i in range(0, 9):
         s = models.User(
@@ -197,7 +194,6 @@ def seed():
         s.put()
         models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
         students += [s]
-
 
     k = models.User(
         email=["dummy2@admin.com"],
@@ -214,13 +210,11 @@ def seed():
     course.instructor.append(a.key)
     course.put()
 
-
     # Create a few assignments
     assign = make_future_assignment(course, c)
     assign.put()
     assign2 = make_past_assignment(course, c)
     assign2.put()
-
 
     # Create submissions
     subms = []
@@ -251,7 +245,6 @@ def seed():
     # scheme final
     subm = make_seed_scheme_submission(assign2, group_members[1], True)
     subm.put()
-
 
     # Now create indiviual submission
     for i in range(9):
