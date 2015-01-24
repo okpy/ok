@@ -60,7 +60,8 @@ app.factory('Submission', ['$resource',
         get: {
           transformResponse: function(data) {
             return JSON.parse(data).data;
-          }
+          },
+          cache: true
         },
         diff: {
           url: 'api/v1/submission/:id/diff',
@@ -117,7 +118,8 @@ app.factory('Assignment', ['$resource',
           isArray: false,
           transformResponse: function(data) {
             return JSON.parse(data).data;
-          }
+          },
+          cache: true
         },
         get: {
           transformResponse: function(data) {
@@ -188,12 +190,14 @@ app.factory('Course', ['$resource',
           isArray: true,
           transformResponse: function(data) {
             return JSON.parse(data).data.results;
-          }
+          },
+          cache: true
         },
         get: {
           transformResponse: function(data) {
             return JSON.parse(data).data;
-          }
+          },
+          cache: true
         },
         staff: {
           isArray: true,

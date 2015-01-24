@@ -60,9 +60,10 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId
         $timeout(function() {
-          $window.hljs.initHighlighting();
-        }, 300);
-
+          $('code').each(function(i, block) {
+            hljs.highlightBlock(block);
+          });
+        }, 100);
       });
   }]);
 

@@ -128,7 +128,7 @@
             <span class="col-1"><p>Date</p></span>
             <span class="col-2"><p>By</p></span>
           </li>
-          <li class="pop-item" id="1" ng-repeat="subm in currAssign.submissions">
+          <li class="pop-item" id="1" ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
             <a class="flag" ng-class=" {active: currAssign.final.final_submission && subm.id == currAssign.final.backup.id }">
               <span class="label left"><p>Flagged for Grading</p></span>
               <span class="cloth"></span>
@@ -150,7 +150,7 @@
             <span class="col-1"><p>Date</p></span>
             <span class="col-2"><p>By</p></span>
           </li>
-          <li class="pop-item" ng-repeat="backup in currAssign.backups">
+          <li class="pop-item" ng-repeat="backup in currAssign.backups | orderBy:'created':true">
             <span class="col-1"><p>{{ backup.created | amCalendar }} </p></span>
             <span class="col-2"><p>{{ backup.submitter.email[0] }}</p></span>
             <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
