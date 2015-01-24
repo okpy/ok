@@ -867,7 +867,7 @@ class FinalSubmission(Base):
         self.submitter = self.submission.get().backup.get().submitter
 
         old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
-        old_submissions = old.get()
+        old_submissions = old.fetch()
 
         if not old_submissions:
             return
@@ -880,4 +880,3 @@ class FinalSubmission(Base):
                 if self.submitter == person:
                     submission.delete()
                     return
-
