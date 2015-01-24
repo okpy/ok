@@ -566,9 +566,12 @@ class Submission(Base):
 
     def mark_as_final(self):
         final_submission = FinalSubmission(assignment=self.backup.get().assignment, \
-                                           group=self.backup.get().group.key, \
                                            submitter=self.submitter,\
                                            submission=self.key)
+        group = self.backup.get().group
+        if group:
+            final_submission.group = group
+
         final_submission.put()
 
     @classmethod
