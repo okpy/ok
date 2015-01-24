@@ -200,6 +200,9 @@ class User(Base):
         return group
 
     def get_course_info(self, course):
+        if not course:
+            raise BadValueError("Invalid course")
+
         info = {'user': self}
         info['assignments'] = []
 
