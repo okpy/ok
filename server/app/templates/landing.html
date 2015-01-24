@@ -12,7 +12,7 @@
       </div>
       <nav>
         <ul>
-          <li><a href={{users_link}}>Login</a></li>
+          <li><a href={{users_link}}>{{users_title}}</a></li>
         </ul>
       </nav>
     </header>
@@ -20,7 +20,15 @@
       <div class="center">
         <h1 class="title">Better programming projects</h1>
         <h2 class="subtitle">Run tests, track progress, and assist in debugging</h2>
-        <span class="break"><a href={{users_link}} class="button">Student Login</a></span>
+        <span class="break">
+        {% if user %}
+              <a href='/ok' class="button">Student Dashboard</a></span>
+        {% else %}
+              <a href={{users_link}} class="button">Student Login</a></span>
+        {% endif %}
+
+
+
       </div>
       <div class="bar">
         <p class="msg"><b>Instructor</b>, Interested in trying ok for your course? </p>
