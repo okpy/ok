@@ -234,8 +234,8 @@ class User(Base):
                                     solved += value
                                 if type(value) == int:
                                     total += value
-
-                assign_info['percent'] = round(100*float(solved)/total, 0)
+                if total > 0:
+                    assign_info['percent'] = round(100*float(solved)/total, 0)
 
             assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
             assign_info['submissions'] = len(self.get_submissions(assignment.key)) > 0
