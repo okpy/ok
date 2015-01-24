@@ -63,7 +63,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', '
 
       $scope.reloadAssignments = function () {
           User.get({
-            course: $scope.courseId,
+            course: $scope.courseIdL,
           }, function (response) {
             console.log(response.assignments)
             $scope.assignments = response.assignments
