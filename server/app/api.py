@@ -1121,7 +1121,7 @@ class VersionAPI(APIResource):
 
         obj.versions.append(new_version)
         if 'current' in data and data['current']:
-            obj.current_version = data['current_version']
+            obj.current_version = data['version']
         obj.put()
         return obj
 
