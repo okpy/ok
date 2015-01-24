@@ -1180,6 +1180,12 @@ class CourseAPI(APIResource):
             'web_args': {
             }
         },
+        'get_courses': {
+            'methods': set(['GET']),
+            'web_args': {
+                'user': KeyArg('User', required=True)
+            }
+        },
         'get_students': {
         },
         'add_student': {
@@ -1221,10 +1227,22 @@ class CourseAPI(APIResource):
             course.staff.remove(data['staff_member'])
             course.put()
 
+    def get_courses(self, course, user, data):
+        query = models.Participant.query(models.Participant.user == data['user'])
+        need = Need('index')
+        query = models.Participant.can(user, need, course, query)
+        return list(query)
+
     def get_students(self, course, user, data):
-        return list(models.Participant.query(models.Participant.course == course))
+        query = models.Participant.query(models.Participant.course == course)
+        need = Need('index')
+        query = models.Participant.can(user, need, course, query)
+        return list(query)
 
     def add_student(self, course, user, data):
+        need = Need('staff') # Only staff can call this API
+        if not course.can(user, need, course):
+            raise need.exception()
         new_participant = models.Participant(user, course, 'student')
         new_participant.put()
 
