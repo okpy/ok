@@ -1282,22 +1282,22 @@ class GroupAPI(APIResource):
             }
         },
         'add_member': {
-            'methods': set(['PUT']),
+            'methods': set(['PUT', 'POST']),
             'web_args': {
-                'member': Arg(str, required=True),
+                'email': Arg(str, required=True),
                 },
             },
         'remove_member': {
-            'methods': set(['PUT']),
+            'methods': set(['PUT', 'POST']),
             'web_args': {
-                'member': Arg(str, required=True),
+                'email': Arg(str, required=True),
                 },
             },
         'accept': {
-            'methods': set(['PUT']),
+            'methods': set(['PUT', 'POST']),
             },
         'decline': {
-            'methods': set(['PUT']),
+            'methods': set(['PUT', 'POST']),
             }
     }
 
@@ -1307,17 +1307,19 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        if data['member'] in group.invited:
+        if data['email'] in group.invited:
             raise BadValueError('user has already been invited')
-        if data['member'] in group.member:
+        if data['email'] in group.member:
             raise BadValueError('user already part of group')
 
-        group.invite(data['member'])
+        error = group.invite(data['email'])
+        if error:
+            raise BadValueError(error)
 
         audit_log_message = models.AuditLog(
             event_type='Group.add_member',
             user=user.key,
-            description='Added member {} to group'.format(data['member']),
+            description='Added member {} to group'.format(data['email']),
             obj=group.key
         )
         audit_log_message.put()
@@ -1328,7 +1330,7 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        group.exit(data['member'])
+        group.exit(data['email'])
 
         audit_log_message = models.AuditLog(
             event_type='Group.remove_member',
@@ -1343,7 +1345,9 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             return need.exception()
 
-        group.invite(data['member'])
+        error = group.invite(data['email'])
+        if error:
+            raise BadValueError(error)
 
     def accept(self, group, user, data):
         # can only accept an invitation if you are in the invited_members

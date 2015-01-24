@@ -414,7 +414,7 @@ class GroupAPITest(APITest, APIBaseTestCase):
         to_invite = self.accounts['dummy_student']
 
         self.post_json(
-            '/{}/{}/invite'.format(self.name, inst.key.id()),
+            '/{}/{}/add_member'.format(self.name, inst.key.id()),
             data={'email': to_invite.email[0]})
 
         self.assertEqual(inst.invited, [to_invite.key])
@@ -436,7 +436,7 @@ class GroupAPITest(APITest, APIBaseTestCase):
         inst.invited.append(self.user.key)
         inst.put()
 
-        self.post_json('/{}/{}/exit'.format(self.name, inst.key.id()))
+        self.post_json('/{}/{}/decline'.format(self.name, inst.key.id()))
 
         self.assertEqual(inst.invited, [])
         self.assertNotIn(self.user.key, inst.member)
@@ -447,7 +447,9 @@ class GroupAPITest(APITest, APIBaseTestCase):
         inst.member.append(self.user.key)
         inst.put()
 
-        self.post_json('/{}/{}/exit'.format(self.name, inst.key.id()))
+        self.post_json(
+            '/{}/{}/remove_member'.format(self.name, inst.key.id()),
+                data={'email': self.user.email[0]})
 
         self.assertNotIn(self.user.key, inst.member)
 
@@ -464,7 +466,7 @@ class GroupAPITest(APITest, APIBaseTestCase):
         ).put()
 
         self.post_json(
-            '/{}/{}/invite'.format(self.name, inst.key.id()),
+            '/{}/{}/add_member'.format(self.name, inst.key.id()),
             data={'email': to_invite.email[0]})
 
         self.assertStatusCode(400)

@@ -150,11 +150,10 @@ class PermissionsUnitTest(APIBaseTestCase):
         self.login('student0')
         self.set_assignment('first')
         self.assertNoSubmissions()
-        self.submit(self.submissions['first'])
+        self.submit(self.backups['first'])
         self.assertNumSubmissions(1)
 
 
 if __name__ == "__main__":
     print 'test disabled for now'
-    return
-    unittest.main()
+    #unittest.main()
