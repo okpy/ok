@@ -1334,15 +1334,17 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        group.exit(data['email'])
+        to_remove = models.User.lookup(data['email'])
+        if to_remove:
+            group.exit(to_remove)
 
-        audit_log_message = models.AuditLog(
-            event_type='Group.remove_member',
-            user=user.key,
-            obj=group.key,
-            description='Removed user from group'
-        )
-        audit_log_message.put()
+            audit_log_message = models.AuditLog(
+                event_type='Group.remove_member',
+                user=user.key,
+                obj=group.key,
+                description='Removed user from group'
+            )
+            audit_log_message.put()
 
     def invite(self, group, user, data):
         need = Need('invite')

@@ -757,6 +757,8 @@ class Group(Base):
                 users.remove(user_key)
         if not self.validate():
             self.key.delete()
+        else:
+            self.put()
 
     @classmethod
     def _can(cls, user, need, group, query):
