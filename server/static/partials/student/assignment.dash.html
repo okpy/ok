@@ -21,10 +21,10 @@
       <div class="assign-text">
         <div class="col left">
 
-          <div ng-if="assign.group">
+          <div ng-if="assign.group.group_info">
             <h3 class="assign-subtitle">Group members</h3>
             <ul class="plainList">
-              <li ng-repeat="member in assign.group.member">
+              <li ng-repeat="member in assign.group.group_info.member">
                 <span class="stripes dark">
                   <span class="stripe"></span>
                   <span class="stripe"></span>
@@ -33,22 +33,22 @@
                 {{member.email[0]}}
               </li>
             </ul>
-            <ul class="plainList" ng-if="assign.group.invited.length > 0">
+            <ul class="plainList" ng-if="assign.group.group_info.invited.length > 0">
               <h3 class="assign-subtitle">Invited:</h3>
-              <li ng-repeat="invited in assign.group.invited">
+              <li ng-repeat="invited in assign.group.group_info.invited">
                 {{invited.email[0]}}
               <br>
-
-              <a class="link" ng-click="acceptInvite(assign.group)"> (Accept) </a> or
-              <a class="link" ng-click="rejectInvite(assign.group)"> (Reject)</a>
-
+              <p ng-if="assign.group.invited">
+                <a class="link" ng-click="acceptInvite(assign.group.group_info)"> (Accept) </a> or
+                <a class="link" ng-click="rejectInvite(assign.group.group_info)"> (Reject)</a>
+              </p>
 
               </li>
             </ul>
-
-          <a ng-click="showGroup(assign.group)" class="link view-group" id="1">view group &raquo;</a>
+          <br>
+          <a ng-click="showGroup(assign.group.group_info)" class="link view-group" id="1">view group &raquo;</a>
           </div>
-          <div ng-if="!assign.group">
+          <div ng-if="!assign.group.group_info">
             <h3 class="assign-subtitle">Invite to Group</h3>
             <form name="inviteGroup">
 
@@ -101,7 +101,7 @@
             </li>
           </ul>
           <hr>
-        <p  ng-if="currGroup.invited.length > 0" class="popup-byline"> Invited Members: </p>
+        <p ng-if="currGroup.invited.length > 0" class="popup-byline"> Invited Members: </p>
 
           <ul class="list-view">
 
