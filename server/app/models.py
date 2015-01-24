@@ -547,10 +547,10 @@ class Submission(Base):
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
 
     def mark_as_final(self):
-        final_submission = FinalSubmission(assignment=backup.assignment, \
-                                           group = backup.group, \
-                                           submitter = self.submitter,\
-                                           submission=self)
+        final_submission = FinalSubmission(assignment=self.backup.get().assignment, \
+                                           group=self.backup.get().group.key, \
+                                           submitter=self.submitter,\
+                                           submission=self.key)
         final_submission.put()
 
     @classmethod

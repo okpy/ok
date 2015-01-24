@@ -258,22 +258,11 @@ def assign_submission(subm_id, submit):
     if not submit:
         return
 
-    subm = ModelProxy.Submission(backup = backup)
+    S = ModelProxy.Submission
+    subm = S(backup=backup.key)
+    subm.put()
 
-    group = backup.submitter.get().get_group(assign_key)
-
-    FS = ModelProxy.FinalSubmission
-    current = FS.query()
-    current = current.filter(FS.assignment == assign_key)
-    current = current.filter(FS.group == group.key)
-    current = current.get()
-    if not current:
-        current = FS(
-            assignment=assign_key,
-            group=group.key)
-
-    current.submission = subm.key
-    current.put()
+    subm.mark_as_final()
 
 def parse_date(date):
     try:
