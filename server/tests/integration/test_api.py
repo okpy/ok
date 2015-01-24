@@ -472,6 +472,32 @@ class GroupAPITest(APITest, APIBaseTestCase):
         self.assertStatusCode(400)
         self.assertEqual(inst.invited, [])
 
+    def test_remove_from_two_member_group(self):
+        self.user = self.accounts['dummy_student']
+        inst = self.model(assignment=self.assignment.key,
+                member=[self.user.key, self.accounts['dummy_student2'].key])
+        inst.put()
+
+        self.post_json(
+                '/{}/{}/remove_member'.format(self.name, inst.key.id()),
+                data={'email': self.user.email[0]})
+        
+        self.assertStatusCode(200)
+        self.assertEqual(inst.key.get(), None)
+
+    def test_decline_invite_from_two_member_group(self):
+        self.user = self.accounts['dummy_student']
+
+        inst = self.model(assignment=self.assignment.key, 
+                member=[self.accounts['dummy_student2'].key], invited = [self.user.key])
+        inst.put()
+
+        self.post_json(
+               '/{}/{}/decline'.format(self.name, inst.key.id()),
+               data={'email': self.user.email[0]})
+
+        self.assertStatusCode(200)
+        self.assertEqual(inst.key.get(), None)
 
     def test_create_two_entities(self):
         pass # No creation
