@@ -26,6 +26,9 @@
 .firstLogin {
   margin-left: 50%
 }
+div[ui-view]{
+ width: 100%;
+}
 
 .sweet-alert * {
   float: none;
@@ -34,6 +37,29 @@
 .plainList {
   list-style: none;
 }
+
+.fullWidth {
+  width: 100%;
+}
+
+.code-view {
+  height: 600px;
+}
+.code-contents  {
+  width: 700px;
+}
+
+
+.code-title {
+  padding:20px;
+  width:100%;
+  box-sizing:border-box;
+  font-size:30px;
+  color:#FFF;
+  font-family:'Raleway';
+  text-align:left;
+}
+
 
 
 /* testing */
@@ -789,7 +815,7 @@ body.course {
 				}
 			pre,.code-cont {
 				position:absolute;
-				top:0;
+				top:85px;
 				left:0;
 				bottom:0;
 				right:0;
@@ -1274,7 +1300,7 @@ body.course {
 			margin-left:-10px;
 		}
 	.screen.courses {
-		margin-left:10%;
+		margin-left:5%;
 	}
 	.menu {
 		width:250px;

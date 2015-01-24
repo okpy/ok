@@ -55,7 +55,17 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 ]);
 
 
-// Eeek.
+
+app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
+  function($scope, $window, $location, $stateParams, $timeout, $anchorScroll, Submission) {
+     Submission.get({id: $stateParams.submissionId}, function (response) {
+        $scope.submission = response;
+        $window.hljs.initHighlightingOnLoad();
+      });
+  }]);
+
+
+// Main dashboard controller. Should be modularized later.
 app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', '$timeout',
   function($scope, $window, $state,  $stateParams, Assignment, User, Group, $timeout) {
 

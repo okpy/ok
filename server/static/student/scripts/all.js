@@ -1,11 +1,10 @@
 $(document).ready(function() {
 
 	// checkpoints
-
 	// function onPageLoad() {
 	// 	hideLoader()
 	// 	checkForAlerts();
-	// 	hljs.initHighlightingOnLoad();
+	//
 	// 	// addSortable();
 	// 	fixSortable();
 	// }
