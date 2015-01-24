@@ -163,7 +163,7 @@ class User(Base):
         for member in members:
             all_backups += list(Backup.query( \
                 Backup.submitter == member).filter( \
-                    Backup.assignment == assignment))
+                    Backup.assignment == assignment).fetch())
 
         all_backups.sort(lambda x, y: int(5*(int(x.created > y.created) - 0.5)))
 
@@ -182,7 +182,7 @@ class User(Base):
 
         all_submissions = []
         for member in members:
-            all_submissions += list(Submission.query(Submission.submitter == member))
+            all_submissions += list(Submission.query(Submission.submitter == member).fetch())
 
         all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment]
 
@@ -896,10 +896,10 @@ class FinalSubmission(Base):
 
         for submission in old_submissions:
             if self.submitter == submission.submitter:
-                submission.delete()
+                ndb.delete(submission)
                 return # Should only have 1 final submission per submitter
             if submission.group:
                 for person in submission.group.member:
                     if self.submitter == person:
-                        submission.delete()
+                        ndb.delete(submission)
                         return
