@@ -60,7 +60,11 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
   function($scope, $window, $location, $stateParams, $timeout, $anchorScroll, Submission) {
      Submission.get({id: $stateParams.submissionId}, function (response) {
         $scope.submission = response;
-        $window.hljs.initHighlightingOnLoad();
+        $scope.courseId = $stateParams.courseId
+        $timeout(function() {
+          $window.hljs.initHighlighting();
+        }, 300);
+
       });
   }]);
 
@@ -68,6 +72,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
 // Main dashboard controller. Should be modularized later.
 app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', '$timeout',
   function($scope, $window, $state,  $stateParams, Assignment, User, Group, $timeout) {
+      $scope.courseId = $stateParams.courseId
 
       $scope.toggleAssign = function (assign) {
         if ($scope.currAssign == assign) {

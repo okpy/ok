@@ -61,7 +61,7 @@
           <div class="col right">
             <div ng-if="assign.final.final_submission">
               <h3 class="assign-subtitle"  >Latest Submission</h3>
-              <a ui-sref='submission.detail({submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+              <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
 
               <a ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
             </div>
@@ -154,7 +154,7 @@
           <li class="pop-item" ng-repeat="backup in currAssign.backups">
             <span class="col-1"><p>{{ backup.created | amCalendar }} </p></span>
             <span class="col-2"><p>{{ backup.submitter.email[0] }}</p></span>
-            <a ui-sref="submission.detail({submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
+            <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
           </li>
         </div>
       </div>

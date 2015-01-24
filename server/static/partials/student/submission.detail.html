@@ -1,7 +1,7 @@
 <aside>
 
             <div class="block">
-            <a ui-sref="student" class="block-link block-back">
+            <a ui-sref="student({courseId: courseId})" class="block-link block-back">
               <span class="arrow left dark"></span>
               <p>Back</p>
             </a>
@@ -41,7 +41,7 @@
               <div class="assign-deck">
                 <p><img src="/static/student/images/icon-clock.png">{{submission.created | amCalendar}}. Due {{submission.assignment.due_date | amCalendar}} </p>
                 <br>
-              <p>By: {{submission.submitter.email[0]}}</p>
+                <p>By: {{submission.submitter.email[0]}}</p>
               </div>
       </div>
     <div class="assign-code">
@@ -51,7 +51,7 @@
           <h2 class="code-title">{{file_name}}</h2> <br> <br>
           <hr class="fullWidth">
           <pre >
-            <code class=" code-contents">
+            <code class="hljs code-contents">
               {{contents}}
             </code>
           </pre>
