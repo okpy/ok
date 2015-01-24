@@ -181,8 +181,9 @@ class User(Base):
             members = group.member
 
         for member in members:
-            all_subms += list(Submission.query(Submission.submitter == member).\
-                    filter(Backup.assignment == assignment))
+            all_submissions += list(Submission.query(Submission.submitter == member))
+
+        all_subms = [x for x in all_submissions if x.backup.assignment == assignment]
 
         all_subms.sort(lambda x, y: int(5*(int(x.created > y.created) - 0.5)))
 
@@ -215,9 +216,9 @@ class User(Base):
                     self.get_final_submission(assignment.key)
             if assign_info['final']['final_submission']:
                 assign_info['final']['submission'] = \
-                        assign_info['final']['final_submission'].submission.get()
+                        assign_info['final']['final_submission'].submission.fetch()
                 assign_info['final']['backup'] = \
-                        assign_info['final']['submission'].backup.get()
+                        assign_info['final']['submission'].backup.fetch()
 
             # Compute percentage here... feel free to delete if unnecessary
                 final = assign_info['final']['backup']
