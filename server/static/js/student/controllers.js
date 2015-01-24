@@ -48,10 +48,8 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 
 
 // Eeek.
-app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', 'User', 'Group', '$timeout',
-  function($scope, $window,Assignment, User, Group, $timeout) {
-      $scope.courseId = 5165212546105344;
-      $scope.courseIdL = 5699868278390784;
+app.controller("AssignmentDashController", ['$scope', '$window',  '$stateParams', 'Assignment', 'User', 'Group', '$timeout',
+  function($scope, $window,  $stateParams, Assignment, User, Group, $timeout) {
 
       $scope.toggleAssign = function (assign) {
         if ($scope.currAssign == assign) {
@@ -63,27 +61,29 @@ app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', '
 
       $scope.reloadAssignments = function () {
           User.get({
-            course: $scope.courseIdL,
+            course: $stateParams.courseId,
           }, function (response) {
             console.log(response.assignments)
             $scope.assignments = response.assignments
           })
       }
 
-      $scope.reloadAssignGroup = function (assign) {
+      $scope.reloadAssignGroup = function () {
           Assignment.group({
-            id: assign.assignment.id,
+            id: $scope.currAssign.assignment.id,
           }, function (response) {
-            assign.group = response.data
+            $scope.currAssign.group = response.data;
+            $scope.currGroup = $scope.currAssign.group;
           })
       }
 
       $scope.reloadAssignments()
 
       $scope.removeMember = function(currGroup, member) {
+        console.log(member, currGroup.id)
             Group.removeMember({
-              member: member.key,
-              id: currGroup.id
+              id: currGroup.id,
+              member: member.email[0]
             }, function (err) {
               $scope.currGroup = null;
               $scope.hideGroup();
@@ -112,7 +112,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', '
       $scope.addMember = function(assign, member) {
         if (member && member != '') {
           assignId = assign.assignment.id
-          console.log("POSTING ")
           Assignment.invite({
             id: assignId,
             email: member
@@ -124,11 +123,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', '
                   timer: 3500,
                   type: "success"
                 });
-              $scope.reloadAssignGroup(assign)
+              $scope.reloadAssignGroup()
           }, function (err, data) {
-            console.log(err)
-              $window.swal("Oops...", "That user/email isn't in this course.", "error");
-            $scope.reloadAssignGroup(assign)
+            $window.swal("Oops...", "That user/email isn't in this course.", "error");
+            $scope.reloadAssignGroup()
          });
         }
       };

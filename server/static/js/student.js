@@ -44,18 +44,18 @@ app.directive('sidebarModule', function() {
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise("/");
-
-    var student = {
-      name: 'student',
-      url: '/',
-      templateUrl: '/static/partials/student/student.html',
-    }
+    $urlRouterProvider.otherwise("/course");
 
     var courseLanding = {
       name: 'courseLanding',
-      url: '/courseLanding',
+      url: '/course',
       templateUrl: '/static/partials/student/courseLanding.html',
+    }
+
+    var student = {
+      name: 'student',
+      url: '/course/:courseId',
+      templateUrl: '/static/partials/student/student.html',
     }
 
     var submissions = {
@@ -198,8 +198,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
     }
 
     $stateProvider.
-      state(student).
       state(courseLanding).
+      state(student).
       state(submissions).
       state(submissionList).
       state(submissionDetail).

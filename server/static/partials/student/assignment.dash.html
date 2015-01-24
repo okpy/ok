@@ -20,9 +20,10 @@
     <div class="assign-more" ng-show="currAssign == assign">
       <div class="assign-text">
         <div class="col left">
+
           <div ng-if="assign.group">
             <h3 class="assign-subtitle">Group members</h3>
-            <ul class="sortable">
+            <ul class="plainList">
               <li ng-repeat="member in assign.group.member">
                 <span class="stripes dark">
                   <span class="stripe"></span>
@@ -32,11 +33,24 @@
                 {{member.email[0]}}
               </li>
             </ul>
+            <ul class="plainList" ng-if="assign.group.invited.length > 0">
+              <h3 class="assign-subtitle">Invited:</h3>
+
+              <li ng-repeat="invited in assign.group.invited">
+                <span class="stripes dark">
+                  <span class="stripe"></span>
+                  <span class="stripe"></span>
+                  <span class="stripe"></span>
+                </span>
+                {{invited.email[0]}}
+              </li>
+            </ul>
+
           <a ng-click="showGroup(assign.group)" class="link view-group" id="1">view group &raquo;</a>
           </div>
           <div ng-if="!assign.group">
             <h3 class="assign-subtitle">Invite to Group</h3>
-          <form name="inviteGroup">
+            <form name="inviteGroup">
 
             <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
             <a ng-click="addMember(assign, assign.invitee)" class="button">Submit</a>
@@ -73,7 +87,7 @@
         <p class="popup-byline"> <b class="assign-name">{{ currGroup.assignment.display_name }}</b></p>
         <div class="pop-content">
 
-          <ul ui-sortable ng-model="currGroup.member">
+          <ul ui-sortable ng-model="currGroup.member" class="list-view">
 
             <li ng-repeat="member in currGroup.member" class="pop-item">
               <span class="stripes">
@@ -86,7 +100,7 @@
               <div class="remove-user" ng-click="removeMember(currGroup, member)"><span class="icon-x">+</span></div>
             </li>
           </ul>
-          <a ng-click="addMember(currGroup.assignment.id, 'test@example.com')" class="action">Save</a>
+          <a ng-click class="action">Save</a>
         </div>
       </div>
 

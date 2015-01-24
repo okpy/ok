@@ -23,9 +23,16 @@
 	.button:hover {
 		background-color:rgba(255, 147, 38, 0.8);
 	}
+.firstLogin {
+  margin-left: 50%
+}
 
 .sweet-alert * {
   float: none;
+}
+
+.plainList {
+  list-style: none;
 }
 
 
@@ -737,7 +744,12 @@ body.course {
 					line-height:150%;
 					width:100%;
 				}
-				.sortable {
+        .sortable {
+          width:100%;
+          list-style-type: none;
+
+        }
+				.list-view {
 					width:100%;
           list-style-type: none;
 
