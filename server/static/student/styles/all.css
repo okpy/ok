@@ -26,6 +26,9 @@
 .firstLogin {
   margin-left: 50%
 }
+div[ui-view]{
+ width: 100%;
+}
 
 .sweet-alert * {
   float: none;
@@ -34,6 +37,29 @@
 .plainList {
   list-style: none;
 }
+
+.fullWidth {
+  width: 100%;
+}
+
+.code-view {
+  height: 600px;
+}
+.code-contents  {
+  width: 700px;
+}
+
+
+.code-title {
+  padding:20px;
+  width:100%;
+  box-sizing:border-box;
+  font-size:30px;
+  color:#FFF;
+  font-family:'Raleway';
+  text-align:left;
+}
+
 
 
 /* testing */
@@ -765,7 +791,7 @@ body.course {
 				.assign-text .link {
 					margin-top:10px;
 				}
-		.assign-code {
+		.assign.code {
 			background-color:#3f3f3f;
 		}
 			.code-cont {
@@ -789,7 +815,7 @@ body.course {
 				}
 			pre,.code-cont {
 				position:absolute;
-				top:0;
+				top:85px;
 				left:0;
 				bottom:0;
 				right:0;
@@ -817,11 +843,24 @@ body.course {
 					margin-top:10px;
 				}
 			code,code span:not(.comment-icon) {
-				float:none;
+				white-space:pre;
+				color:#C90;
 				font-family:monospace;
+				width:100%;
+				padding:20px;
+				box-sizing:border-box;
 			}
 				code * {
 					float:none;
+				}
+				.code-title {
+					padding:20px 0 0 20px;
+					width:100%;
+					box-sizing:border-box;
+					font-size:30px;
+					color:#FFF;
+					font-family:'Raleway';
+					text-align:left;
 				}
 			.files {
 				width:30%;
@@ -1274,7 +1313,7 @@ body.course {
 			margin-left:-10px;
 		}
 	.screen.courses {
-		margin-left:10%;
+		margin-left:5%;
 	}
 	.menu {
 		width:250px;

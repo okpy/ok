@@ -33,7 +33,15 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
 // Assignment Controllers
 app.controller("AssignmentOverviewController", ['$scope', 'Assignment', 'User', '$timeout',
   function($scope, Assignment, User, $timeout) {
-    Assignment.query(function(response) {
+    Assignment.query({
+      fields: {
+        id: true,
+        display_name: true,
+        id: true,
+        due_date: true,
+        points: true,
+        created: true,
+      }}, function(response) {
       $scope.assignments = response.results;
     })}
 ]);
@@ -47,7 +55,17 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 ]);
 
 
-// Eeek.
+
+app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
+  function($scope, $window, $location, $stateParams, $timeout, $anchorScroll, Submission) {
+     Submission.get({id: $stateParams.submissionId}, function (response) {
+        $scope.submission = response;
+        $window.hljs.initHighlightingOnLoad();
+      });
+  }]);
+
+
+// Main dashboard controller. Should be modularized later.
 app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', '$timeout',
   function($scope, $window, $state,  $stateParams, Assignment, User, Group, $timeout) {
 

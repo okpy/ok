@@ -180,10 +180,11 @@ class User(Base):
         else:
             members = group.member
 
+        all_submissions = []
         for member in members:
             all_submissions += list(Submission.query(Submission.submitter == member))
 
-        all_subms = [x for x in all_submissions if x.backup.assignment == assignment]
+        all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment]
 
         all_subms.sort(lambda x, y: int(5*(int(x.created > y.created) - 0.5)))
 
@@ -233,7 +234,7 @@ class User(Base):
                                     solved += value
                                 if type(value) == int:
                                     total += value
-                
+
                 assign_info['percent'] = round(100*float(solved)/total, 0)
 
             assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
