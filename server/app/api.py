@@ -1301,11 +1301,13 @@ class GroupAPI(APIResource):
             },
         'decline': {
             'methods': set(['PUT', 'POST']),
+            },
+        'exit': {
+            'methods': set(['PUT', 'POST']),
             }
     }
 
     def add_member(self, group, user, data):
-        # can only add a member if you are a member
         need = Need('invite')
         if not group.can(user, need, group):
             raise need.exception()
@@ -1328,8 +1330,7 @@ class GroupAPI(APIResource):
         audit_log_message.put()
 
     def remove_member(self, group, user, data):
-        # can only remove a member if you are a member
-        need = Need('rescind')
+        need = Need('remove')
         if not group.can(user, need, group):
             raise need.exception()
 
@@ -1355,7 +1356,6 @@ class GroupAPI(APIResource):
             raise BadValueError(error)
 
     def accept(self, group, user, data):
-        # can only accept an invitation if you are in the invited_members
         need = Need('accept')
         if not group.can(user, need, group):
             raise need.exception()
@@ -1363,8 +1363,10 @@ class GroupAPI(APIResource):
         group.accept(user)
 
     def decline(self, group, user, data):
-        # can only reject an invitation if you are in the invited_members
-        need = Need('accept')
+        self.exit(group, user, data)
+
+    def exit(self, group, user, data):
+        need = Need('exit')
         if not group.can(user, need, group):
             raise need.exception()
 
