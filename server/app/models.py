@@ -194,12 +194,10 @@ class User(Base):
     def get_group(self, assignment):
         query = Group.query(Group.member == self.key)
         group = query.filter(Group.assignment == assignment).get()
-        invited = False
         if not group: # Might be invited to a group
             query = Group.query(Group.invited == self.key)
             group = query.filter(Group.assignment == assignment).get()
-            invited = True
-        return {'group_info': group, 'invited': invited}
+        return group
 
     def get_course_info(self, course):
         info = {'user': self}
@@ -207,7 +205,8 @@ class User(Base):
 
         for assignment in course.assignments:
             assign_info = {}
-            assign_info['group'] = self.get_group(assignment.key)
+            group = self.get_group(assignment.key)
+            assign_info['group'] = {'group_info': group, 'invited': self in group.invited}
             assign_info['final'] = {}
             assign_info['final']['final_submission'] = \
                     self.get_final_submission(assignment.key)
