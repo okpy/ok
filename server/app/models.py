@@ -382,7 +382,13 @@ class Participant(Base):
             user_key = user_key.key
         if isinstance(course_key, Course):
             course_key = course_key.key
-        Participant(user=user_key, course=course_key, role=role).put()
+
+        query = cls.query(cls.user == user.key,
+                          cls.course == course_key,
+                          cls.role == role)
+        current = query.get()
+        if not current:
+            Participant(user=user_key, course=course_key, role=role).put()
 
     @classmethod
     def has_role(cls, user_key, course_key, role):

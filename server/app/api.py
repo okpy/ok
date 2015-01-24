@@ -11,6 +11,7 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
+from app.constants import STUDENT_ROLE, STAFF_ROLE
 
 from app import models, app
 from app.codereview import compare
@@ -1036,6 +1037,9 @@ class SubmissionAPI(APIResource):
             return (403, 'late', {
                 'late': True,
                 })
+
+        if not models.Participant.has_role(user, assignment.course, STUDENT_ROLE):
+            models.Participant.add_role(user, assignment.course STUDENT_ROLE)
 
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
