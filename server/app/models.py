@@ -205,7 +205,8 @@ class User(Base):
 
         for assignment in course.assignments:
             assign_info = {}
-            assign_info['group'] = self.get_group(assignment.key)
+            group = self.get_group(assignment.key)
+            assign_info['group'] = {'group_info': group, 'invited': self in group.invited}
             assign_info['final'] = {}
             assign_info['final']['final_submission'] = \
                     self.get_final_submission(assignment.key)
@@ -382,7 +383,13 @@ class Participant(Base):
             user_key = user_key.key
         if isinstance(course_key, Course):
             course_key = course_key.key
-        Participant(user=user_key, course=course_key, role=role).put()
+
+        query = cls.query(cls.user == user_key,
+                          cls.course == course_key,
+                          cls.role == role)
+        current = query.get()
+        if not current:
+            Participant(user=user_key, course=course_key, role=role).put()
 
     @classmethod
     def has_role(cls, user_key, course_key, role):
