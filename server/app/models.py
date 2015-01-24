@@ -898,7 +898,8 @@ class FinalSubmission(Base):
             if self.submitter == submission.submitter:
                 submission.delete()
                 return # Should only have 1 final submission per submitter
-            for person in submission.group.member:
-                if self.submitter == person:
-                    submission.delete()
-                    return
+            if submission.group:
+                for person in submission.group.member:
+                    if self.submitter == person:
+                        submission.delete()
+                        return
