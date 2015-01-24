@@ -844,23 +844,12 @@ body.course {
 				}
 			code,code span:not(.comment-icon) {
 				white-space:pre;
-				color:#C90;
 				font-family:monospace;
 				width:100%;
-				padding:20px;
 				box-sizing:border-box;
 			}
 				code * {
 					float:none;
-				}
-				.code-title {
-					padding:20px 0 0 20px;
-					width:100%;
-					box-sizing:border-box;
-					font-size:30px;
-					color:#FFF;
-					font-family:'Raleway';
-					text-align:left;
 				}
 			.files {
 				width:30%;

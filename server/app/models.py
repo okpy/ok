@@ -221,7 +221,7 @@ class User(Base):
                 assign_info['final']['backup'] = \
                         assign_info['final']['submission'].backup.get()
 
-            # Compute percentage here... feel free to delete if unnecessary
+                # Percentage
                 final = assign_info['final']['backup']
                 solved = 0
                 total = 0
@@ -571,7 +571,7 @@ class Submission(Base):
                                            submission=self.key)
         group = self.backup.get().group
         if group:
-            final_submission.group = group
+            final_submission.group = group.key
 
         final_submission.put()
 
@@ -795,9 +795,9 @@ class Group(Base):
             return False
         if action in ("get", "exit"):
             return user.key in group.member or user.key in group.invited
-        elif action in ("invite", "rescind"):
+        elif action in ("invite", "remove"):
             return user.key in group.member
-        elif action == "accept":
+        elif action in "accept":
             return user.key in group.invited
         return False
 

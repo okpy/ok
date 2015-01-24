@@ -12,7 +12,7 @@
     </div>
 
     <div class="assign-progress">
-      <div class="assign-bar" ng-if="assign.final.progress"><span class="assign-fill" ng-if="assign.final" ng-style="{'width' : '100%'}"></span></div>
+      <div class="assign-bar" ng-if="assign.progress"><span class="assign-fill" ng-if="assign.final" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
       <p class="assign-label" ng-if="assign.final.final_submission"><c>Assignment submitted!</c> </p>
       <p class="assign-label" ng-if="!assign.final.final_submission"><c> Not submitted yet</c></p>
     </div>
@@ -61,11 +61,11 @@
           <div class="col right">
             <div ng-if="assign.final.final_submission">
               <h3 class="assign-subtitle"  >Latest Submission</h3>
-              <a ui-sref='submission.detail({submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+              <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
 
               <a ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
             </div>
-            <h3 class="assign-subtitle" ng-if="!assign.final.final_submission" >No Submission</h3>
+            <h3 class="assign-subtitle" ng-if="!assign.final.final_submission" >No Submissions</h3>
 
 
             <span class="clear"><a ng-click="getBackups(assign.assignment.id)" ng-if="assign.backups" class="link view-backups">view backups &raquo;</a></span>
@@ -154,7 +154,7 @@
           <li class="pop-item" ng-repeat="backup in currAssign.backups">
             <span class="col-1"><p>{{ backup.created | amCalendar }} </p></span>
             <span class="col-2"><p>{{ backup.submitter.email[0] }}</p></span>
-            <a ui-sref="submission.detail({submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
+            <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
           </li>
         </div>
       </div>
