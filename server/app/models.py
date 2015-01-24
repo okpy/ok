@@ -221,14 +221,19 @@ class User(Base):
 
             # Compute percentage here... feel free to delete if unnecessary
                 final = assign_info['final']['backup']
-                percent = None
+                solved = 0
+                total = 0
                 for message in final.messages:
-                    if message.kind == 'scoring' and 'total_score' in message.contents:
-                        percent = message.contents['total_score']/\
-                                assignment.total_points
-                if percent:
-                    percent = round(percent*100, 0)
-                    assign_info['percent'] = percent
+                    if message.kind == 'grading':
+                        for test_type in message.contents:
+                            for key in message.contents[test_type]:
+                                value = message.contents[test_type][key]
+                                if key == 'passed':
+                                    solved += value
+                                if type(value) == int:
+                                    total += value
+                
+                assign_info['percent'] = round(100*float(solved)/total, 0)
 
             assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
             assign_info['submissions'] = len(self.get_submissions(assignment.key)) > 0
