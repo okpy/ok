@@ -211,7 +211,7 @@ class User(Base):
         for assignment in course.assignments:
             assign_info = {}
             group = self.get_group(assignment.key)
-            assign_info['group'] = {'group_info': group, 'invited': group and self in group.invited}
+            assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
             assign_info['final'] = {}
             assign_info['final']['final_submission'] = \
                     self.get_final_submission(assignment.key)
