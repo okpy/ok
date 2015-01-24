@@ -200,6 +200,9 @@ class User(Base):
         return group
 
     def get_course_info(self, course):
+        if not course:
+            raise BadValueError("Invalid course")
+
         info = {'user': self}
         info['assignments'] = []
 
@@ -453,6 +456,7 @@ class Backup(Base):
     submitter = ndb.KeyProperty(User)
     assignment = ndb.KeyProperty(Assignment)
     client_time = ndb.DateTimeProperty()
+    server_time = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
     tags = ndb.StringProperty(repeated=True)
 
@@ -552,6 +556,7 @@ class Submission(Base):
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
+    server_time = ndb.DateTimeProperty(auto_now_add=True)
 
     def mark_as_final(self):
         final_submission = FinalSubmission(assignment=self.backup.get().assignment, \
@@ -851,6 +856,13 @@ class FinalSubmission(Base):
     queue = ndb.KeyProperty(Queue)
 
     @property
+    def server_time(self):
+        """
+        Returns the server time the final submission was created at.
+        """
+        return self.submission.get().server_time
+
+    @property
     def assigned(self):
         """
         Return whether or not this assignment has been assigned to a queue.
@@ -867,7 +879,7 @@ class FinalSubmission(Base):
         self.submitter = self.submission.get().backup.get().submitter
 
         old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
-        old_submissions = old.get()
+        old_submissions = old.fetch()
 
         if not old_submissions:
             return
@@ -880,4 +892,3 @@ class FinalSubmission(Base):
                 if self.submitter == person:
                     submission.delete()
                     return
-
