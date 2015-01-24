@@ -7,6 +7,8 @@
 	position:relative;
 }
 
+
+
 /* button */
 .button {
 	background-color:#FF9326;
@@ -36,6 +38,25 @@
 .diff {
   width: 100%;
   border-collapse: separate;
+}
+.invite {
+margin: 0;
+margin-bottom: 15px;
+width: 100%;
+outline: 0;
+-webkit-tap-highlight-color: rgba(255,255,255,0);
+text-align: left;
+line-height: 1.6em;
+font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+
+padding: .67861em 1em;
+background: #fff;
+border: 1px solid rgba(0,0,0,.15);
+color: rgba(0,0,0,.8);
+border-radius: .2857rem;
+-webkit-transition: background-color .2s ease,box-shadow .2s ease,border-color .2s ease;
+transition: background-color .2s ease,box-shadow .2s ease
+
 }
 
 .foo {

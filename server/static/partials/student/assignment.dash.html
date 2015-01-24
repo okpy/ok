@@ -35,8 +35,9 @@
           <a ng-click="showGroup(assign.group)" class="link view-group" id="1">view group &raquo;</a>
           </div>
           <div ng-if="!assign.group">
-            <h3 class="assign-subtitle">Invite someone to your group</h3>
-            <input type="email" ng-model="assign.invitee">
+            <h3 class="assign-subtitle">Invite to Group</h3>
+            <input type="email" class="invite" placeholder="ok@cs61a.org" ng-model="assign.invitee">
+            <a ng-click="" class="button">Submit</a>
           </div>
         </div>
 
