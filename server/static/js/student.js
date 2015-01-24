@@ -61,7 +61,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissions = {
       name: 'submission',
       abstract: true,
-      url: '/submission',
+      url: '/:courseId/submission',
       templateUrl: '/static/partials/common/submission.base.html',
     }
 
