@@ -20,10 +20,11 @@
     <div class="assign-more" ng-show="currAssign == assign">
       <div class="assign-text">
         <div class="col left">
-          <div ng-if="assign.group">
+
+          <div ng-if="assign.group.group_info">
             <h3 class="assign-subtitle">Group members</h3>
-            <ul class="sortable">
-              <li ng-repeat="member in assign.group.member">
+            <ul class="plainList">
+              <li ng-repeat="member in assign.group.group_info.member">
                 <span class="stripes dark">
                   <span class="stripe"></span>
                   <span class="stripe"></span>
@@ -32,11 +33,24 @@
                 {{member.email[0]}}
               </li>
             </ul>
-          <a ng-click="showGroup(assign.group)" class="link view-group" id="1">view group &raquo;</a>
+            <ul class="plainList" ng-if="assign.group.group_info.invited.length > 0">
+              <h3 class="assign-subtitle">Invited:</h3>
+              <li ng-repeat="invited in assign.group.group_info.invited">
+                {{invited.email[0]}}
+              <br>
+              <p ng-if="assign.group.invited">
+                <a class="link" ng-click="acceptInvite(assign.group.group_info)"> (Accept) </a> or
+                <a class="link" ng-click="rejectInvite(assign.group.group_info)"> (Reject)</a>
+              </p>
+
+              </li>
+            </ul>
+          <br>
+          <a ng-click="showGroup(assign.group.group_info)" class="link view-group" id="1">view group &raquo;</a>
           </div>
-          <div ng-if="!assign.group">
+          <div ng-if="!assign.group.group_info">
             <h3 class="assign-subtitle">Invite to Group</h3>
-          <form name="inviteGroup">
+            <form name="inviteGroup">
 
             <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
             <a ng-click="addMember(assign, assign.invitee)" class="button">Submit</a>
@@ -73,7 +87,7 @@
         <p class="popup-byline"> <b class="assign-name">{{ currGroup.assignment.display_name }}</b></p>
         <div class="pop-content">
 
-          <ul ui-sortable ng-model="currGroup.member">
+          <ul ui-sortable ng-model="currGroup.member" class="list-view">
 
             <li ng-repeat="member in currGroup.member" class="pop-item">
               <span class="stripes">
@@ -86,7 +100,23 @@
               <div class="remove-user" ng-click="removeMember(currGroup, member)"><span class="icon-x">+</span></div>
             </li>
           </ul>
-          <a ng-click="addMember(currGroup.assignment.id, 'test@example.com')" class="action">Save</a>
+          <hr>
+        <p ng-if="currGroup.invited.length > 0" class="popup-byline"> Invited Members: </p>
+
+          <ul class="list-view">
+
+            <li ng-repeat="invited in currGroup.invited" class="pop-item">
+              <span class="stripes">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              <span class="item-no">{{ $index }}</span>
+              <p class="first-member">{{ invited.email[0] }} </p>
+              <div class="remove-user" ng-click="removeMember(currGroup, invited)"><span class="icon-x">+</span></div>
+            </li>
+          </ul>
+          <a ng-click class="action">Save</a>
         </div>
       </div>
 

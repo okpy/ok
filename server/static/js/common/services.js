@@ -143,18 +143,19 @@ app.factory('Assignment', ['$resource',
 
 app.factory('Group', ['$resource',
     function($resource) {
-      return $resource('api/v1/group', {
-        format: "json"
+      return $resource('api/v1/group/:id', {
+        format: "json",
+          id: "@id"
       }, {
         addMember: {
-          url: 'api/v1/group/invite',
+          url: 'api/v1/group/:id/add_member',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         removeMember: {
-          url: 'api/v1/group/:id/exit',
+          url: 'api/v1/group/:id/remove_member',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
@@ -168,7 +169,7 @@ app.factory('Group', ['$resource',
           }
         },
         rejectInvitation: {
-          url: 'api/v1/group/:id/exit',
+          url: 'api/v1/group/:id/decline',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;

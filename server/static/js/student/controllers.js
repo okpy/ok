@@ -48,10 +48,8 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 
 
 // Eeek.
-app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', 'User', 'Group', '$timeout',
-  function($scope, $window,Assignment, User, Group, $timeout) {
-      $scope.courseId = 5165212546105344;
-      $scope.courseIdL = 5699868278390784;
+app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', '$timeout',
+  function($scope, $window, $state,  $stateParams, Assignment, User, Group, $timeout) {
 
       $scope.toggleAssign = function (assign) {
         if ($scope.currAssign == assign) {
@@ -61,34 +59,67 @@ app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', '
         }
       }
 
+      $scope.findAndToggle = function (assignId) {
+        for (var i = 0; i < $scope.assignments.length; i++) {
+          if ($scope.assignments[i].id == assignId) {
+            $scope.toggleAssign($scope.assignments[i])
+          }
+        }
+      }
+
       $scope.reloadAssignments = function () {
           User.get({
-            course: $scope.courseIdL,
+            course: $stateParams.courseId,
           }, function (response) {
-            console.log(response.assignments)
             $scope.assignments = response.assignments
           })
       }
 
-      $scope.reloadAssignGroup = function (assign) {
+      $scope.reloadView = function () {
+        oldToggle = $scope.currAssign.id
+        $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
+        $scope.findAndToggle(oldToggle)
+      };
+
+      $scope.reloadAssignGroup = function () {
           Assignment.group({
-            id: assign.assignment.id,
+            id: $scope.currAssign.assignment.id,
           }, function (response) {
-            assign.group = response.data
+            $scope.currAssign.group = response.data;
+            $scope.currGroup = $scope.currAssign.group;
           })
       }
 
       $scope.reloadAssignments()
 
       $scope.removeMember = function(currGroup, member) {
+        console.log(member, currGroup.id)
             Group.removeMember({
-              member: member.key,
-              id: currGroup.id
+              id: currGroup.id,
+              email: member.email[0]
             }, function (err) {
               $scope.currGroup = null;
               $scope.hideGroup();
               $scope.currAssign.group = null
             });
+      };
+
+      $scope.rejectInvite = function(currGroup) {
+          Group.rejectInvitation({
+            id: currGroup.id,
+          }, function (err) {
+            currGroup = null
+            $scope.currAssign.group = null
+          });
+      };
+
+      $scope.acceptInvite = function(currGroup) {
+          Group.acceptInvitation({
+              id: currGroup.id,
+          }, function (err) {
+            console.log($scope.currGroup)
+            $scope.reloadView()
+          });
       };
 
       $scope.getSubmissions = function (assignId) {
@@ -112,7 +143,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', '
       $scope.addMember = function(assign, member) {
         if (member && member != '') {
           assignId = assign.assignment.id
-          console.log("POSTING ")
           Assignment.invite({
             id: assignId,
             email: member
@@ -124,11 +154,11 @@ app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', '
                   timer: 3500,
                   type: "success"
                 });
-              $scope.reloadAssignGroup(assign)
-          }, function (err, data) {
-            console.log(err)
-              $window.swal("Oops...", "That user/email isn't in this course.", "error");
-            $scope.reloadAssignGroup(assign)
+              $scope.reloadView()
+          }, function (err, data, config) {
+            console.log(err, data, config)
+            console.log("sadness")
+            $window.swal("Oops...", "Can't add that user to your group. Is that the right email? They might already be in a group.", "error");
          });
         }
       };
@@ -181,96 +211,4 @@ app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', '
       }
 ]);
 
-// Group Controllers
-app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
-    function ($scope, $stateParams, $window, $timeout, Group) {
-      $scope.loadGroup = function() {
-        Group.query({
-            assignment: $stateParams.assignmentId,
-            members: $window.user
-          }, function(groups) {
-            if (groups.length == 1) {
-              $scope.group = groups[0];
-              $scope.inGroup = true;
-            } else {
-              $scope.group = undefined;
-              $scope.inGroup = false;
-            }
-          }
-        );
-      }
-      $scope.refreshGroup = function() {
-          $timeout(function() {
-            $scope.loadGroup();
-          }, 300);
-      }
-      $scope.loadGroup();
-      $scope.createGroup = function() {
-        Group.save({
-          assignment: $stateParams.assignmentId,
-          members: $window.user
-        }, $scope.refreshGroup);
-      }
-    }
-  ]);
-
-app.controller("MemberController", ["$scope", "$modal", "Group",
-    function ($scope, $modal, Group) {
-      $scope.remove = function() {
-          Group.removeMember({
-            member: $scope.member.email,
-            id: $scope.group.id
-          }, $scope.refreshGroup);
-        }
-    }
-]);
-
-app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
-    function ($scope, $stateParams, $window, $timeout, Group) {
-      $scope.add = function() {
-        if ($scope.newMember != "") {
-          Group.addMember({
-            member: $scope.newMember,
-            id: $scope.group.id
-          }, $scope.refreshGroup);
-        }
-      }
-    }
-  ]);
-
-app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$timeout", "User", "Group",
-    function ($scope, $stateParams, $window, $timeout, User, Group) {
-      $scope.invitations = User.invitations({
-        assignment: $stateParams.assignmentId
-      });
-
-      $scope.refreshInvitations = function() {
-          $timeout(function() {
-            $scope.invitations = User.invitations({
-              assignment: $stateParams.assignmentId
-            });
-          }, 300);
-      }
-
-      $scope.accept = function(invitation, $event) {
-        $event.stopPropagation();
-        if ($scope.inGroup === false) {
-          Group.acceptInvitation({
-            id: invitation.id
-          }, function() {
-            $scope.refreshInvitations();
-            $scope.refreshGroup();
-          });
-        } else {
-        }
-      }
-
-      $scope.reject = function(invitation, $event) {
-        $event.stopPropagation();
-        Group.rejectInvitation({
-          id: invitation.id
-        }, $scope.refreshInvitations);
-      }
-    }
-  ]);
 

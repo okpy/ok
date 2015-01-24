@@ -37,7 +37,7 @@ def student():
     params = {}
     if user is None:
         params['users_link'] = force_account_chooser(
-            users.create_login_url('/#/courseLanding'))
+            users.create_login_url('/#'))
         params['users_title'] = "Sign In"
     else:
         logging.info("User is %s", user.email())
