@@ -221,7 +221,7 @@ class User(Base):
                 assign_info['final']['backup'] = \
                         assign_info['final']['submission'].backup.fetch()
 
-            # Compute percentage here... feel free to delete if unnecessary
+                # Percentage
                 final = assign_info['final']['backup']
                 solved = 0
                 total = 0
@@ -234,7 +234,6 @@ class User(Base):
                                     solved += value
                                 if type(value) == int:
                                     total += value
-
                 assign_info['percent'] = round(100*float(solved)/total, 0)
 
             assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
