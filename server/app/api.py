@@ -1305,6 +1305,13 @@ class GroupAPI(APIResource):
         )
         audit_log_message.put()
 
+    def invite(self, group, user, data):
+        need = Need('invite')
+        if not group.can(user, need, group):
+            return need.exception()
+
+        group.invite(data['member'])
+
     def accept(self, group, user, data):
         # can only accept an invitation if you are in the invited_members
         need = Need('accept')
