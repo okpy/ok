@@ -53,22 +53,22 @@
             <form name="inviteGroup">
 
             <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
-            <a ng-click="addMember(assign, assign.invitee)" class="button">Submit</a>
+            <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
           </form>
           </div>
         </div>
 
           <div class="col right">
-            <div ng-if="assign.final.final_submission">
+            <div ng-if="assign.submissions">
               <h3 class="assign-subtitle"  >Latest Submission</h3>
               <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
-
-              <a ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
             </div>
-            <h3 class="assign-subtitle" ng-if="!assign.final.final_submission" >No Submissions</h3>
 
+            <h3 class="assign-subtitle" ng-if="!assign.submission" >No Submissions</h3>
+            <a ng-if="assign.submissions" ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
 
             <span class="clear"><a ng-click="getBackups(assign.assignment.id)" ng-if="assign.backups" class="link view-backups">view backups &raquo;</a></span>
+            <span class="clear" ng-if="!assign.backups">No backups found. Have you run ok?</a></span>
           </div>
 
       </div>

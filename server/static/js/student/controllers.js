@@ -3,8 +3,6 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
     function ($scope, $window, $state, $stateParams, Course) {
       Course.get(function(response) {
         $scope.courses = response.results
-        // TODO : Remove
-        console.log($scope.courses)
       });
       if ($window.user.indexOf("berkeley.edu") == -1) {
         $window.swal({
@@ -95,6 +93,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.assignments = response.assignments
+          }, function (error) {
+            console.log(error)
+            $window.swal('Unknown Course', 'Whoops.', 'error');
+            $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
       }
 
@@ -181,7 +183,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           }, function (err, data, config) {
             console.log(err, data, config)
             console.log("sadness")
-            $window.swal("Oops...", "Can't add that user to your group. Is that the right email? They might already be in a group.", "error");
+            $window.swal("Oops...", "Can't add that user to your group.    Is that the right email? They might already be in a group or may not be in the course.", "error");
          });
         }
       };
