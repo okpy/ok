@@ -765,7 +765,7 @@ body.course {
 				.assign-text .link {
 					margin-top:10px;
 				}
-		.assign-code {
+		.assign.code {
 			background-color:#3f3f3f;
 		}
 			.code-cont {
@@ -817,11 +817,24 @@ body.course {
 					margin-top:10px;
 				}
 			code,code span:not(.comment-icon) {
-				float:none;
+				white-space:pre;
+				color:#C90;
 				font-family:monospace;
+				width:100%;
+				padding:20px;
+				box-sizing:border-box;
 			}
 				code * {
 					float:none;
+				}
+				.code-title {
+					padding:20px 0 0 20px;
+					width:100%;
+					box-sizing:border-box;
+					font-size:30px;
+					color:#FFF;
+					font-family:'Raleway';
+					text-align:left;
 				}
 			.files {
 				width:30%;
