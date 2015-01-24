@@ -217,9 +217,9 @@ class User(Base):
                     self.get_final_submission(assignment.key)
             if assign_info['final']['final_submission']:
                 assign_info['final']['submission'] = \
-                        assign_info['final']['final_submission'].submission.fetch()
+                        assign_info['final']['final_submission'].submission.get()
                 assign_info['final']['backup'] = \
-                        assign_info['final']['submission'].backup.fetch()
+                        assign_info['final']['submission'].backup.get()
 
                 # Percentage
                 final = assign_info['final']['backup']
@@ -234,7 +234,8 @@ class User(Base):
                                     solved += value
                                 if type(value) == int:
                                     total += value
-                assign_info['percent'] = round(100*float(solved)/total, 0)
+                if total > 0:
+                    assign_info['percent'] = round(100*float(solved)/total, 0)
 
             assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
             assign_info['submissions'] = len(self.get_submissions(assignment.key)) > 0
@@ -566,9 +567,12 @@ class Submission(Base):
 
     def mark_as_final(self):
         final_submission = FinalSubmission(assignment=self.backup.get().assignment, \
-                                           group=self.backup.get().group.key, \
                                            submitter=self.submitter,\
                                            submission=self.key)
+        group = self.backup.get().group
+        if group:
+            final_submission.group = group
+
         final_submission.put()
 
     @classmethod

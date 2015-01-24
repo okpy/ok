@@ -12,7 +12,7 @@
     </div>
 
     <div class="assign-progress">
-      <div class="assign-bar" ng-if="assign.final.progress"><span class="assign-fill" ng-if="assign.final" ng-style="{'width' : '100%'}"></span></div>
+      <div class="assign-bar" ng-if="assign.progress"><span class="assign-fill" ng-if="assign.final" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
       <p class="assign-label" ng-if="assign.final.final_submission"><c>Assignment submitted!</c> </p>
       <p class="assign-label" ng-if="!assign.final.final_submission"><c> Not submitted yet</c></p>
     </div>
@@ -65,7 +65,7 @@
 
               <a ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
             </div>
-            <h3 class="assign-subtitle" ng-if="!assign.final.final_submission" >No Submission</h3>
+            <h3 class="assign-subtitle" ng-if="!assign.final.final_submission" >No Submissions</h3>
 
 
             <span class="clear"><a ng-click="getBackups(assign.assignment.id)" ng-if="assign.backups" class="link view-backups">view backups &raquo;</a></span>
