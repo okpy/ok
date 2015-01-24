@@ -208,7 +208,8 @@ class User(Base):
 
         for assignment in course.assignments:
             assign_info = {}
-            assign_info['group'] = self.get_group(assignment.key)
+            group = self.get_group(assignment.key)
+            assign_info['group'] = {'group_info': group, 'invited': group and self in group.invited}
             assign_info['final'] = {}
             assign_info['final']['final_submission'] = \
                     self.get_final_submission(assignment.key)
@@ -385,7 +386,13 @@ class Participant(Base):
             user_key = user_key.key
         if isinstance(course_key, Course):
             course_key = course_key.key
-        Participant(user=user_key, course=course_key, role=role).put()
+
+        query = cls.query(cls.user == user_key,
+                          cls.course == course_key,
+                          cls.role == role)
+        current = query.get()
+        if not current:
+            Participant(user=user_key, course=course_key, role=role).put()
 
     @classmethod
     def has_role(cls, user_key, course_key, role):
@@ -550,10 +557,10 @@ class Submission(Base):
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
 
     def mark_as_final(self):
-        final_submission = FinalSubmission(assignment=backup.assignment, \
-                                           group = backup.group, \
-                                           submitter = self.submitter,\
-                                           submission=self)
+        final_submission = FinalSubmission(assignment=self.backup.get().assignment, \
+                                           group=self.backup.get().group.key, \
+                                           submitter=self.submitter,\
+                                           submission=self.key)
         final_submission.put()
 
     @classmethod
@@ -716,7 +723,6 @@ class Group(Base):
         self.invited.append(user.key)
         self.put()
 
-
     #@ndb.transactional
     @classmethod
     def invite_to_group(cls, user_key, email, assignment_key):
@@ -752,8 +758,12 @@ class Group(Base):
         for users in [self.member, self.invited]:
             if user_key in users:
                 users.remove(user_key)
-        if not self.validate():
+
+        error = self.validate()
+        if error:
             self.key.delete()
+        else:
+            self.put()
 
     @classmethod
     def _can(cls, user, need, group, query):

@@ -48,9 +48,10 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 
 
 // Eeek.
-app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Group', '$timeout',
-  function($scope, Assignment, User, Group, $timeout) {
-      $scope.courseId = 5699868278390784;
+app.controller("AssignmentDashController", ['$scope', '$window', 'Assignment', 'User', 'Group', '$timeout',
+  function($scope, $window,Assignment, User, Group, $timeout) {
+      $scope.courseId = 5165212546105344;
+      $scope.courseIdL = 5699868278390784;
 
       $scope.toggleAssign = function (assign) {
         if ($scope.currAssign == assign) {
@@ -62,10 +63,18 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
 
       $scope.reloadAssignments = function () {
           User.get({
-            course: 5699868278390784,
+            course: $scope.courseIdL,
           }, function (response) {
             console.log(response.assignments)
             $scope.assignments = response.assignments
+          })
+      }
+
+      $scope.reloadAssignGroup = function (assign) {
+          Assignment.group({
+            id: assign.assignment.id,
+          }, function (response) {
+            assign.group = response.data
           })
       }
 
@@ -100,17 +109,29 @@ app.controller("AssignmentDashController", ['$scope', 'Assignment', 'User', 'Gro
             });
       }
 
-        $scope.addMember = function(assignmentId, member) {
-          if (member != '') {
-            Assignment.invite({
-              id: assignmentId,
-              email: member
-            }, function (response) {
-              // TODO  Check for error.
-              console.log(response)
-            });
-          }
-        };
+      $scope.addMember = function(assign, member) {
+        if (member && member != '') {
+          assignId = assign.assignment.id
+          console.log("POSTING ")
+          Assignment.invite({
+            id: assignId,
+            email: member
+          }, function (response) {
+            // TODO  Check for error.
+              $window.swal({
+                  title: "Invitation Sent!",
+                  text: "They will need to login to okpy.org and accept the invite.",
+                  timer: 3500,
+                  type: "success"
+                });
+              $scope.reloadAssignGroup(assign)
+          }, function (err, data) {
+            console.log(err)
+              $window.swal("Oops...", "That user/email isn't in this course.", "error");
+            $scope.reloadAssignGroup(assign)
+         });
+        }
+      };
 
         $scope.showGroup = function showGroup(group) {
             $('.popups').addClass('active');

@@ -11,6 +11,7 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
+from app.constants import STUDENT_ROLE, STAFF_ROLE
 
 from app import models, app
 from app.codereview import compare
@@ -51,7 +52,7 @@ def DateTimeArg(**kwds):
     Converts a webarg to a datetime object
 
     :param kwds: (dictionary) set of parameters
-    :return: (Arg) type of argument 
+    :return: (Arg) type of argument
     """
     def parse_date(arg):
         op = None
@@ -621,6 +622,15 @@ class AssignmentAPI(APIResource):
                 'points': Arg(int)
             }
         },
+        'invite': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
+        'group': {
+          'methods': set(['GET']),
+        },
         'assign': {
             'methods': set(['POST'])
         }
@@ -646,6 +656,16 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
         deferred.defer(add_to_grading_queues, obj.key)
+
+    def group(self, obj, user, data):
+        """User's current group for assignment."""
+        return models.Group.lookup(user, obj)
+
+    def invite(self, obj, user, data):
+        """User ask invited to join his/her current group for assignment."""
+        err = models.Group.invite_to_group(user.key, data['email'], obj.key)
+        if err:
+            raise BadValueError(err)
 
 
 class SubmitNDBImplementation(object):
@@ -1018,6 +1038,8 @@ class SubmissionAPI(APIResource):
                 'late': True,
                 })
 
+        models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)
+
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
         return (201, 'success', {
@@ -1180,6 +1202,12 @@ class CourseAPI(APIResource):
             'web_args': {
             }
         },
+        'get_courses': {
+            'methods': set(['GET']),
+            'web_args': {
+                'user': KeyArg('User', required=True)
+            }
+        },
         'get_students': {
         },
         'add_student': {
@@ -1221,10 +1249,22 @@ class CourseAPI(APIResource):
             course.staff.remove(data['staff_member'])
             course.put()
 
+    def get_courses(self, course, user, data):
+        query = models.Participant.query(models.Participant.user == data['user'])
+        need = Need('index')
+        query = models.Participant.can(user, need, course, query)
+        return list(query)
+
     def get_students(self, course, user, data):
-        return list(models.Participant.query(models.Participant.course == course))
+        query = models.Participant.query(models.Participant.course == course)
+        need = Need('index')
+        query = models.Participant.can(user, need, course, query)
+        return list(query)
 
     def add_student(self, course, user, data):
+        need = Need('staff') # Only staff can call this API
+        if not course.can(user, need, course):
+            raise need.exception()
         new_participant = models.Participant(user, course, 'student')
         new_participant.put()
 
@@ -1244,28 +1284,23 @@ class GroupAPI(APIResource):
                 'members': KeyArg('User')
             }
         },
-        'invite': {
-            'web_args': {
-                'member': Arg(str, required=True)
-            }
-        },
         'add_member': {
-            'methods': set(['PUT']),
+            'methods': set(['PUT', 'POST']),
             'web_args': {
-                'member': Arg(str, required=True),
+                'email': Arg(str, required=True),
                 },
             },
         'remove_member': {
-            'methods': set(['PUT']),
+            'methods': set(['PUT', 'POST']),
             'web_args': {
-                'member': Arg(str, required=True),
+                'email': Arg(str, required=True),
                 },
             },
         'accept': {
-            'methods': set(['PUT']),
+            'methods': set(['PUT', 'POST']),
             },
         'decline': {
-            'methods': set(['PUT']),
+            'methods': set(['PUT', 'POST']),
             }
     }
 
@@ -1275,17 +1310,19 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        if data['member'] in group.invited:
+        if data['email'] in group.invited:
             raise BadValueError('user has already been invited')
-        if data['member'] in group.member:
+        if data['email'] in group.member:
             raise BadValueError('user already part of group')
 
-        group.invite(data['member'])
+        error = group.invite(data['email'])
+        if error:
+            raise BadValueError(error)
 
         audit_log_message = models.AuditLog(
             event_type='Group.add_member',
             user=user.key,
-            description='Added member {} to group'.format(data['member']),
+            description='Added member {} to group'.format(data['email']),
             obj=group.key
         )
         audit_log_message.put()
@@ -1296,15 +1333,26 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        group.exit(data['member'])
+        to_remove = models.User.lookup(data['email'])
+        if to_remove:
+            group.exit(to_remove)
 
-        audit_log_message = models.AuditLog(
-            event_type='Group.remove_member',
-            user=user.key,
-            obj=group.key,
-            description='Removed user from group'
-        )
-        audit_log_message.put()
+            audit_log_message = models.AuditLog(
+                event_type='Group.remove_member',
+                user=user.key,
+                obj=group.key,
+                description='Removed user from group'
+            )
+            audit_log_message.put()
+
+    def invite(self, group, user, data):
+        need = Need('invite')
+        if not group.can(user, need, group):
+            return need.exception()
+
+        error = group.invite(data['email'])
+        if error:
+            raise BadValueError(error)
 
     def accept(self, group, user, data):
         # can only accept an invitation if you are in the invited_members

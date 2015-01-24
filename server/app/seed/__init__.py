@@ -2,6 +2,7 @@
 
 from app import models
 from app import utils
+from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
 
 import json
 
@@ -158,16 +159,22 @@ def seed():
 
     # Start putting things in the DB.
 
+
     c = models.User(
         email=["test@example.com"],
         is_admin=True
     )
     c.put()
+    # Create a course
+    course = make_seed_course(c)
+    course.put()
+
 
     a = models.User(
         email=["dummy@admin.com"],
     )
     a.put()
+    models.Participant.add_role(a.key, course.key, STAFF_ROLE)
 
     students = []
     group_members = []
@@ -177,6 +184,9 @@ def seed():
             email=["partner" + str(i) + "@teamwork.com"],
         )
         s.put()
+        models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
+
+
         group_members += [s]
 
 
@@ -185,6 +195,7 @@ def seed():
             email=["student" + str(i) + "@student.com"],
         )
         s.put()
+        models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
         students += [s]
 
 
@@ -192,13 +203,10 @@ def seed():
         email=["dummy2@admin.com"],
     )
     k.put()
+    models.Participant.add_role(k.key, course.key, STUDENT_ROLE)
 
     version = make_version('v1.3.0')
     version.put()
-
-    # Create a course
-    course = make_seed_course(c)
-    course.put()
 
     # Put a few members on staff
     course.instructor.append(c.key)
