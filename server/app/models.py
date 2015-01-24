@@ -571,7 +571,7 @@ class Submission(Base):
                                            submission=self.key)
         group = self.backup.get().group
         if group:
-            final_submission.group = group
+            final_submission.group = group.key
 
         final_submission.put()
 
