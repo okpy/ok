@@ -33,7 +33,15 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
 // Assignment Controllers
 app.controller("AssignmentOverviewController", ['$scope', 'Assignment', 'User', '$timeout',
   function($scope, Assignment, User, $timeout) {
-    Assignment.query(function(response) {
+    Assignment.query({
+      fields: {
+        id: true,
+        display_name: true,
+        id: true,
+        due_date: true,
+        points: true,
+        created: true,
+      }}, function(response) {
       $scope.assignments = response.results;
     })}
 ]);
