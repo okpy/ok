@@ -103,7 +103,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $scope.assignments = response.assignments
             $scope.hideLoader()
           }, function (error) {
-            console.log(error)
             $scope.hideLoader()
             $window.swal('Unknown Course', 'Whoops.', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
@@ -129,7 +128,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.reloadAssignments()
 
       $scope.removeMember = function(currGroup, member) {
-        console.log(member, currGroup.id)
             Group.removeMember({
               id: currGroup.id,
               email: member.email[0]
