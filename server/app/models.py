@@ -152,6 +152,11 @@ class User(Base):
         else:
             return FinalSubmission.query(FinalSubmission.group == group.key).get()
 
+    def _contains_files(self, backup):
+        messages = backup.get_messages()
+        if 'file_contents' in messages:
+            return not messages['file_contents']
+
     def get_backups(self, assignment, num_backups=10):
         group = self.get_group(assignment)
         all_backups = []
@@ -164,6 +169,8 @@ class User(Base):
             all_backups += list(Backup.query( \
                 Backup.submitter == member).filter( \
                     Backup.assignment == assignment).fetch())
+
+        all_backups = [x for x in all_backups if self._contains_files(x)]
 
         all_backups.sort(lambda x, y: int(5*(int(x.created > y.created) - 0.5)))
         
@@ -181,7 +188,8 @@ class User(Base):
         for member in members:
             all_submissions += list(Submission.query(Submission.submitter == member).fetch())
 
-        all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment]
+        all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment \
+                and self._contains_files(x.backup.get())]
 
         all_subms.sort(lambda x, y: int(5*(int(x.created > y.created) - 0.5)))
 
