@@ -1,8 +1,42 @@
-var app = angular.module('student', ['ngResource', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'ui.sortable', 'angularMoment', 'tableSort']);
+
+angular.module('ErrorCatcher', [])
+  .factory('$exceptionHandler', function () {
+      return function errorCatcherHandler(exception, cause) {
+          console.error(exception.stack);
+          Raven.captureException(exception);
+      };
+  }).factory('errorHttpInterceptor', ['$q', function ($q) {
+        return {
+            responseError: function responseError(rejection) {
+                Raven.captureException(new Error('HTTP response error'), {
+                    extra: {
+                        config: rejection.config,
+                        status: rejection.status
+                    }
+                });
+                return $q.reject(rejection);
+            }
+        };
+  }]).config(['$httpProvider', function($httpProvider) {
+      $httpProvider.interceptors.push('errorHttpInterceptor');
+  }]);
+
+
+var app = angular.module('student', ['ngResource', 'ErrorCatcher', 'ui.router', 'angular-loading-bar', 'ngAnimate', 'ui.bootstrap', 'ui.sortable', 'angularMoment', 'tableSort']);
 
 angular.module('student').constant('angularMomentConfig', {
     timezone: 'America/Los_Angeles'
 });
+
+
+angular.module('student').value("RavenConfig", {
+  dsn: 'https://edc8538d3d5f47fcb1b14c33d9ae7d8b@app.getsentry.com/36686',
+  config: {
+  whitelistUrls: ['http://ok-server.appspot.com', 'localhost']
+  //Additional config options here
+  }
+});
+
 
 app.directive('assignmentModule', function() {
         return {
