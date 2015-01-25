@@ -1,0 +1,27 @@
+<form class="form-horizontal" role="form">
+  <div class="form-group">
+    <label for="assignment-name" class="col-sm-2 control-label">Name: </label>
+    <div class="col-sm-10">
+      <input class="form-control" id="assignment-name" type="text" ng-model="assignment.name" placeholder="hw1">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label" for="assignment-points">Points: </label>
+    <div class="col-sm-10">
+      <input class="form-control" id="assignment-points" type="number" ng-model="assignment.points" required placeholder="3">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label" for="assignment-course">Course: </label>
+    <div class="col-sm-10">
+      <select ng-model="assignment.course" ng-options="course.id as course.name for course in courses">
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-default" ng-click="save()"> Save </button>
+    </div>
+  </div>
+</form>
