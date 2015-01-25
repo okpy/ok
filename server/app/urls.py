@@ -73,6 +73,22 @@ def landing():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("landing.html", **params)
 
+
+@app.route("/login")
+def login():
+    def force_account_chooser(url):
+        if 'ServiceLogin' in url:
+            return url.replace('ServiceLogin', 'AccountChooser')
+        return url
+
+    user = users.get_current_user()
+    params = {}
+    if user is None:
+      return redirect(users.create_login_url('/'))
+    else:
+      return redirect(url_for('home'))
+
+
 @app.route("/old")
 def dashboard():
     user = users.get_current_user()
