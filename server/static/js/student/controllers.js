@@ -68,6 +68,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
             hljs.highlightBlock(block);
           });
         }, 100);
+      }, function (error) {
+        $window.swal("Uhoh", "There was an error!", "error");
       });
   }]);
 
@@ -94,7 +96,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
 
       $scope.reloadAssignments = function () {
-          $scope.showLoader()
+        $scope.showLoader()
           User.get({
             course: $stateParams.courseId,
           }, function (response) {
@@ -111,8 +113,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.reloadView = function () {
         // oldToggle = $scope.currAssign.id
         $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
-        // $scope.findAndToggle(oldToggle)
       };
+
       $scope.showLoader = function showLoader() {
         $('.loader').removeClass('hide');
       }
@@ -122,18 +124,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         setTimeout(function() {
           $('.loader').removeClass('done')
         },800)
-      }
-
-      $scope.reloadAssignGroup = function () {
-          Assignment.group({
-            id: $scope.currAssign.assignment.id,
-          }, function (response) {
-            $scope.currAssign.group = response.data;
-            $scope.currGroup = $scope.currAssign.group;
-          }, function (err) {
-            console.log("there was an error!")
-            $window.swal('Could not get data.', 'Whoops.', 'error');
-          })
       }
 
       $scope.reloadAssignments()
@@ -198,13 +188,14 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             id: assignId,
             email: member
           }, function (response) {
+              $scope.reloadView()
               $window.swal({
                   title: "Invitation Sent!",
                   text: "They will need to login to okpy.org and accept the invite.",
                   timer: 3500,
                   type: "success"
                 });
-              $scope.reloadView()
+
           }, function (err) {
             $window.swal("Oops...", "Can't add that user to your group.    Is that the right email? They might already be in a group or may not be in the course.", "error");
          });

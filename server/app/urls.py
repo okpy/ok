@@ -32,11 +32,6 @@ def root():
 
 @app.route("/ok")
 def home():
-    def force_account_chooser(url):
-        if 'ServiceLogin' in url:
-            return url.replace('ServiceLogin', 'AccountChooser')
-        return url
-
     user = users.get_current_user()
     params = {}
     if user is None:
@@ -56,11 +51,6 @@ def home():
 
 @app.route("/landing")
 def landing():
-    def force_account_chooser(url):
-        if 'ServiceLogin' in url:
-            return url.replace('ServiceLogin', 'AccountChooser')
-        return url
-
     user = users.get_current_user()
     params = {}
     if user is None:
@@ -80,11 +70,6 @@ def landing():
 
 @app.route("/login")
 def login():
-    def force_account_chooser(url):
-        if 'ServiceLogin' in url:
-            return url.replace('ServiceLogin', 'AccountChooser')
-        return url
-
     user = users.get_current_user()
     params = {}
     if user is None:

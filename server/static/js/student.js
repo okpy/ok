@@ -4,7 +4,6 @@ angular.module('student').constant('angularMomentConfig', {
     timezone: 'America/Los_Angeles'
 });
 
-
 app.directive('assignmentModule', function() {
         return {
             restrict: 'E',

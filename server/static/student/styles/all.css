@@ -1176,7 +1176,7 @@ body.course {
 	top:0;
 	left:0;
 	background-color:rgba(0,0,0,0.9);
-	z-index:2500;
+	z-index:250;
 }
 	.loader.hide {
 		top:-100%;
