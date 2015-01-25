@@ -58,7 +58,10 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
   function($scope, $window, $location, $stateParams, $timeout, $anchorScroll, Submission) {
      Submission.get({id: $stateParams.submissionId}, function (response) {
         $scope.submission = response;
-        $scope.courseId = $stateParams.courseId
+        $scope.courseId = $stateParams.courseId;
+        if ($scope.submission.messages && $scope.submission.messages.file_contents['submit']) {
+          delete $scope.submission.messages.file_contents['submit']
+        }
         $timeout(function() {
           $('code').each(function(i, block) {
             hljs.highlightBlock(block);
