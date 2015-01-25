@@ -7,7 +7,7 @@
   <div class='snippet-wrapper'>
     <table class='snippet'>
       <tbody>
-      <tr ng-controller="CodeLineController" ng-repeat='codeline in contents track by $index'>
+      <tr ng-controller="CodeLineController" ng-repeat='codeline in contents track by $index' class="foo">
         <td ng-click="scroll()" id="{{anchorId}}" class='diff-line-num diff-line-num-left'>{{lineNum}}</td>
         <td class='diff-line-code diff-line-code-empty'>{{codeline}}</td>
       </tr>

@@ -3,6 +3,8 @@
 """
 Tests api field filtering.
 """
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 from app.utils import coerce_to_json
 from test_base import BaseTestCase, unittest
 

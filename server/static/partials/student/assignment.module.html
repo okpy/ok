@@ -1,0 +1,27 @@
+  <div class="block" ng-controller="AssignmentOverviewController" >
+    <div class="block-dom">
+      <h3 class="block-title">{{ assignments.length || '?' }}</h3>
+      <span>Active Assignments</span>
+    </div>
+    <div class="block-sub" >
+      <div class="assign-block" ng-repeat="assign in assignments">
+        <p class="block-label"><c></c>{{ assign.display_name }}</p>
+<!--         <div class="block-progress" progress="75"><span class="block-bar"></span>
+ -->        </div>
+      </div>
+    </div>
+    <a href="{{course.website}}" class="block-link">
+      <span class="icon-link">8</span>
+      <p class="link-label">Course Website</p>
+    </a>
+  </div>
+  <div class="newblock">
+    <a ui-sref="student" class="block-link block-back">
+      <span class="arrow left dark"></span>
+      <p>Back</p>
+    </a>
+    <a href="http://cs61a.org" class="block-link">
+      <span class="icon-link">8</span>
+      <p class="link-label">Course Website</p>
+    </a>
+  </div>

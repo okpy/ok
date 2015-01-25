@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+#pylint: disable=no-init,invalid-name,missing-docstring,maybe-no-member
+
 """
 Server test case scaffolding
 """
@@ -9,6 +11,7 @@ import os
 import sys
 import collections
 import urllib
+import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..')))
@@ -29,14 +32,33 @@ from google.appengine.ext import ndb
 import app
 from app import models
 from app import auth
-from app.constants import API_PREFIX #pylint: disable=import-error
+from app.constants import API_PREFIX
 from app.authenticator import Authenticator, AuthenticationException
 
-class BaseTestCase(unittest.TestCase): #pylint: disable=no-init
+def make_fake_course(creator):
+    return models.Course(
+        institution="UC Soumya",
+        instructor=[creator.key],
+        offering="cal/cs61a/fa14",
+        active=True)
+
+
+def make_fake_assignment(course, creator):
+    return models.Assignment(
+        name='hw1',
+        points=3,
+        display_name="CS 61A",
+        templates="[]",
+        course=course.key,
+        creator=creator.key,
+        max_group_size=4,
+        due_date=datetime.datetime.now())
+
+class BaseTestCase(unittest.TestCase):
     """
     Base test case.
     """
-    def setUp(self): #pylint: disable=invalid-name, missing-docstring
+    def setUp(self):
         # Flask apps testing. See: http://flask.pocoo.org/docs/testing/
         app.app.config.from_object('app.settings.Debug')
         self.app = app.app
@@ -72,6 +94,8 @@ class APIBaseTestCase(BaseTestCase):
     def setUp(self):
         super(APIBaseTestCase, self).setUp()
         APIBaseTestCase.accounts = self.get_accounts()
+        for acc in APIBaseTestCase.accounts.values():
+            acc.put()
         self.user = None
         auth.authenticate = self.authenticate
 

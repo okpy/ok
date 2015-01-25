@@ -29,6 +29,22 @@ app.factory('User', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        getBackups: {
+          method: "GET",
+          isArray: true,
+          url: 'api/v1/user/:id/get_backups',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        getSubmissions: {
+          method: "GET",
+          isArray: true,
+          url: 'api/v1/user/:id/get_submissions',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
       });
     }
   ]);
@@ -44,7 +60,8 @@ app.factory('Submission', ['$resource',
         get: {
           transformResponse: function(data) {
             return JSON.parse(data).data;
-          }
+          },
+          cache: true
         },
         diff: {
           url: 'api/v1/submission/:id/diff',
@@ -93,14 +110,31 @@ app.factory('Submission', ['$resource',
 
 app.factory('Assignment', ['$resource',
     function($resource) {
-      return $resource('api/v1/assignment/:id', {format: "json"}, {
+      return $resource('api/v1/assignment/:id', {
+        format: "json",
+        id: "@id"
+      }, {
         query: {
           isArray: false,
           transformResponse: function(data) {
             return JSON.parse(data).data;
-          }
+          },
+          cache: true
         },
         get: {
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        group: {
+          url: 'api/v1/assignment/:id/group',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        invite: {
+          method: "POST",
+          url: 'api/v1/assignment/:id/invite',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -113,24 +147,8 @@ app.factory('Group', ['$resource',
     function($resource) {
       return $resource('api/v1/group/:id', {
         format: "json",
-        id: "@id",
+          id: "@id"
       }, {
-        query: {
-          isArray: true,
-          transformResponse: function(response) {
-            response = JSON.parse(response);
-            if (response.status != 200) {
-              return []
-            }
-            data = response.data
-            return data.results;
-          }
-        },
-        get: {
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
         addMember: {
           url: 'api/v1/group/:id/add_member',
           method: 'PUT',
@@ -146,14 +164,14 @@ app.factory('Group', ['$resource',
           }
         },
         acceptInvitation: {
-          url: 'api/v1/group/:id/accept_invitation',
+          url: 'api/v1/group/:id/accept',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         rejectInvitation: {
-          url: 'api/v1/group/:id/reject_invitation',
+          url: 'api/v1/group/:id/decline',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
@@ -172,12 +190,14 @@ app.factory('Course', ['$resource',
           isArray: true,
           transformResponse: function(data) {
             return JSON.parse(data).data.results;
-          }
+          },
+          cache: true
         },
         get: {
           transformResponse: function(data) {
             return JSON.parse(data).data;
-          }
+          },
+          cache: true
         },
         staff: {
           isArray: true,
@@ -248,4 +268,5 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
+
 

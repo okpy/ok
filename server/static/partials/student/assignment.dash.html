@@ -1,0 +1,162 @@
+<div class="screen" ng-controller="AssignmentDashController">
+
+  <div class="assign large active" id="1" ng-repeat="assign in assignments">
+    <div class="assign-main">
+      <img class="assign-bg" src="/static/student/images/bg-clock.png">
+       <h2 class="assign-title"> {{ assign.assignment.display_name }}</h2>
+      <div class="assign-deck">
+        <p><img src="/static/student/images/icon-clock.png">due {{ assign.assignment.due_date | amCalendar }}</p>
+        <p><span class="icon-question">?</span> {{assign.assignment.points}} points</p>
+        <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+      </div>
+    </div>
+
+    <div class="assign-progress">
+      <div class="assign-bar" ng-if="assign.progress"><span class="assign-fill" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
+      <p class="assign-label" ng-if="assign.final.final_submission"><c>Assignment submitted!</c> </p>
+      <p class="assign-label" ng-if="!assign.final.final_submission"><c> Not submitted yet</c></p>
+    </div>
+
+    <div class="assign-more" ng-show="currAssign == assign">
+      <div class="assign-text">
+        <div class="col left">
+
+          <div ng-if="assign.group.group_info">
+            <h3 class="assign-subtitle">Group members</h3>
+            <ul class="plainList">
+              <li ng-repeat="member in assign.group.group_info.member">
+                <span class="stripes dark">
+                  <span class="stripe"></span>
+                  <span class="stripe"></span>
+                  <span class="stripe"></span>
+                </span>
+                {{member.email[0]}}
+              </li>
+            </ul>
+            <ul class="plainList" ng-if="assign.group.group_info.invited.length > 0">
+              <h3 class="assign-subtitle">Invited:</h3>
+              <li ng-repeat="invited in assign.group.group_info.invited">
+                {{invited.email[0]}}
+              <br>
+              <p ng-if="assign.group.invited">
+                <a class="link" ng-click="acceptInvite(assign.group.group_info)"> (Accept) </a> or
+                <a class="link" ng-click="rejectInvite(assign.group.group_info)"> (Reject)</a>
+              </p>
+
+              </li>
+            </ul>
+          </div>
+          <a ng-if="assign.group.group_info" ng-click="showGroup(assign.group.group_info)" class="link view-group" id="1">view group &raquo;</a>
+          <div ng-if="!assign.group.group_info">
+            <h3 class="assign-subtitle">Invite to Group</h3>
+            <form name="inviteGroup">
+
+            <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
+            <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+          </form>
+          </div>
+        </div>
+
+          <div class="col right">
+            <div ng-if="assign.final.final_submission">
+              <h3 class="assign-subtitle"  >Latest Submission</h3>
+              <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+            </div>
+
+            <h3 class="assign-subtitle" ng-if="!assign.submissions" >No Submissions</h3>
+            <a ng-if="assign.submissions" ng-click="getSubmissions(assign.assignment.id)" class="link view-submissions">view submissions &raquo;</a>
+
+            <span class="clear"><a ng-click="getBackups(assign.assignment.id)" ng-if="assign.backups" class="link view-backups">view backups &raquo;</a></span>
+            <span class="clear" ng-if="!assign.backups">No backups found. Have you run ok?</a></span>
+          </div>
+
+      </div>
+    </div>
+    <a class="assign-expand" ng-click="toggleAssign(assign)">
+      <p ng-if="assign != currAssign">Expand</p>
+      <p ng-if="assign == currAssign">Collapse</p>
+    </a>
+  </div>
+
+
+    <div class="popups">
+      <div class="popup group hide">
+        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+        <h2 class="popup-title">Group</h2>
+        <p class="popup-byline"> <b class="assign-name">{{ currGroup.assignment.display_name }}</b></p>
+        <div class="pop-content">
+
+          <ul ui-sortable ng-model="currGroup.member" class="list-view">
+
+            <li ng-repeat="member in currGroup.member" class="pop-item">
+              <span class="stripes">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              <span class="item-no">{{ $index }}</span>
+              <p class="first-member">{{ member.email[0] }} </p>
+              <div class="remove-user" ng-click="removeMember(currGroup, member)"><span class="icon-x">+</span></div>
+            </li>
+          </ul>
+          <hr>
+        <p ng-if="currGroup.invited.length > 0" class="popup-byline"> Invited Members: </p>
+
+          <ul class="list-view">
+
+            <li ng-repeat="invited in currGroup.invited" class="pop-item">
+              <span class="stripes">
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+                <span class="stripe"></span>
+              </span>
+              <span class="item-no">{{ $index }}</span>
+              <p class="first-member">{{ invited.email[0] }} </p>
+              <div class="remove-user" ng-click="removeMember(currGroup, invited)"><span class="icon-x">+</span></div>
+            </li>
+          </ul>
+          <a ng-click class="action">Save</a>
+        </div>
+      </div>
+
+      <div class="popup submissions hide">
+        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+        <h2 class="popup-title">Submissions</h2>
+        <p class="popup-byline">for <b>{{ currAssign.assignment.display_name }}</b></p>
+        <div class="pop-content">
+          <li class="header">
+            <span class="col-1"><p>Date</p></span>
+            <span class="col-2"><p>By</p></span>
+          </li>
+          <li class="pop-item" id="1" ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
+            <a class="flag" ng-class=" {active: currAssign.final.final_submission && subm.id == currAssign.final.backup.id }">
+              <span class="label left"><p>Flagged for Grading</p></span>
+              <span class="cloth"></span>
+              <span class="stem"></span>
+            </a>
+            <span class="col-1"><p>{{ subm.created | amCalendar }}</p></span>
+            <span class="col-2"><p>{{ subm.submitter.email[0] }}</p></span>
+            <a ui-sref='submission.detail({courseId: courseId, submissionId:subm.id})' class="light link view-submission">view &raquo;</a>
+          </li>
+        </div>
+      </div>
+
+      <div class="popup backups hide">
+        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+        <h2 class="popup-title">Backups</h2>
+        <p class="popup-byline">for <b>{{ currAssign.assignment.display_name }}</b></p>
+        <div class="pop-content">
+          <li class="header">
+            <span class="col-1"><p>Date</p></span>
+            <span class="col-2"><p>By</p></span>
+          </li>
+          <li class="pop-item" ng-repeat="backup in currAssign.backups | orderBy:'created':true">
+            <span class="col-1"><p>{{ backup.created | amCalendar }} </p></span>
+            <span class="col-2"><p>{{ backup.submitter.email[0] }}</p></span>
+            <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
+          </li>
+        </div>
+      </div>
+    </div>
+
+</div>

@@ -3,11 +3,12 @@
 """
 Tests api auto updating
 """
+import os
+os.environ['FLASK_CONF'] = 'TEST'
 import datetime 
 
-
 from test_base import APIBaseTestCase, unittest
-from test_api import make_fake_assignment, make_fake_course
+from test_base import make_fake_assignment, make_fake_course
 from app import models
 from app.urls import check_version, IncorrectVersionError
 
@@ -17,7 +18,7 @@ class AutoUpdateTest(APIBaseTestCase):
     """
 
     def get_accounts(self):
-        pass
+        return {}
 
     def setUp(self):
         super(AutoUpdateTest, self).setUp()

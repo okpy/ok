@@ -198,45 +198,8 @@ def filter_query(query, args, model):
 
     return query
 
-BATCH_SIZE = 500
-
-@ndb.toplevel
-def upgrade_submissions(cursor=None, num_updated=0):
-    query = ModelProxy.OldSubmission.query()
-
-    to_put = []
-    kwargs = {}
-
-    if cursor:
-        kwargs['start_cursor'] = cursor
-
-    results, cursor, more = query.fetch_page(BATCH_SIZE, **kwargs)
-    more = False
-    for old in results:
-        if old.converted:
-            more = True
-            continue
-
-        new = old.upgrade()
-        to_put.append(new)
-
-        old.converted = True
-        old.put_async()
-
-    if to_put or more:
-        ndb.put_multi(to_put)
-        num_updated += len(to_put)
-        logging.info(
-            'Put %d entities to Datastore for a total of %d',
-            len(to_put), num_updated)
-        deferred.defer(
-            upgrade_submissions, cursor=cursor, num_updated=num_updated)
-    else:
-        logging.info(
-            'upgrade_submissions complete with %d updates!', num_updated)
-
 ASSIGN_BATCH_SIZE = 20
-def assign_work(assign_key, cursor=None, num_updated=0):
+def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.FinalSubmission.query().filter(
         ModelProxy.FinalSubmission.assignment == assign_key)
 
@@ -278,36 +241,28 @@ def assign_work(assign_key, cursor=None, num_updated=0):
             'Put %d entities to Datastore for a total of %d',
             to_put, num_updated)
         deferred.defer(
-            assign_work, assign_key, cursor=cursor,
+            add_to_grading_queues, assign_key, cursor=cursor,
             num_updated=num_updated)
     else:
         logging.debug(
-            'assign_work complete with %d updates!', num_updated)
+            'add_to_grading_queues complete with %d updates!', num_updated)
 
-def assign_submission(subm_id):
-    subm = ModelProxy.Submission.get_by_id(subm_id)
-    assign_key = subm.assignment
+def assign_submission(subm_id, submit):
+    backup = ModelProxy.Backup.get_by_id(subm_id)
+    assign_key = backup.assignment
 
-    if not subm.get_messages().get('file_contents'):
+    if not backup.get_messages().get('file_contents'):
         logging.info("Submission had no file_contents, not processing")
         return
 
-    group = subm.submitter.get().get_group(assign_key)
+    if not submit:
+        return
 
-    FS = ModelProxy.FinalSubmission
-    current = FS.query()
-    current = current.filter(FS.assignment == assign_key)
-    current = current.filter(FS.group == group.key)
-    current = current.get()
-    if not current:
-        current = FS(
-            assignment=assign_key,
-            group=group.key)
+    S = ModelProxy.Submission
+    subm = S(backup=backup.key)
+    subm.put()
 
-    current.submission = subm.key
-    current.put()
-    message = "Final submission modification disallowed for now"
-    logging.error(message)
+    subm.mark_as_final()
 
 def parse_date(date):
     try:

@@ -1,7 +1,16 @@
+#pylint: disable=missing-docstring,invalid-name
+
 from app import models
 from app import utils
+from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
 
 import json
+
+SEED_OFFERING = "cal/cs61a/fa14"
+
+def is_seeded():
+    is_seed = models.Course.offering == SEED_OFFERING
+    return bool(models.Course.query(is_seed).get())
 
 def seed():
     import os
@@ -9,14 +18,12 @@ def seed():
     import random
     from google.appengine.ext import ndb
 
-    def make_fake_course(creator):
+    def make_seed_course(creator):
         return models.Course(
-            name="CS 61A",
+            display_name="CS 61A",
             institution="UC Soumya",
-            term="Fall",
-            year="2014",
-            creator=creator.key,
-            staff=[])
+            offering=SEED_OFFERING,
+            instructor=[creator.key])
 
     def make_future_assignment(course, creator):
         date = (datetime.datetime.now() + datetime.timedelta(days=365))
@@ -27,13 +34,15 @@ def seed():
 
         return models.Assignment(
             name='proj1',
-            points=20,
             display_name="Hog",
+            points=20,
             templates=json.dumps(templates),
-            course=course.key,
             creator=creator.key,
+            course=course.key,
             max_group_size=4,
-            due_date=date)
+            due_date=date,
+            lock_date=date,
+            )
 
     # Will reject all scheme submissions
     def make_past_assignment(course, creator):
@@ -41,7 +50,7 @@ def seed():
         with open('app/seed/scheme_templates/scheme.py') as sc, \
             open('app/seed/scheme_templates/scheme_reader.py') as sr, \
             open('app/seed/scheme_templates/tests.scm') as tests, \
-            open('app/seed/scheme_templates/questions.scm') as quest :
+            open('app/seed/scheme_templates/questions.scm') as quest:
             templates = {}
             templates['scheme.py'] = sc.read(),
             templates['scheme_reader.py'] = sr.read(),
@@ -58,23 +67,41 @@ def seed():
             max_group_size=4,
             due_date=date)
 
+    def make_hw_assignment(course, creator):
+        date = (datetime.datetime.now() + datetime.timedelta(days=2))
+        with open('app/seed/scheme_templates/scheme.py') as sc:
+            templates = {}
+            templates['scheme.py'] = sc.read(),
+
+        return models.Assignment(
+            name='cal/CS61A/sp15/hw1',
+            points=2,
+            display_name="Homework 1",
+            templates=json.dumps(templates),
+            course=course.key,
+            creator=creator.key,
+            max_group_size=4,
+            due_date=date)
+
     def make_group(assign, members):
         return models.Group(
-            members=[m.key for m in members],
-            assignment = assign.key
+            member=[m.key for m in members],
+            assignment=assign.key
         )
 
     def make_invited_group(assign, members):
         return models.Group(
-            members=[members[0].key],
-            invited_members=[members[1].key],
-            assignment = assign.key
+            member=[members[0].key],
+            invited=[members[1].key],
+            assignment=assign.key
         )
 
+    def random_date():
+        days, seconds = random.randint(0, 12), random.randint(0, 86399)
+        delta = datetime.timedelta(days=days, seconds=seconds)
+        sdate = (datetime.datetime.now() - delta)
 
-    def make_fake_submission(assignment, submitter, final=False):
-        sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
-
+    def make_seed_submission(assignment, submitter, final=False):
         with open('app/seed/hog_modified.py') as fp:
             messages = {}
             messages['file_contents'] = {
@@ -85,20 +112,22 @@ def seed():
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
-        return models.Submission(
+        backup = models.Backup(
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
-            created=sdate)
+            client_time=random_date())
+
+        backup.put()
+
+        return models.Submission(backup=backup.key)
 
 
-    def make_fake_scheme_submission(assignment, submitter, final=False):
-        sdate = (datetime.datetime.now() - datetime.timedelta(days=random.randint(0,12), seconds=random.randint(0,86399)))
-
+    def make_seed_scheme_submission(assignment, submitter, final=False):
         with open('app/seed/scheme.py') as sc, \
-            open('app/seed/scheme_reader.py') as sr, \
-            open('app/seed/tests.scm') as tests, \
-            open('app/seed/questions.scm') as quest :
+             open('app/seed/scheme_reader.py') as sr, \
+             open('app/seed/tests.scm') as tests, \
+             open('app/seed/questions.scm') as quest:
             messages = {}
             messages['file_contents'] = {
                 'scheme.py': sc.read(),
@@ -110,11 +139,15 @@ def seed():
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
-        return models.Submission(
+        backup = models.Backup(
             messages=messages,
             assignment=assignment.key,
             submitter=submitter.key,
-            created=sdate)
+            client_time=random_date())
+
+        backup.put()
+
+        return models.Submission(backup=backup.key)
 
     def make_version(current_version):
         return models.Version(
@@ -132,96 +165,80 @@ def seed():
             assigned_staff=[asignee.key])
         queue = queue.put()
         for subm in submissions:
+            backup = subm.backup.get()
             fs = models.FinalSubmission(
                 assignment=assignment.key,
-                group=subm.submitter.get().get_group(assignment.key).key,
+                group=backup.submitter.get().get_group(assignment.key).key,
                 submission=subm.key,
                 queue=queue)
             fs.put()
 
-    # Start putting things in the DB. 
-    
+    # Start putting things in the DB.
+
+
     c = models.User(
-        key=ndb.Key("User", "test@example.com"),
-        email="test@example.com",
-        first_name="Admin",
-        last_name="Example",
-        login="Adbert",
-        role="admin"
+        email=["test@example.com"],
+        is_admin=True
     )
     c.put()
+    # Create a course
+    course = make_seed_course(c)
+    course.put()
+
 
     a = models.User(
-        key=ndb.Key("User", "dummy@admin.com"),
-        email="dummy@admin.com",
-        first_name="Admin",
-        last_name="Jones",
-        login="albert",
-        role="admin"
+        email=["dummy@admin.com"],
     )
     a.put()
+    models.Participant.add_role(a.key, course.key, STAFF_ROLE)
 
     students = []
     group_members = []
 
     for i in range(4):
         s = models.User(
-            key=ndb.Key("User", "partner"  + str(i) + "@teamwork.com"),
-            email="partner" + str(i) + "@teamwork.com",
-            first_name="partner"+ str(i),
-            last_name="learning",
-            login="student",
-            role="student"
+            email=["partner" + str(i) + "@teamwork.com"],
         )
         s.put()
+        models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
         group_members += [s]
 
-
-    for i in range(0,9):
+    for i in range(0, 9):
         s = models.User(
-            key=ndb.Key("User", "student"  + str(i) + "@student.com"),
-            email="student" + str(i) + "@student.com",
-            first_name="Ben"+ str(i),
-            last_name="Bitdiddle",
-            login="student",
-            role="student"
+            email=["student" + str(i) + "@student.com"],
         )
         s.put()
+        models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
         students += [s]
 
-
     k = models.User(
-        key=ndb.Key("User", "dummy2@admin.com"),
-        email="dummy2@admin.com",
-        first_name="John",
-        last_name="Jones",
-        login="john",
-        role="admin"
+        email=["dummy2@admin.com"],
     )
     k.put()
+    models.Participant.add_role(k.key, course.key, STUDENT_ROLE)
 
     version = make_version('v1.3.0')
     version.put()
-
-    # Create a course
-    course = make_fake_course(c)
-    course.put()
+    version = make_version('v1.3.2')
+    version.put()
+    version = make_version('v1.3.3')
+    version.put()
 
     # Put a few members on staff
-    course.staff.append(c.key)
+    course.instructor.append(c.key)
     course.put()
-    course.staff.append(a.key)
+    course.instructor.append(a.key)
     course.put()
-
 
     # Create a few assignments
     assign = make_future_assignment(course, c)
     assign.put()
     assign2 = make_past_assignment(course, c)
     assign2.put()
+    assignHW = make_hw_assignment(course, c)
+    assignHW.put()
 
-
-    # Create submissions 
+    # Create submissions
     subms = []
 
     # Group submission
@@ -233,43 +250,39 @@ def seed():
     g2 = make_invited_group(assign, team2)
     g2.put()
 
-    # Have each member in the group submit one 
+    # Have each member in the group submit one
     for member in group_members:
-        subm = make_fake_submission(assign, member)
+        subm = make_seed_submission(assign, member)
         subm.put()
 
     for member in group_members:
-        subm = make_fake_scheme_submission(assign2, member)
+        subm = make_seed_scheme_submission(assign2, member)
         subm.put()
 
-    # Make this one be a final submission though. 
-    subm = make_fake_submission(assign, group_members[1], True)
+    # Make this one be a final submission though.
+    subm = make_seed_submission(assign, group_members[1], True)
     subm.put()
     subms.append(subm)
 
     # scheme final
-    subm = make_fake_scheme_submission(assign2, group_members[1], True)
+    subm = make_seed_scheme_submission(assign2, group_members[1], True)
     subm.put()
-
 
     # Now create indiviual submission
     for i in range(9):
-        subm = make_fake_submission(assign, students[i])
+        subm = make_seed_submission(assign, students[i])
         subm.put()
         #subms.append(subm)
 
-        subm = make_fake_submission(assign, students[i], True)
+        subm = make_seed_submission(assign, students[i], True)
         subm.put()
         #subms.append(subm)
 
+    # Seed a queue. This should be auto-generated.
+    make_queue(assign, subms, c)
+    make_queue(assign, subms, k)
 
-
-    # Seed a queue. This should be auto-generated. 
-    
-    q = make_queue(assign, subms, c)
-    q = make_queue(assign, subms, k)
-
-    #utils.assign_work(assign.key)
+    #utils.add_to_grading_queues(assign.key)
 
 
 
