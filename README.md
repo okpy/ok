@@ -31,6 +31,10 @@ $ cd server
 $ ./start_server
 ```
 
+Customizing seed content
+-------------------
+`app/seed/__init__.py` intializes the local dev appserver with sample content (Users, Assignments, a Course etc). You can customize it by changing the file and restarting the dev server.
+
 Server Development
 ------------------
 
