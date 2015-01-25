@@ -217,7 +217,11 @@ def seed():
     k.put()
     models.Participant.add_role(k.key, course.key, STUDENT_ROLE)
 
+    version = make_version('v1.3.0')
+    version.put()
     version = make_version('v1.3.2')
+    version.put()
+    version = make_version('v1.3.3')
     version.put()
 
     # Put a few members on staff
