@@ -705,7 +705,7 @@ body.course {
 				left:100%;
 			}
 			.small .assign-deck {
-				margin:40px 0 20px 10%;
+				margin:30px 0 20px 10%;
 				line-height:150%;
 				font-size:14px;
 			}
@@ -979,7 +979,7 @@ body.course {
 		float:none;
 	}
 	.popup {
-		width:450px;
+		width:550px;
 		background:url('../images/bg.png') #333;
 		padding:50px;
 		float:none;
@@ -1078,9 +1078,6 @@ body.course {
 			margin:20px;
 			color:#FFF;
 		}
-	.popup.submissions {
-		width:450px;
-	}
 		.popup .label {
 			display:none
 		}
