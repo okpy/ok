@@ -166,10 +166,7 @@ class User(Base):
                     Backup.assignment == assignment).fetch())
 
         all_backups.sort(lambda x, y: int(5*(int(x.created > y.created) - 0.5)))
-
-        for backup in all_backups[:num_backups]:
-            backup.messages =()
-
+        
         return all_backups[:num_backups]
 
     def get_submissions(self, assignment, num_submissions=10):
@@ -896,10 +893,10 @@ class FinalSubmission(Base):
 
         for submission in old_submissions:
             if self.submitter == submission.submitter:
-                ndb.delete(submission)
+                submission.key.delete()
                 return # Should only have 1 final submission per submitter
             if submission.group:
                 for person in submission.group.member:
                     if self.submitter == person:
-                        ndb.delete(submission)
+                        submission.key.delete()
                         return
