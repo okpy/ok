@@ -49,7 +49,11 @@ app.directive('sidebarModule', function() {
 
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise("/");
+
+    $urlRouterProvider.otherwise(function ($injector) {
+        var $state = $injector.get('$state');
+        $state.go('courseLanding');
+    });
 
     var courseLanding = {
       name: 'courseLanding',

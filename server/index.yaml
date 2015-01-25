@@ -47,6 +47,12 @@ indexes:
   properties:
   - name: created
 
+- kind: Groupv2
+  properties:
+  - name: assignment
+  - name: created
+    direction: desc
+
 - kind: Submission
   properties:
   - name: assignment

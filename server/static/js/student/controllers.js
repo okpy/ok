@@ -60,7 +60,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId;
         if ($scope.submission.messages && $scope.submission.messages.file_contents['submit']) {
-          delete $scope.submission.messages.file_contents['submit']
+          $scope.isSubmit = true;
+          delete $scope.submission.messages.file_contents['submit'];
         }
         $timeout(function() {
           $('code').each(function(i, block) {
@@ -93,22 +94,35 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
 
       $scope.reloadAssignments = function () {
+          $scope.showLoader()
           User.get({
             course: $stateParams.courseId,
           }, function (response) {
             $scope.assignments = response.assignments
+            $scope.hideLoader()
           }, function (error) {
             console.log(error)
+            $scope.hideLoader()
             $window.swal('Unknown Course', 'Whoops.', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
       }
 
       $scope.reloadView = function () {
-        oldToggle = $scope.currAssign.id
+        // oldToggle = $scope.currAssign.id
         $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
-        $scope.findAndToggle(oldToggle)
+        // $scope.findAndToggle(oldToggle)
       };
+      $scope.showLoader = function showLoader() {
+        $('.loader').removeClass('hide');
+      }
+
+      $scope.hideLoader = function hideLoader() {
+        $('.loader').addClass('done hide');
+        setTimeout(function() {
+          $('.loader').removeClass('done')
+        },800)
+      }
 
       $scope.reloadAssignGroup = function () {
           Assignment.group({
@@ -116,6 +130,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           }, function (response) {
             $scope.currAssign.group = response.data;
             $scope.currGroup = $scope.currAssign.group;
+          }, function (err) {
+            console.log("there was an error!")
+            $window.swal('Could not get data.', 'Whoops.', 'error');
           })
       }
 
@@ -127,9 +144,14 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               id: currGroup.id,
               email: member.email[0]
             }, function (err) {
-              $scope.currGroup = null;
               $scope.hideGroup();
-              $scope.currAssign.group = null
+              if (member.email[0] != $window.user) {
+                  $scope.reloadView()
+              } else {
+                $scope.currGroup = null;
+                $scope.currAssign.group = null
+
+              }
             });
       };
 
@@ -146,7 +168,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           Group.acceptInvitation({
               id: currGroup.id,
           }, function (err) {
-            console.log($scope.currGroup)
             $scope.reloadView()
           });
       };
@@ -169,6 +190,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             });
       }
 
+
       $scope.addMember = function(assign, member) {
         if (member && member != '') {
           assignId = assign.assignment.id
@@ -176,7 +198,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             id: assignId,
             email: member
           }, function (response) {
-            // TODO  Check for error.
               $window.swal({
                   title: "Invitation Sent!",
                   text: "They will need to login to okpy.org and accept the invite.",
@@ -184,58 +205,46 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
                   type: "success"
                 });
               $scope.reloadView()
-          }, function (err, data, config) {
-            console.log(err, data, config)
-            console.log("sadness")
+          }, function (err) {
             $window.swal("Oops...", "Can't add that user to your group.    Is that the right email? They might already be in a group or may not be in the course.", "error");
          });
         }
       };
 
-        $scope.showGroup = function showGroup(group) {
-            $('.popups').addClass('active');
-            $('.popup').removeClass('active');
-            $('.popup.group').addClass('active').removeClass('hide');
-            $scope.currGroup = group
-        }
+      $scope.showGroup = function showGroup(group) {
+          $('.popups').addClass('active');
+          $('.popup').removeClass('active');
+          $('.popup.group').addClass('active').removeClass('hide');
+          $scope.currGroup = group
+      }
 
-        $scope.hideGroup = function hideGroup() {
-            $('.popups').removeClass('active');
-            $('.popup').removeClass('active');
-            $('.popup.group').addClass('active').addClass('hide');
-        }
+      $scope.hideGroup = function hideGroup() {
+          $('.popups').removeClass('active');
+          $('.popup').removeClass('active');
+          $('.popup.group').addClass('active').addClass('hide');
+      }
 
-        $scope.showBackups = function showGroup(id) {
-            $('.popups').addClass('active');
-            $('.popup').removeClass('active');
-            $('.popup.backups').addClass('active').removeClass('hide');
-        }
+      $scope.showBackups = function showGroup(id) {
+          $('.popups').addClass('active');
+          $('.popup').removeClass('active');
+          $('.popup.backups').addClass('active').removeClass('hide');
+      }
 
-        $scope.showSubms = function showGroup(id) {
-            $('.popups').addClass('active');
-            $('.popup').removeClass('active');
-            $('.popup.submissions').addClass('active').removeClass('hide');
-        }
+      $scope.showSubms = function showGroup(id) {
+          $('.popups').addClass('active');
+          $('.popup').removeClass('active');
+          $('.popup.submissions').addClass('active').removeClass('hide');
+      }
 
-        $scope.hidePopups =  function hidePopups() {
-            $('.assign').removeClass('s');
-            $('.popups').removeClass('active');
-            $('.popup').removeClass('active');
-            setTimeout(function() {
-              $('.popup').addClass('hide');
-            },400);
-          }
-
-        $scope.showLoader = function showLoader() {
-          $('.loader').removeClass('hide');
-        }
-
-        $scope.hideLoader = function hideLoader() {
-          $('.loader').addClass('done hide');
+      $scope.hidePopups =  function hidePopups() {
+          $('.assign').removeClass('s');
+          $('.popups').removeClass('active');
+          $('.popup').removeClass('active');
           setTimeout(function() {
-            $('.loader').removeClass('done')
-          },800)
+            $('.popup').addClass('hide');
+          },400);
         }
+
 
       }
 ]);
