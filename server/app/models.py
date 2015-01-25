@@ -172,8 +172,8 @@ class User(Base):
 
         all_backups = [x for x in all_backups if self._contains_files(x)]
 
-        all_backups.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5)))
-        
+        all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
+
         return all_backups[:num_backups]
 
     def get_submissions(self, assignment, num_submissions=10):
@@ -191,7 +191,7 @@ class User(Base):
         all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment \
                 and self._contains_files(x.backup.get())]
 
-        all_subms.sort(lambda x, y: int(5*(int(x.server_time > y.server_time) - 0.5)))
+        all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
         for subm in all_subms[:num_submissions]:
             subm.messages = None
