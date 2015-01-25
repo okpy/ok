@@ -10,6 +10,12 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+- kind: Assignmentv2
+  properties:
+  - name: active
+  - name: created
+    direction: desc
+
 - kind: Backup
   properties:
   - name: messages.kind
@@ -19,6 +25,13 @@ indexes:
 
 - kind: Backup
   properties:
+  - name: submitter
+  - name: created
+    direction: desc
+
+- kind: Backupv2
+  properties:
+  - name: messages.kind
   - name: submitter
   - name: created
     direction: desc
