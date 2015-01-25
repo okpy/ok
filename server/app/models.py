@@ -1,4 +1,7 @@
-"""Data Models."""
+"""Data Models.
+
+Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
+"""
 
 #pylint: disable=no-member
 #pylint: disable=unused-argument
@@ -691,6 +694,9 @@ class Group(Base):
     """A group is a collection of users who are either members or invited.
 
     Members of a group can view each other's submissions.
+
+    Specification:
+    https://github.com/Cal-CS-61A-Staff/ok/wiki/Group-&-Submission-Consistency
     """
     member = ndb.KeyProperty(User, repeated=True)
     invited = ndb.KeyProperty(User, repeated=True)
@@ -862,7 +868,11 @@ class Queue(Base):
 
 
 class FinalSubmission(Base):
-    """The final submission for an assignment from a group."""
+    """The final submission for an assignment from a group.
+
+    Specification:
+    https://github.com/Cal-CS-61A-Staff/ok/wiki/Final-Submissions-and-Grading
+    """
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
     submitter = ndb.KeyProperty(User)
