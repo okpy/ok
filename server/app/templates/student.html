@@ -14,6 +14,7 @@
     <script src="/static/vendor/jquery/dist/jquery.min.js"></script>
 
     <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+    <script src="//cdn.ravenjs.com/1.1.2/jquery,native/raven.min.js"></script>
 
     <script src="/static/student/scripts/all.js"></script>
     <script src="/static/student/scripts/highlight.pack.js"></script>
@@ -44,6 +45,11 @@
     <script src="/static/js/student/controllers.js"></script>
     <script src="/static/admin/js/ok/app.js"></script>
 
+    <script>
+    Raven.config('http://4a20238a939b44928f2557e25c5efbaf@sentry.cs61a.org/2', {
+        whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']
+    }).install();
+    </script>
 
   </head>
   <body class="course">
