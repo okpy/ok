@@ -69,15 +69,19 @@ def sudo(su_email):
         logging.info("Staff Login Attempt from %s, Attempting to login as %s", user.email(), su_email)
         userobj = models.User.lookup(user.email())
         if userobj.is_admin:
-          logging.info("Sudo %s to %s success", user.email(), su_email)
+          logging.info("Sudo %s to %s granted", user.email(), su_email)
           substitute = models.User.lookup(su_email)
-          params["user"] = {'id': substitute.key, 'email' : substitute.email[0]}
-          params["sudo"] = {'su': substitute.email[0], 'admin': user.email()}
-          params['users_link'] = '/'
-          params['users_title'] = "Exit Sudo Mode"
-          params['relogin_link'] = '/'
-          params['DEBUG'] = app.config['DEBUG']
-          return render_template("sudo.html", **params)
+          if substitute
+            params["user"] = {'id': substitute.key, 'email' : substitute.email[0]}
+            params["sudo"] = {'su': substitute.email[0], 'admin': user.email()}
+            params['users_link'] = '/'
+            params['users_title'] = "Exit Sudo Mode"
+            params['relogin_link'] = '/'
+            params['DEBUG'] = app.config['DEBUG']
+            return render_template("sudo.html", **params)
+          else:
+            error = {'code': 404, 'description': "User not found"}
+            return page_not_found(error)
         else:
           logging.error("Sudo %s to %s failure", user.email(), su_email)
           error = {'code': 403, 'description': "Insufficient permission"}
