@@ -71,7 +71,7 @@ def sudo(su_email):
         if userobj.is_admin:
           logging.info("Sudo %s to %s granted", user.email(), su_email)
           substitute = models.User.lookup(su_email)
-          if substitute
+          if substitute:
             params["user"] = {'id': substitute.key, 'email' : substitute.email[0]}
             params["sudo"] = {'su': substitute.email[0], 'admin': user.email()}
             params['users_link'] = '/'
