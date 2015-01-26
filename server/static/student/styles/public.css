@@ -218,11 +218,14 @@ h1.title {
 			text-transform:uppercase;
 			font-size:0.75em;
 			letter-spacing:1px;
-			line-height:30px;
+			line-height:25px;
 			font-weight:300;
 			position:absolute;
 			top:30px;
 			left:50px;
+		}
+		.bar-input {
+			color:#FFF;
 		}
 	.center .button {
 		margin-top:20px;
