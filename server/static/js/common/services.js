@@ -1,6 +1,6 @@
 app.factory('User', ['$resource',
     function($resource) {
-      return $resource('api/v1/user/:id', {
+      return $resource('/api/v1/user/:id', {
         format: "json",
         id: window.user,
       }, {
@@ -16,7 +16,7 @@ app.factory('User', ['$resource',
           }
         },
         invitations: {
-          url: 'api/v1/user/:id/invitations',
+          url: '/api/v1/user/:id/invitations',
           isArray: true,
           transformResponse: function(data) {
             return JSON.parse(data).data;
@@ -24,7 +24,7 @@ app.factory('User', ['$resource',
         },
         finalsub: {
           method: "GET",
-          url: 'api/v1/user/:id/final_submission',
+          url: '/api/v1/user/:id/final_submission',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -32,7 +32,7 @@ app.factory('User', ['$resource',
         getBackups: {
           method: "GET",
           isArray: true,
-          url: 'api/v1/user/:id/get_backups',
+          url: '/api/v1/user/:id/get_backups',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -40,7 +40,7 @@ app.factory('User', ['$resource',
         getSubmissions: {
           method: "GET",
           isArray: true,
-          url: 'api/v1/user/:id/get_submissions',
+          url: '/api/v1/user/:id/get_submissions',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -51,7 +51,7 @@ app.factory('User', ['$resource',
 
 app.factory('Submission', ['$resource',
     function($resource) {
-      return $resource('api/v1/submission/:id', {
+      return $resource('/api/v1/submission/:id', {
         format: "json",
         id: "@id",
       }, {
@@ -64,42 +64,42 @@ app.factory('Submission', ['$resource',
           cache: true
         },
         diff: {
-          url: 'api/v1/submission/:id/diff',
+          url: '/api/v1/submission/:id/diff',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         addScore: {
           method: "POST",
-          url: 'api/v1/submission/:id/score',
+          url: '/api/v1/submission/:id/score',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         addComment: {
           method: "POST",
-          url: 'api/v1/submission/:id/add_comment',
+          url: '/api/v1/submission/:id/add_comment',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         deleteComment: {
           method: "POST",
-          url: 'api/v1/submission/:id/delete_comment',
+          url: '/api/v1/submission/:id/delete_comment',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         addTag: {
           method: "PUT",
-          url: 'api/v1/submission/:id/add_tag',
+          url: '/api/v1/submission/:id/add_tag',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         removeTag: {
           method: "PUT",
-          url: 'api/v1/submission/:id/remove_tag',
+          url: '/api/v1/submission/:id/remove_tag',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -110,7 +110,7 @@ app.factory('Submission', ['$resource',
 
 app.factory('Assignment', ['$resource',
     function($resource) {
-      return $resource('api/v1/assignment/:id', {
+      return $resource('/api/v1/assignment/:id', {
         format: "json",
         id: "@id"
       }, {
@@ -127,14 +127,14 @@ app.factory('Assignment', ['$resource',
           }
         },
         group: {
-          url: 'api/v1/assignment/:id/group',
+          url: '/api/v1/assignment/:id/group',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         invite: {
           method: "POST",
-          url: 'api/v1/assignment/:id/invite',
+          url: '/api/v1/assignment/:id/invite',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -145,33 +145,33 @@ app.factory('Assignment', ['$resource',
 
 app.factory('Group', ['$resource',
     function($resource) {
-      return $resource('api/v1/group/:id', {
+      return $resource('/api/v1/group/:id', {
         format: "json",
           id: "@id"
       }, {
         addMember: {
-          url: 'api/v1/group/:id/add_member',
+          url: '/api/v1/group/:id/add_member',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         removeMember: {
-          url: 'api/v1/group/:id/remove_member',
+          url: '/api/v1/group/:id/remove_member',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         acceptInvitation: {
-          url: 'api/v1/group/:id/accept',
+          url: '/api/v1/group/:id/accept',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         rejectInvitation: {
-          url: 'api/v1/group/:id/decline',
+          url: '/api/v1/group/:id/decline',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;
@@ -183,7 +183,7 @@ app.factory('Group', ['$resource',
 
 app.factory('Course', ['$resource',
     function($resource) {
-      return $resource('api/v1/course/:id', {
+      return $resource('/api/v1/course/:id', {
         format: "json",
       }, {
         query: {
@@ -201,19 +201,19 @@ app.factory('Course', ['$resource',
         },
         staff: {
           isArray: true,
-          url: 'api/v1/course/:id/get_staff',
+          url: '/api/v1/course/:id/get_staff',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         add_member: {
-          url: 'api/v1/course/:id/add_staff',
+          url: '/api/v1/course/:id/add_staff',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         remove_member: {
-          url: 'api/v1/course/:id/remove_staff',
+          url: '/api/v1/course/:id/remove_staff',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -224,7 +224,7 @@ app.factory('Course', ['$resource',
 
 app.factory('Version', ['$resource',
     function($resource) {
-      return $resource('api/v1/version/:id', {
+      return $resource('/api/v1/version/:id', {
         format: "json",
       }, {
         query: {
@@ -241,7 +241,7 @@ app.factory('Version', ['$resource',
         },
         update: {
           method: "PUT",
-          url: "api/v1/version/:id/new",
+          url: "/api/v1/version/:id/new",
           params: {}
         }
       });
@@ -250,7 +250,7 @@ app.factory('Version', ['$resource',
 
 app.factory('Queue', ['$resource',
     function($resource) {
-      return $resource('api/v1/queue/:id', {
+      return $resource('/api/v1/queue/:id', {
         format: "json",
         id: "@id",
       }, {

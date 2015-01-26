@@ -42,7 +42,6 @@ def home():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("student.html", **params)
 
-
 @app.route("/landing")
 def landing():
     user = users.get_current_user()
@@ -61,6 +60,32 @@ def landing():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("landing.html", **params)
 
+
+@app.route("/sudo/su/<su_email>")
+def sudo(su_email):
+    user = users.get_current_user()
+    params = {}
+    if user is None:
+        params['users_link'] = force_account_chooser(
+            users.create_login_url('/'))
+        params['users_title'] = "Sign In"
+    else:
+        logging.info("Staff Login Attempt from %s, Attempting to login as %s", user.email(), su_email)
+        userobj = models.User.lookup(user.email())
+        if userobj.is_admin:
+          logging.info("Sudo %s to %s success", user.email(), su_email)
+          substitute = models.User.lookup(su_email)
+          params["user"] = {'id': substitute.key, 'email' : substitute.email[0]}
+          params["sudo"] = {'su': substitute.email[0], 'admin': user.email()}
+          params['users_link'] = '/'
+          params['users_title'] = "Exit Sudo Mode"
+          params['relogin_link'] = '/'
+          params['DEBUG'] = app.config['DEBUG']
+          return render_template("sudo.html", **params)
+        else:
+          logging.error("Sudo %s to %s failure", user.email(), su_email)
+          error = {'code': 403, 'description': "Insufficient permission"}
+          return page_not_found(error)
 
 @app.route("/login")
 def login():
@@ -113,7 +138,8 @@ def admin():
             return render_template("admin.html", **params)
         else:
             logging.info("Staff Login Failure from %s", user.email())
-    return redirect(url_for('dashboard'))
+            error = {'code': 403, 'description': "Insufficient permission"}
+            return page_not_found(error)
 
 ## Error handlers
 # Handle 404 errors
