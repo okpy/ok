@@ -258,6 +258,8 @@ class User(Base):
         """Update the final submission of the user and its group.
         Call on all users after group changes.
         """
+        if isinstance(assignment, Assignment):
+            assignment = assignment.key
         assigned = FinalSubmission.assignment == assignment
         def get_final(*args):
             return FinalSubmission.query(assigned, *args).get()

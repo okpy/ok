@@ -24,13 +24,13 @@ class FinalSubmissionTest(APIBaseTestCase):
         """
         return {
             "student0": models.User(
-                email=["dummy@student.com"]
+                email=["student0@student.com"]
             ),
             "student1": models.User(
-                email=["other@student.com"]
+                email=["student1@student.com"]
             ),
             "student2": models.User(
-                email=["otherrr@student.com"]
+                email=["sudent2@student.com"]
             ),
             "staff": models.User(
                 email=["dummy@staff.com"]
@@ -161,25 +161,11 @@ class FinalSubmissionTest(APIBaseTestCase):
         Asserts that the |user| has the final submission which corresponds
         to |backup|.
         """
-        course_info = user.get_course_info(self.assign.course.get())
-        current_assignment = None
-        for assign_info in course_info['assignments']:
-            if assign_info['assignment'].key == self.assign.key:
-                current_assignment = assign_info
-                break
-
-        self.assertIsNotNone(current_assignment)
-        self.assertEqual(current_assignment['backups'], True)
-        self.assertEqual(current_assignment['submissions'], True)
-        fs = current_assignment['final']['final_submission']
-        self.assertIsNotNone(fs)
-        if fs.group == None:
-            self.assertEqual(fs.submitter, user.key)
-        else:
-            grp = user.get_group(self.assign.key)
-            self.assertEqual(fs.group, grp.key)
-
-        self.assertEqual(fs.submission.get().backup.get(), backup)
+        if isinstance(user, str):
+            user = self.accounts[user]
+        final = user.get_final_submission(self.assign.key)
+        self.assertIsNotNone(final)
+        self.assertEqual(backup.key, final.submission.get().backup)
 
     def submit(self, subm):
         """
@@ -191,7 +177,6 @@ class FinalSubmissionTest(APIBaseTestCase):
 
     def testFinalSubmissionMerging(self):
         """
-        For bug 331.
         Tests that merging groups keeps the final submission for that group.
         """
         self.set_assignment('first')
@@ -205,12 +190,15 @@ class FinalSubmissionTest(APIBaseTestCase):
             self.accounts['student0'],
             self.backups['first'])
 
-        grp = models.Group(
+        group = models.Group(
             assignment=self.assignments['first'].key,
             member=[self.accounts['student0'].key,
                     self.accounts['student1'].key])
-        grp.put()
+        group.put()
+        for user in (self.accounts['student0'], self.accounts['student1']):
+            user.update_final_submission(self.assign)
         self.assertFinalSubmission('student0', 'first')
+        self.assertFinalSubmission('student1', 'first')
 
 if __name__ == "__main__":
     unittest.main()
