@@ -945,7 +945,7 @@ class FinalSubmission(Base):
     group = ndb.KeyProperty(Group)
     submission = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
-    submitter = ndb.ComputedProperty(lambda x: x.submission.get().submitter)
+    submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
     published = ndb.BooleanProperty(default=False)
 
     @property
@@ -965,3 +965,6 @@ class FinalSubmission(Base):
     @classmethod
     def _can(cls, user, need, final, query):
         return Submission._can(user, need, final.submission.get(), query)
+
+    def _pre_put_hook(self):
+        self.submitter = self.submission.get().submitter
