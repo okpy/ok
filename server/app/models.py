@@ -145,9 +145,7 @@ class User(Base):
             self.email.remove(email)
 
     def get_final_submission(self, assignment):
-        query = Group.query(Group.member==self.key)
-        group = query.filter(Group.assignment==assignment)
-        group = group.get()
+        group = self.get_group(assignment)
         if group:
             return FinalSubmission.query(
                 FinalSubmission.group==group.key).get()
@@ -260,28 +258,26 @@ class User(Base):
         """
         if isinstance(assignment, Assignment):
             assignment = assignment.key
-        assigned = FinalSubmission.assignment == assignment
-        def get_final(*args):
-            return FinalSubmission.query(assigned, *args).get()
 
-        for_user = get_final(FinalSubmission.submitter == self.key)
+        options = [FinalSubmission.submitter == self.key]
         group = self.get_group(assignment)
         if group:
-            for_group = get_final(FinalSubmission.group == group.key)
-        else:
-            for_group = for_user
+            options.append(FinalSubmission.group == group.key)
+            options += [FinalSubmission.submitter == m for m in group.member]
+        who = options[0] if len(options) == 1 else ndb.OR(*options)
+        assigned = FinalSubmission.assignment == assignment
+        finals = FinalSubmission.query(assigned, who).fetch()
 
-        if for_group and for_user and  for_group.key != for_user.key:
-            # Choose most recent final submission between user & group
-            ut, gt = [x.get().server_time for x in (for_group, for_user)]
-            if ut > gt:
-                for_user.group = group
-                for_user.put()
-                for_group.key.delete()
-            else:
-                for_user.key.delete()
-        elif not for_user and not group:
-            # Create a final submission for user from the latest submission.
+        if finals:
+            # Keep the most recent and delete the rest.
+            finals.sort(lambda final: final.submission.get().server_time)
+            old, latest = finals[:-1], finals[-1]
+            latest.group = group.key
+            latest.put()
+            for final in old:
+                final.delete()
+        else:
+            # Create a final submission for user from her latest submission.
             subs = Submission.query(
                 Submission.submitter == self.key,
                 Submission.assignment == assignment)
@@ -289,6 +285,7 @@ class User(Base):
             if latest:
                 FinalSubmission(assignment=assignment,
                                 submitter=self,
+                                group=group.key if group else None,
                                 submission=latest).put()
 
     #@ndb.transactional

@@ -161,11 +161,14 @@ class FinalSubmissionTest(APIBaseTestCase):
         Asserts that the |user| has the final submission which corresponds
         to |backup|.
         """
-        if isinstance(user, str):
+        if isinstance(user, (str, unicode)):
             user = self.accounts[user]
         final = user.get_final_submission(self.assign.key)
-        self.assertIsNotNone(final)
-        self.assertEqual(backup.key, final.submission.get().backup)
+        if backup:
+            self.assertIsNotNone(final)
+            self.assertEqual(backup.key, final.submission.get().backup)
+        else:
+            self.assertIsNone(final)
 
     def submit(self, subm):
         """
@@ -186,19 +189,16 @@ class FinalSubmissionTest(APIBaseTestCase):
         subm = self.submissions['first']
         subm.key.delete()
         self.submit(self.backups['first'])
-        self.assertFinalSubmission(
-            self.accounts['student0'],
-            self.backups['first'])
+        self.assertFinalSubmission('student0', self.backups['first'])
+        self.assertFinalSubmission('student1', None)
 
-        group = models.Group(
-            assignment=self.assignments['first'].key,
-            member=[self.accounts['student0'].key,
-                    self.accounts['student1'].key])
-        group.put()
+        mems = [self.accounts['student0'].key, self.accounts['student1'].key]
+        models.Group(assignment=self.assign.key, member=mems).put()
         for user in (self.accounts['student0'], self.accounts['student1']):
             user.update_final_submission(self.assign)
-        self.assertFinalSubmission('student0', 'first')
-        self.assertFinalSubmission('student1', 'first')
+
+        self.assertFinalSubmission('student0', self.backups['first'])
+        self.assertFinalSubmission('student1', self.backups['first'])
 
 if __name__ == "__main__":
     unittest.main()
