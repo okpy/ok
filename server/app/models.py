@@ -200,12 +200,14 @@ class User(Base):
 
         return all_subms[:num_submissions]
 
-    def get_group(self, assignment):
+    def get_group(self, assignment_key):
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
         query = Group.query(Group.member==self.key)
-        group = query.filter(Group.assignment==assignment).get()
+        group = query.filter(Group.assignment==assignment_key).get()
         if not group: # Might be invited to a group
             query = Group.query(Group.invited==self.key)
-            group = query.filter(Group.assignment==assignment).get()
+            group = query.filter(Group.assignment==assignment_key).get()
         return group
 
     def get_course_info(self, course):
@@ -262,7 +264,7 @@ class User(Base):
         options = [FinalSubmission.submitter == self.key]
         group = self.get_group(assignment)
 
-        if group:
+        if group and self.key in group.member:
             options.append(FinalSubmission.group == group.key)
             options += [FinalSubmission.submitter == m for m in group.member]
         who = options[0] if len(options) == 1 else ndb.OR(*options)
@@ -307,9 +309,12 @@ class User(Base):
     def lookup(cls, email):
         """Retrieve a user by email or return None."""
         assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
-        return cls.query(cls.email == email).get()
-
-
+        users = cls.query(cls.email == email).fetch()
+        if not users:
+            return None
+        if len(users) > 1:
+            pass # TODO Decide how to handle non-unique users
+        return users[0]
 
     @classmethod
     def _can(cls, user, need, obj, query):
@@ -785,27 +790,33 @@ class Group(Base):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
         if not user:
-            return "That user does not exist"
+            return "{} cannot be found".format(email)
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
-            return "That user is not enrolled in this course"
+            return "{} is not enrolled in {}".format(email, course.get().display_name)
         if user.key in self.member or user.key in self.invited:
-            return "That user is already in the group"
+            return "{} is already in the group".format(email)
         has_user = ndb.OR(Group.member == user.key, Group.invited == user.key)
         if Group.query(has_user, Group.assignment == self.assignment).get():
-            return "That user is already in some other group"
+            return "{} is already in some other group".format(email)
         max_group_size = self.assignment.get().max_group_size
         total_member = len(self.member) + len(self.invited)
         if total_member + 1 > max_group_size:
             return "The group is full"
         self.invited.append(user.key)
         self.put()
+        for member in self.member:
+            member.get().update_final_submission(self.assignment)
 
     #@ndb.transactional
     @classmethod
     def invite_to_group(cls, user_key, email, assignment_key):
         """User invites email to join his/her group. Returns error or None."""
         group = cls._lookup_or_create(user_key, assignment_key)
+        if isinstance(user_key, User):
+            user_key = user_key.key
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
         AuditLog(
             event_type='Group.invite',
             user=user_key,

@@ -11,55 +11,42 @@ import os
 os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 
-from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
+from test_base import BaseTestCase, unittest #pylint: disable=relative-import
 
-from app import models, utils
+from app import models, utils, constants
 
 from google.appengine.ext import ndb
 
-class FinalSubmissionTest(APIBaseTestCase):
-    def get_accounts(self):
+class FinalSubmissionTest(BaseTestCase):
+    def create_accounts(self):
         """
         Returns the accounts you want to exist in your system.
         """
-        return {
-            "student0": models.User(
-                email=["student0@student.com"]
-            ),
-            "student1": models.User(
-                email=["student1@student.com"]
-            ),
-            "student2": models.User(
-                email=["sudent2@student.com"]
-            ),
-            "staff": models.User(
-                email=["dummy@staff.com"]
-            ),
-            "empty_staff": models.User(
-                email=["dummy_empty@staff.com"]
-            ),
-            "admin": models.User(
-                email=["dummy@admin.com"]
-            )
-        }
+        keys = ["student0", "student1", "student2", "staff", "admin"]
+        return {key: models.User.get_or_insert(key+"@b.edu") for key in keys}
 
     def setUp(self):
         super(FinalSubmissionTest, self).setUp()
-        self.accounts = self.get_accounts()
-        for user in self.accounts.values():
-            user.put()
+        self.accounts = self.create_accounts()
 
         self.courses = {
             "first": models.Course(
                 institution="UC Awesome",
+                display_name="First Course",
                 instructor=[self.accounts['admin'].key]),
             "second": models.Course(
                 institution="UC Awesome",
+                display_name="Second Course",
                 instructor=[self.accounts['admin'].key]),
             }
 
         for course in self.courses.values():
             course.put()
+
+        # Enroll students 0 and 1 in First Course.
+        for student in [self.accounts[s] for s in ('student0', 'student1')]:
+            c = self.courses['first'].key
+            models.Participant.add_role(student.key, c, constants.STUDENT_ROLE)
 
         self.assignments = {
             "first": models.Assignment(
@@ -110,26 +97,6 @@ class FinalSubmissionTest(APIBaseTestCase):
         for backup in self.backups.values():
             backup.put()
 
-        self.submissions = {
-            "first": models.Submission(
-                backup=self.backups["first"].key
-                ),
-            "second": models.Submission(
-                backup=self.backups["second"].key
-                )
-        }
-
-        for subm in self.submissions.values():
-            subm.put()
-
-        self.groups = {
-            'group1': models.Group(
-                member=[self.accounts['student0'].key,
-                        self.accounts['student1'].key],
-                assignment=self.assignments['first'].key
-            )}
-
-        self.groups['group1'].put()
         self.user = self.accounts['student0']
         self.assign = self.assignments['first']
 
@@ -166,7 +133,7 @@ class FinalSubmissionTest(APIBaseTestCase):
         final = user.get_final_submission(self.assign.key)
         if backup:
             self.assertIsNotNone(final)
-            self.assertEqual(backup.key, final.submission.get().backup)
+            self.assertEqual(backup, final.submission.get().backup.get())
         else:
             self.assertIsNone(final)
 
@@ -178,27 +145,41 @@ class FinalSubmissionTest(APIBaseTestCase):
             subm = subm.key
         utils.assign_submission(subm.id(), True)
 
-    def testFinalSubmissionMerging(self):
+    def testCreateGroup(self):
         """
         Tests that merging groups keeps the final submission for that group.
         """
-        self.set_assignment('first')
-
-        self.groups['group1'].key.delete()
-
-        subm = self.submissions['first']
-        subm.key.delete()
         self.submit(self.backups['first'])
         self.assertFinalSubmission('student0', self.backups['first'])
         self.assertFinalSubmission('student1', None)
 
-        mems = [self.accounts['student0'].key, self.accounts['student1'].key]
-        models.Group(assignment=self.assign.key, member=mems).put()
-        for user in (self.accounts['student0'], self.accounts['student1']):
-            user.update_final_submission(self.assign)
+        members = [self.accounts[s].key for s in ('student0', 'student1')]
+        models.Group(assignment=self.assign.key, member=members).put()
+        for member in members:
+            member.get().update_final_submission(self.assign)
 
         self.assertFinalSubmission('student0', self.backups['first'])
         self.assertFinalSubmission('student1', self.backups['first'])
+
+    def testInvite(self):
+        """
+        Tests that final submission updates when a group is created.
+        """
+        self.submit(self.backups['first'])
+        self.submit(self.backups['second'])
+        self.assertFinalSubmission('student0', self.backups['first'])
+        self.assertFinalSubmission('student1', self.backups['second'])
+
+        inviter, invited = [self.accounts[s] for s in ('student0', 'student1')]
+        invite_fn = models.Group.invite_to_group
+        error = invite_fn(inviter.key, invited.email[0], self.assign)
+        self.assertIsNone(error)
+
+        self.assertFinalSubmission('student0', self.backups['first'])
+        self.assertFinalSubmission('student1', self.backups['second'])
+        final = inviter.get_final_submission(self.assign)
+        self.assertIsNotNone(final.group)
+
 
 if __name__ == "__main__":
     unittest.main()
