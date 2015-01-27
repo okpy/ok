@@ -258,13 +258,14 @@ class User(Base):
         """Update the final submission of the user and its group.
         Call on all users after group changes.
         """
-        def get_final(**vargs):
-            return FinalSubmission.query(assignment=assignment, **vargs).get()
+        assigned = FinalSubmission.assignment == assignment
+        def get_final(*args):
+            return FinalSubmission.query(assigned, *args).get()
 
-        for_user = get_final(submitter=self)
+        for_user = get_final(FinalSubmission.submitter == self.key)
         group = self.get_group(assignment)
         if group:
-            for_group = get_final(group=group)
+            for_group = get_final(FinalSubmission.group == group.key)
         else:
             for_group = for_user
 
@@ -279,8 +280,10 @@ class User(Base):
                 for_user.key.delete()
         elif not for_user and not group:
             # Create a final submission for user from the latest submission.
-            subs = Submission.query(submitter=self, assignment=assignment)
-            latest = subs.order_by(Submission.server_time).get()
+            subs = Submission.query(
+                Submission.submitter == self.key,
+                Submission.assignment == assignment)
+            latest = subs.order(-Submission.server_time).get()
             if latest:
                 FinalSubmission(assignment=assignment,
                                 submitter=self,
@@ -606,6 +609,7 @@ class Submission(Base):
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
+    assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
 
     def mark_as_final(self):
@@ -822,7 +826,7 @@ class Group(Base):
         self.member.append(user_key)
         self.put()
         for user_key in self.member:
-            user_key.get().update_final_submission()
+            user_key.get().update_final_submission(self.assignment)
 
     #@ndb.transactional
     def exit(self, user_key):
@@ -840,7 +844,7 @@ class Group(Base):
             self.put()
 
         for user in self.member + [user_key]:
-            user.get().update_final_submission()
+            user.get().update_final_submission(self.assignment)
 
     @classmethod
     def _can(cls, user, need, group, query):
