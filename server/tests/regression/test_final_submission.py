@@ -196,6 +196,27 @@ class FinalSubmissionTest(BaseTestCase):
         self.assertIsNone(inviter.get_final_submission(self.assign).group)
         self.assertIsNone(invited.get_final_submission(self.assign).group)
 
+    def testExit(self):
+        """A new final submission is created for an exiting member."""
+        self.submit(self.backups['first'])
+        self.submit(self.backups['second'])
+        self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
+
+        # Invite and accept
+        inviter, invited = [self.accounts[s] for s in ('student0', 'student1')]
+        group = self.invite(inviter, invited)
+        self.assertIsNone(group.accept(invited))
+        self.assertEqual(1, len(models.FinalSubmission.query().fetch()))
+
+        self.assertIsNone(group.exit(inviter))
+
+        self.assertFinalSubmission('student0', self.backups['first'])
+        self.assertFinalSubmission('student1', self.backups['second'])
+        self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
+        self.assertIsNone(inviter.get_final_submission(self.assign).group)
+        self.assertIsNone(invited.get_final_submission(self.assign).group)
+
+
 
 if __name__ == "__main__":
     unittest.main()
