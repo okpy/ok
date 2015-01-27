@@ -146,7 +146,7 @@ class User(Base):
 
     def get_final_submission(self, assignment):
         group = self.get_group(assignment)
-        if group:
+        if group and self.key in group.member:
             return FinalSubmission.query(
                 FinalSubmission.group==group.key).get()
         else:
