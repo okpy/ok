@@ -145,13 +145,15 @@ class User(Base):
             self.email.remove(email)
 
     def get_final_submission(self, assignment):
-        query = Group.query(member=self.key)
-        group = query.filter(assignment=assignment)
+        query = Group.query(Group.member==self.key)
+        group = query.filter(Group.assignment==assignment)
         group = group.get()
-        if group == None:
-            return FinalSubmission.query(submitter=self.key).get()
+        if group:
+            return FinalSubmission.query(
+                FinalSubmission.group==group.key).get()
         else:
-            return FinalSubmission.query(group=group.key).get()
+            return FinalSubmission.query(
+                FinalSubmission.submitter==self.key).get()
 
     def _contains_files(self, backup):
         messages = backup.get_messages()
@@ -167,8 +169,9 @@ class User(Base):
             members = group.member
 
         for member in members:
-            all_backups += list(Backup.query(submitter=member,
-                                             assignment=assignment).fetch())
+            all_backups += list(Backup.query(
+                Backup.submitter == member,
+                Backup.assignment == assignment).fetch())
 
         all_backups = [x for x in all_backups if self._contains_files(x)]
 
@@ -186,7 +189,8 @@ class User(Base):
 
         all_submissions = []
         for member in members:
-            all_submissions += list(Submission.query(submitter=member).fetch())
+            all_submissions += list(Submission.query(
+                Submission.submitter==member).fetch())
 
         all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment \
                 and self._contains_files(x.backup.get())]
@@ -199,11 +203,11 @@ class User(Base):
         return all_subms[:num_submissions]
 
     def get_group(self, assignment):
-        query = Group.query(member=self.key)
-        group = query.filter(assignment=assignment).get()
+        query = Group.query(Group.member==self.key)
+        group = query.filter(Group.assignment==assignment).get()
         if not group: # Might be invited to a group
-            query = Group.query(invited=self.key)
-            group = query.filter(assignment=assignment).get()
+            query = Group.query(Group.invited==self.key)
+            group = query.filter(Group.assignment==assignment).get()
         return group
 
     def get_course_info(self, course):
@@ -258,7 +262,7 @@ class User(Base):
             return FinalSubmission.query(assignment=assignment, **vargs).get()
 
         for_user = get_final(submitter=self)
-        group = self.group
+        group = self.get_group(assignment)
         if group:
             for_group = get_final(group=group)
         else:
@@ -607,24 +611,25 @@ class Submission(Base):
     def mark_as_final(self):
         """Create or update a final submission."""
         assignment = self.backup.get().assignment
-        group = self.submitter.get().group
+        group = self.submitter.get().get_group(assignment)
         submitter = self.submitter
         if group:
-            final = FinalSubmission.query(assignment=assignment,
-                                          group=group).get()
+            final = FinalSubmission.query(
+                FinalSubmission.assignment==assignment,
+                FinalSubmission.group==group.key).get()
         else:
-            final = FinalSubmission.query(assignment=assignment,
-                                          submitter=submitter).get()
+            final = FinalSubmission.query(
+                FinalSubmission.assignment==assignment,
+                FinalSubmission.submitter==submitter).get()
         if final:
-            # Update
             final.submitter = self.submitter
             final.submission = self
         else:
-            # Create
             final = FinalSubmission(assignment=assignment,
-                                    group=group,
                                     submitter=submitter,
-                                    submission=self)
+                                    submission=self.key)
+            if group:
+                final.group = group.key
         final.put()
 
     @classmethod
