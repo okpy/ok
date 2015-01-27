@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# pylint: disable=invalid-name, too-many-public-methods, too-many-instance-attributes
-# pylint: disable=no-self-use, attribute-defined-outside-init
+
+# pylint: disable=invalid-name, too-many-public-methods, too-many-instance-attributes, no-self-use, attribute-defined-outside-init, no-member, no-init, locally-disabled, missing-docstring
 
 """
 Tests for the permissions system
