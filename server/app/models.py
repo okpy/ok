@@ -273,13 +273,12 @@ class User(Base):
 
         if finals:
             # Keep the most recent and delete the rest.
+            # Note: Deleting a FinalSubmission does not delete its submission.
             finals.sort(key=lambda final: final.submission.get().server_time)
             old, latest = finals[:-1], finals[-1]
             latest.group = group.key if group else None
             latest.put()
-            # ? Does the pre_put_hook interfere?
             for final in old:
-                print("Deleting FINAL", final)
                 final.key.delete()
         else:
             # Create a final submission for user from her latest submission.
@@ -289,7 +288,6 @@ class User(Base):
             latest = subs.order(-Submission.server_time).get()
             if latest:
                 FinalSubmission(assignment=assignment,
-                                submitter=self.key,
                                 group=group.key if group else None,
                                 submission=latest.key).put()
 
@@ -636,9 +634,7 @@ class Submission(Base):
             final.submitter = self.submitter
             final.submission = self
         else:
-            final = FinalSubmission(assignment=assignment,
-                                    submitter=submitter,
-                                    submission=self.key)
+            final = FinalSubmission(assignment=assignment, submission=self.key)
             if group:
                 final.group = group.key
         final.put()
@@ -947,10 +943,10 @@ class FinalSubmission(Base):
     """
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
-    submitter = ndb.KeyProperty(User)
     submission = ndb.KeyProperty(Submission)
-    published = ndb.BooleanProperty(default=False)
     queue = ndb.KeyProperty(Queue)
+    submitter = ndb.ComputedProperty(lambda x: x.submission.get().submitter)
+    published = ndb.BooleanProperty(default=False)
 
     @property
     def server_time(self):
@@ -969,26 +965,3 @@ class FinalSubmission(Base):
     @classmethod
     def _can(cls, user, need, final, query):
         return Submission._can(user, need, final.submission.get(), query)
-
-    # TODO Add hook to update final submissions on submission or group change.
-    # This doesn't mean that there is a new submission being created.
-    def _pre_put_hook(self):
-        self.submitter = self.submission.get().backup.get().submitter
-
-        old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
-        old_submissions = old.fetch()
-
-        if not old_submissions:
-            return
-
-        for submission in old_submissions:
-            if self.submitter == submission.submitter:
-                submission.key.delete()
-                return # Should only have 1 final submission per submitter
-            # TODO: This errors because group is a key - but other not good things happens when it is fixed
-            if submission.group:
-                for person in submission.group.member:
-                    if self.submitter == person:
-                        submission.key.delete()
-                        return
-

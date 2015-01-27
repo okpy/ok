@@ -100,28 +100,10 @@ class FinalSubmissionTest(BaseTestCase):
         self.user = self.accounts['student0']
         self.assign = self.assignments['first']
 
-
     def set_assignment(self, assign):
         if isinstance(assign, (str, unicode)):
             assign = self.assignments[assign]
         self.assign = assign
-
-    def assertNoFinalSubmission(self, user):
-        """
-        Asserts that the |user| has no final submissions.
-        """
-        self.assertNumFinalSubmissions(user, 0)
-
-    def assertNumFinalSubmissions(self, user, num):
-        """
-        Asserts that the |user| has |num| final submissions.
-        """
-        FS = models.FinalSubmission
-        subms = FS.query()
-        subms = subms.filter(FS.assignment == self.assign.key)
-        subms = subms.filter(
-            FS.group == user.get_group(self.assign.key).key)
-        self.assertEquals(num, subms.count())
 
     def assertFinalSubmission(self, user, backup):
         """
@@ -146,9 +128,7 @@ class FinalSubmissionTest(BaseTestCase):
         utils.assign_submission(subm.id(), True)
 
     def testCreateGroup(self):
-        """
-        Tests that merging groups keeps the final submission for that group.
-        """
+        """Merging groups keeps the final submission for that group."""
         self.submit(self.backups['first'])
         self.assertFinalSubmission('student0', self.backups['first'])
         self.assertFinalSubmission('student1', None)
@@ -162,9 +142,7 @@ class FinalSubmissionTest(BaseTestCase):
         self.assertFinalSubmission('student1', self.backups['first'])
 
     def testInvite(self):
-        """
-        Tests that final submission updates when a group is created.
-        """
+        """Final submission updates when a group is created."""
         self.submit(self.backups['first'])
         self.submit(self.backups['second'])
         self.assertFinalSubmission('student0', self.backups['first'])
@@ -179,6 +157,30 @@ class FinalSubmissionTest(BaseTestCase):
         self.assertFinalSubmission('student1', self.backups['second'])
         final = inviter.get_final_submission(self.assign)
         self.assertIsNotNone(final.group)
+
+    def testAccept(self):
+        """Only one final submission after a group is formed."""
+        self.submit(self.backups['first'])  # earlier (discard)
+        self.submit(self.backups['second']) # later (keep)
+        self.assertFinalSubmission('student0', self.backups['first'])
+        self.assertFinalSubmission('student1', self.backups['second'])
+        self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
+
+        inviter, invited = [self.accounts[s] for s in ('student0', 'student1')]
+        invite_fn = models.Group.invite_to_group
+        error = invite_fn(inviter.key, invited.email[0], self.assign)
+        self.assertIsNone(error)
+        group = inviter.get_group(self.assign)
+        error = group.accept(invited)
+        self.assertIsNone(error)
+
+        self.assertFinalSubmission('student0', self.backups['second'])
+        self.assertFinalSubmission('student1', self.backups['second'])
+        self.assertEqual(1, len(models.FinalSubmission.query().fetch()))
+
+
+
+
 
 
 if __name__ == "__main__":
