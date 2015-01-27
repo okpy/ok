@@ -127,6 +127,13 @@ class FinalSubmissionTest(BaseTestCase):
             subm = subm.key
         utils.assign_submission(subm.id(), True)
 
+    def invite(self, inviter, invited):
+        """|Inviter| invites |invited| to a group for self.assign."""
+        invite_fn = models.Group.invite_to_group
+        error = invite_fn(inviter.key, invited.email[0], self.assign)
+        self.assertIsNone(error)
+        return inviter.get_group(self.assign)
+
     def testCreateGroup(self):
         """Merging groups keeps the final submission for that group."""
         self.submit(self.backups['first'])
@@ -149,9 +156,7 @@ class FinalSubmissionTest(BaseTestCase):
         self.assertFinalSubmission('student1', self.backups['second'])
 
         inviter, invited = [self.accounts[s] for s in ('student0', 'student1')]
-        invite_fn = models.Group.invite_to_group
-        error = invite_fn(inviter.key, invited.email[0], self.assign)
-        self.assertIsNone(error)
+        self.invite(inviter, invited)
 
         self.assertFinalSubmission('student0', self.backups['first'])
         self.assertFinalSubmission('student1', self.backups['second'])
@@ -167,20 +172,29 @@ class FinalSubmissionTest(BaseTestCase):
         self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
 
         inviter, invited = [self.accounts[s] for s in ('student0', 'student1')]
-        invite_fn = models.Group.invite_to_group
-        error = invite_fn(inviter.key, invited.email[0], self.assign)
-        self.assertIsNone(error)
-        group = inviter.get_group(self.assign)
-        error = group.accept(invited)
-        self.assertIsNone(error)
+        group = self.invite(inviter, invited)
+        self.assertIsNone(group.accept(invited))
 
         self.assertFinalSubmission('student0', self.backups['second'])
         self.assertFinalSubmission('student1', self.backups['second'])
         self.assertEqual(1, len(models.FinalSubmission.query().fetch()))
 
+    def testDecline(self):
+        """Final submissions are separate after a declined invitation."""
+        self.submit(self.backups['first'])
+        self.submit(self.backups['second'])
 
+        inviter, invited = [self.accounts[s] for s in ('student0', 'student1')]
+        group = self.invite(inviter, invited)
+        self.assertIsNone(group.exit(invited))
+        self.assertIsNone(inviter.get_group(self.assign))
+        self.assertIsNone(invited.get_group(self.assign))
 
-
+        self.assertFinalSubmission('student0', self.backups['first'])
+        self.assertFinalSubmission('student1', self.backups['second'])
+        self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
+        self.assertIsNone(inviter.get_final_submission(self.assign).group)
+        self.assertIsNone(invited.get_final_submission(self.assign).group)
 
 
 if __name__ == "__main__":
