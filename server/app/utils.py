@@ -247,24 +247,26 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
         logging.debug(
             'add_to_grading_queues complete with %d updates!', num_updated)
 
-def assign_submission(subm_id, submit):
-    backup = ModelProxy.Backup.get_by_id(subm_id)
-    assign_key = backup.assignment
+def assign_submission(backup_id, submit):
+    """
+    Create Submisson and FinalSubmission records for a submitted Backup.
 
+    :param backup_id: ID of a Backup
+    :param submit: Whether this backup is a submission to be graded
+    """
+    backup = ModelProxy.Backup.get_by_id(backup_id)
     if not backup.get_messages().get('file_contents'):
-        logging.info("Submission had no file_contents, not processing")
+        logging.info("Submission had no file_contents; not processing")
         return
 
-    if not submit:
-        return
-
-    S = ModelProxy.Submission
-    subm = S(backup=backup.key)
-    subm.put()
-
-    subm.mark_as_final()
+    if submit:
+        subm = ModelProxy.Submission(backup=backup.key)
+        subm.put()
+        subm.mark_as_final()
 
 def parse_date(date):
+    # TODO Describe what date translation is happening here. Probably needs
+    # a rewrite to handle daylight savings and work with other time zones.
     try:
         date = datetime.datetime.strptime(
             date, app.config["GAE_DATETIME_FORMAT"])

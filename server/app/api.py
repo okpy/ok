@@ -689,41 +689,35 @@ class SubmitNDBImplementation(object):
 
         :param user: (object) caller
         :param assignment: (Assignment)
-        :param messages:
-        :param submit:
-        :param submitter: (object) caller
+        :param messages: Data content of backup/submission
+        :param submit: Whether this backup is a submission to be graded
+        :param submitter: (object) caller or submitter
         :return: (Backup) submission
         """
-
-        if not user.is_admin:
+        if not user.is_admin or not submitter:
             submitter = user.key
-        # TODO - Choose member of group if the user is an admin.
 
-        db_messages = []
-        for kind, message in messages.iteritems():
-            if message:
-                db_messages.append(models.Message(kind=kind, contents=message))
+        message_date = messages.get('analytics', {}).get('time', None)
+        if message_date:
+            created = parse_date(message_date)
+        else:
+            created = datetime.datetime.now()
 
-        created = datetime.datetime.now()
-        if messages.get('analytics'):
-            date = messages['analytics']['time']
-            if date:
-                created = parse_date(date)
+        ms = lambda kind, message: models.Message(kind=kind, contents=message)
+        db_messages = [ms(k, m) for k, m in messages.iteritems() if m]
 
-        submission = models.Backup(submitter=submitter,
-                                   assignment=assignment.key,
-                                   messages=db_messages,
-                                   created=created)
-        submission.put()
-
-        deferred.defer(assign_submission, submission.key.id(), submit)
-
-        return submission
+        backup = models.Backup(submitter=submitter,
+                               assignment=assignment.key,
+                               messages=db_messages,
+                               created=created)
+        backup.put()
+        deferred.defer(assign_submission, backup.key.id(), submit)
+        return backup
 
 
 class SubmissionAPI(APIResource):
     """
-    The API resource for the Submission Object
+    The API resource for the Backup & Submission Objects
     """
     model = models.Backup
     diff_model = models.Diff

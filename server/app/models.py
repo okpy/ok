@@ -3,9 +3,7 @@
 Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 """
 
-#pylint: disable=no-member
-#pylint: disable=unused-argument
-#pylint: disable=too-many-return-statements
+#pylint: disable=no-member, unused-argument, too-many-return-statements
 
 import datetime
 
@@ -147,13 +145,13 @@ class User(Base):
             self.email.remove(email)
 
     def get_final_submission(self, assignment):
-        query = Group.query(Group.member == self.key)
-        group = query.filter(Group.assignment == assignment)
-        group = group.get()
-        if group == None:
-            return FinalSubmission.query(FinalSubmission.submitter == self.key).get()
+        group = self.get_group(assignment)
+        if group:
+            return FinalSubmission.query(
+                FinalSubmission.group==group.key).get()
         else:
-            return FinalSubmission.query(FinalSubmission.group == group.key).get()
+            return FinalSubmission.query(
+                FinalSubmission.submitter==self.key).get()
 
     def _contains_files(self, backup):
         messages = backup.get_messages()
@@ -169,9 +167,9 @@ class User(Base):
             members = group.member
 
         for member in members:
-            all_backups += list(Backup.query( \
-                Backup.submitter == member).filter( \
-                    Backup.assignment == assignment).fetch())
+            all_backups += list(Backup.query(
+                Backup.submitter == member,
+                Backup.assignment == assignment).fetch())
 
         all_backups = [x for x in all_backups if self._contains_files(x)]
 
@@ -189,7 +187,8 @@ class User(Base):
 
         all_submissions = []
         for member in members:
-            all_submissions += list(Submission.query(Submission.submitter == member).fetch())
+            all_submissions += list(Submission.query(
+                Submission.submitter==member).fetch())
 
         all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment \
                 and self._contains_files(x.backup.get())]
@@ -202,11 +201,11 @@ class User(Base):
         return all_subms[:num_submissions]
 
     def get_group(self, assignment):
-        query = Group.query(Group.member == self.key)
-        group = query.filter(Group.assignment == assignment).get()
+        query = Group.query(Group.member==self.key)
+        group = query.filter(Group.assignment==assignment).get()
         if not group: # Might be invited to a group
-            query = Group.query(Group.invited == self.key)
-            group = query.filter(Group.assignment == assignment).get()
+            query = Group.query(Group.invited==self.key)
+            group = query.filter(Group.assignment==assignment).get()
         return group
 
     def get_course_info(self, course):
@@ -253,6 +252,42 @@ class User(Base):
 
         return info
 
+    def update_final_submission(self, assignment):
+        """Update the final submission of the user and its group.
+        Call on all users after group changes.
+        """
+        if isinstance(assignment, Assignment):
+            assignment = assignment.key
+
+        options = [FinalSubmission.submitter == self.key]
+        group = self.get_group(assignment)
+        if group:
+            options.append(FinalSubmission.group == group.key)
+            options += [FinalSubmission.submitter == m for m in group.member]
+        who = options[0] if len(options) == 1 else ndb.OR(*options)
+        assigned = FinalSubmission.assignment == assignment
+        finals = FinalSubmission.query(assigned, who).fetch()
+
+        if finals:
+            # Keep the most recent and delete the rest.
+            finals.sort(lambda final: final.submission.get().server_time)
+            old, latest = finals[:-1], finals[-1]
+            latest.group = group.key
+            latest.put()
+            for final in old:
+                final.delete()
+        else:
+            # Create a final submission for user from her latest submission.
+            subs = Submission.query(
+                Submission.submitter == self.key,
+                Submission.assignment == assignment)
+            latest = subs.order(-Submission.server_time).get()
+            if latest:
+                FinalSubmission(assignment=assignment,
+                                submitter=self,
+                                group=group.key if group else None,
+                                submission=latest).put()
+
     #@ndb.transactional
     @classmethod
     def get_or_insert(cls, email):
@@ -270,6 +305,8 @@ class User(Base):
         """Retrieve a user by email or return None."""
         assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
         return cls.query(cls.email == email).get()
+
+
 
     @classmethod
     def _can(cls, user, need, obj, query):
@@ -388,7 +425,7 @@ class Participant(Base):
         if action == "get":
             return True
         elif action == "index":
-            if cls.has_role(user, self.course, STAFF_ROLE):
+            if cls.has_role(user, course, STAFF_ROLE):
                 return query.filter(cls.course == course)
             else:
                 return query.filter(cls.user == user)
@@ -571,17 +608,32 @@ class Submission(Base):
     backup = ndb.KeyProperty(Backup)
     score = ndb.StructuredProperty(Score, repeated=True)
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
+    assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
 
     def mark_as_final(self):
-        final_submission = FinalSubmission(assignment=self.backup.get().assignment, \
-                                           submitter=self.submitter,\
-                                           submission=self.key)
-        group = self.backup.get().group
+        """Create or update a final submission."""
+        assignment = self.backup.get().assignment
+        group = self.submitter.get().get_group(assignment)
+        submitter = self.submitter
         if group:
-            final_submission.group = group.key
-
-        final_submission.put()
+            final = FinalSubmission.query(
+                FinalSubmission.assignment==assignment,
+                FinalSubmission.group==group.key).get()
+        else:
+            final = FinalSubmission.query(
+                FinalSubmission.assignment==assignment,
+                FinalSubmission.submitter==submitter).get()
+        if final:
+            final.submitter = self.submitter
+            final.submission = self
+        else:
+            final = FinalSubmission(assignment=assignment,
+                                    submitter=submitter,
+                                    submission=self.key)
+            if group:
+                final.group = group.key
+        final.put()
 
     @classmethod
     def _can(cls, user, need, submission, query):
@@ -772,6 +824,8 @@ class Group(Base):
         self.invited.remove(user_key)
         self.member.append(user_key)
         self.put()
+        for user_key in self.member:
+            user_key.get().update_final_submission(self.assignment)
 
     #@ndb.transactional
     def exit(self, user_key):
@@ -787,6 +841,9 @@ class Group(Base):
             self.key.delete()
         else:
             self.put()
+
+        for user in self.member + [user_key]:
+            user.get().update_final_submission(self.assignment)
 
     @classmethod
     def _can(cls, user, need, group, query):
@@ -829,6 +886,7 @@ class Group(Base):
         error = self.validate()
         if error:
             raise BadValueError(error)
+
 
 
 class AuditLog(Base):
