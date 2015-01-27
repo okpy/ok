@@ -83,6 +83,13 @@ indexes:
   - name: created
     direction: desc
 
+- kind: Submissionv2
+  properties:
+  - name: assignment
+  - name: submitter
+  - name: server_time
+    direction: desc
+
 - kind: Submissionvtwo
   properties:
   - name: assignment

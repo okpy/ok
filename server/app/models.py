@@ -261,6 +261,7 @@ class User(Base):
 
         options = [FinalSubmission.submitter == self.key]
         group = self.get_group(assignment)
+
         if group:
             options.append(FinalSubmission.group == group.key)
             options += [FinalSubmission.submitter == m for m in group.member]
@@ -270,12 +271,14 @@ class User(Base):
 
         if finals:
             # Keep the most recent and delete the rest.
-            finals.sort(lambda final: final.submission.get().server_time)
+            finals.sort(key=lambda final: final.submission.get().server_time)
             old, latest = finals[:-1], finals[-1]
-            latest.group = group.key
+            latest.group = group.key if group else None
             latest.put()
+            # ? Does the pre_put_hook interfere?
             for final in old:
-                final.delete()
+                print("Deleting FINAL", final)
+                final.key.delete()
         else:
             # Create a final submission for user from her latest submission.
             subs = Submission.query(
@@ -284,9 +287,9 @@ class User(Base):
             latest = subs.order(-Submission.server_time).get()
             if latest:
                 FinalSubmission(assignment=assignment,
-                                submitter=self,
+                                submitter=self.key,
                                 group=group.key if group else None,
-                                submission=latest).put()
+                                submission=latest.key).put()
 
     #@ndb.transactional
     @classmethod
@@ -957,7 +960,7 @@ class FinalSubmission(Base):
         return Submission._can(user, need, final.submission.get(), query)
 
     # TODO Add hook to update final submissions on submission or group change.
-
+    # This doesn't mean that there is a new submission being created.
     def _pre_put_hook(self):
         self.submitter = self.submission.get().backup.get().submitter
 
@@ -971,8 +974,10 @@ class FinalSubmission(Base):
             if self.submitter == submission.submitter:
                 submission.key.delete()
                 return # Should only have 1 final submission per submitter
+            # TODO: This errors because group is a key - but other not good things happens when it is fixed
             if submission.group:
                 for person in submission.group.member:
                     if self.submitter == person:
                         submission.key.delete()
                         return
+
