@@ -200,7 +200,7 @@ class FinalSubmissionTest(BaseTestCase):
         """A new final submission is created for an exiting member."""
         self.submit(self.backups['first'])
         self.submit(self.backups['second'])
-        self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
+        self.assertEqual(2, models.FinalSubmission.count())
 
         # Invite and accept
         inviter, invited = [self.accounts[s] for s in ('student0', 'student1')]
@@ -215,7 +215,6 @@ class FinalSubmissionTest(BaseTestCase):
         self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
         self.assertIsNone(inviter.get_final_submission(self.assign).group)
         self.assertIsNone(invited.get_final_submission(self.assign).group)
-
 
 
 if __name__ == "__main__":
