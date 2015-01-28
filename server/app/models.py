@@ -166,7 +166,7 @@ class User(Base):
     def get_backups(self, assignment, num_backups=10):
         group = self.get_group(assignment)
         all_backups = []
-        if not group:
+        if not group or self.key not in group.member:
             members = [self.key]
         else:
             members = group.member
@@ -185,7 +185,7 @@ class User(Base):
     def get_submissions(self, assignment, num_submissions=10):
         group = self.get_group(assignment)
         all_subms = []
-        if not group:
+        if not group or self.key not in group.member:
             members = [self.key]
         else:
             members = group.member
