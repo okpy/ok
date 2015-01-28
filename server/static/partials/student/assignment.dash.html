@@ -3,10 +3,10 @@
   <div class="assign large active" id="1" ng-repeat="assign in assignments">
     <div class="assign-main">
       <img class="assign-bg" src="/static/student/images/bg-clock.png">
-       <h2 class="assign-title"> {{ assign.assignment.display_name }}</h2>
+       <h2 class="assign-title"> {{ ::assign.assignment.display_name }}</h2>
       <div class="assign-deck">
-        <p><img src="/static/student/images/icon-clock.png">due {{ assign.assignment.due_date | amCalendar }}</p>
-        <p><span class="icon-question">?</span> {{assign.assignment.points}} points</p>
+        <p><img src="/static/student/images/icon-clock.png">due {{ ::assign.assignment.due_date | amCalendar }}</p>
+        <p><span class="icon-question">?</span> {{::assign.assignment.points}} points</p>
         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
       </div>
     </div>

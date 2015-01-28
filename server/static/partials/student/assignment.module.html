@@ -1,11 +1,11 @@
-  <div class="block" ng-controller="AssignmentOverviewController" >
+  <div class="block" ng-controller="AssignmentOverviewController" ng-cloak >
     <div class="block-dom">
-      <h3 class="block-title">{{ assignments.length || '?' }}</h3>
+      <h3 class="block-title">{{ ::assignments.length }}</h3>
       <span>Active Assignments</span>
     </div>
     <div class="block-sub" >
       <div class="assign-block" ng-repeat="assign in assignments">
-        <p class="block-label"><c></c>{{ assign.display_name }}</p>
+        <p class="block-label"><c></c>{{ ::assign.display_name }}</p>
 <!--         <div class="block-progress" progress="75"><span class="block-bar"></span>
  -->        </div>
       </div>
