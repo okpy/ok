@@ -83,11 +83,6 @@ app.directive('sidebarModule', function() {
 app.config(['$stateProvider', '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
 
-    $urlRouterProvider.otherwise(function ($injector) {
-        var $state = $injector.get('$state');
-        $state.go('courseLanding');
-    });
-
     var courseLanding = {
       name: 'courseLanding',
       url: '/',
@@ -239,6 +234,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/student/loginLanding.html'
     }
 
+
     $stateProvider.
       state(courseLanding).
       state(student).
@@ -262,4 +258,11 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(queueDetail).
       state(loginLanding)
       ;
+
+    $urlRouterProvider.otherwise(function ($injector) {
+        var $state = $injector.get('$state');
+        $state.go('courseLanding');
+    });
+
+
   }]);
