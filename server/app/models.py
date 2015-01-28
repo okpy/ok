@@ -635,7 +635,7 @@ class Submission(Base):
                 FinalSubmission.submitter==submitter).get()
         if final:
             final.submitter = self.submitter
-            final.submission = self
+            final.submission = self.key
         else:
             final = FinalSubmission(assignment=assignment, submission=self.key)
             if group:

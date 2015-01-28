@@ -221,7 +221,7 @@ def seed():
     version.put()
     version = make_version('v1.3.2')
     version.put()
-    version = make_version('v1.3.3')
+    version = make_version('v1.3.7')
     version.put()
 
     # Put a few members on staff

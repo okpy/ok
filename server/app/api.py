@@ -697,7 +697,10 @@ class SubmitNDBImplementation(object):
         if not user.is_admin or not submitter:
             submitter = user.key
 
-        message_date = messages.get('analytics', {}).get('time', None)
+        message_date = None
+        analytics = messages.get('analytics')
+        if analytics:
+            message_date = analytics.get('time', None)
         if message_date:
             created = parse_date(message_date)
         else:
