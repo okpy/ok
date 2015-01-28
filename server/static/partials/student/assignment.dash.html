@@ -47,13 +47,13 @@
           </div>
           <a ng-if="assign.group.group_info" ng-click="showGroup(assign.group.group_info)" class="link view-group" id="1">view group &raquo;</a>
           <div ng-if="!assign.group.group_info">
-            <form name="inviteGroup" ng-if="assign.max_group_size > 1">
+            <form name="inviteGroup" ng-if="assign.assignment.max_group_size > 1">
               <h3 class="assign-subtitle">Invite to Group</h3>
 
               <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
               <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
             </form>
-            <h3 class="assign-subtitle" ng-if="assign.max_group_size > 1" > Individual Assignment </h3>
+            <h3 class="assign-subtitle" ng-if="assign.assignment.max_group_size == 1" > Individual Assignment </h3>
 
           </div>
         </div>

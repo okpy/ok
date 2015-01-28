@@ -48,7 +48,7 @@ app.directive('assignmentModule', function() {
 app.directive('assignmentList', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/student/assignment.dash.html',
+            templateUrl: '/static/partials/student/assignment.dash.html?cache1121',
         };
     });
 
