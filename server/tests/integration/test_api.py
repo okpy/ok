@@ -390,14 +390,14 @@ class GroupAPITest(APITest, APIBaseTestCase):
         inst = self.get_basic_instance()
         inst.put()
 
-        to_invite = self.accounts['dummy_student']
-        to_invite.put()
+        invited = self.accounts['dummy_student']
+        invited.put()
 
         self.post_json(
             '/assignment/{}/invite'.format(self.assignment.key.id()),
-            data={'email': to_invite.email[0]})
+            data={'email': invited.email[0]})
 
-        self.assertEqual(inst.invited, [to_invite.key])
+        self.assertEqual(inst.invited, [invited.key])
 
         # Check audit log
         audit_logs = models.AuditLog.query().fetch()
@@ -405,19 +405,19 @@ class GroupAPITest(APITest, APIBaseTestCase):
         log = audit_logs[0]
         self.assertEqual(log.user, self.user.key)
         self.assertEqual('Group.invite', log.event_type)
-        self.assertIn(to_invite.email[0], log.description)
+        self.assertIn(invited.email[0], log.description)
 
     def test_invite(self):
         self.user = self.accounts['dummy_student2']
         inst = self.get_basic_instance()
         inst.put()
-        to_invite = self.accounts['dummy_student']
+        invited = self.accounts['dummy_student']
 
         self.post_json(
             '/{}/{}/add_member'.format(self.name, inst.key.id()),
-            data={'email': to_invite.email[0]})
+            data={'email': invited.email[0]})
 
-        self.assertEqual(inst.invited, [to_invite.key])
+        self.assertEqual(inst.invited, [invited.key])
 
     def test_accept(self):
         self.user = self.accounts['dummy_student']
@@ -459,15 +459,15 @@ class GroupAPITest(APITest, APIBaseTestCase):
         inst.put()
 
         # Place dummy_student in another group
-        to_invite = self.accounts['dummy_student']
+        invited = self.accounts['dummy_student']
         self.model(
             assignment=self.assignment.key,
-            member=[to_invite.key, self.accounts['dummy_staff'].key]
+            member=[invited.key, self.accounts['dummy_staff'].key]
         ).put()
 
         self.post_json(
             '/{}/{}/add_member'.format(self.name, inst.key.id()),
-            data={'email': to_invite.email[0]})
+            data={'email': invited.email[0]})
 
         self.assertStatusCode(400)
         self.assertEqual(inst.invited, [])

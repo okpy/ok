@@ -144,13 +144,18 @@ class User(Base):
         if email in self.email and len(self.email) > 1:
             self.email.remove(email)
 
-    def get_final_submission(self, assignment):
-        group = self.get_group(assignment)
-        if group:
+    def get_final_submission(self, assignment_key):
+        """Get the current final submission for this user."""
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
+        group = self.get_group(assignment_key)
+        if group and self.key in group.member:
             return FinalSubmission.query(
+                FinalSubmission.assignment==assignment_key,
                 FinalSubmission.group==group.key).get()
         else:
             return FinalSubmission.query(
+                FinalSubmission.assignment==assignment_key,
                 FinalSubmission.submitter==self.key).get()
 
     def _contains_files(self, backup):
@@ -200,13 +205,13 @@ class User(Base):
 
         return all_subms[:num_submissions]
 
-    def get_group(self, assignment):
-        query = Group.query(Group.member==self.key)
-        group = query.filter(Group.assignment==assignment).get()
-        if not group: # Might be invited to a group
-            query = Group.query(Group.invited==self.key)
-            group = query.filter(Group.assignment==assignment).get()
-        return group
+    def get_group(self, assignment_key):
+        """Return the group for this user for an assignment."""
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
+        return Group.query(ndb.OR(Group.member==self.key,
+                                  Group.invited==self.key),
+                           Group.assignment==assignment_key).get()
 
     def get_course_info(self, course):
         if not course:
@@ -252,7 +257,7 @@ class User(Base):
 
         return info
 
-    def update_final_submission(self, assignment):
+    def update_final_submission(self, assignment, group=None):
         """Update the final submission of the user and its group.
         Call on all users after group changes.
         """
@@ -260,8 +265,9 @@ class User(Base):
             assignment = assignment.key
 
         options = [FinalSubmission.submitter == self.key]
-        group = self.get_group(assignment)
-        if group:
+        if not group:
+            group = self.get_group(assignment)
+        if group and self.key in group.member:
             options.append(FinalSubmission.group == group.key)
             options += [FinalSubmission.submitter == m for m in group.member]
         who = options[0] if len(options) == 1 else ndb.OR(*options)
@@ -270,12 +276,13 @@ class User(Base):
 
         if finals:
             # Keep the most recent and delete the rest.
-            finals.sort(lambda final: final.submission.get().server_time)
+            # Note: Deleting a FinalSubmission does not delete its submission.
+            finals.sort(key=lambda final: final.submission.get().server_time)
             old, latest = finals[:-1], finals[-1]
-            latest.group = group.key
+            latest.group = group.key if group else None
             latest.put()
             for final in old:
-                final.delete()
+                final.key.delete()
         else:
             # Create a final submission for user from her latest submission.
             subs = Submission.query(
@@ -284,9 +291,8 @@ class User(Base):
             latest = subs.order(-Submission.server_time).get()
             if latest:
                 FinalSubmission(assignment=assignment,
-                                submitter=self,
                                 group=group.key if group else None,
-                                submission=latest).put()
+                                submission=latest.key).put()
 
     #@ndb.transactional
     @classmethod
@@ -304,9 +310,12 @@ class User(Base):
     def lookup(cls, email):
         """Retrieve a user by email or return None."""
         assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
-        return cls.query(cls.email == email).get()
-
-
+        users = cls.query(cls.email == email).fetch()
+        if not users:
+            return None
+        if len(users) > 1:
+            pass # TODO Decide how to handle non-unique users
+        return users[0]
 
     @classmethod
     def _can(cls, user, need, obj, query):
@@ -628,9 +637,7 @@ class Submission(Base):
             final.submitter = self.submitter
             final.submission = self
         else:
-            final = FinalSubmission(assignment=assignment,
-                                    submitter=submitter,
-                                    submission=self.key)
+            final = FinalSubmission(assignment=assignment, submission=self.key)
             if group:
                 final.group = group.key
         final.put()
@@ -782,27 +789,33 @@ class Group(Base):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
         if not user:
-            return "That user does not exist"
+            return "{} cannot be found".format(email)
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
-            return "That user is not enrolled in this course"
+            return "{} is not enrolled in {}".format(email, course.get().display_name)
         if user.key in self.member or user.key in self.invited:
-            return "That user is already in the group"
+            return "{} is already in the group".format(email)
         has_user = ndb.OR(Group.member == user.key, Group.invited == user.key)
         if Group.query(has_user, Group.assignment == self.assignment).get():
-            return "That user is already in some other group"
+            return "{} is already in some other group".format(email)
         max_group_size = self.assignment.get().max_group_size
         total_member = len(self.member) + len(self.invited)
         if total_member + 1 > max_group_size:
             return "The group is full"
         self.invited.append(user.key)
         self.put()
+        for member in self.member:
+            member.get().update_final_submission(self.assignment, self)
 
     #@ndb.transactional
     @classmethod
     def invite_to_group(cls, user_key, email, assignment_key):
         """User invites email to join his/her group. Returns error or None."""
         group = cls._lookup_or_create(user_key, assignment_key)
+        if isinstance(user_key, User):
+            user_key = user_key.key
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
         AuditLog(
             event_type='Group.invite',
             user=user_key,
@@ -825,7 +838,7 @@ class Group(Base):
         self.member.append(user_key)
         self.put()
         for user_key in self.member:
-            user_key.get().update_final_submission(self.assignment)
+            user_key.get().update_final_submission(self.assignment, self)
 
     #@ndb.transactional
     def exit(self, user_key):
@@ -933,10 +946,10 @@ class FinalSubmission(Base):
     """
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
-    submitter = ndb.KeyProperty(User)
     submission = ndb.KeyProperty(Submission)
-    published = ndb.BooleanProperty(default=False)
     queue = ndb.KeyProperty(Queue)
+    submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
+    published = ndb.BooleanProperty(default=False)
 
     @property
     def server_time(self):
@@ -956,23 +969,6 @@ class FinalSubmission(Base):
     def _can(cls, user, need, final, query):
         return Submission._can(user, need, final.submission.get(), query)
 
-    # TODO Add hook to update final submissions on submission or group change.
-
     def _pre_put_hook(self):
-        self.submitter = self.submission.get().backup.get().submitter
-
-        old = FinalSubmission.query(FinalSubmission.assignment == self.assignment)
-        old_submissions = old.fetch()
-
-        if not old_submissions:
-            return
-
-        for submission in old_submissions:
-            if self.submitter == submission.submitter:
-                submission.key.delete()
-                return # Should only have 1 final submission per submitter
-            if submission.group:
-                for person in submission.group.member:
-                    if self.submitter == person:
-                        submission.key.delete()
-                        return
+        # TODO Remove when submitter is a computed property
+        self.submitter = self.submission.get().submitter

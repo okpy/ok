@@ -255,9 +255,9 @@ def seed():
         subm = make_seed_submission(assign, member)
         subm.put()
 
-    for member in group_members:
-        subm = make_seed_scheme_submission(assign2, member)
-        subm.put()
+    # for member in group_members:
+    #     subm = make_seed_scheme_submission(assign2, member)
+    #     subm.put()
 
     # Make this one be a final submission though.
     subm = make_seed_submission(assign, group_members[1], True)
@@ -265,8 +265,8 @@ def seed():
     subms.append(subm)
 
     # scheme final
-    subm = make_seed_scheme_submission(assign2, group_members[1], True)
-    subm.put()
+    # subm = make_seed_scheme_submission(assign2, group_members[1], True)
+    # subm.put()
 
     # Now create indiviual submission
     for i in range(9):
