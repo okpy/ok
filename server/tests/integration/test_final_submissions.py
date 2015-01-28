@@ -1,48 +1,32 @@
 #!/usr/bin/env python
 # encoding: utf-8
-
-"""
-Tests for the permissions system
-"""
+# pylint: disable=no-member, no-init, too-many-public-methods
+# pylint: disable=attribute-defined-outside-init
+# pylint: disable=missing-docstring, unused-import, invalid-name, import-error, super-on-old-class
+"""Tests for final submissions."""
 
 import os
 os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 
-from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
+from test_base import APIBaseTestCase, unittest
 
 from app import models, utils
 
 from google.appengine.ext import ndb
+from google.appengine.ext import deferred
+from google.appengine.ext import testbed
 
-class PermissionsUnitTest(APIBaseTestCase):
+class FinalSubmissionTest(APIBaseTestCase):
     def get_accounts(self):
         """
         Returns the accounts you want to exist in your system.
         """
-        return {
-            "student0": models.User(
-                email=["dummy@student.com"]
-            ),
-            "student1": models.User(
-                email=["other@student.com"]
-            ),
-            "student2": models.User(
-                email=["otherrr@student.com"]
-            ),
-            "staff": models.User(
-                email=["dummy@staff.com"]
-            ),
-            "empty_staff": models.User(
-                email=["dummy_empty@staff.com"]
-            ),
-            "admin": models.User(
-                email=["dummy@admin.com"]
-            )
-        }
+        keys = ["student0", "student1", "student2", "staff", "admin"]
+        return {key: models.User(email=[key+"@b.edu"]) for key in keys}
 
     def setUp(self):
-        super(PermissionsUnitTest, self).setUp()
+        super(APIBaseTestCase, self).setUp()
         self.accounts = self.get_accounts()
         for user in self.accounts.values():
             user.put()
@@ -50,9 +34,11 @@ class PermissionsUnitTest(APIBaseTestCase):
         self.courses = {
             "first": models.Course(
                 institution="UC Awesome",
+                display_name="First Course",
                 instructor=[self.accounts['admin'].key]),
             "second": models.Course(
                 institution="UC Awesome",
+                display_name="Second Course",
                 instructor=[self.accounts['admin'].key]),
             }
 
@@ -70,90 +56,57 @@ class PermissionsUnitTest(APIBaseTestCase):
                 max_group_size=3,
                 due_date=datetime.datetime.now()
                 ),
-            "empty": models.Assignment(
-                name="empty",
-                points=3,
-                creator=self.accounts["admin"].key,
-                course=self.courses['first'].key,
-                display_name="second display",
-                templates="{}",
-                max_group_size=4,
-                due_date=datetime.datetime.now()
-                ),
             }
-        for v in self.assignments.values():
-            v.put()
+        for assign in self.assignments.values():
+            assign.put()
+        self.assign = self.assignments["first"]
 
-        self.backups = {
-            "first": models.Backup(
-                submitter=self.accounts["student0"].key,
-                assignment=self.assignments["first"].key,
-                messages=[models.Message(
-                    kind='file_contents', contents={"trends.py": ""})],
-                ),
-            "second": models.Backup(
-                submitter=self.accounts["student1"].key,
-                assignment=self.assignments["first"].key,
-                messages=[models.Message(
-                    kind='file_contents', contents={"trends.py": ""})],
-                ),
-            "third": models.Backup(
-                submitter=self.accounts["student2"].key,
-                assignment=self.assignments["first"].key,
-                messages=[models.Message(
-                    kind='file_contents', contents={"trends.py": ""})],
-                ),
-            }
+        # Allow manual execution of deferred tasks using run_deferred
+        # https://cloud.google.com/appengine/docs/python/tools/localunittesting
+        self.testbed = testbed.Testbed()
+        self.testbed.activate()
+        self.testbed.init_taskqueue_stub()
 
-        for backup in self.backups.values():
-            backup.put()
+    def run_deferred(self):
+        """Execute all deferred tasks."""
+        task_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
+        for task in task_stub.get_filtered_tasks():
+            deferred.run(task.payload)
 
-        self.submissions = {
-                "first": models.Submission(
-                    backup=self.backups["first"].key
-                    ),
-                "second": models.Submission(
-                    backup=self.backups["second"].key
-                    )
-            }
+    def test_one_final(self):
+        """An invite/accept/exit/invite sequence keeps a final submission."""
+        self.user = self.accounts['student0']
 
-        for subm in self.submissions.values():
-            subm.put()
+        # Submit
+        messages = {'file_contents': {'submit': True, 'trends.py': 'hi!'}}
+        self.post_json('/submission', data={'assignment': self.assign.name,
+                                            'submitter': self.user.key.id(),
+                                            'messages': messages})
+        self.run_deferred()
 
-        self.groups = {
-            'group1': models.Group(
-                member=[self.accounts['student0'].key,
-                         self.accounts['student1'].key],
-                assignment=self.assignments['first'].key
-            )}
+        finals = list(models.FinalSubmission.query().fetch())
+        self.assertEqual(1, len(finals))
+        final = finals[0]
+        self.assertEqual(final, self.user.get_final_submission(self.assign))
+        # TODO Not sure how to make/verify this final_submission get request...
+        # self.get('/user/{}/final_submission'.format(self.user.email[0]),
+        #          data={'assignment': self.assign.key.id()})
 
-        self.groups['group1'].put()
-        self.user = None
+        # Invite
+        invited = self.accounts['student1']
+        # TODO This post is being made with admin as the user; not sure why...
+        self.post_json('/assignment/{}/invite'.format(self.assign.key.id()),
+                       data={'email': invited.email[0]})
+        # TODO Check final submissions
 
-    def set_assignment(self, assign):
-        self.assign = self.assignments[assign]
+        # Accept
+        # TODO
 
-    def assertNoSubmissions(self):
-        self.assertNumSubmissions(0)
+        # Exit
+        # TODO
 
-    def assertNumSubmissions(self, num):
-        FS = models.FinalSubmission
-        subms = FS.query()
-        subms = subms.filter(FS.assignment == self.assign.key)
-        subms = subms.filter(FS.group == self.user.get_group(self.assign.key).key)
-        self.assertEquals(num, subms.count())
-
-    def submit(self, subm):
-        utils.assign_submission(subm.key.id(), True)
-
-    def testFirstSubmission(self):
-        self.login('student0')
-        self.set_assignment('first')
-        self.assertNoSubmissions()
-        self.submit(self.backups['first'])
-        self.assertNumSubmissions(1)
-
+        # Invite
+        # TODO
 
 if __name__ == "__main__":
-    print 'test disabled for now'
-    #unittest.main()
+    unittest.main()

@@ -144,13 +144,18 @@ class User(Base):
         if email in self.email and len(self.email) > 1:
             self.email.remove(email)
 
-    def get_final_submission(self, assignment):
-        group = self.get_group(assignment)
+    def get_final_submission(self, assignment_key):
+        """Get the current final submission for this user."""
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
+        group = self.get_group(assignment_key)
         if group and self.key in group.member:
             return FinalSubmission.query(
+                FinalSubmission.assignment==assignment_key,
                 FinalSubmission.group==group.key).get()
         else:
             return FinalSubmission.query(
+                FinalSubmission.assignment==assignment_key,
                 FinalSubmission.submitter==self.key).get()
 
     def _contains_files(self, backup):
@@ -201,14 +206,12 @@ class User(Base):
         return all_subms[:num_submissions]
 
     def get_group(self, assignment_key):
+        """Return the group for this user for an assignment."""
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key
-        query = Group.query(Group.member==self.key)
-        group = query.filter(Group.assignment==assignment_key).get()
-        if not group: # Might be invited to a group
-            query = Group.query(Group.invited==self.key)
-            group = query.filter(Group.assignment==assignment_key).get()
-        return group
+        return Group.query(ndb.OR(Group.member==self.key,
+                                  Group.invited==self.key),
+                           Group.assignment==assignment_key).get()
 
     def get_course_info(self, course):
         if not course:
