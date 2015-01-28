@@ -257,7 +257,7 @@ class User(Base):
 
         return info
 
-    def update_final_submission(self, assignment):
+    def update_final_submission(self, assignment, group=None):
         """Update the final submission of the user and its group.
         Call on all users after group changes.
         """
@@ -265,8 +265,8 @@ class User(Base):
             assignment = assignment.key
 
         options = [FinalSubmission.submitter == self.key]
-        group = self.get_group(assignment)
-
+        if not group:
+            group = self.get_group(assignment)
         if group and self.key in group.member:
             options.append(FinalSubmission.group == group.key)
             options += [FinalSubmission.submitter == m for m in group.member]
@@ -805,7 +805,7 @@ class Group(Base):
         self.invited.append(user.key)
         self.put()
         for member in self.member:
-            member.get().update_final_submission(self.assignment)
+            member.get().update_final_submission(self.assignment, self)
 
     #@ndb.transactional
     @classmethod
@@ -838,7 +838,7 @@ class Group(Base):
         self.member.append(user_key)
         self.put()
         for user_key in self.member:
-            user_key.get().update_final_submission(self.assignment)
+            user_key.get().update_final_submission(self.assignment, self)
 
     #@ndb.transactional
     def exit(self, user_key):
