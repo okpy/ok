@@ -67,7 +67,7 @@ def login():
     user = users.get_current_user()
     params = {}
     if user is None:
-      return redirect(users.create_login_url('/ok'))
+      return redirect(users.create_login_url('/'))
     else:
       return redirect(url_for('home'))
 
