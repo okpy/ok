@@ -970,4 +970,5 @@ class FinalSubmission(Base):
         return Submission._can(user, need, final.submission.get(), query)
 
     def _pre_put_hook(self):
+        # TODO Remove when submitter is a computed property
         self.submitter = self.submission.get().submitter
