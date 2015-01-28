@@ -6,7 +6,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
 
 import json
 
-SEED_OFFERING = "cal/cs61a/fa14"
+SEED_OFFERING = "cal/cs61a/sp15"
 
 def is_seeded():
     is_seed = models.Course.offering == SEED_OFFERING
