@@ -13,8 +13,8 @@
 
     <div class="assign-progress">
       <div class="assign-bar" ng-if="assign.progress"><span class="assign-fill" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
-      <p class="assign-label" ng-if="assign.final.final_submission"><c>Assignment submitted!</c> </p>
-      <p class="assign-label" ng-if="!assign.final.final_submission"><c> Not submitted yet</c></p>
+      <p class="assign-label" ng-if="assign.final.final_submission">Assignment submitted!</p>
+      <p class="assign-label" ng-if="!assign.final.final_submission">Not submitted yet</p>
     </div>
 
     <div class="assign-more" ng-show="currAssign == assign">
