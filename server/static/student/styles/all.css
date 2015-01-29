@@ -749,6 +749,14 @@ body.course {
 				text-transform:uppercase;
 				margin-top:10px;
 			}
+			.assign-status {
+				text-transform:uppercase;
+                width:100%;
+                text-align:center;
+                color:rgba(255,255,255,0.5);
+                line-height:60px;
+                background-color:#003f7d;
+			}
 			.col {
 				width:50%;
 				padding:30px 40px;
