@@ -756,6 +756,7 @@ body.course {
                 color:rgba(255,255,255,0.5);
                 line-height:60px;
                 background-color:#003f7d;
+                font-style:italic;
 			}
 			.col {
 				width:50%;
