@@ -48,20 +48,22 @@ if __name__ == '__main__':
             SDK_PATH = os.environ['GAE_SDK']
         else:
             SDK_PATH = sys.argv[1] # ...or hardcoded path
-        # Path to tests folder
-        dir_of_file = os.path.dirname(os.path.abspath(__file__))
-        TEST_PATH = os.path.join(dir_of_file, 'tests')
-        test_types = os.listdir(TEST_PATH)
-        failed = False
-        for typ in test_types:
-            test_dir = os.path.join(TEST_PATH, typ)
-            if not os.path.isdir(test_dir):
-                continue
-            print '='*60
-            print "Doing {} testing".format(typ)
-            print '='*60
-            failed = main(SDK_PATH, TEST_PATH, test_dir) or failed
-        sys.exit(int(failed))
     except IndexError:
         # you probably forgot about path as first argument
         print USAGE
+
+    # Path to tests folder
+    dir_of_file = os.path.dirname(os.path.abspath(__file__))
+    TEST_PATH = os.path.join(dir_of_file, 'tests')
+    test_types = os.listdir(TEST_PATH)
+    failed = False
+
+    for typ in test_types:
+        test_dir = os.path.join(TEST_PATH, typ)
+        if not os.path.isdir(test_dir):
+            continue
+        print '='*60
+        print "Doing {} testing".format(typ)
+        print '='*60
+        failed = main(SDK_PATH, TEST_PATH, test_dir) or failed
+    sys.exit(int(failed))
