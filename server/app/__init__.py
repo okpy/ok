@@ -21,9 +21,12 @@ DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          if 'SERVER_SOFTWARE' in os.environ
          else True)
 
+
 TESTING = os.environ["FLASK_CONF"] == "TEST" if "FLASK_CONF" in os.environ else False
-if DEBUG and not TESTING and not is_seeded():
-    seed()
+
+# Uncomment for local webapp testing
+# if DEBUG and not TESTING and not is_seeded():
+#     seed()
 
 if DEBUG:
     app.config.from_object('app.settings.Debug')
