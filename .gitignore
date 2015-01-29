@@ -22,3 +22,6 @@ dist
 # ok-related files
 *.ok_refresh
 *.ok_messages
+
+server/.coverage
+server/coverage_report/*

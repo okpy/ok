@@ -1,0 +1,7 @@
+#!/bin/bash
+
+coverage run apptest.py
+coverage html
+if hash open 2>/dev/null; then
+  open coverage_report/index.html
+fi
