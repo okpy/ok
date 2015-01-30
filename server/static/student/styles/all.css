@@ -758,6 +758,11 @@ body.course {
                 background-color:#003f7d;
                 font-style:italic;
 			}
+				.assign-status.positive {
+					background-color:#528e25;
+				}
+				.assign-status.negative {
+				}
 			.col {
 				width:50%;
 				padding:30px 40px;
