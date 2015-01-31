@@ -771,12 +771,12 @@ body.course {
 				}
 			.assign-status {
 				text-transform:uppercase;
-                width:100%;
-                text-align:center;
-                color:rgba(255,255,255,0.5);
-                line-height:60px;
-                background-color:#003f7d;
-                font-style:italic;
+				width:100%;
+				text-align:center;
+				color:rgba(255,255,255,0.5);
+				line-height:60px;
+				background-color:#003f7d;
+				font-style:italic;
 			}
 				.assign-status.positive {
 					background-color:#528e25;
