@@ -147,7 +147,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         Submission.winRate({
           id: backupId
         }, function (response) {
-          $scope.win_rate = response.data;
+          $scope.win_rate = response;
+          $window.swal($scope.win_rate.winrate+"%",'Final Win Rate','info')
+        }, function (err) {
+          $window.swal("Uhoh",'There was an error','error')
         });
       }
 
