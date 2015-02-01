@@ -724,7 +724,7 @@ body.course {
 			.assign-progress,.assign-text,.course-progress,.assign-miniprogress {
 				width:100%;
 			}
-			.assign-progress,.course-progress {
+			.assign-progress {
 				padding:25px 30px;
 				box-sizing:border-box;
 				background-color:#3f3f3f;
@@ -1267,9 +1267,10 @@ body.course {
 			border:4px solid rgba(255,255,255,0.25);
 		}
   .course-progress {
-  	background-color:#333;
+		margin-top:25px;
   }
 	.course {
+		width:100%;
 		display:inline-block;
 	}
 	.course-subtitle {
