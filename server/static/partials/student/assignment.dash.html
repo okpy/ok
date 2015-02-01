@@ -14,22 +14,14 @@
     <p class="assign-status" ng-if="!assign.final.final_submission">Not submitted yet</p>
     <p class="assign-status positive" ng-if="assign.final.final_submission">Assignment submitted!</p>
 
-    <div class="assign-progress" ng-if="assign.assignment.display_name == 'Hog'">
-      <div class="assign-bar"><span class="assign-fill" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
-      <div class="assign-miniprogress" ng-if="!assign.request">
-        <a href="button">Request</a>
+    <div class="assign-progress" ng-if="assign.assignment.display_name == 'Hog' && assign.final.final_submission && assign.winrate">
+      <div class="assign-bar">
+        <span class="assign-fill" ng-class="{'positive': assign.winrate.percent >= 56, 'partial': assign.winrate.percent >= 54 && assign.winrate.percent < 56}" ng-style="{'width' : assign.winrate.progress+'%'}"></span>
       </div>
-      <div class="assign-miniprogress" ng-if="assign.request">
-        <div class="assign-minibutton">Request</div>
-        <div class="assign-minibar" ng-if="assign.request.progress">
-          <span class="assign-minifill" ng-style="{'width' : assign.request.progress.toString()+'%'}"></span>
-        </div>
-        <p class="assign-minilabel" ng-if="assign.request.milestones.is_not_done">Insufficient</p>
-        <p class="assign-minilabel" ng-if="assign.request.milestones.is_almost_done">Partial credit</p>
-        <p class="assign-minilabel" ng-if="assign.request.milestones.is_done">Success</p>
-      </div>
+      <p class="assign-label" ng-if="assign.winrate.percent"> {{assign.winrate.percent}}% - </p>
+      <p class="assign-label" ng-if="assign.winrate.message"> {{ assign.winrate.message }}</p>
     </div>
-    <a class="assign-expand" ng-if="assign.assignment.display_name == 'Hog' && assign.final.final_submission" ng-click="winRate(assign, assign.final.backup.id)">
+    <a class="assign-expand" ng-if="assign.assignment.display_name == 'Hog' && assign.final.final_submission && !assign.winrate" ng-click="winRate(assign, assign.final.backup.id)">
       <p>Calculate Win Rate</p>
     </a>
 

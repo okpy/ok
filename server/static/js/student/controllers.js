@@ -144,12 +144,28 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       };
 
       $scope.winRate = function (assign, backupId) {
+        assign.winrate = {'progress': 1, 'message': "Loading"}
         Submission.winRate({
           id: backupId
         }, function (response){
-          $scope.win_rate = response;
-          $window.swal($scope.win_rate.winrate+"%",'Final Win Rate','info')
+          if (response.error.type) {
+            assign.winrate = {'progress': 0, 'error': true, 'message': response.error.type+" Error"}
+            $window.swal(response.error.type + " Error",'There was a ' + response.error.type + ' error in your code.','error')
+          } else {
+            $scope.winrate = response
+            assign.winrate = {
+              'progress': (response.winrate / .56) * 100,
+              'percent': response.winrate * 100,
+              'message': response.message
+            }
+          }
+          // $window.swal(response.winrate*100 +"%",'Final Win Rate','info')
         }, function (err) {
+          assign.winrate = {
+            'message': response.message,
+            'error': true
+          }
+
           $window.swal("Uhoh",'There was an error','error')
         });
       }

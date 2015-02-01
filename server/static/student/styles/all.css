@@ -253,10 +253,16 @@ html.active {
 	-o-transition:		0.2s ease 0.2s;
 }
 .hide {
-	transition:			0.4s ease 0.4s;
-	-webkit-transition:	0.4s ease 0.4s;
-	-moz-transition:	0.4s ease 0.4s;
-	-o-transition:		0.4s ease 0.4s;
+  transition:     0.4s ease 0.4s;
+  -webkit-transition: 0.4s ease 0.4s;
+  -moz-transition:  0.4s ease 0.4s;
+  -o-transition:    0.4s ease 0.4s;
+}
+.assign-bar,.assign-fill {
+-webkit-transition : width 0.4s ease;
+   -moz-transition : width 0.4s ease;
+     -o-transition : width 0.4s ease;
+        transition : width 0.4s ease;
 }
 /* -- CSS icons -- */
 .arrow {
@@ -721,6 +727,9 @@ body.course {
 				.large .assign-more.active {
 					height:214px
 				}
+      .assign-empty {
+        width: 0%;
+      }
 			.assign-progress,.assign-text,.course-progress,.assign-miniprogress {
 				width:100%;
 			}
@@ -744,7 +753,6 @@ body.course {
 				}
 			.assign-fill, .assign-minifill {
 				background-color:#006CD8;
-				width:70%;
 			}
 			.assign-label {
 				color:#666;
@@ -780,6 +788,14 @@ body.course {
         background-color:#003f7d;
         font-style:italic;
       }
+        .assign-fill.positive {
+          background-color:#528e25;
+        }
+        .assign-fill.partial {
+        }
+        .assign-fill.negative {
+        }
+
         .assign-status.positive {
           background-color:#528e25;
         }
