@@ -75,8 +75,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
 
 
 // Main dashboard controller. Should be modularized later.
-app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', '$timeout',
-  function($scope, $window, $state,  $stateParams, Assignment, User, Group, $timeout) {
+app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', '$timeout',
+  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, $timeout) {
       $scope.courseId = $stateParams.courseId
 
       $scope.toggleAssign = function (assign) {
@@ -142,6 +142,17 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               }
             });
       };
+
+      $scope.winRate = function (backupId) {
+        Submission.winRate({
+          id: backupId
+        }, function (response) {
+          $scope.win_rate = response;
+          $window.swal($scope.win_rate.winrate+"%",'Final Win Rate','info')
+        }, function (err) {
+          $window.swal("Uhoh",'There was an error','error')
+        });
+      }
 
       $scope.rejectInvite = function(currGroup) {
           Group.rejectInvitation({

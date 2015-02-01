@@ -5,6 +5,7 @@
 import datetime
 import logging
 import ast
+import requests
 
 from flask.views import View
 from flask.app import request, json
@@ -780,6 +781,9 @@ class SubmissionAPI(APIResource):
                 'tag': Arg(str, required=True)
             }
         },
+        'win_rate': {
+            'methods': set(['GET']),
+        },
         'score': {
             'methods': set(['POST']),
             'web_args': {
@@ -999,6 +1003,40 @@ class SubmissionAPI(APIResource):
         obj.compScore = score.key
         obj.put()
         return score
+
+
+    def win_rate(self, obj, user, data):
+        """
+        Gets the win_rate for the submission. This method will be removed shortly.
+
+
+        :param obj: (object) target
+        :param user: -- unused --
+        :param data: -- unused --
+        :return: Win Rate as a float.
+        """
+        messages = obj.get_messages()
+        if 'file_contents' not in obj.get_messages():
+            raise BadValueError('Submission has no contents to diff')
+
+        file_contents = messages['file_contents']
+
+        if 'submit' in file_contents:
+            del file_contents['submit']
+
+        if 'hog.py' in file_contents:
+          hog_code = file_contents['hog.py'].encode('utf-8')
+          payload = {'strategy': hog_code}
+          headers={'content-type': 'application/json'}
+
+          q = requests.post('http://hog.cs61a.org/winrate',
+             data=json.dumps(payload),
+             headers=headers)
+
+          return q.json()
+        else:
+          return {'status': 'Failure'}
+
 
     def get_assignment(self, name):
         """
