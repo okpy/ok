@@ -13,9 +13,21 @@
 
     <p class="assign-status" ng-if="!assign.final.final_submission">Not submitted yet</p>
     <p class="assign-status positive" ng-if="assign.final.final_submission">Assignment submitted!</p>
-    
+
     <div class="assign-progress" ng-if="assign.progress">
       <div class="assign-bar"><span class="assign-fill" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
+      <div class="assign-miniprogress" ng-if="!assign.request">
+        <a href="button">Request</a>
+      </div>
+      <div class="assign-miniprogress" ng-if="assign.request">
+        <div class="assign-minibutton">Request</div>
+        <div class="assign-minibar" ng-if="assign.request.progress">
+          <span class="assign-minifill" ng-style="{'width' : assign.request.progress.toString()+'%'}"></span>
+        </div>
+        <p class="assign-minilabel" ng-if="assign.request.milestones.is_not_done">Insufficient</p>
+        <p class="assign-minilabel" ng-if="assign.request.milestones.is_almost_done">Partial credit</p>
+        <p class="assign-minilabel" ng-if="assign.request.milestones.is_done">Success</p>
+      </div>
     </div>
 
     <div class="assign-more" ng-show="currAssign == assign">

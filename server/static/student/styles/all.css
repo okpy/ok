@@ -234,7 +234,7 @@ html.active {
 .clear {
 	width:100%;
 }
-.label,.block-bar,.assign-fill,.pop-item,.half,.block-link,.file {
+.label,.block-bar,.assign-fill,.pop-item,.half,.block-link,.file,.button {
 	transition:			0.2s ease;
 	-webkit-transition:	0.2s ease;
 	-moz-transition:	0.2s ease;
@@ -721,7 +721,7 @@ body.course {
 				.large .assign-more.active {
 					height:214px
 				}
-			.assign-progress,.assign-text,.course-progress {
+			.assign-progress,.assign-text,.course-progress,.assign-miniprogress {
 				width:100%;
 			}
 			.assign-progress,.course-progress {
@@ -732,14 +732,18 @@ body.course {
 				.assign-more .assign-progress {
 					background-color:#eee
 				}
-			.assign-bar {
+			.assign-bar,.assign-miniprogress {
 				width:100%;
 				background-color:#FFF;
-				height:15px;
 			}
-			.assign-fill {
+				.assign-bar, .assign-fill {
+					height:15px;
+				}
+				.assign-miniprogress, .assign-minifill {
+					height:5px;
+				}
+			.assign-fill, .assign-minifill {
 				background-color:#006CD8;
-				height:15px;
 				width:70%;
 			}
 			.assign-label {
@@ -749,14 +753,32 @@ body.course {
 				text-transform:uppercase;
 				margin-top:10px;
 			}
+				.assign .assign-minilabel {
+					font-size:15px;
+				}
+				.assign-miniprogress .button {
+					background-color:#999;
+					width:100%;
+					color:#666;
+					text-align:center;
+					text-transform:uppercase;
+					font-size:13px;
+					border-radius:0;
+					opacity:1;
+				}
+				.assign-miniprogress .button:hover {
+					color:#333;
+					background-color:#FFF;
+					opacity:1;
+				}
 			.assign-status {
 				text-transform:uppercase;
-                width:100%;
-                text-align:center;
-                color:rgba(255,255,255,0.5);
-                line-height:60px;
-                background-color:#003f7d;
-                font-style:italic;
+				width:100%;
+				text-align:center;
+				color:rgba(255,255,255,0.5);
+				line-height:60px;
+				background-color:#003f7d;
+				font-style:italic;
 			}
 				.assign-status.positive {
 					background-color:#528e25;
