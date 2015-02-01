@@ -756,7 +756,7 @@ body.course {
 				.assign .assign-minilabel {
 					font-size:15px;
 				}
-				.assign-miniprogress .button {
+				.win-button {
 					background-color:#999;
 					width:100%;
 					color:#666;
@@ -766,25 +766,35 @@ body.course {
 					border-radius:0;
 					opacity:1;
 				}
-				.assign-miniprogress .button:hover {
+				.win-button:hover {
 					color:#333;
 					background-color:#FFF;
 					opacity:1;
 				}
-			.assign-status {
+      .assign-status {
+        text-transform:uppercase;
+        width:100%;
+        text-align:center;
+        color:rgba(255,255,255,0.5);
+        line-height:60px;
+        background-color:#003f7d;
+        font-style:italic;
+      }
+        .assign-status.positive {
+          background-color:#528e25;
+        }
+        .assign-status.negative {
+        }
+			.assign-request {
+        display: inline-block;
 				text-transform:uppercase;
 				width:100%;
 				text-align:center;
 				color:rgba(255,255,255,0.5);
 				line-height:60px;
-				background-color:#003f7d;
+				background-color:#AC522C;
 				font-style:italic;
 			}
-				.assign-status.positive {
-					background-color:#528e25;
-				}
-				.assign-status.negative {
-				}
 			.col {
 				width:50%;
 				padding:30px 40px;

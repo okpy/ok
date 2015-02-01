@@ -12,13 +12,13 @@
     </div>
 
     <p class="assign-status" ng-if="!assign.final.final_submission">Not submitted yet</p>
-    <p class="assign-status positive" ng-if="assign.final.final_submission">Assignment submitted!</p>
+    <p class="assign-status positive" ng-if="assign.final.final_submission">Assignment submitted! </p>
 
-    <div class="assign-progress" ng-if="assign.progress">
+    <a ng-click="winRate(assign.final.backup.id)" class="assign-request" ng-if="assign.assignment.display_name == 'Hog'"> Request Win Rate % </p>
+
+
+    <div class="assign-progress" ng-if="assign.request">
       <div class="assign-bar"><span class="assign-fill" ng-style="{'width' : assign.progress.toString()+'%'}"></span></div>
-      <div class="assign-miniprogress" ng-if="!assign.request">
-        <a href="button">Request</a>
-      </div>
       <div class="assign-miniprogress" ng-if="assign.request">
         <div class="assign-minibutton">Request</div>
         <div class="assign-minibar" ng-if="assign.request.progress">
