@@ -69,6 +69,13 @@ app.factory('Submission', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        winRate: {
+          method: "GET",
+          url: 'api/v1/submission/:id/win_rate',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         addScore: {
           method: "POST",
           url: 'api/v1/submission/:id/score',
