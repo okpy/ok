@@ -18,8 +18,14 @@
       <div class="assign-bar">
         <span class="assign-fill" ng-class="{'positive': assign.winrate.percent >= 56, 'partial': assign.winrate.percent >= 54 && assign.winrate.percent < 56}" ng-style="{'width' : assign.winrate.progress+'%'}"></span>
       </div>
-      <p class="assign-label" ng-if="assign.winrate.percent"> {{assign.winrate.percent}}% - </p>
-      <p class="assign-label" ng-if="assign.winrate.message"> {{ assign.winrate.message }}</p>
+      <p class="fullWidth">
+        <p class="assign-label" ng-if="assign.winrate.percent"> {{assign.winrate.percent}}% - </p>
+        <p class="assign-label" ng-if="assign.winrate.message"> {{ assign.winrate.message }}</p>
+      </p>
+      <br> <br> <br>
+      <p class="assign-minilabel">
+        <a href="http://hog.cs61a.org/" class="link" ng-if="assign.winrate.percent < 56"> Experiment with more strategies at hog.cs61a.org</p>
+      </p>
     </div>
     <a class="assign-expand" ng-if="assign.assignment.display_name == 'Hog' && assign.final.final_submission && !assign.winrate" ng-click="winRate(assign, assign.final.backup.id)">
       <p>Calculate Win Rate</p>

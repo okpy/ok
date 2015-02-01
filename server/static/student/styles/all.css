@@ -763,6 +763,7 @@ body.course {
 			}
 				.assign .assign-minilabel {
 					font-size:15px;
+          color: #fff;
 				}
 				.win-button {
 					background-color:#999;
