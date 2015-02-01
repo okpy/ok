@@ -63,6 +63,13 @@ app.factory('Submission', ['$resource',
           },
           cache: true
         },
+        winRate: {
+          method: "GET",
+          url: 'api/v1/submission/:id/win_rate',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         diff: {
           url: 'api/v1/submission/:id/diff',
           transformResponse: function(data) {

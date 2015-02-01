@@ -29,6 +29,9 @@
         <p class="assign-minilabel" ng-if="assign.request.milestones.is_done">Success</p>
       </div>
     </div>
+    <a class="assign-expand" ng-if="assign.assignment.display_name == 'Hog' && assign.final.final_submission" ng-click="winRate(assign, assign.final.backup.id)">
+      <p>Calculate Win Rate</p>
+    </a>
 
     <div class="assign-more" ng-show="currAssign == assign">
       <div class="assign-text">
