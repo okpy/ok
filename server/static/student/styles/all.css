@@ -234,7 +234,7 @@ html.active {
 .clear {
 	width:100%;
 }
-.label,.block-bar,.assign-fill,.pop-item,.half,.block-link,.file {
+.label,.block-bar,.assign-fill,.pop-item,.half,.block-link,.file,.button {
 	transition:			0.2s ease;
 	-webkit-transition:	0.2s ease;
 	-moz-transition:	0.2s ease;
@@ -253,10 +253,16 @@ html.active {
 	-o-transition:		0.2s ease 0.2s;
 }
 .hide {
-	transition:			0.4s ease 0.4s;
-	-webkit-transition:	0.4s ease 0.4s;
-	-moz-transition:	0.4s ease 0.4s;
-	-o-transition:		0.4s ease 0.4s;
+  transition:     0.4s ease 0.4s;
+  -webkit-transition: 0.4s ease 0.4s;
+  -moz-transition:  0.4s ease 0.4s;
+  -o-transition:    0.4s ease 0.4s;
+}
+.assign-bar,.assign-fill {
+-webkit-transition : width 0.4s ease;
+   -moz-transition : width 0.4s ease;
+     -o-transition : width 0.4s ease;
+        transition : width 0.4s ease;
 }
 /* -- CSS icons -- */
 .arrow {
@@ -721,10 +727,13 @@ body.course {
 				.large .assign-more.active {
 					height:214px
 				}
-			.assign-progress,.assign-text,.course-progress {
+      .assign-empty {
+        width: 0%;
+      }
+			.assign-progress,.assign-text,.course-progress,.assign-miniprogress {
 				width:100%;
 			}
-			.assign-progress,.course-progress {
+			.assign-progress {
 				padding:25px 30px;
 				box-sizing:border-box;
 				background-color:#3f3f3f;
@@ -732,15 +741,18 @@ body.course {
 				.assign-more .assign-progress {
 					background-color:#eee
 				}
-			.assign-bar {
+			.assign-bar,.assign-miniprogress {
 				width:100%;
 				background-color:#FFF;
-				height:15px;
 			}
-			.assign-fill {
+				.assign-bar, .assign-fill {
+					height:15px;
+				}
+				.assign-miniprogress, .assign-minifill {
+					height:5px;
+				}
+			.assign-fill, .assign-minifill {
 				background-color:#006CD8;
-				height:15px;
-				width:70%;
 			}
 			.assign-label {
 				color:#666;
@@ -749,20 +761,56 @@ body.course {
 				text-transform:uppercase;
 				margin-top:10px;
 			}
-			.assign-status {
+				.assign .assign-minilabel {
+					font-size:15px;
+				}
+				.win-button {
+					background-color:#999;
+					width:100%;
+					color:#666;
+					text-align:center;
+					text-transform:uppercase;
+					font-size:13px;
+					border-radius:0;
+					opacity:1;
+				}
+				.win-button:hover {
+					color:#333;
+					background-color:#FFF;
+					opacity:1;
+				}
+      .assign-status {
+        text-transform:uppercase;
+        width:100%;
+        text-align:center;
+        color:rgba(255,255,255,0.5);
+        line-height:60px;
+        background-color:#003f7d;
+        font-style:italic;
+      }
+        .assign-fill.positive {
+          background-color:#528e25;
+        }
+        .assign-fill.partial {
+        }
+        .assign-fill.negative {
+        }
+
+        .assign-status.positive {
+          background-color:#528e25;
+        }
+        .assign-status.negative {
+        }
+			.assign-request {
+        display: inline-block;
 				text-transform:uppercase;
-                width:100%;
-                text-align:center;
-                color:rgba(255,255,255,0.5);
-                line-height:60px;
-                background-color:#003f7d;
-                font-style:italic;
+				width:100%;
+				text-align:center;
+				color:rgba(255,255,255,0.5);
+				line-height:60px;
+				background-color:#AC522C;
+				font-style:italic;
 			}
-				.assign-status.positive {
-					background-color:#528e25;
-				}
-				.assign-status.negative {
-				}
 			.col {
 				width:50%;
 				padding:30px 40px;
@@ -1245,9 +1293,10 @@ body.course {
 			border:4px solid rgba(255,255,255,0.25);
 		}
   .course-progress {
-  	background-color:#333;
+		margin-top:25px;
   }
 	.course {
+		width:100%;
 		display:inline-block;
 	}
 	.course-subtitle {
