@@ -1044,7 +1044,8 @@ class SubmissionAPI(APIResource):
                                                messages, submit, submitter)
         return (201, 'success', {
             'key': submission.key.id(),
-            'course': valid_assignment.course.id()
+            'course': valid_assignment.course.id(),
+            'email': user.email[0]
         })
 
     def post(self, user, data):
