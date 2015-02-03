@@ -1108,7 +1108,9 @@ class SubmissionAPI(APIResource):
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
         return (201, 'success', {
-            'key': submission.key.id()
+            'key': submission.key.id(),
+            'course': valid_assignment.course.id(),
+            'email': user.email[0]
         })
 
     def post(self, user, data):
