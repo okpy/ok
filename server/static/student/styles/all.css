@@ -607,6 +607,35 @@ body.course {
 		section.new .newscreen {
 			left:0;
 		}
+		.assign .score {
+			position:absolute;
+			border-radius:50%;
+			top:0;
+			right:0;
+			margin:15px;
+			height:50px;
+			width:50px;
+			background-color:#333;
+			text-align:center;
+			line-height:50px;
+			font-size:14px;
+			color:#FFF;
+		}
+			.score-total {
+				color:rgba(255,255,255,0.5);
+				font-size:8px;
+				float:none;
+			}
+			.score-pts {
+				color:rgba(255,255,255,0.5);
+				position:absolute;
+				bottom:-15px;
+				left:0;
+				width:100%;
+				text-align:center;
+				font-size:8px;
+				text-transform:uppercase;
+			}
 		.assign {
 			width:100%;
 			text-align:left;
