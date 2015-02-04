@@ -1322,7 +1322,7 @@ class CourseAPI(APIResource):
         return list(query)
 
     def get_students(self, course, user, data):
-        query = models.Participant.query(models.Participant.course == course)
+        query = models.Participant.query(models.Participant.course == course.key)
         need = Need('index')
         query = models.Participant.can(user, need, course, query)
         return list(query)
