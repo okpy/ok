@@ -19,7 +19,7 @@ from ddt import ddt
 
 #pylint: disable=no-init, missing-docstring, no-member, too-many-instance-attributes
 @ddt
-class PermissionsUnitTest(BaseTestCase):
+class BaseUnitTest(BaseTestCase):
     @staticmethod
     def get_accounts():
         """
@@ -59,7 +59,7 @@ class PermissionsUnitTest(BaseTestCase):
         part.put()
 
     def setUp(self): #pylint: disable=invalid-name
-        super(PermissionsUnitTest, self).setUp()
+        super(BaseUnitTest, self).setUp()
         self.accounts = self.get_accounts()
         for user in self.accounts.values():
             user.put()
@@ -185,6 +185,7 @@ class PermissionsUnitTest(BaseTestCase):
         assert self.user
         self.user = None
 
+class PermissionsUnitTest(BaseUnitTest):
     #pylint: disable=too-few-public-methods
     class PTest(object):
         """A test of wehther a user can access a model object with need."""

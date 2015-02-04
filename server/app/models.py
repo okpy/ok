@@ -10,6 +10,7 @@ import datetime
 from app import app
 from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
 from app.exceptions import *
+from app import utils
 from flask import json
 from flask.json import JSONEncoder as old_json
 
@@ -348,6 +349,8 @@ class User(Base):
         """Ensure that a user can be accessed by at least one email."""
         if not self.email:
             raise BadValueError("No email associated with " + str(self))
+
+        utils.check_user(self.key.id())
 
 class Course(Base):
     """Courses are expected to have a unique offering."""

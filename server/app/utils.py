@@ -7,6 +7,7 @@ Utility functions used by API and other services
 import collections
 import logging
 import datetime
+import itertools
 
 try:
     from cStringIO import StringIO
@@ -29,6 +30,19 @@ class ModelProxy(object):
         return app.models.__getattribute__(key)
 
 ModelProxy = ModelProxy()
+
+def parse_date(date):
+    # TODO Describe what date translation is happening here. Probably needs
+    # a rewrite to handle daylight savings and work with other time zones.
+    try:
+        date = datetime.datetime.strptime(
+            date, app.config["GAE_DATETIME_FORMAT"])
+    except ValueError:
+        date = datetime.datetime.strptime(
+            date, "%Y-%m-%d %H:%M:%S")
+
+    delta = datetime.timedelta(hours=7)
+    return datetime.datetime.combine(date.date(), date.time()) + delta
 
 def coerce_to_json(data, fields):
     """
@@ -198,6 +212,11 @@ def filter_query(query, args, model):
 
     return query
 
+
+####################
+# Deferred actions #
+####################
+
 ASSIGN_BATCH_SIZE = 20
 def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.FinalSubmission.query().filter(
@@ -264,15 +283,58 @@ def assign_submission(backup_id, submit):
         subm.put()
         subm.mark_as_final()
 
-def parse_date(date):
-    # TODO Describe what date translation is happening here. Probably needs
-    # a rewrite to handle daylight savings and work with other time zones.
-    try:
-        date = datetime.datetime.strptime(
-            date, app.config["GAE_DATETIME_FORMAT"])
-    except ValueError:
-        date = datetime.datetime.strptime(
-            date, "%Y-%m-%d %H:%M:%S")
+def sort_by_assignment(key_func, entries):
+    entries = sorted(entries, key=key_func)
+    return itertools.groupby(entries, key_func)
 
-    delta = datetime.timedelta(hours=7)
-    return datetime.datetime.combine(date.date(), date.time()) + delta
+def unique_email_address(user):
+    U = ModelProxy.User
+
+    dups = []
+    for email in user.email:
+        users = U.query(U.email == email).fetch()
+        for found_user in users:
+            if found_user.key != user.key:
+                dups.append(found_user)
+
+    # TODO(martinis, denero) figure out how to merge users
+
+def unique_final_submission(user):
+    FS = ModelProxy.FinalSubmission
+
+    key_func = lambda subm: subm.assignment
+    submissions = FS.query(FS.submitter == user.key).fetch()
+    for lst in sort_by_assignment(key_func, submissions):
+        if len(lst) > 1:
+            lst.sort(key=lambda subm: subm.server_time)
+            lst = lst[1:]
+            for subm in lst:
+                subm.key.delete()
+
+def unique_group(user):
+    G = ModelProxy.Group
+    key_func = lambda group: group.assignment
+    groups = G.query(G.member == user.key).fetch()
+    for lst in sort_by_assignment(key_func, groups):
+        if len(lst) > 1:
+            # TODO(martinis, denero) figure out what to do
+            pass
+
+def deferred_check_user(user_id):
+    user = ModelProxy.User.get_by_id(user_id)
+    if not user:
+        raise deferred.PermanentTaskFailure("User id {} is invalid.".format(user_id))
+
+    unique_email_address(user)
+    unique_final_submission(user)
+    unique_group(user)
+
+
+def check_user(user_key):
+    if isinstance(user_key, ModelProxy.User):
+        user_key = user_key.key.id()
+
+    if isinstance(user_key, ndb.Key):
+        user_key = user_key.id()
+
+    deferred.defer(deferred_check_user, user_key)
