@@ -71,9 +71,16 @@ class BaseTestCase(unittest.TestCase):
         self.testbed.init_user_stub()
         self.testbed.init_memcache_stub()
         self.testbed.init_taskqueue_stub()
+        self._mocks = []
 
     def tearDown(self): #pylint: disable=invalid-name, missing-docstring
         self.testbed.deactivate()
+        for obj, name, val in self._mocks:
+            setattr(obj, name, val)
+
+    def mock(self, obj, name, val):
+        self._mocks.append((obj, name, getattr(obj, name)))
+        setattr(obj, name, val)
 
 
 class APIBaseTestCase(BaseTestCase):
