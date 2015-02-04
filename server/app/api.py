@@ -1324,8 +1324,9 @@ class CourseAPI(APIResource):
     def get_students(self, course, user, data):
         query = models.Participant.query(models.Participant.course == course.key)
         need = Need('index')
-        query = models.Participant.can(user, need, course, query)
-        return list(query)
+        if not models.Participant.can(user, need, course, query):
+            raise need.exception()
+        return list(query.fetch())
 
     def add_student(self, course, user, data):
         need = Need('staff') # Only staff can call this API
