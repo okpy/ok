@@ -433,6 +433,10 @@ class Participant(Base):
         action = need.action
         if action == "get":
             return True
+        elif action == "staff":
+            if user.is_admin:
+                return True
+            return user.key in course.staff
         elif action == "index":
             if cls.has_role(user, course, STAFF_ROLE):
                 return query.filter(cls.course == course.key)

@@ -1323,7 +1323,7 @@ class CourseAPI(APIResource):
 
     def get_students(self, course, user, data):
         query = models.Participant.query(models.Participant.course == course.key)
-        need = Need('index')
+        need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
         return list(query.fetch())
