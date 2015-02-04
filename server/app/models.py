@@ -435,9 +435,9 @@ class Participant(Base):
             return True
         elif action == "index":
             if cls.has_role(user, course, STAFF_ROLE):
-                return query.filter(cls.course == course)
+                return query.filter(cls.course == course.key)
             else:
-                return query.filter(cls.user == user)
+                return query.filter(cls.user == user.key)
 
     @classmethod
     def add_role(cls, user_key, course_key, role):
