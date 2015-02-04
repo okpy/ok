@@ -444,6 +444,12 @@ class UserAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True)
             }
+        },
+        'lookup': {
+            'methods': set(['GET']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
         }
     }
 
@@ -583,6 +589,14 @@ class UserAPI(APIResource):
 
     def get_submissions(self, obj, user, data):
         return obj.get_backups(data['assignment'])
+
+    def lookup(self, obj, user, data):
+        user_lookup = self.model.lookup(data['email'])
+        need = Need('get')
+        if not obj.can(user, need, user_lookup):
+            raise need.exception()
+
+        return user_lookup
 
 class AssignmentAPI(APIResource):
     """
