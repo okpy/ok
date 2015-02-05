@@ -66,6 +66,10 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
         $timeout(function() {
           $('code').each(function(i, block) {
             hljs.highlightBlock(block);
+            
+            // update line numbers
+            numbers = '<p>'+(block.match(\n) || []).join('</p><p>')+'</p>';
+            $('.num-cont ul').html(numbers);
           });
         }, 100);
       }, function (error) {
