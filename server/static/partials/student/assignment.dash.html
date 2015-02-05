@@ -2,7 +2,11 @@
 
   <div class="assign large active" id="1" ng-repeat="assign in assignments">
     <div class="assign-main">
-      <div class="score">{{ ::assign.assignment.score }}<span class="score-total">/{{::assign.assignment.points}}</span><span class="score-pts">PTS</span></div>
+      <div class="score">
+        {{ ::assign.assignment.score }}
+        <span class="score-total">/{{::assign.assignment.points}}</span>
+        <span class="score-pts">PTS</span>
+      </div>
       <img class="assign-bg" src="/static/student/images/bg-clock.png">
        <h2 class="assign-title"> {{ ::assign.assignment.display_name }}</h2>
       <div class="assign-deck">
