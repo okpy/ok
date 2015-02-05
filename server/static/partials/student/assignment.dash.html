@@ -6,7 +6,7 @@
         {{ assign.assignment.score || '--'}}
         <span class="score-total">/{{::assign.assignment.points}}</span>
         <span class="score-pts">pts</span>
-        <div class="subscore">
+        <div class="subscore" ng-if="{{ subscore_exists }}">
           2<span class="subscore-total">/3</span>
         </div>
       </div>
