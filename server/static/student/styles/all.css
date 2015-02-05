@@ -612,29 +612,19 @@ body.course {
 			border-radius:50%;
 			top:0;
 			right:0;
-			margin:15px;
-			height:50px;
-			width:50px;
-			background-color:rgba(0,0,0,0.5);
+			margin:-15px -15px 0 0;
+			height:100px;
+			width:100px;
+			background-color:rgba(0,0,0,0.35);
 			text-align:center;
-			line-height:50px;
-			font-size:14px;
+			line-height:100px;
+			font-size:24px;
 			color:#FFF;
 		}
 			.score-total {
 				color:rgba(255,255,255,0.5);
-				font-size:8px;
+				font-size:12px;
 				float:none;
-			}
-			.score-pts {
-				color:rgba(255,255,255,0.5);
-				position:absolute;
-				bottom:-15px;
-				left:0;
-				width:100%;
-				text-align:center;
-				font-size:8px;
-				text-transform:uppercase;
 			}
 		.assign {
 			width:100%;
@@ -642,6 +632,9 @@ body.course {
 		}
 			.assign + .assign {
 				margin-top:20px;
+			}
+			.assign-main {
+				overflow:hidden;
 			}
 			.assign h2,.assign-main p,.course-main p {
 				color:#FFF;
@@ -793,7 +786,7 @@ body.course {
 			}
 				.assign .assign-minilabel {
 					font-size:15px;
-          color: #fff;
+          			color: #fff;
 				}
 				.win-button {
 					background-color:#999;
@@ -810,17 +803,17 @@ body.course {
 					background-color:#FFF;
 					opacity:1;
 				}
-      .assign-status {
-        text-transform:uppercase;
-        width:100%;
-        text-align:center;
-        color:rgba(255,255,255,0.5);
-        line-height:60px;
-        background-color:#003f7d;
-        font-style:italic;
-      }
+      	.assign-status {
+			text-transform:uppercase;
+			width:100%;
+			text-align:center;
+			color:rgba(255,255,255,0.5);
+			line-height:60px;
+			background-color:#003f7d;
+			font-style:italic;
+      	}
         .assign-fill.positive {
-          background-color:#528e25;
+	  		background-color:#528e25;
         }
         .assign-fill.partial {
         }
@@ -828,12 +821,12 @@ body.course {
         }
 
         .assign-status.positive {
-          background-color:#528e25;
+	  		background-color:#528e25;
         }
         .assign-status.negative {
         }
 			.assign-request {
-        display: inline-block;
+        		display: inline-block;
 				text-transform:uppercase;
 				width:100%;
 				text-align:center;
