@@ -28,6 +28,7 @@ import urllib
 import urlparse
 
 from google.appengine.ext import ndb
+from google.appengine.api import users
 
 import app
 from app import models
@@ -84,6 +85,7 @@ class APIBaseTestCase(BaseTestCase):
     name = ""
     num = 1
     api_version = 'v1'
+    url_prefix = API_PREFIX + '/{}'
 
     def get_accounts(self):
         """
@@ -98,9 +100,17 @@ class APIBaseTestCase(BaseTestCase):
             acc.put()
         self.user = None
         auth.authenticate = self.authenticate
+        users.get_current_user = self.authenticate_GAE_service
 
     def authenticate(self):
         return self.user
+
+    def authenticate_GAE_service(self):
+        class FakeUser:
+            def email(_):
+                return self.user.email[0]
+
+        return FakeUser() if self.user else None
 
     def login(self, user):
         """ Logs in the user. """
@@ -119,7 +129,9 @@ class APIBaseTestCase(BaseTestCase):
         """
         Makes a get request.
         """
-        url = API_PREFIX + '/' + self.api_version + url
+        if self.url_prefix:
+            url = self.url_prefix.format(self.api_version) + url
+
         params = urllib.urlencode(kwds)
         self.response = self.client.get(url + '?' + params, *args)
         try:

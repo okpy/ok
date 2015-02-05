@@ -21,6 +21,7 @@ from app import auth
 from app.authenticator import Authenticator, AuthenticationException
 
 class SudoUnitTest(APIBaseTestCase):
+    url_prefix = ''
     def get_accounts(self):
         """
         Returns the accounts you want to exist in your system.
@@ -45,15 +46,12 @@ class SudoUnitTest(APIBaseTestCase):
             )
         }
 
-    def get(self, url, *args, **kwds):
-        """
-        Makes a get request.
-        """
-        url = url
-        self.response = self.client.get(url, *args)
-
     def assertStatusCode(self, code): #pylint: disable=invalid-name
-        self.assertEqual(self.response.status_code, code, self.response.headers)
+        self.assertEqual(
+            self.response.status_code, code,
+            'response code ({}) != correct code ({}).\n{}'.format(
+                self.response.status_code, code,
+                self.response.get_data()[:100]))
 
     def setUp(self):
         super(SudoUnitTest, self).setUp()
@@ -62,30 +60,33 @@ class SudoUnitTest(APIBaseTestCase):
             user.put()
         self.user = None
 
+    def sudo(self, user):
+        self.get('/sudo/su/{}'.format(user))
+
     # User should be redirected to login.
     def testNoLogin(self):
-        self.get('/sudo/su/dummy@student.com')
+        self.sudo('dummy@student.com')
         self.assertStatusCode(302)
 
     def testLoginToSudo(self):
         self.login('admin')
-        self.get('/sudo/su/dummy@student.com')
+        self.sudo('dummy@student.com')
         self.assertStatusCode(200)
         self.logout()
 
     def testStudentAttemptToSudo(self):
         self.login('student1')
-        self.get('/sudo/su/dummy@student.com')
+        self.sudo('dummy@student.com')
         self.assertStatusCode(404)
 
     def testNonExistantStudent(self):
         self.login('admin')
-        self.get('/sudo/su/nonexistant@student.com')
+        self.sudo('nonexistant@student.com')
         self.assertStatusCode(404)
 
     def testCheckStudent2(self):
         self.login('staff')
-        self.get('/sudo/su/other@student.com')
+        self.sudo('other@student.com')
         self.assertStatusCode(404)
 
 
