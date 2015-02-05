@@ -1,78 +1,67 @@
 <aside>
 
-            <div class="block">
-            <a ui-sref="student({courseId: courseId})" class="block-link block-back">
-              <span class="arrow left dark"></span>
-              <p>Back</p>
-            </a>
-            <a href="http://cs61a.org" class="block-link">
-              <span class="icon-link">8</span>
-              <p class="link-label">Course Website</p>
-            </a>
-          </div>
+    <div class="block">
+        <a ui-sref="student({courseId: courseId})" class="block-link block-back">
+            <span class="arrow left dark"></span>
 
+            <p>Back</p>
+        </a>
+        <a href="http://cs61a.org" class="block-link">
+            <span class="icon-link">8</span>
+
+            <p class="link-label">Course Website</p>
+        </a>
+    </div>
 </aside>
 
 <section>
-
     <div class="assign code small inactive" ng-if="!submission.$resolved">
-      <div class="assign-main">
-        <h2 class="assign-title">Loading
-        </h2>
-              <div class="assign-deck">
-              ...
-              </div>
+        <div class="assign-main">
+            <h2 class="assign-title">Loading</h2>
+            <div class="assign-deck">
+                ...
             </div>
-            <p id="1" class="active" >
-                      <a>
-                        Loading Code
-                      </a>
-            <p>
-
+        </div>
+        <p id="1" class="active">
+            <a>Loading Code</a>
+        <p>
     </div>
     <div class="assign code small active" ng-if="submission.$resolved">
-      <div class="assign-main">
-        <h2 class="assign-title">{{submission.assignment.display_name}}
-          <span class="flag">
-            <span class="cloth"></span>
-            <span class="stem"></span>
-          </span>
-        </h2>
-              <div class="assign-deck">
-                <p><img src="/static/student/images/icon-clock.png"> {{submission.server_time | amCalendar}}.  Due {{submission.assignment.due_date | amCalendar}}
-                <br>By: {{submission.submitter.email[0]}}</p>
-              </div>
-      </div>
-    <div class="assign-code">
-      <!-- TODO: CSS -->
-      <div class="code-main code-view fullWidth" ng-repeat="(file_name, contents) in submission.messages.file_contents" >
-          <hr class="fullWidth">
-          <h2 class="code-title">{{file_name}}</h2> <br> <br>
-          <hr class="fullWidth">
-          <div class="num-cont">
-              <ul>
-                  <p>1</p>
-              </ul>
-          </div>
+        <div class="assign-main">
+            <h2 class="assign-title">{{submission.assignment.display_name}}
+                <span class="flag">
+                <span class="cloth"></span>
+                <span class="stem"></span>
+                </span>
+            </h2>
+            <div class="assign-deck">
+                <p><img src="/static/student/images/icon-clock.png"> {{submission.server_time | amCalendar}}. Due
+                    {{submission.assignment.due_date | amCalendar}}
+                    <br>By: {{submission.submitter.email[0]}}</p>
+            </div>
+        </div>
+        <div class="assign-code">
+            <!-- TODO: CSS -->
+            <div class="code-main code-view fullWidth"
+                 ng-repeat="(file_name, contents) in submission.messages.file_contents">
+                <hr class="fullWidth">
+                <h2 class="code-title">{{file_name}}</h2> <br> <br>
+                <hr class="fullWidth">
+                <div class="num-cont">
+                    <ul>
+                        <p>1</p>
+                    </ul>
+                </div>
           <pre>
               <code class="hljs code-contents">
                   {{contents}}
               </code>
           </pre>
-      <div class="files">
+                <div class="files">
                 </div>
-      </div>
+            </div>
         </div>
-      </div>
-
-
     </div>
-
-
-
     </div>
-
-
-
-
+    </div>
 </section>
