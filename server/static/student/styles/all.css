@@ -607,7 +607,7 @@ body.course {
 		section.new .newscreen {
 			left:0;
 		}
-		.assign .score {
+		.assign .score,.assign .subscore {
 			position:absolute;
 			border-radius:50%;
 			top:0;
@@ -621,10 +621,31 @@ body.course {
 			font-size:24px;
 			color:#FFF;
 		}
-			.score-total {
+			.score-total,.subscore-total {
 				color:rgba(255,255,255,0.5);
 				font-size:12px;
 				float:none;
+			}
+			.assign .subscore {
+				height:40px;
+				width:40px;
+				position:absolute;
+				bottom:0;
+				left:0;
+				margin:auto auto -20px -5px;
+				line-height:40px;
+				font-size:18px;
+			}
+			.score-pts {
+				color:rgba(255,255,255,0.5);
+				position:absolute;
+				bottom:-25px;
+				left:0;
+				width:100%;
+				text-align:center;
+				font-size:10px;
+				font-weight:400;
+				text-transform:uppercase;
 			}
 		.assign {
 			width:100%;
