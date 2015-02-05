@@ -650,6 +650,7 @@ body.course {
 			.assign .subscore:hover,.assign .score:hover {
 				background-color:rgba(0,0,0,0.5);
 				padding:10px;
+				cursor:pointer;
 			}
 				.assign .subscore:hover {
 					margin: auto auto -25px -10px;
