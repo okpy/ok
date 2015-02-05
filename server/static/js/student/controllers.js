@@ -68,7 +68,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
             hljs.highlightBlock(block);
             
             // update line numbers
-            numbers = '<p>'+(block.match(\n) || []).join('</p><p>')+'</p>';
+            numbers = '<p>'+(block.match("\n") || []).join('</p><p>')+'</p>';
             $('.num-cont ul').html(numbers);
           });
         }, 100);
