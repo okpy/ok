@@ -941,6 +941,22 @@ class Queue(Base):
             'id': self.key.id()
         }
 
+    @classmethod
+    def _can(cls, user, need, queue, query=None):
+        action = need.action
+        if not user.logged_in:
+            return False
+
+        if action == "index":
+            if user.is_admin:
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
+        return False
+
 
 class FinalSubmission(Base):
     """The final submission for an assignment from a group.
