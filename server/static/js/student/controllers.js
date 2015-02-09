@@ -68,9 +68,12 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
             hljs.highlightBlock(block);
             
             // update line numbers
-            lines = block.split("\n");
-            numbers = '<p>'+(lines.length || []).join('</p><p>')+'</p>';
-            $(this).find('.num-cont ul').html(numbers);
+            lines = block.match(/\n/) || [];
+            numbers = '';
+            for (i=0;i<lines.length;i++) {
+                numbers += '<p>'+i+'</p>';
+            }
+            $(this).parent().find('.num-cont ul').html(numbers);
           });
         }, 100);
       }, function (error) {
