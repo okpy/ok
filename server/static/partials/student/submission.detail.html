@@ -48,12 +48,12 @@
             <div class="code-main fullWidth"
                  ng-repeat="(file_name, contents) in submission.messages.file_contents">
                 <h2 class="code-title">{{file_name}}</h2>
+                <div class="num-cont">
+                    <ul>
+                        <p>1</p>
+                    </ul>
+                </div>
                 <code class="hljs code-cont">
-                    <div class="num-cont">
-                        <ul>
-                            <p>1</p>
-                        </ul>
-                    </div>
                     {{contents}}
                 </code>
 

@@ -917,7 +917,7 @@ body.course {
 			}
 			.num-cont {
 				position:absolute;
-				top:0;
+				top:75px;
 				left:0;
 				bottom:0;
 				width:20px;
@@ -933,6 +933,7 @@ body.course {
 					text-align:center;
 				}
 				.num-cont ul {
+					margin-top:25px;
 					width:100%;
 				}
 			code,code span:not(.comment-icon) {
