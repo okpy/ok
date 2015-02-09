@@ -52,7 +52,7 @@
 
 
         <script src="/static/js/admin.js"></script>
-        <script src="/static/js/common/main.js"></script>
+        <script src="/static/js/admin/main.js"></script>
         <script src="/static/js/common/services.js"></script>
         <script src="/static/js/common/controllers.js?q=cacheblock"></script>
 
@@ -125,7 +125,7 @@
                           {% else %}
                           <li class="user">
                               <a href={{users_link}}>Login</a>
-                          </li> 
+                          </li>
                           {% endif %}
                     </ul>
                 </div>
@@ -137,17 +137,17 @@
             window.user = "{{user.email}}";
             window.reloginLink = "{{relogin_link}}";
           </script>
-        
+
         <div class="wrapper row-offcanvas row-offcanvas-left">
             <!-- Left side column. contains the logo and sidebar -->
-            <aside class="left-side sidebar-offcanvas">                
+            <aside class="left-side sidebar-offcanvas">
                 <!-- sidebar: style can be found in sidebar.less -->
                 <sidebar-module/>
                 <!-- /.sidebar -->
             </aside>
 
             <!-- Right side column. Contains the navbar and content of the page -->
-            <aside class="right-side admin-center">                
+            <aside class="right-side admin-center">
 
               <div ui-view></div>
 

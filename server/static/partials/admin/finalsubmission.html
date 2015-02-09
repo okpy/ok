@@ -28,8 +28,8 @@
           </div>
         </div>
 
-        <div ng-repeat="(file_name, contents) in submission.backup.messages.file_contents">
-          <snippet/>
+        <div ng-repeat="(file_name, contents) in diff.diff">
+          <diff/>
         </div>
 
         <div class="box box-primary">

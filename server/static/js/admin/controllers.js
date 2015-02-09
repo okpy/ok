@@ -103,6 +103,8 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
     }, function (response){
       $scope.finalSubmission = response;
       $scope.submission = response.submission;
+      $scope.backupId = response.submission.backup.id;
+      $scope.diff = Submission.diff({id: $scope.backupId});
       if (response.submission.score.length > 0) {
         $scope.compScore = response.submission.score[0].score
         $scope.compMessage = response.submission.score[0].message
@@ -397,6 +399,7 @@ app.controller("CodeLineController", ["$scope", "$timeout", "$location", "$ancho
       $location.hash($scope.anchorId);
       $anchorScroll();
     }
+
     if ($scope.$last === true) {
       $timeout(function () {
         $(".diff-line-code").each(function(i, elem) {
@@ -417,8 +420,9 @@ app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScr
       codeline.start = $scope.contents[i][0];
       codeline.line = $scope.contents[i].slice(2);
       codeline.index = i;
-      if ($scope.diff.comments.hasOwnProperty($scope.file_name) && $scope.diff.comments[$scope.file_name].hasOwnProperty(i)) {
-        codeline.comments = $scope.diff.comments[$scope.file_name][i]
+      // Only care about right-num (which is the new-file)
+      if ($scope.diff.comments.hasOwnProperty($scope.file_name) && $scope.diff.comments[$scope.file_name].hasOwnProperty(rightNum)) {
+        codeline.comments = $scope.diff.comments[$scope.file_name][rightNum]
       }
       codeline.lineNum = i + 1;
       if (codeline.start == "+") {
@@ -494,9 +498,11 @@ app.controller("CommentController", ["$scope", "$stateParams", "$timeout", "$mod
       });
       modal.result.then(function() {
         Submission.deleteComment({
-          id: $stateParams.submissionId,
+          id: $scope.backupId,
           comment: $scope.comment.id
-        }, $scope.refreshDiff);
+        }, function (result){
+          $window.swal('Comment Deleted!')
+        });
       });
     }
   }
@@ -516,11 +522,13 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
       text = $scope.commentText.text;
       if (text !== undefined && text.trim() != "") {
         Submission.addComment({
-          id: $stateParams.submissionId,
+          id: $scope.backupId,
           file: $scope.file_name,
-          index: $scope.codeline.index,
+          index: $scope.codeline.rightNum,
           message: text,
-        }, $scope.refreshDiff);
+        }, function () {
+          $window.swal('comment made!')
+        });
       }
     }
   }
