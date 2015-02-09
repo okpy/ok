@@ -788,13 +788,6 @@ class SubmissionAPI(APIResource):
         },
         'win_rate': {
             'methods': set(['GET']),
-        },
-        'score': {
-            'methods': set(['POST']),
-            'web_args': {
-                'score': Arg(int, required=True),
-                'message': Arg(str, required=True),
-                }
         }
     }
 
@@ -1016,28 +1009,6 @@ class SubmissionAPI(APIResource):
           memcache.add('%s:hog_win' % obj.key.id(), q.json(), 86400)
           return q.json()
 
-
-    def score(self, obj, user, data):
-        """
-        Sets composition score
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: (int) score
-        """
-        score = models.Score(
-            score=data['score'],
-            message=data['message'],
-            grader=user.key)
-        score.put()
-
-        if 'Composition' not in obj.tags:
-            obj.tags.append('Composition')
-
-        obj.compScore = score.key
-        obj.put()
-        return score
 
 
     def win_rate(self, obj, user, data):
@@ -1497,4 +1468,48 @@ class FinalSubmissionAPI(APIResource):
         },
         'index': {
         },
+        'score': {
+            'methods': set(['POST']),
+            'web_args': {
+                'score': Arg(int, required=True),
+                'message': Arg(str, required=True),
+                'source': Arg(str, required=True),
+              }
         }
+
+        }
+
+    def score(self, obj, user, data):
+        """
+        Sets composition score
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
+        """
+        need = Need('grade')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        score = models.Score(
+            score=data['score'],
+            message=data['message'],
+            grader=user.key)
+        grade = score.put()
+
+        submission = obj.submission.get()
+
+        # Create or updated based on existing scores.
+        if data['source'] == 'composition':
+          # Only keep any autograded scores.
+          submission.score = [autograde for autograde in submission.score \
+            if score.autograder]
+          submission.score.append(score)
+        else:
+          submission.score.append(score)
+
+        submission.put()
+
+        return score
+

@@ -124,9 +124,11 @@ def admin():
         params['users_link'] = force_account_chooser(
             users.create_login_url('/#/loginLanding'))
         params['users_title'] = "Sign In"
+        return redirect(users.create_login_url('/manage'))
     else:
         logging.info("Staff Login Attempt from %s", user.email())
-        userobj = models.User.get_by_id(user.email())
+        userobj = models.User.lookup(user.email())
+        print(dir(user))
         if userobj.is_admin:
             logging.info("Staff Login Success from %s", user.email())
             params["user"] = {'email': user.email()}

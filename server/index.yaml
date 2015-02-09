@@ -47,6 +47,11 @@ indexes:
   properties:
   - name: created
 
+- kind: Commentv2
+  ancestor: yes
+  properties:
+  - name: created
+
 - kind: Groupv2
   properties:
   - name: assignment
@@ -57,6 +62,12 @@ indexes:
   properties:
   - name: assigned_staff
   - name: assignment
+  - name: created
+    direction: desc
+
+- kind: Queuev2
+  properties:
+  - name: assigned_staff
   - name: created
     direction: desc
 

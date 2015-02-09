@@ -1,0 +1,59 @@
+<div>
+  <div class="center-block">
+    <h2>Submission: {{submission.created | amCalendar}} </h2>
+    <span ng-if="submission.score.length != 0" ng-repeat="score in submission.score" class="badge bg-info">
+      Graded - {{score.score}} - {{score.grader.email[0]}}
+    </span>
+
+  </div>
+  <div class='text-center'>
+    <ul class="submControl pager">
+      <li ng-class="{disabled: prevId == undefined, previous: align}" class="previous">
+        <button ng-disabled="prevId == undefined" href="" ng-click="goTo(prevId)" class="ng-binding">« Previous</buttin>
+        </li>
+        <li ng-class="{disabled: nextId == undefined, next: align}" class="next">
+          <button ng-disabled="nextId == undefined" href="" ng-click="goTo(nextId)" class="ng-binding">Next »</buttin>
+          </li>
+
+        </ul>
+
+      </div>
+      <div class="center-block">
+
+        <div class="btn-group">
+        <button type="button" class="btn btn-flat btn-info" ui-sref="queue.detail({queueId:queueId})" ><i class="fa fa-fw fa-list"></i> Go To Queue</button>
+
+          <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.backup.id}}/download'>
+            <i class="fa fa-fw fa-cloud-download"></i> Download </button>
+          </div>
+        </div>
+
+        <div ng-repeat="(file_name, contents) in submission.backup.messages.file_contents">
+          <snippet/>
+        </div>
+
+        <div class="box box-primary">
+          <div class="box-header">
+            <h3 class="box-title">Grading</h3>
+          </div><!-- /.box-header -->
+          <div class="box-body">
+            <form role="form" ng-submit="submitGrade()">
+              <!-- select -->
+              <div class="form-group">
+                <label>Composition Grade</label>
+                <select class="form-control" required name="compScore" ng-model="compScore">
+                  <option value="0">0</option>
+                  <option value="2">2</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Message</label>
+                <textarea class="form-control" rows="3" required name="compMessage" ng-model="compMessage" placeholder="Your Comments/Feedback."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+          </div>
+          <!-- /.box-body -->
+        </div>
+      </div>

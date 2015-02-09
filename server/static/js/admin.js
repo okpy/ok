@@ -3,7 +3,7 @@ var app = angular.module('admin', ['ngResource', 'ui.router', 'angular-loading-b
 app.directive('assignmentModule', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/dashboard/assignment.moduledash.html',
+            templateUrl: '/static/partials/admin/assignment.module.html',
         };
     });
 
@@ -82,12 +82,21 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/dashboard/dashboard.html',
     }
 
+
     var submissions = {
       name: 'submission',
       abstract: true,
       url: '/submission',
       templateUrl: '/static/partials/common/submission.base.html',
     }
+
+    var submissionFinal = {
+      name: 'submission.final',
+      url: '/final/:finalId',
+      templateUrl: '/static/partials/admin/finalsubmission.html',
+      controller: "FinalSubmissionCtrl"
+    }
+
 
     var submissionList = {
       name: 'submission.list',
@@ -157,7 +166,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       abstract: true,
       templateUrl: '/static/partials/admin/course.base.html',
     }
-    
+
     var courseDetail = {
       name: 'course.detail.stats',
       url: '/',
@@ -256,6 +265,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(dashboard).
       state(admin).
       state(submissions).
+      state(submissionFinal).
       state(submissionList).
       state(submissionDetail).
       state(submissionDiff).

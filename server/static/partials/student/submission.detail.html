@@ -39,7 +39,7 @@
           </span>
         </h2>
               <div class="assign-deck">
-                <p><img src="/static/student/images/icon-clock.png"> {{submission.server_time | amCalendar}}.  Due {{submission.assignment.due_date | amCalendar}}
+                <p><img src="/static/student/images/icon-clock.png"> {{submission.created | amCalendar}}.  Due {{submission.assignment.due_date | amCalendar}}
                 <br>By: {{submission.submitter.email[0]}}</p>
               </div>
       </div>
