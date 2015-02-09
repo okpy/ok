@@ -67,13 +67,18 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           $('code').each(function(i, block) {
             hljs.highlightBlock(block);
             
-            // update line numbers
-            lines = block.match(/\n/) || [];
-            numbers = '';
-            for (i=0;i<lines.length;i++) {
-                numbers += '<p>'+i+'</p>';
+            code = $scope.submission.messages.file_contents;
+            for (var key in code) {
+                if (code.hasOwnProperty(key)) {
+                    lines = code[key].match(/"\n"/) || [];
+                    numbers = '';
+                    console.log(lines.length);
+                    for (i=0;i<lines.length;i++) {
+                      numbers += '<p>'+i+'</p>';
+                    }
+                    $(this).parent().find('.num-cont ul').html(numbers);
+                }
             }
-            $(this).parent().find('.num-cont ul').html(numbers);
           });
         }, 100);
       }, function (error) {
