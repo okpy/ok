@@ -908,7 +908,7 @@ body.course {
 			.code-cont {
 				background-color:#3f3f3f;
 				width: 100%;
-				padding-left:30px !important;
+				padding-left:50px !important;
 				box-sizing:border-box;
 			}
 			code .num-cont * {
@@ -920,7 +920,7 @@ body.course {
 				top:75px;
 				left:0;
 				bottom:0;
-				width:20px;
+				width:30px;
 				background-color:#333;
 				overflow-y:hidden;
 				z-index:100;

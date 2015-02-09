@@ -71,7 +71,6 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
             for (var key in code) {
                 if (code.hasOwnProperty(key)) {
                     count = code[key].match(/[^\n]*\n[^\n]*/gi).length;
-                    console.log(count);
                     numbers = '';
                     for (i=0;i<count;i++) {
                       numbers += '<p>'+(i+1)+'</p>';
