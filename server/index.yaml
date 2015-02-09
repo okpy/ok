@@ -53,6 +53,19 @@ indexes:
   - name: created
     direction: desc
 
+- kind: Queuev2
+  properties:
+  - name: assigned_staff
+  - name: assignment
+  - name: created
+    direction: desc
+
+- kind: Queuev2
+  properties:
+  - name: assignment
+  - name: created
+    direction: desc
+
 - kind: Submission
   properties:
   - name: assignment

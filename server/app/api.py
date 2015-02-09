@@ -70,6 +70,12 @@ def DateTimeArg(**kwds):
 
 MODEL_VERSION = 'v2'
 
+def try_int(x):
+    try:
+        return int(x)
+    except (ValueError, TypeError):
+        return x
+
 def KeyArg(cls, **kwds):
     """
     Converts a webarg to a key in Google's ndb.
@@ -79,10 +85,7 @@ def KeyArg(cls, **kwds):
     :return: (Arg) type of argument
     """
     def parse_key(key):
-        try:
-            key = int(key)
-        except (ValueError, TypeError):
-            pass
+        key = try_int(key)
         return {'pairs': [(cls + MODEL_VERSION, key)]}
     return Arg(ndb.Key, use=parse_key, **kwds)
 
@@ -100,8 +103,9 @@ def KeyRepeatedArg(cls, **kwds):
         if not isinstance(key_list, list):
             if ',' in key_list:
                 staff_lst = key_list.split(',')
+                staff_lst = map(try_int, staff_lst)
             else:
-                staff_lst = [key_list]
+                staff_lst = [try_int(key_list)]
         return [ndb.Key(cls + MODEL_VERSION, x) for x in staff_lst]
     return Arg(None, use=parse_list, **kwds)
 
@@ -1478,8 +1482,8 @@ class QueueAPI(APIResource):
         :return: entity
         """
         ent = super(QueueAPI, self).new_entity(attributes)
-        for user in ent.assigned_staff:
-            models.User.get_or_insert(user.id())
+        ent.assigned_staff = [models.User.get_or_insert(
+            user.id()).key for user in ent.assigned_staff]
         return ent
 
 class FinalSubmissionAPI(APIResource):
