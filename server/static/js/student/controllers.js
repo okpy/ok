@@ -72,7 +72,6 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
                 if (code.hasOwnProperty(key)) {
                     lines = code[key].match(/"\n"/) || [];
                     numbers = '';
-                    console.log(lines.length);
                     for (i=0;i<lines.length;i++) {
                       numbers += '<p>'+i+'</p>';
                     }
