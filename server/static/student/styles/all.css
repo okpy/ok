@@ -881,14 +881,14 @@ body.course {
 					line-height:150%;
 					width:100%;
 				}
-		  .sortable {
-			 width:100%;
-			 list-style-type: none;
+			.sortable {
+				width:100%;
+				list-style-type: none;
 
-		  }
+			}
 				.list-view {
 					width:100%;
-			 list-style-type: none;
+					list-style-type: none;
 
 				}
 				.link {
@@ -911,6 +911,10 @@ body.course {
 				padding-left:30px !important;
 				box-sizing:border-box;
 			}
+			code .num-cont * {
+				display:inline-block;
+				float:left;
+			}
 			.num-cont {
 				position:absolute;
 				top:0;
@@ -930,7 +934,6 @@ body.course {
 				}
 				.num-cont ul {
 					width:100%;
-					margin-top:10px;
 				}
 			code,code span:not(.comment-icon) {
 				white-space:pre;
@@ -938,7 +941,7 @@ body.course {
 				width:100%;
 				box-sizing:border-box;
 			}
-				code * {
+				code *:not(p):not(div) {
 					float:none;
 				}
 			.files {
