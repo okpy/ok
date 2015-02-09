@@ -1,0 +1,31 @@
+<div class='file'>
+  <div class='meta'>
+    <div class='info'>
+      {{file_name}}
+    </div>
+  </div>
+  <div class='snippet-wrapper'>
+    <table class='snippet' ng-controller="DiffController">
+        <tbody ng-controller="DiffLineController" ng-repeat="codeline in contents track by $index" ng-hide='neutral && hideEmpty'>
+        <tr ng-mouseenter="hover=true" ng-mouseleave="hover=false">
+          <td ng-click="scroll()" id='{{anchorId}}' ng-class='{"diff-line-num-neg": negative, "diff-line-num-pos": positive}' class='diff-line-num diff-line-num-left'>
+              {{codeline.leftNum}}
+          </td>
+          <td ng-click="scroll()" id='{{anchorId}}' ng-class='{"diff-line-num-neg": negative, "diff-line-num-pos": positive}' class='diff-line-num diff-line-num-right'>
+              {{codeline.rightNum}}
+          <button ng-click="toggleComment()" ng-if="hover && !negative" class='comment-button btn btn-xs btn-primary'>
+
+            <span ng-if="showComment" class="glyphicon glyphicon-minus"></span>
+            <span ng-if="!showComment" class="glyphicon glyphicon-plus"></span></button>
+          </td>
+          <td ng-class='{"diff-line-code-pos":positive, "diff-line-code-neg": negative, "diff-line-code-empty": neutral}' class='diff-line-code'>{{codeline.start+codeline.line}}</td>
+        </tr>
+        <tr>
+          <td colspan=3>
+            <comments/>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,18 @@
+<div class='file'>
+  <div class='meta'>
+    <div class='info'>
+      {{file_name}}
+    </div>
+  </div>
+  <div class='snippet-wrapper'>
+    <table class='snippet' ng-controller="CodeController">
+      <tbody ng-controller="CodeLineController" ng-repeat='codeline in contents track by $index' ng-mouseenter="hover=true" ng-mouseleave="hover=false" class="foo">
+        <tr ng-mouseenter="hover=true" ng-mouseleave="hover=false">
+          <td ng-click="scroll()" id="{{anchorId}}" class='diff-line-num diff-line-num-left'>{{lineNum}}
+          </td>
+          <td class='diff-line-code diff-line-code-empty'>{{codeline}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
