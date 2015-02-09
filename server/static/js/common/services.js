@@ -76,13 +76,6 @@ app.factory('Submission', ['$resource',
             return JSON.parse(data).data;
           }
         },
-        winRate: {
-          method: "GET",
-          url: 'api/v1/submission/:id/win_rate',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
         addScore: {
           method: "POST",
           url: '/api/v1/submission/:id/score',
@@ -121,6 +114,29 @@ app.factory('Submission', ['$resource',
       });
     }
   ]);
+
+app.factory('FinalSubmission', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/final_submission/:id', {
+        format: "json",
+        id: "@id"
+      }, {
+        get: {
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        score: {
+          method: "POST",
+          url: '/api/v1/final_submission/:id/score',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+      });
+    }
+  ]);
+
 
 app.factory('Assignment', ['$resource',
     function($resource) {

@@ -170,6 +170,7 @@ def seed():
                 assignment=assignment.key,
                 group=backup.submitter.get().get_group(assignment.key).key,
                 submission=subm.key,
+                submitter=backup.submitter,
                 queue=queue)
             fs.put()
 

@@ -10,7 +10,8 @@
       <tr>
         <th ts-criteria="assignment.display_name" ts-default>Assignment</th>
         <th>Staff</th>
-        <th ts-criteria="submissions.length | parseInt">Submissions</th>
+        <th ts-criteria="submissions.graded | parseInt">Graded</th>
+        <th ts-criteria="submissions.count | parseInt">Total Submission</th>
         <th>View</th>
       </tr>
     </thead>
@@ -23,7 +24,7 @@
       <td>
         <div ng-if="queue.assigned_staff.length > 0">
           <div ng-repeat="user in queue.assigned_staff">
-            {{user.id}} {{$last ? '' : ', '}}
+            {{user.email[0]}} {{$last ? '' : ', '}}
           </div>
         </div>
         <div ng-if="queue.assigned_staff.length <= 0">
@@ -31,12 +32,15 @@
         </div>
       </td>
       <td>
-        {{queue.submissions.length}}
+        {{queue.graded}}
+      </td>
+      <td>
+        {{queue.count}}
       </td>
       <td>
         <a class="btn btn-primary btn-sm" ui-sref='queue.detail({queueId:queue.id})'>
           View Queue
-        </a> 
+        </a>
       </td>
     </tr>
       </tbody>

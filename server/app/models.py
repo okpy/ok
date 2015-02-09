@@ -587,6 +587,11 @@ class Backup(Base):
             return bool(group and user.key in group.member)
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
+        if action == "grade":
+            if user.is_admin:
+              return True
+            course_key = backup.assignment.get().course
+            return Participant.has_role(user, course_key, STAFF_ROLE)
         if action == "index":
             if not user.logged_in:
                 return False
@@ -611,9 +616,9 @@ class Backup(Base):
 class Score(Base):
     """The score for a submission, either from a grader or autograder."""
     score = ndb.IntegerProperty()
-    message = ndb.StringProperty() # Plain text
+    message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User)
-    autograder = ndb.StringProperty()
+    autograder = ndb.TextProperty()
 
 
 class Submission(Base):
@@ -928,16 +933,40 @@ class Queue(Base):
         Returns all the submissions in this queue.
         """
         query = FinalSubmission.query().filter(FinalSubmission.queue == self.key)
-        return [fs.submission for fs in query]
+        return [fs for fs in query]
+
+    @property
+    def graded(self):
+        """
+        Returns the count of graded submissions in this queue.
+        """
+        return len([1 for fs in self.submissions if fs.submission.get().score])
 
     def to_json(self, fields=None):
         if not fields:
             fields = {}
 
+        final_submissions = self.submissions
+        subms = []
+        for fs in final_submissions:
+          submission = fs.submission.get()
+          subms.append(
+            {
+             'id': fs.key.id(),
+             'submission': fs.submission.id(),
+             'created': submission.created,
+             'backup': submission.backup.id(),
+             'submitter': fs.submitter.get(),
+             'group': fs.group.get(),
+             'score': submission.score,
+            })
+
         return {
-            'submissions': [{'id': val.id()} for val in self.submissions],
+            'submissions': subms,
+            'count': len(final_submissions),
+            'graded': self.graded,
             'assignment': self.assignment.get(),
-            'assigned_staff': [val.get().to_json(fields.get('assigned_staff')) for val in self.assigned_staff],
+            'assigned_staff': [val.get() for val in self.assigned_staff],
             'id': self.key.id()
         }
 
@@ -984,6 +1013,13 @@ class FinalSubmission(Base):
         Return whether or not this assignment has been assigned to a queue.
         """
         return bool(self.queue)
+
+    @property
+    def backup(self):
+        """
+        Return the associated backup.
+        """
+        return self.submission.get().backup.get()
 
     @classmethod
     def _can(cls, user, need, final, query):
