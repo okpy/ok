@@ -70,10 +70,11 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
             code = $scope.submission.messages.file_contents;
             for (var key in code) {
                 if (code.hasOwnProperty(key)) {
-                    lines = code[key].match(/"\n"/) || [];
+                    count = code[key].match(/[^\n]*\n[^\n]*/gi).length;
+                    console.log(count);
                     numbers = '';
-                    for (i=0;i<lines.length;i++) {
-                      numbers += '<p>'+i+'</p>';
+                    for (i=0;i<count;i++) {
+                      numbers += '<p>'+(i+1)+'</p>';
                     }
                     $(this).parent().find('.num-cont ul').html(numbers);
                 }
