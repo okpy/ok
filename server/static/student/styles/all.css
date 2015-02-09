@@ -227,7 +227,7 @@ html.active {
 .clear {
 	width:100%;
 }
-.label,.block-bar,.assign-fill,.pop-item,.half,.block-link,.file,.button {
+.label,.block-bar,.assign-fill,.pop-item,.half,.block-link,.file,.button,.score,.subscore {
 	transition:			0.2s ease;
 	-webkit-transition:	0.2s ease;
 	-moz-transition:	0.2s ease;
@@ -640,6 +640,17 @@ body.course {
 				font-weight:400;
 				text-transform:uppercase;
 			}
+			.assign .subscore:hover,.assign .score:hover {
+				background-color:rgba(0,0,0,0.5);
+				padding:10px;
+				cursor:pointer;
+			}
+				.assign .subscore:hover {
+					margin: auto auto -25px -10px;
+				}
+				.assign .score:hover {
+					margin: -20px -20px 0 0;
+				}
 		.assign {
 			width:100%;
 			text-align:left;
