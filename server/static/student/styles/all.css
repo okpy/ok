@@ -42,14 +42,6 @@ div[ui-view]{
   width: 100%;
 }
 
-.code-view {
-  height: 600px;
-}
-.code-contents  {
-  width: 100%;
-}
-
-
 .code-title {
   padding:20px 0 20px 30px;
   width:100%;
@@ -903,32 +895,9 @@ body.course {
 			background-color:#3f3f3f;
 		}
 			.code-cont {
-				width:70%;
-				float:left;
 				background-color:#3f3f3f;
-			}
-			pre {
-				width:100%;
-				box-sizing:border-box;
-			}
-				.code-cont code {
-					color:#FFF;
-					padding:0 0 0 30px;
-					display:none;
-					float:left;
-					margin-top:-55px;
-				}
-				.code-cont code.active {
-					display:block;
-				}
-			pre,.code-cont {
-				position:absolute;
-				top:85px;
-				left:0;
-				bottom:0;
-				right:0;
-				overflow-y:scroll;
-				padding-left:30px;
+				width: 100%;
+				padding-left:30px !important;
 				box-sizing:border-box;
 			}
 			.num-cont {

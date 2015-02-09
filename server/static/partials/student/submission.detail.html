@@ -18,12 +18,14 @@
     <div class="assign code small inactive" ng-if="!submission.$resolved">
         <div class="assign-main">
             <h2 class="assign-title">Loading</h2>
+
             <div class="assign-deck">
                 ...
             </div>
         </div>
         <p id="1" class="active">
             <a>Loading Code</a>
+
         <p>
     </div>
     <div class="assign code small active" ng-if="submission.$resolved">
@@ -34,6 +36,7 @@
                 <span class="stem"></span>
                 </span>
             </h2>
+
             <div class="assign-deck">
                 <p><img src="/static/student/images/icon-clock.png"> {{submission.server_time | amCalendar}}. Due
                     {{submission.assignment.due_date | amCalendar}}
@@ -42,19 +45,18 @@
         </div>
         <div class="assign-code">
             <!-- TODO: CSS -->
-            <div class="code-main code-view fullWidth"
+            <div class="code-main fullWidth"
                  ng-repeat="(file_name, contents) in submission.messages.file_contents">
                 <h2 class="code-title">{{file_name}}</h2>
-                <div class="num-cont">
-                    <ul>
-                        <p>1</p>
-                    </ul>
-                </div>
-                <pre>
-                  <code class="hljs code-contents">
-                      {{contents}}
-                  </code>
-                </pre>
+                <code class="hljs code-cont">
+                    <div class="num-cont">
+                        <ul>
+                            <p>1</p>
+                        </ul>
+                    </div>
+                    {{contents}}
+                </code>
+
                 <div class="files">
                 </div>
             </div>
