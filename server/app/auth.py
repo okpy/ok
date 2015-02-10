@@ -22,7 +22,7 @@ def authenticate():
         return models.User.get_or_insert(user.email())
 
     if 'access_token' not in request.args:
-        return models.AnonymousUser()
+        return models.User.get_or_insert("<anon>")
     else:
         access_token = request.args['access_token']
         user = mc.get("%s-%s" % (MC_NAMESPACE, access_token))

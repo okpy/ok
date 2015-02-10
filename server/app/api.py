@@ -1233,7 +1233,8 @@ class CourseAPI(APIResource):
             'methods': set(['POST']),
             'web_args': {
                 'staff_member': KeyArg('User', required=True)
-            }        },
+            }        
+        },
         'assignments': {
             'methods': set(['GET']),
             'web_args': {
@@ -1268,8 +1269,7 @@ class CourseAPI(APIResource):
 
         if data['staff_member'] not in course.staff:
             user = models.User.get_or_insert(data['staff_member'].id())
-            course.staff.append(user.key)
-            course.put()
+            Participant.add_role(user, course, constants.STAFF_ROLE)
 
     def get_staff(self, course, user, data):
         need = Need('staff')
@@ -1282,18 +1282,20 @@ class CourseAPI(APIResource):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
+
         if data['staff_member'] in course.staff:
-            course.staff.remove(data['staff_member'])
-            course.put()
+            Participant.remove_role(user, course, constants.STAFF_ROLE)
 
     def get_courses(self, course, user, data):
-        query = models.Participant.query(models.Participant.user == data['user'])
+        query = models.Participant.query(
+            models.Participant.user == data['user'])
         need = Need('index')
         query = models.Participant.can(user, need, course, query)
         return list(query)
 
     def get_students(self, course, user, data):
-        query = models.Participant.query(models.Participant.course == course.key)
+        query = models.Participant.query(
+            models.Participant.course == course.key)
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
@@ -1445,7 +1447,8 @@ class QueueAPI(APIResource):
         """
         Request to define a new entity
 
-        :param attributes: entity attributes, to be loaded on entity instantiation
+        :param attributes: entity attributes,
+            to be loaded on entity instantiation
         :return: entity
         """
         ent = super(QueueAPI, self).new_entity(attributes)
