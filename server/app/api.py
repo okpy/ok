@@ -12,11 +12,10 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-from app.constants import STUDENT_ROLE, STAFF_ROLE
 
 from app import models, app
 from app.codereview import compare
-from app.constants import API_PREFIX
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
 from app.utils import add_to_grading_queues, parse_date, assign_submission
@@ -1270,7 +1269,7 @@ class CourseAPI(APIResource):
         if data['staff_member'] not in course.staff:
             user = models.User.get_or_insert(data['staff_member'].id())
             models.Participant.add_role(
-                user, course, constants.STAFF_ROLE)
+                user, course, STAFF_ROLE)
 
     def get_staff(self, course, user, data):
         need = Need('staff')
@@ -1286,7 +1285,7 @@ class CourseAPI(APIResource):
 
         if data['staff_member'] in course.staff:
             models.Participant.remove_role(
-                user, course, constants.STAFF_ROLE)
+                user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
         query = models.Participant.query(
