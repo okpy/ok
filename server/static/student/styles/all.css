@@ -932,10 +932,9 @@ body.course {
 				bottom:0;
 				width:30px;
 				background-color:#333;
-				overflow-y:hidden;
 				z-index:100;
 			}
-				.num-cont p {
+				.num-cont .line {
 					width:100%;
 					font-size:12px;
 					line-height:125%;

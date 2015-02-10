@@ -63,32 +63,25 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           $scope.isSubmit = true;
           delete $scope.submission.messages.file_contents['submit'];
         }
-
-        sample_comments = {'hog.py':
-            {
-                20: {'name': 'Johnny Appleseed', 'message': 'Hello.', 'replies':
-                    [{'name': 'Anonymous', 'message': 'Ewieeeee.'}]},
-                40: {'name': 'YoyoMa', 'message': 'HAH'}
-            }
-        }
-
+        
         $timeout(function() {
 
             numbers = [];
             code = $scope.submission.messages.file_contents;
             commtemp = $('.comment-template').html();
-            $('.comment-template').delete();
+            $('.comment-template').remove();
             
             for (var key in code) {
                 if (code.hasOwnProperty(key)) {
-                    comments = sample_comments; // change this to ACTUAL dictionary of comments
+                    comments = {}; // change this to ACTUAL dictionary of comments
                     file = code[key];
+                    html = "";
                     for (i=0;i<file.split('\n').length;i++) {
-                        comments = html = '';
-                        if (comments.hasOwnProperty(i)) {
+                        comments = '';
+                        if (i % 15 == 0) { // modify condition
                             comments += commtemp;
                         }
-                        html += '<p>'+(i+1)+(comments || "")+'</p>';
+                        html += '<div class="line">'+(i+1)+comments+'</div>';
                     }
                     numbers.push(html);
                 }
