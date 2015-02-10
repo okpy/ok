@@ -1269,7 +1269,8 @@ class CourseAPI(APIResource):
 
         if data['staff_member'] not in course.staff:
             user = models.User.get_or_insert(data['staff_member'].id())
-            Participant.add_role(user, course, constants.STAFF_ROLE)
+            models.Participant.add_role(
+                user, course, constants.STAFF_ROLE)
 
     def get_staff(self, course, user, data):
         need = Need('staff')
@@ -1284,7 +1285,8 @@ class CourseAPI(APIResource):
             raise need.exception()
 
         if data['staff_member'] in course.staff:
-            Participant.remove_role(user, course, constants.STAFF_ROLE)
+            models.Participant.remove_role(
+                user, course, constants.STAFF_ROLE)
 
     def get_courses(self, course, user, data):
         query = models.Participant.query(
