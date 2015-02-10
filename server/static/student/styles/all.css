@@ -298,7 +298,13 @@ html.active {
 	position:absolute;
 	width:30px;
 	text-align:center;
+	left:30px;
+	z-index:4000;
+	padding-bottom:7.5px;
 }
+	.comment:hover {
+		background-color:rgba(0,0,0,0.15);
+	}
 .comment-icon {
 	width:12px;
 	height:8px;
@@ -912,7 +918,7 @@ body.course {
 			.code-cont {
 				background-color:#3f3f3f;
 				width: 100%;
-				padding-left:50px !important;
+				padding-left:60px !important;
 				box-sizing:border-box;
 			}
 			code .num-cont * {

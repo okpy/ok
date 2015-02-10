@@ -43,30 +43,34 @@
                     <br>By: {{submission.submitter.email[0]}}</p>
             </div>
         </div>
+
+        <div class="comment-template">
+            <div class="comment">
+                <span class="comment-icon"></span>
+                <div class="comment-content">
+                    <div class="comment-text">
+                        <h3>Name Goes HERE</h3>
+                        <p>This cooooode shosho B-E-A-Utiful.</p>
+                    </div>
+                    <form>
+                        <div class="comment-reply">
+                            <div class="reply">
+                                <h4>NaME TWOOOO</h4>
+                                <p>Moaaar text. This code shosho U-G-L-Y.</p>
+                            </div>
+                            <input class="reply-input" placeholder="your thoughts?">
+                        </div>
+                        <input type="submit" class="action">
+                    </form>
+                </div>
+            </div>
+        </div>
+        
         <div class="assign-code">
             <!-- TODO: CSS -->
             <div class="code-main fullWidth"
                  ng-repeat="(file_name, contents) in submission.messages.file_contents">
                 <h2 class="code-title">{{file_name}}</h2>
-                <div class="comment" style="top:40px">
-                    <span class="comment-icon"></span>
-                    <div class="comment-content">
-                        <div class="comment-text">
-                            <h3>Name Goes HERE</h3>
-                            <p>This cooooode shosho B-E-A-Utiful.</p>
-                        </div>
-                        <form>
-                            <div class="comment-reply">
-                                <div class="reply">
-                                    <h4>NaME TWOOOO</h4>
-                                    <p>Moaaar text. This code shosho U-G-L-Y.</p>
-                                </div>
-                                <input class="reply-input" placeholder="your thoughts?">
-                            </div>
-                            <input type="submit" class="action">
-                        </form>
-                    </div>
-                </div>
                 <div class="num-cont">
                     <ul>
                         <p>1</p>
