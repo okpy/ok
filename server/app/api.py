@@ -1040,41 +1040,6 @@ class SubmissionAPI(APIResource):
         obj.put()
         return score
 
-
-    def win_rate(self, obj, user, data):
-        """
-        Gets the win_rate for the submission.
-            This method will be removed shortly.
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: Win Rate as a float.
-        """
-        messages = obj.get_messages()
-        if 'file_contents' not in obj.get_messages():
-            raise BadValueError('Submission has no contents to diff')
-
-        file_contents = messages['file_contents']
-
-        if 'submit' in file_contents:
-            del file_contents['submit']
-
-        if 'hog.py' in file_contents:
-          hog_code = file_contents['hog.py'].encode('utf-8')
-          payload = {'strategy': hog_code}
-          headers={'content-type': 'application/json'}
-
-          q = requests.post(
-            'http://hog.cs61a.org/winrate',
-            data=json.dumps(payload),
-            headers=headers)
-
-          return q.json()
-        else:
-          return {'status': 'Failure'}
-
-
     def get_assignment(self, name):
         """
         Look up an assignment by name
