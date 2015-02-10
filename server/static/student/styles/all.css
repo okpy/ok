@@ -296,12 +296,16 @@ html.active {
 }
 .comment {
 	position:absolute;
+	width:30px;
+	text-align:center;
 }
 .comment-icon {
 	width:12px;
 	height:8px;
 	background-color:#99E5FF;
 	opacity:1;
+	float:none;
+	display:inline-block;
 }
 	.comment-icon::before {
 		content:"";
@@ -326,7 +330,7 @@ html.active {
 		font-family:'Open Sans';
 		position:absolute;
 		top:0;
-		right:0;
+		left:30px;
 		z-index:3000;
 	}
 		.comments-cont {

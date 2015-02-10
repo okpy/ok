@@ -63,25 +63,29 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           $scope.isSubmit = true;
           delete $scope.submission.messages.file_contents['submit'];
         }
+
         $timeout(function() {
+
             numbers = [];
             code = $scope.submission.messages.file_contents;
             for (var key in code) {
                 if (code.hasOwnProperty(key)) {
-                    count = code[key].match(/[^\n]*\n[^\n]*/gi).length;
-                    numbers = '';
+                    var str = code[key];
+                    var count = str.split('\n').length;
+                    html = '';
                     for (i=0;i<count;i++) {
-                      numbers += '<p>'+(i+1)+'</p>';
+                        html += '<p>'+(i+1);
+
+                        html += '</p>';
                     }
-                    numbers[] = numbers;
+                    numbers.push(html);
                 }
             }
-            i = 0;
-          $('code').each(function(i, block) {
-            $(this).parent().find('.num-cont ul').html(numbers[i]);
-            i++;
-            hljs.highlightBlock(block);
-          });
+
+            $('code').each(function(i, block) {
+                $(this).parent().find('.num-cont ul').html(numbers.shift());
+                hljs.highlightBlock(block);
+            });
         }, 100);
       }, function (error) {
         $window.swal("Uhoh", "There was an error!", "error");
