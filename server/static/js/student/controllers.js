@@ -64,9 +64,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           delete $scope.submission.messages.file_contents['submit'];
         }
         $timeout(function() {
-          $('code').each(function(i, block) {
-            hljs.highlightBlock(block);
-            
+            numbers = [];
             code = $scope.submission.messages.file_contents;
             for (var key in code) {
                 if (code.hasOwnProperty(key)) {
@@ -75,9 +73,14 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
                     for (i=0;i<count;i++) {
                       numbers += '<p>'+(i+1)+'</p>';
                     }
-                    $(this).parent().find('.num-cont ul').html(numbers);
+                    numbers[] = numbers;
                 }
             }
+            i = 0;
+          $('code').each(function(i, block) {
+            $(this).parent().find('.num-cont ul').html(numbers[i]);
+            i++;
+            hljs.highlightBlock(block);
           });
         }, 100);
       }, function (error) {
