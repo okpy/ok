@@ -926,6 +926,7 @@ class Queue(Base):
     """A queue of submissions to grade."""
     assignment = ndb.KeyProperty(Assignment)
     assigned_staff = ndb.KeyProperty(User, repeated=True)
+    owner = ndb.KeyProperty(User)
 
     @property
     def submissions(self):
@@ -967,6 +968,7 @@ class Queue(Base):
             'graded': self.graded,
             'assignment': self.assignment.get(),
             'assigned_staff': [val.get() for val in self.assigned_staff],
+            'owner': self.owner.get().email[0],
             'id': self.key.id()
         }
 
