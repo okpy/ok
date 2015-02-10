@@ -392,7 +392,7 @@ class UserAPI(APIResource):
     methods = {
         'post': {
             'web_args': {
-                'email': KeyRepeatedArg(str, required=True),
+                'email': Arg(str),
                 'name': Arg(str),
                 }
         },
@@ -489,6 +489,7 @@ class UserAPI(APIResource):
         entity = self.model.lookup(attributes['email'])
         if entity:
             raise BadValueError('user already exists')
+        attributes['email'] = [attributes['email']]
         entity = self.model.from_dict(attributes)
         return entity
 
