@@ -215,6 +215,7 @@ app.factory('Course', ['$resource',
     function($resource) {
       return $resource('/api/v1/course/:id', {
         format: "json",
+        id: "@id"
       }, {
         query: {
           isArray: true,
@@ -237,12 +238,14 @@ app.factory('Course', ['$resource',
           }
         },
         add_member: {
+          method: "POST",
           url: '/api/v1/course/:id/add_staff',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
         remove_member: {
+          method: "POST",
           url: '/api/v1/course/:id/remove_staff',
           transformResponse: function(data) {
             return JSON.parse(data).data;
