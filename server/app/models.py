@@ -1004,8 +1004,12 @@ class Queue(Base):
                 Participant.user == user.key,
                 Participant.role == STAFF_ROLE).fetch()]
             if courses:
+                assigns = []
+                for course in courses:
+                    assigns.extend(
+                        Assignment.query(Assignment.course == course).fetch())
                 return disjunction(
-                    query, [(Queue.course == course) for course in courses])
+                    query, [(Queue.assignment == assign.key) for assign in assigns])
             return False
 
         course = queue.assignment.get().course
