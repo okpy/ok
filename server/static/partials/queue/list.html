@@ -56,6 +56,7 @@
 <div class="box-header">
   <h3 class="box-title" ng-if="!queues.$resolved" >Loading Completed Queues</h3>
   <h3 class="box-title" ng-if="queues.$resolved && queues.length > 0">Completed Queues</h3>
+  <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0">No Completed Queues</h3>
 </div><!-- /.box-header -->
 <div class="box-body no-padding table-responsive">
   <table id="queuetable" ts-wrapper ng-if="queues.length > 0" class="table table-responsive table-striped table-bordered">
