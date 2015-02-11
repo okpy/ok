@@ -529,7 +529,7 @@ class UserAPI(APIResource):
         :param data: (dictionary) key assignment called
         :return: None
         """
-        query = models.Group.query(models.Group.invited_members == user.key)
+        query = models.Group.query(models.Group.invited == user.key)
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
         return list(query)
