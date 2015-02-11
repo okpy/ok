@@ -17,15 +17,15 @@
         </tr>
         <tr ng-repeat="member in members" ts-repeat>
           <td>
-            <a ui-sref='staff.detail({staffId:member.id})'>
-              {{member.email}}
+            <a ui-sref='staff.detail({staffId:member.user.id})'>
+              {{member.user.email[0]}}
             </a>
           </td>
           <td>{{member.role}}</td>
         </tr>
       </table>
     </div>
-</div> 
+</div>
 
 <div class="box box-info">
     <div class="box-header">
@@ -34,9 +34,7 @@
     <div class="box-body">
         <div class="form-group">
           <label>Staff Email</label>
-          <input type="email" placeholder="Enter .edu email here" class="form-control input-lg" ng-model="newMember.email" required/> 
-          <label>Role</label>
-          <select class="form-control" ng-model="newMember.role" ng-options="role for role in roles" required>
+          <input type="email" placeholder="Enter .edu email here" class="form-control input-lg" ng-model="newMember.email" required/>
           </select>
         </div>
      <div class="box-footer">

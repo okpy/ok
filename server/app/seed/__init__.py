@@ -167,9 +167,12 @@ def seed():
         queue = queue.put()
         for subm in submissions:
             backup = subm.backup.get()
+            group = None
+            if backup.submitter.get().get_group(assignment.key):
+              group = backup.submitter.get().get_group(assignment.key).key
             fs = models.FinalSubmission(
                 assignment=assignment.key,
-                group=backup.submitter.get().get_group(assignment.key).key,
+                group=group,
                 submission=subm.key,
                 submitter=backup.submitter,
                 queue=queue)
@@ -278,11 +281,11 @@ def seed():
 
         subm = make_seed_submission(assign, students[i], True)
         subm.put()
-        #subms.append(subm)
+        subms.append(subm)
 
     # Seed a queue. This should be auto-generated.
-    make_queue(assign, subms, c)
-    make_queue(assign, subms, k)
+    make_queue(assign, subms[:len(subms)//2], c)
+    make_queue(assign, subms[len(subms)//2:], k)
 
     #utils.add_to_grading_queues(assign.key)
 

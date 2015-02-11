@@ -951,6 +951,9 @@ class Queue(Base):
         subms = []
         for fs in final_submissions:
           submission = fs.submission.get()
+          group = fs.group
+          if group:
+            group = fs.group.get()
           subms.append(
             {
              'id': fs.key.id(),
@@ -958,7 +961,7 @@ class Queue(Base):
              'created': submission.created,
              'backup': submission.backup.id(),
              'submitter': fs.submitter.get(),
-             'group': fs.group.get(),
+             'group': group,
              'score': submission.score,
             })
 

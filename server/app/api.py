@@ -1230,13 +1230,13 @@ class CourseAPI(APIResource):
         'add_staff': {
             'methods': set(['POST']),
             'web_args': {
-                'staff_member': KeyArg('User', required=True)
+                'email': Arg(str, required=True)
             }
         },
         'remove_staff': {
             'methods': set(['POST']),
             'web_args': {
-                'staff_member': KeyArg('User', required=True)
+                'email': Arg(str, required=True)
             }        },
         'assignments': {
             'methods': set(['GET']),
@@ -1270,17 +1270,21 @@ class CourseAPI(APIResource):
         if not course.can(user, need, course):
             raise need.exception()
 
-        if data['staff_member'] not in course.staff:
-            user = models.User.get_or_insert(data['staff_member'].id())
-            course.staff.append(user.key)
-            course.put()
+        user = models.User.get_or_insert(data['email'])
+        query = models.Participant.query(models.Participant.user == user.key)
+
+        if not query.get():
+          models.Participant.add_role(user, course, 'staff')
+
 
     def get_staff(self, course, user, data):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
-
-        return course.staff
+        query = models.Participant.query(
+          models.Participant.course == course.key,
+          models.Participant.role == 'staff')
+        return list(query.fetch())
 
     def remove_staff(self, course, user, data):
         need = Need('staff')
@@ -1295,6 +1299,7 @@ class CourseAPI(APIResource):
         need = Need('index')
         query = models.Participant.can(user, need, course, query)
         return list(query)
+
 
     def get_students(self, course, user, data):
         query = models.Participant.query(models.Participant.course == course.key)

@@ -130,7 +130,8 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
      $scope.totalItems = submissions.length;
      if (currSubm > 0) {
       $scope.prevId = submissions[currSubm-1];
-    } else if (currSubm > -1 && currSubm < submissions.length - 1) {
+    }
+    if (currSubm > -1 && currSubm < submissions.length - 1) {
       $scope.nextId = submissions[currSubm+1];
     }
 
@@ -148,7 +149,7 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
     // Goes to the next submission
     $scope.goTo = function (finalSubm) {
       if (finalSubm != undefined) {
-        $state.transitionTo("submission.final", { finalId: $scope.nextId});
+        $state.transitionTo("submission.final", { finalId: finalSubm});
      } else if ($scope.queueId != undefined) {
         // No more items. Show a success message.
         $window.swal({ title: "Nice work!", type: 'success',  text: "Great progress so far!",   timer: 2500 });
@@ -272,17 +273,22 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
 
 
 // Staff Controllers
-app.controller("StaffListCtrl", ["$scope", "$stateParams", "Course", "User",
-  function($scope, $stateParams, Course, User) {
+app.controller("StaffListCtrl", ["$scope","$window", "$stateParams", "Course", "User",
+  function($scope, $window, $stateParams, Course, User) {
     $scope.members = Course.staff({id: $stateParams.courseId});
     $scope.roles = ['staff', 'admin', 'user'];
     $scope.newMember = {
       role: 'staff'
     }
     $scope.save = function () {
-        //Todo: Create user or reassign role of user.
-        //Todo: Also Change User Role.
-      };
+      Course.add_member({
+        id: $stateParams.courseId,
+        email: $scope.newMember.email
+      }, function() {
+        $window.swal("Added!", "Added "+$scope.newMember.email+" to the course staff", "success");
+        $scope.newMember.email = "";
+      });
+    };
 
     }]);
 
@@ -339,6 +345,8 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
        submissions.push(submDict[key]['id']);
      }
      var currSubm = submissions.indexOf(parseInt($stateParams.submissionId));
+     console.log(currSubm)
+     console.log(submissions)
 
      $scope.allSubmissions = submissions;
      $scope.currentPage = currSubm;
