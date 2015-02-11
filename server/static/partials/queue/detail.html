@@ -1,17 +1,24 @@
+  <section class="content-header">
+      <ol class="breadcrumb">
+          <li><a ui-sref="queue.list"><i class="fa fa-list "> </i> All Staff Queues </a></li>
+          <li class="active">{{ queue.assignment.display_name}} Queue </li>
+      </ol>
+  </section>
+
 <div>
-  <div class="center-block"> 
+  <div class="center-block">
     <h2> Queues for {{queue.assignment.display_name}} </h2>
       <div ng-if="queue.$resolved && queue.assigned_staff.length > 0 ">
-      Staff: 
+      Staff:
         <span ng-repeat="user in queue.assigned_staff" class="badge bg-info">
-          {{user.id}} {{$last ? '' : ', '}}
+          {{user.email[0]}} {{$last ? '' : ', '}}
         </span>
       </ul>
       </div>
       <div ng-if="queue.$resolved && queue.assigned_staff.length <= 0">
         <strong>No staff assigned</strong>
       </div>
-      <div ng-if="queue.submissions.length == 0"> 
+      <div ng-if="queue.submissions.length == 0">
         <h3>  No submissions </h3>
       </div>
       <br>
@@ -21,37 +28,30 @@
     <table ts-wrapper id="queuedetail"  ng-if="queue.submissions.length > 0" class="table table-responsive table-striped table-bordered">
     <tbody>
     <tr>
-      <th ts-criteria="assignment.display_name" >Assignment</th>
       <th ts-criteria="submitter.email">Submitter</th>
       <th ts-criteria="submission.created">Time</th>
-      <th style="width: 15%">Tags</th>
-      <th ts-criteria="compScore.score" >Grade</th>
-      <th ts-criteria="-compScore.score" >Action</th>
+      <th ts-criteria="score.score" width="30%">Grade</th>
+      <th ts-criteria="-score.score" width="20%" >Action</th>
     </tr>
 
-    <tr ng-repeat="submission in submList " ts-repeat>
+    <tr ng-repeat="subm in submList " ts-repeat>
       <td>
-        <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}</a>
-      </td>
-      <td>{{submission.submitter.email}}</td>
-      <td>
-        {{submission.created | amCalendar}}
-      </td>
-      <td >
-          <span class="badge bg-info">{{submission.assignment.display_name}}</span>
-          <span ng-repeat="tag in submission.tags" class="badge bg-blue">
-            {{ tag }}
-          </span>
+      <span> Submitter: <a> {{subm.submitter.email[0]}} </a> </span>
+      <div ng-if="subm.group"> Group: <a ng-repeat="member in subm.group.member"> {{ member.email[0] }}{{$last ? '' : ','}} </a>  </div>
       </td>
       <td>
-        <p ng-if="submission.compScore == null"> Ungraded </p>
-        <p ng-if="submission.compScore != null"> {{submission.compScore.score}} </p>
+        {{subm.created | amCalendar}}
       </td>
       <td>
-          <a ui-sref='submission.diff({submissionId:submission.id})' type="button" ng-if="submission.compScore == null"
+
+        <p ng-if="subm.score.length == 0"> Ungraded </p>
+        <p ng-if="subm.score.length != 0" ng-repeat="score in subm.score"> {{score.score}} from {{score.grader.email[0]}} at {{score.created | amCalendar}} </p>
+      </td>
+      <td>
+          <a ui-sref='submission.final({finalId:subm.id})' type="button" ng-if="subm.score.length == 0"
             class="btn btn-block btn-flat btn-info">Grade</a>
 
-          <a ui-sref='submission.diff({submissionId:submission.id})' type="button" ng-if="submission.compScore != null"
+          <a ui-sref='submission.final({finalId:subm.id})' type="button" ng-if="subm.score.length != 0"
             class="btn btn-block btn-flat btn-warning">Re-grade</a>
       </td>
 

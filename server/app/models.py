@@ -603,6 +603,11 @@ class Backup(Base):
             return bool(group and user.key in group.member)
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
+        if action == "grade":
+            if user.is_admin:
+              return True
+            course_key = backup.assignment.get().course
+            return Participant.has_role(user, course_key, STAFF_ROLE)
         if action == "index":
             if not user.logged_in:
                 return False
@@ -627,9 +632,9 @@ class Backup(Base):
 class Score(Base):
     """The score for a submission, either from a grader or autograder."""
     score = ndb.IntegerProperty()
-    message = ndb.StringProperty() # Plain text
+    message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User)
-    autograder = ndb.StringProperty()
+    autograder = ndb.TextProperty()
 
 
 class Submission(Base):
@@ -688,8 +693,8 @@ class Diff(Base):
         comments = list(self.comments)
         all_comments = {}
         for comment in comments:
-            file_comments = all_comments.set_default(comment.filename, {})
-            file_comments.set_default(comment.line, []).append(comment)
+            file_comments = all_comments.setdefault(comment.filename, {})
+            file_comments.setdefault(comment.line, []).append(comment)
 
         data['comments'] = all_comments
         return data
@@ -936,7 +941,9 @@ class AuditLog(Base):
 class Queue(Base):
     """A queue of submissions to grade."""
     assignment = ndb.KeyProperty(Assignment)
+    course = ndb.ComputedProperty(lambda q: q.assignment.get().course)
     assigned_staff = ndb.KeyProperty(User, repeated=True)
+    owner = ndb.KeyProperty(User)
 
     @property
     def submissions(self):
@@ -944,16 +951,44 @@ class Queue(Base):
         Returns all the submissions in this queue.
         """
         query = FinalSubmission.query().filter(FinalSubmission.queue == self.key)
-        return [fs.submission for fs in query]
+        return [fs for fs in query]
+
+    @property
+    def graded(self):
+        """
+        Returns the count of graded submissions in this queue.
+        """
+        return len([1 for fs in self.submissions if fs.submission.get().score])
 
     def to_json(self, fields=None):
         if not fields:
             fields = {}
 
+        final_submissions = self.submissions
+        subms = []
+        for fs in final_submissions:
+          submission = fs.submission.get()
+          group = fs.group
+          if group:
+            group = fs.group.get()
+          subms.append(
+            {
+             'id': fs.key.id(),
+             'submission': fs.submission.id(),
+             'created': submission.created,
+             'backup': submission.backup.id(),
+             'submitter': fs.submitter.get(),
+             'group': group,
+             'score': submission.score,
+            })
+
         return {
-            'submissions': [{'id': val.id()} for val in self.submissions],
+            'submissions': subms,
+            'count': len(final_submissions),
+            'graded': self.graded,
             'assignment': self.assignment.get(),
-            'assigned_staff': [val.get().to_json(fields.get('assigned_staff')) for val in self.assigned_staff],
+            'assigned_staff': [val.get() for val in self.assigned_staff],
+            'owner': self.owner.get().email[0],
             'id': self.key.id()
         }
 
@@ -966,9 +1001,18 @@ class Queue(Base):
         if action == "index":
             if user.is_admin:
                 return query
+            courses = [part.course for part in Participant.query(
+                Participant.user == user.key,
+                Participant.role == STAFF_ROLE).fetch()]
+            if courses:
+                return disjunction(
+                    query, [(Queue.course == course) for course in courses])
             return False
 
-        if user.is_admin:
+        course = queue.assignment.get().course
+        is_staff = user.is_admin or \
+            Participant.has_role(user, course, STAFF_ROLE)
+        if is_staff:
             return True
 
         return False
@@ -1001,9 +1045,17 @@ class FinalSubmission(Base):
         """
         return bool(self.queue)
 
+    @property
+    def backup(self):
+        """
+        Return the associated backup.
+        """
+        return self.submission.get().backup.get()
+
     @classmethod
     def _can(cls, user, need, final, query):
-        return Submission._can(user, need, final.submission.get(), query)
+        return Submission._can(
+            user, need, final.submission.get() if final else None, query)
 
     def _pre_put_hook(self):
         # TODO Remove when submitter is a computed property

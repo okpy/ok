@@ -12,10 +12,10 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 
 from app import models, app
 from app.codereview import compare
-from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
 from app.utils import add_to_grading_queues, parse_date, assign_submission
@@ -529,7 +529,7 @@ class UserAPI(APIResource):
         :param data: (dictionary) key assignment called
         :return: None
         """
-        query = models.Group.query(models.Group.invited_members == user.key)
+        query = models.Group.query(models.Group.invited == user.key)
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
         return list(query)
@@ -788,13 +788,6 @@ class SubmissionAPI(APIResource):
         },
         'win_rate': {
             'methods': set(['GET']),
-        },
-        'score': {
-            'methods': set(['POST']),
-            'web_args': {
-                'score': Arg(int, required=True),
-                'message': Arg(str, required=True),
-                }
         }
     }
 
@@ -1225,14 +1218,14 @@ class CourseAPI(APIResource):
         'add_staff': {
             'methods': set(['POST']),
             'web_args': {
-                'staff_member': KeyArg('User', required=True)
+                'email': Arg(str, required=True)
             }
         },
         'remove_staff': {
             'methods': set(['POST']),
             'web_args': {
-                'staff_member': KeyArg('User', required=True)
-            }        
+                'email': Arg(str, required=True)
+            }
         },
         'assignments': {
             'methods': set(['GET']),
@@ -1266,26 +1259,28 @@ class CourseAPI(APIResource):
         if not course.can(user, need, course):
             raise need.exception()
 
-        if data['staff_member'] not in course.staff:
-            user = models.User.get_or_insert(data['staff_member'].id())
-            models.Participant.add_role(
-                user, course, STAFF_ROLE)
+        user = models.User.get_or_insert(data['email'])
+        if user not in course.staff:
+          models.Participant.add_role(user, course, STAFF_ROLE)
 
     def get_staff(self, course, user, data):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
-
-        return course.staff
+        query = models.Participant.query(
+          models.Participant.course == course.key,
+          models.Participant.role == 'staff')
+        return list(query.fetch())
 
     def remove_staff(self, course, user, data):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
 
+        removed_user = models.User.get_or_insert(data['email'])
+
         if data['staff_member'] in course.staff:
-            models.Participant.remove_role(
-                user, course, STAFF_ROLE)
+            models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
         query = models.Participant.query(
@@ -1293,6 +1288,7 @@ class CourseAPI(APIResource):
         need = Need('index')
         query = models.Participant.can(user, need, course, query)
         return list(query)
+
 
     def get_students(self, course, user, data):
         query = models.Participant.query(
@@ -1306,7 +1302,7 @@ class CourseAPI(APIResource):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        new_participant = models.Participant(user, course, 'student')
+        new_participant = models.Participant.add_role(user, course, STUDENT_ROLE)
         new_participant.put()
 
     def assignments(self, course, user, data):
@@ -1452,6 +1448,8 @@ class QueueAPI(APIResource):
             to be loaded on entity instantiation
         :return: entity
         """
+        if 'owner' not in attributes:
+            attributes['owner'] = attributes['assigned_staff'][0]
         ent = super(QueueAPI, self).new_entity(attributes)
         ent.assigned_staff = [models.User.get_or_insert(
             user.id()).key for user in ent.assigned_staff]
@@ -1468,4 +1466,48 @@ class FinalSubmissionAPI(APIResource):
         },
         'index': {
         },
+        'score': {
+            'methods': set(['POST']),
+            'web_args': {
+                'score': Arg(int, required=True),
+                'message': Arg(str, required=True),
+                'source': Arg(str, required=True),
+              }
         }
+
+        }
+
+    def score(self, obj, user, data):
+        """
+        Sets composition score
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
+        """
+        need = Need('grade')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        score = models.Score(
+            score=data['score'],
+            message=data['message'],
+            grader=user.key)
+        grade = score.put()
+
+        submission = obj.submission.get()
+
+        # Create or updated based on existing scores.
+        if data['source'] == 'composition':
+          # Only keep any autograded scores.
+          submission.score = [autograde for autograde in submission.score \
+            if score.autograder]
+          submission.score.append(score)
+        else:
+          submission.score.append(score)
+
+        submission.put()
+
+        return score
+

@@ -1,10 +1,33 @@
-<div>
-  <h2>Course: {{course.name}}</h2>
-  {{course}}
-  <br>
 
-    <a ui-sref='staff.list({courseId:course.id})'>
-      Staff List
+<h2>Course: {{course.display_name}}</h2>
+<div>
+  <div class="center-block" ng-if="!course.$resolved">
+    <h3>Loading...</h3>
+  </div>
+  <table ts-wrapper ng-if="course" class="table table-striped table-bordered table-responsive">
+    <tr>
+      <th ts-criteria="name">Name</th>
+      <th ts-criteria="institution">Institution</th>
+      <th ts-criteria="year">Offering</th>
+      <th>Active</th>
+      <th>ID</th>
+      <th>Instructor</th>
+    </tr>
+    <tr>
+      <td>
+        <a ui-sref='course.detail.stats({courseId:course.id})'>
+          {{course.display_name}}
+        </a>
+      </td>
+      <td>{{course.institution}}</td>
+      <td>{{course.offering}}</td>
+      <td>{{course.active}}</td>
+      <td>{{course.id}}</td>
+      <td>{{course.instructor[0].email[0]}}</td>
+    </tr>
+  </table>
+    <a class="btn btn-primary" ui-sref='staff.list({courseId:course.id})'>
+      View/Edit Staff
     </a>
 
 </div>
