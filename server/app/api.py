@@ -1278,8 +1278,10 @@ class CourseAPI(APIResource):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
-
-        return course.staff
+        query = models.Participant.query(
+          models.Participant.course == course.key,
+          models.Participant.role == 'staff')
+        return list(query.fetch())
 
     def remove_staff(self, course, user, data):
         need = Need('staff')
