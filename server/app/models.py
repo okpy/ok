@@ -460,6 +460,22 @@ class Participant(Base):
             Participant(user=user_key, course=course_key, role=role).put()
 
     @classmethod
+    def remove_role(cls, user_key, course_key, role):
+        if role not in VALID_ROLES:
+            raise BadValueError("Bad role: " + str(role))
+        if isinstance(user_key, User):
+            user_key = user_key.key
+        if isinstance(course_key, Course):
+            course_key = course_key.key
+
+        query = cls.query(cls.user == user_key,
+                          cls.course == course_key,
+                          cls.role == role)
+        current = query.get()
+        if current:
+            current.key.delete()
+
+    @classmethod
     def has_role(cls, user_key, course_key, role):
         if isinstance(user_key, User):
             user_key = user_key.key

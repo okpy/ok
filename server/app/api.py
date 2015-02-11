@@ -391,7 +391,7 @@ class UserAPI(APIResource):
     methods = {
         'post': {
             'web_args': {
-                'email': KeyRepeatedArg(str, required=True),
+                'email': Arg(str),
                 'name': Arg(str),
                 }
         },
@@ -488,6 +488,7 @@ class UserAPI(APIResource):
         entity = self.model.lookup(attributes['email'])
         if entity:
             raise BadValueError('user already exists')
+        attributes['email'] = [attributes['email']]
         entity = self.model.from_dict(attributes)
         return entity
 
@@ -1009,39 +1010,27 @@ class SubmissionAPI(APIResource):
           return q.json()
 
 
-
-    def win_rate(self, obj, user, data):
+    def score(self, obj, user, data):
         """
-        Gets the win_rate for the submission. This method will be removed shortly.
-
+        Sets composition score
 
         :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: Win Rate as a float.
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
         """
-        messages = obj.get_messages()
-        if 'file_contents' not in obj.get_messages():
-            raise BadValueError('Submission has no contents to diff')
+        score = models.Score(
+            score=data['score'],
+            message=data['message'],
+            grader=user.key)
+        score.put()
 
-        file_contents = messages['file_contents']
+        if 'Composition' not in obj.tags:
+            obj.tags.append('Composition')
 
-        if 'submit' in file_contents:
-            del file_contents['submit']
-
-        if 'hog.py' in file_contents:
-          hog_code = file_contents['hog.py'].encode('utf-8')
-          payload = {'strategy': hog_code}
-          headers={'content-type': 'application/json'}
-
-          q = requests.post('http://hog.cs61a.org/winrate',
-             data=json.dumps(payload),
-             headers=headers)
-
-          return q.json()
-        else:
-          return {'status': 'Failure'}
-
+        obj.compScore = score.key
+        obj.put()
+        return score
 
     def get_assignment(self, name):
         """
@@ -1455,7 +1444,8 @@ class QueueAPI(APIResource):
         """
         Request to define a new entity
 
-        :param attributes: entity attributes, to be loaded on entity instantiation
+        :param attributes: entity attributes,
+            to be loaded on entity instantiation
         :return: entity
         """
         if 'owner' not in attributes:
