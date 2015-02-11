@@ -941,6 +941,7 @@ class AuditLog(Base):
 class Queue(Base):
     """A queue of submissions to grade."""
     assignment = ndb.KeyProperty(Assignment)
+    course = ndb.ComputedProperty(lambda q: q.assignment.get().course)
     assigned_staff = ndb.KeyProperty(User, repeated=True)
     owner = ndb.KeyProperty(User)
 
@@ -1004,12 +1005,8 @@ class Queue(Base):
                 Participant.user == user.key,
                 Participant.role == STAFF_ROLE).fetch()]
             if courses:
-                assigns = []
-                for course in courses:
-                    assigns.extend(
-                        Assignment.query(Assignment.course == course).fetch())
                 return disjunction(
-                    query, [(Queue.assignment == assign.key) for assign in assigns])
+                    query, [(Queue.course == course) for course in courses])
             return False
 
         course = queue.assignment.get().course
