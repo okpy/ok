@@ -30,7 +30,7 @@ app.directive('comments', function() {
         return {
             scope: false,
             restrict: 'E',
-            templateUrl: '/static/partials/common/comment-viewer.html',
+            templateUrl: '/static/partials/admin/comment-viewer.html',
         };
     });
 

@@ -3,8 +3,14 @@
     <div class='comment-holder' ng-repeat="comment in codeline.comments" ng-controller="CommentController">
       <div class='comment'>
         <div class='comment-header'>
-          <div class='left'>
+          <div class='left' ng-if="comment.author.email[0]">
             <strong>{{comment.author.email[0]}}</strong> wrote:
+          </div>
+          <div class='left' ng-if="comment.self">
+            <strong> You </strong> recently wrote:
+          </div>
+          <div class='left' ng-if="!comment.self && !comment.author.email">
+            <strong> Someone </strong> recently wrote:
           </div>
           <div class='right'>
             <button type="button" ng-click="remove()" class="btn btn-danger btn-xs">
@@ -23,7 +29,7 @@
         <button ng-click="toggleComment()" class='btn btn-primary'>Reply</button>
       </div>
     </div>
-    <div ng-controller="WriteCommentController" class='comment-form' class='row' ng-if="showComment">
+    <div ng-controller="WriteCommentController" class='comment-form' class='row' ng-if="showComment && showWriter">
       <form class="comment-tabset form-horizontal" role="form">
         <tabset class='tabset-background'>
           <tab heading="Write Comment">
@@ -50,7 +56,7 @@
             <button ng-click="toggleComment()" class="btn btn-default">Close</button>
           </div>
           <div class="right">
-            <button type="submit" ng-disabled="commentText.text == ''" ng-click="comment()" class="btn btn-primary">Comment</button>
+            <button type="submit" ng-disabled="commentText.text == ''" ng-click="makeComment()" class="btn btn-primary">Comment</button>
           </div>
           <div class="clearfix"></div>
         </div>
