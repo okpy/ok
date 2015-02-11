@@ -1452,6 +1452,8 @@ class QueueAPI(APIResource):
         :param attributes: entity attributes, to be loaded on entity instantiation
         :return: entity
         """
+        if 'owner' not in attributes:
+            attributes['owner'] = attributes['assigned_staff'][0]
         ent = super(QueueAPI, self).new_entity(attributes)
         ent.assigned_staff = [models.User.get_or_insert(
             user.id()).key for user in ent.assigned_staff]
