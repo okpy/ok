@@ -472,13 +472,19 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
       $scope.neutral = true;
     }
     $scope.anchorId = $scope.file_name + "-L" + $scope.codeline.lineNum;
+
     $scope.scroll = function() {
       $location.hash($scope.anchorId);
       $anchorScroll();
     }
+
     $scope.showComment = false;
+    $scope.showWriter = true;
     $scope.toggleComment = function(line) {
       $scope.showComment = !$scope.showComment;
+    }
+    $scope.toggleWriter = function(line) {
+      $scope.showWriter = !$scope.showWriter;
     }
   }
   ]);
@@ -518,7 +524,7 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
       return $sce.trustAsHtml(converter.makeHtml(text));
     }
     $scope.commentText = {text:""}
-    $scope.comment = function() {
+    $scope.makeComment = function() {
       text = $scope.commentText.text;
       if (text !== undefined && text.trim() != "") {
         Submission.addComment({
@@ -526,7 +532,14 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
           file: $scope.file_name,
           index: $scope.codeline.rightNum,
           message: text,
-        }, function () {
+        }, function (resp) {
+          resp.self = true
+          if ($scope.codeline.comments) {
+            $scope.codeline.comments.push(resp)
+          } else {
+            $scope.codeline.comments = [resp]
+          }
+          $scope.toggleWriter()
         });
       }
     }
