@@ -296,7 +296,8 @@ app.factory('Queue', ['$resource',
         get: {
           transformResponse: function(data) {
             return JSON.parse(data).data;
-          }
+          },
+          cache: true
         },
       });
     }
