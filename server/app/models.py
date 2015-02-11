@@ -677,8 +677,8 @@ class Diff(Base):
         comments = list(self.comments)
         all_comments = {}
         for comment in comments:
-            file_comments = all_comments.set_default(comment.filename, {})
-            file_comments.set_default(comment.line, []).append(comment)
+            file_comments = all_comments.setdefault(comment.filename, {})
+            file_comments.setdefault(comment.line, []).append(comment)
 
         data['comments'] = all_comments
         return data
