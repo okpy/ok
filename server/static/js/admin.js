@@ -3,7 +3,7 @@ var app = angular.module('admin', ['ngResource', 'ui.router', 'angular-loading-b
 app.directive('assignmentModule', function() {
         return {
             restrict: 'E',
-            templateUrl: '/static/partials/admin/assignment.module.html',
+            templateUrl: '/static/partials/dashboard/assignment.moduledash.html',
         };
     });
 

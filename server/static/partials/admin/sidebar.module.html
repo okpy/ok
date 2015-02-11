@@ -24,11 +24,16 @@
                 <i class="fa fa-archive"></i> <span>Staff Queue</span>
             </a>
         </li>
+        <li>
+            <a>
+                <i class="fa fa-list"></i> <span>Submission Search (Coming Soon)</span>
+            </a>
+        </li>
 
          <li class="treeview active">
             <a>
                 <i class="fa fa-bar-chart-o"></i>
-                <span>Assignments</span> &nbsp;
+                <span>Assignments (Details)</span> &nbsp;
                 <small class="badge bg-green">{{ assignments.length }}</small>
             </a>
             <ul class="treeview-menu active" style="display: block;" ng-repeat="assignment in assignments">
@@ -39,8 +44,8 @@
                 <li><a ui-sref='assignment.list' style="margin-left: 20px;"><i class="fa fa-list"></i> All Assignments</a> </li>
             </ul>
 
-<!--
-            <ul class="treeview-menu active" style="display: block;" >
+
+<!--         <ul class="treeview-menu active" style="display: block;" >
                 <li><a ui-sref='assignment.create'><i class="fa fa-pencil"></i> Create Assignment</a> </li>
             </ul>
  -->
