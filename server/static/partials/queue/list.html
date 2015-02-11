@@ -2,8 +2,9 @@
 
 <div class="box">
   <div class="box-header">
-    <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >No Queues</h3>
-    <h3 class="box-title" ng-if="queues.length > 0">Coursewide Queues</h3>
+  <h3 class="box-title" ng-if="!queues.$resolved" >Loading Course Queues</h3>
+  <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >No Queues</h3>
+  <h3 class="box-title" ng-if="queues.length > 0">Coursewide Queues</h3>
   </div><!-- /.box-header -->
 
 <div class="box-body no-padding table-responsive">
@@ -50,7 +51,7 @@
   </div><!-- /.box-body -->
 </div>
 
-<div class="box">
+<div class="box" ng-if="!hideComplete">
 
 <div class="box-header">
   <h3 class="box-title" ng-if="!queues.$resolved" >Loading Completed Queues</h3>
