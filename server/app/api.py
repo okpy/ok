@@ -12,11 +12,10 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-from app.constants import STUDENT_ROLE, STAFF_ROLE
++from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 
 from app import models, app
 from app.codereview import compare
-from app.constants import API_PREFIX
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
 from app.utils import add_to_grading_queues, parse_date, assign_submission
@@ -1237,7 +1236,8 @@ class CourseAPI(APIResource):
             'methods': set(['POST']),
             'web_args': {
                 'email': Arg(str, required=True)
-            }        },
+            }
+        },
         'assignments': {
             'methods': set(['GET']),
             'web_args': {
@@ -1271,38 +1271,37 @@ class CourseAPI(APIResource):
             raise need.exception()
 
         user = models.User.get_or_insert(data['email'])
-        query = models.Participant.query(models.Participant.user == user.key)
-
-        if not query.get():
-          models.Participant.add_role(user, course, 'staff')
-
+        if user not in course.staff:
+          Participant.add_role(user, course, STAFF_ROLE)
 
     def get_staff(self, course, user, data):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
-        query = models.Participant.query(
-          models.Participant.course == course.key,
-          models.Participant.role == 'staff')
-        return list(query.fetch())
+
+        return course.staff
 
     def remove_staff(self, course, user, data):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
+
+        removed_user = models.User.get_or_insert(data['email'])
+
         if data['staff_member'] in course.staff:
-            course.staff.remove(data['staff_member'])
-            course.put()
+            Participant.remove_role(removed_user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
-        query = models.Participant.query(models.Participant.user == data['user'])
+        query = models.Participant.query(
+            models.Participant.user == data['user'])
         need = Need('index')
         query = models.Participant.can(user, need, course, query)
         return list(query)
 
 
     def get_students(self, course, user, data):
-        query = models.Participant.query(models.Participant.course == course.key)
+        query = models.Participant.query(
+            models.Participant.course == course.key)
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
