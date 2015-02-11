@@ -1,6 +1,6 @@
 <div class="box" ng-controller="UserQueueListCtrl">
 <div class="box-header">
-  <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >No Assigned Queues</h3>
+  <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >You have no queues!</h3>
   <h3 class="box-title" ng-if="queues.length > 0">My Queue</h3>
 </div><!-- /.box-header -->
 
@@ -36,7 +36,7 @@
       <td>
         <a class="btn btn-primary btn-sm" ui-sref='queue.detail({queueId:queue.id})'>
           View Queue
-        </a> 
+        </a>
       </td>
     </tr>
       </tbody>
