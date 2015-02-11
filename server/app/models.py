@@ -966,18 +966,22 @@ class Queue(Base):
 
         final_submissions = self.submissions
         subms = []
-        for fs in final_submissions:
-          submission = fs.submission.get()
-          group = fs.group
-          if group:
-            group = fs.group.get()
+        submitters = ndb.get_multi(fs.submitter for fs in final_submissions)
+        submissions = [fs.submission for fs in final_submissions]
+        submissions = ndb.get_multi(submissions)
+        groups = [fs.group for fs in final_submissions]
+        groups = ndb.get_multi(filter(None, groups))
+        groups = {v.key: v for v in groups}
+        for i, fs in enumerate(final_submissions):
+          submission = submissions[i]
+          group = groups.get(fs.group)
           subms.append(
             {
              'id': fs.key.id(),
-             'submission': fs.submission.id(),
+             'submission': submission.key.id(),
              'created': submission.created,
              'backup': submission.backup.id(),
-             'submitter': fs.submitter.get(),
+             'submitter': submitters[i],
              'group': group,
              'score': submission.score,
             })
@@ -985,8 +989,8 @@ class Queue(Base):
         return {
             'submissions': subms,
             'count': len(final_submissions),
-            'graded': self.graded,
-            'assignment': self.assignment.get(),
+            'graded': len(filter(None, (subm.score for subm in submissions))),
+            'assignment': {'id': self.assignment},
             'assigned_staff': [val.get() for val in self.assigned_staff],
             'owner': self.owner.get().email[0],
             'id': self.key.id()
