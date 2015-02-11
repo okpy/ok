@@ -997,15 +997,20 @@ class Queue(Base):
         if not user.logged_in:
             return False
 
+        if action == "index":
+            if user.is_admin:
+                return query
+            courses = [part.course for part in Participant.query(
+                Participant.user == user.key,
+                Participant.role == STAFF_ROLE).fetch()]
+            if courses:
+                return disjunction(
+                    query, [(Queue.course == course) for course in courses])
+            return False
+
         course = queue.assignment.get().course
         is_staff = user.is_admin or \
             Participant.has_role(user, course, STAFF_ROLE)
-
-        if action == "index":
-            if is_staff:
-                return query
-            return False
-
         if is_staff:
             return True
 
