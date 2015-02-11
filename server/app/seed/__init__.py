@@ -162,7 +162,8 @@ def seed():
     def make_queue(assignment, submissions, asignee):
         queue = models.Queue(
             assignment=assignment.key,
-            assigned_staff=[asignee.key])
+            assigned_staff=[asignee.key],
+            owner=asignee.key)
         queue = queue.put()
         for subm in submissions:
             backup = subm.backup.get()

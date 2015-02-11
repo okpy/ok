@@ -527,7 +527,6 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
           index: $scope.codeline.rightNum,
           message: text,
         }, function () {
-          $window.swal('comment made!')
         });
       }
     }
