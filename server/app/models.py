@@ -997,12 +997,16 @@ class Queue(Base):
         if not user.logged_in:
             return False
 
+        course = queue.assignment.get().course
+        is_staff = user.is_admin or \
+            Participant.has_role(user, course, STAFF_ROLE)
+
         if action == "index":
-            if user.is_admin:
+            if is_staff:
                 return query
             return False
 
-        if user.is_admin:
+        if is_staff:
             return True
 
         return False
@@ -1044,7 +1048,8 @@ class FinalSubmission(Base):
 
     @classmethod
     def _can(cls, user, need, final, query):
-        return Submission._can(user, need, final.submission.get(), query)
+        return Submission._can(
+            user, need, final.submission.get() if final else None, query)
 
     def _pre_put_hook(self):
         # TODO Remove when submitter is a computed property
