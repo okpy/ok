@@ -12,7 +12,7 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 
 from app import models, app
 from app.codereview import compare
@@ -1261,7 +1261,7 @@ class CourseAPI(APIResource):
 
         user = models.User.get_or_insert(data['email'])
         if user not in course.staff:
-          Participant.add_role(user, course, STAFF_ROLE)
+          models.Participant.add_role(user, course, STAFF_ROLE)
 
     def get_staff(self, course, user, data):
         need = Need('staff')
@@ -1280,7 +1280,7 @@ class CourseAPI(APIResource):
         removed_user = models.User.get_or_insert(data['email'])
 
         if data['staff_member'] in course.staff:
-            Participant.remove_role(removed_user, course, STAFF_ROLE)
+            models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
         query = models.Participant.query(
@@ -1302,7 +1302,7 @@ class CourseAPI(APIResource):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        new_participant = models.Participant(user, course, 'student')
+        new_participant = models.Participant.add_role(user, course, STUDENT_ROLE)
         new_participant.put()
 
     def assignments(self, course, user, data):

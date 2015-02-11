@@ -128,7 +128,13 @@ def admin():
     else:
         logging.info("Staff Login Attempt from %s", user.email())
         userobj = models.User.lookup(user.email())
-        if userobj.is_admin:
+
+        # TODO: Filter by class.
+        query = models.Participant.query(
+          models.Participant.role == 'staff')
+        all_staff = [part.user.id() for part in list(query.fetch())]
+
+        if userobj.is_admin or userobj.key.id() in all_staff:
             logging.info("Staff Login Success from %s", user.email())
             params["user"] = {'email': user.email()}
             params["admin"] = {'email': user.email()}
@@ -140,7 +146,7 @@ def admin():
             return render_template("admin.html", **params)
         else:
             logging.info("Staff Login Failure from %s", user.email())
-            error = {'code': 404, 'description': "Insufficient permission"}
+            error = {'code': 403, 'description': "Insufficient permission"}
             return page_not_found(error)
 
 ## Error handlers
