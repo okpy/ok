@@ -14,6 +14,7 @@
         <tr>
           <th ts-criteria="email">Email</th>
           <th ts-criteria="role">Role</th>
+          <th width="10%"> Remove </th>
         </tr>
         <tr ng-repeat="member in members" ts-repeat>
           <td>
@@ -22,6 +23,7 @@
             </a>
           </td>
           <td>{{member.role}}</td>
+          <td><a ng-click="remove(member.user.email[0])" class="btn btn-danger">Remove</a></td>
         </tr>
       </table>
     </div>

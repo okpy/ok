@@ -1277,10 +1277,9 @@ class CourseAPI(APIResource):
         if not course.can(user, need, course):
             raise need.exception()
 
-        removed_user = models.User.get_or_insert(data['email'])
-
-        if removed_user in course.staff:
-            models.Participant.remove_role(removed_user, course, STAFF_ROLE)
+        removed_user = models.User.lookup(data['email'])
+        if removed_user:
+          models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
         query = models.Participant.query(

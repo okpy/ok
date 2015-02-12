@@ -220,7 +220,7 @@ def seed():
         email=["dummy2@admin.com"],
     )
     k.put()
-    models.Participant.add_role(k.key, course.key, STUDENT_ROLE)
+    models.Participant.add_role(k.key, course.key, STAFF_ROLE)
 
     version = make_version('v1.3.0')
     version.put()

@@ -289,6 +289,14 @@ app.controller("StaffListCtrl", ["$scope","$window", "$stateParams", "Course", "
         $scope.newMember.email = "";
       });
     };
+    $scope.remove = function (userEmail) {
+      Course.remove_member({
+        id: $stateParams.courseId,
+        email: userEmail
+      }, function() {
+        $window.swal("Removed!", "Removed " + userEmail + " from the course staff", "success");
+      });
+    };
 
     }]);
 
