@@ -332,8 +332,7 @@ def merge_user(user_key, dup_user_key):
     # Change email
     # Right now, I just append the hash of their key, which should be
     # something they can't guess... Maybe make it more secure??
-    new_emails = [email + str(hash(str(dup_user_key)))
-                  for email in dup_user.email]
+    new_emails = [email + email for email in dup_user.email]
 
     user = get_user()
     lowered_emails = [email.lower() for email in user.email]
@@ -342,6 +341,8 @@ def merge_user(user_key, dup_user_key):
             user.email.append(email.lower())
 
     dup_user.email = new_emails
+    dup_user.put_async()
+    user.put_async()
 
     log = ModelProxy.AuditLog()
     log.event_type = "Merge user"
