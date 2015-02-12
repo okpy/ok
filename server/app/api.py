@@ -1279,7 +1279,7 @@ class CourseAPI(APIResource):
 
         removed_user = models.User.get_or_insert(data['email'])
 
-        if data['staff_member'] in course.staff:
+        if removed_user in course.staff:
             models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
