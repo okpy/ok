@@ -44,6 +44,79 @@ class UserPermissionsUnitTest(PermissionsUnitTest):
     def test_access(self, value):
         return PermissionsUnitTest.access(self, value)
 
+class UserMergeTest(BaseUnitTest):
+    def setUp(self):
+        BaseTestCase.setUp(self)
+        self._caught_exception = None
+        self.user = self.get_basic_user()
+        self.admin = models.User(email=['test@admin.com'], is_admin=True)
+        self.admin.put()
+
+        self.course = make_fake_course(self.admin)
+        self.course.put()
+        self.assign = make_fake_assignment(self.course, self.admin)
+        self.assign.put()
+
+    def get_basic_user(self): #pylint: disable=no-self-use
+        email = 'test@example.com'
+        user = models.User(email=[email])
+        user.put()
+
+        return user
+
+    def get_user_pair(self, typ="same"):
+        user = self.get_basic_user()
+        user2 = self.get_basic_user()
+        if typ == "upper":
+            user2.email[0]= user2.email[0][0].upper() + user2.email[0][1:]
+            user2.put()
+
+        return (user, user2)
+
+
+    def merge_user(self, usera, userb):
+        utils.merge_user(usera, userb)
+
+    def test_merge_user_lowercase(self):
+        """
+        Tests that two users with the same email (when lowercased) are merged.
+        """
+        user_obj, user_obj_upper = self.get_user_pair("upper")
+        new_email = user_obj_upper.email[0]
+
+        self.merge_user(user_obj, user_obj_upper)
+        user_obj = user_obj.key.get()
+        user_obj_upper = user_obj_upper.key.get()
+
+        self.assertNotEqual(user_obj_upper.email[0], new_email)
+        self.assertNotIn(new_email, user_obj.email)
+
+    def test_leave_group(self):
+        """
+        Tests that merging two users makes the merged user leave groups.
+        """
+        user_obj, user_obj2 = self.get_user_pair()
+
+        # Cause groups must have 2 people
+        user_obj3 = self.get_basic_user()
+        user_obj3.email = ['rawr@thing.com']
+        user_obj3.put()
+        user_obj4 = self.get_basic_user()
+        user_obj4.email = ['doggy@thing.com']
+        user_obj4.put()
+
+        group = models.Group(
+            member=[user_obj2.key, user_obj3.key, user_obj4.key],
+            assignment=self.assign.key)
+        group.put()
+
+        self.merge_user(user_obj, user_obj2)
+
+        group = group.key.get()
+        self.assertIsNotNone(group)
+        self.assertNotIn(user_obj2.key, group.member)
+
+
 class UserUniquenessTest(BaseUnitTest):
     def setUp(self):
         BaseTestCase.setUp(self)
@@ -150,9 +223,9 @@ class UserUniquenessTest(BaseUnitTest):
         self.mock(utils, 'unique_group', unique_group_mock)
 
         utils.deferred_check_user(user_obj.key.id())
-        self.assertEqual(calls[0], 1)
-        self.assertEqual(calls[1], 1)
-        self.assertEqual(calls[2], 1)
+        self.assertNotEqual(calls[0], 0)
+        self.assertNotEqual(calls[1], 0)
+        self.assertNotEqual(calls[2], 0)
 
 if __name__ == "__main__":
     unittest.main()
