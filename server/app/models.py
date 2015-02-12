@@ -648,9 +648,8 @@ class Submission(Base):
     assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
 
-    def mark_as_final(self):
-        """Create or update a final submission."""
-        assignment = self.backup.get().assignment
+    def get_final(self):
+        assignment = self.assignment
         group = self.submitter.get().get_group(assignment)
         submitter = self.submitter
         if group:
@@ -661,14 +660,49 @@ class Submission(Base):
             final = FinalSubmission.query(
                 FinalSubmission.assignment==assignment,
                 FinalSubmission.submitter==submitter).get()
+        return final
+
+    def mark_as_final(self):
+        """Create or update a final submission."""
+        final = self.get_final()
+
         if final:
             final.submitter = self.submitter
             final.submission = self.key
         else:
-            final = FinalSubmission(assignment=assignment, submission=self.key)
+            group = self.submitter.get().get_group(self.assignment)
+            final = FinalSubmission(
+                assignment=self.assignment, submission=self.key)
             if group:
                 final.group = group.key
         final.put()
+
+    def resubmit(self, user_key):
+        """
+        Resubmits this submission as being submitted by |user|.
+        """
+        old_backup = self.backup.get()
+        new_backup = Backup(
+            submitter=user_key,
+            assignment=self.assignment,
+            client_time=old_backup.client_time,
+            server_time=old_backup.server_time,
+            messages=old_backup.messages,
+            tags=old_backup.tags)
+        new_backup_key = new_backup.put()
+        new_subm = Submission(
+            backup=new_backup_key,
+            score=self.score,
+            submitter=user_key,
+            assignment=self.assignment,
+            server_time=self.server_time)
+        new_subm_key = new_subm.put_async()
+
+        final = self.get_final()
+        if final:
+            final.submitter = user_key
+            final.submission = new_subm_key
+            final.put()
 
     @classmethod
     def _can(cls, user, need, submission, query):

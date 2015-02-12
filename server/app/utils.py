@@ -287,6 +287,70 @@ def sort_by_assignment(key_func, entries):
     entries = sorted(entries, key=key_func)
     return itertools.groupby(entries, key_func)
 
+@ndb.toplevel
+def merge_user(user_key, dup_user_key):
+    """
+    Merges |dup_user| into |user|.
+    """
+    if isinstance(user_key, ModelProxy.Base):
+        user = user_key
+        user_key = user_key.key
+        get_user = lambda: dup_user
+    else:
+        user = user_key.get_async()
+        def get_user():
+            if isinstance(user, ndb.Future):
+                user = user.get_result()
+            return user
+
+    if isinstance(dup_user_key, ModelProxy.Base):
+        dup_user = dup_user_key
+        get_dup_user = lambda: dup_user
+        dup_user_key = dup_user_key.key
+    else:
+        dup_user = dup_user_key.get_async()
+        def get_dup_user():
+            if isinstance(dup_user, ndb.Future):
+                dup_user = dup_user.get_result()
+            return dup_user
+
+    # Leave all groups
+    G = ModelProxy.Group
+    groups = G.query(ndb.OR(
+        G.member == dup_user_key,
+        G.invited == dup_user_key)).fetch()
+    for group in groups:
+        group.exit(dup_user_key)
+
+    # Re-submit submissions
+    S = ModelProxy.Submission
+    subms = S.query(S.submitter == dup_user_key).fetch()
+    for subm in subms:
+        subm.resubmit(user_key)
+
+    dup_user = get_dup_user()
+    # Change email
+    # Right now, I just append the hash of their key, which should be
+    # something they can't guess... Maybe make it more secure??
+    new_emails = [email + str(hash(str(dup_user_key)))
+                  for email in dup_user.email]
+
+    user = get_user()
+    lowered_emails = [email.lower() for email in user.email]
+    for email in dup_user.email:
+        if email.lower() not in lowered_emails:
+            user.email.append(email.lower())
+
+    dup_user.email = new_emails
+
+    log = ModelProxy.AuditLog()
+    log.event_type = "Merge user"
+    log.user = user_key
+    log.description = "Merged user {} with {}. Merged emails {}".format(
+        dup_user_key.id(), user_key.id(), get_dup_user().email)
+    log.obj = dup_user_key
+    log.put_async()
+
 def unique_email_address(user):
     U = ModelProxy.User
 
@@ -295,9 +359,15 @@ def unique_email_address(user):
         users = U.query(U.email == email).fetch()
         for found_user in users:
             if found_user.key != user.key:
-                dups.append(found_user)
+                dups.append((user, found_user))
 
-    # TODO(martinis, denero) figure out how to merge users
+    for usera, userb in dups:
+        if usera.email[0].lower() != usera.email[0]:
+            user, dup_user = usera, userb
+        else:
+            user, dup_user = userb, usera
+
+        merge_user(user, dup_user)
 
 def unique_final_submission(user):
     FS = ModelProxy.FinalSubmission
