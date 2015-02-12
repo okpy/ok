@@ -1,16 +1,10 @@
 <div>
-  <div class='comment-box' ng-if="showComment || codeline.comments.length > 0">
+  <div class='comment-box' ng-if="showComment || codeline.comments.length > 0" ng-hide="hideBox">
     <div class='comment-holder' ng-repeat="comment in codeline.comments" ng-controller="CommentController">
       <div class='comment'>
         <div class='comment-header'>
           <div class='left' ng-if="comment.author.email[0]">
             <strong>{{comment.author.email[0]}}</strong> wrote:
-          </div>
-          <div class='left' ng-if="comment.self">
-            <strong> You </strong> recently wrote:
-          </div>
-          <div class='left' ng-if="!comment.self && !comment.author.email">
-            <strong> Someone </strong> recently wrote:
           </div>
           <div class='right'>
             <button type="button" ng-click="remove()" class="btn btn-danger btn-xs">

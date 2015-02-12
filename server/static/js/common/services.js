@@ -284,20 +284,27 @@ app.factory('Version', ['$resource',
 app.factory('Queue', ['$resource',
     function($resource) {
       return $resource('/api/v1/queue/:id', {
-        format: "json",
         id: "@id",
       }, {
+        get: {
+          cache: true,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        pull: {
+          method: "GET",
+          url: "/api/v1/queue/:id",
+          cache: false,
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         query: {
           isArray: true,
           transformResponse: function(data) {
             return JSON.parse(data).data.results;
           }
-        },
-        get: {
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          },
-          cache: true
         },
       });
     }

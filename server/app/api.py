@@ -912,6 +912,7 @@ class SubmissionAPI(APIResource):
             author=user.key,
             parent=diff_obj.key)
         comment.put()
+        return comment
 
     def delete_comment(self, obj, user, data):
         """

@@ -490,23 +490,27 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
     $scope.anchorId = $scope.file_name + "-L" + $scope.codeline.lineNum;
 
     $scope.scroll = function() {
-      $location.hash($scope.anchorId);
-      $anchorScroll();
+      //$location.hash($scope.anchorId);
+      // $anchorScroll();
     }
 
     $scope.showComment = false;
+    $scope.hideBox = false;
     $scope.showWriter = true;
-    $scope.toggleComment = function(line) {
+    $scope.toggleComment = function() {
       $scope.showComment = !$scope.showComment;
     }
-    $scope.toggleWriter = function(line) {
+    $scope.toggleBox = function() {
+      $scope.hideBox = !$scope.hideBox;
+    }
+    $scope.toggleWriter = function() {
       $scope.showWriter = !$scope.showWriter;
     }
   }
   ]);
 
-app.controller("CommentController", ["$scope", "$stateParams", "$timeout", "$modal", "Submission",
-  function ($scope, $stateParams, $timeout, $modal, Submission) {
+app.controller("CommentController", ["$scope", "$window", "$stateParams", "$timeout", "$modal", "Submission",
+  function ($scope, $window, $stateParams, $timeout, $modal, Submission) {
     $scope.remove = function() {
       var modal = $modal.open({
         templateUrl: '/static/partials/common/removecomment.modal.html',
@@ -523,7 +527,8 @@ app.controller("CommentController", ["$scope", "$stateParams", "$timeout", "$mod
           id: $scope.backupId,
           comment: $scope.comment.id
         }, function (result){
-          $window.swal('Comment Deleted!')
+          $scope.toggleBox()
+          $scope.comment = false;
         });
       });
     }
@@ -731,18 +736,12 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
 
 app.controller("QueueModuleController", ["$scope", "Queue",
   function ($scope, Queue) {
-    $scope.queues = Queue.query({
-      "fields": {
-        "submissions": {
-          "id": true,
-        }
-      }
-    }, function (response) {
+    $scope.queues = Queue.get(function (response) {
       $scope.num_submissions = 0;
-
-      if (response.length > 0) {
-        for (var i = 0; i < response.length; i++) {
-          $scope.num_submissions += response[i].submissions.length;
+      res = response['results']
+      if (res.length > 0) {
+        for (var i = 0; i < res.length; i++) {
+          $scope.num_submissions += res[i].submissions.length;
         }
       } else {
         $scope.num_submissions = 0;
@@ -753,24 +752,20 @@ app.controller("QueueModuleController", ["$scope", "Queue",
 app.controller("QueueListCtrl", ['$scope', 'Queue',
   function($scope, Queue) {
     /* TODO: Fields to this query */
-    $scope.queues = Queue.query();
+     Queue.get(function (response) {
+        $scope.queues = response['results']
+      });
+     $scope.refresh = function () {
+      Queue.pull(function (response) {
+          $scope.queues = response['results']
+       });
+     }
   }]);
 
 app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
   function($scope, Queue, $window, $state) {
 
     $scope.queues = Queue.query({
-      "fields": {
-        "assignment": {
-          "id": true,
-          "display_name": true
-        },
-        "assigned_staff": true,
-        "submissions": {
-          "id": true,
-        },
-        'id': true
-      },
       "assigned_staff": $window.user
     });
 
@@ -779,14 +774,16 @@ app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParams", "$sessionStorage",
   function ($scope, Queue, Submission, $stateParams, $sessionStorage) {
     $scope.$storage = $sessionStorage;
-    $scope.queue = Queue.get({
+    Queue.pull({
       id: $stateParams.queueId
     }, function (result) {
+      $scope.queue = result;
       result['submissions'].sort(function(a, b) {
         return a.id - b.id;
       });
       $scope.$storage.currentQueue = JSON.stringify(result);
       $scope.submList = result['submissions'];
     });
+
 
   }]);

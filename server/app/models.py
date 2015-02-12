@@ -713,6 +713,8 @@ class Comment(Base):
 
     @classmethod
     def _can(cls, user, need, comment=None, query=None):
+        if user.is_admin:
+          return True
         if need.action in ["get", "modify", "delete"]:
             return comment.author == user.key
         return False
