@@ -151,6 +151,10 @@ class UserMergeTest(BaseUnitTest):
     def test_no_resubmit(self):
         user_obj, user_obj2 = self.get_user_pair()
 
+        calls = [0]
+        def resubmit(*args):
+            calls[0] += 1
+
         self.merge_user(user_obj, user_obj2)
         self.assertEqual(calls[0], 0)
 
@@ -170,6 +174,16 @@ class UserMergeTest(BaseUnitTest):
 
         self.merge_user(user_obj, user_obj2)
         self.assertEqual(calls[0], 0)
+
+    def test_audit_log(self):
+        user_obj, user_obj2 = self.get_user_pair()
+
+        self.merge_user(user_obj, user_obj2)
+        log = models.AuditLog.query(
+            models.AuditLog.event_type == "Merge user").get()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.user, user_obj.key)
+        self.assertEqual(log.obj, user_obj2.key)
 
 
 class UserUniquenessTest(BaseUnitTest):
