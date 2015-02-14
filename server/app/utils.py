@@ -295,7 +295,7 @@ def merge_user(user_key, dup_user_key):
     if isinstance(user_key, ModelProxy.Base):
         user = user_key
         user_key = user_key.key
-        get_user = lambda: dup_user
+        get_user = lambda: user
     else:
         user = user_key.get_async()
         def get_user():
@@ -330,8 +330,6 @@ def merge_user(user_key, dup_user_key):
 
     dup_user = get_dup_user()
     # Change email
-    # Right now, I just append the hash of their key, which should be
-    # something they can't guess... Maybe make it more secure??
     new_emails = [email + email for email in dup_user.email]
 
     user = get_user()

@@ -68,13 +68,13 @@ class UserMergeTest(BaseUnitTest):
         user = self.get_basic_user()
         user2 = self.get_basic_user()
         if typ == "upper":
-            user2.email[0]= user2.email[0][0].upper() + user2.email[0][1:]
+            user2.email[0] = user2.email[0][0].upper() + user2.email[0][1:]
             user2.put()
 
         return (user, user2)
 
 
-    def merge_user(self, usera, userb):
+    def merge_user(self, usera, userb): #pylint: disable=no-self-use
         utils.merge_user(usera, userb)
 
     def test_merge_user_lowercase(self):
@@ -90,6 +90,21 @@ class UserMergeTest(BaseUnitTest):
 
         self.assertNotEqual(user_obj_upper.email[0], new_email)
         self.assertNotIn(new_email, user_obj.email)
+
+    def test_merge_user_email(self):
+        """
+        Tests that the emails of two users gets merged correctly.
+        """
+        user_obj, user_obj2 = self.get_user_pair()
+        new_email = user_obj2.email[0] = '123' + user_obj.email[0]
+        user_obj2.put()
+
+        self.merge_user(user_obj, user_obj2)
+        user_obj = user_obj.key.get()
+        user_obj2 = user_obj2.key.get()
+
+        self.assertNotEqual(user_obj2.email[0], new_email)
+        self.assertIn(new_email, user_obj.email)
 
     def test_leave_group(self):
         """
@@ -115,6 +130,46 @@ class UserMergeTest(BaseUnitTest):
         group = group.key.get()
         self.assertIsNotNone(group)
         self.assertNotIn(user_obj2.key, group.member)
+
+    def test_resubmit(self):
+        user_obj, user_obj2 = self.get_user_pair()
+        calls = [0]
+        def resubmit(*args):
+            calls[0] += 1
+
+        self.mock(models.Submission, 'resubmit', resubmit)
+
+        backup = models.Backup()
+        backup.submitter = user_obj2.key
+        backup.put()
+        subm = models.Submission(backup=backup.key)
+        subm.put()
+
+        self.merge_user(user_obj, user_obj2)
+        self.assertNotEqual(calls[0], 0)
+
+    def test_no_resubmit(self):
+        user_obj, user_obj2 = self.get_user_pair()
+
+        self.merge_user(user_obj, user_obj2)
+        self.assertEqual(calls[0], 0)
+
+    def test_no_resubmit_other_user(self):
+        user_obj, user_obj2 = self.get_user_pair()
+        calls = [0]
+        def resubmit(*args):
+            calls[0] += 1
+
+        self.mock(models.Submission, 'resubmit', resubmit)
+
+        backup = models.Backup()
+        backup.submitter = user_obj.key
+        backup.put()
+        subm = models.Submission(backup=backup.key)
+        subm.put()
+
+        self.merge_user(user_obj, user_obj2)
+        self.assertEqual(calls[0], 0)
 
 
 class UserUniquenessTest(BaseUnitTest):
