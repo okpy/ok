@@ -19,7 +19,7 @@ def authenticate():
     authenticator = app.config["AUTHENTICATOR"]
     user = users.get_current_user()
     if user:
-        return models.User.get_or_insert(user.email())
+        return models.User.get_or_insert(user.email().lower())
 
     if 'access_token' not in request.args:
         return models.User.get_or_insert("<anon>")

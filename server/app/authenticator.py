@@ -38,7 +38,7 @@ class GoogleAuthenticator(Authenticator):
             raise AuthenticationException("access token invalid")
         if 'email' not in response:
             raise AuthenticationException("email doesn't exist")
-        return response['email']
+        return response['email'].lower()
 
 class TestingAuthenticator(Authenticator):
     """

@@ -299,9 +299,7 @@ def merge_user(user_key, dup_user_key):
     else:
         user = user_key.get_async()
         def get_user():
-            if isinstance(user, ndb.Future):
-                user = user.get_result()
-            return user
+            return user.get_result()
 
     if isinstance(dup_user_key, ModelProxy.Base):
         dup_user = dup_user_key
@@ -310,9 +308,7 @@ def merge_user(user_key, dup_user_key):
     else:
         dup_user = dup_user_key.get_async()
         def get_dup_user():
-            if isinstance(dup_user, ndb.Future):
-                dup_user = dup_user.get_result()
-            return dup_user
+            return dup_user.get_result()
 
     # Leave all groups
     G = ModelProxy.Group

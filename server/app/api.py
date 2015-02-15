@@ -19,6 +19,7 @@ from app.codereview import compare
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
 from app.utils import add_to_grading_queues, parse_date, assign_submission
+from app.utils import merge_user
 
 from app.exceptions import *
 
@@ -447,7 +448,13 @@ class UserAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True)
             }
-        }
+        },
+        'merge_user': {
+            'methods': set(['POST']),
+            'web_args': {
+                'other_email': Arg(str, required=True),
+            }
+        },
     }
 
     def get(self, obj, user, data):
@@ -587,6 +594,22 @@ class UserAPI(APIResource):
 
     def get_submissions(self, obj, user, data):
         return obj.get_backups(data['assignment'])
+
+    def merge_user(self, obj, user, data):
+        """
+        Merges this user with another user.
+        This user is the user that is "merged" -- no longer can login.
+        """
+        need = Need('merge')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        other_user = models.User.lookup(data['other_email'])
+        if not other_user:
+            raise BadValueError("Invalid user to merge to")
+
+        merge_user(obj, other_user)
+
 
 class AssignmentAPI(APIResource):
     """
