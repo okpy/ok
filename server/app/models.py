@@ -10,6 +10,7 @@ import datetime
 from app import app
 from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
 from app.exceptions import *
+from app import utils
 from flask import json
 from flask.json import JSONEncoder as old_json
 
@@ -298,6 +299,7 @@ class User(Base):
     @classmethod
     def get_or_insert(cls, email):
         """Retrieve a user by email or create that user."""
+        email = email.lower()
         user = cls.lookup(email)
         if user:
             return user
@@ -310,6 +312,7 @@ class User(Base):
     def lookup(cls, email):
         """Retrieve a user by email or return None."""
         assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
+        email = email.lower()
         users = cls.query(cls.email == email).fetch()
         if not users:
             return None
@@ -326,6 +329,9 @@ class User(Base):
 
         if need.action == "lookup":
             return True
+        elif need.action == "merge":
+            # TODO(soumya) figure out how to make permissions for this
+            return False
         if need.action == "get":
             if not obj or not isinstance(obj, User):
                 return False
@@ -348,6 +354,7 @@ class User(Base):
         """Ensure that a user can be accessed by at least one email."""
         if not self.email:
             raise BadValueError("No email associated with " + str(self))
+        #utils.check_user(self.key.id())
 
 class Course(Base):
     """Courses are expected to have a unique offering."""
@@ -401,7 +408,7 @@ class Assignment(Base):
     due_date = ndb.DateTimeProperty()
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
-        lambda a: a.lock_date and datetime.datetime.now() <= a.lock_date)
+        lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
     # TODO Add services requested
 
     @classmethod
@@ -645,9 +652,8 @@ class Submission(Base):
     assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
 
-    def mark_as_final(self):
-        """Create or update a final submission."""
-        assignment = self.backup.get().assignment
+    def get_final(self):
+        assignment = self.assignment
         group = self.submitter.get().get_group(assignment)
         submitter = self.submitter
         if group:
@@ -658,14 +664,47 @@ class Submission(Base):
             final = FinalSubmission.query(
                 FinalSubmission.assignment==assignment,
                 FinalSubmission.submitter==submitter).get()
+        return final
+
+    def mark_as_final(self):
+        """Create or update a final submission."""
+        final = self.get_final()
+
         if final:
             final.submitter = self.submitter
             final.submission = self.key
         else:
-            final = FinalSubmission(assignment=assignment, submission=self.key)
+            group = self.submitter.get().get_group(self.assignment)
+            final = FinalSubmission(
+                assignment=self.assignment, submission=self.key)
             if group:
                 final.group = group.key
         final.put()
+
+    def resubmit(self, user_key):
+        """
+        Resubmits this submission as being submitted by |user|.
+        """
+        old_backup = self.backup.get()
+        new_backup = Backup(
+            submitter=user_key,
+            assignment=self.assignment,
+            client_time=old_backup.client_time,
+            server_time=old_backup.server_time,
+            messages=old_backup.messages,
+            tags=old_backup.tags)
+        new_backup_key = new_backup.put()
+        new_subm = Submission(
+            backup=new_backup_key,
+            score=self.score,
+            server_time=self.server_time)
+        new_subm_key = new_subm.put_async()
+
+        final = self.get_final()
+        if final:
+            final.submitter = user_key
+            final.submission = new_subm_key.get_result()
+            final.put()
 
     @classmethod
     def _can(cls, user, need, submission, query):
