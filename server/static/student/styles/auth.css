@@ -40,3 +40,21 @@ a {
 	.button:hover {
 		background-color:rgba(255, 147, 38, 0.8);
 	}
+.center-container {
+    
+}
+.center {
+    text-align:center;
+}
+
+
+
+.center * + * {
+    margin-top:20px;
+}
+
+.auth-title, .auth-subtitle { width:100% }
+
+.auth-title {
+    font-size:4em;
+}
