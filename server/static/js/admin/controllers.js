@@ -114,6 +114,10 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       }
     });
     $scope.storage = $sessionStorage
+    $scope.hideEmpty = true;
+    $scope.toggleBlank = function () {
+      $scope.hideEmpty = !$scope.hideEmpty;
+    }
 
     if ($scope.storage.currentQueue) {
       var queue = JSON.parse($scope.storage.currentQueue);
@@ -551,7 +555,7 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
         Submission.addComment({
           id: $scope.backupId,
           file: $scope.file_name,
-          index: $scope.codeline.rightNum,
+          index: $scope.codeline.rightNum - 1,
           message: text,
         }, function (resp) {
           resp.self = true

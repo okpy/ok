@@ -9,7 +9,7 @@
         <div ng-repeat='tag in submission.tags'>
           <span class="badge bg-info">{{tag}}</span>
         </div>
-        <br> 
+        <br>
   </div>
 
   <div class="box box-primary" ng-if="submission.compScore != null">
@@ -31,11 +31,11 @@
         <br>
         <div class="btn-group">
           <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
-          <button class="btn btn-flat btn-info" ui-sref='submission.detail({submissionId:submission.id})'> 
-            <i class="fa fa-fw fa-code"></i> View Plain           
+          <button class="btn btn-flat btn-info" ui-sref='submission.detail({submissionId:submission.id})'>
+            <i class="fa fa-fw fa-code"></i> View Plain
           </button>
 
-          <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.id}}/download'> 
+          <a class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.id}}/download'>
             <i class="fa fa-fw fa-cloud-download"></i> Download </button>
         </div>
 
