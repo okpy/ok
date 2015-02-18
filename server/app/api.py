@@ -880,11 +880,7 @@ class SubmissionAPI(APIResource):
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            if 'scheme.py' in diff_obj.diff.keys():
-                logging.debug('Deleting existing scheme submission')
-                diff_obj.key.delete()
-            else:
-                return diff_obj
+            return diff_obj
 
         diff = {}
         templates = obj.assignment.get().templates
@@ -894,7 +890,6 @@ class SubmissionAPI(APIResource):
 
         templates = json.loads(templates)
         if type(templates) == unicode:
-            logging.debug('performing ast')
             templates = ast.literal_eval(templates)
 
         for filename, contents in file_contents.items():
