@@ -555,7 +555,7 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
         Submission.addComment({
           id: $scope.backupId,
           file: $scope.file_name,
-          index: $scope.codeline.rightNum,
+          index: $scope.codeline.rightNum - 1,
           message: text,
         }, function (resp) {
           resp.self = true
