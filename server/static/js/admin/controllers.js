@@ -114,6 +114,10 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       }
     });
     $scope.storage = $sessionStorage
+    $scope.hideEmpty = true;
+    $scope.toggleBlank = function () {
+      $scope.hideEmpty = !$scope.hideEmpty;
+    }
 
     if ($scope.storage.currentQueue) {
       var queue = JSON.parse($scope.storage.currentQueue);

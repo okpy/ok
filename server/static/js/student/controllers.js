@@ -56,6 +56,7 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 
 app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
   function($scope, $window, $location, $stateParams, $timeout, $anchorScroll, Submission) {
+     $scope.diff = Submission.diff({id: $stateParams.submissionId});
      Submission.get({id: $stateParams.submissionId}, function (response) {
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId;
