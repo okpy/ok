@@ -16,7 +16,10 @@ class JobMapper(Mapper):
         self.set_filters(filters)
 
     def map(self, entity):
-        map_result = self.job_mapper(entity)
+        try:
+            map_result = self.job_mapper(entity)
+        except:
+            raise deferred.PermanentTaskFailure()
         self.job_dump.map_result.append(map_result)
         self.job_dump.map_count += 1
         self.job_dump.put()
@@ -32,7 +35,10 @@ class JobReducer(object):
         self.job_reducer = job_reducer
 
     def run(self, map_result):
-        reduce_result = self.job_reducer(map_result)
+        try:
+            reduce_result = self.job_reducer(map_result)
+        except:
+            raise deferred.PermanentTaskFailure()
         self.job_dump.result = {
             'result': reduce_result
         }
