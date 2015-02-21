@@ -14,7 +14,7 @@ from webargs import Arg
 from webargs.flaskparser import FlaskParser
 from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 
-from app import models, app
+from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
@@ -1529,3 +1529,15 @@ class FinalSubmissionAPI(APIResource):
 
         return score
 
+class AnalyticsDumpAPI(APIResource):
+    """
+    The API resource for the Assignment Object
+    """
+    model = analytics.AnalyticsDump
+
+    methods = {
+        'get': {
+        },
+        'index': {
+        },
+    }

@@ -57,11 +57,13 @@ class Mapper(object):
         """Returns a query over the specified kind, with any appropriate filters applied."""
         q = self.kind.query()
         for filter in self.filters:
-            q = q.filter(filter)
+            q = q.filter(ndb.query.FilterNode(*filter))
         for order in self.orders:
             q = q.order(order)
-
         return q
+
+    def set_filters(self, filters):
+        self.filters = filters
 
     def run(self, batch_size=100, initial_data=None):
         if initial_data is None:

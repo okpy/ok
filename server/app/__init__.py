@@ -15,6 +15,7 @@ from app import utils
 from app import exceptions
 from app import api
 from app import auth
+import app.analytics as analytics
 from app.seed import seed, is_seeded
 
 DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
