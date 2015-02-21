@@ -59,7 +59,7 @@ class Job(object):
 
     def _run(self):
         self.job_dump.update_status('mapping')
-        self.job_mapper.run(1)
+        self.job_mapper.run()
         self.job_dump.update_status('reducing')
         self.job_reducer.run(self.job_dump.map_result)
         self.job_dump.update_status('done')
