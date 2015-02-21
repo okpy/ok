@@ -1531,7 +1531,7 @@ class FinalSubmissionAPI(APIResource):
 
 class AnalyticsDumpAPI(APIResource):
     """
-    The API resource for the Assignment Object
+    The API resource for the AnalyticsDump Object
     """
     model = analytics.AnalyticsDump
 
