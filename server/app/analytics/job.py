@@ -87,6 +87,7 @@ class Job(object):
             self.clean_up()
             self.job_dump.error = '%s: %s' % (e.job_type, e.message)
             self.job_dump.update_status('failed')
+            raise deferred.PermanentTaskFailure()
 
     def clean_up(self):
         self.job_dump.map_result = None
