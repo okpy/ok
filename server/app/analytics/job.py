@@ -84,7 +84,7 @@ class AnalyticsDump(Base):
 
     def update_status(self, status):
         self.status = status
-        self.put()
+        self.put_async()
 
     @classmethod
     def _can(cls, user, need, obj, query):
