@@ -3,6 +3,15 @@ from app.analytics.mapper import Mapper
 from app.models import Base
 
 
+class JobException(Exception):
+    """
+    Represents an Exception that happens in a Mapper or Reducer.
+    """
+
+    def __init__(self, message, job_type):
+        self.message = message
+        self.job_type = job_type
+
 class JobMapper(Mapper):
     """
     A wrapper class for the NDB Mapper that stores
@@ -18,8 +27,8 @@ class JobMapper(Mapper):
     def map(self, entity):
         try:
             map_result = self.job_mapper(entity)
-        except:
-            raise deferred.PermanentTaskFailure()
+        except Exception as e:
+            raise JobException(e.message, "map")
         self.job_dump.map_result.append(map_result)
         self.job_dump.map_count += 1
         self.job_dump.put()
@@ -37,8 +46,8 @@ class JobReducer(object):
     def run(self, map_result):
         try:
             reduce_result = self.job_reducer(map_result)
-        except:
-            raise deferred.PermanentTaskFailure()
+        except Exception as e:
+            raise JobException(e.message, "reduce")
         self.job_dump.result = {
             'result': reduce_result
         }
@@ -52,10 +61,11 @@ class Job(object):
     The user of this object needs to specify a mapper and
     a reducer over entities.
     """
-    def __init__(self, kind, mapper, reducer, filters):
+    def __init__(self, kind, mapper, reducer, filters, save_output=False):
         self.job_dump = AnalyticsDump()
         self.job_mapper = JobMapper(kind, self.job_dump, mapper, filters)
         self.job_reducer = JobReducer(self.job_dump, reducer)
+        self.save_output = save_output
 
     def start(self):
         self.job_dump.initialize()
@@ -65,10 +75,21 @@ class Job(object):
 
     def _run(self):
         self.job_dump.update_status('mapping')
-        self.job_mapper.run()
-        self.job_dump.update_status('reducing')
-        self.job_reducer.run(self.job_dump.map_result)
-        self.job_dump.update_status('done')
+        try:
+            self.job_mapper.run()
+            self.job_dump.update_status('error')
+            self.job_dump.update_status('reducing')
+            self.job_reducer.run(self.job_dump.map_result)
+            if not self.save_output:
+                self.clean_up()
+            self.job_dump.update_status('done')
+        except JobException as e:
+            self.clean_up()
+            self.job_dump.error = '%s: %s' % (e.job_type, e.message)
+            self.job_dump.update_status('failed')
+
+    def clean_up(self):
+        self.job_dump.map_result = None
 
 
 class AnalyticsDump(Base):
@@ -77,6 +98,7 @@ class AnalyticsDump(Base):
     map_count = ndb.IntegerProperty()
     result = ndb.JsonProperty()
     status = ndb.StringProperty()
+    error = ndb.StringProperty()
 
     def initialize(self):
         self.map_result = []
@@ -84,10 +106,12 @@ class AnalyticsDump(Base):
 
     def update_status(self, status):
         self.status = status
-        self.put_async()
+        self.put()
 
     @classmethod
     def _can(cls, user, need, obj, query):
-        if user.is_admin:
-            return True
-        return False
+        if not user.is_admin:
+            return False
+        if need.action == "index":
+            return query
+        return True
