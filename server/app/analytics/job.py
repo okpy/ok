@@ -1,3 +1,5 @@
+import time
+
 from google.appengine.ext import ndb, deferred
 from app.analytics.mapper import Mapper
 from app.models import Base
@@ -61,6 +63,13 @@ class Job(object):
     The user of this object needs to specify a mapper and
     a reducer over entities.
     """
+    FAILURE = "failure"
+    SUCCESS = "success"
+
+    MAPPING = "mapping"
+    REDUCING = "reducing"
+
+
     def __init__(self, kind, mapper, reducer, filters, save_output=False):
         self.job_dump = AnalyticsDump()
         self.job_mapper = JobMapper(kind, self.job_dump, mapper, filters)
@@ -70,23 +79,35 @@ class Job(object):
     def start(self):
         self.job_dump.initialize()
         self.job_dump.update_status('starting')
-        deferred.defer(self._run)
-        return self.job_dump
+        result = deferred.defer(self._run)
+        return result
+
+    def wait(self, poll_time=1):
+        # Hacky polling implementation, but not sure of a better way
+        status = self.get_status()
+        while status != self.FAILURE and status != self.SUCCESS:
+            time.sleep(poll_time)
+            status = self.get_status()
+
+    def get_status(self):
+        return self.get_dump().status
+
+    def get_dump(self):
+        return self.job_dump.key.get()
 
     def _run(self):
-        self.job_dump.update_status('mapping')
+        self.job_dump.update_status(self.MAPPING)
         try:
             self.job_mapper.run()
-            self.job_dump.update_status('error')
-            self.job_dump.update_status('reducing')
+            self.job_dump.update_status(self.REDUCING)
             self.job_reducer.run(self.job_dump.map_result)
             if not self.save_output:
                 self.clean_up()
-            self.job_dump.update_status('done')
+            self.job_dump.update_status(self.SUCCESS)
         except JobException as e:
             self.clean_up()
             self.job_dump.error = '%s: %s' % (e.job_type, e.message)
-            self.job_dump.update_status('failed')
+            self.job_dump.update_status(self.FAILURE)
             raise deferred.PermanentTaskFailure()
 
     def clean_up(self):

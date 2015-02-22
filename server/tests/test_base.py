@@ -72,6 +72,7 @@ class BaseTestCase(unittest.TestCase):
         self.testbed.init_user_stub()
         self.testbed.init_memcache_stub()
         self.testbed.init_taskqueue_stub()
+        self.taskqueue_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
         self._mocks = []
 
     def tearDown(self): #pylint: disable=invalid-name, missing-docstring
