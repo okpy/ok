@@ -40,6 +40,7 @@ class Mapper(object):
 
         Implementers should return a tuple containing two iterables (to_update, to_delete).
         """
+        raise NotImplementedError
 
     def init(self):
         # initialize variables
