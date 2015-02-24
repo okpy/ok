@@ -7,15 +7,19 @@ import logging
 from google.appengine.ext import deferred, ndb
 from google.appengine.runtime import DeadlineExceededError
 
+from app.needs import Need
+
 
 class Mapper(object):
 
-    def __init__(self, use_cache=False):
+    def __init__(self, kind, user, use_cache=False):
+
         ndb.get_context().set_cache_policy(use_cache)
         if not use_cache:
             ndb.get_context().clear_cache()
 
-        self.kind = None
+        self.kind = kind
+        self.user = user
         self.to_put = []
         self.to_delete = []
         self.terminate = False
@@ -26,6 +30,7 @@ class Mapper(object):
         self.filters = []
         self.orders = []
         self.keys_only = False
+        self.initial_query = None
         # implement init for different initializations
         self.init()
 
@@ -56,7 +61,7 @@ class Mapper(object):
 
     def get_query(self):
         """Returns a query over the specified kind, with any appropriate filters applied."""
-        q = self.kind.query()
+        q = self.kind.can(self.user, Need('index'), query=self.kind.query())
         for filter in self.filters:
             q = q.filter(ndb.query.FilterNode(*filter))
         for order in self.orders:

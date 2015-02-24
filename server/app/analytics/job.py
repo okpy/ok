@@ -2,7 +2,7 @@ import time
 
 from google.appengine.ext import ndb, deferred
 from app.analytics.mapper import Mapper
-from app.models import Base
+from app.models import Base, User
 
 
 class JobException(Exception):
@@ -19,9 +19,8 @@ class JobMapper(Mapper):
     A wrapper class for the NDB Mapper that stores
     map results in an NDB AnalyticsDump in addition to just mapping.
     """
-    def __init__(self, kind, job_dump, job_mapper, filters):
-        super(JobMapper, self).__init__()
-        self.kind = kind
+    def __init__(self, kind, user, job_dump, job_mapper, filters):
+        super(JobMapper, self).__init__(kind, user)
         self.job_dump = job_dump
         self.job_mapper = job_mapper
         self.set_filters(filters)
@@ -34,6 +33,7 @@ class JobMapper(Mapper):
         self.job_dump.map_result.append(map_result)
         self.job_dump.map_count += 1
         self.job_dump.put()
+
 
 
 class JobReducer(object):
@@ -70,9 +70,11 @@ class Job(object):
     REDUCING = "reducing"
 
 
-    def __init__(self, kind, mapper, reducer, filters, save_output=False):
-        self.job_dump = AnalyticsDump()
-        self.job_mapper = JobMapper(kind, self.job_dump, mapper, filters)
+    def __init__(self, kind, user, mapper, reducer, filters, save_output=False):
+        self.kind = kind
+        self.user = user
+        self.job_dump = AnalyticsDump(owner=user.key)
+        self.job_mapper = JobMapper(kind, user, self.job_dump, mapper, filters)
         self.job_reducer = JobReducer(self.job_dump, reducer)
         self.save_output = save_output
 
@@ -121,6 +123,7 @@ class AnalyticsDump(Base):
     result = ndb.JsonProperty()
     status = ndb.StringProperty()
     error = ndb.StringProperty()
+    owner = ndb.KeyProperty(User)
 
     def initialize(self):
         self.map_result = []
@@ -132,8 +135,10 @@ class AnalyticsDump(Base):
 
     @classmethod
     def _can(cls, user, need, obj, query):
-        if not user.is_admin:
-            return False
         if need.action == "index":
-            return query
-        return True
+            return query.filter(AnalyticsDump.owner == user.key)
+        if need.action == "create":
+            return True
+        if need.action == "get":
+            return obj.owner == user.key
+        return False
