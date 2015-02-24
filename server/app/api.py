@@ -1564,7 +1564,7 @@ class AnalyticsAPI(APIResource):
 
     def post(self, user, data):
 
-        need = Need('get')
+        need = Need('create')
 
         if not self.model.can(user, need, None):
             raise need.exception()

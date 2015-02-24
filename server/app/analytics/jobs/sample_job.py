@@ -1,5 +1,6 @@
 from app import models
-from app.analytics import Job
+
+KIND = models.User
 
 def mapper(entity):
     return entity.email
@@ -7,5 +8,3 @@ def mapper(entity):
 def reducer(map_result):
     return len(map_result)
 
-def get_job(user, filters=[]):
-    return Job(models.User, user, mapper, reducer, filters=filters)
