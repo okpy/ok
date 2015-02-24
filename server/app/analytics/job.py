@@ -9,10 +9,10 @@ class JobException(Exception):
     """
     Represents an Exception that happens in a Mapper or Reducer.
     """
-
     def __init__(self, message, job_type):
         self.message = message
         self.job_type = job_type
+
 
 class JobMapper(Mapper):
     """
@@ -35,7 +35,6 @@ class JobMapper(Mapper):
         self.job_dump.put()
 
 
-
 class JobReducer(object):
     """
     A class that performs a reduce job on a map result
@@ -55,6 +54,7 @@ class JobReducer(object):
         }
         self.job_dump.put()
 
+
 class Job(object):
     """
     A class that represents a map-reduce job over some sort of
@@ -68,7 +68,6 @@ class Job(object):
 
     MAPPING = "mapping"
     REDUCING = "reducing"
-
 
     def __init__(self, kind, user, mapper, reducer, filters, save_output=False):
         self.kind = kind
