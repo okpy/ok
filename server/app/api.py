@@ -714,7 +714,7 @@ class SubmitNDBImplementation(object):
         if not assignments:
             by_name = models.Assignment.name == name
             assignments = list(models.Assignment.query().filter(by_name))
-            memcache.put(mc_key, assignments)
+            memcache.set(mc_key, assignments)
         return assignments
 
     def create_submission(self, user, assignment, messages, submit, submitter):
