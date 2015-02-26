@@ -1,6 +1,6 @@
 <div class="screen" ng-controller="AssignmentDashController">
 
-  <div class="assign " ng-class="{active: assign.assignment.active, inactive: !assign.assignment.active, small: !assign.assignment.active, large: assign.assignment.active }" id="1" ng-repeat="assign in assignments">
+  <div class="assign " ng-class="{active: assign.assignment.active, inactive: !assign.assignment.active, small: !assign.assignment.active, large: assign.assignment.active }" id="1" ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
     <div class="assign-main">
       <a class="score" ng-click="showComposition(assign.final.submission.score[0])" ng-if="assign.final.submission && assign.final.submission.score.length > 0" ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'>
         {{ assign.final.submission.score[0].score}}
