@@ -69,9 +69,13 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
      }, function (response) {
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId;
+        if (response.messages.file_contents['submit']) {
+          delete $scope.submission.messages.file_contents['submit'];
+          $scope.isSubmit = true;
+        }
+
         if ($scope.submission.messages && $scope.submission.messages.file_contents['submit'] && $scope.submission.active) {
           $scope.isSubmit = true;
-          delete $scope.submission.messages.file_contents['submit'];
           Submission.diff({id: $stateParams.submissionId},
             function(results) {
             $scope.diff = results;
@@ -84,17 +88,17 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
                     commentList = $scope.diff.comments[key];
                     file = code[key];
                     html = "";
-                    console.log(commentList)
-
-                    for (i=0;i<file.split('\n').length;i++) {
-                        comments = '';
-                        if (commentList[i]) { // Ugly hack. Replace with TR based approach!
-                            comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' wrote: </h3> <p>' +
-                                $scope.convertMarkdown(commentList[i][0].message)+'</p>' + commEnd
-                        }
-                        html += '<div class="line">'+(i+1)+comments+'</div>';
+                    if (file === file.toString()) {
+                      for (i=0;i<file.split('\n').length;i++) {
+                          comments = '';
+                          if (commentList[i]) { // Ugly hack. Replace with TR based approach!
+                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' wrote: </h3> <p>' +
+                                  $scope.convertMarkdown(commentList[i][0].message)+'</p>' + commEnd
+                          }
+                          html += '<div class="line">'+(i+1)+comments+'</div>';
+                      }
+                      numbers.push(html);
                     }
-                    numbers.push(html);
                 }
             }
 
@@ -114,18 +118,14 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
                 if (code.hasOwnProperty(key)) {
                     comments = {}; // change this to ACTUAL dictionary of comments
                     file = code[key];
-                    html = "";
-                    if (file) {
+                    if (file && file === file.toString()) {
+                        html = "";
                         for (i=0;i<file.split('\n').length;i++) {
-                        comments = '';
-                        if (i % 15 == 0) { // modify condition
-                        }
-                        html += '<div class="line">'+(i+1)+comments+'</div>';
-                    }
-
-                    }
-                  numbers.push(html);
-
+                            comments = '';
+                            html += '<div class="line">'+(i+1)+comments+'</div>';
+                         }
+                        numbers.push(html);
+                      }
                 }
             }
 
