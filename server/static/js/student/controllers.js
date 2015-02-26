@@ -69,7 +69,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
      }, function (response) {
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId;
-        if ($scope.submission.messages && $scope.submission.messages.file_contents['submit']) {
+        if ($scope.submission.messages && $scope.submission.messages.file_contents['submit'] && $scope.submission.active) {
           $scope.isSubmit = true;
           delete $scope.submission.messages.file_contents['submit'];
           Submission.diff({id: $stateParams.submissionId},
@@ -170,11 +170,11 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           User.get({
             course: $stateParams.courseId,
           }, function (response) {
-            $scope.assignments = response.assignments
+            $scope.assignments = response.assignments;
             $scope.hideLoader()
           }, function (error) {
             $scope.hideLoader()
-            $window.swal('Unknown Course', 'Whoops.', 'error');
+            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
       }

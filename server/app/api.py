@@ -889,7 +889,7 @@ class SubmissionAPI(APIResource):
 
         diff = {}
         templates = obj.assignment.get().templates
-        if not templates:
+        if not templates or templates == {}:
             raise BadValueError('no templates for assignment, \
                                 please contact course staff')
 
