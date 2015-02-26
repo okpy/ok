@@ -709,8 +709,13 @@ class SubmitNDBImplementation(object):
         :param name: (string) name to search for
         :return: (list) assignments
         """
-        by_name = models.Assignment.name == name
-        return list(models.Assignment.query().filter(by_name))
+        mc_key = 'assignments_{}'.format(name)
+        assignments = memcache.get(mc_key)
+        if not assignments:
+            by_name = models.Assignment.name == name
+            assignments = list(models.Assignment.query().filter(by_name))
+            memcache.set(mc_key, assignments)
+        return assignments
 
     def create_submission(self, user, assignment, messages, submit, submitter):
         """
@@ -1060,6 +1065,7 @@ class SubmissionAPI(APIResource):
             raise a validation error
         """
         assignments = self.db.lookup_assignments_by_name(name)
+
         if not assignments:
             raise BadValueError('Assignment \'%s\' not found' % name)
         if len(assignments) > 1:
