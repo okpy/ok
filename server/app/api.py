@@ -898,9 +898,12 @@ class SubmissionAPI(APIResource):
             templates = ast.literal_eval(templates)
 
         for filename, contents in file_contents.items():
-            temp = templates[filename]
-            if type(templates[filename]) == list:
-                temp = templates[filename][0]
+            if filename in templates:
+                temp = templates[filename]
+                if type(templates[filename]) == list:
+                    temp = templates[filename][0]
+            else:
+                temp = ""
             diff[filename] = compare.diff(temp, contents)
 
         diff = self.diff_model(id=obj.key.id(),
