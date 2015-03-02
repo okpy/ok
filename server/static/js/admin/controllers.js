@@ -770,7 +770,7 @@ app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
   function($scope, Queue, $window, $state) {
 
     $scope.queues = Queue.query({
-      "assigned_staff": $window.user
+      "owner": $window.user
     });
 
   }]);
