@@ -14,7 +14,7 @@
   <table id="queuetable" ts-wrapper ng-if="queues.length > 0" class="table table-responsive table-striped table-bordered">
     <thead>
       <tr>
-        <th ts-criteria="assignment.display_name" ts-default>Assignment</th>
+        <th ts-criteria="assignment.id.display_name" ts-default>Assignment</th>
         <th>Staff</th>
         <th ts-criteria="graded | parseInt">Graded</th>
         <th ts-criteria="count | parseInt">Total Submissions</th>
@@ -64,7 +64,7 @@
   <table id="queuetable" ts-wrapper ng-if="queues.length > 0" class="table table-responsive table-striped table-bordered">
     <thead>
       <tr>
-        <th ts-criteria="assignment.display_name" ts-default>Assignment</th>
+        <th ts-criteria="assignment.id.display_name" ts-default>Assignment</th>
         <th>Staff</th>
         <th ts-criteria="graded | parseInt">Graded</th>
         <th ts-criteria="count | parseInt">Total Submissions</th>
