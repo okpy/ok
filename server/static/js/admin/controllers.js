@@ -114,7 +114,7 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       }
     });
     $scope.storage = $sessionStorage
-    $scope.hideEmpty = true;
+    $scope.hideEmpty = false;
     $scope.toggleBlank = function () {
       $scope.hideEmpty = !$scope.hideEmpty;
     }
