@@ -23,7 +23,7 @@
       <td>
         <div ng-if="queue.assigned_staff.length > 0">
           <div ng-repeat="user in queue.assigned_staff">
-            {{user.id}} {{$last ? '' : ', '}}
+            {{user.email[0]}} {{$last ? '' : ', '}}
           </div>
         </div>
         <div ng-if="queue.assigned_staff.length <= 0">
