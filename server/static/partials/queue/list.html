@@ -75,7 +75,7 @@
 
     <tr ng-repeat="queue in queues" ng-if="queue.graded == queue.count" ts-repeat>
       <td>
-        {{queue.assignment.display_name}}
+        {{queue.assignment.id.display_name}}
       </td>
       <td>
         <div ng-if="queue.assigned_staff.length > 0">
