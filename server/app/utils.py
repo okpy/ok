@@ -370,8 +370,7 @@ def unique_final_submission(user):
     submissions = FS.query(FS.submitter == user.key).fetch()
     for lst in sort_by_assignment(key_func, submissions):
         if len(lst) > 1:
-            lst.sort(key=lambda subm: subm.server_time)
-            lst = lst[1:]
+            lst = sorted(lst, key=lambda subm: subm.server_time)[1:]
             for subm in lst:
                 subm.key.delete()
 
