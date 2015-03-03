@@ -1463,7 +1463,8 @@ class QueueAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment'),
                 'assigned_staff': KeyArg('User'),
-                }
+                'owner': KeyArg('User'),
+            }
         },
         }
 
