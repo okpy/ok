@@ -14,7 +14,7 @@ from webargs import Arg
 from webargs.flaskparser import FlaskParser
 from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 
-from app import models, app
+from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
@@ -47,6 +47,20 @@ def parse_json_field(field):
         return field
     return json.loads(field)
 
+def parse_json_list_field(field):
+    """
+    Parses field or returns appropriate boolean value.
+
+    :param field: (string)
+    :return: (string) parsed JSON
+    """
+    if not field[0] == '[':
+        if field == 'false':
+            return False
+        elif field == 'true':
+            return True
+        return field
+    return json.loads(field)
 # Arguments to convert query strings to a python type
 
 def DateTimeArg(**kwds):
@@ -1539,3 +1553,47 @@ class FinalSubmissionAPI(APIResource):
 
         return score
 
+class AnalyticsAPI(APIResource):
+    """
+    The API resource for the AnalyticsDump Object
+    """
+    model = analytics.AnalyticsDump
+
+    methods = {
+        'get': {
+        },
+        'index': {
+        },
+        'post': {
+            'web_args': {
+                'job_type': Arg(str, required=True),
+                'filters': Arg(None, use=parse_json_list_field, required=True),
+            }
+        },
+    }
+
+    def post(self, user, data):
+
+        need = Need('create')
+
+        if not self.model.can(user, need, None):
+            raise need.exception()
+
+        job_type, filters = data['job_type'], data['filters']
+
+        if not isinstance(filters, list):
+            raise BadValueError('filters must be a list of triples')
+        for filter in filters:
+            if len(filter) != 3:
+                raise BadValueError('filters must be a list of triples')
+
+        if job_type not in analytics.available_jobs:
+            raise BadValueError('job must be of the following types: %s' %
+                                ', '.join(list(analytics.available_jobs.keys())))
+
+        job = analytics.get_job(job_type, user, filters)
+        job.start()
+
+        return (201, 'success', {
+            'key': job.job_dump.key.id()
+        })
