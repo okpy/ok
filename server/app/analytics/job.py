@@ -135,9 +135,13 @@ class AnalyticsDump(Base):
     @classmethod
     def _can(cls, user, need, obj, query):
         if need.action == "index":
+            if user.is_admin:
+                return query
             return query.filter(AnalyticsDump.owner == user.key)
         if need.action == "create":
             return True
         if need.action == "get":
+            if user.is_admin:
+                return True
             return obj.owner == user.key
         return False
