@@ -212,6 +212,10 @@ def register_api(view, endpoint, url):
                 rval = utils.create_api_response(200, message, rval)
             return rval
 
+        except IncorrectVersionError as e:
+            logging.warn(e.message)
+            return utils.create_api_response(e.code, e.message, e.data)
+
         except APIException as e:
             logging.exception(e.message)
             return utils.create_api_response(e.code, e.message, e.data)
