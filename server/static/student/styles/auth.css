@@ -6,8 +6,8 @@
 	font-weight:300;
 	position:relative;
 }
-html,body,h1,h2,h3,h4,h5,h6,header,section,article,footer { width:100% }
-html,body { height:100% }
+html,body,h1,h2,h3,h4,h5,h6,header,section,article,footer,.center-container { width:100% }
+html,body,.center-container { min-height:100% }
 h1,h2,h3,h4,h5,h6 { font-weight:lighter; text-align:center; }
 a, c, br { float:none }
 b { font-weight:700 }
@@ -40,14 +40,17 @@ a {
 	.button:hover {
 		background-color:rgba(255, 147, 38, 0.8);
 	}
-.center-container {
-    
-}
+
 .center {
-    text-align:center;
+	width:800px;
+	height:200px;
+	position:absolute;
+	top:50%;
+	right:50%;
+	margin-top:-100px;
+	margin-right:-400px;
+	text-align:center;
 }
-
-
 
 .center * + * {
     margin-top:20px;
