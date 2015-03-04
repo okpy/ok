@@ -74,7 +74,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           $scope.isSubmit = true;
         }
 
-        if ($scope.submission.messages && $scope.submission.messages.file_contents['submit'] && $scope.submission.active) {
+        if ($scope.submission.messages && $scope.isSubmit && !$scope.submission.assignment.active) {
           $scope.isSubmit = true;
           Submission.diff({id: $stateParams.submissionId},
             function(results) {
