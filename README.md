@@ -14,12 +14,13 @@ Installation
 -------------
 
 Before installation, ensure that:
-1. The default Python installation is Python2.
+* The default Python installation is Python2.
   - To temporarily symlink the `python` command to Python2, run `rm /usr/bin/python; sudo ln -s /usr/bin/python2.7 /usr/bin/python`
-2. Ok directory's absolute path does *not* have spaces.
+* Ok directory's absolute path does *not* have spaces.
   - From your Ok directory, run `pwd` to see its full path.
   - In effect, the *installation* will not work in Google Drive or iCloud; the server may be subsequently run in the cloud.
 
+To install:
 * Clone this repo
 * Install [Google App Engine SDK](https://developers.google.com/appengine/downloads) and add it to your `$PATH`. You can do `brew install google-app-engine` on a mac.
 * `export GAE_SDK=<location of unzipped GAE SDK>`
