@@ -494,18 +494,26 @@ body.course {
 		.logo img {
 			float:left;
 		}
+	.tools {
+		z-index:3000;
+	}
 	.tools li {
 		color:#FFF;
-		text-transform:uppercase;
-	 list-style-type: none;
+		font-weight:600;
+	 	list-style-type: none;
+	 	padding:30px 20px;
+	 	background-color:#003f7d;
 	}
+		.tools li:last-child {
+			background-color:#0059B2;
+		}
 		.tools li .stripes {
 			float:right;
 			opacity:1;
 			margin:5px 0 0 7px;
 		}
-		.tools li + li {
-			margin-left:15px;
+		.show-menu {
+			font-weight:600;
 		}
 	aside {
 		width:18%;
@@ -623,7 +631,6 @@ body.course {
 		position:fixed;
 		top:0;
 		right:0;
-		padding:40px 50px;
 	}
 	section {
 		width:80%;
