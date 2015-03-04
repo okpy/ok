@@ -325,6 +325,8 @@ class User(Base):
         if not user.logged_in:
             return False
         if user.is_admin:
+            if need.action == "index":
+                return query
             return True
 
         if need.action == "lookup":

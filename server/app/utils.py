@@ -326,7 +326,6 @@ def merge_user(user_key, dup_user_key):
 
     dup_user = get_dup_user()
     # Change email
-    new_emails = [email + email for email in dup_user.email]
 
     user = get_user()
     lowered_emails = [email.lower() for email in user.email]
@@ -334,7 +333,7 @@ def merge_user(user_key, dup_user_key):
         if email.lower() not in lowered_emails:
             user.email.append(email.lower())
 
-    dup_user.email = new_emails
+    dup_user.email = [email + email for email in dup_user.email]
     dup_user.put_async()
     user.put_async()
 
@@ -342,7 +341,7 @@ def merge_user(user_key, dup_user_key):
     log.event_type = "Merge user"
     log.user = user_key
     log.description = "Merged user {} with {}. Merged emails {}".format(
-        dup_user_key.id(), user_key.id(), get_dup_user().email)
+        dup_user_key.id(), user_key.id(), dup_user.email)
     log.obj = dup_user_key
     log.put_async()
 
@@ -371,8 +370,7 @@ def unique_final_submission(user):
     submissions = FS.query(FS.submitter == user.key).fetch()
     for lst in sort_by_assignment(key_func, submissions):
         if len(lst) > 1:
-            lst.sort(key=lambda subm: subm.server_time)
-            lst = lst[1:]
+            lst = sorted(lst, key=lambda subm: subm.server_time)[1:]
             for subm in lst:
                 subm.key.delete()
 

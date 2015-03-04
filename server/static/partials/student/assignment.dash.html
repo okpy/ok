@@ -1,12 +1,12 @@
 <div class="screen" ng-controller="AssignmentDashController">
 
-  <div class="assign large active" id="1" ng-repeat="assign in assignments">
+  <div class="assign " ng-class="{active: assign.assignment.active, inactive: !assign.assignment.active, small: !assign.assignment.active, large: assign.assignment.active }" id="1" ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
     <div class="assign-main">
-      <div class="score">
-        {{ assign.assignment.score || '--'}}
-        <span class="score-total">/{{::assign.assignment.points}}</span>
-        <span class="score-pts">pts</span>
-      </div>
+      <a class="score" ng-click="showComposition(assign.final.submission.score[0])" ng-if="assign.final.submission && assign.final.submission.score.length > 0" ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'>
+        {{ assign.final.submission.score[0].score}}
+        <span class="score-total">/2</span>
+        <span class="score-pts">Comp.</span>
+      </a>
       <img class="assign-bg" src="/static/student/images/bg-clock.png">
        <h2 class="assign-title"> {{ ::assign.assignment.display_name }}</h2>
       <div class="assign-deck">
@@ -18,22 +18,6 @@
     <p class="assign-status" ng-if="!assign.final.final_submission">Not submitted yet</p>
     <p class="assign-status positive" ng-if="assign.final.final_submission">Assignment submitted!</p>
 
-    <div class="assign-progress" ng-if="assign.assignment.display_name == 'Hog' && assign.final.final_submission && assign.winrate">
-      <div class="assign-bar">
-        <span class="assign-fill" ng-class="{'positive': assign.winrate.percent >= 56, 'partial': assign.winrate.percent >= 54 && assign.winrate.percent < 56}" ng-style="{'width' : assign.winrate.progress+'%'}"></span>
-      </div>
-      <p class="fullWidth">
-        <p class="assign-label" ng-if="assign.winrate.percent"> {{assign.winrate.percent}}% - </p>
-        <p class="assign-label" ng-if="assign.winrate.message"> {{ assign.winrate.message }}</p>
-      </p>
-      <br> <br> <br>
-      <p class="assign-minilabel">
-        <a href="http://hog.cs61a.org/" class="link" ng-if="assign.winrate.percent < 56"> Experiment with more strategies at hog.cs61a.org</p>
-      </p>
-    </div>
-    <a class="assign-expand" ng-if="assign.assignment.display_name == 'Hog' && assign.final.final_submission && !assign.winrate" ng-click="winRate(assign, assign.final.backup.id)">
-      <p>Calculate Win Rate</p>
-    </a>
 
     <div class="assign-more" ng-show="currAssign == assign">
       <div class="assign-text">
@@ -79,7 +63,8 @@
           <div class="col right">
             <div ng-if="assign.final.final_submission">
               <h3 class="assign-subtitle"  >Latest Submission</h3>
-              <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+              <a ng-hide="assign.final.submission.score"  ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+              <a ng-if="assign.final.submission.score"  ng-click="showComposition(assign.final.submission.score[0])" ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
             </div>
 
             <h3 class="assign-subtitle" ng-if="!assign.submissions" >No Submissions</h3>

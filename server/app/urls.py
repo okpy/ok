@@ -212,6 +212,10 @@ def register_api(view, endpoint, url):
                 rval = utils.create_api_response(200, message, rval)
             return rval
 
+        except IncorrectVersionError as e:
+            logging.warn(e.message)
+            return utils.create_api_response(e.code, e.message, e.data)
+
         except APIException as e:
             logging.exception(e.message)
             return utils.create_api_response(e.code, e.message, e.data)
@@ -235,3 +239,4 @@ register_api(api.GroupAPI, 'group_api', 'group')
 register_api(api.UserAPI, 'user_api', 'user')
 register_api(api.QueueAPI, 'queue_api', 'queue')
 register_api(api.FinalSubmissionAPI, 'final_submission_api', 'final_submission')
+register_api(api.AnalyticsAPI, 'analytics_api', 'analytics')

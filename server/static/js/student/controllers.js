@@ -54,20 +54,90 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 
 
 
-app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
-  function($scope, $window, $location, $stateParams, $timeout, $anchorScroll, Submission) {
-     Submission.get({id: $stateParams.submissionId}, function (response) {
+app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams', '$sce', '$timeout', '$anchorScroll', 'Submission',
+  function($scope, $window, $location, $stateParams, $sce, $timeout, $anchorScroll, Submission) {
+      var converter = new Showdown.converter();
+      $scope.convertMarkdown = function(text) {
+        if (text == "" || text === undefined) {
+          return $sce.trustAsHtml("")
+        }
+        return $sce.trustAsHtml(converter.makeHtml(text));
+      }
+
+     Submission.get({
+      id: $stateParams.submissionId
+     }, function (response) {
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId;
-        if ($scope.submission.messages && $scope.submission.messages.file_contents['submit']) {
-          $scope.isSubmit = true;
+        if (response.messages.file_contents['submit']) {
           delete $scope.submission.messages.file_contents['submit'];
+          $scope.isSubmit = true;
         }
-        $timeout(function() {
-          $('code').each(function(i, block) {
-            hljs.highlightBlock(block);
-          });
-        }, 100);
+
+        if ($scope.submission.messages && $scope.isSubmit && !$scope.submission.assignment.active) {
+          $scope.isSubmit = true;
+          Submission.diff({id: $stateParams.submissionId},
+            function(results) {
+            $scope.diff = results;
+            numbers = [];
+            code = $scope.submission.messages.file_contents;
+            commStart = '<div class="comment-template"><div class="comment"><span class="comment-icon"></span><div class="comment-content"><div class="comment-text">';
+            commEnd = '</div></div></div></div>';
+            for (var key in code) {
+                if ($scope.diff.comments[key]) {
+                    commentList = $scope.diff.comments[key];
+                    file = code[key];
+                    html = "";
+                    if (file === file.toString()) {
+                      for (i=0;i<file.split('\n').length;i++) {
+                          comments = '';
+                          if (commentList[i]) { // Ugly hack. Replace with TR based approach!
+                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' wrote: </h3> <p>' +
+                                  $scope.convertMarkdown(commentList[i][0].message)+'</p>' + commEnd
+                          }
+                          html += '<div class="line">'+(i+1)+comments+'</div>';
+                      }
+                      numbers.push(html);
+                    }
+                }
+            }
+
+            $('code').each(function(i, block) {
+                $(this).parent().find('.num-cont ul').html(numbers.shift());
+                hljs.highlightBlock(block);
+            });
+
+            });
+        } else {
+          $timeout(function() {
+
+            numbers = [];
+            code = $scope.submission.messages.file_contents;
+
+            for (var key in code) {
+                if (code.hasOwnProperty(key)) {
+                    comments = {}; // change this to ACTUAL dictionary of comments
+                    file = code[key];
+                    if (file && file === file.toString()) {
+                        html = "";
+                        for (i=0;i<file.split('\n').length;i++) {
+                            comments = '';
+                            html += '<div class="line">'+(i+1)+comments+'</div>';
+                         }
+                        numbers.push(html);
+                      }
+                }
+            }
+
+
+              $('code').each(function(i, block) {
+                $(this).parent().find('.num-cont ul').html(numbers.shift());
+                  hljs.highlightBlock(block);
+              });
+          }, 100);
+
+        }
+
       }, function (error) {
         $window.swal("Uhoh", "There was an error!", "error");
       });
@@ -100,15 +170,19 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           User.get({
             course: $stateParams.courseId,
           }, function (response) {
-            $scope.assignments = response.assignments
+            $scope.assignments = response.assignments;
             $scope.hideLoader()
           }, function (error) {
             $scope.hideLoader()
-            $window.swal('Unknown Course', 'Whoops.', 'error');
+            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
       }
-
+      $scope.showComposition = function(score) {
+        if (score) {
+          $window.swal('Score: '+score.score+'/2', 'Message: ' + score.message, 'info');
+        }
+      }
       $scope.reloadView = function () {
         // oldToggle = $scope.currAssign.id
         $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
