@@ -14,7 +14,7 @@ from webargs import Arg
 from webargs.flaskparser import FlaskParser
 from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 
-from app import models, app
+from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip
@@ -47,6 +47,20 @@ def parse_json_field(field):
         return field
     return json.loads(field)
 
+def parse_json_list_field(field):
+    """
+    Parses field or returns appropriate boolean value.
+
+    :param field: (string)
+    :return: (string) parsed JSON
+    """
+    if not field[0] == '[':
+        if field == 'false':
+            return False
+        elif field == 'true':
+            return True
+        return field
+    return json.loads(field)
 # Arguments to convert query strings to a python type
 
 def DateTimeArg(**kwds):
@@ -709,8 +723,13 @@ class SubmitNDBImplementation(object):
         :param name: (string) name to search for
         :return: (list) assignments
         """
-        by_name = models.Assignment.name == name
-        return list(models.Assignment.query().filter(by_name))
+        mc_key = 'assignments_{}'.format(name)
+        assignments = memcache.get(mc_key)
+        if not assignments:
+            by_name = models.Assignment.name == name
+            assignments = list(models.Assignment.query().filter(by_name))
+            memcache.set(mc_key, assignments)
+        return assignments
 
     def create_submission(self, user, assignment, messages, submit, submitter):
         """
@@ -880,27 +899,25 @@ class SubmissionAPI(APIResource):
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if diff_obj:
-            if 'scheme.py' in diff_obj.diff.keys():
-                logging.debug('Deleting existing scheme submission')
-                diff_obj.key.delete()
-            else:
-                return diff_obj
+            return diff_obj
 
         diff = {}
         templates = obj.assignment.get().templates
-        if not templates:
+        if not templates or templates == {}:
             raise BadValueError('no templates for assignment, \
                                 please contact course staff')
 
         templates = json.loads(templates)
         if type(templates) == unicode:
-            logging.debug('performing ast')
             templates = ast.literal_eval(templates)
 
         for filename, contents in file_contents.items():
-            temp = templates[filename]
-            if type(templates[filename]) == list:
-                temp = templates[filename][0]
+            if filename in templates:
+                temp = templates[filename]
+                if type(templates[filename]) == list:
+                    temp = templates[filename][0]
+            else:
+                temp = ""
             diff[filename] = compare.diff(temp, contents)
 
         diff = self.diff_model(id=obj.key.id(),
@@ -1065,6 +1082,7 @@ class SubmissionAPI(APIResource):
             raise a validation error
         """
         assignments = self.db.lookup_assignments_by_name(name)
+
         if not assignments:
             raise BadValueError('Assignment \'%s\' not found' % name)
         if len(assignments) > 1:
@@ -1459,7 +1477,8 @@ class QueueAPI(APIResource):
             'web_args': {
                 'assignment': KeyArg('Assignment'),
                 'assigned_staff': KeyArg('User'),
-                }
+                'owner': KeyArg('User'),
+            }
         },
         }
 
@@ -1534,3 +1553,47 @@ class FinalSubmissionAPI(APIResource):
 
         return score
 
+class AnalyticsAPI(APIResource):
+    """
+    The API resource for the AnalyticsDump Object
+    """
+    model = analytics.AnalyticsDump
+
+    methods = {
+        'get': {
+        },
+        'index': {
+        },
+        'post': {
+            'web_args': {
+                'job_type': Arg(str, required=True),
+                'filters': Arg(None, use=parse_json_list_field, required=True),
+            }
+        },
+    }
+
+    def post(self, user, data):
+
+        need = Need('create')
+
+        if not self.model.can(user, need, None):
+            raise need.exception()
+
+        job_type, filters = data['job_type'], data['filters']
+
+        if not isinstance(filters, list):
+            raise BadValueError('filters must be a list of triples')
+        for filter in filters:
+            if len(filter) != 3:
+                raise BadValueError('filters must be a list of triples')
+
+        if job_type not in analytics.available_jobs:
+            raise BadValueError('job must be of the following types: %s' %
+                                ', '.join(list(analytics.available_jobs.keys())))
+
+        job = analytics.get_job(job_type, user, filters)
+        job.start()
+
+        return (201, 'success', {
+            'key': job.job_dump.key.id()
+        })

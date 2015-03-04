@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <title>ok dashboard</title>
-        <!-- Student --> 
+        <!-- Student -->
         <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +20,7 @@
         <link href="/static/vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet"></link>
         <link href="/static/vendor/sweetalert/lib/sweet-alert.css" rel="stylesheet"></link>
         <link href="/static/vendor/angular-tablesort/tablesort.css" rel="stylesheet"></link>
-        
+
         <script src="/static/vendor/jquery/dist/jquery.min.js"></script>
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js" type="text/javascript"></script>
 
@@ -42,7 +42,7 @@
         <script src="/static/vendor/moment/moment.js"></script>
         <script src="/static/vendor/moment-timezone/moment-timezone.js"></script>
         <script src="/static/vendor/angular-moment/angular-moment.js"></script>
-        <script src="/static/vendor/showdown/compressed/showdown.js"></script>
+        <script src="/static/vendor/showdown/compressed/Showdown.min.js"></script>
         <script src="/static/vendor/sweetalert/lib/sweet-alert.min.js"></script>
         <script src="/static/vendor/angular-tablesort/js/angular-tablesort.js"></script>
 
@@ -89,15 +89,15 @@
                                       <!-- Menu Body -->
                                       <li class="user-body">
                                           <div class="col-xs-4 text-center">
-                                                <!-- Very bad linking --> 
+                                                <!-- Very bad linking -->
                                                 <a id="submissions-button" ui-sref="submission.list">Submissions</a>
                                           </div>
                                           <div class="col-xs-4 text-center">
-                                                  <!-- Very bad linking --> 
+                                                  <!-- Very bad linking -->
                                                   <a id="assignments-button" ui-sref="assignment.list">Assignments</a>
                                           </div>
                                           <div class="col-xs-4 text-center">
-                                                  <!-- Very bad linking --> 
+                                                  <!-- Very bad linking -->
                                                   <a id="assignments-button" ui-sref="course.list">Course</a>
                                           </div>
                                       </li>
@@ -115,7 +115,7 @@
                           {% else %}
                           <li class="user">
                               <a href={{users_link}}>Login</a>
-                          </li> 
+                          </li>
                           {% endif %}
                     </ul>
                 </div>

@@ -23,7 +23,7 @@
           <button type="button" class="btn btn-flat btn-info" ng-hide="hideEmpty" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Collapse Code</button>
           <button type="button" class="btn btn-flat btn-info" ng-show="hideEmpty" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
 
-          <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.id}}/download'> 
+          <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.id}}/download'>
             <i class="fa fa-fw fa-cloud-download"></i> Download </button>
         </div>
   </div>
@@ -32,7 +32,7 @@
   <div ng-repeat="(file_name, contents) in diff.diff">
     <diff/>
   </div>
-  
+
   <div class="box box-primary">
 	    <div class="box-header">
 	        <h3 class="box-title">Grading</h3>
@@ -53,7 +53,7 @@
                     <label>Message</label>
                     <textarea class="form-control" rows="3" required name="compMessage" ng-model="compMessage" placeholder="Your Comments/Feedback."></textarea>
                 </div>
- 
+
            	 	<button type="submit" class="btn btn-primary">Submit</button>
         	</form>
     	</div>

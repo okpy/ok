@@ -7,7 +7,8 @@ app.factory('User', ['$resource',
         get: {
           transformResponse: function(data) {
             return JSON.parse(data).data;
-          }
+          },
+          cache: true
         },
         create: {
           method: "POST",
