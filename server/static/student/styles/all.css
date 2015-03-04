@@ -1284,6 +1284,7 @@ body.course {
 		width:20px;
 		margin:3px 10px 0 -10px;
 		opacity:0.15;
+		cursor:pointer;
 	}
 		.stripe {
 			width:100%;
