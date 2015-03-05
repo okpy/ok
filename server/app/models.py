@@ -1164,3 +1164,23 @@ class FinalSubmission(Base):
     def _pre_put_hook(self):
         # TODO Remove when submitter is a computed property
         self.submitter = self.submission.get().submitter
+
+class Notification(Base):
+    """
+    Notification for a course.
+    """
+    message = ndb.StringProperty()
+    URL = ndb.StringProperty()
+    count = ndb.FloatProperty()
+    expiration = ndb.DateTimeProperty()
+    course = ndb.KeyProperty(Course)
+    written = ndb.DateTimeProperty()
+
+    @classmethod
+    def _can(cls, user, need, course, query):
+        action = need.action
+        if action == "add":
+            if user.is_admin:
+                return True
+            return user.key in course.staff
+        return False

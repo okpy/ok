@@ -1640,7 +1640,7 @@ class NotificationsAPI(APIResource):
         }
     }
 
-    def latest(self, user, data):
+    def latest(self, course, user, data):
         pass
     
     def add(self, course, user, data):
