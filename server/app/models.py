@@ -1187,10 +1187,7 @@ class Notification(Base):
     count = ndb.FloatProperty()
     expiration = ndb.DateTimeProperty()
     course = ndb.KeyProperty(Course)
-<<<<<<< HEAD
     status = ndb.IntegerProperty()
-=======
->>>>>>> fd7c160... added Notification model
     written = ndb.DateTimeProperty()
 
     @classmethod

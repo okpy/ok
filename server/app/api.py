@@ -1652,8 +1652,14 @@ class NotificationsAPI(APIResource):
         'index': {
         },
         'clean': {
+            'web_args': {
+                'message': Arg(str, required=True),
+                'url': Arg(str),
+                'course': KeyArg('Course', required=True),
+                'expiration': Arg(datetime)
+            }
         },
-        'remove': {
+        'read': {
         }
     }
 
@@ -1684,7 +1690,11 @@ class NotificationsAPI(APIResource):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 5197a8b... method args, add method
         notification = models.Notification(
             message=data['message'],
             url=data['url'],
@@ -1692,6 +1702,7 @@ class NotificationsAPI(APIResource):
             expiration=data['expiration'])
         
         notification.put()
+<<<<<<< HEAD
     
     def read(self, obj, user, data):
         # implementation not complete
@@ -1701,6 +1712,9 @@ class NotificationsAPI(APIResource):
     
     def notifications(self, user, data):
         pass
+=======
+>>>>>>> 5197a8b... method args, add method
     
-    def remove(self, user, data):
+    def read(self, obj, user, data):
+        
         pass
