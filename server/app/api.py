@@ -1627,16 +1627,24 @@ class NotificationsAPI(APIResource):
     model = models.Notification
     
     methods = {
-        'put': {
+        'add': {
+            'methods': set(['POST']),
             'web_args': {
-                
+                'message': Arg(str, required=True),
+                'url': Arg(str),
+                'course': KeyArg('Course', required=True),
+                'expiration': Arg(datetime)
             }
         },
-        'index': {
+        'latest': {
+            'methods': set(['PUT']),
+            'web_args': {
+                'course': KeyArg('Course', required=True),
+                'start': Arg(int),
+                'count': Arg(int)
+            }
         },
-        'clean': {
-        },
-        'remove': {
+        'read': {
         }
     }
 
@@ -1655,13 +1663,15 @@ class NotificationsAPI(APIResource):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
-        # implementation not complete
+        
+        notification = models.Notification(
+            message=data['message'],
+            url=data['url'],
+            course=course.key,
+            expiration=data['expiration'])
+        
+        notification.put()
     
-    def clean(self, user, data):
-        pass
-    
-    def notifications(self, user, data):
-        pass
-    
-    def remove(self, user, data):
+    def read(self, obj, user, data):
+        
         pass
