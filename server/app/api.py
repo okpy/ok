@@ -1645,6 +1645,15 @@ class NotificationsAPI(APIResource):
             }
         },
         'read': {
+        },
+        'put': {
+               'web_args': {}
+               },
+        'index': {
+        },
+        'clean': {
+        },
+        'remove': {
         }
     }
 
@@ -1662,6 +1671,9 @@ class NotificationsAPI(APIResource):
             models.Notification.course == course.id)
 
         return list(query.fetch())
+
+    def latest(self, user, data):
+        pass
     
     def add(self, course, user, data):
         """
@@ -1675,7 +1687,7 @@ class NotificationsAPI(APIResource):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
-        
+
         notification = models.Notification(
             message=data['message'],
             url=data['url'],
@@ -1685,5 +1697,13 @@ class NotificationsAPI(APIResource):
         notification.put()
     
     def read(self, obj, user, data):
-        
+        # implementation not complete
+    
+    def clean(self, user, data):
+        pass
+    
+    def notifications(self, user, data):
+        pass
+    
+    def remove(self, user, data):
         pass
