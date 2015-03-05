@@ -149,7 +149,7 @@ header {
 h1.title {
 	font-size:3.1em;
 	font-family:'Raleway';
-	font-weight:100;
+	font-weight:200;
 	color:#FFF;
 	-webkit-animation: fade-in-2 1s ease;
   	-moz-animation:    fade-in-2 1s ease;
@@ -160,7 +160,7 @@ h1.title {
 	color:#FFF;
 	width:100%;
 	padding:20px 0;
-	font-weight:600;
+	font-weight:700;
 	letter-spacing:2px;
 	font-size:0.75em;
 	text-transform:uppercase;
@@ -302,7 +302,7 @@ footer {
 footer h3 {
 	text-transform:uppercase;
 	font-size:1em;
-	font-weight:600;
+	font-weight:700;
 	margin-bottom:10px;
 }
 	footer p {
