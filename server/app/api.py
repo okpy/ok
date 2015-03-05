@@ -1572,6 +1572,7 @@ class FinalSubmissionAPI(APIResource):
 
         return score
 
+
 class AnalyticsAPI(APIResource):
     """
     The API resource for the AnalyticsDump Object
@@ -1616,3 +1617,51 @@ class AnalyticsAPI(APIResource):
         return (201, 'success', {
             'key': job.job_dump.key.id()
         })
+
+
+class NotificationsAPI(APIResource):
+    """
+    The API resource for Notifications
+    """
+    
+    model = models.Notification
+    
+    methods = {
+        'put': {
+            'web_args': {
+                
+            }
+        },
+        'index': {
+        },
+        'clean': {
+        },
+        'remove': {
+        }
+    }
+
+    def latest(self, user, data):
+        pass
+    
+    def add(self, course, user, data):
+        """
+        Adds a new notification to the database.
+        
+        :param course: target course 
+        :param user: user making the call
+        :param data: passed in via URL queries
+        :return: 
+        """
+        need = Need('staff')
+        if not course.can(user, need, course):
+            raise need.exception()
+        # implementation not complete
+    
+    def clean(self, user, data):
+        pass
+    
+    def notifications(self, user, data):
+        pass
+    
+    def remove(self, user, data):
+        pass
