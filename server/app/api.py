@@ -1671,9 +1671,6 @@ class NotificationsAPI(APIResource):
             models.Notification.course == course.id)
 
         return list(query.fetch())
-
-    def latest(self, user, data):
-        pass
     
     def add(self, course, user, data):
         """
