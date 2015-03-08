@@ -135,6 +135,8 @@
           {% if user %}
           <script>
             window.user = "{{user.email}}";
+            window.keyId = "{{user.keyId}}";
+            window.userId = "{{user.id}}";
             window.reloginLink = "{{relogin_link}}";
           </script>
 

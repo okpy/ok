@@ -136,7 +136,7 @@ def admin():
 
         if userobj.is_admin or userobj.key.id() in all_staff:
             logging.info("Staff Login Success from %s", user.email())
-            params["user"] = {'email': user.email()}
+            params["user"] = {'id': user.user_id(), 'keyId': userobj.key.id(), 'email' : user.email()}
             params["admin"] = {'email': user.email()}
             params['users_link'] = users.create_logout_url('/')
             params['users_title'] = "Log Out"

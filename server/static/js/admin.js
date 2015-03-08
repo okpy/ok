@@ -64,6 +64,14 @@ app.directive('userqueueList', function() {
     });
 
 
+app.directive('staffList', function() {
+        return {
+            restrict: 'E',
+            controller: "StaffListCtrl",
+            templateUrl: '/static/partials/admin/staff.list.html',
+        };
+    });
+
 
 
 app.config(['$stateProvider', '$urlRouterProvider',

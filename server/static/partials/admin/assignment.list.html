@@ -10,23 +10,33 @@
   <tr>
     <th ts-criteria="display_name">Name</th>
     <th ts-criteria="due_date" ts-default>Due Date</th>
-    <!-- Future Progress Bar --> 
+    <th ts-criteria="active" ts-default>Active</th>
+    <th ts-criteria="lock_date" ts-default>Lock Date</th>
+    <!-- Future Progress Bar -->
     <th ts-criteria="points | parseFloat">Points</th>
-    <th style="width: 15%">Label</th>
+    <th style="width: 15%">Endpoint</th>
   </tr>
 
     <tr ng-repeat="assignment in assignments" ts-repeat>
       <td>
-        <a ui-sref='assignment.detail({assignmentId:assignment.id})'>{{assignment.display_name}} </a> 
+        <a ui-sref='assignment.detail({assignmentId:assignment.id})'>{{assignment.display_name}} </a>
       </td>
       <td>
         {{assignment.due_date | amCalendar}}
       </td>
+      <td>
+        <span ng-show="assignment.active">Yes</span>
+        <span ng-hide="assignment.active">No</span>
+      </td>
+      <td>
+        {{assignment.lock_date | amCalendar}}
+      </td>
+
       <td>{{assignment.points}}</td>
       <td>
-        <span class="badge bg-info">{{assignment.display_name}}</span>
+        <span class="badge bg-info">{{assignment.name}}</span>
       </td>
-        <!-- Future Progress Bar -->                                         
+        <!-- Future Progress Bar -->
         </tr>
       </tbody>
     </table>

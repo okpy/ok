@@ -1,3 +1,13 @@
+  <section class="content-header">
+      <ol class="breadcrumb">
+          <li><a ui-sref="queue.list"><i class="fa fa-list "> </i> All Staff Queues </a></li>
+          <li ng-if="queueId"><a ui-sref="queue.detail({queueId:queueId})"><i class="fa fa-inbox"></i> Grading Queue</a> </li>
+          <li ng-if="!queueId"><a ui-sref="queue.list"><i class="fa fa-inbox"></i> Course Queues</a> </li>
+          <li class="active"><i class="fa fa-file-code-o "> </i> Grading Submission </a></li>
+
+      </ol>
+  </section>
+
 <div>
   <div class="center-block">
     <h2>Submission: {{submission.created | amCalendar}} </h2>
@@ -21,7 +31,6 @@
       <div class="center-block">
 
         <div class="btn-group">
-        <button type="button" class="btn btn-flat btn-info" ui-sref="queue.detail({queueId:queueId})" ><i class="fa fa-fw fa-list"></i> Go To Queue</button>
           <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()" ng-show="hideEmpty"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
           <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()" ng-hide="hideEmpty"><i class="fa fa-fw fa-arrows-v"></i> Collapse Code</button>
           <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.backup.id}}/download'>
