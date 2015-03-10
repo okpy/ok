@@ -11,7 +11,7 @@
     <h3 class="box-title" ng-if="assignments.$resolved && assignments.length == 0" >No Assignments</h3>
     <h3 class="box-title" ng-if="assignments.length > 0">Assignments</h3>
     <div class="box-tools" style="float:right;">
-      <button class="btn btn-primary" ui-sref="assignment.new"> <i class="fa fa-plus"></i> Create Assignment</a>
+      <button class="btn btn-primary" ui-sref="assignment.create"> <i class="fa fa-plus"></i> Create Assignment</a>
     </div>
 
   </div><!-- /.box-header -->
@@ -21,11 +21,11 @@
     <tbody>
     <tr>
       <th ts-criteria="display_name">Name</th>
-      <th ts-criteria="due_date" ts-default>Due Date</th>
       <th ts-criteria="active" ts-default>Active</th>
-      <th ts-criteria="lock_date" ts-default>Lock Date</th>
-      <!-- Future Progress Bar -->
       <th ts-criteria="points | parseFloat">Points</th>
+      <th ts-criteria="due_date" ts-default>Due Date</th>
+      <th ts-criteria="lock_date">Lock Date</th>
+      <!-- Future Progress Bar -->
       <th style="width: 15%">Endpoint</th>
     </tr>
 
@@ -34,17 +34,17 @@
           <a ui-sref='assignment.detail({assignmentId:assignment.id})'>{{assignment.display_name}} </a>
         </td>
         <td>
-          {{assignment.due_date | amCalendar}}
-        </td>
-        <td>
           <span ng-show="assignment.active">Yes</span>
           <span ng-hide="assignment.active">No</span>
+        </td>
+        <td>{{assignment.points}}</td>
+        <td>
+          {{assignment.due_date | amCalendar}}
         </td>
         <td>
           {{assignment.lock_date | amCalendar}}
         </td>
 
-        <td>{{assignment.points}}</td>
         <td>
           <span class="badge bg-info">{{assignment.name}}</span>
         </td>
