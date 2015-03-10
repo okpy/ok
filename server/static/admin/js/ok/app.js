@@ -1,4 +1,4 @@
-// <= IE8 Doesn't have indexOf. This patch isn't used currently. 
+// <= IE8 Doesn't have indexOf. This patch isn't used currently.
 var indexOf = function(needle) {
     if(typeof Array.prototype.indexOf === 'function') {
         indexOf = Array.prototype.indexOf;
@@ -20,7 +20,7 @@ var indexOf = function(needle) {
     return indexOf.call(this, needle);
 };
 
-// Customize the time format. 
+// Customize the time format.
 moment.locale('en', {
     // customizations
     calendar : {

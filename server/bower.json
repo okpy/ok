@@ -47,7 +47,8 @@
     "angular-tablesort": "~1.0.5",
     "moment-timezone": "~0.3.0",
     "jquery-ui": ">=1.10.3",
-    "angular-ui-sortable": "~0.13.3"
+    "angular-ui-sortable": "~0.13.3",
+    "bootstrap-timepicker": "~0.2.6"
   },
   "devDependencies": {
     "sparkline": "http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js",
