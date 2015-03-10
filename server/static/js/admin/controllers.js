@@ -51,6 +51,42 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
     $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
   }
   ]);
+
+app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $stateParams, Assignment, Course) {
+    $scope.existingAssign = Assignment.get({id: $stateParams.assignmentId});
+    $scope.newAssign = {
+      'due_time': '23:59:59.0000',
+      'max_group_size': 2
+    };
+    Course.get({}, function(resp) {
+        $scope.courses = resp.results;
+        $scope.newAssign.course = $scope.courses[0];
+    });
+
+    $scope.createAssign = function () {
+        var due_date_time = $scope.newAssign.due_date + ' ' + $scope.newAssign.due_time
+        Assignment.create({
+          'display_name': $scope.newAssign.display_name,
+          'name': $scope.newAssign.endpoint,
+          'points': $scope.newAssign.points,
+          'max_group_size': $scope.newAssign.max_group_size,
+          'templates': {},
+          'due_date': due_date_time,
+          'course': $scope.newAssign.course.id,
+        },
+          function (response) {
+            $window.swal("Assignment Created!",'','success');
+          }, function (error) {
+            console.log('error')
+            $window.swal("Could not create assignment",'There was an error','error');
+
+          }
+        )
+
+    }
+  }
+  ]);
 app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
   function ($scope, $state, Submission) {
     $scope.itemsPerPage = 3;
@@ -770,7 +806,7 @@ app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
   function($scope, Queue, $window, $state) {
 
     $scope.queues = Queue.query({
-      "owner": $window.user
+      "owner": $window.keyId
     });
 
   }]);

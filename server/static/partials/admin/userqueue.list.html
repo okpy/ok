@@ -1,45 +1,55 @@
-<div class="box" ng-controller="UserQueueListCtrl">
-<div class="box-header">
-  <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >You have no queues!</h3>
-  <h3 class="box-title" ng-if="queues.length > 0">My Queue</h3>
-</div><!-- /.box-header -->
+<div ng-controller="UserQueueListCtrl">
+  <section class="content-header" ng-hide="hideComplete">
+      <ol class="breadcrumb" >
+          <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+          <li><a ui-sref="queue.list"><i class="fa fa-archive"></i> All Queues </a></li>
+          <li class="active"><i class="fa fa-inbox"></i> My Queues</li>
+      </ol>
+  </section>
 
-<div class="box-body no-padding table-responsive">
-  <table ts-wrapper id="queuetable" ng-if="queues.length > 0" class="table table-responsive table-striped table-bordered">
-    <thead>
-      <tr>
-        <th ts-criteria="assignment.display_name" ts-default>Assignment</th>
-        <th>Staff</th>
-        <th ts-criteria="submissions.length | parseInt">Submissions</th>
-        <th>View</th>
-      </tr>
-    </thead>
-  <tbody>
+  <div class="box">
+  <div class="box-header">
+    <h3 class="box-title" ng-if="queues.$resolved && queues.length == 0" >You have no queues!</h3>
+    <h3 class="box-title" ng-if="queues.length > 0">My Queue</h3>
+  </div><!-- /.box-header -->
 
-    <tr ng-repeat="queue in queues">
-      <td>
-        {{queue.assignment.id.display_name}}
-      </td>
-      <td>
-        <div ng-if="queue.assigned_staff.length > 0">
-          <div ng-repeat="user in queue.assigned_staff">
-            {{user.email[0]}} {{$last ? '' : ', '}}
+  <div class="box-body no-padding table-responsive">
+    <table ts-wrapper id="queuetable" ng-if="queues.length > 0" class="table table-responsive table-striped table-bordered">
+      <thead>
+        <tr>
+          <th ts-criteria="assignment.display_name" ts-default>Assignment</th>
+          <th>Staff</th>
+          <th ts-criteria="submissions.length | parseInt">Submissions</th>
+          <th>View</th>
+        </tr>
+      </thead>
+    <tbody>
+
+      <tr ng-repeat="queue in queues">
+        <td>
+          {{queue.assignment.id.display_name}}
+        </td>
+        <td>
+          <div ng-if="queue.assigned_staff.length > 0">
+            <div ng-repeat="user in queue.assigned_staff">
+              {{user.email[0]}} {{$last ? '' : ', '}}
+            </div>
           </div>
-        </div>
-        <div ng-if="queue.assigned_staff.length <= 0">
-          <strong>No staff assigned</strong>
-        </div>
-      </td>
-      <td>
-        {{queue.submissions.length}}
-      </td>
-      <td>
-        <a class="btn btn-primary btn-sm" ui-sref='queue.detail({queueId:queue.id})'>
-          View Queue
-        </a>
-      </td>
-    </tr>
-      </tbody>
-    </table>
-  </div><!-- /.box-body -->
-</div><!-- /.box -->
+          <div ng-if="queue.assigned_staff.length <= 0">
+            <strong>No staff assigned</strong>
+          </div>
+        </td>
+        <td>
+          {{queue.submissions.length}}
+        </td>
+        <td>
+          <a class="btn btn-primary btn-sm" ui-sref='queue.detail({queueId:queue.id})'>
+            View Queue
+          </a>
+        </td>
+      </tr>
+        </tbody>
+      </table>
+    </div><!-- /.box-body -->
+  </div><!-- /.box -->
+</div>

@@ -64,6 +64,13 @@ indexes:
   - name: created
     direction: desc
 
+- kind: Groupv2
+  properties:
+  - name: assignment
+  - name: member
+  - name: created
+    direction: desc
+
 - kind: Queuev2
   properties:
   - name: assigned_staff
@@ -86,6 +93,12 @@ indexes:
 - kind: Queuev2
   properties:
   - name: course
+  - name: created
+    direction: desc
+
+- kind: Queuev2
+  properties:
+  - name: owner
   - name: created
     direction: desc
 

@@ -1,0 +1,85 @@
+<div>
+  <section class="content-header" ng-hide="dashboard">
+    <ol class="breadcrumb">
+      <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+      <li><a ui-sref="assignment.list"><i class="fa fa-list"></i> All Assignments</a></li>
+      <li class="active"><i class="fa fa-plus"></i> New Assignment</li>
+    </ol>
+  </section>
+  <section>
+    <div class="row">
+      <div class="col-md-3">
+      </div>
+      <div class="col-md-6">
+
+  <div class="box" >
+    <form >
+      <div class="box-body">
+        <div class="form-group">
+          <label>Assignment Name</label>
+          <input ng-model="newAssign.display_name" type="text" class="form-control input-lg" placeholder="Scheme Project">
+        </div>
+        <div class="form-group">
+          <label>Endpoint</label>
+          <input ng-model="newAssign.endpoint" type="text" class="form-control input-lg" placeholder="cal/cs61a/sp15/scheme">
+        </div>
+        <div class="form-group">
+          <label>Points</label>
+          <input ng-model="newAssign.points" type="number" step="any" min="0" class="form-control" placeholder="">
+        </div>
+        <div class="form-group">
+          <label>Assignment URL</label>
+          <input ng-model="newAssign.url" type="text" class="form-control" placeholder="http://cs61a.org/proj/scheme">
+        </div>
+        <div class="form-group">
+          <label>Max Group Size</label>
+          <input ng-model="newAssign.max_group_size" type="number" min="1" class="form-control" placeholder="">
+        </div>
+        <div class="form-group">
+            <label>Due Date</label>
+            <div class="input-group">
+              <div class="input-group-addon">
+                <i class="fa fa-calendar"></i>
+              </div>
+              <input type="text" ng-model="newAssign.due_date" class="form-control" placeholder="YYYY-MM-DD">
+            </div><!-- /.input group -->
+        </div>
+
+        <div class="form-group">
+          <label>Time Due</label>
+          <input ng-model="newAssign.due_time" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Course</label>
+
+           <select class="form-control" required ng-model="newAssign.course" ng-options="course as course.display_name+' ('+course.offering+')' for course in courses">
+          </select>
+
+        </div>
+
+<!--
+          <div class="bootstrap-timepicker">
+          <div class="form-group">
+            <label>Time picker:</label>
+            <div class="input-group">
+              <input  type="text" value="23:59 PM"class="form-control timepicker">
+              <div class="input-group-addon">
+                <i class="fa fa-clock-o"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+ -->
+         <button ng-click="createAssign()" class="btn btn-block btn-primary btn-lg">Create Assignment</button>
+
+      </div>
+    </form>
+
+  </div>
+
+      </div> <!-- xs.col.6 -->
+    </div> <!-- row -->
+  </section>
+
+</div>

@@ -1,3 +1,19 @@
+<div class="box box-info">
+    <div class="box-header">
+        <h3 class="box-title">Add Staff</h3>
+    </div>
+    <div class="box-body">
+        <div class="form-group">
+          <label>Staff Email (Must be a Google Account)</label>
+          <input type="email" placeholder="Enter .edu here" class="form-control input-lg" ng-model="newMember.email" required/>
+          </select>
+        </div>
+     <div class="box-footer">
+        <button type="button" ng-click="save()" class="btn btn-info">Add to Staff</button>
+    </div>
+    </div><!-- /.box-body -->
+</div>
+
  <div class="box box-primary">
     <div class="box-header">
         <h3 class="box-title">Staff Members</h3>
@@ -27,20 +43,4 @@
         </tr>
       </table>
     </div>
-</div>
-
-<div class="box box-info">
-    <div class="box-header">
-        <h3 class="box-title">Add Staff</h3>
-    </div>
-    <div class="box-body">
-        <div class="form-group">
-          <label>Staff Email</label>
-          <input type="email" placeholder="Enter .edu email here" class="form-control input-lg" ng-model="newMember.email" required/>
-          </select>
-        </div>
-     <div class="box-footer">
-        <button type="button" ng-click="save()" class="btn btn-info">Add to Staff</button>
-    </div>
-    </div><!-- /.box-body -->
 </div>

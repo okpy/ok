@@ -1,3 +1,10 @@
+<section class="content-header">
+    <ol class="breadcrumb">
+        <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+        <li><a ui-sref="course.list"<i class="fa fa-list"></i> All Courses</a></li>
+        <li class="active"><i class="fa fa-pencil"></i> {{course.display_name}} </a> </li>
+    </ol>
+</section>
 
 <h2>Course: {{course.display_name}}</h2>
 <div>
@@ -26,6 +33,8 @@
       <td>{{course.instructor[0].email[0]}}</td>
     </tr>
   </table>
+
+    <staff-list />
     <a class="btn btn-primary" ui-sref='staff.list({courseId:course.id})'>
       View/Edit Staff
     </a>
