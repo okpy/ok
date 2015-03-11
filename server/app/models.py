@@ -549,6 +549,7 @@ class Backup(Base):
     server_time = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
     tags = ndb.StringProperty(repeated=True)
+    grade = ndb.StructuredProperty(Grade)
 
     def get_messages(self, fields=None):
         """Returns self.messages formatted as a dictionary.
@@ -644,6 +645,12 @@ class Score(Base):
     message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User)
     autograder = ndb.TextProperty()
+
+
+class Grade(Base):
+    """The autograder result for a backup, with a score and message."""
+    grade = ndb.FloatProperty()
+    message = ndb.TextProperty() # complete result of autograder?
 
 
 class Submission(Base):
