@@ -19,8 +19,10 @@ from flask import jsonify, request, Response, json
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
+from google.appengine.api import taskqueue
 
 from app import app
+from app.constants import STUDENT_ROLE
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
@@ -401,3 +403,22 @@ def check_user(user_key):
         user_key = user_key.id()
 
     deferred.defer(deferred_check_user, user_key)
+
+
+######################
+# Autograder actions #
+######################
+
+def add_taskqueue(assign_key):
+    q = taskqueue.Queue("pull-queue")
+
+    participant = ModelProxy.Participant
+    course = ModelProxy.Course
+    students =[part.user for part in participant.query(
+    participant.course == course.key,
+    participant.role == STUDENT_ROLE).fetch()]
+    submissions = [student.get_final_submission(assign_key) for student in students]
+    tasks = []
+    for sub in submissions:
+        tasks.append(taskqueue.Task(payload=sub, method = "POST"))
+    q.add(tasks)
