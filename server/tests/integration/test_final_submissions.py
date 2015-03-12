@@ -69,14 +69,9 @@ class FinalSubmissionTest(APIBaseTestCase):
             assign.put()
         self.assign = self.assignments["first"]
 
-        # Allow manual execution of deferred tasks using run_deferred
-        # https://cloud.google.com/appengine/docs/python/tools/localunittesting
-        self.testbed.init_taskqueue_stub()
-
     def run_deferred(self):
         """Execute all deferred tasks."""
-        task_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
-        for task in task_stub.get_filtered_tasks():
+        for task in self.taskqueue_stub.get_filtered_tasks():
             deferred.run(task.payload)
 
     def test_one_final(self):
