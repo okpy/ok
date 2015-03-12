@@ -95,7 +95,8 @@ class FinalSubmissionTest(APIBaseTestCase):
         self.assertIsNotNone(subm)
         backup = subm.backup.get()
         self.assertIsNotNone(backup)
-        self.assertEqual(backup.submitter, self.user.key)
+        self.assertEqual(backup.submitter, self.user.key,
+                "{} != {}".format(backup.submitter.get(), self.user))
         # TODO Not sure how to make/verify this final_submission get request...
         # self.assertEqual(final, self.user.get_final_submission(self.assign))
         # self.get('/user/{}/final_submission'.format(self.user.email[0]),
