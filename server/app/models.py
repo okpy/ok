@@ -658,11 +658,7 @@ class Submission(Base):
         assignment = self.assignment
         # I have no idea why this works... need it to pass tests
         val = self.submitter
-        print val
         val = val.get()
-        print val
-        if val:
-            print val.email
         group = val.get_group(assignment)
         submitter = self.submitter
         if group:
