@@ -69,14 +69,9 @@ class FinalSubmissionTest(APIBaseTestCase):
             assign.put()
         self.assign = self.assignments["first"]
 
-        # Allow manual execution of deferred tasks using run_deferred
-        # https://cloud.google.com/appengine/docs/python/tools/localunittesting
-        self.testbed.init_taskqueue_stub()
-
     def run_deferred(self):
         """Execute all deferred tasks."""
-        task_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
-        for task in task_stub.get_filtered_tasks():
+        for task in self.taskqueue_stub.get_filtered_tasks():
             deferred.run(task.payload)
 
     def test_one_final(self):
@@ -100,7 +95,8 @@ class FinalSubmissionTest(APIBaseTestCase):
         self.assertIsNotNone(subm)
         backup = subm.backup.get()
         self.assertIsNotNone(backup)
-        self.assertEqual(backup.submitter, self.user.key)
+        self.assertEqual(backup.submitter, self.user.key,
+                "{} != {}".format(backup.submitter.get(), self.user))
         # TODO Not sure how to make/verify this final_submission get request...
         # self.assertEqual(final, self.user.get_final_submission(self.assign))
         # self.get('/user/{}/final_submission'.format(self.user.email[0]),

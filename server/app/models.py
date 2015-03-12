@@ -658,8 +658,8 @@ class Submission(Base):
         assignment = self.assignment
         # I have no idea why this works... need it to pass tests
         val = self.submitter
-        val = self.submitter.get()
-        group = self.submitter.get().get_group(assignment)
+        val = val.get()
+        group = val.get_group(assignment)
         submitter = self.submitter
         if group:
             final = FinalSubmission.query(
