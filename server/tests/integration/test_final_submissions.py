@@ -31,7 +31,6 @@ class FinalSubmissionTest(APIBaseTestCase):
         for user in self.accounts.values():
             user.put()
 
-
         self.courses = {
             "first": models.Course(
                 institution="UC Awesome",
@@ -68,8 +67,6 @@ class FinalSubmissionTest(APIBaseTestCase):
 
         # Allow manual execution of deferred tasks using run_deferred
         # https://cloud.google.com/appengine/docs/python/tools/localunittesting
-        self.testbed = testbed.Testbed()
-        self.testbed.activate()
         self.testbed.init_taskqueue_stub()
 
     def run_deferred(self):
