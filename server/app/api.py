@@ -830,6 +830,13 @@ class SubmissionAPI(APIResource):
         },
         'win_rate': {
             'methods': set(['GET']),
+        },
+        'add_grade': {
+            'methods': set(['POST']),
+            'web_args': {
+                'grade': Arg(int, required=True),
+                'message': Arg(str, required=True),
+            }
         }
     }
 
@@ -1072,6 +1079,26 @@ class SubmissionAPI(APIResource):
         obj.compScore = score.key
         obj.put()
         return score
+
+    def add_grade(self, obj, user, data):
+        """
+        Sets autograder score
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) grade
+        """
+        grade = models.Grade(
+            grade=data['grade'],
+            message=data['message'])
+        grade.put()
+
+        submission = obj.backup.get()
+
+        submission.grade = grade
+        submission.put()
+        return grade
 
     def get_assignment(self, name):
         """

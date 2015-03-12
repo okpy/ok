@@ -646,12 +646,10 @@ class Score(Base):
     grader = ndb.KeyProperty(User)
     autograder = ndb.TextProperty()
 
-
 class Grade(Base):
     """The autograder result for a backup, with a score and message."""
     grade = ndb.FloatProperty()
-    message = ndb.TextProperty() # complete result of autograder?
-
+    message = ndb.TextProperty() # complete Result of autograder?
 
 class Submission(Base):
     """A backup that may be scored."""
