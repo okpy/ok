@@ -659,6 +659,9 @@ class Submission(Base):
         # I have no idea why this works... need it to pass tests
         val = self.submitter
         val = val.get()
+        if not val:
+            print self.submitter
+            print self.backup.get()
         group = val.get_group(assignment)
         submitter = self.submitter
         if group:
