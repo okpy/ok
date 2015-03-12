@@ -32,7 +32,7 @@ class BasicJobTest(BaseUnitTest):
     def generate_simple_job(self, kind, map_error=False, reduce_error=False):
         mapper = error_mapper if map_error else simple_mapper
         reducer = error_reducer if reduce_error else simple_reducer
-        return Job(kind, mapper, reducer, [])
+        return Job(kind, self.get_accounts()['admin'], mapper, reducer, [])
 
     def run_job(self, job):
         job.start()
