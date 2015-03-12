@@ -30,10 +30,7 @@ class FinalSubmissionTest(APIBaseTestCase):
         return rval
 
     def setUp(self):
-        super(APIBaseTestCase, self).setUp()
-        self.accounts = self.get_accounts()
-        for user in self.accounts.values():
-            user.put()
+        super(FinalSubmissionTest, self).setUp()
 
         self.courses = {
             "first": models.Course(
@@ -76,16 +73,13 @@ class FinalSubmissionTest(APIBaseTestCase):
 
     def test_one_final(self):
         """An invite/accept/exit/invite sequence keeps a final submission."""
-        self.user = self.accounts['student0']
+        self.login('student0')
 
         # Submit
         messages = {'file_contents': {'submit': True, 'trends.py': 'hi!'}}
-        self.post_json('/submission?{}={}'.format(
-            'access_token', self.accounts['admin'].email[0]),
+        self.post_json('/submission',
             data={'assignment': self.assign.name,
-                  'submitter': self.user.key.id(),
-                  'messages': messages,
-                  'access_token': self.user.email[0]})
+                  'messages': messages})
         self.run_deferred()
 
         finals = list(models.FinalSubmission.query().fetch())

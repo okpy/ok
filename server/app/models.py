@@ -662,6 +662,7 @@ class Submission(Base):
         if not val:
             print self.submitter
             print self.backup.get()
+            print User.query().fetch()
         group = val.get_group(assignment)
         submitter = self.submitter
         if group:
