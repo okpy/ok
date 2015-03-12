@@ -35,7 +35,7 @@ def main(sdk_path, test_root, test_path):
     suite = unittest2.loader.TestLoader().discover(test_path)
     result = unittest2.TextTestRunner(verbosity=2).run(suite)
 
-    if lresult.failures or result.errors:
+    if result.failures or result.errors:
         return True
     return False
 
