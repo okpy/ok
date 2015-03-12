@@ -127,7 +127,7 @@ def make_num_counter(helper):
     def wrapper(self, assignment, max_size=None):
         count = 0
 
-        all_submissions = helper(assignment)
+        all_submissions = helper(self, assignment)
         if max_size is not None:
             left_to_count = max_size
             for submission_query in all_submissions:
@@ -193,9 +193,9 @@ class User(Base):
 
         all_backups = []
         for member in members:
-            all_backups += Backup.query(
+            all_backups.append(Backup.query(
                 Backup.submitter == member,
-                Backup.assignment == assignment)
+                Backup.assignment == assignment))
 
         return all_backups
 
@@ -215,8 +215,8 @@ class User(Base):
 
         all_submissions = []
         for member in members:
-            all_submissions += Submission.query(
-                Submission.submitter==member)
+            all_submissions.append(Submission.query(
+                Submission.submitter==member))
 
         return all_submissions
 
@@ -282,7 +282,7 @@ class User(Base):
                     assign_info['percent'] = round(100*float(solved)/total, 0)
 
             assign_info['backups'] = self.get_num_backups(assignment.key, 1) > 0
-            assign_info['submissions'] = self.get_num_submission(assignment.key, 1) > 0
+            assign_info['submissions'] = self.get_num_submissions(assignment.key, 1) > 0
             assign_info['assignment'] = assignment
 
             info['assignments'].append(assign_info)

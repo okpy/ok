@@ -315,11 +315,13 @@ class UserCounterHelperTest(BaseUnitTest):
 
     def run_counter(self, queries, limit=None):
         assignment = object()
-        def func(assign):
-            self.assertEqual(assign, assignment)
+        fake_self = object()
+        def func(called_self, assign):
+            self.assertEqual(assignment, assign)
+            self.assertEqual(fake_self, called_self)
             return queries
 
-        return models.make_num_counter(func)(None, assignment, limit)
+        return models.make_num_counter(func)(fake_self, assignment, limit)
 
     @data(
         ((10, 2), None, 20),
