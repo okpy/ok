@@ -17,17 +17,17 @@ class AutograderTests(BaseTestCase):
         """Enroll student in course with the given role."""
         part = models.Participant()
         part.user = self.students[student].key
-        part.course = self.course[course].key
+        part.course = course.key
         part.role = role
         part.put()
 
     def setUp(self):
-        super(BaseUnitTest, self).setUp()
-        self.creator = test_base.make_fake_creator()
+        super(BaseTestCase, self).setUp()
+        self.creator = make_fake_creator()
         self.creator.put()
-        self.course = test_base.make_fake_course(self.creator)
+        self.course = make_fake_course(self.creator)
         self.course.put()
-        self.assignment = test_base.make_fake_assignment(self.course, self.creator)
+        self.assignment = make_fake_assignment(self.course, self.creator)
         self.assignment.put()
 
         self.students = {
@@ -45,9 +45,9 @@ class AutograderTests(BaseTestCase):
         for student in self.students.values():
             student.put()
 
-        self.enroll("student0", "first", STUDENT_ROLE)
-        self.enroll("student1", "first", STUDENT_ROLE)
-        self.enroll("student2", "second", STUDENT_ROLE)
+        self.enroll("student0", self.course, STUDENT_ROLE)
+        self.enroll("student1", self.course, STUDENT_ROLE)
+        self.enroll("student2", self.course, STUDENT_ROLE)
 
         self.finalSubmissions = {
             "submission0": models.FinalSubmission(
@@ -64,15 +64,15 @@ class AutograderTests(BaseTestCase):
             )
         }
 
-        for submission in self.finalSubmission.values():
+        for submission in self.finalSubmissions.values():
             student.put()
 
-    def addToQueueTest():
+    def test_addToQueue(self):
         add_taskqueue(self.assignment.key)
         q = taskqueue.Queue("pull-queue")
         tasks = q.lease_tasks(10, 10)
         for t in tasks:
-            self.assertIn(t.paylaod, self.finalSubmission.values())
+            self.assertIn(t.paylaod, self.finalSubmissions.values())
 
 if __name__ == "__main__":
     unittest.main()
