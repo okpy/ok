@@ -11,7 +11,7 @@ import datetime
 
 from test_base import APIBaseTestCase, unittest
 
-from app import models, utils
+from app import models, utils, constants
 
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
@@ -31,6 +31,7 @@ class FinalSubmissionTest(APIBaseTestCase):
         for user in self.accounts.values():
             user.put()
 
+
         self.courses = {
             "first": models.Course(
                 institution="UC Awesome",
@@ -44,6 +45,10 @@ class FinalSubmissionTest(APIBaseTestCase):
 
         for course in self.courses.values():
             course.put()
+
+        for student in ["student0", "student1", "student2"]:
+            models.Participant.add_role(
+                self.accounts[student], self.courses['first'], constants.STUDENT_ROLE)
 
         self.assignments = {
             "first": models.Assignment(
