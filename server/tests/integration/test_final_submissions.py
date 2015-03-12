@@ -23,7 +23,11 @@ class FinalSubmissionTest(APIBaseTestCase):
         Returns the accounts you want to exist in your system.
         """
         keys = ["student0", "student1", "student2", "staff", "admin"]
-        return {key: models.User(email=[key+"@b.edu"]) for key in keys}
+        rval = {key: models.User(email=[key+"@b.edu"]) for key in keys}
+        for k, val in rval.items():
+            if 'admin' in k:
+                val.is_admin = True
+        return rval
 
     def setUp(self):
         super(APIBaseTestCase, self).setUp()
@@ -81,14 +85,22 @@ class FinalSubmissionTest(APIBaseTestCase):
 
         # Submit
         messages = {'file_contents': {'submit': True, 'trends.py': 'hi!'}}
-        self.post_json('/submission', data={'assignment': self.assign.name,
-                                            'submitter': self.user.key.id(),
-                                            'messages': messages})
+        self.post_json('/submission?{}={}'.format(
+            'access_token', self.accounts['admin'].email[0]),
+            data={'assignment': self.assign.name,
+                  'submitter': self.user.key.id(),
+                  'messages': messages,
+                  'access_token': self.user.email[0]})
         self.run_deferred()
 
         finals = list(models.FinalSubmission.query().fetch())
         self.assertEqual(1, len(finals))
         final = finals[0]
+        subm = final.submission.get()
+        self.assertIsNotNone(subm)
+        backup = subm.backup.get()
+        self.assertIsNotNone(backup)
+        self.assertEqual(backup.submitter, self.user.key)
         # TODO Not sure how to make/verify this final_submission get request...
         # self.assertEqual(final, self.user.get_final_submission(self.assign))
         # self.get('/user/{}/final_submission'.format(self.user.email[0]),
