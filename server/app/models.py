@@ -656,8 +656,6 @@ class Submission(Base):
 
     def get_final(self):
         assignment = self.assignment
-        print self.submitter
-        print self.submitter.get()
         group = self.submitter.get().get_group(assignment)
         submitter = self.submitter
         if group:

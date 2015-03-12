@@ -107,10 +107,10 @@ class FinalSubmissionTest(APIBaseTestCase):
         #          data={'assignment': self.assign.key.id()})
 
         # Invite
-        invited = self.accounts['student1']
+        #invited = self.accounts['student1']
         # TODO This post is being made with admin as the user; not sure why...
-        self.post_json('/assignment/{}/invite'.format(self.assign.key.id()),
-                       data={'email': invited.email[0]})
+        #self.post_json('/assignment/{}/invite'.format(self.assign.key.id()),
+        #               data={'email': invited.email[0]})
         # TODO Check final submissions
 
         # Accept
