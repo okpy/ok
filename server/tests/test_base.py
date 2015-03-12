@@ -55,6 +55,11 @@ def make_fake_assignment(course, creator):
         max_group_size=4,
         due_date=datetime.datetime.now())
 
+#@NEW
+def make_fake_creator():
+    return models.User(
+        email=["dummy@student.com"])
+
 class BaseTestCase(unittest.TestCase):
     """
     Base test case.
