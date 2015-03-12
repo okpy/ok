@@ -80,12 +80,13 @@ class FinalSubmissionTest(APIBaseTestCase):
 
         # Submit
         messages = {'file_contents': {'submit': True, 'trends.py': 'hi!'}}
+        print 'submitting as {}. Admin is {}'.format(
+            self.user.key, self.accounts['admin'].key)
         self.post_json('/submission?{}={}'.format(
             'access_token', self.accounts['admin'].email[0]),
             data={'assignment': self.assign.name,
                   'submitter': self.user.key.id(),
-                  'messages': messages,
-                  'access_token': self.user.email[0]})
+                  'messages': messages})
         self.run_deferred()
 
         finals = list(models.FinalSubmission.query().fetch())
