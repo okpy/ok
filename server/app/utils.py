@@ -409,16 +409,9 @@ def check_user(user_key):
 # Autograder actions #
 ######################
 
-def add_taskqueue(assign_key):
+def add_taskqueue(course, assign_key):
     q = taskqueue.Queue("pull-queue")
-
-    participant = ModelProxy.Participant
-    course = ModelProxy.Course
-    
-    students =[part.user for part in participant.query(
-    participant.course == course.key,
-    participant.role == STUDENT_ROLE).fetch()]
-    
+    students = course.students()  
     submissions = [student.get_final_submission(assign_key) for student in students]
     
     tasks = []
