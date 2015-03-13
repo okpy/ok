@@ -414,10 +414,13 @@ def add_taskqueue(assign_key):
 
     participant = ModelProxy.Participant
     course = ModelProxy.Course
+    
     students =[part.user for part in participant.query(
     participant.course == course.key,
     participant.role == STUDENT_ROLE).fetch()]
+    
     submissions = [student.get_final_submission(assign_key) for student in students]
+    
     tasks = []
     for sub in submissions:
         tasks.append(taskqueue.Task(payload=sub, method = "POST"))
