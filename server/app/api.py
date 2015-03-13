@@ -1515,9 +1515,25 @@ class FinalSubmissionAPI(APIResource):
                 'message': Arg(str, required=True),
                 'source': Arg(str, required=True),
               }
+        },
+        'post': {
+            'web_args': {
+                'submission': KeyArg('Submissionvtwo', required=True)
+            }
+        },
         }
 
-        }
+    def new_entity(self, attributes):
+        """
+        Creates a new entity with given attributes.
+
+        :param attributes: (dictionary)
+        :return: (entity, error_response) should be ignored if error_response
+        is a True value
+        """
+        subm = attributes['submission']
+        fs = subm.mark_as_final()
+        return fs
 
     def score(self, obj, user, data):
         """
