@@ -55,6 +55,11 @@ def make_fake_assignment(course, creator):
         max_group_size=4,
         due_date=datetime.datetime.now())
 
+def make_fake_grade(grade):
+    return models.Grade(
+        grade=grade,
+        message="This is a fake grade.")
+
 class BaseTestCase(unittest.TestCase):
     """
     Base test case.
