@@ -657,7 +657,7 @@ class Submission(Base):
     def get_final(self):
         assignment = self.assignment
         # I have no idea why this works... need it to pass tests
-        group = val.get_group(assignment)
+        group = self.submitter.get().get_group(assignment)
         submitter = self.submitter
         if group:
             final = FinalSubmission.query(
