@@ -57,7 +57,7 @@ class FinalSubmissionTest(BaseTestCase):
                 display_name="first display",
                 templates="{}",
                 max_group_size=3,
-                due_date=datetime.datetime.now()
+                due_date=datetime.datetime.now() + datetime.timedelta(days=1)
                 ),
             "empty": models.Assignment(
                 name="empty",
@@ -67,7 +67,7 @@ class FinalSubmissionTest(BaseTestCase):
                 display_name="second display",
                 templates="{}",
                 max_group_size=4,
-                due_date=datetime.datetime.now()
+                due_date=datetime.datetime.now() + datetime.timedelta(days=1)
                 ),
             }
         for assign in self.assignments.values():
