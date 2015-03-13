@@ -657,12 +657,6 @@ class Submission(Base):
     def get_final(self):
         assignment = self.assignment
         # I have no idea why this works... need it to pass tests
-        val = self.submitter
-        val = val.get()
-        if not val:
-            print self.submitter
-            print self.backup.get()
-            print User.query().fetch()
         group = val.get_group(assignment)
         submitter = self.submitter
         if group:
