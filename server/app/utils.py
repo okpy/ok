@@ -412,9 +412,10 @@ def check_user(user_key):
 def add_taskqueue(course, assign_key):
     q = taskqueue.Queue("pull-queue")
     students = course.students()  
-    submissions = [student.get_final_submission(assign_key) for student in students]
+    submissions = [student.get().get_final_submission(assign_key) for student in students]
     
     tasks = []
     for sub in submissions:
-        tasks.append(taskqueue.Task(payload=sub, method = "POST"))
+        if sub:
+            tasks.append(taskqueue.Task( params = {'key': sub.key.urlsafe()}, method = "PULL"))
     q.add(tasks)
