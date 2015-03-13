@@ -1531,9 +1531,9 @@ class FinalSubmissionAPI(APIResource):
         :return: (entity, error_response) should be ignored if error_response
         is a True value
         """
-        subm = attributes['submission']
-        fs = subm.mark_as_final()
-        return fs
+        subm = attributes['submission'].get()
+        subm.mark_as_final()
+        return subm.get_final()
 
     def score(self, obj, user, data):
         """

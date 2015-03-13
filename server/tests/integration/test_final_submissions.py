@@ -8,10 +8,11 @@
 import os
 os.environ['FLASK_CONF'] = 'TEST'
 import datetime
+NOW = datetime.datetime.now()
 
 from test_base import APIBaseTestCase, unittest
 
-from app import models, utils, constants
+from app import models, utils, constants, api
 
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
@@ -59,7 +60,7 @@ class FinalSubmissionTest(APIBaseTestCase):
                 display_name="first display",
                 templates="{}",
                 max_group_size=3,
-                due_date=datetime.datetime.now() + datetime.timedelta(days=1)
+                due_date=NOW + datetime.timedelta(days=1)
                 ),
             }
         for assign in self.assignments.values():
@@ -138,7 +139,7 @@ class FinalSubmissionTest(APIBaseTestCase):
             data={'assignment': assignment.name,
                   'messages': messages})
 
-    def submit(self, subm=None):
+    def submit(self, subm=None, is_final=True):
         """
         Submits the given submission.
         """
@@ -158,7 +159,7 @@ class FinalSubmissionTest(APIBaseTestCase):
 
     def test_final_after_due_date(self):
         self.login('student0')
-        self.set_due_date(datetime.datetime.now() - datetime.timedelta(days=1))
+        self.set_due_date(NOW - datetime.timedelta(days=1))
 
         self.assertNoFinalSubmissions()
 
@@ -170,7 +171,7 @@ class FinalSubmissionTest(APIBaseTestCase):
 
     def test_final_before_due_date(self):
         self.login('student0')
-        self.set_due_date(datetime.datetime.now() + datetime.timedelta(days=1))
+        self.set_due_date(NOW + datetime.timedelta(days=1))
 
         self.assertNoFinalSubmissions()
 
@@ -218,6 +219,37 @@ class FinalSubmissionTest(APIBaseTestCase):
         # Invite
         # TODO
 
+    def set_as_final_submission(self, backup):
+        fs_api = api.FinalSubmissionAPI()
+        subm = models.Submission.query(
+            models.Submission.backup == backup.key).get()
+        self.assertIsNotNone(subm)
+        data = {
+                'submission': subm.key
+        }
+        return fs_api.post(self.user, data)
+
+    def test_set_different_submission_as_final_submission(self):
+        self.login('student0')
+
+        self.assertNoFinalSubmissions()
+
+        # Submit
+        self.submit()
+        self.run_deferred()
+        self.assertNumFinalSubmissions(1)
+
+        self.logout()
+        self.login('student1')
+        self.set_due_date(NOW - datetime.timedelta(days=1))
+        self.submit(self.backups['second'])
+        self.run_deferred()
+
+        self.assertNumFinalSubmissions(1)
+
+        self.set_as_final_submission(self.backups['second'])
+
+        self.assertFinalSubmission(self.user, self.backups['second'])
 
     def test_create_group(self):
         """Merging groups keeps the final submission for that group."""
