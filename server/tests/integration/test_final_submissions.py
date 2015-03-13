@@ -59,7 +59,7 @@ class FinalSubmissionTest(APIBaseTestCase):
                 display_name="first display",
                 templates="{}",
                 max_group_size=3,
-                due_date=datetime.datetime.now()
+                due_date=datetime.datetime.now() + datetime.timedelta(days=1)
                 ),
             }
         for assign in self.assignments.values():
@@ -71,18 +71,63 @@ class FinalSubmissionTest(APIBaseTestCase):
         for task in self.taskqueue_stub.get_filtered_tasks():
             deferred.run(task.payload)
 
+    def all_fs(self):
+        return models.FinalSubmission.query().fetch()
+
+    def assertNumFinalSubmissions(self, number):
+        self.assertEqual(number, len(self.all_fs()))
+
+    def assertNoFinalSubmissions(self):
+        self.assertNumFinalSubmissions(0)
+
+    def set_due_date(self, new_date):
+        self.assign.due_date = new_date
+        self.assign.put()
+
+    def submit(self, assignment=None, messages=None):
+        if not messages:
+            messages = {'file_contents': {'submit': True, 'trends.py': 'hi!'}}
+
+        if not assignment:
+            assignment = self.assign
+
+        self.post_json('/submission',
+            data={'assignment': assignment.name,
+                  'messages': messages})
+
+    def test_final_after_due_date(self):
+        self.login('student0')
+        self.set_due_date(datetime.datetime.now() - datetime.timedelta(days=1))
+
+        self.assertNoFinalSubmissions()
+
+        # Submit
+        self.submit()
+        self.run_deferred()
+
+        self.assertNoFinalSubmissions()
+
+    def test_final_before_due_date(self):
+        self.login('student0')
+        self.set_due_date(datetime.datetime.now() + datetime.timedelta(days=1))
+
+        self.assertNoFinalSubmissions()
+
+        # Submit
+        self.submit()
+        self.run_deferred()
+
+        self.assertNumFinalSubmissions(1)
+
     def test_one_final(self):
         """An invite/accept/exit/invite sequence keeps a final submission."""
         self.login('student0')
 
         # Submit
-        messages = {'file_contents': {'submit': True, 'trends.py': 'hi!'}}
-        self.post_json('/submission',
-            data={'assignment': self.assign.name,
-                  'messages': messages})
+        self.submit()
         self.run_deferred()
 
-        finals = list(models.FinalSubmission.query().fetch())
+        finals = self.all_fs()
         self.assertEqual(1, len(finals))
         final = finals[0]
         subm = final.submission.get()
