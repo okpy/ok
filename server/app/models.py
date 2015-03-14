@@ -374,6 +374,11 @@ class Course(Base):
         return [part.user for part in Participant.query(
             Participant.course == self.key,
             Participant.role == STAFF_ROLE).fetch()]
+        
+    def students(self):
+        return [part.user for part in Participant.query(
+            Participant.course == self.key,
+            Participant.role == STUDENT_ROLE).fetch()]
 
     @classmethod
     def _can(cls, user, need, course, query):
