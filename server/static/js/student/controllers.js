@@ -145,8 +145,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
 
 
 // Main dashboard controller. Should be modularized later.
-app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', '$timeout',
-  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, $timeout) {
+app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', 'FinalSubmission', '$timeout',
+  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, FinalSubmission, $timeout) {
       $scope.courseId = $stateParams.courseId
 
       $scope.toggleAssign = function (assign) {
@@ -277,6 +277,22 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               $scope.currAssign.backups = response;
               $scope.showBackups();
             });
+      }
+
+      $scope.changeSubmission = function (submId) {
+        FinalSubmission.change({
+          submission: submId
+        }, function (response) {
+          $scope.reloadView()
+          $window.swal({
+              title: "Subm!",
+              text: "They will need to login to okpy.org and accept the invite.",
+              timer: 3500,
+              type: "success"
+            });
+        }, function (error) {
+            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+        })
       }
 
 

@@ -282,6 +282,21 @@ app.factory('Version', ['$resource',
     }
   ]);
 
+app.factory('FinalSubmission', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/final_submission', {}, {
+        change: {
+          method: "POST",
+          url: "/api/v1/final_submission",
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+      });
+    }
+  ]);
+
+
 app.factory('Queue', ['$resource',
     function($resource) {
       return $resource('/api/v1/queue/:id', {
