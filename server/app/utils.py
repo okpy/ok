@@ -279,9 +279,13 @@ def assign_submission(backup_id, submit):
         return
 
     if submit:
+        assign = backup.assignment.get_async()
         subm = ModelProxy.Submission(backup=backup.key)
         subm.put()
-        subm.mark_as_final()
+
+        # Can only make a final submission before it's due
+        if datetime.datetime.now() < assign.get_result().due_date:
+            subm.mark_as_final()
 
 def sort_by_assignment(key_func, entries):
     entries = sorted(entries, key=key_func)
