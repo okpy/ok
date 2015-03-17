@@ -297,7 +297,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         FinalSubmission.change({
           submission: submId
         }, function (response) {
-          console.log(response);
           $scope.reloadView()
           $window.swal({
               title: "Changed Submission",

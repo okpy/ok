@@ -129,8 +129,8 @@
         <p class="popup-byline">for <b>{{ currAssign.assignment.display_name }}</b></p>
         <div class="pop-content">
           <li class="header">
-            <span class="col-2"><p>Date</p></span>
-            <span class="col-1"><p>By</p></span>
+            <span class="col-1"><p>Date</p></span>
+            <span class="col-2"><p>By</p></span>
           </li>
           <li class="pop-item" id="1" ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
             <a class="flag" ng-click="changeSubmission(subm.id)" ng-class=" {active: currAssign.final.final_submission && subm.backup.id == currAssign.final.backup.id }">
