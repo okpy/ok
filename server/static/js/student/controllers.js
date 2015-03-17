@@ -185,7 +185,21 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
       $scope.reloadView = function () {
         // oldToggle = $scope.currAssign.id
-        $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
+          $scope.currAssign = null;
+
+          User.force_get({
+            course: $stateParams.courseId,
+          }, function (response) {
+            $scope.assignments = response.assignments;
+            $scope.hideLoader()
+          }, function (error) {
+            $scope.hideLoader()
+            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
+            $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
+          });
+        $scope.hidePopups();
+
+        // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
 
       $scope.showLoader = function showLoader() {
@@ -283,10 +297,11 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         FinalSubmission.change({
           submission: submId
         }, function (response) {
+          console.log(response);
           $scope.reloadView()
           $window.swal({
-              title: "Subm!",
-              text: "They will need to login to okpy.org and accept the invite.",
+              title: "Changed Submission",
+              text: "We'll grade the submission you marked.",
               timer: 3500,
               type: "success"
             });

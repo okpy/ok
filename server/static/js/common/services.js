@@ -10,6 +10,13 @@ app.factory('User', ['$resource',
           },
           cache: true
         },
+        force_get: {
+          method: "GET",
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          },
+          cache: false
+        },
         create: {
           method: "POST",
           transformResponse: function(data) {
