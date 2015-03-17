@@ -1524,7 +1524,7 @@ class FinalSubmissionAPI(APIResource):
         },
         'post': {
             'web_args': {
-                'submission': KeyArg('Submissionvtwo', required=True)
+                'submission': KeyArg('Submission', required=True)
             }
         },
         }
