@@ -1165,7 +1165,6 @@ class FinalSubmission(Base):
         # TODO Remove when submitter is a computed property
         self.submitter = self.submission.get().submitter
 
-<<<<<<< HEAD
 
 class Receipts(Base):
     """
@@ -1176,8 +1175,6 @@ class Receipts(Base):
     read = ndb.BooleanProperty()
 
 
-=======
->>>>>>> fd7c160... added Notification model
 class Notification(Base):
     """
     Notification for a course.

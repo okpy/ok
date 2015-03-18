@@ -1690,11 +1690,7 @@ class NotificationsAPI(APIResource):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
-<<<<<<< HEAD
-
-=======
         
->>>>>>> 5197a8b... method args, add method
         notification = models.Notification(
             message=data['message'],
             url=data['url'],
@@ -1702,7 +1698,6 @@ class NotificationsAPI(APIResource):
             expiration=data['expiration'])
         
         notification.put()
-<<<<<<< HEAD
     
     def read(self, obj, user, data):
         # implementation not complete
@@ -1712,8 +1707,6 @@ class NotificationsAPI(APIResource):
     
     def notifications(self, user, data):
         pass
-=======
->>>>>>> 5197a8b... method args, add method
     
     def read(self, obj, user, data):
         
