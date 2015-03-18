@@ -973,12 +973,12 @@ body.course {
 				.num-cont .line {
 					width:100%;
 					font-size:12px;
-					line-height:100%;
+					line-height:14px;
 					color:#666;
 					text-align:center;
 				}
 				.num-cont ul {
-					margin-top:25px;
+					margin-top:20px;
 					width:100%;
 				}
 			code,code span:not(.comment-icon) {
