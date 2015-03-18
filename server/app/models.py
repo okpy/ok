@@ -1029,6 +1029,9 @@ class Queue(Base):
              'group': group,
              'score': submission.score,
             })
+        owner_email = "Unknown"
+        if self.owner.get():
+          owner_email = self.owner.get().email[0]
 
         return {
             'submissions': subms,
@@ -1036,7 +1039,7 @@ class Queue(Base):
             'graded': len(filter(None, (subm.score for subm in submissions))),
             'assignment': {'id': self.assignment},
             'assigned_staff': [val.get() for val in self.assigned_staff],
-            'owner': self.owner.get().email[0],
+            'owner': owner_email,
             'id': self.key.id()
         }
 
