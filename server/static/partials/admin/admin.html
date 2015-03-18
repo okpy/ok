@@ -31,11 +31,11 @@
                     <div class="row">
                         <!-- Left col -->
                         <section class="col-lg-12 connectedSortable">
-                          <queue-list ng-init="hideComplete = true;">
+                          <userqueue-list ng-init="hideComplete = true; dashboard = true">
                         </section>
                         <!-- /.Left col -->
                         <section class="col-lg-12 connectedSortable">
-                            <assignment-list>
+                            <assignment-list ng-init="dashboard = true; ">
                         </section>
                         <!-- right col -->
 

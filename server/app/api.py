@@ -686,6 +686,12 @@ class AssignmentAPI(APIResource):
         :return:
         """
         data['creator'] = user.key
+        # check if the course actually exists
+        course = data['course'].get()
+        if not course:
+            raise BadValueError("Course with ID {} does not exist.".format(
+                data['course'].id()))
+
         # check if there is a duplicate assignment
         assignments = list(
             models.Assignment.query(models.Assignment.name == data['name']))

@@ -2,9 +2,9 @@
     <!-- Sidebar user panel -->
     <div class="user-panel">
         <div class="pull-left info">
-            <p>{{course_name}}</p>
+            <p>{{course_name}}</i></p>
 
-            <a href="#"><i class="fa fa-circle text-success"></i> Course Staff</a>
+            <a href="#">Course Staff Dashboard</a>
         </div>
     </div>
     <!-- sidebar menu: : style can be found in sidebar.less -->
@@ -14,46 +14,53 @@
                 <i class="fa fa-dashboard"></i> <span>Staff Dashboard</span>
             </a>
         </li>
-<!--          <li class="">
+
+        <li class="">
             <a ui-sref="userqueue">
                 <i class="fa fa-inbox"></i> <span>My Queue</span>
             </a>
         </li>
- -->        <li class="">
+
+        <li class="">
             <a ui-sref="queue.list">
-                <i class="fa fa-archive"></i> <span>Staff Queue</span>
-            </a>
-        </li>
-        <li>
-            <a>
-                <i class="fa fa-list"></i> <span>Submission Search (Coming Soon)</span>
+                <i class="fa fa-archive"></i> <span>All Queues</span>
             </a>
         </li>
 
-         <li class="treeview active">
-            <a>
-                <i class="fa fa-bar-chart-o"></i>
-                <span>Assignments (Details)</span> &nbsp;
-                <small class="badge bg-green">{{ assignments.length }}</small>
-            </a>
-            <ul class="treeview-menu active" style="display: block;" ng-repeat="assignment in assignments">
-                    <li><a ui-sref='assignment.detail({assignmentId:assignment.id})' style="margin-left: 20px;"><i class="fa fa-inbox"></i> {{assignment.display_name}}</a></li>
-            </ul>
-
-            <ul class="treeview-menu active" style="display: block;" >
-                <li><a ui-sref='assignment.list' style="margin-left: 20px;"><i class="fa fa-list"></i> All Assignments</a> </li>
-            </ul>
-
-
-<!--         <ul class="treeview-menu active" style="display: block;" >
-                <li><a ui-sref='assignment.create'><i class="fa fa-pencil"></i> Create Assignment</a> </li>
-            </ul>
- -->
-            </li>
         <li>
             <a ui-sref="course.list">
                 <i class="fa fa-list"></i> <span>Course List</span>
             </a>
+        </li>
+
+         <li class="treeview">
+            <a>
+                <i class="fa fa-bar-chart-o"></i>
+                <span>Assignments</span> &nbsp;
+                <small class="badge bg-green">{{ assignments.length }}</small>
+            </a>
+            <ul class="treeview-menu" style="" ng-repeat="assignment in assignments">
+                    <li><a ui-sref='assignment.detail({assignmentId:assignment.id})' style="margin-left: 20px;"><i class="fa fa-inbox"></i> {{assignment.display_name}}</a></li>
+            </ul>
+            <ul class="treeview-menu" style="display: block;" >
+                <li><a ui-sref='assignment.create' style="margin-left: 20px;"><i class="fa fa-plus"></i> Create Assignment</a> </li>
+            </ul>
+            <ul class="treeview-menu" style="display: block;" >
+                <li><a ui-sref='assignment.list' style="margin-left: 20px;"><i class="fa fa-list"></i> All Assignments</a> </li>
+            </ul>
+        </li>
+        <li class="treeview">
+            <a>
+                <i class="fa fa-bar-chart-o"></i>
+                <span>ok-client Versions</span> &nbsp;
+            </a>
+            <ul class="treeview-menu" style="display: block;">
+              <li>
+              <a ui-sref="version.new" style="margin-left: 20px;">
+                  <i class="fa fa-terminal"></i> <span>New Version</span>
+              </a>
+              </li>
+            </ul>
         </li>
     </ul>
 </section>

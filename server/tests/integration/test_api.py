@@ -242,8 +242,10 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
 
     def post_entity(self, inst, *args, **kwds):
         """Posts an entity to the server."""
-        data = inst.to_json()
-        data['course'] = data['course']['id']
+        data = inst
+        if not isinstance(data, dict):
+            data = inst.to_json()
+            data['course'] = data['course']['id']
 
         self.post_json('/{}'.format(self.name),
                        data=data, *args, **kwds)
@@ -253,6 +255,15 @@ class AssignmentAPITest(APITest, APIBaseTestCase):
             else:
                 inst.key = models.ndb.Key(self.model,
                                           self.response_json.get('key'))
+
+    def test_course_does_not_exist(self):
+        inst = self.get_basic_instance()
+        data = inst.to_json()
+        data['course'] = self._course.key.id() + 100000
+
+        self.post_entity(data)
+
+        self.assertStatusCode(400)
 
 
 class BackupAPITest(APITest, APIBaseTestCase):

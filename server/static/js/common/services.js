@@ -64,13 +64,6 @@ app.factory('Submission', ['$resource',
           },
           cache: true
         },
-        winRate: {
-          method: "GET",
-          url: 'api/v1/submission/:id/win_rate',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
         diff: {
           url: '/api/v1/submission/:id/diff',
           transformResponse: function(data) {
@@ -153,6 +146,13 @@ app.factory('Assignment', ['$resource',
           cache: true
         },
         get: {
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        create: {
+          method: "POST",
+          url: '/api/v1/assignment',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }

@@ -11,7 +11,7 @@ import datetime
 
 from test_base import APIBaseTestCase, unittest
 
-from app import models, utils
+from app import models, utils, constants
 
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
@@ -23,13 +23,14 @@ class FinalSubmissionTest(APIBaseTestCase):
         Returns the accounts you want to exist in your system.
         """
         keys = ["student0", "student1", "student2", "staff", "admin"]
-        return {key: models.User(email=[key+"@b.edu"]) for key in keys}
+        rval = {key: models.User(email=[key+"@b.edu"]) for key in keys}
+        for k, val in rval.items():
+            if 'admin' in k:
+                val.is_admin = True
+        return rval
 
     def setUp(self):
-        super(APIBaseTestCase, self).setUp()
-        self.accounts = self.get_accounts()
-        for user in self.accounts.values():
-            user.put()
+        super(FinalSubmissionTest, self).setUp()
 
         self.courses = {
             "first": models.Course(
@@ -44,6 +45,10 @@ class FinalSubmissionTest(APIBaseTestCase):
 
         for course in self.courses.values():
             course.put()
+
+        for student in ["student0", "student1", "student2"]:
+            models.Participant.add_role(
+                self.accounts[student], self.courses['first'], constants.STUDENT_ROLE)
 
         self.assignments = {
             "first": models.Assignment(
@@ -61,42 +66,41 @@ class FinalSubmissionTest(APIBaseTestCase):
             assign.put()
         self.assign = self.assignments["first"]
 
-        # Allow manual execution of deferred tasks using run_deferred
-        # https://cloud.google.com/appengine/docs/python/tools/localunittesting
-        self.testbed = testbed.Testbed()
-        self.testbed.activate()
-        self.testbed.init_taskqueue_stub()
-
     def run_deferred(self):
         """Execute all deferred tasks."""
-        task_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
-        for task in task_stub.get_filtered_tasks():
+        for task in self.taskqueue_stub.get_filtered_tasks():
             deferred.run(task.payload)
 
     def test_one_final(self):
         """An invite/accept/exit/invite sequence keeps a final submission."""
-        self.user = self.accounts['student0']
+        self.login('student0')
 
         # Submit
         messages = {'file_contents': {'submit': True, 'trends.py': 'hi!'}}
-        self.post_json('/submission', data={'assignment': self.assign.name,
-                                            'submitter': self.user.key.id(),
-                                            'messages': messages})
+        self.post_json('/submission',
+            data={'assignment': self.assign.name,
+                  'messages': messages})
         self.run_deferred()
 
         finals = list(models.FinalSubmission.query().fetch())
         self.assertEqual(1, len(finals))
         final = finals[0]
+        subm = final.submission.get()
+        self.assertIsNotNone(subm)
+        backup = subm.backup.get()
+        self.assertIsNotNone(backup)
+        self.assertEqual(backup.submitter, self.user.key,
+                "{} != {}".format(backup.submitter.get(), self.user))
         # TODO Not sure how to make/verify this final_submission get request...
         # self.assertEqual(final, self.user.get_final_submission(self.assign))
         # self.get('/user/{}/final_submission'.format(self.user.email[0]),
         #          data={'assignment': self.assign.key.id()})
 
         # Invite
-        invited = self.accounts['student1']
+        #invited = self.accounts['student1']
         # TODO This post is being made with admin as the user; not sure why...
-        self.post_json('/assignment/{}/invite'.format(self.assign.key.id()),
-                       data={'email': invited.email[0]})
+        #self.post_json('/assignment/{}/invite'.format(self.assign.key.id()),
+        #               data={'email': invited.email[0]})
         # TODO Check final submissions
 
         # Accept

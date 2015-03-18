@@ -656,6 +656,7 @@ class Submission(Base):
 
     def get_final(self):
         assignment = self.assignment
+        # I have no idea why this works... need it to pass tests
         group = self.submitter.get().get_group(assignment)
         submitter = self.submitter
         if group:

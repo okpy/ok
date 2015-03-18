@@ -1,13 +1,21 @@
   <section class="content-header">
       <ol class="breadcrumb">
           <li><a ui-sref="queue.list"><i class="fa fa-list "> </i> All Staff Queues </a></li>
-          <li class="active">{{ queue.assignment.display_name}} Queue </li>
+          <li class="active" ng-if="queue.$resolved"> {{queue.owner}}'s {{ queue.assignment.id.display_name }} queue </li>
       </ol>
   </section>
 
 <div>
   <div class="center-block">
-    <h2> Queues for {{queue.assignment.display_name}} </h2>
+    <h2> Queues for {{queue.assignment.id.display_name}} </h2>
+
+      <div ng-if="queue.$resolved && queue.owner ">
+        Owner:
+        <span class="badge bg-info">
+          {{queue.owner}}
+        </span>
+      </div>
+
       <div ng-if="queue.$resolved && queue.assigned_staff.length > 0 ">
       Staff:
         <span ng-repeat="user in queue.assigned_staff" class="badge bg-info">

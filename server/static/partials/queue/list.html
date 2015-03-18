@@ -1,3 +1,10 @@
+<section class="content-header">
+    <ol class="breadcrumb">
+        <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+        <li class="active"><i class="fa fa-archive"></i> All Queues</li>
+    </ol>
+</section>
+
 <div ng-controller="QueueListCtrl" >
 
 <div class="box">
@@ -6,7 +13,6 @@
   <h3 class="box-title" ng-if="queues.length > 0">Coursewide Queues</h3>
   <div class="box-tools" style="float:right;">
     <button class="btn btn-primary" ng-click="refresh()">Refresh</a>
-
   </div>
   </div><!-- /.box-header -->
 

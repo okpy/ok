@@ -1,36 +1,58 @@
-<div class="box" ng-controller="AssignmentListCtrl" >
-<div class="box-header">
-  <h3 class="box-title" ng-if="assignments.$resolved && assignments.length == 0" >No Assignments</h3>
-  <h3 class="box-title" ng-if="assignments.length > 0">Assignments</h3>
-</div><!-- /.box-header -->
+<div ng-controller="AssignmentListCtrl">
+  <section class="content-header" ng-hide="dashboard">
+      <ol class="breadcrumb" >
+          <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+          <li class="active"><i class="fa fa-list"></i> All Assignments</li>
+      </ol>
+  </section>
 
-<div class="box-body no-padding table-responsive">
-  <table ts-wrapper ng-if="assignments.length > 0" class="table table-responsive table-striped table-bordered">
-  <tbody>
-  <tr>
-    <th ts-criteria="display_name">Name</th>
-    <th ts-criteria="due_date" ts-default>Due Date</th>
-    <!-- Future Progress Bar --> 
-    <th ts-criteria="points | parseFloat">Points</th>
-    <th style="width: 15%">Label</th>
-  </tr>
+  <div class="box" >
+  <div class="box-header">
+    <h3 class="box-title" ng-if="assignments.$resolved && assignments.length == 0" >No Assignments</h3>
+    <h3 class="box-title" ng-if="assignments.length > 0">Assignments</h3>
+    <div class="box-tools" style="float:right;">
+      <button class="btn btn-primary" ui-sref="assignment.create"> <i class="fa fa-plus"></i> Create Assignment</a>
+    </div>
 
-    <tr ng-repeat="assignment in assignments" ts-repeat>
-      <td>
-        <a ui-sref='assignment.detail({assignmentId:assignment.id})'>{{assignment.display_name}} </a> 
-      </td>
-      <td>
-        {{assignment.due_date | amCalendar}}
-      </td>
-      <td>{{assignment.points}}</td>
-      <td>
-        <span class="badge bg-info">{{assignment.display_name}}</span>
-      </td>
-        <!-- Future Progress Bar -->                                         
-        </tr>
-      </tbody>
-    </table>
-  </div><!-- /.box-body -->
-</div><!-- /.box -->
+  </div><!-- /.box-header -->
 
+  <div class="box-body no-padding table-responsive">
+    <table ts-wrapper ng-if="assignments.length > 0" class="table table-responsive table-striped table-bordered">
+    <tbody>
+    <tr>
+      <th ts-criteria="display_name">Name</th>
+      <th ts-criteria="active" ts-default>Active</th>
+      <th ts-criteria="points | parseFloat">Points</th>
+      <th ts-criteria="due_date" ts-default>Due Date</th>
+      <th ts-criteria="lock_date">Lock Date</th>
+      <!-- Future Progress Bar -->
+      <th style="width: 15%">Endpoint</th>
+    </tr>
+
+      <tr ng-repeat="assignment in assignments" ts-repeat>
+        <td>
+          <a ui-sref='assignment.detail({assignmentId:assignment.id})'>{{assignment.display_name}} </a>
+        </td>
+        <td>
+          <span ng-show="assignment.active">Yes</span>
+          <span ng-hide="assignment.active">No</span>
+        </td>
+        <td>{{assignment.points}}</td>
+        <td>
+          {{assignment.due_date | amCalendar}}
+        </td>
+        <td>
+          {{assignment.lock_date | amCalendar}}
+        </td>
+
+        <td>
+          <span class="badge bg-info">{{assignment.name}}</span>
+        </td>
+          <!-- Future Progress Bar -->
+          </tr>
+        </tbody>
+      </table>
+    </div><!-- /.box-body -->
+  </div><!-- /.box -->
+</div>
 
