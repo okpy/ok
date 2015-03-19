@@ -1700,6 +1700,7 @@ class NotificationsAPI(APIResource):
         notification.put()
     
     def read(self, obj, user, data):
+        pass
         # implementation not complete
     
     def clean(self, user, data):
