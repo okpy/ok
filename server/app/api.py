@@ -1649,7 +1649,19 @@ class NotificationsAPI(APIResource):
     }
 
     def latest(self, course, user, data):
-        pass
+        """
+        Fetches latest notifications by course, based on start and end counts.
+
+        :param course:
+        :param user:
+        :param data:
+        :return:
+        """
+        query = models.Notification.query(
+            # expiration < today()
+        )
+
+        return list(query.fetch())
     
     def add(self, course, user, data):
         """
