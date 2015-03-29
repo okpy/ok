@@ -1,64 +1,163 @@
-<html>
-<head>
-	<title>Okpy</title>
-	<link href="styles/courses.css" rel="stylesheet">
-	<link rel="stylesheet" href="styles/highlights/zenburn.css">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
-	<script src="scripts/highlight.pack.js"></script>
-</head>
-	<body>
-		<div class="main">
-			<div class="shadow"></div>
-			<div class="content">
-				<header class="container-fluid">
-					<div class="logo dark">
-						<img src="images/logo-dark.png">
-						<h1>Okpy</h1>
+<html class="no-js ng-scope" ng-app="student"><head><style type="text/css">@charset "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\:form{display:block;}</style>
+	<meta charset="UTF-8">
+	<title>Ok Student</title>
+
+	<link href="/static/student/styles/all.css" rel="stylesheet">
+	<link rel="stylesheet" href="/static/student/styles/zenburn.css">
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+	<link href="/static/vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet">
+
+	<link href="/static/vendor/sweetalert/lib/sweet-alert.css" rel="stylesheet">
+
+	<script src="/static/vendor/jquery/dist/jquery.min.js"></script><style type="text/css"></style>
+
+	<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+	<script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>
+
+	<script src="/static/student/scripts/all.js"></script>
+	<script src="/static/student/scripts/highlight.pack.js"></script>
+
+	<script src="/static/vendor/angular/angular.js"></script>
+	<script src="/static/vendor/highlightjs/highlight.pack.js"></script>
+
+	<script src="/static/vendor/angular-resource/angular-resource.js"></script>
+	<script src="/static/vendor/underscore/underscore.js"></script>
+	<script src="/static/vendor/angular-ui-router/release/angular-ui-router.js"></script>
+	<script src="/static/vendor/angular-loading-bar/build/loading-bar.min.js"></script>
+	<script src="/static/vendor/angular-animate/angular-animate.js"></script>
+	<script src="/static/vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+	<script src="/static/vendor/moment/moment.js"></script>
+	<script src="/static/js/other/moment-timezone-with-data.js"></script>
+	<script src="/static/vendor/angular-moment/angular-moment.js"></script>
+	<script src="/static/vendor/showdown/compressed/Showdown.js"></script>
+	<script src="/static/vendor/sweetalert/lib/sweet-alert.min.js"></script>
+	<script src="/static/vendor/angular-tablesort/js/angular-tablesort.js"></script>
+	<script src="/static/vendor/angular-ui-sortable/sortable.js"></script>
+
+	<script src="/static/js/student.js?cacheblock"></script>
+	<script src="/static/js/common/main.js"></script>
+	<script src="/static/js/common/services.js"></script>
+	<script src="/static/js/common/controllers.js"></script>
+	<script src="/static/js/student/controllers.js"></script>
+	<script src="/static/admin/js/ok/app.js"></script>
+
+	<script>
+    Raven.config('https://edc8538d3d5f47fcb1b14c33d9ae7d8b@app.getsentry.com/36686', {
+        whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']
+    }).install();
+    </script>
+
+	<style>.pkt_added {text-decoration:none !important;}</style></head>
+<body class="course" data-pinterest-extension-installed="sa1.35">
+<div class="main">
+	<div class="shadow"></div>
+	<div class="content">
+
+		<header>
+			<a ui-sref="dashboard" class="logo">
+				<img src="/static/student/images/logo-light.png">
+				<h1>Okpy</h1>
+			</a>
+		</header>
+
+		<nav class="tools">
+			<ul>
+
+				<li><a href="/static/student/tour.html"><span class="icon-question">?</span></a></li>
+				<li> alvinwan@berkeley.edu </li>
+
+				<li>
+					<a class="show-menu">
+						Menu
+                <span class="stripes">
+                  <span class="stripe"></span>
+                  <span class="stripe"></span>
+                  <span class="stripe"></span>
+                </span>
+					</a>
+
+
+				</li>
+			</ul>
+		</nav>
+
+		<span class="menu-cover"></span>
+		<nav class="menu">
+			<ul>
+				<div class="close light close-menu"><span class="icon-x">+</span></div>
+
+				<li><a href="">alvinwan@berkeley.edu</a></li>
+
+				<li><a href="http://cs61a.org">CS61A</a></li>
+				<li><a href="https://ok-server.appspot.com/_ah/logout?continue=https://www.google.com/accounts/Logout%3Fcontinue%3Dhttps://appengine.google.com/_ah/logout%253Fcontinue%253Dhttps://ok-server.appspot.com/landing%26service%3Dah">Log Out</a></li>
+			</ul>
+		</nav>
+
+		<script>
+              window.user = "alvinwan@berkeley.edu";
+              window.userId = "109982523380525474358";
+              window.reloginLink = "https://ok-server.appspot.com/_ah/logout?continue=https://www.google.com/accounts/Logout%3Fcontinue%3Dhttps://appengine.google.com/_ah/logout%253Fcontinue%253Dhttps://www.google.com/accounts/AccountChooser%25253Fservice%25253Dah%252526passive%25253Dtrue%252526continue%25253Dhttps://appengine.google.com/_ah/conflogin%2525253Fcontinue%2525253Dhttps://ok-server.appspot.com/%252526ltmpl%25253Dgm%252526shdf%25253DChULEgZhaG5hbWUaCW9rLXNlcnZlcgwSAmFoIhTRmfBdjg3uj7bbvDhthnutdmmiBygBMhTTf2TVMyA55uLdnSwm7dSaRjyL5w%26service%3Dah";
+            </script>
+		<!-- uiView:  --><div ui-view="" class="ng-scope"><div class="screen courses ng-scope">
+		<div class="screen courses ng-scope" ng-controller="CourseSelectorController">
+			<!-- ngRepeat: course in courses --><section ng-repeat="course in courses" class="ng-scope">
+			<a ui-sref="student({courseId:course.id})" class="course large" href="#/course/6058925581402112">
+				<div class="course-main" style="background:url('/static/student/images/courses/cs61a.png') no-repeat center; background-size:cover">
+					<img class="assign-bg" src="/static/student/images/bg-logo.png">
+					<h2 class="assign-title ng-binding">CS 98-052</h2>
+
+					<p class="course-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
+					<div class="assign-deck">
 					</div>
-				</header>
-				<div class="container-fluid">
-					<section>
-						<a href="all.html" class="module blue col-md-4" id="1">
-							<div class="module-main">
-								<h2 class="assign-title">CS61A</h2>
-								<p class="module-subtitle">Introduction to the Structure and Interpretation of Computer Programs . UC Berkeley</p>
-							</div>
-							<div class="module-detail">
-								<p>Detail</p>
-								<span class="arrow right"></span>
-							</div>
-						</a>
-						<a href="tour.html" class="module gray col-md-4" id="1">
-							<div class="module-main">
-								<div class="penant">
-									<p>New!</p>
-								</div>
-								<h2 class="assign-title">Dum Dum</h2>
-								<p class="module-subtitle">The Structure and Interpretation of Chickens and Penguins in Space . UC HurHur</p>
-							</div>
-							<div class="module-detail">
-								<p>Detail</p>
-								<span class="arrow right"></span>
-							</div>
-						</a>
-					</section>
+
+					<div class="course-progress">
+						<div class="assign-bar"><span class="assign-fill" style="width: 100%"></span></div>
+						<p class="assign-label">Course has begun</p>
+					</div>
+
+
 				</div>
-			</div>
-		</div>
-		<div class="loader active">
-			<div class="center">
-				<div class="circle">
-					<span class="mask">
-						<span class="half"></span>
-					</span>
-					<span class="mask other">
-						<span class="half"></span>
-					</span>
+			</a>
+		</section><!-- end ngRepeat: course in courses --><section ng-repeat="course in courses" class="ng-scope">
+			<a ui-sref="student({courseId:course.id})" class="course large" href="#/course/5165212546105344">
+				<div class="course-main" style="background:url('/static/student/images/courses/cs61a.png') no-repeat center; background-size:cover">
+					<img class="assign-bg" src="/static/student/images/bg-logo.png">
+					<h2 class="assign-title ng-binding">CS 61A</h2>
+
+					<p class="course-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
+					<div class="assign-deck">
+					</div>
+
+					<div class="course-progress">
+						<div class="assign-bar"><span class="assign-fill" style="width: 100%"></span></div>
+						<p class="assign-label">Course has begun</p>
+					</div>
+
+
 				</div>
-				<p>k</p>
-			</div>
+			</a>
+		</section><!-- end ngRepeat: course in courses -->
 		</div>
-	</body>
-	<link href='http://fonts.googleapis.com/css?family=Raleway:100|Open+Sans:300,700' rel='stylesheet' type='text/css'>
-</html>
+	</div></div>
+
+
+	</div>
+
+
+	<div class="loader hide">
+		<div class="center">
+			<div class="circle">
+          <span class="mask">
+            <span class="half"></span>
+          </span>
+          <span class="mask other">
+            <span class="half"></span>
+          </span>
+			</div>
+			<p>k</p>
+		</div>
+	</div>
+
+
+	<link href="//fonts.googleapis.com/css?family=Raleway:100|Open+Sans:300,700" rel="stylesheet" type="text/css">
+</div><div><div class="sweet-overlay" tabindex="-1"></div><div class="sweet-alert" tabindex="-1"><div class="icon error"><span class="x-mark"><span class="line left"></span><span class="line right"></span></span></div><div class="icon warning"> <span class="body"></span> <span class="dot"></span> </div> <div class="icon info"></div> <div class="icon success"> <span class="line tip"></span> <span class="line long"></span> <div class="placeholder"></div> <div class="fix"></div> </div> <div class="icon custom"></div> <h2>Title</h2><p>Text</p><button class="cancel" tabindex="2">Cancel</button><button class="confirm" tabindex="1">OK</button></div></div><a style="height: 20px; width: 40px; position: absolute; opacity: 0.85; z-index: 8675309; display: none; cursor: pointer; border: none; background-color: transparent; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAYAAAD/Rn+7AAADU0lEQVR42s2WXUhTYRjHz0VEVPRFUGmtVEaFUZFhHxBhsotCU5JwBWEf1EWEEVHQx4UfFWYkFa2biPJiXbUta33OXFtuUXMzJ4bK3Nqay7m5NeZq6h/tPQ+xU20zugjOxR/+7/O8539+5znnwMtNTExwJtMb3L/fiLv3botCSmUjeCaejTOb39AiFothfHxcFIrHY8RksZjBsckJcOIRMfFsHD/SsbExUYpnI8DR0dGUGjSb0byhEJp5Uqg5CTSzc2CQleJbMEj9/ywBcGRkJEk9DQqouEVQT1sK444yWI9UonmTjGqauVLEIlHa9x8lAMbj8SSpp0rwKGMVvg8P46vbg0C7na8z8JsMcgHe7jlEa+edRhiLy8n/TUMfu6EvLElk+U0WtGwrTrdfAGQf5J8iiK4LVzDU28t8JtMSocf8E+l68myaNFXm/6rXslLK7ay5TOunuRvZWpJuvwAYjUaTpOIWoquuAZ219RTaxKYp9BbjycoN5FvL9qH9TBX5rvoGdJythvXYSTxdtRnWylO/ZdqrLsGwszzhWQ593z2KlAwCYCQSSZJ6ehZ0W7bD9VBLgN0NCqr3qR7R2rBrL3pu3Sb/7nDlz2uy6cG0OXk0GTbZXzNp8trsPAQdTj6frlWzN2DcXZGKQQAMh8NJ6rpyHe+PnkCr/CAFdZyvpfpjuvkifLF9wIt1Wwlo0OHie1RvWrKa93RjzfzliTzPKz3ltB0/Tevmwp14wGUgHAzSOoUEwFAolFaaBSuhnslPRkJexUJtZ6v5HtUeLswl33n1BgEY5fvhs9sJ3FAiT+QYyyvoAQJuD0KBAFRTJNAuz5/s3gJgMBhMJwrVFRThM5tY5zUF/A4X1f2fvQTRLCuBreoim0YmAbqNJryvPEXeeq46kaNdkQ/1HCncbJKPs9ZSv2VHGfWsZ2hfkhKAfr8/pdxWKx4wwD69PmVfNSOL+lr2w+gYqHpWDtXt1xQ8AMlWU0e1lqLd/APRHoP8AJqWrQG9gYxcPMsvSJUvAA4MDKTUJ7MZLaVy8v+qT21tcDx/OemePr0RTkNrur4A6PP5xCgBsL+/X4wiQDpuuVxOeL1eMYmYeDY6sOp0z+B0OuHxeEQhxkJMFosJiSO/UinOI/8Pc+l7KKArAT8AAAAASUVORK5CYII=); top: 244px; left: 376px;" href="http://www.pinterest.com/pin/create/extension/?url=https%3A%2F%2Fok-server.appspot.com%2F%23%2F&amp;media=https%3A%2F%2Fok-server.appspot.com%2Fstatic%2Fstudent%2Fimages%2Fbg-logo.png&amp;xm=h&amp;xv=sa1.35&amp;description=Ok%20Student"></a></body></html>
