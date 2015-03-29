@@ -2,60 +2,59 @@
 	<meta charset="UTF-8">
 	<title>Ok Student</title>
 
-	<link href="/static/student/styles/all.css" rel="stylesheet">
-	<link rel="stylesheet" href="/static/student/styles/zenburn.css">
-	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
-	<link href="/static/vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet">
+	<link href="styles/courses.css" rel="stylesheet">
+	<link rel="stylesheet" href="styles/zenburn.css">
+	<!--<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">-->
+	<!--<link href="../vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet">-->
 
-	<link href="/static/vendor/sweetalert/lib/sweet-alert.css" rel="stylesheet">
+	<!--<link href="../vendor/sweetalert/lib/sweet-alert.css" rel="stylesheet">-->
 
-	<script src="/static/vendor/jquery/dist/jquery.min.js"></script><style type="text/css"></style>
+	<script src="../vendor/jquery/dist/jquery.min.js"></script><style type="text/css"></style>
 
 	<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
-	<script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>
+	<!--<script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>-->
 
-	<script src="/static/student/scripts/all.js"></script>
-	<script src="/static/student/scripts/highlight.pack.js"></script>
+	<script src="scripts/all.js"></script>
+	<script src="scripts/highlight.pack.js"></script>
 
-	<script src="/static/vendor/angular/angular.js"></script>
-	<script src="/static/vendor/highlightjs/highlight.pack.js"></script>
+	<!--<script src="../vendor/angular/angular.js"></script>-->
+	<script src="../vendor/highlightjs/highlight.pack.js"></script>
 
-	<script src="/static/vendor/angular-resource/angular-resource.js"></script>
-	<script src="/static/vendor/underscore/underscore.js"></script>
-	<script src="/static/vendor/angular-ui-router/release/angular-ui-router.js"></script>
-	<script src="/static/vendor/angular-loading-bar/build/loading-bar.min.js"></script>
-	<script src="/static/vendor/angular-animate/angular-animate.js"></script>
-	<script src="/static/vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
-	<script src="/static/vendor/moment/moment.js"></script>
-	<script src="/static/js/other/moment-timezone-with-data.js"></script>
-	<script src="/static/vendor/angular-moment/angular-moment.js"></script>
-	<script src="/static/vendor/showdown/compressed/Showdown.js"></script>
-	<script src="/static/vendor/sweetalert/lib/sweet-alert.min.js"></script>
-	<script src="/static/vendor/angular-tablesort/js/angular-tablesort.js"></script>
-	<script src="/static/vendor/angular-ui-sortable/sortable.js"></script>
+	<!--<script src="../vendor/angular-resource/angular-resource.js"></script>-->
+	<!--<script src="../vendor/underscore/underscore.js"></script>-->
+	<!--<script src="../vendor/angular-ui-router/release/angular-ui-router.js"></script>-->
+	<!--<script src="../vendor/angular-loading-bar/build/loading-bar.min.js"></script>-->
+	<!--<script src="../vendor/angular-animate/angular-animate.js"></script>-->
+	<!--<script src="../vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>-->
+	<!--<script src="../vendor/moment/moment.js"></script>-->
+	<!--<script src="../js/other/moment-timezone-with-data.js"></script>-->
+	<!--<script src="../vendor/angular-moment/angular-moment.js"></script>-->
+	<!--<script src="../vendor/showdown/compressed/Showdown.js"></script>-->
+	<!--<script src="../vendor/sweetalert/lib/sweet-alert.min.js"></script>-->
+	<!--<script src="../vendor/angular-tablesort/js/angular-tablesort.js"></script>-->
+	<!--<script src="../vendor/angular-ui-sortable/sortable.js"></script>-->
 
-	<script src="/static/js/student.js?cacheblock"></script>
-	<script src="/static/js/common/main.js"></script>
-	<script src="/static/js/common/services.js"></script>
-	<script src="/static/js/common/controllers.js"></script>
-	<script src="/static/js/student/controllers.js"></script>
-	<script src="/static/admin/js/ok/app.js"></script>
+	<script src="../js/student.js?cacheblock"></script>
+	<script src="../js/common/main.js"></script>
+	<script src="../js/common/services.js"></script>
+	<script src="../js/common/controllers.js"></script>
+	<script src="../js/student/controllers.js"></script>
+	<script src="../admin/js/ok/app.js"></script>
 
 	<script>
     Raven.config('https://edc8538d3d5f47fcb1b14c33d9ae7d8b@app.getsentry.com/36686', {
         whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']
     }).install();
     </script>
-
-	<style>.pkt_added {text-decoration:none !important;}</style></head>
-<body class="course" data-pinterest-extension-installed="sa1.35">
+</head>
+<body class="course">
 <div class="main">
 	<div class="shadow"></div>
 	<div class="content">
 
 		<header>
 			<a ui-sref="dashboard" class="logo">
-				<img src="/static/student/images/logo-light.png">
+				<img src="images/logo-light.png">
 				<h1>Okpy</h1>
 			</a>
 		</header>
@@ -63,7 +62,7 @@
 		<nav class="tools">
 			<ul>
 
-				<li><a href="/static/student/tour.html"><span class="icon-question">?</span></a></li>
+				<li><a href="tour.html"><span class="icon-question">?</span></a></li>
 				<li> alvinwan@berkeley.edu </li>
 
 				<li>
@@ -102,8 +101,8 @@
 		<div class="screen courses ng-scope" ng-controller="CourseSelectorController">
 			<!-- ngRepeat: course in courses --><section ng-repeat="course in courses" class="ng-scope">
 			<a ui-sref="student({courseId:course.id})" class="course large" href="#/course/6058925581402112">
-				<div class="course-main" style="background:url('/static/student/images/courses/cs61a.png') no-repeat center; background-size:cover">
-					<img class="assign-bg" src="/static/student/images/bg-logo.png">
+				<div class="course-main" style="background:url('images/courses/cs61a.png') no-repeat center; background-size:cover">
+					<img class="assign-bg" src="images/bg-logo.png">
 					<h2 class="assign-title ng-binding">CS 98-052</h2>
 
 					<p class="course-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
@@ -120,8 +119,8 @@
 			</a>
 		</section><!-- end ngRepeat: course in courses --><section ng-repeat="course in courses" class="ng-scope">
 			<a ui-sref="student({courseId:course.id})" class="course large" href="#/course/5165212546105344">
-				<div class="course-main" style="background:url('/static/student/images/courses/cs61a.png') no-repeat center; background-size:cover">
-					<img class="assign-bg" src="/static/student/images/bg-logo.png">
+				<div class="course-main" style="background:url('images/courses/cs61a.png') no-repeat center; background-size:cover">
+					<img class="assign-bg" src="images/bg-logo.png">
 					<h2 class="assign-title ng-binding">CS 61A</h2>
 
 					<p class="course-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
