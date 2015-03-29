@@ -1646,9 +1646,6 @@ class NotificationsAPI(APIResource):
         },
         'read': {
         },
-        'put': {
-               'web_args': {}
-               },
         'index': {
         },
         'clean': {
@@ -1658,8 +1655,6 @@ class NotificationsAPI(APIResource):
                 'course': KeyArg('Course', required=True),
                 'expiration': Arg(datetime)
             }
-        },
-        'read': {
         }
     }
 
@@ -1710,5 +1705,4 @@ class NotificationsAPI(APIResource):
         pass
     
     def read(self, obj, user, data):
-        
         pass
