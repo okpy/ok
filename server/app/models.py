@@ -411,6 +411,8 @@ class Assignment(Base):
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
+    resubmission = ndb.BooleanProperty(default=False)
+
     # TODO Add services requested
 
     @classmethod
@@ -653,6 +655,7 @@ class Submission(Base):
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
     assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
+    is_resubmission = ndb.BooleanProperty(default=False)
 
     def get_final(self):
         assignment = self.assignment
@@ -672,10 +675,14 @@ class Submission(Base):
     def mark_as_final(self):
         """Create or update a final submission."""
         final = self.get_final()
-
         if final:
-            final.submitter = self.submitter
-            final.submission = self.key
+            assignment = self.assignment.get()
+            if not assignment.active and assignment.resubmission:
+                # Follow resubmssion procedure
+                final.resubmission = self.key
+            else:
+              final.submitter = self.submitter
+              final.submission = self.key
         else:
             group = self.submitter.get().get_group(self.assignment)
             final = FinalSubmission(
@@ -1078,6 +1085,7 @@ class FinalSubmission(Base):
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
     submission = ndb.KeyProperty(Submission)
+    resubmission = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
     submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
     published = ndb.BooleanProperty(default=False)
