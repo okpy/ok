@@ -1111,19 +1111,18 @@ class SubmissionAPI(APIResource):
 
         if submit and late_flag:
             if revision:
-              # In the revision period. Ensure that user has a previously graded submission.
-              fs = user.get_final_submission(assignment)
-              if fs is None or fs.submission.score is None:
-                return (403, 'late', {
-                  'late': True,
-                  'message': "No Previous Submission",
-                  })
+                # In the revision period. Ensure that user has a previously graded submission.
+                fs = user.get_final_submission(valid_assignment)
+                if fs is None or fs.submission.get().score == []:
+                    return (403, 'Previous submission was not graded', {
+                      'late': True,
+                      })
             else:
-              # Late submission. Do not allow them to submit
-              logging.info('Rejecting Late Submission', submitter)
-              return (403, 'late', {
-                  'late': True,
-                  })
+                # Late submission. Do not allow them to submit
+                logging.info('Rejecting Late Submission', submitter)
+                return (403, 'late', {
+                    'late': True,
+                    })
 
 
         models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)

@@ -684,7 +684,7 @@ class Submission(Base):
         final = self.get_final()
         if final:
             assignment = self.assignment.get()
-            if not assignment.active and assignment.revision:
+            if assignment.revision:
                 # Follow resubmssion procedure
                 final.revision = self.key
             else:
