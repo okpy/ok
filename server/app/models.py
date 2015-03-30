@@ -226,20 +226,20 @@ class User(Base):
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
             assign_info['final'] = {}
-            final = assign_info['final']
+            final_info = assign_info['final']
 
-            final['final_submission'] = self.get_final_submission(assignment.key)
-            if final['final_submission']:
-                final['submission'] = final['final_submission'].submission.get()
-                final['backup'] = final['submission'].backup.get()
+            final_info['final_submission'] = self.get_final_submission(assignment.key)
+            if final_info['final_submission']:
+                final_info['submission'] = final_info['final_submission'].submission.get()
+                final_info['backup'] = final_info['submission'].backup.get()
 
-                if final['final_submission'].revision:
-                    final['revision'] = final['final_submission'].revision.get()
+                if final_info['final_submission'].revision:
+                    final_info['revision'] = final_info['final_submission'].revision.get()
 
-                final['backup'] = final['submission'].backup.get()
+                final_info['backup'] = final_info['submission'].backup.get()
 
                 # Percentage
-                final = assign_info['final']['backup']
+                final = final_info['backup']
                 solved = 0
                 total = 0
                 for message in final.messages:
