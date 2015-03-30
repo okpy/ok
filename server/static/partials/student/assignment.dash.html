@@ -66,7 +66,7 @@
             <div ng-if="assign.final.final_submission">
               <div ng-if="assign.final.final_submission.revision">
                 <h3 class="assign-subtitle">Revision</h3>
-                <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.final_submission.revision.id})' class="link view-submission"><p> {{ assign.final.final_submission.revision.created | amCalendar }} &raquo;</p></a>
+                <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.final_submission.revision.backup.id})' class="link view-submission"><p> {{ assign.final.final_submission.revision.created | amCalendar }} &raquo;</p></a>
                 <br><br>
               </div>
               <h3 class="assign-subtitle"  >Latest Submission</h3>
