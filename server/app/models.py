@@ -226,20 +226,17 @@ class User(Base):
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
             assign_info['final'] = {}
-            assign_info['final']['final_submission'] = \
-                    self.get_final_submission(assignment.key)
-            if assign_info['final']['final_submission']:
-                assign_info['final']['submission'] = \
-                        assign_info['final']['final_submission'].submission.get()
-                assign_info['final']['backup'] = \
-                        assign_info['final']['submission'].backup.get()
+            final = assign_info['final']
 
-                if assign_info['final']['final_submission'].revision:
-                    assign_info['final']['revision'] = \
-                      assign_info['final']['final_submission'].revision.get()
+            final['final_submission'] = self.get_final_submission(assignment.key)
+            if final['final_submission']:
+                final['submission'] = final['final_submission'].submission.get()
+                final['backup'] = final['submission'].backup.get()
 
-                assign_info['final']['backup'] = \
-                        assign_info['final']['submission'].backup.get()
+                if final['final_submission'].revision:
+                    final['revision'] = final['final_submission'].revision.get()
+
+                final['backup'] = final['submission'].backup.get()
 
                 # Percentage
                 final = assign_info['final']['backup']
