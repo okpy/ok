@@ -63,8 +63,8 @@
           <div class="col right">
             <div ng-if="assign.final.final_submission">
               <h3 class="assign-subtitle"  >Latest Submission</h3>
-              <a ng-hide="assign.final.submission.score"  ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
-              <a ng-if="assign.final.submission.score"  ng-click="showComposition(assign.final.submission.score[0])" ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+              <a ng-hide="assign.final.submission.score.length > 0"  ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+              <a ng-if="assign.final.submission.score.length > 0"  ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"  class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
             </div>
 
             <h3 class="assign-subtitle" ng-if="!assign.submissions" >No Submissions</h3>
