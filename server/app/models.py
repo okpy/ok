@@ -226,13 +226,17 @@ class User(Base):
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
             assign_info['final'] = {}
-            assign_info['final']['final_submission'] = \
-                    self.get_final_submission(assignment.key)
-            if assign_info['final']['final_submission']:
-                assign_info['final']['submission'] = \
-                        assign_info['final']['final_submission'].submission.get()
-                assign_info['final']['backup'] = \
-                        assign_info['final']['submission'].backup.get()
+            final = assign_info['final']
+
+            final['final_submission'] = self.get_final_submission(assignment.key)
+            if final['final_submission']:
+                final['submission'] = final['final_submission'].submission.get()
+                final['backup'] = final['submission'].backup.get()
+
+                if final['final_submission'].revision:
+                    final['revision'] = final['final_submission'].revision.get()
+
+                final['backup'] = final['submission'].backup.get()
 
                 # Percentage
                 final = assign_info['final']['backup']
@@ -411,6 +415,8 @@ class Assignment(Base):
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
+    revision = ndb.BooleanProperty(default=False)
+
     # TODO Add services requested
 
     @classmethod
@@ -653,6 +659,7 @@ class Submission(Base):
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
     assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
+    is_revision = ndb.BooleanProperty(default=False)
 
     def get_final(self):
         assignment = self.assignment
@@ -672,10 +679,14 @@ class Submission(Base):
     def mark_as_final(self):
         """Create or update a final submission."""
         final = self.get_final()
-
         if final:
-            final.submitter = self.submitter
-            final.submission = self.key
+            assignment = self.assignment.get()
+            if assignment.revision:
+                # Follow resubmssion procedure
+                final.revision = self.key
+            else:
+                final.submitter = self.submitter
+                final.submission = self.key
         else:
             group = self.submitter.get().get_group(self.assignment)
             final = FinalSubmission(
@@ -1078,6 +1089,7 @@ class FinalSubmission(Base):
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
     submission = ndb.KeyProperty(Submission)
+    revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
     submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
     published = ndb.BooleanProperty(default=False)
