@@ -685,8 +685,8 @@ class Submission(Base):
                 # Follow resubmssion procedure
                 final.revision = self.key
             else:
-              final.submitter = self.submitter
-              final.submission = self.key
+                final.submitter = self.submitter
+                final.submission = self.key
         else:
             group = self.submitter.get().get_group(self.assignment)
             final = FinalSubmission(
