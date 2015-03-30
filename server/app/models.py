@@ -234,6 +234,13 @@ class User(Base):
                 assign_info['final']['backup'] = \
                         assign_info['final']['submission'].backup.get()
 
+                if assign_info['final']['final_submission'].revision:
+                    assign_info['final']['revision'] = \
+                      assign_info['final']['final_submission'].revision.get()
+
+                assign_info['final']['backup'] = \
+                        assign_info['final']['submission'].backup.get()
+
                 # Percentage
                 final = assign_info['final']['backup']
                 solved = 0
