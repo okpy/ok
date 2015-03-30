@@ -1114,6 +1114,7 @@ class SubmissionAPI(APIResource):
                 # In the revision period. Ensure that user has a previously graded submission.
                 fs = user.get_final_submission(valid_assignment)
                 if fs is None or fs.submission.get().score == []:
+                    logging.info('Rejecting Revision without graded FS', submitter)
                     return (403, 'Previous submission was not graded', {
                       'late': True,
                       })
