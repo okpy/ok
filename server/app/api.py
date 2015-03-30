@@ -1107,8 +1107,9 @@ class SubmissionAPI(APIResource):
         due = valid_assignment.due_date
         late_flag = valid_assignment.lock_date and \
                     datetime.datetime.now() >= valid_assignment.lock_date
+        revision = valid_assignment.revision
 
-        if submit and late_flag:
+        if submit and late_flag and not revision:
             # Late submission. Do not allow them to submit
             logging.info('Rejecting Late Submission', submitter)
             return (403, 'late', {
