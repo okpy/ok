@@ -57,13 +57,12 @@
     </script>
 </head>
 <body class="course">
-<div class="container-fluid wrap-container">
+<div class="container-fluid">
     <div class="shadow"></div>
-    <div class="wrap">
+    <div class="wrap-container">
         <header>
             <a ui-sref="dashboard" class="logo">
                 <img src="images/logo-light.png">
-
                 <h1>Okpy</h1>
             </a>
             <nav class="tools">
@@ -99,7 +98,7 @@
         </nav>
 
         <!-- uiView:  -->
-        <div ui-view="" class="ng-scope">
+        <div class="ng-scope wrap">
             <div class="screen courses ng-scope">
                 <div class="screen courses ng-scope" ng-controller="CourseSelectorController">
                     <div class="row">
@@ -130,7 +129,7 @@
                             <div ui-sref="student({courseId:course.id})" class="blob">
                                 <div class="blob-main">
                                     <h2 class="blob-title ng-binding">Enter Course ID</h2>
-                                    <p class="blob-subtitle ng-binding"> Is your course not on okpy? <a href="#">Ask your instructor</a> about it.</p>
+                                    <p class="blob-subtitle ng-binding"> Is your course missing? <a href="#">Ask your instructor</a> about it.</p>
                                 </div>
                                 <input class="blob-action" placeholder="course identification number">
                             </div>

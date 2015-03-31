@@ -15,6 +15,8 @@ a, a:hover {
 }
     p a {       border-bottom:1px dotted #666 }
     p a:hover { border-bottom:1px solid #666 }
+    li { list-style:none; }
+/* Structure */
 .wrap-container {
     text-align:center;
 }
@@ -25,6 +27,12 @@ a, a:hover {
     display:inline-block;
     text-align:left;
 }
+/* Commons */
+header {
+    border-bottom:1px solid #eee;
+    width:100%;
+}
+/* Elements */
 .arrow {
     width:10px;
     height:3px;
@@ -52,6 +60,7 @@ a, a:hover {
         border:none;
         outline:none;
     }
+/* Blobs */
 .blob {
     color:#666;
     background-color:#eee;
