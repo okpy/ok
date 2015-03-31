@@ -378,6 +378,11 @@ class Course(Base):
         return [part.user for part in Participant.query(
             Participant.course == self.key,
             Participant.role == STAFF_ROLE).fetch()]
+        
+    def students(self):
+        return [part.user for part in Participant.query(
+            Participant.course == self.key,
+            Participant.role == STUDENT_ROLE).fetch()]
 
     @classmethod
     def _can(cls, user, need, course, query):
@@ -546,6 +551,10 @@ def disjunction(query, filters):
     else:
         return query.filter(filters[0])
 
+class Grade(Base):
+    """The autograder result for a backup, with a score and message."""
+    grade = ndb.FloatProperty()
+    message = ndb.TextProperty() # complete Result of autograder?
 
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
@@ -555,6 +564,7 @@ class Backup(Base):
     server_time = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
     tags = ndb.StringProperty(repeated=True)
+    grade = ndb.StructuredProperty(Grade)
 
     def get_messages(self, fields=None):
         """Returns self.messages formatted as a dictionary.
