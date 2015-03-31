@@ -33,7 +33,7 @@ def seed():
             templates['hogq.scm'] = fp.read()
 
         return models.Assignment(
-            name='proj1',
+            name='cal/CS61A/sp15/proj1',
             display_name="Hog",
             points=20,
             templates=json.dumps(templates),
@@ -153,7 +153,7 @@ def seed():
         return models.Version(
             name='ok',
             id='ok',
-            base_url='https://github.com/Cal-CS-61A-Staff/ok/releases/download',
+            base_url='https://github.com/Cal-CS-61A-Staff/ok-client/releases/download',
             versions=[current_version],
             current_version=current_version
         )
@@ -226,7 +226,7 @@ def seed():
     version.put()
     version = make_version('v1.3.2')
     version.put()
-    version = make_version('v1.3.7')
+    version = make_version('v1.3.15')
     version.put()
 
     # Put a few members on staff

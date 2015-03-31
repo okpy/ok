@@ -226,16 +226,20 @@ class User(Base):
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
             assign_info['final'] = {}
-            assign_info['final']['final_submission'] = \
-                    self.get_final_submission(assignment.key)
-            if assign_info['final']['final_submission']:
-                assign_info['final']['submission'] = \
-                        assign_info['final']['final_submission'].submission.get()
-                assign_info['final']['backup'] = \
-                        assign_info['final']['submission'].backup.get()
+            final_info = assign_info['final']
+
+            final_info['final_submission'] = self.get_final_submission(assignment.key)
+            if final_info['final_submission']:
+                final_info['submission'] = final_info['final_submission'].submission.get()
+                final_info['backup'] = final_info['submission'].backup.get()
+
+                if final_info['final_submission'].revision:
+                    final_info['revision'] = final_info['final_submission'].revision.get()
+
+                final_info['backup'] = final_info['submission'].backup.get()
 
                 # Percentage
-                final = assign_info['final']['backup']
+                final = final_info['backup']
                 solved = 0
                 total = 0
                 for message in final.messages:
@@ -411,6 +415,8 @@ class Assignment(Base):
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
+    revision = ndb.BooleanProperty(default=False)
+
     # TODO Add services requested
 
     @classmethod
@@ -653,9 +659,11 @@ class Submission(Base):
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
     assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
+    is_revision = ndb.BooleanProperty(default=False)
 
     def get_final(self):
         assignment = self.assignment
+        # I have no idea why this works... need it to pass tests
         group = self.submitter.get().get_group(assignment)
         submitter = self.submitter
         if group:
@@ -671,10 +679,14 @@ class Submission(Base):
     def mark_as_final(self):
         """Create or update a final submission."""
         final = self.get_final()
-
         if final:
-            final.submitter = self.submitter
-            final.submission = self.key
+            assignment = self.assignment.get()
+            if assignment.revision:
+                # Follow resubmssion procedure
+                final.revision = self.key
+            else:
+                final.submitter = self.submitter
+                final.submission = self.key
         else:
             group = self.submitter.get().get_group(self.assignment)
             final = FinalSubmission(
@@ -1028,6 +1040,9 @@ class Queue(Base):
              'group': group,
              'score': submission.score,
             })
+        owner_email = "Unknown"
+        if self.owner.get():
+          owner_email = self.owner.get().email[0]
 
         return {
             'submissions': subms,
@@ -1035,7 +1050,7 @@ class Queue(Base):
             'graded': len(filter(None, (subm.score for subm in submissions))),
             'assignment': {'id': self.assignment},
             'assigned_staff': [val.get() for val in self.assigned_staff],
-            'owner': self.owner.get().email[0],
+            'owner': owner_email,
             'id': self.key.id()
         }
 
@@ -1074,6 +1089,7 @@ class FinalSubmission(Base):
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
     submission = ndb.KeyProperty(Submission)
+    revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
     submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
     published = ndb.BooleanProperty(default=False)

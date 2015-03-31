@@ -178,9 +178,22 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
       }
-      $scope.showComposition = function(score) {
+      $scope.showComposition = function(score, backupId) {
         if (score) {
-          $window.swal('Score: '+score.score+'/2', 'Message: ' + score.message, 'info');
+          $window.swal({title: 'Score: '+score.score+'/2',
+              text: 'Message: ' + score.message,
+              showCancelButton: false,
+              icon: false,
+              allowEscapeKey: true,
+              allowOutsideClick: true,
+              confirmButtonText: "View Comments",
+              closeOnConfirm: false},
+              function(isConfirm){
+                if (isConfirm) {
+                  $window.location.replace('/old#/submission/'+backupId.toString()+'/diff')
+                } else {
+
+                } });
         }
       }
       $scope.reloadView = function () {

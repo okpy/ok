@@ -103,9 +103,10 @@ class APIBaseTestCase(BaseTestCase):
 
     def setUp(self):
         super(APIBaseTestCase, self).setUp()
-        APIBaseTestCase.accounts = self.get_accounts()
-        for acc in APIBaseTestCase.accounts.values():
+        self.accounts = self.get_accounts()
+        for acc in self.accounts.values():
             acc.put()
+
         self.user = None
         auth.authenticate = self.authenticate
         users.get_current_user = self.authenticate_GAE_service

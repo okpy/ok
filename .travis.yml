@@ -1,14 +1,14 @@
 language: python
 
 env:
-  - CMD=server/apptest.py $GAE_SDK GAE_VERSION=1.9.17
+  - CMD=server/apptest.py GAE_VERSION=1.9.17
 
 python:
   - "2.7"
 
 install: pip install -r server_requirements.txt
 
-script: FLASK_CONF=TEST python $CMD
+script: FLASK_CONF=TEST python $CMD --sdk_location $GAE_SDK --quiet
 
 before_script:
   - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_$GAE_VERSION.zip -o gae_sdk.zip
