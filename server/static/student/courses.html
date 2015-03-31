@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <title>Ok Student</title>
 
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    
     <link href="styles/courses.css" rel="stylesheet">
     <link rel="stylesheet" href="styles/zenburn.css">
     <!--<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">-->
@@ -17,7 +19,7 @@
     <script src="../vendor/jquery/dist/jquery.min.js"></script>
     <style type="text/css"></style>
 
-    <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
     <!--<script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>-->
 
     <script src="scripts/all.js"></script>
@@ -55,10 +57,9 @@
     </script>
 </head>
 <body class="course">
-<div class="main">
+<div class="container-fluid wrap-container">
     <div class="shadow"></div>
-    <div class="content">
-
+    <div class="wrap">
         <header>
             <a ui-sref="dashboard" class="logo">
                 <img src="images/logo-light.png">
@@ -67,7 +68,6 @@
             </a>
             <nav class="tools">
                 <ul>
-
                     <li><a href="tour.html"><span class="icon-question">?</span></a></li>
                     <li><a href="#"><img src="images/icon-profile.png">alvinwan@berkeley.edu</a></li>
                     <li>
@@ -79,8 +79,6 @@
 							  <span class="stripe"></span>
 							</span>
                         </a>
-
-
                     </li>
                 </ul>
             </nav>
@@ -104,44 +102,40 @@
         <div ui-view="" class="ng-scope">
             <div class="screen courses ng-scope">
                 <div class="screen courses ng-scope" ng-controller="CourseSelectorController">
-                    <!-- ngRepeat: course in courses -->
-                    <section ng-repeat="course in courses" class="ng-scope">
-                        <a ui-sref="student({courseId:course.id})" class="course large"
-                           href="#/course/6058925581402112">
-                            <div class="blob-main">
-                                <h2 class="blob-title ng-binding">CS 98-052</h2>
-
-                                <p class="blob-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
-                                <span class="blob-action">View Course</span>
-
-                            </div>
-                        </a>
-                    </section>
-                    <!-- end ngRepeat: course in courses -->
-                    <section ng-repeat="course in courses" class="ng-scope">
-                        <a ui-sref="student({courseId:course.id})" class="course large"
-                           href="#/course/5165212546105344">
-                            <div class="blob-main">
-                                <h2 class="blob-title ng-binding">CS 61A</h2>
-
-                                <p class="blob-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
-                                <span class="blob-action">View Course</span>
-
-                            </div>
-                        </a>
-                    </section>
-                    <!-- end ngRepeat: course in courses -->
-                    <section ng-repeat="course in courses" class="ng-scope">
-                        <div ui-sref="student({courseId:course.id})" class="course large">
-                            <div class="blob-default">
-                                <h2 class="blob-title ng-binding">Enter Course ID</h2>
-
-                                <p class="blob-subtitle ng-binding"> Is your course not on okpy? <a href="#">Ask your instructor</a> about it.</p>
+                    <div class="row">
+                        <!-- ngRepeat: course in courses -->
+                        <div class="col-md-4 ng-scope" ng-repeat="course in courses">
+                            <a ui-sref="student({courseId:course.id})" class="blob colored blue"
+                               href="#/course/6058925581402112">
+                                <div class="blob-main">
+                                    <h2 class="blob-title ng-binding">CS 98-052</h2>
+                                    <p class="blob-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
+                                </div>
+                                <div class="blob-action">View Course<span class="white arrow right"></span></div>
+                            </a>
+                        </div>
+                        <!-- end ngRepeat: course in courses -->
+                        <div class="col-md-4 ng-scope" ng-repeat="course in courses">
+                            <a ui-sref="student({courseId:course.id})" class="blob colored blue"
+                               href="#/course/6058925581402112">
+                                <div class="blob-main">
+                                    <h2 class="blob-title ng-binding">CS 98-052</h2>
+                                    <p class="blob-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
+                                </div>
+                                <div class="blob-action">View Course<span class="white arrow right"></span></div>
+                            </a>
+                        </div>
+                        <!-- end ngRepeat: course in courses -->
+                        <div class="col-md-4 ng-scope" ng-repeat="course in courses">
+                            <div ui-sref="student({courseId:course.id})" class="blob">
+                                <div class="blob-main">
+                                    <h2 class="blob-title ng-binding">Enter Course ID</h2>
+                                    <p class="blob-subtitle ng-binding"> Is your course not on okpy? <a href="#">Ask your instructor</a> about it.</p>
+                                </div>
                                 <input class="blob-action" placeholder="course identification number">
-
                             </div>
                         </div>
-                    </section>
+                    </div>
                 </div>
             </div>
         </div>

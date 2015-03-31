@@ -1,3 +1,87 @@
-.arrow {
-
+h1,h2,h3,h4,h5,h6 {
+    margin:0;
+    font-family:'Roboto Condensed';
 }
+p, a, li, span {
+    font-family:'Roboto';
+    font-weight:
+}
+a, a:hover {
+    text-decoration:inherit;
+    font-size:inherit;
+    font-weight:inherit;
+    color:inherit;
+    float:none;
+}
+    p a {       border-bottom:1px dotted #666 }
+    p a:hover { border-bottom:1px solid #666 }
+.wrap-container {
+    text-align:center;
+}
+.wrap {
+    width:80%;
+    max-width:1000px;
+    float:none;
+    display:inline-block;
+    text-align:left;
+}
+.arrow {
+    width:10px;
+    height:3px;
+}
+    .arrow::before {
+        content:"";
+        position:absolute;
+        bottom:0;
+        right:0;
+        height:10px;
+        width:3px;
+    }
+    .arrow.white,.arrow.white::before {
+        background-color:#FFF;
+        display:inline-block;
+    }
+    .right {
+        color:#FFF;
+        transform:          rotate(-45deg);
+        -webkit-transform:  rotate(-45deg);
+        -moz-transform:     rotate(-45deg);
+        -o-transform:       rotate(-45deg);
+    }
+    input {
+        border:none;
+        outline:none;
+    }
+.blob {
+    color:#666;
+    background-color:#eee;
+    position:relative;
+    display:inline-block;
+    float:left;
+    width:100%;
+}
+    .blob.colored {
+        color:#FFF;
+    }
+        .blob.blue { background-color:#00698C }
+    .blob-main {
+        padding:50px 50px 30px 50px;
+    }
+    .blob-subtitle {
+        margin-top:15px;
+    }
+    .blob-action {
+        padding:30px 50px;
+        background-color:rgba(0,0,0,0.05);
+        width:100%;
+        text-transform:uppercase;
+        position:relative;
+    }
+        .colored .blob-action {
+            background-color:rgba(0,0,0,0.2);
+        }
+        .blob-action .arrow {
+            position:absolute;
+            top:40px;
+            right:30px;
+        }
