@@ -34,7 +34,18 @@ header {
     width:100%;
 }
     .logo, .tools,.tools a { display:inline-block; }
-        .logo h1 { width:auto }
+        .logo h1 {
+            width:auto;
+            text-align:left;
+            font-size:2em;
+        }
+        .logo img {
+            float:left;
+            height:2em;
+        }
+        .logo {
+            padding:25px;
+        }
     .tools {
         float:right;
     }
