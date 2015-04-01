@@ -139,7 +139,7 @@
             <span class="col-1"><p>Date</p></span>
             <span class="col-2"><p>By</p></span>
           </li>
-          <li class="pop-item" id="1" ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
+          <li class="pop-item" id="1"  ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
             <a class="flag" ng-class=" {active: currAssign.final.final_submission && subm.id == currAssign.final.backup.id }">
               <span class="label left"><p>Flagged for Grading</p></span>
               <span class="cloth"></span>
@@ -149,6 +149,11 @@
             <span class="col-2"><p>{{ subm.submitter.email[0] }}</p></span>
             <a ui-sref='submission.detail({courseId: courseId, submissionId:subm.id})' class="light link view-submission">view &raquo;</a>
           </li>
+          <li class="pop-item" ng-if="currAssign.submissions.length > 0" >
+            <p ng-click="subm_quantity = subm_quantity + 30; getSubmissions(currAssign.assignment.id);" class="light link" style="float:none">Load More Submissions</a>
+          </li>
+
+
         </div>
       </div>
 
@@ -166,6 +171,10 @@
             <span class="col-2"><p>{{ backup.submitter.email[0] }}</p></span>
             <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
           </li>
+          <li class="pop-item" ng-if="currAssign.backups.length > 0">
+            <p ng-click="backup_quantity = backup_quantity + 30; getBackups(currAssign.assignment.id); " class="light link" style="float:none">Load More Backups</a>
+          </li>
+
         </div>
       </div>
     </div>
