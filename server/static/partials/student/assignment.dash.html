@@ -1,6 +1,6 @@
 <div class="screen" ng-controller="AssignmentDashController">
 
-  <div class="assign " ng-class="{active: assign.assignment.active, inactive: !assign.assignment.active, small: !assign.assignment.active, large: assign.assignment.active }" id="1" ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+  <div class="assign " ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active && !assign.assignment.revision}" id="1" ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
     <div class="assign-main">
       <a class="score" ng-click="showComposition(assign.final.submission.score[0],assign.final.backup.id)" ng-if="assign.final.submission && assign.final.submission.score.length > 0">
         {{ assign.final.submission.score[0].score}}
@@ -11,12 +11,14 @@
        <h2 class="assign-title"> {{ ::assign.assignment.display_name }}</h2>
       <div class="assign-deck">
         <p><img src="/static/student/images/icon-clock.png">due {{ ::assign.assignment.due_date | amCalendar }}</p>
-        <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
-      </div>
+        <p ng-if="assign.assignment.revision"> Composition Revisions Enabled<p>
+<!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+ -->      </div>
     </div>
 
     <p class="assign-status" ng-if="!assign.final.final_submission">Not submitted yet</p>
-    <p class="assign-status positive" ng-if="assign.final.final_submission">Assignment submitted!</p>
+    <p class="assign-status positive" ng-if="assign.final.final_submission && !assign.final.final_submission.revision">Assignment submitted</p>
+    <p class="assign-status positive" ng-if="assign.final.final_submission &&  assign.final.final_submission.revision"> Revision submitted </p>
 
 
     <div class="assign-more" ng-show="currAssign == assign">
@@ -62,9 +64,14 @@
 
           <div class="col right">
             <div ng-if="assign.final.final_submission">
+              <div ng-if="assign.final.final_submission.revision">
+                <h3 class="assign-subtitle">Revision</h3>
+                <a ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.final_submission.revision.backup.id})' class="link view-submission"><p> {{ assign.final.final_submission.revision.created | amCalendar }} &raquo;</p></a>
+                <br><br>
+              </div>
               <h3 class="assign-subtitle"  >Latest Submission</h3>
-              <a ng-hide="assign.final.submission.score"  ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
-              <a ng-if="assign.final.submission.score"  ng-click="showComposition(assign.final.submission.score[0])" ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+              <a ng-hide="assign.final.submission.score.length > 0"  ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
+              <a ng-if="assign.final.submission.score.length > 0"  ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"  class="link view-submission"><p> {{ assign.final.backup.created | amCalendar }} &raquo;</p></a> <br>
             </div>
 
             <h3 class="assign-subtitle" ng-if="!assign.submissions" >No Submissions</h3>
@@ -132,7 +139,7 @@
             <span class="col-1"><p>Date</p></span>
             <span class="col-2"><p>By</p></span>
           </li>
-          <li class="pop-item" id="1" ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
+          <li class="pop-item" id="1"  ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
             <a class="flag" ng-class=" {active: currAssign.final.final_submission && subm.id == currAssign.final.backup.id }">
               <span class="label left"><p>Flagged for Grading</p></span>
               <span class="cloth"></span>
@@ -142,6 +149,11 @@
             <span class="col-2"><p>{{ subm.submitter.email[0] }}</p></span>
             <a ui-sref='submission.detail({courseId: courseId, submissionId:subm.id})' class="light link view-submission">view &raquo;</a>
           </li>
+          <li class="pop-item" ng-if="currAssign.submissions.length > 0" >
+            <p ng-click="subm_quantity = subm_quantity + 30; getSubmissions(currAssign.assignment.id);" class="light link" style="float:none">Load More Submissions</a>
+          </li>
+
+
         </div>
       </div>
 
@@ -159,6 +171,10 @@
             <span class="col-2"><p>{{ backup.submitter.email[0] }}</p></span>
             <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
           </li>
+          <li class="pop-item" ng-if="currAssign.backups.length > 0">
+            <p ng-click="backup_quantity = backup_quantity + 30; getBackups(currAssign.assignment.id); " class="light link" style="float:none">Load More Backups</a>
+          </li>
+
         </div>
       </div>
     </div>

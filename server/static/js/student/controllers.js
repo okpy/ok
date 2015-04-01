@@ -274,9 +274,13 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           });
       };
 
+      $scope.subm_quantity = 10;
+      $scope.backup_quantity = 10;
+
       $scope.getSubmissions = function (assignId) {
             User.getSubmissions({
-              assignment: assignId
+              assignment: assignId,
+              quantity: $scope.subm_quantity
             }, function (response) {
               $scope.currAssign.submissions = response;
               $scope.showSubms();
@@ -285,7 +289,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
 
       $scope.getBackups = function (assignId) {
             User.getBackups({
-              assignment: assignId
+              assignment: assignId,
+              quantity: $scope.backup_quantity
             }, function (response) {
               $scope.currAssign.backups = response;
               $scope.showBackups();
