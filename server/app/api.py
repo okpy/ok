@@ -454,13 +454,15 @@ class UserAPI(APIResource):
         'get_backups': {
             'methods': set(['GET']),
             'web_args': {
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True),
+                'quantity': Arg(int, default=10)
             }
         },
         'get_submissions': {
             'methods': set(['GET']),
             'web_args': {
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True),
+                'quantity': Arg(int, default=10)
             }
         },
         'merge_user': {
@@ -604,10 +606,10 @@ class UserAPI(APIResource):
         :param data: (dictionary) key assignment called
         :return: None
         """
-        return obj.get_backups(data['assignment'])
+        return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return obj.get_backups(data['assignment'])
+        return obj.get_backups(data['assignment'], data['quantity'])
 
     def merge_user(self, obj, user, data):
         """
