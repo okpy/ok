@@ -11,7 +11,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import testbed
 
-from app.utils import add_taskqueue
+from app.utils import add_taskqueue, lease_tasks
 from app.constants import STUDENT_ROLE
 from app.constants import STAFF_ROLE
 from app import models
@@ -121,12 +121,15 @@ class AutograderTests(BaseTestCase):
         for submission in self.finalSubmissions.values():
             submission.put()
 
-    def test_addToQueue(self):
+    def test_addToQueue_and_lease(self):
         add_taskqueue(self.course, self.assignment.key)
         q = taskqueue.Queue("pull-queue")
-        tasks = q.lease_tasks(10, 10)
-        sub = task[0].payload
-        self.assertEquals(len(tasks), 3)            
+        submissions = lease_tasks()
+        self.assertEquals(len(submissions), 3)             
+
+        for sub in submissions:
+            self.assertIn(sub, self.finalSubmissions.values())
+
 
 if __name__ == "__main__":
     unittest.main()
