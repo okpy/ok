@@ -404,7 +404,6 @@ def check_user(user_key):
 
     deferred.defer(deferred_check_user, user_key)
 
-
 ######################
 # Autograder actions #
 ######################
@@ -417,5 +416,25 @@ def add_taskqueue(course, assign_key):
     tasks = []
     for sub in submissions:
         if sub:
-            tasks.append(taskqueue.Task( params = {'key': sub.key.urlsafe()}, method = "PULL"))
+            tasks.append(taskqueue.Task( payload = sub.key.urlsafe(), method = "PULL"))
     q.add(tasks)
+
+def lease_tasks(): 
+    day_seconds = 86400
+    max_tasks = 1000
+    q = taskqueue.Queue("pull-queue")
+    submissions = []
+    tasks = q.lease_tasks(day_seconds,max_tasks)
+
+    while len(tasks) != 0:
+        for task in tasks:
+            url_string = task.payload
+            key = ndb.Key(urlsafe=url_string)
+            sub = key.get()
+            submissions.append(sub)
+
+        q.delete_tasks(tasks)
+        tasks = q.lease_tasks(day_seconds, max_tasks)
+
+    return submissions
+
