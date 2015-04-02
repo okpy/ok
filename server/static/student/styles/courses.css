@@ -32,19 +32,20 @@ a, a:hover {
 header {
     border-bottom:1px solid #eee;
     width:100%;
+    float:left;
 }
     .logo, .tools,.tools a { display:inline-block; }
         .logo h1 {
             width:auto;
             text-align:left;
-            font-size:2em;
+            font-size:1.5em;
         }
         .logo img {
             float:left;
-            height:2em;
+            height:1.5em;
         }
         .logo {
-            padding:25px;
+            padding:30px;
         }
     .tools {
         float:right;
