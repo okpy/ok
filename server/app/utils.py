@@ -417,5 +417,5 @@ def add_taskqueue(course, assign_key):
     tasks = []
     for sub in submissions:
         if sub:
-            tasks.append(taskqueue.Task( params = {'key': sub.key.urlsafe()}, method = "PULL"))
+            tasks.append(taskqueue.Task( payload = sub.key, method = "PULL"))
     q.add(tasks)

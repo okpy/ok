@@ -125,6 +125,7 @@ class AutograderTests(BaseTestCase):
         add_taskqueue(self.course, self.assignment.key)
         q = taskqueue.Queue("pull-queue")
         tasks = q.lease_tasks(10, 10)
+        sub = task[0].payload
         self.assertEquals(len(tasks), 3)            
 
 if __name__ == "__main__":
