@@ -1,0 +1,1835 @@
+<html class="no-js ng-scope" ng-app="student">
+<head>
+    <style type="text/css">@charset
+        "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none
+        !important;}ng\:form{display:block;}
+    </style>
+    <meta charset="UTF-8">
+    <title>Ok Student</title>
+
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="styles/courses.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/zenburn.css">
+    <!--<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">-->
+    <!--<link href="../vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet">-->
+
+    <!--<link href="../vendor/sweetalert/lib/sweet-alert.css" rel="stylesheet">-->
+
+    <script src="../vendor/jquery/dist/jquery.min.js"></script>
+    <style type="text/css"></style>
+
+    <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+    <!--<script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>-->
+
+    <script src="scripts/all.js"></script>
+    <script src="scripts/highlight.pack.js"></script>
+
+    <!--<script src="../vendor/angular/angular.js"></script>-->
+    <script src="../vendor/highlightjs/highlight.pack.js"></script>
+
+    <!--<script src="../vendor/angular-resource/angular-resource.js"></script>-->
+    <!--<script src="../vendor/underscore/underscore.js"></script>-->
+    <!--<script src="../vendor/angular-ui-router/release/angular-ui-router.js"></script>-->
+    <!--<script src="../vendor/angular-loading-bar/build/loading-bar.min.js"></script>-->
+    <!--<script src="../vendor/angular-animate/angular-animate.js"></script>-->
+    <!--<script src="../vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>-->
+    <!--<script src="../vendor/moment/moment.js"></script>-->
+    <!--<script src="../js/other/moment-timezone-with-data.js"></script>-->
+    <!--<script src="../vendor/angular-moment/angular-moment.js"></script>-->
+    <!--<script src="../vendor/showdown/compressed/Showdown.js"></script>-->
+    <!--<script src="../vendor/sweetalert/lib/sweet-alert.min.js"></script>-->
+    <!--<script src="../vendor/angular-tablesort/js/angular-tablesort.js"></script>-->
+    <!--<script src="../vendor/angular-ui-sortable/sortable.js"></script>-->
+
+    <script src="../js/student.js?cacheblock"></script>
+    <script src="../js/common/main.js"></script>
+    <script src="../js/common/services.js"></script>
+    <script src="../js/common/controllers.js"></script>
+    <script src="../js/student/controllers.js"></script>
+    <script src="../admin/js/ok/app.js"></script>
+
+    <script>
+    Raven.config('https://edc8538d3d5f47fcb1b14c33d9ae7d8b@app.getsentry.com/36686', {
+        whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']
+    }).install();
+    
+    
+    </script>
+</head>
+<body class="course">
+<div class="container-fluid">
+    <div class="shadow"></div>
+    <div class="wrap-container">
+        <header>
+            <a ui-sref="dashboard" class="logo col-md-3">
+                <img src="images/logo-dark.png">
+                <h1>Okpy</h1>
+            </a>
+            <nav class="tools col-md-9">
+                <ul>
+                    <li>
+                        <a class="show-menu">
+                            Menu
+							<span class="stripes">
+							  <span class="stripe"></span>
+							  <span class="stripe"></span>
+							  <span class="stripe"></span>
+							</span>
+                        </a>
+                    </li>
+                    <li><a href="tour.html"><span class="icon-question">?</span></a></li>
+                    <li><a href="#"><img src="images/icon-profile.png">alvinwan@berkeley.edu</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <nav class="menu">
+            <ul>
+                <span class="close light close-menu"><span class="icon-x">+</span></span>
+
+                <li><a href="">alvinwan@berkeley.edu</a></li>
+
+                <li><a href="http://cs61a.org">CS61A</a></li>
+                <li>
+                    <a href="https://ok-server.appspot.com/_ah/logout?continue=https://www.google.com/accounts/Logout%3Fcontinue%3Dhttps://appengine.google.com/_ah/logout%253Fcontinue%253Dhttps://ok-server.appspot.com/landing%26service%3Dah">Log
+                        Out</a></li>
+            </ul>
+        </nav>
+        
+        <!-- uiView:  -->
+        <div ui-view="" class="ng-scope">  <!-- Sidebar -->
+
+            <aside class="ng-scope">
+                <assignment-module>
+                    <div class="block ng-scope" ng-controller="AssignmentOverviewController">
+                        <div class="block-dom">
+                            <h3 class="block-title ng-binding">22</h3>
+                            <span>Active Assignments</span>
+                        </div>
+                        <div class="block-sub">
+                            <!-- ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    lab09
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    lab08
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    lab07
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    hw06
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    quiz2
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    lab06
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    Ants
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    hw5
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    lab05
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    hw2
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    hw4
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    Maps
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    lab04
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    Project 1 Contest: Hog Strategy
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    hw3
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    lab03
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    extra hw1
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    hw2
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    Hog
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    quiz1
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    lab02
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                            <div class="assign-block ng-scope" ng-repeat="assign in assignments">
+                                <p class="block-label ng-binding">
+                                    <c></c>
+                                    hw1
+                                </p>
+                                </div>
+                            <!-- end ngRepeat: assign in assignments -->
+                        </div>
+                    </div>
+                    <a href="" class="block-link">
+                        <span class="icon-link">8</span>
+
+                        <p class="link-label">Course Website</p>
+                    </a>
+
+                    <div class="newblock">
+                        <a ui-sref="student" class="block-link block-back" href="#/course/5165212546105344">
+                            <span class="arrow left dark"></span>
+
+                            <p>Back</p>
+                        </a>
+                        <a href="http://cs61a.org" class="block-link">
+                            <span class="icon-link">8</span>
+
+                            <p class="link-label">Course Website</p>
+                        </a>
+                    </div>
+                </assignment-module>
+            </aside>
+
+
+            <section class="ng-scope">
+                <div class="fullWidth screen">
+                    <assignment-list>
+                        <div class="screen ng-scope" ng-controller="AssignmentDashController">
+
+                            <!-- ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/18/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign" style="">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> hw2</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/02/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign" style="">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> hw4</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/23/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> hw1</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            01/28/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope active large"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> Hog</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/05/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p ng-if="assign.assignment.revision"
+                                                                                    class="ng-scope"> Composition
+                                        Revisions Enabled</p><!-- end ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope active large"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> Maps</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/26/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p ng-if="assign.assignment.revision"
+                                                                                    class="ng-scope"> Composition
+                                        Revisions Enabled</p><!-- end ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> lab07</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            03/12/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> lab04</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/18/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> hw3</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/19/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> quiz2</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            03/05/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 --><h3
+                                                    class="assign-subtitle ng-scope"
+                                                    ng-if="assign.assignment.max_group_size == 1"> Individual
+                                                Assignment </h3><!-- end ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> quiz1</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            01/29/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 --><h3
+                                                    class="assign-subtitle ng-scope"
+                                                    ng-if="assign.assignment.max_group_size == 1"> Individual
+                                                Assignment </h3><!-- end ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> hw06</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            03/16/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> lab06</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            03/04/2015 at 11:59 AM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> hw5</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            03/04/2015 at 11:59 AM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> lab05</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/25/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> lab02</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            01/28/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> lab09</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            Yesterday at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> lab03</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            02/04/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> lab08</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            03/19/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+                            <div class="assign  ng-scope inactive small"
+                                 ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="assign-main">
+                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
+                                    <img class="assign-bg" src="/static/student/images/bg-clock.png">
+
+                                    <h2 class="assign-title ng-binding"> Ants</h2>
+
+                                    <div class="assign-deck">
+                                        <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                            03/12/2015 at 11:59 PM</p>
+                                        <!-- ngIf: assign.assignment.revision --><p>
+                                        <!--         <a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a>
+                                         -->      </p></div>
+                                </div>
+
+                                <!-- ngIf: !assign.final.final_submission --><p class="assign-status ng-scope"
+                                                                                ng-if="!assign.final.final_submission">
+                                Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
+                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
+
+
+                                <div class="assign-more ng-hide" ng-show="currAssign == assign">
+                                    <div class="assign-text">
+                                        <div class="col left">
+
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: assign.group.group_info -->
+                                            <!-- ngIf: !assign.group.group_info -->
+                                            <div ng-if="!assign.group.group_info" class="ng-scope">
+                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+                                                <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                      class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                    <h3 class="assign-subtitle">Invite to Group</h3>
+
+                                                    <input type="email"
+                                                           class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="ok@cs61a.org" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(assign, assign.invitee)" class="button">Invite</a>
+                                                </form>
+                                                <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
+
+                                            </div>
+                                            <!-- end ngIf: !assign.group.group_info -->
+                                        </div>
+
+                                        <div class="col right">
+                                            <!-- ngIf: assign.final.final_submission -->
+
+                                            <!-- ngIf: !assign.submissions --><h3 class="assign-subtitle ng-scope"
+                                                                                  ng-if="!assign.submissions">No
+                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                            <!-- ngIf: assign.submissions -->
+
+                                            <span class="clear"><!-- ngIf: assign.backups --></span>
+                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
+                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <a class="assign-expand" ng-click="toggleAssign(assign)">
+                                    <!-- ngIf: assign != currAssign --><p ng-if="assign != currAssign" class="ng-scope">
+                                    More Info</p><!-- end ngIf: assign != currAssign -->
+                                    <!-- ngIf: assign == currAssign -->
+                                </a>
+                            </div>
+                            <!-- end ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
+
+
+                            <div class="popups">
+                                <div class="popup group hide">
+                                    <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+                                    <h2 class="popup-title">Group</h2>
+
+                                    <p class="popup-byline"><b class="assign-name ng-binding"></b></p>
+
+                                    <div class="pop-content">
+
+                                        <ul ui-sortable="" ng-model="currGroup.member"
+                                            class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">
+
+                                            <!-- ngRepeat: member in currGroup.member -->
+                                        </ul>
+                                        <hr>
+                                        <!-- ngIf: currGroup.invited.length > 0 -->
+
+                                        <ul class="list-view">
+
+                                            <!-- ngRepeat: invited in currGroup.invited -->
+                                        </ul>
+                                        <a ng-click="" class="action">Save</a>
+                                    </div>
+                                </div>
+
+                                <div class="popup submissions hide">
+                                    <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+                                    <h2 class="popup-title">Submissions</h2>
+
+                                    <p class="popup-byline">for <b class="ng-binding"></b></p>
+
+                                    <div class="pop-content">
+                                        <li class="header">
+                                            <span class="col-1"><p>Date</p></span>
+                                            <span class="col-2"><p>By</p></span>
+                                        </li>
+                                        <!-- ngRepeat: subm in currAssign.submissions | orderBy:'created':true -->
+                                        <!-- ngIf: currAssign.submissions.length > 0 -->
+
+
+                                    </div>
+                                </div>
+
+                                <div class="popup backups hide">
+                                    <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+                                    <h2 class="popup-title">Backups</h2>
+
+                                    <p class="popup-byline">for <b class="ng-binding"></b></p>
+
+                                    <div class="pop-content">
+                                        <li class="header">
+                                            <span class="col-1"><p>Date</p></span>
+                                            <span class="col-2"><p>By</p></span>
+                                        </li>
+                                        <!-- ngRepeat: backup in currAssign.backups | orderBy:'created':true -->
+                                        <!-- ngIf: currAssign.backups.length > 0 -->
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </assignment-list>
+                </div>
+            </section>
+        </div>
+
+
+    </div>
+
+
+    <div class="loader hide">
+        <div class="center">
+            <div class="circle">
+          <span class="mask">
+            <span class="half"></span>
+          </span>
+          <span class="mask other">
+            <span class="half"></span>
+          </span>
+            </div>
+            <p>k</p>
+        </div>
+    </div>
+
+
+    <link href="//fonts.googleapis.com/css?family=Raleway:100|Open+Sans:300,700" rel="stylesheet" type="text/css">
+</div>
+</body>
+</html>
