@@ -277,7 +277,11 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.subm_quantity = 10;
       $scope.backup_quantity = 10;
 
-      $scope.getSubmissions = function (assignId) {
+
+      $scope.getSubmissions = function (assignId,toIncrease) {
+            if (toIncrease) {
+              $scope.subm_quantity += 50;
+            }
             User.getSubmissions({
               assignment: assignId,
               quantity: $scope.subm_quantity
@@ -287,7 +291,11 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             });
       }
 
-      $scope.getBackups = function (assignId) {
+      $scope.getBackups = function (assignId, toIncrease) {
+            if (toIncrease) {
+              $scope.backup_quantity += 50;
+            }
+
             User.getBackups({
               assignment: assignId,
               quantity: $scope.backup_quantity
