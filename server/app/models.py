@@ -6,6 +6,7 @@ Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 #pylint: disable=no-member, unused-argument, too-many-return-statements
 
 import datetime
+import itertools
 
 from app import app
 from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
@@ -200,8 +201,8 @@ class User(Base):
         return all_backups
 
     def get_backups(self, assignment, num_backups=10):
-        all_backups = self._get_backups_helper(assignment)
-        all_backups = [query.fetch(num_backups) for query in all_backups]
+        queries = self._get_backups_helper(assignment)
+        all_backups = list(itertools.chain(query.fetch(num_backups) for query in queries))
         all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
         return all_backups[:num_backups]
