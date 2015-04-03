@@ -69,7 +69,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
      }, function (response) {
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId;
-        if (response.messages.file_contents['submit']) {
+        if (response.messages && response.messages.file_contents && response.messages.file_contents['submit']) {
           delete $scope.submission.messages.file_contents['submit'];
           $scope.isSubmit = true;
         }
