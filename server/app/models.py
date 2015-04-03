@@ -222,8 +222,9 @@ class User(Base):
         return all_submissions
 
     def get_submissions(self, assignment, num_submissions=10):
-        all_submissions = self._get_submissions_helper(assignment)
+        queries = self._get_submissions_helper(assignment)
 
+        all_subms = list(itertools.chain(query.fetch(num_backups) for query in queries))
         all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment \
                 and self._contains_files(x.backup.get())]
 
