@@ -202,7 +202,12 @@ class User(Base):
 
     def get_backups(self, assignment, num_backups=10):
         queries = self._get_backups_helper(assignment)
-        all_backups = list(itertools.chain(query.fetch(num_backups) for query in queries))
+        backups = [query.fetch(num_backups) for query in queries]
+        all_backups = []
+        for results in backups:
+            for b in results:
+                all_backups.append(b)
+
         all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
         return all_backups[:num_backups]
@@ -224,8 +229,13 @@ class User(Base):
     def get_submissions(self, assignment, num_submissions=10):
         queries = self._get_submissions_helper(assignment)
 
-        all_subms = list(itertools.chain(query.fetch(num_backups) for query in queries))
-        all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment \
+        subms = [query.fetch(num_submissions) for query in queries]
+        all_subms = []
+        for results in subms:
+            for s in results:
+                all_subms.append(s)
+
+        all_subms = [x for x in all_subms if x.backup.get().assignment == assignment \
                 and self._contains_files(x.backup.get())]
 
         all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
