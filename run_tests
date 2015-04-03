@@ -1,13 +1,13 @@
 #!/bin/sh
 
-if env | grep -q ^VIRTUAL_ENV=
+if env | grep -q '^VIRTUAL_ENV='
 then
     deactivate
 fi
 
 source env/server/bin/activate
 cd server
-FLASK_CONF=TEST python apptest.py $1
+FLASK_CONF=TEST python apptest.py $@
 RESULT=$?
 cd ..
 deactivate

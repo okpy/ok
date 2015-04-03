@@ -454,13 +454,15 @@ class UserAPI(APIResource):
         'get_backups': {
             'methods': set(['GET']),
             'web_args': {
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True),
+                'quantity': Arg(int, default=10)
             }
         },
         'get_submissions': {
             'methods': set(['GET']),
             'web_args': {
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True),
+                'quantity': Arg(int, default=10)
             }
         },
         'merge_user': {
@@ -604,10 +606,10 @@ class UserAPI(APIResource):
         :param data: (dictionary) key assignment called
         :return: None
         """
-        return obj.get_backups(data['assignment'])
+        return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return obj.get_backups(data['assignment'])
+        return obj.get_backups(data['assignment'], data['quantity'])
 
     def merge_user(self, obj, user, data):
         """
@@ -686,6 +688,12 @@ class AssignmentAPI(APIResource):
         :return:
         """
         data['creator'] = user.key
+        # check if the course actually exists
+        course = data['course'].get()
+        if not course:
+            raise BadValueError("Course with ID {} does not exist.".format(
+                data['course'].id()))
+
         # check if there is a duplicate assignment
         assignments = list(
             models.Assignment.query(models.Assignment.name == data['name']))
@@ -1101,13 +1109,24 @@ class SubmissionAPI(APIResource):
         due = valid_assignment.due_date
         late_flag = valid_assignment.lock_date and \
                     datetime.datetime.now() >= valid_assignment.lock_date
+        revision = valid_assignment.revision
 
         if submit and late_flag:
-            # Late submission. Do not allow them to submit
-            logging.info('Rejecting Late Submission', submitter)
-            return (403, 'late', {
-                'late': True,
-                })
+            if revision:
+                # In the revision period. Ensure that user has a previously graded submission.
+                fs = user.get_final_submission(valid_assignment)
+                if fs is None or fs.submission.get().score == []:
+                    logging.info('Rejecting Revision without graded FS', submitter)
+                    return (403, 'Previous submission was not graded', {
+                      'late': True,
+                      })
+            else:
+                # Late submission. Do not allow them to submit
+                logging.info('Rejecting Late Submission', submitter)
+                return (403, 'late', {
+                    'late': True,
+                    })
+
 
         models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)
         submission = self.db.create_submission(user, valid_assignment,
