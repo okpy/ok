@@ -123,7 +123,6 @@ class AutograderTests(BaseTestCase):
 
     def test_addToQueue_and_lease(self):
         add_taskqueue(self.course, self.assignment.key)
-        q = taskqueue.Queue("pull-queue")
         submissions = lease_tasks()
         self.assertEquals(len(submissions), 3)             
 
