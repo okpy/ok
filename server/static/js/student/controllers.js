@@ -69,7 +69,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
      }, function (response) {
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId;
-        if (response.messages.file_contents['submit']) {
+        if (response.messages && response.messages.file_contents && response.messages.file_contents['submit']) {
           delete $scope.submission.messages.file_contents['submit'];
           $scope.isSubmit = true;
         }
@@ -274,18 +274,31 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           });
       };
 
-      $scope.getSubmissions = function (assignId) {
+      $scope.subm_quantity = 10;
+      $scope.backup_quantity = 10;
+
+
+      $scope.getSubmissions = function (assignId,toIncrease) {
+            if (toIncrease) {
+              $scope.subm_quantity += 50;
+            }
             User.getSubmissions({
-              assignment: assignId
+              assignment: assignId,
+              quantity: $scope.subm_quantity
             }, function (response) {
               $scope.currAssign.submissions = response;
               $scope.showSubms();
             });
       }
 
-      $scope.getBackups = function (assignId) {
+      $scope.getBackups = function (assignId, toIncrease) {
+            if (toIncrease) {
+              $scope.backup_quantity += 50;
+            }
+
             User.getBackups({
-              assignment: assignId
+              assignment: assignId,
+              quantity: $scope.backup_quantity
             }, function (response) {
               $scope.currAssign.backups = response;
               $scope.showBackups();
