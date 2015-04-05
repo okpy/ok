@@ -234,9 +234,10 @@ class User(Base):
         for results in subms:
             for s in results:
                 all_subms.append(s)
-
-        all_subms = [x for x in all_subms if x.backup.get().assignment == assignment \
-                and self._contains_files(x.backup.get())]
+        
+        all_subms = [x.backup.get() for x in all_subms]
+        all_subms = [x for x in all_subms if x.assignment == assignment \
+                and self._contains_files(x)]
 
         all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
