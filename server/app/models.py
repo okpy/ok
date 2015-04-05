@@ -240,9 +240,6 @@ class User(Base):
 
         all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
-        for subm in all_subms[:num_submissions]:
-            subm.messages = None # What is this here for???
-
         return all_subms[:num_submissions]
 
     get_num_submissions = make_num_counter(_get_submissions_helper)
