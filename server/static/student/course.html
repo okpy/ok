@@ -6,28 +6,20 @@
     </style>
     <meta charset="UTF-8">
     <title>Ok Student</title>
-
     <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-
     <link href="styles/courses.css" rel="stylesheet">
     <link rel="stylesheet" href="styles/zenburn.css">
     <!--<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">-->
     <!--<link href="../vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet">-->
-
     <!--<link href="../vendor/sweetalert/lib/sweet-alert.css" rel="stylesheet">-->
-
     <script src="../vendor/jquery/dist/jquery.min.js"></script>
     <style type="text/css"></style>
-
     <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
     <!--<script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>-->
-
     <script src="scripts/all.js"></script>
     <script src="scripts/highlight.pack.js"></script>
-
     <!--<script src="../vendor/angular/angular.js"></script>-->
     <script src="../vendor/highlightjs/highlight.pack.js"></script>
-
     <!--<script src="../vendor/angular-resource/angular-resource.js"></script>-->
     <!--<script src="../vendor/underscore/underscore.js"></script>-->
     <!--<script src="../vendor/angular-ui-router/release/angular-ui-router.js"></script>-->
@@ -41,19 +33,16 @@
     <!--<script src="../vendor/sweetalert/lib/sweet-alert.min.js"></script>-->
     <!--<script src="../vendor/angular-tablesort/js/angular-tablesort.js"></script>-->
     <!--<script src="../vendor/angular-ui-sortable/sortable.js"></script>-->
-
     <script src="../js/student.js?cacheblock"></script>
     <script src="../js/common/main.js"></script>
     <script src="../js/common/services.js"></script>
     <script src="../js/common/controllers.js"></script>
     <script src="../js/student/controllers.js"></script>
     <script src="../admin/js/ok/app.js"></script>
-
     <script>
     Raven.config('https://edc8538d3d5f47fcb1b14c33d9ae7d8b@app.getsentry.com/36686', {
         whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']
     }).install();
-    
     
 
     </script>
@@ -85,94 +74,80 @@
                 </ul>
             </nav>
         </header>
-
         <nav class="menu">
             <ul>
                 <span class="close light close-menu"><span class="icon-x">+</span></span>
-
                 <li><a href="">alvinwan@berkeley.edu</a></li>
-
                 <li><a href="http://cs61a.org">CS61A</a></li>
                 <li>
                     <a href="https://ok-server.appspot.com/_ah/logout?continue=https://www.google.com/accounts/Logout%3Fcontinue%3Dhttps://appengine.google.com/_ah/logout%253Fcontinue%253Dhttps://ok-server.appspot.com/landing%26service%3Dah">Log
                         Out</a></li>
             </ul>
         </nav>
-
         <!-- uiView:  -->
-
         <section class="ng-scope wrap">
             <div class="fullWidth screen courses">
                 <assignment-list class="row">
                     <div class="screen ng-scope" ng-controller="AssignmentDashController">
-
-                        <!-- ngRepeat: assign in assignments | orderBy: ['assignment.active','assignment.points']:true -->
                         <div class="col-md-4 ng-scope"
                              ng-class="{'active large': assign.assignment.active || assign.assignment.revision, 'inactive small': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                              id="1"
                              ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
                             <div class="blob colored blue">
                                 <div class="blob-main">
-                                    <!-- ngIf: assign.final.submission && assign.final.submission.score.length > 0 -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
                                     <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
                                         02/18/2015 at 11:59 PM</p>
-                                    <!-- ngIf: assign.assignment.revision -->
                                     <!-- <p><a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a></p> -->
                                 </div>
-    
-                                <!-- ngIf: !assign.final.final_submission -->
-                                <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted yet</p><!-- end ngIf: !assign.final.final_submission -->
-                                <!-- ngIf: assign.final.final_submission && !assign.final.final_submission.revision -->
-                                <!-- ngIf: assign.final.final_submission &&  assign.final.final_submission.revision -->
-    
-    
+                                <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
+                                    yet</p><!-- end ngIf: !assign.final.final_submission -->
                                 <div class="blob-more ng-hide" ng-show="currAssign == blob" style="">
                                     <div class="blob-text">
                                         <div class="col left">
-    
-                                            <!-- ngIf: assign.group.group_info -->
-                                            <!-- ngIf: assign.group.group_info -->
-                                            <!-- ngIf: !assign.group.group_info -->
+
+
                                             <div ng-if="!assign.group.group_info" class="ng-scope">
-                                                <!-- ngIf: assign.assignment.max_group_size > 1 -->
+
                                                 <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
                                                       class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
                                                     <h3 class="blob-subtitle">Invite to Group</h3>
-    
+
                                                     <input type="email"
                                                            class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
                                                            placeholder="ok@cs61a.org" ng-model="assign.invitee"
                                                            required="">
-                                                    <a ng-click="addMember(blob, assign.invitee)" class="button">Invite</a>
+                                                    <a ng-click="addMember(blob, assign.invitee)"
+                                                       class="button">Invite</a>
                                                 </form>
                                                 <!-- end ngIf: assign.assignment.max_group_size > 1 -->
-                                                <!-- ngIf: assign.assignment.max_group_size == 1 -->
-    
+
+
                                             </div>
                                             <!-- end ngIf: !assign.group.group_info -->
                                         </div>
-    
+
                                         <div class="col right">
-                                            <!-- ngIf: assign.final.final_submission -->
-    
-                                            <!-- ngIf: !assign.submissions --><h3 class="blob-subtitle ng-scope"
-                                                                                  ng-if="!assign.submissions">No
-                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
-                                            <!-- ngIf: assign.submissions -->
-    
-                                            <span class="clear"><!-- ngIf: assign.backups --></span>
-                                            <!-- ngIf: !assign.backups --><span class="clear ng-scope"
-                                                                                ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+
+
+                                            <h3 class="blob-subtitle ng-scope"
+                                                ng-if="!assign.submissions">No
+                                                Submissions</h3><!-- end ngIf: !assign.submissions -->
+
+
+                                            <span class="clear"></span>
+                                            <span class="clear ng-scope"
+                                                  ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
                                         </div>
-    
+
                                     </div>
                                 </div>
                                 <a class="blob-expand" ng-click="toggleAssign(blob)">
-                                    <!-- ngIf: blob != currAssign -->
-                                    <div class="blob-action" ng-if="blob != currAssign" class="ng-scope">View Course<span class="white arrow right"></span></div>
+
+                                    <div class="blob-action" ng-if="blob != currAssign" class="ng-scope">View
+                                        Course<span class="white arrow right"></span></div>
                                     <!-- end ngIf: blob != currAssign -->
-                                    <!-- ngIf: blob == currAssign -->
+
                                 </a>
                             </div>
                         </div>
@@ -184,23 +159,15 @@
                                 <p class="popup-byline"><b class="blob-name ng-binding"></b></p>
 
                                 <div class="pop-content">
-
                                     <ul ui-sortable="" ng-model="currGroup.member"
                                         class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">
-
-                                        <!-- ngRepeat: member in currGroup.member -->
                                     </ul>
                                     <hr>
-                                    <!-- ngIf: currGroup.invited.length > 0 -->
-
                                     <ul class="list-view">
-
-                                        <!-- ngRepeat: invited in currGroup.invited -->
                                     </ul>
                                     <a ng-click="" class="action">Save</a>
                                 </div>
                             </div>
-
                             <div class="popup submissions hide">
                                 <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
                                 <h2 class="popup-title">Submissions</h2>
@@ -212,13 +179,10 @@
                                         <span class="col-1"><p>Date</p></span>
                                         <span class="col-2"><p>By</p></span>
                                     </li>
-                                    <!-- ngRepeat: subm in currAssign.submissions | orderBy:'created':true -->
-                                    <!-- ngIf: currAssign.submissions.length > 0 -->
 
 
                                 </div>
                             </div>
-
                             <div class="popup backups hide">
                                 <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
                                 <h2 class="popup-title">Backups</h2>
@@ -230,38 +194,16 @@
                                         <span class="col-1"><p>Date</p></span>
                                         <span class="col-2"><p>By</p></span>
                                     </li>
-                                    <!-- ngRepeat: backup in currAssign.backups | orderBy:'created':true -->
-                                    <!-- ngIf: currAssign.backups.length > 0 -->
 
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </assignment-list>
             </div>
         </section>
     </div>
-
-
 </div>
-
-
-<div class="loader hide">
-    <div class="center">
-        <div class="circle">
-          <span class="mask">
-            <span class="half"></span>
-          </span>
-          <span class="mask other">
-            <span class="half"></span>
-          </span>
-        </div>
-        <p>k</p>
-    </div>
-</div>
-
-
 <link href="//fonts.googleapis.com/css?family=Raleway:100|Open+Sans:300,700" rel="stylesheet" type="text/css">
 </div>
 </body>
