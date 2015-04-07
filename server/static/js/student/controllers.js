@@ -92,7 +92,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
                       for (i=0;i<file.split('\n').length;i++) {
                           comments = '';
                           if (commentList[i]) { // Ugly hack. Replace with TR based approach!
-                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' wrote: </h3> <p>' +
+                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' commented on line ' + (commentList[i][0].line).toString() + ': </h3> <p>' +
                                   $scope.convertMarkdown(commentList[i][0].message)+'</p>' + commEnd
                           }
                           html += '<div class="line">'+(i+1)+comments+'</div>';
