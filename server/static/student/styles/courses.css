@@ -137,3 +137,18 @@ header {
             top:40px;
             right:30px;
         }
+.blob-text, .block-more {
+    position:absolute;
+    top:0;
+    left:0;
+    height:100%;
+    width:100%;
+}
+    .blob-more {
+        overflow:hidden;
+    }
+    .blob-text {
+        background-color:#333;
+        padding:50px;
+    }
+    
