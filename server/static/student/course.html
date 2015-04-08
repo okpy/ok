@@ -94,43 +94,46 @@
                              id="1"
                              ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
                             <div class="blob colored blue">
+                                <div class="blob-dot"></div>
                                 <div class="blob-main">
+                                    <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
+                                        yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
-                                    <p class="ng-binding"><img src="/static/student/images/icon-clock.png">due
+                                    <p class="blob-shiftcopy blob-copy ng-binding"><img src="images/icon-calendar-tiny-light.png">due
                                         02/18/2015 at 11:59 PM</p>
-                                    <!-- <p><a ng-href="http://cs61a.org/" class="link light"><span class="icon-link">8</span> cs61a.org </a></p> -->
                                 </div>
-                                <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
-                                    yet</p><!-- end ngIf: !assign.final.final_submission -->
-                                <div class="blob-more" ng-show="currAssign == blob">
+                                <div class="blob-more ng-hide" ng-show="currAssign == blob">
+                                    <span class="flip"><img src="images/icon-flip-light.png"></span>
                                     <div class="blob-text">
                                         <div ng-if="!assign.group.group_info" class="ng-scope">
+                                            <h3 class="blob-subtitle">Project 1 Contest</h3>
                                             <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
                                                   class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
-                                                <h3 class="blob-subtitle">Invite to Group</h3>
-
-                                                <input type="email"
-                                                       class="invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
-                                                       placeholder="ok@cs61a.org" ng-model="assign.invitee"
-                                                       required="">
-                                                <a ng-click="addMember(blob, assign.invitee)"
-                                                   class="button">Invite</a>
+                                                <div class="blob-shiftcopy">
+                                                    <img src="images/icon-members-light.png">
+                                                    <input type="email"
+                                                           class="blob-input invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="invite member to group" ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(blob, assign.invitee)"
+                                                       class="button">Invite</a>
+                                                </div>
                                             </form>
                                             <!-- end ngIf: assign.assignment.max_group_size > 1 -->
                                         </div>
                                         <!-- end ngIf: !assign.group.group_info -->
-                                        <h3 class="blob-subtitle ng-scope"
-                                            ng-if="!assign.submissions">No
-                                            Submissions</h3><!-- end ngIf: !assign.submissions -->
+                                        <p class="blob-shiftcopy ng-scope"
+                                            ng-if="!assign.submissions"><img src="images/icon-submission-light.png">
+                                            Submission on Feb. 6 at 4:59 p.m.</p><!-- end ngIf: !assign.submissions -->
                                         <span class="clear"></span>
-                                        <span class="clear ng-scope"
-                                              ng-if="!assign.backups">No backups found. Have you run ok?</span><!-- end ngIf: !assign.backups -->
+                                        <span class="blob-shiftcopy ng-scope"
+                                              ng-if="assign.backups">view backups<span class="arrow white right fat"></span></span><!-- end ngIf: !assign.backups -->
                                     </div>
                                 </div>
                             <div class="blob-expand" ng-click="toggleAssign(blob)">
 
                                 <div class="blob-action" ng-if="blob != currAssign" class="ng-scope">View
-                                    Course<span class="white arrow right"></span></div>
+                                    Details<span class="white arrow right"></span></div>
                                 <!-- end ngIf: blob != currAssign -->
                             </div>
                         </div>

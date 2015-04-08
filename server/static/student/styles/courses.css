@@ -16,6 +16,12 @@ a, a:hover {
     p a {       border-bottom:1px dotted #666 }
     p a:hover { border-bottom:1px solid #666 }
     li { list-style:none; }
+.flip,.blob-action,.arrow {
+    transition:         0.2s ease;
+    -webkit-transition: 0.2s ease;
+    -moz-transition:    0.2s ease;
+    -o-transition:      0.2s ease;
+}
 /* Structure */
 .wrap-container {
     text-align:center;
@@ -78,6 +84,14 @@ header {
         background-color:#FFF;
         display:inline-block;
     }
+    .arrow.fat {
+        width:7px;
+        height:3px;
+    }
+        .arrow.fat::before {
+            height:7px;
+            width:3px;
+        }
     .right {
         color:#FFF;
         transform:          rotate(-45deg);
@@ -128,27 +142,78 @@ header {
         width:100%;
         text-transform:uppercase;
         position:relative;
+        font-weight:700;
+        font-size:0.85em;
+        letter-spacing:1px;
+        cursor:pointer;
     }
         .colored .blob-action {
             background-color:rgba(0,0,0,0.2);
+        }
+        .blob-action:hover {
+            padding:34px 40px;
         }
         .blob-action .arrow {
             position:absolute;
             top:40px;
             right:30px;
         }
-.blob-text, .block-more {
+            .blob-action:hover .arrow {
+                top:42px;
+                right:25px;
+            }
+.blob-text, .blob-more {
     position:absolute;
     top:0;
     left:0;
     height:100%;
     width:100%;
+    z-index:10;
 }
     .blob-more {
         overflow:hidden;
     }
     .blob-text {
-        background-color:#333;
+        background-color:#555;
         padding:50px;
     }
-    
+    .flip {
+        position:absolute;
+        top:0;
+        right:0;
+        padding:20px;
+        z-index:15;
+        opacity:0.25;
+    }
+        .flip:hover {
+            opacity:1;
+            cursor:pointer;
+        }
+    .blob-shiftcopy {
+        padding-left:25px;
+        width:100%;
+        box-sizing:border-box;
+    }
+        .blob-shiftcopy img {
+            margin-left:-25px;
+            margin-right:5px;
+        }   
+        span .arrow, p .arrow {
+            margin:0 5px;
+        }
+    .blob-input {
+        background-color:transparent;
+    }
+    .blob-subtitle {
+        margin:0 0 15px 0
+    }
+    p img { margin-right:10px; }
+    .blob-copy {
+        margin-top:15px;
+        color:rgba(255,255,255,0.5);
+        line-height:150%;
+    }
+    .blob-status {
+        font-style:italic;
+        color:rgba(255,255,255,0.5);
+    }
