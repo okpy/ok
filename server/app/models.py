@@ -222,14 +222,15 @@ class User(Base):
         all_submissions = []
         for member in members:
             all_submissions.append(Submission.query(
-                Submission.submitter==member))
+                Submission.submitter==member,
+                Submission.assignment==assignment))
 
         return all_submissions
 
     def get_submissions(self, assignment, num_submissions=10):
         queries = self._get_submissions_helper(assignment)
 
-        subms = [query.fetch(num_submissions) for query in queries]
+        subms = [query.fetch() for query in queries]
         all_subms = []
         for results in subms:
             for s in results:
