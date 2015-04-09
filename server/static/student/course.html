@@ -203,24 +203,29 @@
     </div>
     <div class="sidebars">
         <div class="sidebar group">
-            <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
-            <h2 class="sidebar-title">Group</h2>
+            <div class="sidebar-header colored">
+                <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+                <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
+                    yet</p><!-- end ngIf: !assign.final.final_submission -->
+                <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
+
+                <p class="blob-shiftcopy blob-copy ng-binding"><img
+                        src="images/icon-calendar-tiny-light.png">due
+                    02/18/2015 at 11:59 PM</p>
+            </div>
+            <h2 class="sidebar-subtitle">Group</h2>
 
             <p class="sidebar-byline"><b class="blob-name ng-binding"></b></p>
 
-            <div class="pop-content">
-                <ul ui-sortable="" ng-model="currGroup.member"
-                    class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">
-                </ul>
-                <hr>
-                <ul class="list-view">
-                </ul>
-                <a ng-click="" class="action">Save</a>
+            <ul ui-sortable="" ng-model="currGroup.member"
+                class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">
+            </ul>
+            <hr>
+            <ul class="list-view">
+            </ul>
+            <a ng-click="" class="action">Save</a>
             </div>
-        </div>
-        <div class="sidebar submissions hide">
-            <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
-            <h2 class="sidebar-title">Submissions</h2>
+            <h2 class="sidebar-subtitle">Submissions</h2>
 
             <p class="sidebar-byline">for <b class="ng-binding"></b></p>
 
