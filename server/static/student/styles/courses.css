@@ -16,11 +16,11 @@ a, a:hover {
     p a {       border-bottom:1px dotted #666 }
     p a:hover { border-bottom:1px solid #666 }
     li { list-style:none; }
-.flip,.blob-action,.arrow {
-    transition:         0.2s ease;
-    -webkit-transition: 0.2s ease;
-    -moz-transition:    0.2s ease;
-    -o-transition:      0.2s ease;
+.flip,.blob-action,.arrow,.blob-text,.blob-more {
+    transition:         0.4s ease;
+    -webkit-transition: 0.4s ease;
+    -moz-transition:    0.4s ease;
+    -o-transition:      0.4s ease;
 }
 /* Structure */
 .wrap-container {
@@ -152,6 +152,7 @@ header {
         }
         .blob-action:hover {
             padding:34px 40px;
+            margin-top:-8px;
         }
         .blob-action .arrow {
             position:absolute;
@@ -164,7 +165,7 @@ header {
             }
 .blob-text, .blob-more {
     position:absolute;
-    top:0;
+    top:-100%;
     left:0;
     height:100%;
     width:100%;
@@ -173,6 +174,12 @@ header {
     .blob-more {
         overflow:hidden;
     }
+        .blob-more.flipped,.blob-more.flipped .blob-text {
+            top:0;
+        }
+        .blob-more .blob-text {
+            top:100%;
+        }
     .blob-text {
         background-color:#555;
         padding:50px;
