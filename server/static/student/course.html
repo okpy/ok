@@ -49,7 +49,6 @@
 </head>
 <body class="course">
 <div class="container-fluid">
-    <div class="shadow"></div>
     <div class="wrap-container">
         <header>
             <a ui-sref="dashboard" class="logo col-md-3">
@@ -89,11 +88,10 @@
             <div class="fullWidth screen courses">
                 <div class="row">
                     <div class="screen ng-scope" ng-controller="AssignmentDashController">
-                        <div class="col-md-4 ng-scope">
+                        <div class="col-md-4 ng-scope" ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
                             <div class="blob colored blue"
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
-                                 id="1"
-                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                 id="1">
                                 <div class="blob-dot"></div>
                                 <div class="blob-main">
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
@@ -144,11 +142,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4 ng-scope">
+                        <div class="col-md-4 ng-scope" ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
                             <div class="blob grey"
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
-                                 id="1"
-                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                 id="2">
                                 <div class="blob-dot"></div>
                                 <div class="blob-main">
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
@@ -194,62 +191,62 @@
                                 <div class="blob-expand">
                                     <div class="ng-scope blob-action" ng-if="blob != currAssign"
                                          ng-click="toggleAssign(blob)">View
-                                        Details<span class="white arrow right"></span></div>
+                                        Details<span class="white dark arrow right"></span></div>
                                     <!-- end ngIf: blob != currAssign -->
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="popups">
-                    <div class="popup group hide">
-                        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
-                        <h2 class="popup-title">Group</h2>
-
-                        <p class="popup-byline"><b class="blob-name ng-binding"></b></p>
-
-                        <div class="pop-content">
-                            <ul ui-sortable="" ng-model="currGroup.member"
-                                class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">
-                            </ul>
-                            <hr>
-                            <ul class="list-view">
-                            </ul>
-                            <a ng-click="" class="action">Save</a>
-                        </div>
-                    </div>
-                    <div class="popup submissions hide">
-                        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
-                        <h2 class="popup-title">Submissions</h2>
-
-                        <p class="popup-byline">for <b class="ng-binding"></b></p>
-
-                        <div class="pop-content">
-                            <li class="header">
-                                <span class="col-1"><p>Date</p></span>
-                                <span class="col-2"><p>By</p></span>
-                            </li>
-
-
-                        </div>
-                    </div>
-                    <div class="popup backups hide">
-                        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
-                        <h2 class="popup-title">Backups</h2>
-
-                        <p class="popup-byline">for <b class="ng-binding"></b></p>
-
-                        <div class="pop-content">
-                            <li class="header">
-                                <span class="col-1"><p>Date</p></span>
-                                <span class="col-2"><p>By</p></span>
-                            </li>
-
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
+    </div>
+    <div class="sidebars">
+        <div class="sidebar group">
+            <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+            <h2 class="sidebar-title">Group</h2>
+
+            <p class="sidebar-byline"><b class="blob-name ng-binding"></b></p>
+
+            <div class="pop-content">
+                <ul ui-sortable="" ng-model="currGroup.member"
+                    class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">
+                </ul>
+                <hr>
+                <ul class="list-view">
+                </ul>
+                <a ng-click="" class="action">Save</a>
+            </div>
+        </div>
+        <div class="sidebar submissions hide">
+            <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+            <h2 class="sidebar-title">Submissions</h2>
+
+            <p class="sidebar-byline">for <b class="ng-binding"></b></p>
+
+            <div class="pop-content">
+                <li class="header">
+                    <span class="col-1"><p>Date</p></span>
+                    <span class="col-2"><p>By</p></span>
+                </li>
+
+
+            </div>
+        </div>
+        <div class="sidebar backups hide">
+            <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+            <h2 class="sidebar-title">Backups</h2>
+
+            <p class="sidebar-byline">for <b class="ng-binding"></b></p>
+
+            <div class="pop-content">
+                <li class="header">
+                    <span class="col-1"><p>Date</p></span>
+                    <span class="col-2"><p>By</p></span>
+                </li>
+
+            </div>
+        </div>
     </div>
 </div>
 <!--<link href="//fonts.googleapis.com/css?family=Raleway:100|Open+Sans:300,700" rel="stylesheet" type="text/css">-->

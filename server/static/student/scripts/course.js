@@ -1,8 +1,9 @@
 $(document).ready(function() {
     $('.flip').on('click',function() {
-        $(this).parent().parent().removeClass('flipped');
+        $('.blob-more').removeClass('flipped');
     });
     $('.blob-action').on('click',function() {
+        $('.flip').click();
         $(this).parent().parent().children('.blob-more').addClass('flipped');
     });
 });

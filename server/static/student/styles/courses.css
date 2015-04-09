@@ -16,7 +16,7 @@ a, a:hover {
     p a {       border-bottom:1px dotted #666 }
     p a:hover { border-bottom:1px solid #666 }
     li { list-style:none; }
-.flip,.blob-action,.arrow,.blob-text,.blob-more {
+.flip,.blob-action,.arrow,.blob-text,.blob-more,.wrap-container {
     transition:         0.4s ease;
     -webkit-transition: 0.4s ease;
     -moz-transition:    0.4s ease;
@@ -80,9 +80,14 @@ header {
         height:10px;
         width:3px;
     }
+    .arrow,.arrow::before {
+        display:inline-block;
+    }
     .arrow.white,.arrow.white::before {
         background-color:#FFF;
-        display:inline-block;
+    }
+    .arrow.dark,.arrow.dark::before {
+        background-color:#666;
     }
     .arrow.fat {
         width:7px;
@@ -222,6 +227,27 @@ header {
         .colored .blob-copy,.colored .blob-status {
             color:rgba(255,255,255,0.5);
         }
-    .colored .blob-status {
+    .blob-status {
         font-style:italic;
+    }
+/* -- sidebar -- */
+.blurred {
+    filter: blur(3px);
+    filter: url("blur.svg#gaussian_blur");
+    -webkit-filter: blur(3px);
+    -o-filter: blur(3px);
+}
+    .wrap-container.blurred {
+        margin-left:-400px;
+    }
+.sidebars {
+    position:fixed;
+    top:0;
+    right:0;
+    width:400px;
+    height:100%;
+}
+    .sidebar {
+        width:100%;
+        background-color:#FFF;
     }
