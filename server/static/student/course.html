@@ -16,7 +16,7 @@
     <style type="text/css"></style>
     <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
     <!--<script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>-->
-    <script src="scripts/all.js"></script>
+    <script src="scripts/course.js"></script>
     <script src="scripts/highlight.pack.js"></script>
     <script src="../vendor/angular/angular.js"></script>
     <script src="../vendor/highlightjs/highlight.pack.js"></script>
@@ -41,7 +41,7 @@
     <!--<script src="../admin/js/ok/app.js"></script>-->
     <!--<script>-->
     <!--Raven.config('https://edc8538d3d5f47fcb1b14c33d9ae7d8b@app.getsentry.com/36686', {-->
-        <!--whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']-->
+    <!--whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']-->
     <!--}).install();-->
     <!---->
 
@@ -87,33 +87,38 @@
         <!-- uiView:  -->
         <section class="ng-scope wrap">
             <div class="fullWidth screen courses">
-                <assignment-list class="row">
+                <div class="row">
                     <div class="screen ng-scope" ng-controller="AssignmentDashController">
-                        <div class="col-md-4 ng-scope"
-                             ng-class="{'active': assign.assignment.active || assign.assignment.revision, 'inactive': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
-                             id="1"
-                             ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
-                            <div class="blob colored blue">
+                        <div class="col-md-4 ng-scope">
+                            <div class="blob colored blue"
+                                 ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
                                 <div class="blob-dot"></div>
                                 <div class="blob-main">
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
-                                    <p class="blob-shiftcopy blob-copy ng-binding"><img src="images/icon-calendar-tiny-light.png">due
+
+                                    <p class="blob-shiftcopy blob-copy ng-binding"><img
+                                            src="images/icon-calendar-tiny-light.png">due
                                         02/18/2015 at 11:59 PM</p>
                                 </div>
                                 <div class="blob-more" ng-show="currAssign == blob">
                                     <div class="blob-text">
-                                        <span class="flip" onclick="$(this).parent().parent().removeClass('flipped')"><img src="images/icon-flip-light.png"></span>
+                                        <span class="flip"><img src="images/icon-flip-light.png"></span>
+
                                         <div ng-if="!assign.group.group_info" class="ng-scope">
                                             <h3 class="blob-subtitle">Project 1 Contest</h3>
+
                                             <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
                                                   class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
                                                 <div class="blob-shiftcopy">
                                                     <img src="images/icon-members-light.png">
                                                     <input type="email"
                                                            class="blob-input invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
-                                                           placeholder="invite member to group" ng-model="assign.invitee"
+                                                           placeholder="invite member to group"
+                                                           ng-model="assign.invitee"
                                                            required="">
                                                     <a ng-click="addMember(blob, assign.invitee)"
                                                        class="button">Invite</a>
@@ -123,74 +128,130 @@
                                         </div>
                                         <!-- end ngIf: !assign.group.group_info -->
                                         <p class="blob-shiftcopy ng-scope"
-                                            ng-if="!assign.submissions"><img src="images/icon-submission-light.png">
+                                           ng-if="!assign.submissions"><img src="images/icon-submission-light.png">
                                             Submission on Feb. 6 at 4:59 p.m.</p><!-- end ngIf: !assign.submissions -->
                                         <span class="clear"></span>
                                         <span class="blob-shiftcopy ng-scope"
-                                              ng-if="assign.backups">view backups<span class="arrow white right fat"></span></span><!-- end ngIf: !assign.backups -->
+                                              ng-if="assign.backups">view backups<span
+                                                class="arrow white right fat"></span></span><!-- end ngIf: !assign.backups -->
                                     </div>
                                 </div>
-                            <div class="blob-expand">
-
-                                <div class="ng-scope blob-action" ng-if="blob != currAssign"  ng-click="toggleAssign(blob)" onclick="$(this).parent().parent().children('.blob-more').addClass('flipped');">View
-                                    Details<span class="white arrow right"></span></div>
-                                <!-- end ngIf: blob != currAssign -->
+                                <div class="blob-expand">
+                                    <div class="ng-scope blob-action" ng-if="blob != currAssign"
+                                         ng-click="toggleAssign(blob)">View
+                                        Details<span class="white arrow right"></span></div>
+                                    <!-- end ngIf: blob != currAssign -->
+                                </div>
                             </div>
                         </div>
-                        <div class="popups">
-                            <div class="popup group hide">
-                                <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
-                                <h2 class="popup-title">Group</h2>
+                        <div class="col-md-4 ng-scope">
+                            <div class="blob grey"
+                                 ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
+                                 id="1"
+                                 ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                                <div class="blob-dot"></div>
+                                <div class="blob-main">
+                                    <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
+                                        yet</p><!-- end ngIf: !assign.final.final_submission -->
+                                    <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
 
-                                <p class="popup-byline"><b class="blob-name ng-binding"></b></p>
-
-                                <div class="pop-content">
-                                    <ul ui-sortable="" ng-model="currGroup.member"
-                                        class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">
-                                    </ul>
-                                    <hr>
-                                    <ul class="list-view">
-                                    </ul>
-                                    <a ng-click="" class="action">Save</a>
+                                    <p class="blob-shiftcopy blob-copy ng-binding"><img
+                                            src="images/icon-calendar-tiny-dark.png">due
+                                        02/18/2015 at 11:59 PM</p>
                                 </div>
-                            </div>
-                            <div class="popup submissions hide">
-                                <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
-                                <h2 class="popup-title">Submissions</h2>
+                                <div class="blob-more" ng-show="currAssign == blob">
+                                    <div class="blob-text">
+                                        <span class="flip"><img src="images/icon-flip-light.png"></span>
 
-                                <p class="popup-byline">for <b class="ng-binding"></b></p>
+                                        <div ng-if="!assign.group.group_info" class="ng-scope">
+                                            <h3 class="blob-subtitle">Project 1 Contest</h3>
 
-                                <div class="pop-content">
-                                    <li class="header">
-                                        <span class="col-1"><p>Date</p></span>
-                                        <span class="col-2"><p>By</p></span>
-                                    </li>
-
-
+                                            <form name="inviteGroup" ng-if="assign.assignment.max_group_size &gt; 1"
+                                                  class="ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-email">
+                                                <div class="blob-shiftcopy">
+                                                    <img src="images/icon-members-light.png">
+                                                    <input type="email"
+                                                           class="blob-input invite email ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required"
+                                                           placeholder="invite member to group"
+                                                           ng-model="assign.invitee"
+                                                           required="">
+                                                    <a ng-click="addMember(blob, assign.invitee)"
+                                                       class="button">Invite</a>
+                                                </div>
+                                            </form>
+                                            <!-- end ngIf: assign.assignment.max_group_size > 1 -->
+                                        </div>
+                                        <!-- end ngIf: !assign.group.group_info -->
+                                        <p class="blob-shiftcopy ng-scope"
+                                           ng-if="!assign.submissions"><img src="images/icon-submission-light.png">
+                                            Submission on Feb. 6 at 4:59 p.m.</p><!-- end ngIf: !assign.submissions -->
+                                        <span class="clear"></span>
+                                        <span class="blob-shiftcopy ng-scope"
+                                              ng-if="assign.backups">view backups<span
+                                                class="arrow right fat"></span></span><!-- end ngIf: !assign.backups -->
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="popup backups hide">
-                                <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
-                                <h2 class="popup-title">Backups</h2>
-
-                                <p class="popup-byline">for <b class="ng-binding"></b></p>
-
-                                <div class="pop-content">
-                                    <li class="header">
-                                        <span class="col-1"><p>Date</p></span>
-                                        <span class="col-2"><p>By</p></span>
-                                    </li>
-
+                                <div class="blob-expand">
+                                    <div class="ng-scope blob-action" ng-if="blob != currAssign"
+                                         ng-click="toggleAssign(blob)">View
+                                        Details<span class="white arrow right"></span></div>
+                                    <!-- end ngIf: blob != currAssign -->
                                 </div>
                             </div>
                         </div>
                     </div>
-                </assignment-list>
+                </div>
+                <div class="popups">
+                    <div class="popup group hide">
+                        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+                        <h2 class="popup-title">Group</h2>
+
+                        <p class="popup-byline"><b class="blob-name ng-binding"></b></p>
+
+                        <div class="pop-content">
+                            <ul ui-sortable="" ng-model="currGroup.member"
+                                class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">
+                            </ul>
+                            <hr>
+                            <ul class="list-view">
+                            </ul>
+                            <a ng-click="" class="action">Save</a>
+                        </div>
+                    </div>
+                    <div class="popup submissions hide">
+                        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+                        <h2 class="popup-title">Submissions</h2>
+
+                        <p class="popup-byline">for <b class="ng-binding"></b></p>
+
+                        <div class="pop-content">
+                            <li class="header">
+                                <span class="col-1"><p>Date</p></span>
+                                <span class="col-2"><p>By</p></span>
+                            </li>
+
+
+                        </div>
+                    </div>
+                    <div class="popup backups hide">
+                        <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
+                        <h2 class="popup-title">Backups</h2>
+
+                        <p class="popup-byline">for <b class="ng-binding"></b></p>
+
+                        <div class="pop-content">
+                            <li class="header">
+                                <span class="col-1"><p>Date</p></span>
+                                <span class="col-2"><p>By</p></span>
+                            </li>
+
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
 </div>
 <!--<link href="//fonts.googleapis.com/css?family=Raleway:100|Open+Sans:300,700" rel="stylesheet" type="text/css">-->
-</div>
 </body>
 </html>

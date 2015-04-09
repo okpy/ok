@@ -126,7 +126,7 @@ header {
     float:left;
     width:100%;
 }
-    .blob.colored {
+    .blob.colored,.blob-more {
         color:#FFF;
     }
         .blob.blue { background-color:#00698C }
@@ -217,10 +217,11 @@ header {
     p img { margin-right:10px; }
     .blob-copy {
         margin-top:15px;
-        color:rgba(255,255,255,0.5);
         line-height:150%;
     }
-    .blob-status {
+        .colored .blob-copy,.colored .blob-status {
+            color:rgba(255,255,255,0.5);
+        }
+    .colored .blob-status {
         font-style:italic;
-        color:rgba(255,255,255,0.5);
     }
