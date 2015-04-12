@@ -4,7 +4,6 @@ h1,h2,h3,h4,h5,h6 {
 }
 p, a, li, span {
     font-family:'Roboto';
-    font-weight:
 }
 a, a:hover {
     text-decoration:inherit;
@@ -16,11 +15,29 @@ a, a:hover {
     p a {       border-bottom:1px dotted #666 }
     p a:hover { border-bottom:1px solid #666 }
     li { list-style:none; }
-.flip,.blob-action,.arrow,.blob-text,.blob-more,.wrap-container {
+.flip,.blob-action,.arrow,.blob-text,.blob-more {
     transition:         0.4s ease;
     -webkit-transition: 0.4s ease;
     -moz-transition:    0.4s ease;
     -o-transition:      0.4s ease;
+}
+.sidebars {
+    transition:         0.4s ease;
+    -webkit-transition: 0.4s ease;
+    -moz-transition:    0.4s ease;
+    -o-transition:      0.4s ease;
+}
+.wrap-container {
+    transition:         0.3s ease 0.6s;
+    -webkit-transition: 0.3s ease 0.6s;
+    -moz-transition:    0.3s ease 0.6s;
+    -o-transition:      0.3s ease 0.6s;
+}
+.cover {
+    transition:         0.4s ease 0.4s;
+    -webkit-transition: 0.4s ease 0.4s;
+    -moz-transition:    0.4s ease 0.4s;
+    -o-transition:      0.4s ease 0.4s;
 }
 /* Structure */
 .wrap-container {
@@ -231,27 +248,27 @@ header {
         font-style:italic;
     }
 /* -- sidebar -- */
-.blurred {
+.active .wrap-container {
     filter: blur(3px);
     filter: url("blur.svg#gaussian_blur");
     -webkit-filter: blur(3px);
     -o-filter: blur(3px);
 }
-    .wrap-container.blurred {
-        margin-left:-400px;
-    }
 .sidebars {
     position:fixed;
     top:0;
-    right:0;
-    width:400px;
+    right:-50%;
     height:100%;
+    z-index:30;
 }
+    .active .sidebars {
+        right:0;
+    }
     .sidebar {
         height:100%;
         width:100%;
         background-color:#188B66;
-        z-index:30;
+        padding:0;
     }
     .sidebar::before,.sidebar li::before,.sidebar-subtitle::before {
         content:"";
@@ -293,3 +310,33 @@ header {
         padding:20px 25px;
         background-color:#FFF;
     }
+    .cover {
+        position:fixed;
+        top:0;
+        left:100%;
+        height:100%;
+        width:100%;
+        z-index:20;
+        background-color:rgba(255,255,255,0.5);
+    }
+        .active .cover {
+            left:0;
+        }
+    .close {
+        text-shadow:none;
+        zoom:150%;
+        cursor:hover;
+        transform:          rotate(45deg);
+        -webkit-transform:  rotate(45deg);
+        -moz-transform:     rotate(45deg);
+        -o-transform:       rotate(45deg);
+        position:absolute;
+        top:0;
+        right:0;
+        margin:10px 20px;
+        padding:10px;
+        color:rgba(0,0,0,0.35);
+    }
+        .close:hover {
+            color:rgba(0,0,0,0.65);
+        }
