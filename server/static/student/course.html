@@ -88,7 +88,8 @@
             <div class="fullWidth screen courses">
                 <div class="row">
                     <div class="screen ng-scope" ng-controller="AssignmentDashController">
-                        <div class="col-md-4 ng-scope" ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                        <div class="col-md-4 ng-scope"
+                             ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
                             <div class="blob colored blue"
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="1">
@@ -142,7 +143,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4 ng-scope" ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
+                        <div class="col-md-4 ng-scope"
+                             ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
                             <div class="blob grey"
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="2">
@@ -208,6 +210,7 @@
                 <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                     yet</p><!-- end ngIf: !assign.final.final_submission -->
                 <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
+
                 <p class="blob-shiftcopy blob-copy ng-binding"><img
                         src="images/icon-calendar-tiny-light.png">due
                     02/18/2015 at 11:59 PM</p>
@@ -215,14 +218,14 @@
             <h2 class="sidebar-subtitle">Group</h2>
             <!--<p class="sidebar-byline"><b class="blob-name ng-binding"></b></p>-->
             <!--<ul ui-sortable="" ng-model="currGroup.member"-->
-                <!--class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">-->
+            <!--class="list-view ng-pristine ng-untouched ng-valid ng-isolate-scope ui-sortable">-->
             <!--</ul>-->
             <ul class="sidebar-list">
                 <li>Some content</li>
                 <li>Some content</li>
             </ul>
             <a ng-click="" class="action">Save</a>
-            </div>
+
             <h2 class="sidebar-subtitle">Submissions</h2>
 
             <p class="sidebar-byline">for <b class="ng-binding"></b></p>

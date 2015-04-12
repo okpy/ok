@@ -251,19 +251,28 @@ header {
         height:100%;
         width:100%;
         background-color:#188B66;
+        z-index:30;
     }
     .sidebar::before,.sidebar li::before,.sidebar-subtitle::before {
         content:"";
         width:5px;
-        z-index:-10;
+        z-index:-1;
         position:absolute;
         right:100%;
         top:0;
-        height:100%;
-        background-color:rgba(0,0,0,0.75);
+        bottom:0;
+        background-color:#666;
     }
         .sidebar * {
             position:relative;
+        }
+        .sidebar-subtitle::before {
+            z-index:35;
+            background-color:rgba(0,0,0,0.35);
+        }
+        .sidebar .sidebar-list li::before {
+            z-index:36;
+            background-color:rgba(255,255,255,0.8);
         }
     .sidebar-header {
         padding:35px 45px;
@@ -284,6 +293,3 @@ header {
         padding:20px 25px;
         background-color:#FFF;
     }
-        .sidebar li::before {
-            background-color:rgba(255,255,255,0.25);
-        }
