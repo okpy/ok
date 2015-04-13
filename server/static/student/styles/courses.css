@@ -148,6 +148,19 @@ header {
     float:left;
     width:100%;
 }
+    .blob-alert {
+        background-color:transparent;
+        position:absolute;
+        top:0;
+        right:0;
+        width:42px;
+        height:42px;
+        border-radius:50%;
+        margin-right:-20px;
+        margin-top:15px;
+        border:5px solid #FFF;
+        z-index:10;
+    }
     .colored,.blob-more {
         color:#FFF;
     }
