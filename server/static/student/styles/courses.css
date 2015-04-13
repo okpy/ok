@@ -260,12 +260,14 @@ header {
     right:-50%;
     height:100%;
     z-index:30;
+    padding-left:5px;
+    overflow-y:scroll;
 }
     .active .sidebars {
         right:0;
     }
     .sidebar {
-        height:100%;
+        min-height:100%;
         width:100%;
         background-color:#188B66;
         padding:0;
@@ -301,14 +303,28 @@ header {
         padding:25px 45px;
         font-size:1.25em;
         z-index:20;
+        margin:0;
     }
     .sidebar-list {
         padding:0;
+        margin:0;
     }
     .sidebar li {
         width:100%;
         padding:20px 25px;
         background-color:#FFF;
+    }
+    .sidebar .action {
+        width:100%;
+        padding:25px;
+        display:inline-block;
+        background-color:#188B66;
+        color:#FFF;
+        text-transform:uppercase;
+        font-weight:700;
+        text-align:center;
+        box-sizing:border-box;
+        z-index:25;
     }
     .cover {
         position:fixed;
@@ -323,6 +339,7 @@ header {
             left:0;
         }
     .close {
+        z-index:38;
         text-shadow:none;
         zoom:150%;
         cursor:hover;
