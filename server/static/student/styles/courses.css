@@ -157,7 +157,7 @@ header {
         height:3em;
         border-radius:50%;
         margin-right:-1.5em;
-        margin-top:15px;
+        margin-top:35px;
         line-height:2.5em;
         font-size:1.25em;
         text-align:center;
@@ -168,6 +168,11 @@ header {
         color:#FFF;
     }
         .blob.blue { background-color:#00698C }
+        .blob.blue .blob-alert { background-color: #00BFFF }
+        .blob.green { background-color: #698C00 }
+        .blob.green .blob-alert { background-color: #A3D900 }
+        .blob-alert.good { background-color:#690 }
+        .blob-alert.bad { background-color:#D93600 }
     .blob-main {
         padding:50px 50px 30px 50px;
     }
@@ -355,21 +360,27 @@ header {
             left:0;
         }
     .close {
-        z-index:38;
+        z-index:15;
         text-shadow:none;
-        zoom:150%;
         cursor:hover;
         transform:          rotate(45deg);
         -webkit-transform:  rotate(45deg);
         -moz-transform:     rotate(45deg);
         -o-transform:       rotate(45deg);
-        position:absolute;
-        top:0;
-        right:0;
-        margin:10px 20px;
-        padding:10px;
-        color:rgba(0,0,0,0.35);
     }
-        .close:hover {
-            color:rgba(0,0,0,0.65);
+        .sidebars .close {
+            zoom:150%;
+            z-index:38;
+            position:absolute;
+            top:0;
+            right:0;
+            margin:10px 20px;
+            padding:10px;
+            color:rgba(0,0,0,0.75);
+        }
+            .close:hover {
+                color:#000;
+            }
+        .close.white {
+            color:#FFF;
         }
