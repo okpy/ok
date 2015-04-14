@@ -100,10 +100,10 @@ header {
     .arrow,.arrow::before {
         display:inline-block;
     }
-    .arrow.white,.arrow.white::before {
+    .colored .arrow,.colored .arrow::before,.arrow.white,.arrow.white::before {
         background-color:#FFF;
     }
-    .arrow.dark,.arrow.dark::before {
+    .arrow,.arrow::before,.arrow.dark,.arrow.dark::before {
         background-color:#666;
     }
     .arrow.fat {
@@ -171,8 +171,8 @@ header {
         .blob.blue .blob-alert { background-color: #00BFFF }
         .blob.green { background-color: #698C00 }
         .blob.green .blob-alert { background-color: #A3D900 }
-        .blob-alert.good { background-color:#690 }
-        .blob-alert.bad { background-color:#D93600 }
+        .good .blob-alert { background-color:#690 }
+        .bad .blob-alert { background-color:#D93600 }
     .blob-main {
         padding:50px 50px 30px 50px;
     }
@@ -268,6 +268,18 @@ header {
     .blob-status {
         font-style:italic;
     }
+    .blob .clock {
+        height:16px;
+        width:16px;
+        display:inline-block;
+        margin-left:-25px;
+        margin-right:5px;
+        background:url('../images/icon-calendar-tiny-dark.png') transparent no-repeat center center;
+    }
+        .blob.colored .clock {
+             background:url('../images/icon-calendar-tiny-light.png') transparent no-repeat center center;
+        }
+
 /* -- sidebar -- */
 .active .wrap-container {
     filter: blur(3px);
@@ -367,6 +379,7 @@ header {
         -webkit-transform:  rotate(45deg);
         -moz-transform:     rotate(45deg);
         -o-transform:       rotate(45deg);
+        opacity:1;
     }
         .sidebars .close {
             zoom:150%;
@@ -376,11 +389,15 @@ header {
             right:0;
             margin:10px 20px;
             padding:10px;
-            color:rgba(0,0,0,0.75);
+            color:rgba(0,0,0,0.5);
         }
-            .close:hover {
+            .sidebars .close:hover {
                 color:#000;
             }
         .close.white {
             color:#FFF;
         }
+            .blob-alert .close {
+                float:none;
+                margin-top:0.5em;
+            }

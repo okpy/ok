@@ -100,8 +100,7 @@
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
 
-                                    <p class="blob-shiftcopy blob-copy ng-binding"><img
-                                            src="images/icon-calendar-tiny-light.png">due
+                                    <p class="blob-shiftcopy blob-copy ng-binding"><span class="clock"></span>due
                                         02/18/2015 at 11:59 PM</p>
                                 </div>
                                 <!--<div class="blob-more" ng-show="currAssign == blob">-->
@@ -146,18 +145,17 @@
                         </div>
                         <div class="col-md-4 ng-scope"
                              ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
-                            <div class="blob grey"
+                            <div class="blob colored green"
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="2">
                                 <div class="blob-dot"></div>
                                 <div class="blob-main">
-                                    <div class="blob-alert good"><span class="check"></span></div>
+                                    <div class="blob-alert">!</div>
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
 
-                                    <p class="blob-shiftcopy blob-copy ng-binding"><img
-                                            src="images/icon-calendar-tiny-dark.png">due
+                                    <p class="blob-shiftcopy blob-copy ng-binding"><span class="clock"></span>due
                                         02/18/2015 at 11:59 PM</p>
                                 </div>
                                 <!--<div class="blob-more" ng-show="currAssign == blob">-->
@@ -195,7 +193,7 @@
                                 <div class="blob-expand">
                                     <div class="ng-scope blob-action" ng-if="blob != currAssign"
                                          ng-click="toggleAssign(blob)">View
-                                        Details<span class="white dark arrow right"></span></div>
+                                        Details<span class="arrow right"></span></div>
                                     <!-- end ngIf: blob != currAssign -->
                                 </div>
                             </div>
@@ -206,14 +204,13 @@
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="2">
                                 <div class="blob-dot"></div>
-                                <div class="blob-main">
-                                    <div class="blob-alert bad"><span class="close white"></span></div>
+                                <div class="blob-main good">
+                                    <div class="blob-alert"><div class="close white"><span>+</span></div></div>
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
 
-                                    <p class="blob-shiftcopy blob-copy ng-binding"><img
-                                            src="images/icon-calendar-tiny-dark.png">due
+                                    <p class="blob-shiftcopy blob-copy ng-binding"><span class="clock"></span>due
                                         02/18/2015 at 11:59 PM</p>
                                 </div>
                                 <!--<div class="blob-more" ng-show="currAssign == blob">-->
@@ -251,7 +248,7 @@
                                 <div class="blob-expand">
                                     <div class="ng-scope blob-action" ng-if="blob != currAssign"
                                          ng-click="toggleAssign(blob)">View
-                                        Details<span class="white dark arrow right"></span></div>
+                                        Details<span class="arrow right"></span></div>
                                     <!-- end ngIf: blob != currAssign -->
                                 </div>
                             </div>
@@ -264,13 +261,13 @@
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="2">
                                 <div class="blob-dot"></div>
-                                <div class="blob-main">
+                                <div class="blob-main bad">
+                                    <div class="blob-alert"><span class="check"></span></div>
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
 
-                                    <p class="blob-shiftcopy blob-copy ng-binding"><img
-                                            src="images/icon-calendar-tiny-dark.png">due
+                                    <p class="blob-shiftcopy blob-copy ng-binding"><span class="clock"></span>due
                                         02/18/2015 at 11:59 PM</p>
                                 </div>
                                 <!--<div class="blob-more" ng-show="currAssign == blob">-->
@@ -308,7 +305,7 @@
                                 <div class="blob-expand">
                                     <div class="ng-scope blob-action" ng-if="blob != currAssign"
                                          ng-click="toggleAssign(blob)">View
-                                        Details<span class="white dark arrow right"></span></div>
+                                        Details<span class="arrow right"></span></div>
                                     <!-- end ngIf: blob != currAssign -->
                                 </div>
                             </div>
