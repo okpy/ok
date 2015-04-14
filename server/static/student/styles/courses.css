@@ -153,11 +153,14 @@ header {
         position:absolute;
         top:0;
         right:0;
-        width:42px;
-        height:42px;
+        width:3em;
+        height:3em;
         border-radius:50%;
-        margin-right:-20px;
+        margin-right:-1.5em;
         margin-top:15px;
+        line-height:2.5em;
+        font-size:1.25em;
+        text-align:center;
         border:5px solid #FFF;
         z-index:10;
     }
