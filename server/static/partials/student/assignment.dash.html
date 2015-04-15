@@ -147,7 +147,7 @@
             </a>
             <span class="col-1"><p>{{ subm.created | amCalendar }}</p></span>
             <span class="col-2"><p>{{ subm.submitter.email[0] }}</p></span>
-            <a ui-sref='submission.detail({courseId: courseId, submissionId:subm.id})' class="light link view-submission">view &raquo;</a>
+            <a ui-sref='submission.detail({courseId: courseId, submissionId:subm.backup.id})' class="light link view-submission">view &raquo;</a>
           </li>
           <li class="pop-item" ng-if="currAssign.submissions.length > 0" >
             <p ng-click="getSubmissions(currAssign.assignment.id, true);" class="light link" style="float:none">Load More Submissions</a>
