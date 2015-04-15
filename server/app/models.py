@@ -6,6 +6,7 @@ Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 #pylint: disable=no-member, unused-argument, too-many-return-statements
 
 import datetime
+import itertools
 
 from app import app
 from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
@@ -123,6 +124,26 @@ class Base(ndb.Model):
         """
         return False
 
+def make_num_counter(helper):
+    def wrapper(self, assignment, max_size=None):
+        count = 0
+
+        all_submissions = helper(self, assignment)
+        if max_size is not None:
+            left_to_count = max_size
+            for submission_query in all_submissions:
+                if count >= max_size:
+                    break
+                diff = submission_query.count(left_to_count)
+                left_to_count -= diff
+                count += diff
+        else:
+            for submission_query in all_submissions:
+                count += submission_query.count(max_size)
+
+
+        return count
+    return wrapper
 
 class User(Base):
     """Users may have multiple email addresses. Note: the built-in user model
@@ -164,28 +185,35 @@ class User(Base):
         if 'file_contents' in messages:
             return messages['file_contents']
 
-    def get_backups(self, assignment, num_backups=10):
+    def _get_backups_helper(self, assignment):
         group = self.get_group(assignment)
-        all_backups = []
         if not group or self.key not in group.member:
             members = [self.key]
         else:
             members = group.member
 
+        all_backups = []
         for member in members:
-            all_backups += list(Backup.query(
+            all_backups.append(Backup.query(
                 Backup.submitter == member,
-                Backup.assignment == assignment).fetch())
+                Backup.assignment == assignment))
 
-        all_backups = [x for x in all_backups if self._contains_files(x)]
+        return all_backups
+
+    def get_backups(self, assignment, num_backups=10):
+        queries = self._get_backups_helper(assignment)
+        backups = [query.fetch(num_backups) for query in queries]
+        all_backups = []
+        for results in backups:
+            for b in results:
+                all_backups.append(b)
 
         all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
         return all_backups[:num_backups]
-
-    def get_submissions(self, assignment, num_submissions=10):
+    
+    def _get_submissions_helper(self, assignment):
         group = self.get_group(assignment)
-        all_subms = []
         if not group or self.key not in group.member:
             members = [self.key]
         else:
@@ -193,18 +221,32 @@ class User(Base):
 
         all_submissions = []
         for member in members:
-            all_submissions += list(Submission.query(
-                Submission.submitter==member).fetch())
+            all_submissions.append(Submission.query(
+                Submission.submitter==member,
+                Submission.assignment==assignment))
 
-        all_subms = [x for x in all_submissions if x.backup.get().assignment == assignment \
-                and self._contains_files(x.backup.get())]
+        return all_submissions
+
+    def get_submissions(self, assignment, num_submissions=10):
+        queries = self._get_submissions_helper(assignment)
+
+        subms = [query.fetch() for query in queries]
+        all_subms = []
+        for results in subms:
+            for s in results:
+                all_subms.append(s)
+        
+        all_subms = [x.backup.get() for x in all_subms]
+        all_subms = [x for x in all_subms if x.assignment == assignment \
+                and self._contains_files(x)]
 
         all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
-        for subm in all_subms[:num_submissions]:
-            subm.messages = None
-
         return all_subms[:num_submissions]
+
+    get_num_submissions = make_num_counter(_get_submissions_helper)
+    get_num_backups = make_num_counter(_get_backups_helper)
+
 
     def get_group(self, assignment_key):
         """Return the group for this user for an assignment."""
@@ -226,16 +268,20 @@ class User(Base):
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
             assign_info['final'] = {}
-            assign_info['final']['final_submission'] = \
-                    self.get_final_submission(assignment.key)
-            if assign_info['final']['final_submission']:
-                assign_info['final']['submission'] = \
-                        assign_info['final']['final_submission'].submission.get()
-                assign_info['final']['backup'] = \
-                        assign_info['final']['submission'].backup.get()
+            final_info = assign_info['final']
+
+            final_info['final_submission'] = self.get_final_submission(assignment.key)
+            if final_info['final_submission']:
+                final_info['submission'] = final_info['final_submission'].submission.get()
+                final_info['backup'] = final_info['submission'].backup.get()
+
+                if final_info['final_submission'].revision:
+                    final_info['revision'] = final_info['final_submission'].revision.get()
+
+                final_info['backup'] = final_info['submission'].backup.get()
 
                 # Percentage
-                final = assign_info['final']['backup']
+                final = final_info['backup']
                 solved = 0
                 total = 0
                 for message in final.messages:
@@ -250,8 +296,8 @@ class User(Base):
                 if total > 0:
                     assign_info['percent'] = round(100*float(solved)/total, 0)
 
-            assign_info['backups'] = len(self.get_backups(assignment.key)) > 0
-            assign_info['submissions'] = len(self.get_submissions(assignment.key)) > 0
+            assign_info['backups'] = self.get_num_backups(assignment.key, 1) > 0
+            assign_info['submissions'] = self.get_num_submissions(assignment.key, 1) > 0
             assign_info['assignment'] = assignment
 
             info['assignments'].append(assign_info)
@@ -411,6 +457,8 @@ class Assignment(Base):
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
+    revision = ndb.BooleanProperty(default=False)
+
     # TODO Add services requested
 
     @classmethod
@@ -653,6 +701,7 @@ class Submission(Base):
     submitter = ndb.ComputedProperty(lambda x: x.backup.get().submitter)
     assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
+    is_revision = ndb.BooleanProperty(default=False)
 
 
     def get_final(self):
@@ -673,10 +722,14 @@ class Submission(Base):
     def mark_as_final(self):
         """Create or update a final submission."""
         final = self.get_final()
-
         if final:
-            final.submitter = self.submitter
-            final.submission = self.key
+            assignment = self.assignment.get()
+            if assignment.revision:
+                # Follow resubmssion procedure
+                final.revision = self.key
+            else:
+                final.submitter = self.submitter
+                final.submission = self.key
         else:
             group = self.submitter.get().get_group(self.assignment)
             final = FinalSubmission(
@@ -1030,6 +1083,9 @@ class Queue(Base):
              'group': group,
              'score': submission.score,
             })
+        owner_email = "Unknown"
+        if self.owner.get():
+          owner_email = self.owner.get().email[0]
 
         return {
             'submissions': subms,
@@ -1037,7 +1093,7 @@ class Queue(Base):
             'graded': len(filter(None, (subm.score for subm in submissions))),
             'assignment': {'id': self.assignment},
             'assigned_staff': [val.get() for val in self.assigned_staff],
-            'owner': self.owner.get().email[0],
+            'owner': owner_email,
             'id': self.key.id()
         }
 
@@ -1076,6 +1132,7 @@ class FinalSubmission(Base):
     assignment = ndb.KeyProperty(Assignment)
     group = ndb.KeyProperty(Group)
     submission = ndb.KeyProperty(Submission)
+    revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
     submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
     published = ndb.BooleanProperty(default=False)

@@ -69,7 +69,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
      }, function (response) {
         $scope.submission = response;
         $scope.courseId = $stateParams.courseId;
-        if (response.messages.file_contents['submit']) {
+        if (response.messages && response.messages.file_contents && response.messages.file_contents['submit']) {
           delete $scope.submission.messages.file_contents['submit'];
           $scope.isSubmit = true;
         }
@@ -92,7 +92,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
                       for (i=0;i<file.split('\n').length;i++) {
                           comments = '';
                           if (commentList[i]) { // Ugly hack. Replace with TR based approach!
-                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' wrote: </h3> <p>' +
+                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' commented on line ' + (commentList[i][0].line).toString() + ': </h3> <p>' +
                                   $scope.convertMarkdown(commentList[i][0].message)+'</p>' + commEnd
                           }
                           html += '<div class="line">'+(i+1)+comments+'</div>';
@@ -178,9 +178,22 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
       }
-      $scope.showComposition = function(score) {
+      $scope.showComposition = function(score, backupId) {
         if (score) {
-          $window.swal('Score: '+score.score+'/2', 'Message: ' + score.message, 'info');
+          $window.swal({title: 'Score: '+score.score+'/2',
+              text: 'Message: ' + score.message,
+              showCancelButton: false,
+              icon: false,
+              allowEscapeKey: true,
+              allowOutsideClick: true,
+              confirmButtonText: "View Comments",
+              closeOnConfirm: false},
+              function(isConfirm){
+                if (isConfirm) {
+                  $window.location.replace('/old#/submission/'+backupId.toString()+'/diff')
+                } else {
+
+                } });
         }
       }
       $scope.reloadView = function () {
@@ -275,18 +288,31 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           });
       };
 
-      $scope.getSubmissions = function (assignId) {
+      $scope.subm_quantity = 10;
+      $scope.backup_quantity = 10;
+
+
+      $scope.getSubmissions = function (assignId,toIncrease) {
+            if (toIncrease) {
+              $scope.subm_quantity += 50;
+            }
             User.getSubmissions({
-              assignment: assignId
+              assignment: assignId,
+              quantity: $scope.subm_quantity
             }, function (response) {
               $scope.currAssign.submissions = response;
               $scope.showSubms();
             });
       }
 
-      $scope.getBackups = function (assignId) {
+      $scope.getBackups = function (assignId, toIncrease) {
+            if (toIncrease) {
+              $scope.backup_quantity += 50;
+            }
+
             User.getBackups({
-              assignment: assignId
+              assignment: assignId,
+              quantity: $scope.backup_quantity
             }, function (response) {
               $scope.currAssign.backups = response;
               $scope.showBackups();
