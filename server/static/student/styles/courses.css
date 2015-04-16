@@ -161,6 +161,12 @@ header {
     .check,.check::before {
         background-color:#FFF;
     }
+.icon-question {
+    font-weight:700;
+    font-size:1.5em;
+    display:inline-block;
+    margin-top:-0.25em;
+}
 /* blob themes */
 .blob[color="blue"], .colored.sidebar[color="blue"] { background-color:#00698C }
 .blob[color="blue"] .blob-alert { background-color: #00BFFF }
@@ -216,10 +222,11 @@ header {
         padding:30px 50px;
         background-color:rgba(0,0,0,0.05);
         width:100%;
+        display:block;
         text-transform:uppercase;
         position:relative;
         font-weight:700;
-        font-size:0.85em;
+        font-size:14px;
         letter-spacing:1px;
         cursor:pointer;
     }

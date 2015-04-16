@@ -58,14 +58,15 @@
 </head>
 <body class="course">
 <div class="container-fluid">
-    <div class="shadow"></div>
     <div class="wrap-container">
         <header>
-            <a ui-sref="dashboard" class="logo col-md-3">
-                <img src="images/logo-dark.png">
-                <h1>Okpy</h1>
-            </a>
-            <nav class="tools col-md-9">
+            <div class="col-md-4">
+                <a ui-sref="dashboard" class="logo">
+                    <img src="images/logo-dark.png">
+                    <h1>Okpy</h1>
+                </a>
+            </div>
+            <nav class="tools col-md-8">
                 <ul>
                     <li>
                         <a class="show-menu">
@@ -101,25 +102,29 @@
                 <div class="row">
                     <!-- ngRepeat: course in courses -->
                     <div class="col-md-4 ng-scope" ng-repeat="course in courses">
-                        <a ui-sref="student({courseId:course.id})" class="blob colored blue"
-                           href="course.html#/course/6058925581402112">
+                        <div class="blob colored" color="gold">
                             <div class="blob-main">
                                 <h2 class="blob-title ng-binding">CS 98-052</h2>
                                 <p class="blob-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
                             </div>
-                            <div class="blob-action">View Course<span class="white arrow right"></span></div>
-                        </a>
+                            <a class="blob-action"
+                               ui-sref="student({courseId:course.id})"
+                               href="course.html#/course/6058925581402112">View Course
+                                <span class="white arrow right"></span></a>
+                        </div>
                     </div>
                     <!-- end ngRepeat: course in courses -->
                     <div class="col-md-4 ng-scope" ng-repeat="course in courses">
-                        <a ui-sref="student({courseId:course.id})" class="blob colored blue"
-                           href="course.html#/course/6058925581402112">
+                        <div class="blob colored" color="blue">
                             <div class="blob-main">
                                 <h2 class="blob-title ng-binding">CS 98-052</h2>
                                 <p class="blob-subtitle ng-binding"> UC Berkeley &nbsp; &nbsp;</p>
                             </div>
-                            <div class="blob-action">View Course<span class="white arrow right"></span></div>
-                        </a>
+                            <a class="blob-action"
+                               ui-sref="student({courseId:course.id})"
+                               href="course.html#/course/6058925581402112">View Course
+                                <span class="white arrow right"></span></a>
+                        </div>
                     </div>
                     <!-- end ngRepeat: course in courses -->
                     <div class="col-md-4 ng-scope" ng-repeat="course in courses">
