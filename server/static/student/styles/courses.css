@@ -46,12 +46,16 @@ a, a:hover {
     -o-transition:      0.4s ease 0.4s;
 }
 /* Structure */
+.container-fluid {
+    padding:0;
+    margin:0;
+}
 .wrap-container {
     text-align:center;
 }
 .wrap {
     width:80%;
-    max-width:1000px;
+    max-width:1200px;
     float:none;
     display:inline-block;
     text-align:left;
@@ -186,6 +190,7 @@ header {
     float:left;
     width:100%;
     margin-top:2.5em;
+    text-align:left;
 }
     .blob-alert {
         background-color:transparent;
@@ -455,7 +460,7 @@ header {
         .active .cover {
             left:0;
         }
-    .course .close, .courses .close {
+    .sidebar .close {
         z-index:15;
         text-shadow:none;
         cursor:hover;
@@ -486,8 +491,12 @@ header {
                 float:none;
                 margin-top:0.5em;
             }
+/* submission */
+.submission .blob {
+    margin-top:-1px;
+}
 /* compatability with ok css */
-.submission p {
+.files p {
     font-size:0.8em;
     line-height:200%;
 }
