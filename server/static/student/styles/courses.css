@@ -215,6 +215,9 @@ header {
     .blob-main {
         padding:50px 50px 30px 50px;
     }
+    .blob-title {
+        font-weight:300;
+    }
     .blob-subtitle {
         margin-top:15px;
     }
@@ -226,7 +229,7 @@ header {
         text-transform:uppercase;
         position:relative;
         font-weight:700;
-        font-size:14px;
+        font-size:12px;
         letter-spacing:1px;
         cursor:pointer;
     }
