@@ -167,10 +167,16 @@ header {
     .colored,.blob-more {
         color:#FFF;
     }
+    /* blob themes */
         .blob.blue { background-color:#00698C }
         .blob.blue .blob-alert { background-color: #00BFFF }
+        
         .blob.green { background-color: #698C00 }
         .blob.green .blob-alert { background-color: #A3D900 }
+        
+        .blob.gold { background-color:#D9A300 }
+        .blob.gold .blob-alert { background-color:#FFC926 }
+        
         .good .blob-alert { background-color:#690 }
         .bad .blob-alert { background-color:#D93600 }
     .blob-main {
