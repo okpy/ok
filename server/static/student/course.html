@@ -90,7 +90,7 @@
                     <div class="row">
                         <div class="col-md-4 ng-scope"
                              ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
-                            <div class="blob colored blue"
+                            <div class="blob colored" color="blue"
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="1">
                                 <div class="blob-dot"></div>
@@ -145,7 +145,7 @@
                         </div>
                         <div class="col-md-4 ng-scope"
                              ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
-                            <div class="blob colored green"
+                            <div class="blob colored" color="green"
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="2">
                                 <div class="blob-dot"></div>
@@ -312,12 +312,12 @@
                         </div>
                         <div class="col-md-4 ng-scope"
                              ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
-                            <div class="blob colored gold"
+                            <div class="blob colored" color="gold"
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="2">
                                 <div class="blob-dot"></div>
                                 <div class="blob-main bad">
-                                    <div class="blob-alert"><span class="check"></span></div>
+                                    <div class="blob-alert"><span class="check">!</span></div>
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
@@ -372,15 +372,14 @@
     </div>
     <span class="cover"></span>
     <div class="sidebars">
-        <div class="sidebar group col-md-4">
-            <div class="sidebar-header colored">
+        <div class="sidebar colored group col-md-4">
+            <div class="sidebar-header">
                 <div class="close"><span ng-click="hidePopups()" class="icon-x">+</span></div>
                 <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                     yet</p><!-- end ngIf: !assign.final.final_submission -->
                 <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
 
-                <p class="blob-shiftcopy blob-copy ng-binding"><img
-                        src="images/icon-calendar-tiny-light.png">due
+                <p class="blob-shiftcopy blob-copy ng-binding"><span class="clock"></span>due
                     02/18/2015 at 11:59 PM</p>
             </div>
             <h2 class="sidebar-subtitle">Group</h2>

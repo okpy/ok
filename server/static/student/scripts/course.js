@@ -6,6 +6,8 @@ $(document).ready(function() {
 //        $('.flip').click();
 //        $(this).parent().parent().children('.blob-more').addClass('flipped');
         $('.container-fluid').addClass('active');
+        var blob = $(this).parent().parent();
+        $('.sidebar').attr('color', blob.attr('color'));
     });
     $('.sidebars .close').on('click',function() {
         $('.container-fluid').removeClass('active');
