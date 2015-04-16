@@ -15,24 +15,30 @@ a, a:hover {
     p a {       border-bottom:1px dotted #666 }
     p a:hover { border-bottom:1px solid #666 }
     li { list-style:none; }
-.flip,.blob-action,.arrow,.blob-text,.blob-more {
+.blob-action,.arrow,.blob-text,.blob-more {
     transition:         0.4s ease;
     -webkit-transition: 0.4s ease;
     -moz-transition:    0.4s ease;
     -o-transition:      0.4s ease;
 }
 .sidebars {
-    transition:         0.4s ease;
-    -webkit-transition: 0.4s ease;
-    -moz-transition:    0.4s ease;
-    -o-transition:      0.4s ease;
+    transition:         0.4s ease 0.01s;
+    -webkit-transition: 0.4s ease 0.01s;
+    -moz-transition:    0.4s ease 0.01s;
+    -o-transition:      0.4s ease 0.01s;
 }
 .wrap-container {
+    transition:         0.6s ease 0.01s;
+    -webkit-transition: 0.6s ease 0.01s;
+    -moz-transition:    0.6s ease 0.01s;
+    -o-transition:      0.6s ease 0.01s;
+}
+/*.wrap-container {
     transition:         0.3s ease 0.6s;
     -webkit-transition: 0.3s ease 0.6s;
     -moz-transition:    0.3s ease 0.6s;
     -o-transition:      0.3s ease 0.6s;
-}
+}*/
 .cover {
     transition:         0.4s ease 0.4s;
     -webkit-transition: 0.4s ease 0.4s;
@@ -97,7 +103,7 @@ header {
         height:10px;
         width:3px;
     }
-    .arrow,.arrow::before {
+    .arrow,.arrow::before,.check,.check::before {
         display:inline-block;
     }
     .colored .arrow,.colored .arrow::before,.arrow.white,.arrow.white::before {
@@ -139,6 +145,35 @@ header {
         margin-bottom:2px;
         background-color:#666;
     }
+.check {
+    width:7px;
+    height:3px;
+    transform:          rotate(45deg);
+    -webkit-transform:  rotate(45deg);
+    -moz-transform:     rotate(45deg);
+    -o-transform:       rotate(45deg);
+}
+    .check::before {
+        content:"";
+        position:absolute;
+        bottom:0;
+        right:0;
+        height:10px;
+        width:3px;
+    }
+    .check,.check::before {
+        background-color:#FFF;
+    }
+/* blob themes */
+.blob[color="blue"], .colored.sidebar[color="blue"] { background-color:#00698C }
+.blob[color="blue"] .blob-alert { background-color: #00BFFF }
+
+.blob[color="green"], .colored.sidebar[color="green"] { background-color: #698C00 }
+.blob[color="green"] .blob-alert { background-color: #A3D900 }
+
+.blob[color="gold"], .colored.sidebar[color="gold"] { background-color:#D9A300 }
+.blob[color="gold"] .blob-alert { background-color:#FFC926 }
+        
 /* Blobs */
 .blob {
     color:#666;
@@ -165,19 +200,12 @@ header {
         z-index:10;
         font-weight:700;
     }
+        .blob-alert .check {
+            margin:1.2em 0.25em 0 0;
+        }
     .colored,.blob-more {
         color:#FFF;
     }
-    /* blob themes */
-        .blob[color="blue"], .colored.sidebar[color="blue"] { background-color:#00698C }
-        .blob[color="blue"] .blob-alert { background-color: #00BFFF }
-        
-        .blob[color="green"], .colored.sidebar[color="green"] { background-color: #698C00 }
-        .blob[color="green"] .blob-alert { background-color: #A3D900 }
-        
-        .blob[color="gold"], .colored.sidebar[color="gold"] { background-color:#D9A300 }
-        .blob[color="gold"] .blob-alert { background-color:#FFC926 }
-        
         .good .blob-alert { background-color:#690 }
         .bad .blob-alert { background-color:#D93600 }
     .blob-main {
@@ -283,12 +311,15 @@ header {
         margin-right:5px;
         background:url('../images/icon-calendar-tiny-dark.png') transparent no-repeat center center;
     }
-        .blob.colored .clock {
+        .colored .clock {
              background:url('../images/icon-calendar-tiny-light.png') transparent no-repeat center center;
         }
     .row + .row {
         margin-top:2.5em;
     }
+        .row:last-child {
+            margin-bottom:5pe
+        }
 
 /* -- sidebar -- */
 .active .wrap-container {
@@ -313,30 +344,42 @@ header {
         min-height:100%;
         width:100%;
         background-color:#FFF;
-        padding:0;
+        padding:0 0 0 5px;
+        margin-right:-1px;
     }
         .colored.sidebar {
             background-color:#777;
         }
-    .sidebar::before,.sidebar li::before,.sidebar-subtitle::before {
+    .sidebar li::before,.sidebar-subtitle::before,.sidebar-header::before {
         content:"";
         width:5px;
         z-index:-1;
         position:absolute;
-        right:100%;
+        left:0;
         top:0;
         bottom:0;
-        background-color:#666;
+        background-color:rgba(0,0,0,0.5);
+        left:-5px;
     }
+        li + li {
+            border-top:1px solid #eee;
+        }
         .sidebar * {
             position:relative;
         }
-        .sidebar-subtitle::before {
+        .sidebar-subtitle::before,.sidebar-header::before {
             z-index:35;
             background-color:rgba(0,0,0,0.2);
         }
             .colored .sidebar-subtitle::before {
-                background-color:rgba(0,0,0,0.35);
+                background-color:rgba(0,0,0,0.5);
+            }
+        .colored .sidebar-header::before {
+            z-index:37;
+            background-color:rgba(0,0,0,0.1);
+        }
+            .colored .sidebar-header::before {
+                background-color:rgba(0,0,0,0.3);
             }
         .sidebar .sidebar-list li::before {
             z-index:36;
@@ -366,7 +409,15 @@ header {
         width:100%;
         padding:20px 25px;
         background-color:#FFF;
+        color:#666;
     }
+        .sidebar li a {
+            float:right;
+            margin-right:10px;
+        }
+            .sidebar li .arrow {
+                margin-left:10px;
+            }
     .sidebar .action {
         width:100%;
         padding:25px;
@@ -378,10 +429,16 @@ header {
         box-sizing:border-box;
         z-index:25;
     }
-        .colored.sidebar .action {
+        .colored.sidebar .action:hover {
             color:#FFF;
+            cursor:pointer;
+            background-color:rgba(0,0,0,0.15);
+        }
+        .colored.sidebar .action {
+            color:rgba(255,255,255,0.75);
         }
     .cover {
+        cursor:pointer;
         position:fixed;
         top:0;
         left:100%;
@@ -411,10 +468,11 @@ header {
             right:0;
             margin:10px 20px;
             padding:10px;
-            color:rgba(0,0,0,0.5);
+            color:rgba(0,0,0,0.25);
+            opacity:1;
         }
             .sidebars .close:hover {
-                color:#000;
+                color:rgba(0,0,0,0.75);
             }
         .close.white {
             color:#FFF;

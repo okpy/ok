@@ -12,4 +12,7 @@ $(document).ready(function() {
     $('.sidebars .close').on('click',function() {
         $('.container-fluid').removeClass('active');
     });
+    $('.cover').on('click',function() {
+        $('.sidebars .close').click();
+    });
 });

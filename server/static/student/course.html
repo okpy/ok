@@ -94,7 +94,7 @@
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="1">
                                 <div class="blob-dot"></div>
-                                <div class="blob-main">
+                                <div class="blob-main attn">
                                     <div class="blob-alert">!</div>
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
@@ -149,8 +149,8 @@
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="2">
                                 <div class="blob-dot"></div>
-                                <div class="blob-main">
-                                    <div class="blob-alert">!</div>
+                                <div class="blob-main good">
+                                    <div class="blob-alert"><span class="check"></span></div>
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
@@ -316,8 +316,8 @@
                                  ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
                                  id="2">
                                 <div class="blob-dot"></div>
-                                <div class="blob-main bad">
-                                    <div class="blob-alert"><span class="check">!</span></div>
+                                <div class="blob-main attn">
+                                    <div class="blob-alert">!</div>
                                     <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                                         yet</p><!-- end ngIf: !assign.final.final_submission -->
                                     <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
@@ -394,28 +394,23 @@
             <a ng-click="" class="action">Save</a>
 
             <h2 class="sidebar-subtitle">Submissions</h2>
-
-            <p class="sidebar-byline">for <b class="ng-binding"></b></p>
-
-            <div class="pop-content">
-                <li class="header">
-                    <span class="col-1"><p>Date</p></span>
-                    <span class="col-2"><p>By</p></span>
-                </li>
-
-
-            </div>
+            <ul class="sidebar-list">
+                <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+                <li>Feb. 2 at 6:00 p.m. by Angie Jodjana<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+                <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+                <li>Feb. 2 at 6:00 p.m. by Angie Jodjana<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+                <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+            </ul>
+            <a ng-click="" class="action">Load More</a>
             <h2 class="sidebar-subtitle">Backups</h2>
-
-            <p class="sidebar-byline">for <b class="ng-binding"></b></p>
-
-            <div class="pop-content">
-                <li class="header">
-                    <span class="col-1"><p>Date</p></span>
-                    <span class="col-2"><p>By</p></span>
-                </li>
-
-            </div>
+            <ul class="sidebar-list">
+                <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+                <li>Feb. 2 at 6:00 p.m. by Angie Jodjana<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+                <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+                <li>Feb. 2 at 6:00 p.m. by Angie Jodjana<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+                <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+            </ul>
+            <a ng-click="" class="action">Load More</a>
         </div>
     </div>
 </div>
