@@ -63,7 +63,7 @@ header {
     width:100%;
     float:left;
 }
-    .logo, .tools,.tools a { display:inline-block; }
+    .logo, .tools,.tools a { display:block; }
         .logo h1 {
             width:auto;
             text-align:left;
@@ -76,9 +76,6 @@ header {
         .logo {
             padding:30px;
         }
-    .tools {
-        float:right;
-    }
         .tools li a {
             float:right;
             padding:30px 20px;
@@ -182,6 +179,7 @@ header {
     display:inline-block;
     float:left;
     width:100%;
+    margin-top:2.5em;
 }
     .blob-alert {
         background-color:transparent;
@@ -314,12 +312,9 @@ header {
         .colored .clock {
              background:url('../images/icon-calendar-tiny-light.png') transparent no-repeat center center;
         }
-    .row + .row {
-        margin-top:2.5em;
+    .row:last-child {
+        margin-bottom:10em
     }
-        .row:last-child {
-            margin-bottom:5pe
-        }
 
 /* -- sidebar -- */
 .active .wrap-container {
@@ -331,7 +326,7 @@ header {
 .sidebars {
     position:fixed;
     top:0;
-    right:-50%;
+    right:-500px;
     height:100%;
     z-index:30;
     padding-left:5px;
