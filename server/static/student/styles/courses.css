@@ -2,7 +2,7 @@ h1,h2,h3,h4,h5,h6 {
     margin:0;
     font-family:'Roboto Condensed';
 }
-p, a, li, span {
+p, a, li, span:not([class^="hljs-"]) {
     font-family:'Roboto';
 }
 a, a:hover {
@@ -117,7 +117,7 @@ header {
             height:7px;
             width:3px;
         }
-    .right {
+    .arrow.right {
         color:#FFF;
         transform:          rotate(-45deg);
         -webkit-transform:  rotate(-45deg);
@@ -455,7 +455,7 @@ header {
         .active .cover {
             left:0;
         }
-    .close {
+    .course .close, .courses .close {
         z-index:15;
         text-shadow:none;
         cursor:hover;
@@ -486,3 +486,12 @@ header {
                 float:none;
                 margin-top:0.5em;
             }
+/* compatability with ok css */
+.submission p {
+    font-size:0.8em;
+    line-height:200%;
+}
+    .comment-header div {
+        font-size:0.9em;
+        padding:0.25em;
+    }
