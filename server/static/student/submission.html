@@ -113,15 +113,6 @@
     </span><!-- end ngIf: submission.score.length != 0 --><!-- end ngRepeat: score in submission.score -->
 
                     </div>
-                    <div class="center-block">
-
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-flat btn-info ng-hide" ng-click="toggleBlank()" ng-show="hideEmpty"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
-                            <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()" ng-hide="hideEmpty"><i class="fa fa-fw fa-arrows-v"></i> Collapse Code</button>
-                            <button class="btn btn-flat btn-info" href="/api/v1/submission/4827365192499200/download">
-                                <i class="fa fa-fw fa-cloud-download"></i> Download </button>
-                        </div>
-                    </div>
 
                     <!-- ngRepeat: (file_name, contents) in diff.diff -->
                     <div ng-repeat="(file_name, contents) in diff.diff" class="ng-scope files">

@@ -212,6 +212,14 @@ header {
         .blob-alert .check {
             margin:1.2em 0.25em 0 0;
         }
+        .blob-alert.thin {
+            font-size:1em;
+            font-weight:500;
+            width:4em;
+            height:4em;
+            line-height:3.25em;
+            margin-right:-1.75em;
+        }
     .colored,.blob-more {
         color:#FFF;
     }
@@ -460,14 +468,16 @@ header {
         .active .cover {
             left:0;
         }
-    .sidebar .close {
-        z-index:15;
-        text-shadow:none;
-        cursor:hover;
+    .close {
         transform:          rotate(45deg);
         -webkit-transform:  rotate(45deg);
         -moz-transform:     rotate(45deg);
         -o-transform:       rotate(45deg);
+    }
+    .sidebar .close {
+        z-index:15;
+        text-shadow:none;
+        cursor:hover;
         opacity:1;
     }
         .sidebars .close {
@@ -490,11 +500,16 @@ header {
             .blob-alert .close {
                 float:none;
                 margin-top:0.5em;
+                opacity:1;
+                cursor:default;
             }
 /* submission */
 .submission .blob {
     margin-top:-1px;
 }
+    .submission .sidebar .arrow {
+        margin-top:10px;
+    }
 /* compatability with ok css */
 .files p {
     font-size:0.8em;
