@@ -1,24 +1,32 @@
-<div class="screen courses">
-  <div class="screen courses" ng-controller="CourseSelectorController">
-    <section ng-repeat="course in courses">
-      <a ui-sref='student({courseId:course.id})' class="course large">
-        <div class="course-main" style="background:url('/static/student/images/courses/cs61a.png') no-repeat center; background-size:cover">
-          <img class="assign-bg" src="/static/student/images/bg-logo.png">
-          <h2 class="assign-title">{{ course.display_name }}</h2>
-
-          <p class="course-subtitle"> {{course.institution}} &nbsp; {{course.term}}&nbsp;{{course.year}}</p>
-          <div class="assign-deck">
-          </div>
-
-              <div class="course-progress">
-                <div class="assign-bar"><span class="assign-fill" style='width: 100%'></span></div>
-                <p class="assign-label">Course has begun</p>
-              </div>
-
-
-      </div>
-    </a>
-      
-  </section>
-</div>
+<div class="wrap">
+    <section class="screen courses" ng-controller="CourseSelectorController">
+        <div class="row">
+            <div ng-repeat="course in courses">
+                <div class="col-md-4 ng-scope">
+                    <div class="blob colored" color="blue">
+                        <div class="blob-main attn">
+                            <div class="blob-alert thin">5</div>
+                            <h2 class="blob-title ng-binding">{{ course.display_name }}</h2>
+                            <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-tag"></span>{{course.institution}}
+                                &nbsp; {{course.term}}&nbsp;{{course.year}}</p>
+                        </div>
+                        <a class="blob-action"
+                           ui-sref='student({courseId:course.id})'
+                           href="course.html#/course/6058925581402112">View Course
+                            <span class="white arrow right"></span></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 ng-scope" ng-repeat="course in courses">
+                <div ui-sref="student({courseId:course.id})" class="blob">
+                    <div class="blob-main">
+                        <h2 class="blob-title ng-binding">Enter Course ID</h2>
+                        <p class="blob-subtitle ng-binding"> Is your course missing? <a href="#">Ask your instructor</a>
+                            about it.</p>
+                    </div>
+                    <input class="blob-action" placeholder="course identification number">
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
