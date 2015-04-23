@@ -1,115 +1,118 @@
 <!DOCTYPE html>
 <html class="no-js" ng-app="student">
-<head>
-    <meta charset="UTF-8">
-    <title>Ok Student</title>
-
-    <link rel="stylesheet" href="/static/student/styles/zenburn.css">
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
-    <link href="/static/vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet">
-
-    <link href="/static/vendor/sweetalert/lib/sweet-alert.css" rel="stylesheet">
-
-    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/student/styles/courses.css" rel="stylesheet">
-
-
-    <script src="/static/vendor/jquery/dist/jquery.min.js"></script>
-
-    <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
-    <script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>
-
-    <script src="/static/student/scripts/course.js"></script>
-    <script src="/static/student/scripts/highlight.pack.js"></script>
-
-    <script src="/static/vendor/angular/angular.js"></script>
-    <script src="/static/vendor/highlightjs/highlight.pack.js"></script>
-
-    <script src="/static/vendor/angular-resource/angular-resource.js"></script>
-    <script src="/static/vendor/underscore/underscore.js"></script>
-    <script src="/static/vendor/angular-ui-router/release/angular-ui-router.js"></script>
-    <script src="/static/vendor/angular-loading-bar/build/loading-bar.min.js"></script>
-    <script src="/static/vendor/angular-animate/angular-animate.js"></script>
-    <script src="/static/vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
-    <script src="/static/vendor/moment/moment.js"></script>
-    <script src="/static/js/other/moment-timezone-with-data.js"></script>
-    <script src="/static/vendor/angular-moment/angular-moment.js"></script>
-    <script src="/static/vendor/showdown/compressed/Showdown.js"></script>
-    <script src="/static/vendor/sweetalert/lib/sweet-alert.min.js"></script>
-    <script src="/static/vendor/angular-tablesort/js/angular-tablesort.js"></script>
-    <script src="/static/vendor/angular-ui-sortable/sortable.js"></script>
-
-    <script src="/static/js/student.js?cacheblock"></script>
-    <script src="/static/js/common/main.js"></script>
-    <script src="/static/js/common/services.js"></script>
-    <script src="/static/js/common/controllers.js"></script>
-    <script src="/static/js/student/controllers.js"></script>
-    <script src="/static/admin/js/ok/app.js"></script>
-
-    <script>
-    Raven.config('https://edc8538d3d5f47fcb1b14c33d9ae7d8b@app.getsentry.com/36686', {
-        whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']
-    }).install();
-
-    </script>
-
-</head>
-<body class="course">
-<div class="container-fluid"">
-    <div class="wrap-container">
-        <header>
-            <div class="col-md-4">
-                <a ui-sref="dashboard" class="logo">
-                    <img src="/static/student/images/logo-dark.png">
-                    <h1>Okpy</h1>
-                </a>
-            </div>
-            <nav class="tools col-md-8">
-                <ul>
-                    {% if user %}
-                    <li>
-                        <a class="show-menu">Menu
-                            <span class="stripes">
-                              <span class="stripe"></span>
-                              <span class="stripe"></span>
-                              <span class="stripe"></span>
-                            </span>
-                        </a>
-                    </li>
-                    <li><a href="/static/student/tour.html"><span class="icon-question">?</span></a></li>
-                    <li><a href="#">{{user.email}}</a></li>
-                    {% else %}
-                    <li>
-                        <a href={{users_link}}>{{users_title}}</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-        </header>
-        <span class="menu-cover"></span>
-        <nav class="menu">
-            <ul>
-                <div class="close light close-menu"><span class="icon-x">+</span></div>
-                {% if user %}
-                <li><a href>{{user.email}}</a></li>
-                {% endif %}
-                <li><a href="http://cs61a.org">CS61A</a></li>
-                <li><a href={{users_link}}>{{users_title}}</a></li>
-            </ul>
-        </nav>
-        {% if user %}
+    <head>
+        <meta charset="UTF-8">
+        <title>Ok Student</title>
+    
+        <link rel="stylesheet" href="/static/student/styles/zenburn.css">
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+        <link href="/static/vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet">
+    
+        <link href="/static/vendor/sweetalert/lib/sweet-alert.css" rel="stylesheet">
+    
+        <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/student/styles/courses.css" rel="stylesheet">
+    
+    
+        <script src="/static/vendor/jquery/dist/jquery.min.js"></script>
+    
+        <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+        <script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>
+    
+        <script src="/static/student/scripts/course.js"></script>
+        <script src="/static/student/scripts/highlight.pack.js"></script>
+    
+        <script src="/static/vendor/angular/angular.js"></script>
+        <script src="/static/vendor/highlightjs/highlight.pack.js"></script>
+    
+        <script src="/static/vendor/angular-resource/angular-resource.js"></script>
+        <script src="/static/vendor/underscore/underscore.js"></script>
+        <script src="/static/vendor/angular-ui-router/release/angular-ui-router.js"></script>
+        <script src="/static/vendor/angular-loading-bar/build/loading-bar.min.js"></script>
+        <script src="/static/vendor/angular-animate/angular-animate.js"></script>
+        <script src="/static/vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+        <script src="/static/vendor/moment/moment.js"></script>
+        <script src="/static/js/other/moment-timezone-with-data.js"></script>
+        <script src="/static/vendor/angular-moment/angular-moment.js"></script>
+        <script src="/static/vendor/showdown/compressed/Showdown.js"></script>
+        <script src="/static/vendor/sweetalert/lib/sweet-alert.min.js"></script>
+        <script src="/static/vendor/angular-tablesort/js/angular-tablesort.js"></script>
+        <script src="/static/vendor/angular-ui-sortable/sortable.js"></script>
+    
+        <script src="/static/js/student.js?cacheblock"></script>
+        <script src="/static/js/common/main.js"></script>
+        <script src="/static/js/common/services.js"></script>
+        <script src="/static/js/common/controllers.js"></script>
+        <script src="/static/js/student/controllers.js"></script>
+        <script src="/static/admin/js/ok/app.js"></script>
+    
         <script>
-              window.user = "{{user.email}}";
-              window.userId = "{{user.id}}";
-              window.reloginLink = "{{relogin_link}}";
-
+        Raven.config('https://edc8538d3d5f47fcb1b14c33d9ae7d8b@app.getsentry.com/36686', {
+            whitelistUrls: ['https://ok-server.appspot.com', 'ok-server.appspot.com']
+        }).install();
+    
+        
         </script>
-        <div ui-view></div>
-        {% else %}
-        <span class="firstLogin"><a href={{users_link}} class="button">Login</a></span>
-        {% endif %}
-
-    </div>
-</body>
-<link href='http://fonts.googleapis.com/css?family=Roboto+Condensed|Roboto' rel='stylesheet' type='text/css'>
+    
+    </head>
+    <body class="course">
+        <div class="container-fluid">
+            <div class="wrap-container">
+                <header>
+                    <div class="col-md-4">
+                        <a ui-sref="dashboard" class="logo">
+                            <img src="/static/student/images/logo-dark.png">
+            
+                            <h1>Okpy</h1>
+                        </a>
+                    </div>
+                    <nav class="tools col-md-8">
+                        <ul>
+                            {% if user %}
+                            <li>
+                                <a class="show-menu">Menu
+                                        <span class="stripes">
+                                          <span class="stripe"></span>
+                                          <span class="stripe"></span>
+                                          <span class="stripe"></span>
+                                        </span>
+                                </a>
+                            </li>
+                            <li><a href="/static/student/tour.html"><span class="icon-question">?</span></a></li>
+                            <li><a href="#">{{user.email}}</a></li>
+                            {% else %}
+                            <li>
+                                <a href={{users_link}}>{{users_title}}</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </header>
+                <span class="menu-cover"></span>
+                <nav class="menu">
+                    <ul>
+                        <div class="close light close-menu"><span class="icon-x">+</span></div>
+                        {% if user %}
+                        <li><a href>{{user.email}}</a></li>
+                        {% endif %}
+                        <li><a href="http://cs61a.org">CS61A</a></li>
+                        <li><a href={{users_link}}>{{users_title}}</a></li>
+                    </ul>
+                </nav>
+                {% if user %}
+                <script>
+                    window.user = "{{user.email}}";
+                    window.userId = "{{user.id}}";
+                    window.reloginLink = "{{relogin_link}}";
+                </script>
+                <div ui-view>
+                </div>
+                {% else %}
+                <span class="firstLogin"><a href={{users_link}} class="button">Login</a></span>
+                {% endif %}
+            </div>
+        </div>
+    </body>
+<link href='http://fonts.googleapis.com/css?family=Roboto:400,500,700|Roboto+Condensed' rel='stylesheet'
+      type='text/css'>
 </html>
