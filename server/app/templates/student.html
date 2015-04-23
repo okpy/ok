@@ -5,6 +5,7 @@
     <title>Ok Student</title>
 
     <link href="/static/student/styles/courses.css" rel="stylesheet">
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/student/styles/zenburn.css">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
     <link href="/static/vendor/angular-loading-bar/build/loading-bar.css" rel="stylesheet"></link>
@@ -16,7 +17,7 @@
     <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
     <script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>
 
-    <script src="/static/student/scripts/all.js"></script>
+    <script src="/static/student/scripts/course.js"></script>
     <script src="/static/student/scripts/highlight.pack.js"></script>
 
     <script src="/static/vendor/angular/angular.js"></script>
@@ -52,15 +53,12 @@
 
 </head>
 <body class="course">
-<div class="main">
-    <div class="shadow"></div>
-    <div class="content">
-
+<div class="container-fluid"">
+    <div class="wrap-container">
         <header>
             <div class="col-md-4">
-                <a ui-sref="dashboard" class="logo">
-                    <img src="images/logo-dark.png">
-
+                <a href="courses" ui-sref="dashboard" class="logo">
+                    <img src=/static/student/images/logo-dark.png">
                     <h1>Okpy</h1>
                 </a>
             </div>
@@ -83,8 +81,6 @@
                         <a href={{users_link}}>{{users_title}}</a>
                     </li>
                     {% endif %}
-                    <li><a href="tour.html"><span class="icon-question">?</span></a></li>
-                    <li><a href="#"><img src="images/icon-profile.png">alvinwan@berkeley.edu</a></li>
                 </ul>
             </nav>
         </header>
@@ -113,5 +109,5 @@
 
     </div>
 </body>
-<link href='//fonts.googleapis.com/css?family=Raleway:100|Open+Sans:300,700' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Roboto+Condensed|Roboto' rel='stylesheet' type='text/css'>
 </html>
