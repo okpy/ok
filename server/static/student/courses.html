@@ -108,10 +108,13 @@
                                 <h2 class="blob-title ng-binding">CS 98-052</h2>
                                 <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-tag"></span> UC Berkeley &nbsp; &nbsp;</p>
                             </div>
-                            <a class="blob-action"
-                               ui-sref="student({courseId:course.id})"
-                               href="course.html#/course/6058925581402112">View Course
-                                <span class="white arrow right"></span></a>
+                            <a ui-sref="student({courseId:course.id})"
+                                     href="course.html#/course/6058925581402112">
+                                <div class="blob-action">
+                                    View Course
+                                    <span class="white arrow right"></span>
+                                </div>
+                            </a>
                         </div>
                     </div>
                     <!-- end ngRepeat: course in courses -->
