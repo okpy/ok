@@ -38,12 +38,12 @@ angular.module('student').value("RavenConfig", {
 });
 
 
-app.directive('assignmentModule', function() {
-        return {
-            restrict: 'E',
-            templateUrl: '/static/partials/student/assignment.module.html',
-        };
-    });
+//app.directive('assignmentModule', function() {
+//        return {
+//            restrict: 'E',
+//            templateUrl: '/static/partials/student/assignment.module.html',
+//        };
+//    });
 
 app.directive('assignmentList', function() {
         return {
