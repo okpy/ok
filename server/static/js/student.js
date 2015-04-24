@@ -44,6 +44,13 @@ angular.module('student').value("RavenConfig", {
 //            templateUrl: '/static/partials/student/assignment.module.html',
 //        };
 //    });
+    
+app.directive('assignmentDetails', function() {
+    return {
+        restrict: 'E',
+        templateUrl: '/static/partials/student/assignment.detail.html',
+    };
+});
 
 app.directive('assignmentList', function() {
         return {
