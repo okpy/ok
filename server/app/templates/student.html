@@ -85,14 +85,10 @@
                         </ul>
                     </nav>
                 </header>
-                <span class="menu-cover"></span>
-                <nav class="menu">
+                <nav class="menu col-md-4" onclick="openMenu(this)">
                     <ul>
-                        <div class="close light close-menu"><span class="icon-x">+</span></div>
-                        {% if user %}
-                        <li><a href>{{user.email}}</a></li>
-                        {% endif %}
-                        <li><a href="http://cs61a.org">CS61A</a></li>
+                        <div class="close"><span class="icon-x">+</span></div>
+                        <li><a ui-sref="dashboard">All Courses</a></li>
                         <li><a href={{users_link}}>{{users_title}}</a></li>
                     </ul>
                 </nav>

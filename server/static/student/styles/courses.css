@@ -91,8 +91,21 @@ header {
             margin-right:10px;
         }
 .menu {
-    display:none;
+    position:fixed;
+    top:0;
+    right:-500px;
+    height:100%;
+    overflow-y:scroll;
+    background-color:#FFF;
+    box-sizing:border-box;
+    padding:20px 0;
 }
+
+    .menu li a {
+        display:inline-block;
+        width:100%;
+        padding:20px;
+    }
 /* Elements */
 .arrow {
     width:10px;
