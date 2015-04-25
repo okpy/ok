@@ -21,7 +21,7 @@ a, a:hover {
     -moz-transition:    0.4s ease;
     -o-transition:      0.4s ease;
 }
-.sidebars {
+.sidebar {
     transition:         0.4s ease 0.01s;
     -webkit-transition: 0.4s ease 0.01s;
     -moz-transition:    0.4s ease 0.01s;
@@ -362,17 +362,21 @@ header {
     height:100%;
     z-index:30;
     padding-left:5px;
-    overflow-y:scroll;
 }
-    .active .sidebars {
-        right:0;
+    .active.sidebar {
+        right:500px;
     }
     .sidebar {
-        min-height:100%;
+        height:100%;
         width:100%;
         background-color:#FFF;
         padding:0 0 0 5px;
         margin-right:-1px;
+        position:absolute;
+        right:0;
+        top:0;
+        overflow-y:scroll;
+        text-align:left;
     }
         .colored.sidebar {
             background-color:#777;

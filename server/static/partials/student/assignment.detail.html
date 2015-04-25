@@ -1,39 +1,92 @@
+<ul ui-sortable ng-model="currGroup.member" class="list-view">
+
+                <li ng-repeat="member in currGroup.member" class="pop-item">
+<span class="stripes">
+<span class="stripe"></span>
+<span class="stripe"></span>
+<span class="stripe"></span>
+</span>
+                    <span class="item-no">{{ $index }}</span>
+
+                </li>
+            </ul>
+            <hr>
+            <p ng-if="currGroup.invited.length > 0" class="popup-byline"> Invited Members: </p>
+
+            <ul class="list-view">
+
+                <li ng-repeat="invited in currGroup.invited" class="pop-item">
+<span class="stripes">
+<span class="stripe"></span>
+<span class="stripe"></span>
+<span class="stripe"></span>
+</span>
+                    <span class="item-no">{{ $index }}</span>
+
+                    <p class="first-member">{{ invited.email[0] }} </p>
+
+                    <div class="remove-user" ng-click="removeMember(currGroup, invited)"><span class="icon-x">+</span>
+                    </div>
+                </li>
+            </ul>
+            <a ng-click class="action">Save</a>
+        </div>
+    </div>
+</div>
+
+</div>
+
 <span class="cover"></span>
-<div class="ng-scope sidebars" ng-controller="AssignmentDashController">
-    <div class="sidebar colored group col-md-4">
+<div class="ng-scope sidebars col-md-4" ng-controller="AssignmentDashController">
+    <div class="sidebar colored group" ng-repeat="assign in assignments" id="{{ assign.assignment.id }}">
         <div class="sidebar-header">
-            <div class="close"><span onclick="closeDetails()">+</span></div>
+            <div class="close"><span ng-click="closeDetails()">+</span></div>
             <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                 yet</p>
-            <h2 class="blob-title ng-binding"> Project 1 Contest: Hog Strategy</h2>
+            <h2 class="blob-title ng-binding">{{ assign.assignment.display_name }}</h2>
 
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
-                02/18/2015 at 11:59 PM</p>
+                {{ ::assign.assignment.due_date | amCalendar }}</p>
         </div>
         <h2 class="sidebar-subtitle">Group</h2>
         <ul class="sidebar-list">
-            <li>Some content</li>
-            <li>Some content</li>
+            <li ng-repeat="member in assign.group.member">{{ member.email[0] }}
+                <span class="icon-x" ng-click="removeMember(assign.group, member)">+</span>
+            </li>
         </ul>
         <a ng-click="" class="action">Save</a>
 
         <h2 class="sidebar-subtitle">Submissions</h2>
         <ul class="sidebar-list">
-            <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
-            <li>Feb. 2 at 6:00 p.m. by Angie Jodjana<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
-            <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
-            <li>Feb. 2 at 6:00 p.m. by Angie Jodjana<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
-            <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+            <li ng-if="currAssign.submissions.length == 0">No submissions found.</li>
+            <li ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
+                <a class="flag"
+                   ng-class=" {active: currAssign.final.final_submission && subm.id == currAssign.final.backup.id }">
+                    <span class="label left"><p>Flagged for Grading</p></span>
+                    <span class="cloth"></span>
+                    <span class="stem"></span>
+                </a>
+                {{ subm.created | amCalendar }} by {{ subm.submitter.email[0] }}
+                <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})">view
+                    <span class="arrow right dark fat"></span>
+                </a>
+            </li>
         </ul>
-        <a ng-click="" class="action">Load More</a>
+        <a ng-if="currAssign.submissions.length > 0"
+           ng-click="getSubmissions(currAssign.assignment.id, true);"
+           class="action">Load More</a>
         <h2 class="sidebar-subtitle">Backups</h2>
         <ul class="sidebar-list">
-            <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
-            <li>Feb. 2 at 6:00 p.m. by Angie Jodjana<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
-            <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
-            <li>Feb. 2 at 6:00 p.m. by Angie Jodjana<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
-            <li>Feb. 2 at 6:00 p.m. by Alvin Wan<a href="submission.html">view<span class="arrow right dark fat"></span></a></li>
+            <li ng-if="currAssign.backups.length == 0">No backups found. Have you run ok?</li>
+            <li ng-repeat="backup in currAssign.backups | orderBy:'created':true">
+                {{ backup.created | amCalendar }} by {{ backup.submitter.email[0] }}
+                <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})">view
+                    <span class="arrow right dark fat"></span>
+                </a>
+            </li>
         </ul>
-        <a ng-click="" class="action">Load More</a>
+        <a ng-if="currAssign.backups.length > 0"
+           ng-click="getBackups(currAssign.assignment.id, true);"
+           class="action">Load More</a>
     </div>
 </div>

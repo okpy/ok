@@ -186,7 +186,8 @@
     <div class="col-md-4 ng-scope"
          ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
       <div class="blob {{ assign.assignment.active || assign.assignment.revision ? 'colored' : ''}}"
-           color="{{ assign.assignment.active || assign.assignment.revision ? randomColor(assign).color : 'gray'}}">
+           color="{{ assign.assignment.active || assign.assignment.revision ? randomColor(assign.assignment).color : 'gray'}}"
+              id="{{ assign.assignment.id }}">
         <div class="blob-dot"></div>
         <div class="blob-main {{ !assign.final.final_submission ? (assign.assignment.active ? 'attn' : 'bad') : 'good'}}">
           <div class="blob-alert">
@@ -202,7 +203,7 @@
           <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
             {{ ::assign.assignment.due_date | amCalendar }}</p>
         </div>
-        <div class="ng-scope blob-action" onclick="openDetails(this)">View
+        <div class="ng-scope blob-action" ng-click="openDetails(assign)">View
           Details<span class="{{ assign.assignment.active || assign.assignment.revision ? 'white' : 'dark' }} arrow right"></span></div>
       </div>
     </div>

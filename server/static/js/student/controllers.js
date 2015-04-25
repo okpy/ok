@@ -297,23 +297,29 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         }
       };
       
-      $scope.randomColor = function randomColor(assign) {
+      $scope.randomColor = function randomColor(assignment) {
         themes = ['blue','gold','green']
-        assign.color = themes[Math.ceil(Math.random()*themes.length)-1]
-        return assign
+        if (!assignment.color) {
+            assignment.color = themes[Math.ceil(Math.random()*themes.length)-1]
+        }
+        return assignment
       }
 
-        $scope.openDetails = function openDetails(element) {
+        $scope.openDetails = function openDetails(assign) {
+            $scope.currGroup = assign.group
+            $scope.currAssign = assign
             $('.wrap-container').addClass('active');
-            var blob = $(element).parent();
-            $('.sidebar').attr('color', blob.attr('color'));
-            // $scope.currGroup = group
+            var blob = $('.blob[id="'+assign.assignment.id+'"]');
+            var sidebar = $('.sidebar[id="'+assign.assignment.id+'"]');
+            sidebar.attr('color', blob.attr('color'));
+            sidebar.addClass('active');
         }
         
         $scope.closeDetails = function closeDetails() {
+            $('.sidebar').removeClass('active');
             $('.wrap-container').removeClass('active');
         }
-      }
+      } 
 ]);
 
 
