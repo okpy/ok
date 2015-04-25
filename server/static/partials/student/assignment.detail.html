@@ -13,7 +13,7 @@
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
                 {{ ::assign.assignment.due_date | amCalendar }}</p>
         </div>
-        <div ng-if="assign.group.group_info.member.length > 1">
+        <div ng-if="assign.group.group_info.member.length < assign.assignment.max_group_size">
             <h2 class="sidebar-subtitle">Group</h2>
             <ul class="sidebar-list">
                 <li ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}

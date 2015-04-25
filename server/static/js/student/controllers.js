@@ -201,14 +201,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               id: currGroup.id,
               email: member.email[0]
             }, function (err) {
-              $scope.reloadAssignments();
-              if (member.email[0] != $window.user) {
-                  $scope.reloadView()
-              } else {
+                $scope.reloadView()
                 $scope.currGroup = null;
                 $scope.currAssign.group = null
-
-              }
             });
       };
 
