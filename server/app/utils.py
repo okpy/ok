@@ -408,33 +408,42 @@ def check_user(user_key):
 # Autograder actions #
 ######################
 
-def add_taskqueue(course, assign_key):
+def add_taskqueue(backup):
+    q = taskqueue.Queue("pull-queue")
+    submission_contents = backup.get_messages.get("file_contents")
+    tasks = []
+    tasks.append(taskqueue.Task( payload = submission_contents, method = "PULL"))
+    q.add(tasks)
+
+def add_all_taskqueue(course, assign_key):
     q = taskqueue.Queue("pull-queue")
     students = course.students()  
-    submissions = [student.get().get_final_submission(assign_key) for student in students]
-    
+    final_submissions = [student.get().get_final_submission(assign_key) for student in students]
+    submissions = [final.submission.get() for final in final_submissions]
+    backups = [sub.backup.get() for sub in submissions]
+
     tasks = []
-    for sub in submissions:
-        if sub:
-            tasks.append(taskqueue.Task( payload = sub.key.urlsafe(), method = "PULL"))
+    for backup in backups:
+        submission_contents = backup.get_messages.get("file_contents")
+        tasks.append(taskqueue.Task( payload = backup.key.urlsafe(), method = "PULL"))
     q.add(tasks)
 
 def lease_tasks(): 
     day_seconds = 86400
     max_tasks = 1000
     q = taskqueue.Queue("pull-queue")
-    submissions = []
+    backups = []
     tasks = q.lease_tasks(day_seconds,max_tasks)
 
     while len(tasks) != 0:
         for task in tasks:
             url_string = task.payload
             key = ndb.Key(urlsafe=url_string)
-            sub = key.get()
-            submissions.append(sub)
+            backup = key.get()
+            backups.append(backup)
 
         q.delete_tasks(tasks)
         tasks = q.lease_tasks(day_seconds, max_tasks)
 
-    return submissions
+    return backups
 
