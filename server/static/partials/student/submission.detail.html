@@ -1,70 +1,103 @@
-<aside>
+<!--<aside>-->
 
-    <div class="block">
-        <a ui-sref="student({courseId: courseId})" class="block-link block-back">
-            <span class="arrow left dark"></span>
+    <!--<div class="block">-->
+        <!--<a ui-sref="student({courseId: courseId})" class="block-link block-back">-->
+            <!--<span class="arrow left dark"></span>-->
 
-            <p>Back</p>
+            <!--<p>Back</p>-->
+        <!--</a>-->
+        <!--<a href="http://cs61a.org" class="block-link">-->
+            <!--<span class="icon-link">8</span>-->
+
+            <!--<p class="link-label">Course Website</p>-->
+        <!--</a>-->
+    <!--</div>-->
+<!--</aside>-->
+
+<!--<section>-->
+    <!--<div class="assign code small inactive" ng-if="!submission.$resolved">-->
+        <!--<div class="assign-main">-->
+            <!--<h2 class="assign-title">Loading</h2>-->
+
+            <!--<div class="assign-deck">-->
+                <!--...-->
+            <!--</div>-->
+        <!--</div>-->
+        <!--<p id="1" class="active">-->
+            <!--<a>Loading Code</a>-->
+
+        <!--<p>-->
+    <!--</div>-->
+    <!--<div class="assign code small active" ng-if="submission.$resolved">-->
+        <!--<div class="assign-main">-->
+            <!--<h2 class="assign-title">{{submission.assignment.display_name}}-->
+                <!--<span class="flag">-->
+                <!--<span class="cloth"></span>-->
+                <!--<span class="stem"></span>-->
+                <!--</span>-->
+            <!--</h2>-->
+
+            <!--<div class="assign-deck">-->
+                <!--<p><img src="/static/student/images/icon-clock.png"> {{submission.server_time | amCalendar}}. Due-->
+                    <!--{{submission.assignment.due_date | amCalendar}}-->
+                    <!--<br>By: {{submission.submitter.email[0]}}</p>-->
+            <!--</div>-->
+        <!--</div>-->
+
+
+        <!--<div class="assign-code">-->
+            <!--&lt;!&ndash; TODO: CSS &ndash;&gt;-->
+            <!--<div class="code-main fullWidth"-->
+                 <!--ng-repeat="(file_name, contents) in submission.messages.file_contents">-->
+                <!--<h2 class="code-title">{{file_name}}</h2>-->
+                <!--<div class="num-cont">-->
+                    <!--<ul>-->
+                        <!--<p>1</p>-->
+                    <!--</ul>-->
+                <!--</div>-->
+                <!--<code class="hljs code-cont">-->
+                    <!--{{contents}}-->
+                <!--</code>-->
+
+                <!--<div class="files">-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+<!--</section>-->
+
+    <link href="/static/css/main.css" rel="stylesheet">
+    <link href="/static/admin/css/ok.css">
+    <div class="blob {{ submission.assignment.active || submission.assignment.revision ? 'colored' : ''}}"
+         color="{{ submission.assignment.active || submission.assignment.revision ? 'blue' : 'gray'}}"
+         id="{{ submission.assignment.id }}">
+        <div class="blob-dot"></div>
+        <div class="blob-main {{ !assign.final.final_submission ? (submission.assignment.active ? 'attn' : 'bad') : 'good'}}">
+            <h2 class="blob-title ng-binding">{{ ::submission.assignment.display_name }}</h2>
+            <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
+                {{ ::submission.assignment.due_date | amCalendar }}</p>
+        </div>
+        <a ui-sref="student({courseId: courseId})">
+            <div class="ng-scope blob-action"></div>
         </a>
-        <a href="http://cs61a.org" class="block-link">
-            <span class="icon-link">8</span>
-
-            <p class="link-label">Course Website</p>
-        </a>
     </div>
-</aside>
+    <h2>Submission: {{submission.created | amCalendar}} </h2>
+      {{tag}}
+    <div class="center-block">
 
-<section>
-    <div class="assign code small inactive" ng-if="!submission.$resolved">
-        <div class="assign-main">
-            <h2 class="assign-title">Loading</h2>
+        <div class="btn-group">
+            <button type="button" class="btn btn-flat btn-info" ng-hide="hideEmpty" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Collapse Code</button>
+            <button type="button" class="btn btn-flat btn-info" ng-show="hideEmpty" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
 
-            <div class="assign-deck">
-                ...
-            </div>
-        </div>
-        <p id="1" class="active">
-            <a>Loading Code</a>
-
-        <p>
-    </div>
-    <div class="assign code small active" ng-if="submission.$resolved">
-        <div class="assign-main">
-            <h2 class="assign-title">{{submission.assignment.display_name}}
-                <span class="flag">
-                <span class="cloth"></span>
-                <span class="stem"></span>
-                </span>
-            </h2>
-
-            <div class="assign-deck">
-                <p><img src="/static/student/images/icon-clock.png"> {{submission.server_time | amCalendar}}. Due
-                    {{submission.assignment.due_date | amCalendar}}
-                    <br>By: {{submission.submitter.email[0]}}</p>
-            </div>
-        </div>
-
-
-        <div class="assign-code">
-            <!-- TODO: CSS -->
-            <div class="code-main fullWidth"
-                 ng-repeat="(file_name, contents) in submission.messages.file_contents">
-                <h2 class="code-title">{{file_name}}</h2>
-                <div class="num-cont">
-                    <ul>
-                        <p>1</p>
-                    </ul>
-                </div>
-                <code class="hljs code-cont">
-                    {{contents}}
-                </code>
-
-                <div class="files">
-                </div>
-            </div>
+            <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.id}}/download'>
+                <i class="fa fa-fw fa-cloud-download"></i> Download </button>
         </div>
     </div>
-    </div>
-    </div>
-</section>
 
+
+    <div ng-repeat="(file_name, contents) in diff.diff">
+        <diff/>
+    </div>
+</div>

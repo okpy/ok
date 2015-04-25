@@ -1,0 +1,60 @@
+<div>
+  <div class='comment-box' ng-if="showComment || codeline.comments.length > 0" ng-hide="hideBox">
+    <div class='comment-holder' ng-repeat="comment in codeline.comments" ng-controller="CommentController">
+      <div class='comment'>
+        <div class='comment-header'>
+          <div class='left' ng-if="comment.author.email[0]">
+            <strong>{{comment.author.email[0]}}</strong> wrote:
+          </div>
+          <div class='right'>
+            <button type="button" ng-click="remove()" class="btn btn-danger btn-xs">
+              <span class="glyphicon glyphicon-remove"></span>
+            </button>
+          </div>
+          <div class='clearfix'></div>
+        </div>
+        <div class='comment-text'>
+          <div ng-bind-html="convertMarkdown(comment.message)"></div>
+        </div>
+      </div>
+    </div>
+    <div ng-if="!showComment">
+      <div>
+        <button ng-click="toggleComment()" class='btn btn-primary'>Reply</button>
+      </div>
+    </div>
+    <div ng-controller="WriteCommentController" class='comment-form' class='row' ng-if="showComment && showWriter">
+      <form class="comment-tabset form-horizontal" role="form">
+        <tabset class='tabset-background'>
+          <tab heading="Write Comment">
+            <div class='tab-body'>
+              <div class="form-group">
+                <div class="col-sm-12">
+                  <textarea ng-model="commentText.text" class="comment-input form-control" placeholder="Enter comment here"></textarea>
+                </div>
+              </div>
+            </div>
+          </tab>
+          <tab heading="Preview">
+            <div class='tab-body'>
+              <div class="form-group">
+                <div class="col-sm-12">
+                  <div class='comment-preview' ng-if="commentText != ''" ng-bind-html="convertMarkdown(commentText.text)">Hello</div>
+                </div>
+              </div>
+            </div>
+          </tab>
+        </tabset>
+        <div class='comment-buttons'>
+          <div class="left">
+            <button ng-click="toggleComment()" class="btn btn-default">Close</button>
+          </div>
+          <div class="right">
+            <button type="submit" ng-disabled="commentText.text == ''" ng-click="makeComment()" class="btn btn-primary">Comment</button>
+          </div>
+          <div class="clearfix"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
