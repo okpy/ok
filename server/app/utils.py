@@ -429,7 +429,7 @@ def add_all_taskqueue(course, assign_key):
     tasks = []
     for backup in backups:
         submission_contents = backup.get_messages.get("file_contents")
-        tasks.append(taskqueue.Task( payload = backup.key.urlsafe(), method = "PULL"))
+        tasks.append(taskqueue.Task( payload = submission_contents, method = "PULL"))
     q.add(tasks)
 
 def lease_tasks(): 
