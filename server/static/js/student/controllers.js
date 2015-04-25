@@ -1,3 +1,15 @@
+app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams",
+    function ($scope, $window, $state, $stateParams) {
+        $scope.openMenu = function(menu) {
+            $(menu).addClass('active')
+            $('.container-fluid').addClass('active').addClass('pushed')
+        }
+        $scope.closeMenu = function() {
+            $('.menu').removeClass('active')
+            $('.container-fluid').removeClass('active').removeClass('pushed')
+        }
+    }
+])
 
 app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$stateParams', 'Course',
     function ($scope, $window, $state, $stateParams, Course) {

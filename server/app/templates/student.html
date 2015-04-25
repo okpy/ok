@@ -17,9 +17,7 @@
     
         <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
         <script src="//cdn.ravenjs.com/1.1.16/angular,jquery,native/raven.min.js"></script>
-    
-        <script src="/static/student/scripts/highlight.pack.js"></script>
-    
+
         <script src="/static/vendor/angular/angular.js"></script>
         <script src="/static/vendor/highlightjs/highlight.pack.js"></script>
     
@@ -55,10 +53,10 @@
     </head>
     <body class="course">
         <div class="container-fluid">
-            <div class="wrap-container">
+            <div class="wrap-container" ng-controller="HeaderController">
                 <header class="toBlur">
                     <div class="col-md-4">
-                        <a ui-sref="dashboard" class="logo">
+                        <a href="/#" class="logo">
                             <img src="/static/student/images/logo-dark.png">
                             <h1>Okpy</h1>
                         </a>
@@ -67,7 +65,7 @@
                         <ul>
                             {% if user %}
                             <li>
-                                <a class="show-menu">Menu
+                                <a class="show-menu" ng-click="openMenu(this)">Menu
                                         <span class="stripes">
                                           <span class="stripe"></span>
                                           <span class="stripe"></span>
@@ -85,10 +83,10 @@
                         </ul>
                     </nav>
                 </header>
-                <nav class="menu col-md-4" onclick="openMenu(this)">
+                <nav class="menu col-md-4">
                     <ul>
-                        <div class="close"><span class="icon-x">+</span></div>
-                        <li><a ui-sref="dashboard">All Courses</a></li>
+                        <div class="close" ng-click="closeMenu()"><span class="icon-x">+</span></div>
+                        <li ng-click="closeMenu()"><a href="/#">All Courses</a></li>
                         <li><a href={{users_link}}>{{users_title}}</a></li>
                     </ul>
                 </nav>

@@ -17,7 +17,7 @@ a, a:hover {
     .colored p a {  border-bottom:1px dotted rgba(255,255,255,0.5) }
     .colored p a:hover { border-bottom:1px solid rgba(255,255,255,0.5) }
     li { list-style:none; }
-.blob-action,.arrow,.blob-text,.blob-more {
+.blob-action,.arrow,.blob-text,.blob-more,.menu,.container-fluid {
     transition:         0.4s ease;
     -webkit-transition: 0.4s ease;
     -moz-transition:    0.4s ease;
@@ -99,12 +99,19 @@ header {
     background-color:#FFF;
     box-sizing:border-box;
     padding:20px 0;
+    z-index:25;
 }
 
     .menu li a {
         display:inline-block;
         width:100%;
         padding:20px;
+    }
+    .pushed,.pushed header {
+        margin-left:-33.33%;
+    }
+    .pushed .menu {
+        right:0;
     }
 /* Elements */
 .arrow {
