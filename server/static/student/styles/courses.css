@@ -195,6 +195,9 @@ header {
     margin-top:2.5em;
     text-align:left;
 }
+    .blob.first {
+        margin-top:0;
+    }
     .blob-alert {
         background-color:transparent;
         position:absolute;

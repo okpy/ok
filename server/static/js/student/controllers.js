@@ -325,4 +325,146 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       } 
 ]);
 
+// copied from admin
+app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce",
+  function ($scope, $timeout, $location, $anchorScroll, $sce) {
+    contents = [];
+    var leftNum = 0, rightNum = 0;
+    for (var i = 0; i < $scope.contents.length; i++) {
+      codeline = {"type": "line"};
+      codeline.start = $scope.contents[i][0];
+      codeline.line = $scope.contents[i].slice(2);
+      codeline.index = i;
+      // Only care about right-num (which is the new-file)
+      if ($scope.diff.comments.hasOwnProperty($scope.file_name) && $scope.diff.comments[$scope.file_name].hasOwnProperty(rightNum)) {
+        codeline.comments = $scope.diff.comments[$scope.file_name][rightNum]
+      }
+      codeline.lineNum = i + 1;
+      if (codeline.start == "+") {
+        rightNum++;
+        codeline.rightNum = rightNum;
+        codeline.leftNum = "";
+      } else if (codeline.start == "-") {
+        leftNum++;
+        codeline.leftNum = leftNum;;
+        codeline.rightNum = "";
+      } else if (codeline.start == "?") {
+          // TODO: add in-line coloring
+          continue;
+        } else {
+          leftNum++;
+          rightNum++;
+          codeline.leftNum = leftNum;;
+          codeline.rightNum = rightNum;
+        }
+        contents.push(codeline);
+      }
+      $scope.contents = contents;
+      $timeout(function() {
+        $(".diff-line-code").each(function(i, elem) {
+          hljs.highlightBlock(elem);
+        });
+        $anchorScroll();
+      });
+    }
+    ]);
 
+// copied from admin
+app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce", "$modal",
+  function ($scope, $timeout, $location, $anchorScroll, $sce, $modal) {
+    var converter = new Showdown.converter();
+    $scope.convertMarkdown = function(text) {
+      if (text == "" || text === undefined) {
+        return $sce.trustAsHtml("")
+      }
+      return $sce.trustAsHtml(converter.makeHtml(text));
+    }
+    var start = $scope.codeline.start;
+    if (start == "+") {
+      $scope.positive = true;
+    } else if (start == "-") {
+      $scope.negative = true;
+    } else {
+      $scope.neutral = true;
+    }
+    $scope.anchorId = $scope.file_name + "-L" + $scope.codeline.lineNum;
+
+    $scope.scroll = function() {
+      //$location.hash($scope.anchorId);
+      // $anchorScroll();
+    }
+
+    $scope.showComment = false;
+    $scope.hideBox = false;
+    $scope.showWriter = true;
+    $scope.toggleComment = function() {
+      $scope.showComment = !$scope.showComment;
+    }
+    $scope.toggleBox = function() {
+      $scope.hideBox = !$scope.hideBox;
+    }
+    $scope.toggleWriter = function() {
+      $scope.showWriter = !$scope.showWriter;
+    }
+  }
+  ]);
+  
+  // copied from admin
+  app.controller("CommentController", ["$scope", "$window", "$stateParams", "$timeout", "$modal", "Submission",
+    function ($scope, $window, $stateParams, $timeout, $modal, Submission) {
+      $scope.remove = function() {
+        var modal = $modal.open({
+          templateUrl: '/static/partials/common/removecomment.modal.html',
+          scope: $scope,
+          size: 'sm',
+          resolve: {
+            modal: function () {
+              return modal;
+            }
+          }
+        });
+        modal.result.then(function() {
+          Submission.deleteComment({
+            id: $scope.backupId,
+            comment: $scope.comment.id
+          }, function (result){
+            $scope.toggleBox()
+            $scope.comment = false;
+          });
+        });
+      }
+    }
+    ]);
+  
+  // copied from admin
+  app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Submission",
+    function ($scope, $sce, $stateParams, Submission) {
+      var converter = new Showdown.converter();
+      $scope.convertMarkdown = function(text) {
+        if (text == "" || text === undefined) {
+          return $sce.trustAsHtml("No comment yet...")
+        }
+        return $sce.trustAsHtml(converter.makeHtml(text));
+      }
+      $scope.commentText = {text:""}
+      $scope.makeComment = function() {
+        text = $scope.commentText.text;
+        if (text !== undefined && text.trim() != "") {
+          Submission.addComment({
+            id: $scope.backupId,
+            file: $scope.file_name,
+            index: $scope.codeline.rightNum - 1,
+            message: text,
+          }, function (resp) {
+            resp.self = true
+            if ($scope.codeline.comments) {
+              $scope.codeline.comments.push(resp)
+            } else {
+              $scope.codeline.comments = [resp]
+            }
+            $scope.toggleWriter()
+          });
+        }
+      }
+    }
+    ]);

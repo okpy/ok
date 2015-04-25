@@ -70,7 +70,7 @@
 
     <link href="/static/css/main.css" rel="stylesheet">
     <link href="/static/admin/css/ok.css">
-    <div class="blob {{ submission.assignment.active || submission.assignment.revision ? 'colored' : ''}}"
+    <div class="blob first {{ submission.assignment.active || submission.assignment.revision ? 'colored' : ''}}"
          color="{{ submission.assignment.active || submission.assignment.revision ? 'blue' : 'gray'}}"
          id="{{ submission.assignment.id }}">
         <div class="blob-dot"></div>
@@ -84,7 +84,12 @@
             <div class="ng-scope blob-action">Back</div>
         </a>
     </div>
-    <div ng-repeat="(file_name, contents) in diff.diff">
+<div class="center-block">
+    <span ng-if="submission.score.length != 0" ng-repeat="score in submission.score" class="badge bg-info">
+      Graded - {{submission.score}} - {{submission.grader.email}}
+    </span>
+</div>
+    <div class="files wrap" ng-repeat="(file_name, contents) in submission.messages.file_contents">
         <diff/>
     </div>
 </div>
