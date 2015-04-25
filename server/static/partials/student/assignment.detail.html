@@ -36,11 +36,12 @@
 
 </div>
 
-<span class="cover"></span>
-<div class="ng-scope sidebars col-md-4" ng-controller="AssignmentDashController">
-    <div class="sidebar colored group" ng-repeat="assign in assignments" id="{{ assign.assignment.id }}">
+<span class="cover" ng-click="closeDetails()"></span>
+<div class="sidebars col-md-4" ng-controller="AssignmentDashController">
+    <div class="sidebar colored group ng-scope" ng-repeat="assign in assignments" 
+         id="{{ assign.assignment.id }}" color="{{ randomColor(assign.assignment).color }}">
         <div class="sidebar-header">
-            <div class="close"><span ng-click="closeDetails()">+</span></div>
+            <div class="close" ng-click="closeDetails()"><span>+</span></div>
             <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
                 yet</p>
             <h2 class="blob-title ng-binding">{{ assign.assignment.display_name }}</h2>
@@ -58,10 +59,10 @@
 
         <h2 class="sidebar-subtitle">Submissions</h2>
         <ul class="sidebar-list">
-            <li ng-if="currAssign.submissions.length == 0">No submissions found.</li>
-            <li ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
+            <li ng-if="!assign.submissions || assign.submissions.length == 0">No submissions found.</li>
+            <li ng-repeat="subm in assign.submissions | orderBy:'created':true">
                 <a class="flag"
-                   ng-class=" {active: currAssign.final.final_submission && subm.id == currAssign.final.backup.id }">
+                   ng-class=" {active: assign.final.final_submission && subm.id == assign.final.backup.id }">
                     <span class="label left"><p>Flagged for Grading</p></span>
                     <span class="cloth"></span>
                     <span class="stem"></span>
@@ -72,21 +73,21 @@
                 </a>
             </li>
         </ul>
-        <a ng-if="currAssign.submissions.length > 0"
-           ng-click="getSubmissions(currAssign.assignment.id, true);"
+        <a ng-if="assign.submissions.length > 0"
+           ng-click="getSubmissions(assign.assignment.id, true);"
            class="action">Load More</a>
         <h2 class="sidebar-subtitle">Backups</h2>
         <ul class="sidebar-list">
-            <li ng-if="currAssign.backups.length == 0">No backups found. Have you run ok?</li>
-            <li ng-repeat="backup in currAssign.backups | orderBy:'created':true">
+            <li ng-if="!assign.backups || assign.backups.length == 0">No backups found. Have you run ok?</li>
+            <li ng-repeat="backup in assign.backups | orderBy:'created':true">
                 {{ backup.created | amCalendar }} by {{ backup.submitter.email[0] }}
                 <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})">view
                     <span class="arrow right dark fat"></span>
                 </a>
             </li>
         </ul>
-        <a ng-if="currAssign.backups.length > 0"
-           ng-click="getBackups(currAssign.assignment.id, true);"
+        <a ng-if="assign.backups.length > 0"
+           ng-click="getBackups(assign.assignment, true);"
            class="action">Load More</a>
     </div>
 </div>

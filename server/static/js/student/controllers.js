@@ -154,10 +154,22 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.assignments = response.assignments;
+            for (i = 0;i<response.assignments.length;i++) {
+                $scope.assignInit(response.assignments[i]);
+            }
           }, function (error) {
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
+      }
+      $scope.assignInit = function(assign) {
+        if ()
+        if (assign.backups) {
+            $scope.getBackups(assign, false);
+        }
+        if (assign.submissions) {
+            $scope.getSubmissions(assign, false);
+        }
       }
       $scope.showComposition = function(score, backupId) {
         if (score) {
@@ -248,30 +260,29 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.backup_quantity = 10;
 
 
-      $scope.getSubmissions = function (assignId,toIncrease) {
+      $scope.getSubmissions = function (assign,toIncrease) {
             if (toIncrease) {
               $scope.subm_quantity += 50;
             }
+            console.log(assign.assignment.id);
             User.getSubmissions({
-              assignment: assignId,
+              assignment: assign.assignment.id,
               quantity: $scope.subm_quantity
             }, function (response) {
-              $scope.currAssign.submissions = response;
-              $scope.showSubms();
+              assign.submissions = response;
             });
+            console.log(assign.submissions);
       }
 
-      $scope.getBackups = function (assignId, toIncrease) {
+      $scope.getBackups = function (assign, toIncrease) {
             if (toIncrease) {
               $scope.backup_quantity += 50;
             }
-
             User.getBackups({
-              assignment: assignId,
+              assignment: assign.assignment.id,
               quantity: $scope.backup_quantity
             }, function (response) {
-              $scope.currAssign.backups = response;
-              $scope.showBackups();
+                assign.backups = response;
             });
       }
 
@@ -309,10 +320,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $scope.currGroup = assign.group
             $scope.currAssign = assign
             $('.wrap-container').addClass('active');
-            var blob = $('.blob[id="'+assign.assignment.id+'"]');
-            var sidebar = $('.sidebar[id="'+assign.assignment.id+'"]');
-            sidebar.attr('color', blob.attr('color'));
-            sidebar.addClass('active');
+            $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
         }
         
         $scope.closeDetails = function closeDetails() {

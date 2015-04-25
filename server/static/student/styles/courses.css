@@ -438,13 +438,14 @@ header {
     }
     .sidebar li {
         width:100%;
-        padding:20px 25px;
+        padding:20px 95px 20px 25px;
         background-color:#FFF;
         color:#666;
     }
         .sidebar li a {
-            float:right;
-            margin-right:10px;
+            position:absolute;
+            top:20px;
+            right:30px;
         }
             .sidebar li .arrow {
                 margin-left:10px;
