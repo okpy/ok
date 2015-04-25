@@ -197,9 +197,17 @@
           <p class="blob-status" ng-if="assign.final.final_submission && !assign.final.final_submission.revision">Assignment submitted</p>
           <p class="blob-status" ng-if="assign.final.final_submission &&  assign.final.final_submission.revision"> Revision submitted </p>
           <h2 class="blob-title ng-binding">{{ ::assign.assignment.display_name }}</h2>
-
           <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
             {{ ::assign.assignment.due_date | amCalendar }}</p>
+          <p class="blob-copy" ng-if="assign.final.final_submission">
+            <a ng-hide="assign.final.submission.score.length > 0"  
+               ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' 
+               class="link view-submission">
+              Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
+            </a><br>
+          <a ng-if="assign.final.submission.score.length > 0"  
+             ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"
+             class="link view-submission">Revision ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
         </div>
         <div class="ng-scope blob-action" ng-click="openDetails(assign)">View
           Details<span class="{{ assign.assignment.active || assign.assignment.revision ? 'white' : 'dark' }} arrow right"></span></div>

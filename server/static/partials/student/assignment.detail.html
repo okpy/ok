@@ -12,8 +12,21 @@
 
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
                 {{ ::assign.assignment.due_date | amCalendar }}</p>
+            <p class="blob-copy" ng-if="assign.final.final_submission">
+                <a ng-hide="assign.final.submission.score.length > 0"
+                   ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'
+                   class="link view-submission">
+                    Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
+                </a><br>
+                <a ng-if="assign.final.submission.score.length > 0"
+                   ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"
+                   class="link view-submission">Revision ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
+            <p class="blob-copy" 
+               ng-click="showComposition(assign.final.submission.score[0],assign.final.backup.id)" 
+               ng-if="assign.final.submission && assign.final.submission.score.length > 0">
+                Composition Score: {{ assign.final.submission.score[0].score}}/2</p>
         </div>
-        <div ng-if="assign.group.group_info.member.length < assign.assignment.max_group_size">
+        <div ng-if="assign.group.group_info.member.length > 1">
             <h2 class="sidebar-subtitle">Group</h2>
             <ul class="sidebar-list">
                 <li ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}
@@ -34,7 +47,7 @@
                     <span class="icon-x">+</span></span>
             </li>
         </ul>
-        <form name="inviteGroup" ng-if="assign.assignment.max_group_size > 1">
+        <form name="inviteGroup" ng-if="!assign.group.group_info || assign.assignment.max_group_size < assign.assignment.max_group_size">
             <h3 class="sidebar-subtitle">Invite to Group</h3>
 
             <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
