@@ -178,9 +178,7 @@
 <!--</div>-->
 <!--</div>-->
 <!--</div>-->
-
-<!--</div>-->
-<div class="ng-scope wrap" ng-controller="AssignmentDashController">
+<div class="ng-scope wrap toBlur" ng-controller="AssignmentDashController">
   <div class="row">
     <div class="col-md-4 ng-scope"
          ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
@@ -195,8 +193,9 @@
             <span ng-if="!assign.final.final_submission && assign.assignment.active">!</span>
           </div>
           <p class="blob-status" ng-if="!assign.final.final_submission && assign.assignment.active">Not submitted yet</p>
-          <p class="blob-status" ng-if="!assign.final.final_submission && !assign.assignment.active">No submission found.</p>
-          <p class="blob-status" ng-if="assign.final.final_submission">Submitted</p>
+          <p class="blob-status" ng-if="!assign.final.final_submission && !assign.assignment.active">No submission found</p>
+          <p class="blob-status" ng-if="assign.final.final_submission && !assign.final.final_submission.revision">Assignment submitted</p>
+          <p class="blob-status" ng-if="assign.final.final_submission &&  assign.final.final_submission.revision"> Revision submitted </p>
           <h2 class="blob-title ng-binding">{{ ::assign.assignment.display_name }}</h2>
 
           <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due

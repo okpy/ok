@@ -4,8 +4,10 @@
          id="{{ assign.assignment.id }}" color="{{ randomColor(assign.assignment).color }}">
         <div class="sidebar-header">
             <div class="close" ng-click="closeDetails()"><span>+</span></div>
-            <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted
-                yet</p>
+            <p class="blob-status" ng-if="!assign.final.final_submission && assign.assignment.active">Not submitted yet</p>
+            <p class="blob-status" ng-if="!assign.final.final_submission && !assign.assignment.active">No submission found</p>
+            <p class="blob-status" ng-if="assign.final.final_submission && !assign.final.final_submission.revision">Assignment submitted</p>
+            <p class="blob-status" ng-if="assign.final.final_submission &&  assign.final.final_submission.revision"> Revision submitted </p>
             <h2 class="blob-title ng-binding">{{ assign.assignment.display_name }}</h2>
 
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
