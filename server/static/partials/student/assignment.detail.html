@@ -51,11 +51,16 @@
         </div>
         <h2 class="sidebar-subtitle">Group</h2>
         <ul class="sidebar-list">
-            <li ng-repeat="member in assign.group.member">{{ member.email[0] }}
+            <li ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}
                 <span class="icon-x" ng-click="removeMember(assign.group, member)">+</span>
             </li>
+            <li ng-if="!assign.group.group_info.member">No group found.</li>
         </ul>
-        <a ng-click="" class="action">Save</a>
+        <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action">Save</a>
+        <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0">Invited Members</h2>
+        <ul class="sidebar-list">
+            
+        </ul>
 
         <h2 class="sidebar-subtitle">Submissions</h2>
         <ul class="sidebar-list">

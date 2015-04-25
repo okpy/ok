@@ -163,7 +163,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           })
       }
       $scope.assignInit = function(assign) {
-        if ()
         if (assign.backups) {
             $scope.getBackups(assign, false);
         }
