@@ -92,7 +92,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
                       for (i=0;i<file.split('\n').length;i++) {
                           comments = '';
                           if (commentList[i]) { // Ugly hack. Replace with TR based approach!
-                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' wrote: </h3> <p>' +
+                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' commented on line ' + (commentList[i][0].line).toString() + ': </h3> <p>' +
                                   $scope.convertMarkdown(commentList[i][0].message)+'</p>' + commEnd
                           }
                           html += '<div class="line">'+(i+1)+comments+'</div>';
@@ -145,8 +145,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
 
 
 // Main dashboard controller. Should be modularized later.
-app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', '$timeout',
-  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, $timeout) {
+app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', 'FinalSubmission', '$timeout',
+  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, FinalSubmission, $timeout) {
       $scope.courseId = $stateParams.courseId
 
       $scope.toggleAssign = function (assign) {
@@ -198,7 +198,21 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
       $scope.reloadView = function () {
         // oldToggle = $scope.currAssign.id
-        $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
+          $scope.currAssign = null;
+
+          User.force_get({
+            course: $stateParams.courseId,
+          }, function (response) {
+            $scope.assignments = response.assignments;
+            $scope.hideLoader()
+          }, function (error) {
+            $scope.hideLoader()
+            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
+            $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
+          });
+        $scope.hidePopups();
+
+        // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
 
       $scope.showLoader = function showLoader() {
@@ -303,6 +317,22 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               $scope.currAssign.backups = response;
               $scope.showBackups();
             });
+      }
+
+      $scope.changeSubmission = function (submId) {
+        FinalSubmission.change({
+          submission: submId
+        }, function (response) {
+          $scope.reloadView()
+          $window.swal({
+              title: "Changed Submission",
+              text: "We'll grade the submission you marked.",
+              timer: 3500,
+              type: "success"
+            });
+        }, function (error) {
+            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+        })
       }
 
 

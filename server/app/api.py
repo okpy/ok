@@ -609,7 +609,7 @@ class UserAPI(APIResource):
         return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return obj.get_backups(data['assignment'], data['quantity'])
+        return obj.get_submissions(data['assignment'], data['quantity'])
 
     def merge_user(self, obj, user, data):
         """
@@ -1561,9 +1561,25 @@ class FinalSubmissionAPI(APIResource):
                 'message': Arg(str, required=True),
                 'source': Arg(str, required=True),
               }
+        },
+        'post': {
+            'web_args': {
+                'submission': KeyArg('Submission', required=True)
+            }
+        },
         }
 
-        }
+    def new_entity(self, attributes):
+        """
+        Creates a new entity with given attributes.
+
+        :param attributes: (dictionary)
+        :return: (entity, error_response) should be ignored if error_response
+        is a True value
+        """
+        subm = attributes['submission'].get()
+        subm.mark_as_final()
+        return subm.get_final()
 
     def score(self, obj, user, data):
         """
