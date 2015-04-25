@@ -149,31 +149,12 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
   function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, $timeout) {
       $scope.courseId = $stateParams.courseId
 
-      $scope.toggleAssign = function (assign) {
-        if ($scope.currAssign == assign) {
-          $scope.currAssign = null
-        } else {
-          $scope.currAssign = assign;
-        }
-      }
-
-      $scope.findAndToggle = function (assignId) {
-        for (var i = 0; i < $scope.assignments.length; i++) {
-          if ($scope.assignments[i].id == assignId) {
-            $scope.toggleAssign($scope.assignments[i])
-          }
-        }
-      }
-
       $scope.reloadAssignments = function () {
-        $scope.showLoader()
           User.get({
             course: $stateParams.courseId,
           }, function (response) {
             $scope.assignments = response.assignments;
-            $scope.hideLoader()
           }, function (error) {
-            $scope.hideLoader()
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
@@ -200,17 +181,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         // oldToggle = $scope.currAssign.id
         $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
-
-      $scope.showLoader = function showLoader() {
-        $('.loader').removeClass('hide');
-      }
-
-      $scope.hideLoader = function hideLoader() {
-        $('.loader').addClass('done hide');
-        setTimeout(function() {
-          $('.loader').removeClass('done')
-        },800)
-      }
 
       $scope.reloadAssignments()
 
@@ -326,42 +296,23 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
          });
         }
       };
-
-      $scope.showGroup = function showGroup(group) {
-          $('.popups').addClass('active');
-          $('.popup').removeClass('active');
-          $('.popup.group').addClass('active').removeClass('hide');
-          $scope.currGroup = group
+      
+      $scope.randomColor = function randomColor(assign) {
+        themes = ['blue','gold','green']
+        assign.color = themes[Math.ceil(Math.random()*themes.length)-1]
+        return assign
       }
 
-      $scope.hideGroup = function hideGroup() {
-          $('.popups').removeClass('active');
-          $('.popup').removeClass('active');
-          $('.popup.group').addClass('active').addClass('hide');
-      }
-
-      $scope.showBackups = function showGroup(id) {
-          $('.popups').addClass('active');
-          $('.popup').removeClass('active');
-          $('.popup.backups').addClass('active').removeClass('hide');
-      }
-
-      $scope.showSubms = function showGroup(id) {
-          $('.popups').addClass('active');
-          $('.popup').removeClass('active');
-          $('.popup.submissions').addClass('active').removeClass('hide');
-      }
-
-      $scope.hidePopups =  function hidePopups() {
-          $('.assign').removeClass('s');
-          $('.popups').removeClass('active');
-          $('.popup').removeClass('active');
-          setTimeout(function() {
-            $('.popup').addClass('hide');
-          },400);
+        $scope.openDetails = function openDetails(element) {
+            $('.wrap-container').addClass('active');
+            var blob = $(element).parent();
+            $('.sidebar').attr('color', blob.attr('color'));
+            // $scope.currGroup = group
         }
-
-
+        
+        $scope.closeDetails = function closeDetails() {
+            $('.wrap-container').removeClass('active');
+        }
       }
 ]);
 

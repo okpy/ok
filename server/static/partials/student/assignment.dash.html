@@ -185,20 +185,25 @@
   <div class="row">
     <div class="col-md-4 ng-scope"
          ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
-      <div class="blob colored" color="blue"
-           ng-class="{'colored blue': assign.assignment.active || assign.assignment.revision, 'neutral': !assign.assignment.active &amp;&amp; !assign.assignment.revision}"
-           id="1">
+      <div class="blob {{ assign.assignment.active || assign.assignment.revision ? 'colored' : ''}}"
+           color="{{ assign.assignment.active || assign.assignment.revision ? randomColor(assign).color : 'gray'}}">
         <div class="blob-dot"></div>
-        <div class="blob-main attn">
-          <div class="blob-alert">!</div>
-          <p class="blob-status ng-scope" ng-if="!assign.final.final_submission">Not submitted yet</p>
+        <div class="blob-main {{ !assign.final.final_submission ? (assign.assignment.active ? 'attn' : 'bad') : 'good'}}">
+          <div class="blob-alert">
+            <span class="check" ng-if="assign.final.final_submission"></span>
+            <div class="close white" ng-if="!assign.final.final_submission && !assign.assignment.active"><span>+</span></div>
+            <span ng-if="!assign.final.final_submission && assign.assignment.active">!</span>
+          </div>
+          <p class="blob-status" ng-if="!assign.final.final_submission && assign.assignment.active">Not submitted yet</p>
+          <p class="blob-status" ng-if="!assign.final.final_submission && !assign.assignment.active">No submission found.</p>
+          <p class="blob-status" ng-if="assign.final.final_submission">Submitted</p>
           <h2 class="blob-title ng-binding">{{ ::assign.assignment.display_name }}</h2>
 
           <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
             {{ ::assign.assignment.due_date | amCalendar }}</p>
         </div>
         <div class="ng-scope blob-action" onclick="openDetails(this)">View
-          Details<span class="white arrow right"></span></div>
+          Details<span class="{{ assign.assignment.active || assign.assignment.revision ? 'white' : 'dark' }} arrow right"></span></div>
       </div>
     </div>
   </div>

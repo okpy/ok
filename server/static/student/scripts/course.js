@@ -19,7 +19,7 @@ $(document).ready(function() {
 
 function openDetails(element) {
     $('.wrap-container').addClass('active');
-    var blob = element.parent();
+    var blob = $(element).parent();
     $('.sidebar').attr('color', blob.attr('color'));
 }
 
