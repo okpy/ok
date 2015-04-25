@@ -77,26 +77,13 @@
         <div class="blob-main {{ !assign.final.final_submission ? (submission.assignment.active ? 'attn' : 'bad') : 'good'}}">
             <h2 class="blob-title ng-binding">{{ ::submission.assignment.display_name }}</h2>
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
-                {{ ::submission.assignment.due_date | amCalendar }}</p>
+                {{ submission.assignment.due_date | amCalendar }}</p>
+            <p class="blob-copy" ng-if="tag">{{tag}}</p>
         </div>
         <a ui-sref="student({courseId: courseId})">
-            <div class="ng-scope blob-action"></div>
+            <div class="ng-scope blob-action">Back</div>
         </a>
     </div>
-    <h2>Submission: {{submission.created | amCalendar}} </h2>
-      {{tag}}
-    <div class="center-block">
-
-        <div class="btn-group">
-            <button type="button" class="btn btn-flat btn-info" ng-hide="hideEmpty" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Collapse Code</button>
-            <button type="button" class="btn btn-flat btn-info" ng-show="hideEmpty" ng-click="toggleBlank()"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
-
-            <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.id}}/download'>
-                <i class="fa fa-fw fa-cloud-download"></i> Download </button>
-        </div>
-    </div>
-
-
     <div ng-repeat="(file_name, contents) in diff.diff">
         <diff/>
     </div>
