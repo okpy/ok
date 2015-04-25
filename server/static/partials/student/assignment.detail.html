@@ -1,42 +1,4 @@
-<ul ui-sortable ng-model="currGroup.member" class="list-view">
-
-                <li ng-repeat="member in currGroup.member" class="pop-item">
-<span class="stripes">
-<span class="stripe"></span>
-<span class="stripe"></span>
-<span class="stripe"></span>
-</span>
-                    <span class="item-no">{{ $index }}</span>
-
-                </li>
-            </ul>
-            <hr>
-            <p ng-if="currGroup.invited.length > 0" class="popup-byline"> Invited Members: </p>
-
-            <ul class="list-view">
-
-                <li ng-repeat="invited in currGroup.invited" class="pop-item">
-<span class="stripes">
-<span class="stripe"></span>
-<span class="stripe"></span>
-<span class="stripe"></span>
-</span>
-                    <span class="item-no">{{ $index }}</span>
-
-                    <p class="first-member">{{ invited.email[0] }} </p>
-
-                    <div class="remove-user" ng-click="removeMember(currGroup, invited)"><span class="icon-x">+</span>
-                    </div>
-                </li>
-            </ul>
-            <a ng-click class="action">Save</a>
-        </div>
-    </div>
-</div>
-
-</div>
-
-<span class="cover" ng-click="closeDetails()"></span>
+<span class="cover ng-scope" ng-click="closeDetails()"></span>
 <div class="sidebars col-md-4" ng-controller="AssignmentDashController">
     <div class="sidebar colored group ng-scope" ng-repeat="assign in assignments" 
          id="{{ assign.assignment.id }}" color="{{ randomColor(assign.assignment).color }}">
@@ -49,19 +11,34 @@
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
                 {{ ::assign.assignment.due_date | amCalendar }}</p>
         </div>
-        <h2 class="sidebar-subtitle">Group</h2>
-        <ul class="sidebar-list">
-            <li ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}
-                <span class="icon-x" ng-click="removeMember(assign.group, member)">+</span>
-            </li>
-            <li ng-if="!assign.group.group_info.member">No group found.</li>
-        </ul>
-        <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action">Save</a>
+        <div ng-if="assign.group.group_info.member.length > 1">
+            <h2 class="sidebar-subtitle">Group</h2>
+            <ul class="sidebar-list">
+                <li ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}
+                    <span class="close" ng-click="removeMember(assign.group.group_info, member)"><span class="icon-x">+</span></span>
+                </li>
+            </ul>
+            <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action">Save</a>
+        </div>
         <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0">Invited Members</h2>
-        <ul class="sidebar-list">
-            
+        <ul class="sidebar-list" ng-if="assign.group.group_info.invited.length > 0">
+            <li ng-repeat="invited in assign.group.group_info.invited">{{ invited.email[0] }}
+                <div ng-if="assign.group.invited" class="options">
+                    <span class="option good" ng-click="acceptInvite(assign.group.group_info)"><span class="check"></span></span>
+                    <span class="option bad" ng-click="rejectInvite(assign.group.group_info)"><span class="close white"><span class="icon-x">+</span></span></span>
+                </div>
+                <span class="close" ng-if="!assign.group.invited"
+                      ng-click="removeMember(assign.group.group_info, invited)">
+                    <span class="icon-x">+</span></span>
+            </li>
         </ul>
+        <form name="inviteGroup" ng-if="assign.assignment.max_group_size > 1">
+            <h3 class="sidebar-subtitle">Invite to Group</h3>
 
+            <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
+            <a ng-click="addMember(assign, assign.invitee)" class="action">Invite</a>
+        </form>
+        
         <h2 class="sidebar-subtitle">Submissions</h2>
         <ul class="sidebar-list">
             <li ng-if="!assign.submissions || assign.submissions.length == 0">No submissions found.</li>

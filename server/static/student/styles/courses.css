@@ -469,6 +469,35 @@ header {
         .colored.sidebar .action {
             color:rgba(255,255,255,0.75);
         }
+        .sidebar input {
+            box-sizing:border-box;
+            padding:20px;
+            width:100%;
+            color:#666;
+        }
+        .options {
+            position:absolute;
+            top:0;
+            right:0;
+            height:60px;
+        }
+        .option {
+            float:right;
+            height:100%;
+            display:inline-block;
+            width:75px;
+            opacity:1;
+            cursor:pointer;
+        }
+            .option > span {
+                margin:30px;
+            }
+            .option.bad {
+                background-color:#cc4229;
+            }
+            .option.good {
+                background-color:#690;
+            }
     .cover {
         cursor:pointer;
         position:fixed;
@@ -511,6 +540,9 @@ header {
         .close.white {
             color:#FFF;
         }
+            .sidebar .option {
+                padding-left:30px;
+            }
             .blob-alert .close {
                 float:none;
                 margin-top:0.5em;

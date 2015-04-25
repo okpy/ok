@@ -153,6 +153,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           User.get({
             course: $stateParams.courseId,
           }, function (response) {
+            $scope.closeDetails();
             $scope.assignments = response.assignments;
             for (i = 0;i<response.assignments.length;i++) {
                 $scope.assignInit(response.assignments[i]);
@@ -189,8 +190,23 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         }
       }
       $scope.reloadView = function () {
+<<<<<<< HEAD
         // oldToggle = $scope.currAssign.id
         $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
+=======
+          $scope.currAssign = null;
+
+          User.force_get({
+            course: $stateParams.courseId,
+          }, function (response) {
+            $scope.closeDetails();
+            $scope.assignments = response.assignments;
+          }, function (error) {
+            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
+            $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
+          });
+
+>>>>>>> 6315839... completed group invite send/accept/deny sequence
       };
 
       $scope.reloadAssignments()
@@ -200,7 +216,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               id: currGroup.id,
               email: member.email[0]
             }, function (err) {
-              $scope.hideGroup();
+              $scope.reloadAssignments();
               if (member.email[0] != $window.user) {
                   $scope.reloadView()
               } else {
