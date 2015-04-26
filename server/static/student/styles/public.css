@@ -24,18 +24,19 @@ a {
 	-o-transition:		0.2s ease;
 }
 .button {
-	background-color:#FF9326;
-	font-weight:700;
-	padding:15px 30px;
-	color:#FFF;
-	font-size:0.75em;
-	letter-spacing:2px;
-	border-radius:30px;
-	text-transform:uppercase;
-	display:inline-block;
+	background-color:#2878c8;
+    font-weight:700;
+    padding:25px 50px;
+    color:#FFF;
+    font-size:1.25em;
+    letter-spacing:2px;
+    border-radius:5px;
+    text-transform:uppercase;
+    display:inline-block;
+    float:none;
 }
 	.button:hover {
-		background-color:rgba(255, 147, 38, 0.8);
+		background-color:#2060a1;
 	}
 .sect {
 	transition:			0.2s ease;
