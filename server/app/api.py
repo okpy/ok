@@ -842,8 +842,8 @@ class SubmissionAPI(APIResource):
         'add_grade': {
             'methods': set(['POST']),
             'web_args': {
-                'grade': Arg(int, required=True),
-                'message': Arg(str, required=True),
+                'score': Arg(int, required=True),
+                'message': Arg(str),
             }
         }
     }
@@ -1097,16 +1097,17 @@ class SubmissionAPI(APIResource):
         :param data: (dictionary) data
         :return: (int) grade
         """
-        grade = models.Grade(
-            grade=data['grade'],
-            message=data['message'])
-        grade.put()
+        score = models.Score(
+            score=data['grade'],
+            message=data['message'],
+            autograder=True)
+        score.put()
 
-        submission = obj.backup.get()
+        submission = obj.get()
 
-        submission.grade = grade
+        submission.score.append(score)
         submission.put()
-        return grade
+        return score
 
     def get_assignment(self, name):
         """

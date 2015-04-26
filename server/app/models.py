@@ -593,11 +593,6 @@ def disjunction(query, filters):
     else:
         return query.filter(filters[0])
 
-class Grade(Base):
-    """The autograder result for a backup, with a score and message."""
-    grade = ndb.FloatProperty()
-    message = ndb.TextProperty() # complete Result of autograder?
-
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
@@ -606,7 +601,6 @@ class Backup(Base):
     server_time = ndb.DateTimeProperty(auto_now_add=True)
     messages = ndb.StructuredProperty(Message, repeated=True)
     tags = ndb.StringProperty(repeated=True)
-    grade = ndb.StructuredProperty(Grade)
 
     def get_messages(self, fields=None):
         """Returns self.messages formatted as a dictionary.
@@ -701,7 +695,7 @@ class Score(Base):
     score = ndb.IntegerProperty()
     message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User)
-    autograder = ndb.TextProperty()
+    autograder = ndb.BooleanProperty(default=False)
 
 
 class Submission(Base):
