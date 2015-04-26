@@ -8,6 +8,17 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
             $('.menu').removeClass('active')
             $('.container-fluid').removeClass('active').removeClass('pushed')
         }
+        $scope.commend = function() {
+            $window.swal({
+                title: 'Oops. Well, this is embarrassing.',
+                text: 'Comments aren\'t ready yet.',
+                showCancelButton: false,
+                icon: false,
+                allowEscapeKey: true,
+                allowOutsideClick: true,
+                confirmButtonText: "Ok",
+                closeOnConfirm: true});
+        }
     }
 ])
 
@@ -85,73 +96,6 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           delete $scope.submission.messages.file_contents['submit'];
           $scope.isSubmit = true;
         }
-
-        if ($scope.submission.messages && $scope.isSubmit && !$scope.submission.assignment.active) {
-          $scope.isSubmit = true;
-          Submission.diff({id: $stateParams.submissionId},
-            function(results) {
-            $scope.diff = results;
-            numbers = [];
-            code = $scope.submission.messages.file_contents;
-            commStart = '<div class="comment-template"><div class="comment"><span class="comment-icon"></span><div class="comment-content"><div class="comment-text">';
-            commEnd = '</div></div></div></div>';
-            for (var key in code) {
-                if ($scope.diff.comments[key]) {
-                    commentList = $scope.diff.comments[key];
-                    file = code[key];
-                    html = "";
-                    if (file === file.toString()) {
-                      for (i=0;i<file.split('\n').length;i++) {
-                          comments = '';
-                          if (commentList[i]) { // Ugly hack. Replace with TR based approach!
-                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' commented on line ' + (commentList[i][0].line).toString() + ': </h3> <p>' +
-                                  $scope.convertMarkdown(commentList[i][0].message)+'</p>' + commEnd
-                          }
-                          html += '<div class="line">'+(i+1)+comments+'</div>';
-                      }
-                      numbers.push(html);
-                    }
-                }
-            }
-
-            $('code').each(function(i, block) {
-                $(this).parent().find('.num-cont ul').html(numbers.shift());
-                hljs.highlightBlock(block);
-            });
-
-            });
-        } else {
-          $timeout(function() {
-
-            numbers = [];
-            code = $scope.submission.messages.file_contents;
-
-            for (var key in code) {
-                if (code.hasOwnProperty(key)) {
-                    comments = {}; // change this to ACTUAL dictionary of comments
-                    file = code[key];
-                    if (file && file === file.toString()) {
-                        html = "";
-                        for (i=0;i<file.split('\n').length;i++) {
-                            comments = '';
-                            html += '<div class="line">'+(i+1)+comments+'</div>';
-                         }
-                        numbers.push(html);
-                      }
-                }
-            }
-
-
-              $('code').each(function(i, block) {
-                $(this).parent().find('.num-cont ul').html(numbers.shift());
-                  hljs.highlightBlock(block);
-              });
-          }, 100);
-
-        }
-
-      }, function (error) {
-        $window.swal("Uhoh", "There was an error!", "error");
       });
   }]);
 
@@ -271,14 +215,12 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             if (toIncrease) {
               $scope.subm_quantity += 50;
             }
-            console.log(assign.assignment.id);
             User.getSubmissions({
               assignment: assign.assignment.id,
               quantity: $scope.subm_quantity
             }, function (response) {
               assign.submissions = response;
             });
-            console.log(assign.submissions);
       }
 
       $scope.getBackups = function (assign, toIncrease) {
@@ -336,147 +278,3 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         }
       } 
 ]);
-
-// copied from admin
-app.controller("DiffController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce",
-  function ($scope, $timeout, $location, $anchorScroll, $sce) {
-    contents = [];
-    var leftNum = 0, rightNum = 0;
-    for (var i = 0; i < $scope.contents.length; i++) {
-      codeline = {"type": "line"};
-      codeline.start = $scope.contents[i][0];
-      codeline.line = $scope.contents[i].slice(2);
-      codeline.index = i;
-      // Only care about right-num (which is the new-file)
-      if ($scope.diff.comments.hasOwnProperty($scope.file_name) && $scope.diff.comments[$scope.file_name].hasOwnProperty(rightNum)) {
-        codeline.comments = $scope.diff.comments[$scope.file_name][rightNum]
-      }
-      codeline.lineNum = i + 1;
-      if (codeline.start == "+") {
-        rightNum++;
-        codeline.rightNum = rightNum;
-        codeline.leftNum = "";
-      } else if (codeline.start == "-") {
-        leftNum++;
-        codeline.leftNum = leftNum;;
-        codeline.rightNum = "";
-      } else if (codeline.start == "?") {
-          // TODO: add in-line coloring
-          continue;
-        } else {
-          leftNum++;
-          rightNum++;
-          codeline.leftNum = leftNum;;
-          codeline.rightNum = rightNum;
-        }
-        contents.push(codeline);
-      }
-      $scope.contents = contents;
-      $timeout(function() {
-        $(".diff-line-code").each(function(i, elem) {
-          hljs.highlightBlock(elem);
-        });
-        $anchorScroll();
-      });
-    }
-    ]);
-
-// copied from admin
-app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$anchorScroll", "$sce", "$modal",
-  function ($scope, $timeout, $location, $anchorScroll, $sce, $modal) {
-    var converter = new Showdown.converter();
-    $scope.convertMarkdown = function(text) {
-      if (text == "" || text === undefined) {
-        return $sce.trustAsHtml("")
-      }
-      return $sce.trustAsHtml(converter.makeHtml(text));
-    }
-    var start = $scope.codeline.start;
-    if (start == "+") {
-      $scope.positive = true;
-    } else if (start == "-") {
-      $scope.negative = true;
-    } else {
-      $scope.neutral = true;
-    }
-    $scope.anchorId = $scope.file_name + "-L" + $scope.codeline.lineNum;
-
-    $scope.scroll = function() {
-      //$location.hash($scope.anchorId);
-      // $anchorScroll();
-    }
-
-    $scope.showComment = false;
-    $scope.hideBox = false;
-    $scope.showWriter = true;
-    $scope.toggleComment = function() {
-      $scope.showComment = !$scope.showComment;
-    }
-    $scope.toggleBox = function() {
-      $scope.hideBox = !$scope.hideBox;
-    }
-    $scope.toggleWriter = function() {
-      $scope.showWriter = !$scope.showWriter;
-    }
-  }
-  ]);
-  
-  // copied from admin
-  app.controller("CommentController", ["$scope", "$window", "$stateParams", "$timeout", "$modal", "Submission",
-    function ($scope, $window, $stateParams, $timeout, $modal, Submission) {
-      $scope.remove = function() {
-        var modal = $modal.open({
-          templateUrl: '/static/partials/common/removecomment.modal.html',
-          scope: $scope,
-          size: 'sm',
-          resolve: {
-            modal: function () {
-              return modal;
-            }
-          }
-        });
-        modal.result.then(function() {
-          Submission.deleteComment({
-            id: $scope.backupId,
-            comment: $scope.comment.id
-          }, function (result){
-            $scope.toggleBox()
-            $scope.comment = false;
-          });
-        });
-      }
-    }
-    ]);
-  
-  // copied from admin
-  app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Submission",
-    function ($scope, $sce, $stateParams, Submission) {
-      var converter = new Showdown.converter();
-      $scope.convertMarkdown = function(text) {
-        if (text == "" || text === undefined) {
-          return $sce.trustAsHtml("No comment yet...")
-        }
-        return $sce.trustAsHtml(converter.makeHtml(text));
-      }
-      $scope.commentText = {text:""}
-      $scope.makeComment = function() {
-        text = $scope.commentText.text;
-        if (text !== undefined && text.trim() != "") {
-          Submission.addComment({
-            id: $scope.backupId,
-            file: $scope.file_name,
-            index: $scope.codeline.rightNum - 1,
-            message: text,
-          }, function (resp) {
-            resp.self = true
-            if ($scope.codeline.comments) {
-              $scope.codeline.comments.push(resp)
-            } else {
-              $scope.codeline.comments = [resp]
-            }
-            $scope.toggleWriter()
-          });
-        }
-      }
-    }
-    ]);
