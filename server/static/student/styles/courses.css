@@ -98,6 +98,7 @@ header {
     overflow-y:scroll;
     background-color:#FFF;
     box-sizing:border-box;
+    -moz-box-sizing:border-box;
     padding:20px 0;
     z-index:25;
 }
@@ -327,6 +328,7 @@ header {
         padding-left:25px;
         width:100%;
         box-sizing:border-box;
+        -moz-box-sizing:border-box;
     }
         .blob-shiftcopy img {
             margin-left:-25px;
@@ -378,7 +380,7 @@ header {
 /* -- sidebar -- */
 .active .toBlur {
     filter: blur(3px);
-    filter: url("blur.svg#gaussian_blur");
+    filter:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' ><filter id='blur10'><feGaussianBlur  stdDeviation='10' /></filter></svg>#blur10");
     -webkit-filter: blur(3px);
     -o-filter: blur(3px);
 }
@@ -486,6 +488,7 @@ header {
         font-weight:700;
         text-align:center;
         box-sizing:border-box;
+        -moz-box-sizing:border-box;
         z-index:25;
     }
         .colored.sidebar .action:hover {
@@ -498,6 +501,7 @@ header {
         }
         .sidebar input {
             box-sizing:border-box;
+            -moz-box-sizing:border-box;
             padding:20px;
             width:100%;
             color:#666;
