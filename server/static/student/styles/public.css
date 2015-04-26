@@ -2,7 +2,7 @@
 	float:left;
 	margin:0;
 	padding:0;
-	font-family:'Open Sans';
+	font-family:'Roboto';
 	font-weight:300;
 	position:relative;
 }
@@ -28,7 +28,7 @@ a {
     font-weight:700;
     padding:25px 50px;
     color:#FFF;
-    font-size:1.25em;
+    font-size:1em;
     letter-spacing:2px;
     border-radius:5px;
     text-transform:uppercase;
@@ -36,7 +36,11 @@ a {
     float:none;
 }
 	.button:hover {
-		background-color:#2060a1;
+		background-color:#164370;
+	}
+	.button.small {
+		font-size:0.75em;
+		font-family:'Roboto Condensed'
 	}
 .sect {
 	transition:			0.2s ease;
@@ -54,6 +58,7 @@ a {
   	-moz-animation:    fade-in 0.5s ease;
   	-o-animation:      fade-in 0.5s ease;
   	animation:         fade-in 0.5s ease;
+  	background-color:#205d9b;
 }
 	.nav {
 		padding:40px 50px;
@@ -106,6 +111,7 @@ header {
 		text-transform:uppercase;
 		color:#FFF;
 		width:auto;
+		font-family:'Roboto Condensed'
 	}
 		header li a {
 			display:inline-block;
@@ -115,6 +121,7 @@ header {
 			text-transform:uppercase;
 			font-size:0.85em;
 			border-bottom:1px dotted transparent;
+			font-family:'Roboto Condensed'
 		}
 		header li a:hover {
 			border-bottom:1px dotted #FFF;
@@ -149,7 +156,7 @@ header {
 }
 h1.title {
 	font-size:3.1em;
-	font-family:'Raleway';
+	font-family:'Roboto Condensed';
 	font-weight:200;
 	color:#FFF;
 	-webkit-animation: fade-in-2 1s ease;
@@ -186,7 +193,7 @@ h1.title {
 		bottom:0;
 		width:100%;
 		left:0;
-		background-color:rgba(0,0,0,0.5);
+		background-color:rgba(0,0,0,0.3);
 		padding:30px 50px;
 		text-align:center;
 		box-sizing:border-box;
@@ -204,7 +211,7 @@ h1.title {
 			background:transparent;
 			color:#FFF;
 			font-size:2em;
-			font-family:'Raleway';
+			font-family:'Roboto Condensed';
 			font-weight:100;
 			opacity:0.5;
 			text-align:center;
@@ -227,7 +234,7 @@ h1.title {
 		}
 		.bar-input {
 			color:rgba(255,255,255,0.5);
-			font-family:'Raleway';
+			font-family:'Roboto Condensed';
 			font-size:30px;
 		}
 		.bar-input:hover {
