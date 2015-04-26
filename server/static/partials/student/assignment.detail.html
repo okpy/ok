@@ -55,12 +55,13 @@
         </form>
         
         <h2 class="sidebar-subtitle">Submissions</h2>
-        <ul class="sidebar-list">
+        <ul class="subms sidebar-list">
             <li ng-if="!assign.submissions || assign.submissions.length == 0">No submissions found.</li>
             <li ng-repeat="subm in assign.submissions | orderBy:'created':true">
                 <a class="flag"
-                   ng-class=" {active: assign.final.final_submission && subm.id == assign.final.backup.id }">
-                    <span class="label left"><p>Flagged for Grading</p></span>
+                   ng-class=" {active: assign.final.final_submission && subm.id == assign.final.backup.id }"
+                    ng-click="flagSubmission(subm.id)">
+                    <span class="label right"><p>Flag for Grading</p></span>
                     <span class="cloth"></span>
                     <span class="stem"></span>
                 </a>

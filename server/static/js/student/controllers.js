@@ -8,17 +8,6 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
             $('.menu').removeClass('active')
             $('.container-fluid').removeClass('active').removeClass('pushed')
         }
-        $scope.commend = function() {
-            $window.swal({
-                title: 'Oops. Well, this is embarrassing.',
-                text: 'Comments aren\'t ready yet.',
-                showCancelButton: false,
-                icon: false,
-                allowEscapeKey: true,
-                allowOutsideClick: true,
-                confirmButtonText: "Ok",
-                closeOnConfirm: true});
-        }
     }
 ])
 
@@ -276,5 +265,16 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $('.sidebar').removeClass('active');
             $('.container-fluid').removeClass('active');
         }
-      } 
+        $scope.flagSubmission = function(submId) {
+            $window.swal({
+                title: 'Oops. Well, this is embarrassing.',
+                text: 'Flagging isn\'t ready yet. Resubmit an old copy, for now, or contact your GSI.',
+                showCancelButton: false,
+                icon: false,
+                allowEscapeKey: true,
+                allowOutsideClick: true,
+                confirmButtonText: "Ok",
+                closeOnConfirm: true});
+          }
+      }
 ]);

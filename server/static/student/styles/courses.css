@@ -17,7 +17,7 @@ a, a:hover {
     .colored p a {  border-bottom:1px dotted rgba(255,255,255,0.5) }
     .colored p a:hover { border-bottom:1px solid rgba(255,255,255,0.5) }
     li { list-style:none; }
-.blob-action,.arrow,.blob-text,.blob-more,.menu,.container-fluid {
+.blob-action,.arrow,.blob-text,.blob-more,.menu,.container-fluid,.label,.flag {
     transition:         0.4s ease;
     -webkit-transition: 0.4s ease;
     -moz-transition:    0.4s ease;
@@ -471,6 +471,9 @@ header {
         background-color:#FFF;
         color:#666;
     }
+        .sidebar .subms li {
+            padding:20px 95px 20px 55px;
+        }
         .sidebar li a {
             position:absolute;
             top:20px;
@@ -580,6 +583,53 @@ header {
                 opacity:1;
                 cursor:default;
             }
+            div div li .flag {
+                height:30px;
+                width:30px;
+                border-radius:50%;
+                background-color:#666;
+                position:absolute;
+                top:15px;
+                right:90%;
+                cursor:pointer;
+            }
+            .flag .cloth {
+                width:0;
+                height:0;
+                border-top:3px solid transparent;
+                border-bottom:3px solid transparent;
+                border-left:5px solid #FFF;
+                position:absolute;
+                top:9px;
+                left:50%;
+            }
+            .flag .stem {
+                width:2px;
+                height:12px;
+                position:absolute;
+                top:9px;
+                right:50%;
+                margin-right:1px;
+                background-color:#FFF;
+            }
+            .label {
+                font-size:0.75em;
+                text-transform:uppercase;
+                padding:5px 10px;
+                background-color:#333;
+                position:absolute;
+                top:5px;
+                left:100%;
+                color:#FFF;
+                opacity:0;
+            }
+                .flag:hover .label {
+                    opacity:1;
+                    margin-left:5px;
+                }
+                .label p {
+                    margin-bottom:0;
+                }
 /* submission */
 .submission .blob {
     margin-top:-1px;
