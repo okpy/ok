@@ -118,7 +118,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissionDiff = {
       name: 'submission.diff',
       url: '/:submissionId/diff',
-      templateUrl: '/static/partials/admin/submission.diff.html?cacheprevent1022',
+      templateUrl: '/static/partials/student/submission.diff.html?cacheprevent1022',
       controller: "SubmissionDiffCtrl"
     }
 

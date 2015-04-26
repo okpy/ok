@@ -192,10 +192,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               allowEscapeKey: true,
               allowOutsideClick: true,
               confirmButtonText: "View Comments",
-              closeOnConfirm: false},
+              closeOnConfirm: true},
               function(isConfirm){
                 if (isConfirm) {
-                  $window.location.replace('/old#/submission/'+backupId.toString()+'/diff')
+                  $window.location.replace('#/'+$scope.courseId+'/submission/'+backupId.toString()+'/diff')
                 } else {
 
                 } });

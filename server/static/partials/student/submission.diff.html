@@ -1,0 +1,21 @@
+    <div class="blob first {{ diff.assignment.active || diff.assignment.revision ? 'colored' : ''}}"
+         color="{{ diff.assignment.active || diff.assignment.revision ? 'blue' : 'gray'}}"
+         id="{{ diff.assignment.id }}">
+        <div class="blob-dot"></div>
+        <div class="blob-main {{ !assign.final.final_submission ? (diff.assignment.active ? 'attn' : 'bad') : 'good'}}">
+            <h2 class="blob-title ng-binding">{{ ::diff.assignment.display_name }}</h2>
+            <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
+                {{ diff.assignment.due_date | amCalendar }}</p>
+            <p class="blob-copy" ng-if="tag">{{tag}}</p>
+        </div>
+        <a ui-sref="student({courseId: courseId})">
+            <div class="blob-action">Back</div>
+        </a>
+    </div>
+    <div class="files wrap" ng-repeat="(file_name, contents) in diff.diff">
+        <diff/>
+    </div>
+</div>
+
+<link href="/static/css/main.css" rel="stylesheet">
+<link href="/static/admin/css/ok.css">
