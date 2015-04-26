@@ -1,11 +1,11 @@
-    <div class="blob first {{ diff.assignment.active || diff.assignment.revision ? 'colored' : ''}}"
-         color="{{ diff.assignment.active || diff.assignment.revision ? 'blue' : 'gray'}}"
-         id="{{ diff.assignment.id }}">
+    <div class="blob first {{ submission.assignment.active || submission.assignment.revision ? 'colored' : ''}}"
+         color="{{ submission.assignment.active || submission.assignment.revision ? 'blue' : 'gray'}}"
+         id="{{ submission.assignment.id }}">
         <div class="blob-dot"></div>
-        <div class="blob-main {{ !assign.final.final_submission ? (diff.assignment.active ? 'attn' : 'bad') : 'good'}}">
-            <h2 class="blob-title ng-binding">{{ ::diff.assignment.display_name }}</h2>
+        <div class="blob-main {{ !assign.final.final_submission ? (submission.assignment.active ? 'attn' : 'bad') : 'good'}}">
+            <h2 class="blob-title ng-binding">{{ ::submission.assignment.display_name }}</h2>
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
-                {{ diff.assignment.due_date | amCalendar }}</p>
+                {{ submission.assignment.due_date | amCalendar }}</p>
             <p class="blob-copy" ng-if="tag">{{tag}}</p>
         </div>
         <a ui-sref="student({courseId: courseId})">
