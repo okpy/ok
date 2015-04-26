@@ -123,8 +123,11 @@ header {
 			border-bottom:1px dotted transparent;
 			font-family:'Roboto Condensed'
 		}
-		header li a:hover {
-			border-bottom:1px dotted #FFF;
+		header li a:hover,.copy a {
+			border-bottom:1px dotted rgba(255,255,255,0.5);
+		}
+		.copy a:hover {
+			border-bottom:1px solid rgba(255,255,255,0.5);
 		}
 	.logo {
 		width:150px;
@@ -187,6 +190,15 @@ h1.title {
 	.break {
 		width:100%;
 		float:inline-block;
+	}
+	.copy {
+		width:100%;
+        color:rgba(255,255,255,0.5);
+        margin-top:1em;
+        -webkit-animation: fade-in-5 3.5s ease;
+		-moz-animation:    fade-in-5 3.5s ease;
+		-o-animation:      fade-in-5 3.5s ease;
+		animation:         fade-in-5 3.5s ease;
 	}
 	.bar {
 		position:absolute;
@@ -339,6 +351,10 @@ footer h3 {
 @-moz-keyframes fade-in-4 { 	0% { opacity: 0; } 80% { opacity: 0; } 100% { opacity: 1; } }
 @-o-keyframes fade-in-4 { 		0% { opacity: 0; } 80% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes fade-in-4 {			0% { opacity: 0; } 80% { opacity: 0; } 100% { opacity: 1; } }
+@-webkit-keyframes fade-in-5 { 	0% { opacity: 0; } 90% { opacity: 0; } 100% { opacity: 1; } }
+@-moz-keyframes fade-in-5 { 	0% { opacity: 0; } 90% { opacity: 0; } 100% { opacity: 1; } }
+@-o-keyframes fade-in-5 { 		0% { opacity: 0; } 90% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes fade-in-5 {			0% { opacity: 0; } 90% { opacity: 0; } 100% { opacity: 1; } }
 @-webkit-keyframes drop-in { 	0% { margin-top: -100px; } 88% { margin-top: -100px; } 100% { margin-top: 1; } }
 @-moz-keyframes drop-in {	 	0% { margin-top: -100px; } 88% { margin-top: -100px; } 100% { margin-top: 1; } }
 @-o-keyframes drop-in { 		0% { margin-top: -100px; } 88% { margin-top: -100px; } 100% { margin-top: 1; } }
