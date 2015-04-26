@@ -73,6 +73,14 @@
                                         </span>
                                 </a>
                             </li>
+                            <li><img src="/static/student/images/icon-bell.png">
+                                <div class="notifications" ng-controller="NotificationsController">
+                                    <a href="#" class="notf">
+                                        <h2 class="notf-title">Notification Title <span>- Bob the Builder</span></h2>
+                                        <p class="notf-copy">You must do this and that and that the other thing, now.</p>
+                                    </a>
+                                </div>
+                            </li>
                             <li><a href="/static/student/tour.html"><span class="icon-question">?</span></a></li>
                             <li><a href="#"><img src="/static/student/images/icon-profile.png">{{user.email}}</a></li>
                             {% else %}

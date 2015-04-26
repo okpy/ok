@@ -11,6 +11,24 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
     }
 ])
 
+app.controller("NotificationsController", ["$scope", "$window", "$state", "$stateParams", 'Course',
+    function ($scope, $window, $state, $stateParams, Course) {
+        $scope.notfs_quantity = 10;
+        
+        $scope.getNotifications = function(toIncrease) {
+            if (toIncrease) {
+                $scope.notfs_quantity += 50;
+            }
+        }
+        
+//        User.getNotifications({
+//
+//        }, function (response) {
+//
+//        });
+    }
+])
+
 app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$stateParams', 'Course',
     function ($scope, $window, $state, $stateParams, Course) {
       Course.get(function(response) {
