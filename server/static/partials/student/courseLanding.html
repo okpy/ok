@@ -2,7 +2,7 @@
     <section class="screen courses" ng-controller="CourseSelectorController">
         <div class="row">
             <div ng-repeat="course in courses">
-                <div class="col-md-4 ng-scope">
+                <div class="col-md-4">
                     <div class="blob colored" color="blue">
                         <div class="blob-main attn">
                             <div class="blob-alert thin">5</div>
@@ -18,7 +18,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 ng-scope" ng-repeat="course in courses">
+            <div class="col-md-4" ng-repeat="course in courses">
                 <div ui-sref="student({courseId:course.id})" class="blob">
                     <div class="blob-main">
                         <h2 class="blob-title ng-binding">Enter Course ID</h2>

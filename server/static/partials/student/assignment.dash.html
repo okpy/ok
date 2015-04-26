@@ -1,6 +1,6 @@
-<div class="ng-scope wrap toBlur" ng-controller="AssignmentDashController">
+<div class="wrap toBlur" ng-controller="AssignmentDashController">
   <div class="row">
-    <div class="col-md-4 ng-scope"
+    <div class="col-md-4"
          ng-repeat="assign in assignments | orderBy: ['assignment.active','assignment.points']:true">
       <div class="blob {{ assign.assignment.active || assign.assignment.revision ? 'colored' : ''}}"
            color="{{ assign.assignment.active || assign.assignment.revision ? randomColor(assign.assignment).color : 'gray'}}"
@@ -29,7 +29,7 @@
              ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"
              class="link view-submission">Revision ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
         </div>
-        <div class="ng-scope blob-action" ng-click="openDetails(assign)">View
+        <div class="blob-action" ng-click="openDetails(assign)">View
           Details<span class="{{ assign.assignment.active || assign.assignment.revision ? 'white' : 'dark' }} arrow right"></span></div>
       </div>
     </div>

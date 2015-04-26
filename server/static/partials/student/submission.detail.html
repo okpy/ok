@@ -9,7 +9,7 @@
             <p class="blob-copy" ng-if="tag">{{tag}}</p>
         </div>
         <a ui-sref="student({courseId: courseId})">
-            <div class="ng-scope blob-action">Back</div>
+            <div class="blob-action">Back</div>
         </a>
     </div>
     <div class="files wrap" ng-repeat="(file_name, contents) in submission.messages.file_contents">

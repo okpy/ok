@@ -1,6 +1,6 @@
-<span class="cover ng-scope" ng-click="closeDetails()"></span>
+<span class="cover" ng-click="closeDetails()"></span>
 <div class="sidebars col-md-4" ng-controller="AssignmentDashController">
-    <div class="sidebar colored group ng-scope" ng-repeat="assign in assignments" 
+    <div class="sidebar colored group" ng-repeat="assign in assignments"
          id="{{ assign.assignment.id }}" color="{{ randomColor(assign.assignment).color }}">
         <div class="sidebar-header">
             <div class="close" ng-click="closeDetails()"><span>+</span></div>
