@@ -21,6 +21,10 @@ app.controller("NotificationsController", ["$scope", "$window", "$state", "$stat
             }
         }
         
+        $scope.showNotfs = function() {
+            $('.notfs').toggleClass('active');
+        }
+        
 //        User.getNotifications({
 //
 //        }, function (response) {

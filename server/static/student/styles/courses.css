@@ -695,14 +695,14 @@ header {
         height:20px;
         line-height:20px;
     }
-    .notfs {
-        opacity:0.75;
+    .notfs img {
+        opacity:0.5;
     }
-        .notfs:hover {
-            opacity:0.9;
+        .notfs:hover img {
+            opacity:0.6;
         }
-        .notfs.active {
-            opacity:1;
+        .notfs.active img {
+            opacity:0.75;
         }
         .notfs.active .notifications {
             display:block;
