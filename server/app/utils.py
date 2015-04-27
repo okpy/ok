@@ -289,7 +289,7 @@ def assign_submission(backup_id, submit):
         if datetime.datetime.now() < assign.get_result().due_date:
             subm.mark_as_final()
 
-        add_taskqueue(backup)
+        add_taskqueue(subm)
 
 def sort_by_assignment(key_func, entries):
     entries = sorted(entries, key=key_func)
