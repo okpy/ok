@@ -22,7 +22,6 @@ from google.appengine.ext import deferred
 from google.appengine.api import taskqueue
 
 from app import app
-from app.constants import STUDENT_ROLE
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
