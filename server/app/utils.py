@@ -417,7 +417,7 @@ def check_user(user_key):
 def add_taskqueue(submission):
     q = taskqueue.Queue("pull-queue")
     backup = submission.backup.get()
-    submission_contents = backup.get_messages.get("file_contents")
+    submission_contents = backup.get_messages().get("file_contents")
     tag = str(backup.submitter.id())
     sub_id = str(submission.key.id())
 
