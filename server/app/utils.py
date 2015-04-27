@@ -414,11 +414,16 @@ def check_user(user_key):
 # Autograder actions #
 ######################
 
-def add_taskqueue(backup):
+def add_taskqueue(submission):
     q = taskqueue.Queue("pull-queue")
+    backup = submission.backup.get()
     submission_contents = backup.get_messages.get("file_contents")
+    tag = str(backup.submitter.id())
+    sub_id = str(submission.key.id())
+
+    submission_contents["submission_id"] = sub_id
     tasks = []
-    tasks.append(taskqueue.Task( payload = submission_contents, method = "PULL"))
+    tasks.append(taskqueue.Task( payload = str(submission_contents), method = "PULL", tag = tag))
     q.add(tasks)
 
 def add_all_taskqueue(course, assign_key):
@@ -426,11 +431,12 @@ def add_all_taskqueue(course, assign_key):
     students = course.students()  
     final_submissions = [student.get().get_final_submission(assign_key) for student in students]
     submissions = [final.submission.get() for final in final_submissions]
-    backups = [sub.backup.get() for sub in submissions]
+    backups = [sub.backup.get(), str(sub.id()) for sub in submissions]
 
     tasks = []
-    for backup in backups:
+    for backup, sub_id in backups:
         submission_contents = backup.get_messages.get("file_contents")
+        submission_contents["submission_id"] = sub_id
         tasks.append(taskqueue.Task( payload = submission_contents, method = "PULL"))
     q.add(tasks)
 
@@ -452,4 +458,3 @@ def lease_tasks():
         tasks = q.lease_tasks(day_seconds, max_tasks)
 
     return backups
-
