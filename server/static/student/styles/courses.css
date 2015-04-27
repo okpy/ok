@@ -82,13 +82,10 @@ header {
         .logo {
             padding:30px;
         }
-        .tools li a {
+        .tools li {
             float:right;
-            padding:30px 20px;
-            color:#666;
-        }
-        .tools img {
-            margin-right:10px;
+            display:inline-block;
+            padding:28px 20px;
         }
 .menu {
     position:fixed;
@@ -630,6 +627,24 @@ header {
                 .label p {
                     margin-bottom:0;
                 }
+.notifications {
+    position:absolute;
+    top:0;
+    left:0;
+    width:350px;
+    background-color:#eee;
+    text-align:left;
+    padding:10px;
+    display:none;
+}
+    .notf {
+        background-color:#FFF;
+        border-radius:3px;
+    }
+    .notf-caption {
+        margin-bottom:0;
+        color:#CCC;
+    }
 /* submission */
 .submission .blob {
     margin-top:-1px;

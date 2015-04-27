@@ -471,6 +471,12 @@ class UserAPI(APIResource):
                 'other_email': Arg(str, required=True),
             }
         },
+        'get_notifications': {
+            'methods': set(['GET']),
+            'web_args': {
+                
+            }
+        }
     }
 
     def get(self, obj, user, data):
@@ -1647,14 +1653,6 @@ class NotificationsAPI(APIResource):
         'read': {
         },
         'index': {
-        },
-        'clean': {
-            'web_args': {
-                'message': Arg(str, required=True),
-                'url': Arg(str),
-                'course': KeyArg('Course', required=True),
-                'expiration': Arg(datetime)
-            }
         }
     }
 
@@ -1697,12 +1695,6 @@ class NotificationsAPI(APIResource):
     def read(self, obj, user, data):
         pass
         # implementation not complete
-    
-    def clean(self, user, data):
-        pass
-    
-    def notifications(self, user, data):
-        pass
     
     def read(self, obj, user, data):
         pass
