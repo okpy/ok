@@ -417,12 +417,10 @@ def add_taskqueue(submission):
     q = taskqueue.Queue("pull-queue")
     backup = submission.backup.get()
     submission_contents = backup.get_messages().get("file_contents")
-    tag = str(backup.submitter.id())
     sub_id = str(submission.key.id())
 
-    submission_contents["submission_id"] = sub_id
     tasks = []
-    tasks.append(taskqueue.Task( payload = str(submission_contents), method = "PULL", tag = tag))
+    tasks.append(taskqueue.Task( payload = str(submission_contents), method = "PULL", tag = sub_id))
     q.add(tasks)
 
 def add_all_taskqueue(course, assign_key):
@@ -434,26 +432,23 @@ def add_all_taskqueue(course, assign_key):
 
     tasks = []
     for backup, sub_id in backups:
-        submission_contents = backup.get().get_messages.get("file_contents")
-        submission_contents["submission_id"] = sub_id
-        tasks.append(taskqueue.Task( payload = submission_contents, method = "PULL"))
+        submission_contents = backup.get_messages().get("file_contents")
+        tasks.append(taskqueue.Task( payload = submission_contents, method = "PULL", tag = sub_id))
     q.add(tasks)
 
 def lease_tasks(): 
     day_seconds = 86400
     max_tasks = 1000
     q = taskqueue.Queue("pull-queue")
-    backups = []
+    files = []
     tasks = q.lease_tasks(day_seconds,max_tasks)
 
     while len(tasks) != 0:
         for task in tasks:
-            url_string = task.payload
-            key = ndb.Key(urlsafe=url_string)
-            backup = key.get()
-            backups.append(backup)
+            payload = task.payload
+            files.append(payload)
 
         q.delete_tasks(tasks)
         tasks = q.lease_tasks(day_seconds, max_tasks)
 
-    return backups
+    return files  

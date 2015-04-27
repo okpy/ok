@@ -11,11 +11,13 @@ from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import testbed
 
-from app.utils import add_all_taskqueue, lease_tasks
+from app.utils import add_taskqueue, add_all_taskqueue, lease_tasks
 from app.constants import STUDENT_ROLE
 from app.constants import STAFF_ROLE
 from app import models
 from google.appengine.api import taskqueue
+
+import json
 
 #Mocks: Course
 class AutograderTests(BaseTestCase):
@@ -33,19 +35,39 @@ class AutograderTests(BaseTestCase):
             )
         }
 
+    def get_messages(self): 
+        return {
+            'message0': models.Message(
+                contents = json.dumps({"hello":0}),
+                kind = 'file_contents'
+                ),
+            'message1': models.Message(
+                contents = json.dumps({"hello1":1}),
+                kind = 'file_contents'
+                ),
+            'message2': models.Message(
+                contents = json.dumps({"hello2":2}),
+                kind = 'file_contents'
+                ),
+
+        }
+
     def get_backups(self):
         return {
             "backup0": models.Backup(
                 submitter = self.students["student0"].key,
-                assignment= self.assignment.key
+                assignment= self.assignment.key,
+                messages = [self.Messages['message0']]
             ),
             "backup1": models.Backup(
                 submitter = self.students["student1"].key,
-                assignment= self.assignment.key
+                assignment= self.assignment.key,
+                messages = [self.Messages['message1']]
             ),
             "backup2": models.Backup(
                 submitter = self.students["student2"].key,
-                assignment= self.assignment.key
+                assignment= self.assignment.key,
+                messages = [self.Messages['message2']]
             )
         }
 
@@ -106,6 +128,11 @@ class AutograderTests(BaseTestCase):
         self.enroll("student1", self.course, STUDENT_ROLE)
         self.enroll("student2", self.course, STUDENT_ROLE)
 
+        self.Messages = self.get_messages()
+
+        for message in self.Messages.values():
+            message.put()
+
         self.Backups = self.get_backups()
 
         for backup in self.Backups.values():
@@ -124,12 +151,17 @@ class AutograderTests(BaseTestCase):
     def test_addToQueue_and_lease(self):
         add_all_taskqueue(self.course, self.assignment.key)
         q = taskqueue.Queue("pull-queue")
-        backups = lease_tasks()
-        self.assertEquals(len(backups), 3)             
+        files = lease_tasks()
+        self.assertEquals(len(files), 3)             
 
         # for bac in backups:
         #     self.assertIn(bac, self.Backups.values())
 
+    def test_add_taskqueue(self):
+        add_taskqueue(self.Submissions['submission0'])
+        q = taskqueue.Queue("pull-queue")
+        files = lease_tasks()
+        self.assertEquals(len(files), 1)             
 
 if __name__ == "__main__":
     unittest.main()
