@@ -86,6 +86,7 @@ header {
             float:right;
             display:inline-block;
             padding:28px 20px;
+            position:relative;
         }
 .menu {
     position:fixed;
@@ -629,22 +630,83 @@ header {
                 }
 .notifications {
     position:absolute;
-    top:0;
+    top:65px;
     left:0;
     width:350px;
     background-color:#eee;
     text-align:left;
-    padding:10px;
+    margin-left:-175px;
+    z-index:30;
+    padding-top:10px;
     display:none;
 }
+    .notifications::before {
+       content:"";
+       width:0;
+       height:0;
+       position:absolute;
+       bottom:100%;
+       left:56%;
+       margin-left:2.5px;
+       border-left:7px solid transparent;
+       border-right:7px solid transparent;
+       border-bottom:7px solid #eee;
+    }
     .notf {
         background-color:#FFF;
         border-radius:3px;
+        margin:0 10px 10px 10px;
+        padding:15px 20px;
+    }
+        .notf + .notf {
+            margin-top:10px;
+        }
+    .notfs-cont {
+        max-height:300px;
+        overflow-y:scroll;
     }
     .notf-caption {
         margin-bottom:0;
         color:#CCC;
     }
+    .notf-action {
+        line-height:50px;
+        color:#999;
+        text-transform:uppercase;
+        text-align:center;
+        font-weight:700;
+        width:100%;
+        cursor:pointer;
+        background-color:rgba(0,0,0,0.05);
+    }
+        .notf-action:hover {
+            color:#666;
+            background-color:rgba(0,0,0,0.075);
+        }
+    .notfs-count {
+        position:absolute;
+        top:20px;
+        right:8px;
+        border-radius:50%;
+        background-color:#00BFFF;
+        color:#FFF;
+        font-size:12px;
+        width:20px;
+        height:20px;
+        line-height:20px;
+    }
+    .notfs {
+        opacity:0.75;
+    }
+        .notfs:hover {
+            opacity:0.9;
+        }
+        .notfs.active {
+            opacity:1;
+        }
+        .notfs.active .notifications {
+            display:block;
+        }
 /* submission */
 .submission .blob {
     margin-top:-1px;
