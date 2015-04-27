@@ -430,11 +430,11 @@ def add_all_taskqueue(course, assign_key):
     students = course.students()  
     final_submissions = [student.get().get_final_submission(assign_key) for student in students]
     submissions = [final.submission.get() for final in final_submissions]
-    backups = [sub.backup.get(), str(sub.id()) for sub in submissions]
+    backups = [(sub.backup.get(), str(sub.key.id())) for sub in submissions]
 
     tasks = []
     for backup, sub_id in backups:
-        submission_contents = backup.get_messages.get("file_contents")
+        submission_contents = backup.get().get_messages.get("file_contents")
         submission_contents["submission_id"] = sub_id
         tasks.append(taskqueue.Task( payload = submission_contents, method = "PULL"))
     q.add(tasks)
