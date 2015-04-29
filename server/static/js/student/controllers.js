@@ -12,7 +12,7 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
 ])
 
 app.controller("NotificationsController", ["$scope", "$window", "$state", "$stateParams", 'Course',
-    function ($scope, $window, $state, $stateParams, Course) {
+    function ($scope, $window, Course, User) {
         $scope.notfs_quantity = 10;
         
         $scope.getNotifications = function(toIncrease) {
@@ -21,15 +21,15 @@ app.controller("NotificationsController", ["$scope", "$window", "$state", "$stat
             }
         }
         
-        $scope.showNotfs = function() {
+        $scope.toggleNotfs = function() {
             $('.notfs').toggleClass('active');
         }
         
-//        User.getNotifications({
-//
-//        }, function (response) {
-//
-//        });
+        Course.getNotifications({
+
+        }, function (response) {
+            $scope.notfs = response.results;
+        });
     }
 ])
 

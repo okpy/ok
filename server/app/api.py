@@ -1313,6 +1313,12 @@ class CourseAPI(APIResource):
                 'student': KeyArg('User', required=True)
             }
         },
+        'get_notifications': {
+            'web_args': {
+                'start': Arg(int),
+                'count': Arg(int)
+            }
+        }
         }
 
     def post(self, user, data):
@@ -1373,6 +1379,23 @@ class CourseAPI(APIResource):
 
     def assignments(self, course, user, data):
         return list(course.assignments)
+    
+    def get_notifications(self, course, user, data):
+        """
+        Fetches latest notifications by course, based on start and count.
+
+        :param course:
+        :param user:
+        :param data:
+        :return:
+        """
+        start = data['start'] if data['start'] is not None else 0
+        count = data['count'] if data['count'] is not None else 10
+        query = models.Notification.query(
+            course = course.id
+        )
+
+        return list(query.fetch())
 
 
 class GroupAPI(APIResource):
@@ -1642,34 +1665,11 @@ class NotificationsAPI(APIResource):
                 'expiration': Arg(datetime)
             }
         },
-        'latest': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'course': KeyArg('Course', required=True),
-                'start': Arg(int),
-                'count': Arg(int)
-            }
-        },
         'read': {
         },
         'index': {
         }
     }
-
-    def latest(self, course, user, data):
-        """
-        Fetches latest notifications by course, based on start and end counts.
-
-        :param course:
-        :param user:
-        :param data:
-        :return:
-        """
-        query = models.Notification.query(
-            models.Receipts.notification == models.Notification.id,
-            models.Notification.course == course.id)
-
-        return list(query.fetch())
     
     def add(self, course, user, data):
         """
@@ -1696,5 +1696,5 @@ class NotificationsAPI(APIResource):
         pass
         # implementation not complete
     
-    def read(self, obj, user, data):
+    def index(self, obj, user, data):
         pass
