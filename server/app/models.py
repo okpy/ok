@@ -420,6 +420,11 @@ class Course(Base):
         return [part.user for part in Participant.query(
             Participant.course == self.key,
             Participant.role == STAFF_ROLE).fetch()]
+        
+    def students(self):
+        return [part.user for part in Participant.query(
+            Participant.course == self.key,
+            Participant.role == STUDENT_ROLE).fetch()]
 
     @classmethod
     def _can(cls, user, need, course, query):
@@ -588,7 +593,6 @@ def disjunction(query, filters):
     else:
         return query.filter(filters[0])
 
-
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
@@ -691,7 +695,7 @@ class Score(Base):
     score = ndb.IntegerProperty()
     message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User)
-    autograder = ndb.TextProperty()
+    autograder = ndb.BooleanProperty(default=False)
 
 
 class Submission(Base):

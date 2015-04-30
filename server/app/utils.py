@@ -19,6 +19,7 @@ from flask import jsonify, request, Response, json
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
+from google.appengine.api import taskqueue
 
 from app import app
 
@@ -287,6 +288,8 @@ def assign_submission(backup_id, submit):
         if datetime.datetime.now() < assign.get_result().due_date:
             subm.mark_as_final()
 
+        add_taskqueue(subm)
+
 def sort_by_assignment(key_func, entries):
     entries = sorted(entries, key=key_func)
     return itertools.groupby(entries, key_func)
@@ -405,3 +408,47 @@ def check_user(user_key):
         user_key = user_key.id()
 
     deferred.defer(deferred_check_user, user_key)
+
+######################
+# Autograder actions #
+######################
+
+def add_taskqueue(submission):
+    q = taskqueue.Queue("pull-queue")
+    backup = submission.backup.get()
+    submission_contents = backup.get_messages().get("file_contents")
+    sub_id = str(submission.key.id())
+
+    tasks = []
+    tasks.append(taskqueue.Task( payload = str(submission_contents), method = "PULL", tag = sub_id))
+    q.add(tasks)
+
+def add_all_taskqueue(course, assign_key):
+    q = taskqueue.Queue("pull-queue")
+    students = course.students()  
+    final_submissions = [student.get().get_final_submission(assign_key) for student in students]
+    submissions = [final.submission.get() for final in final_submissions]
+    backups = [(sub.backup.get(), str(sub.key.id())) for sub in submissions]
+
+    tasks = []
+    for backup, sub_id in backups:
+        submission_contents = backup.get_messages().get("file_contents")
+        tasks.append(taskqueue.Task( payload = submission_contents, method = "PULL", tag = sub_id))
+    q.add(tasks)
+
+def lease_tasks(): 
+    day_seconds = 86400
+    max_tasks = 1000
+    q = taskqueue.Queue("pull-queue")
+    files = []
+    tasks = q.lease_tasks(day_seconds,max_tasks)
+
+    while len(tasks) != 0:
+        for task in tasks:
+            payload = task.payload
+            files.append(payload)
+
+        q.delete_tasks(tasks)
+        tasks = q.lease_tasks(day_seconds, max_tasks)
+
+    return files  

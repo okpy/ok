@@ -838,6 +838,12 @@ class SubmissionAPI(APIResource):
         },
         'win_rate': {
             'methods': set(['GET']),
+        },
+        'add_grade': {
+            'methods': set(['POST']),
+            'web_args': {
+                'score': Arg(int, required=True),
+            }
         }
     }
 
@@ -1081,6 +1087,7 @@ class SubmissionAPI(APIResource):
         obj.put()
         return score
 
+
     def get_assignment(self, name):
         """
         Look up an assignment by name
@@ -1146,7 +1153,6 @@ class SubmissionAPI(APIResource):
         return self.submit(user, data['assignment'],
                            data['messages'], submit_flag,
                            data.get('submitter'))
-
 
 class VersionAPI(APIResource):
     model = models.Version
@@ -1587,6 +1593,43 @@ class FinalSubmissionAPI(APIResource):
         submission.put()
 
         return score
+
+
+class GradeAPI(APIResource):
+    model = models.Submission
+
+    methods = {
+        'get': {
+        },
+        'add_grade': {
+            'methods': set(['POST']),
+            'web_args': {
+                'score': Arg(int, required=True),
+            }
+        }
+    }
+
+    def add_grade(self, obj, user, data):
+        """
+        Sets autograder score
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
+        """
+        score = models.Score(
+            score=data['score'],
+            autograder=True)
+
+        score.put()
+
+        # submission = obj.get()
+
+        obj.score.append(score)
+        obj.put()
+        return score
+
 
 class AnalyticsAPI(APIResource):
     """
