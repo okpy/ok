@@ -289,7 +289,7 @@ app.factory('Version', ['$resource',
     }
   ]);
 
-app.factory('FinalSubmission', ['$resource',
+app.factory('FinalSubmissionChange', ['$resource',
     function($resource) {
       return $resource('/api/v1/final_submission', {}, {
         change: {
