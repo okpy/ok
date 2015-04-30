@@ -765,7 +765,7 @@ class Submission(Base):
 
     @classmethod
     def _can(cls, user, need, submission, query):
-        return Backup._can(user, need, submission.backup.get(), query)
+        return Backup._can(user, need, submission.backup.get() if submission else None, query)
 
 
 class Diff(Base):
