@@ -839,12 +839,6 @@ class SubmissionAPI(APIResource):
         'win_rate': {
             'methods': set(['GET']),
         },
-        'add_grade': {
-            'methods': set(['POST']),
-            'web_args': {
-                'score': Arg(int, required=True),
-            }
-        }
     }
 
     def graded(self, obj, user, data):
@@ -1623,9 +1617,8 @@ class GradeAPI(APIResource):
             autograder=True)
 
         score.put()
-
         # submission = obj.get()
-
+        obj.score = [composition for composition in obj.score if not score.autograder]
         obj.score.append(score)
         obj.put()
         return score
