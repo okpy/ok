@@ -1,7 +1,14 @@
 queue:
 - name: pull-queue
   mode: pull
+<<<<<<< HEAD
   acl:
   - user_email: 887076364996-opeevtug54963jn33liq618c1kjma8d5@developer.gserviceaccount.com
   - user_email: jenniferwu0621@gmail.com
   - writer_email: 887076364996-opeevtug54963jn33liq618c1kjma8d5@developer.gserviceaccount.com
+=======
+  acl: 
+  - user_email: joejoechoichoi@gmail.com
+  - user_email: jeffpak17@gmail.com
+  - user_email: jenniferwu0621@gmail.com 
+>>>>>>> 54d5613aee1802c36d4727f09a62610af1c3e4bb

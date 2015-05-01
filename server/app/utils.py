@@ -23,6 +23,8 @@ from google.appengine.api import taskqueue
 
 from app import app
 
+from app.http_requests import send
+
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
 class ModelProxy(object):
@@ -289,6 +291,7 @@ def assign_submission(backup_id, submit):
             subm.mark_as_final()
 
         add_taskqueue(subm)
+        send()
 
 def sort_by_assignment(key_func, entries):
     entries = sorted(entries, key=key_func)
