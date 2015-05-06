@@ -33,16 +33,18 @@ try:
         decodedResult = base64.urlsafe_b64decode(str(payload))
         dictDecResult = ast.literal_eval(decodedResult)
 
+        subprocess.call(["chmod", "-R", "775", "tests"])
         for key, value in dictDecResult.iteritems():
                 if key != "submit":
-                        f = open('assignment/' + key, 'w')
+                        f = open('tests/' + key, 'w')
                         f.write(value.encode('utf-8'))
                         f.close()
-        output = subprocess.check_output("./grade.sh")
+        output = subprocess.check_output("./tests/grade.sh")
         score_array = [int(p) for p in output.split() if p.isdigit()]
 
         subm_id= task['tag']
         req_url='https://seventh-abacus-87719.appspot.com/api/v1/grade/%s/add_grade'%subm_id
+        #access_token="ya29.longOkGoogleAuthToken&client_version=v1.3.30"
         data= {'score':str(score_array[0])}
         headers= {'Content-type': 'application/json'}
         r = requests.post(req_url, data=json.dumps(data), headers=headers)

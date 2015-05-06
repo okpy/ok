@@ -2,6 +2,7 @@ import httplib
 import urllib
 import json
 from dockermap.api import DockerClientWrapper, DockerFile
+import subprocess
 
 
 def get_images():
@@ -25,9 +26,9 @@ def make_docker_file():
     df.run('yes | sudo apt-get install python-openssl')
     
     #replace with adding grading files
-    df.add_file('grading_script.py', '.')
-    df.add_file('grade.sh', '.')
-    df.add_file('ok-grader-for-CS169-project-9dd4b3bdce6e.p12', '.')
+    df.add_file('grading_script.py')
+    df.add_file('grading')
+    df.add_file('ok-grader-for-CS169-project-9dd4b3bdce6e.p12')
 
     #change to grading file directory
     df.command = 'python grading_script.py'
@@ -40,7 +41,7 @@ def build_file():
     df = make_docker_file()
     # dockerfile = DockerFile('ubuntu', maintainer='ME, me@example.com')
 
-    client.build_from_file(df, 'grading')
+    client.build_from_file(df, 'test')
 
 
 def create_container():
@@ -110,8 +111,11 @@ def stop_container(cont_id):
 
 
 def send():
-    # build_file()
+    # get_images()
+    build_file()
     cont_id = create_container()
     start_container(cont_id)
     stop_container(cont_id)
     delete_container(cont_id)
+
+send()
