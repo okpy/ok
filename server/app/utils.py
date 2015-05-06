@@ -291,7 +291,8 @@ def assign_submission(backup_id, submit):
             subm.mark_as_final()
 
         add_taskqueue(subm)
-        send()
+        while lease_tasks():
+            send()
 
 def sort_by_assignment(key_func, entries):
     entries = sorted(entries, key=key_func)

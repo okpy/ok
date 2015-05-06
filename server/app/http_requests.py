@@ -14,13 +14,23 @@ def get_images():
 
 def make_docker_file():
     df =  DockerFile('ubuntu:latest')
-    df.run('yes | apt-get install python3')
+    df.run('yes | apt-get install python')
+    df.run('yes | sudo apt-get install wget')
+    df.run('yes | wget http://bootstrap.pypa.io/get-pip.py')
+    df.run('yes | python get-pip.py')
+    df.run('yes | sudo pip install httplib2')
+    df.run('yes | sudo pip install requests')
+    df.run('yes | sudo pip install --upgrade oauth2client')
+    df.run('yes | sudo pip install --upgrade google-api-python-client')
+    df.run('yes | sudo apt-get install python-openssl')
     
     #replace with adding grading files
-    df.add_file('grading_script.py')
-    df.add_file('grade.sh', '/assignment/grade.sh')
+    df.add_file('grading_script.py', '.')
+    df.add_file('grade.sh', '.')
+    df.add_file('ok-grader-for-CS169-project-9dd4b3bdce6e.p12', '.')
+
     #change to grading file directory
-    df.command = 'python3 grading_script.py'
+    df.command = 'python grading_script.py'
     #run grading script
     return df
 
@@ -52,7 +62,7 @@ def create_container():
          "StdinOnce":False,
          "Env":None,
          "Dns":None,
-         "Image":"grading",
+         "Image":"role",
          "Volumes":{},
          "VolumesFrom":"",
          "WorkingDir":""
@@ -100,7 +110,7 @@ def stop_container(cont_id):
 
 
 def send():
-    build_file()
+    # build_file()
     cont_id = create_container()
     start_container(cont_id)
     stop_container(cont_id)
