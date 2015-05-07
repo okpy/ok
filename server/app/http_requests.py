@@ -2,8 +2,6 @@ import httplib
 import urllib
 import json
 from dockermap.api import DockerClientWrapper, DockerFile
-import subprocess
-
 
 def get_images():
     conn = httplib.HTTPConnection("104.154.38.163:4243")
