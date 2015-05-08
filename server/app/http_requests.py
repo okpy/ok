@@ -39,7 +39,7 @@ def build_file():
     df = make_docker_file()
     # dockerfile = DockerFile('ubuntu', maintainer='ME, me@example.com')
 
-    client.build_from_file(df, 'test')
+    client.build_from_file(df, 'grader')
 
 
 def create_container():
@@ -61,7 +61,7 @@ def create_container():
          "StdinOnce":False,
          "Env":None,
          "Dns":None,
-         "Image":"role",
+         "Image":"grader",
          "Volumes":{},
          "VolumesFrom":"",
          "WorkingDir":""
