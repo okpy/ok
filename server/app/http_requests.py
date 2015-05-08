@@ -115,5 +115,3 @@ def send():
     start_container(cont_id)
     stop_container(cont_id)
     delete_container(cont_id)
-
-send()
