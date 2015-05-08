@@ -33,13 +33,13 @@ try:
         decodedResult = base64.urlsafe_b64decode(str(payload))
         dictDecResult = ast.literal_eval(decodedResult)
 
-        subprocess.call(["chmod", "-R", "775", "tests"])
+        subprocess.call(["chmod", "-R", "775", "grading"])
         for key, value in dictDecResult.iteritems():
                 if key != "submit":
-                        f = open('tests/' + key, 'w')
+                        f = open('grading/' + key, 'w')
                         f.write(value.encode('utf-8'))
                         f.close()
-        output = subprocess.check_output("./tests/grade.sh")
+        output = subprocess.check_output("./grading/grade.sh")
         score_array = [int(p) for p in output.split() if p.isdigit()]
 
         subm_id= task['tag']
