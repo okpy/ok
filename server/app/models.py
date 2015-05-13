@@ -186,18 +186,27 @@ class User(Base):
             assignment_key = assignment_key.key
         group = self.get_group(assignment_key)
         if group and self.key in group.member:
-            return Submission.query(
-                Submission.assignment==assignment_key,
-                Submission.group==group.key,
+            subms = Submission.query(
+                Submission.submitter.IN(group.member),
+                Submission.assignment == assignment_key,
                 Submission.server_time < before_time).order(
-                  Submission.server_time
-                ).get()
+                  -Submission.server_time
+                ).fetch(100)
         else:
-            return Submission.assignment==assignment_key,
-                Submission.submitter==self.key,
-                Submission.server_time < before_time).order(
-                  Submission.server_time
-                ).get()
+            subms = Submission.query(
+                Submission.submitter ==self.key,
+                Submission.assignment == assignment_key,
+                Submission.server_time < before_time,
+                ).order(
+                  -Submission.server_time
+                ).fetch(100)
+
+        has_files = lambda sb: 'file_contents' in sb.backup.get().get_messages()
+        subms_with_code = filter(has_files, subms)
+        subms_with_code.sort(key= lambda s: s.server_time)
+        if len(subms_with_code) > 0:
+          return subms_with_code[-1]
+        return []
 
     def _contains_files(self, backup):
         messages = backup.get_messages()
