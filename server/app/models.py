@@ -180,6 +180,25 @@ class User(Base):
                 FinalSubmission.assignment==assignment_key,
                 FinalSubmission.submitter==self.key).get()
 
+    def get_submission_before(self, assignment_key, before_time):
+        """Get this users last submission before some server time"""
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
+        group = self.get_group(assignment_key)
+        if group and self.key in group.member:
+            return Submission.query(
+                Submission.assignment==assignment_key,
+                Submission.group==group.key,
+                Submission.server_time < before_time).order(
+                  Submission.server_time
+                ).get()
+        else:
+            return Submission.assignment==assignment_key,
+                Submission.submitter==self.key,
+                Submission.server_time < before_time).order(
+                  Submission.server_time
+                ).get()
+
     def _contains_files(self, backup):
         messages = backup.get_messages()
         if 'file_contents' in messages:
@@ -211,7 +230,7 @@ class User(Base):
         all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
         return all_backups[:num_backups]
-    
+
     def _get_submissions_helper(self, assignment):
         group = self.get_group(assignment)
         if not group or self.key not in group.member:
@@ -235,7 +254,7 @@ class User(Base):
         for results in subms:
             for s in results:
                 all_subms.append(s)
-        
+
         all_subms = [x.backup.get() for x in all_subms]
         all_subms = [x for x in all_subms if x.assignment == assignment \
                 and self._contains_files(x)]
