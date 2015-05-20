@@ -222,14 +222,15 @@ class User(Base):
         all_submissions = []
         for member in members:
             all_submissions.append(Submission.query(
-                Submission.submitter==member))
+                Submission.submitter==member,
+                Submission.assignment==assignment))
 
         return all_submissions
 
     def get_submissions(self, assignment, num_submissions=10):
         queries = self._get_submissions_helper(assignment)
 
-        subms = [query.fetch(num_submissions) for query in queries]
+        subms = [query.fetch() for query in queries]
         all_subms = []
         for results in subms:
             for s in results:
@@ -702,6 +703,7 @@ class Submission(Base):
     server_time = ndb.DateTimeProperty(auto_now_add=True)
     is_revision = ndb.BooleanProperty(default=False)
 
+
     def get_final(self):
         assignment = self.assignment
         # I have no idea why this works... need it to pass tests
@@ -1158,6 +1160,11 @@ class FinalSubmission(Base):
 
     @classmethod
     def _can(cls, user, need, final, query):
+        action = need.action
+        if action in ("create", "put") and final:
+            group = final.submission.get().backup.get().group
+            if group:
+              return user.logged_in and user.key in group.member
         return Submission._can(
             user, need, final.submission.get() if final else None, query)
 
