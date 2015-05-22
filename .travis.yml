@@ -1,7 +1,7 @@
 language: python
 
 env:
-  - CMD=server/apptest.py GAE_VERSION=1.9.17
+  - CMD=server/apptest.py GAE_VERSION=1.9.18
 
 python:
   - "2.7"

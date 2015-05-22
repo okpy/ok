@@ -26,7 +26,7 @@ def authenticate():
         return models.User.get_or_insert("<anon>")
     else:
         access_token = request.args['access_token']
-        print 'USING ACCESS TOKEN', access_token
+        # print 'USING ACCESS TOKEN', access_token
         user = mc.get("%s-%s" % (MC_NAMESPACE, access_token))
         if user:
             return user

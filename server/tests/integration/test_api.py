@@ -14,7 +14,7 @@ import os
 os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
-from test_base import make_fake_assignment, make_fake_course #pylint: disable=relative-import
+from test_base import make_fake_assignment, make_fake_course, make_fake_grade #pylint: disable=relative-import
 from google.appengine.ext import ndb
 from app import models, constants
 from ddt import ddt, data, unpack
@@ -333,6 +333,11 @@ class BackupAPITest(APITest, APIBaseTestCase):
         self.get_index(created='<|%s' % str(time - datetime.timedelta(hours=7)))
         self.assertJson([inst.to_json()])
 
+    def test_add_grade(self):
+        inst = self.get_basic_instance()
+        inst.grade = make_fake_grade(25.7)
+        self.post_entity(inst)
+        self.assertStatusCode(201)
 
 class CourseAPITest(APITest, APIBaseTestCase):
     model = models.Course

@@ -454,13 +454,15 @@ class UserAPI(APIResource):
         'get_backups': {
             'methods': set(['GET']),
             'web_args': {
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True),
+                'quantity': Arg(int, default=10)
             }
         },
         'get_submissions': {
             'methods': set(['GET']),
             'web_args': {
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True),
+                'quantity': Arg(int, default=10)
             }
         },
         'merge_user': {
@@ -604,10 +606,10 @@ class UserAPI(APIResource):
         :param data: (dictionary) key assignment called
         :return: None
         """
-        return obj.get_backups(data['assignment'])
+        return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return obj.get_backups(data['assignment'])
+        return obj.get_submissions(data['assignment'], data['quantity'])
 
     def merge_user(self, obj, user, data):
         """
@@ -836,7 +838,7 @@ class SubmissionAPI(APIResource):
         },
         'win_rate': {
             'methods': set(['GET']),
-        }
+        },
     }
 
     def graded(self, obj, user, data):
@@ -1079,6 +1081,7 @@ class SubmissionAPI(APIResource):
         obj.put()
         return score
 
+
     def get_assignment(self, name):
         """
         Look up an assignment by name
@@ -1107,13 +1110,24 @@ class SubmissionAPI(APIResource):
         due = valid_assignment.due_date
         late_flag = valid_assignment.lock_date and \
                     datetime.datetime.now() >= valid_assignment.lock_date
+        revision = valid_assignment.revision
 
         if submit and late_flag:
-            # Late submission. Do not allow them to submit
-            logging.info('Rejecting Late Submission', submitter)
-            return (403, 'late', {
-                'late': True,
-                })
+            if revision:
+                # In the revision period. Ensure that user has a previously graded submission.
+                fs = user.get_final_submission(valid_assignment)
+                if fs is None or fs.submission.get().score == []:
+                    logging.info('Rejecting Revision without graded FS', submitter)
+                    return (403, 'Previous submission was not graded', {
+                      'late': True,
+                      })
+            else:
+                # Late submission. Do not allow them to submit
+                logging.info('Rejecting Late Submission', submitter)
+                return (403, 'late', {
+                    'late': True,
+                    })
+
 
         models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)
         submission = self.db.create_submission(user, valid_assignment,
@@ -1133,7 +1147,6 @@ class SubmissionAPI(APIResource):
         return self.submit(user, data['assignment'],
                            data['messages'], submit_flag,
                            data.get('submitter'))
-
 
 class VersionAPI(APIResource):
     model = models.Version
@@ -1521,9 +1534,25 @@ class FinalSubmissionAPI(APIResource):
                 'message': Arg(str, required=True),
                 'source': Arg(str, required=True),
               }
+        },
+        'post': {
+            'web_args': {
+                'submission': KeyArg('Submission', required=True)
+            }
+        },
         }
 
-        }
+    def new_entity(self, attributes):
+        """
+        Creates a new entity with given attributes.
+
+        :param attributes: (dictionary)
+        :return: (entity, error_response) should be ignored if error_response
+        is a True value
+        """
+        subm = attributes['submission'].get()
+        subm.mark_as_final()
+        return subm.get_final()
 
     def score(self, obj, user, data):
         """
@@ -1558,6 +1587,42 @@ class FinalSubmissionAPI(APIResource):
         submission.put()
 
         return score
+
+
+class GradeAPI(APIResource):
+    model = models.Submission
+
+    methods = {
+        'get': {
+        },
+        'add_grade': {
+            'methods': set(['POST']),
+            'web_args': {
+                'score': Arg(int, required=True),
+            }
+        }
+    }
+
+    def add_grade(self, obj, user, data):
+        """
+        Sets autograder score
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
+        """
+        score = models.Score(
+            score=data['score'],
+            autograder=True)
+
+        score.put()
+        # submission = obj.get()
+        obj.score = [composition for composition in obj.score if not score.autograder]
+        obj.score.append(score)
+        obj.put()
+        return score
+
 
 class AnalyticsAPI(APIResource):
     """

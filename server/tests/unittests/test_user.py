@@ -12,7 +12,7 @@ import unittest
 from test_permissions import PermissionsUnitTest, BaseUnitTest, BaseTestCase
 from test_base import make_fake_assignment, make_fake_course
 
-from ddt import ddt, data
+from ddt import ddt, data, unpack
 
 from app import utils, models
 from app.models import ndb
@@ -185,6 +185,12 @@ class UserMergeTest(BaseUnitTest):
         self.assertEqual(log.user, user_obj.key)
         self.assertEqual(log.obj, user_obj2.key)
 
+    def test_inputs(self):
+        user_obj, user_obj2 = self.get_user_pair()
+        self.merge_user(user_obj, user_obj2)
+        self.merge_user(user_obj.key, user_obj2)
+        self.merge_user(user_obj, user_obj2.key)
+        self.merge_user(user_obj.key, user_obj2.key)
 
 class UserUniquenessTest(BaseUnitTest):
     def setUp(self):
@@ -295,6 +301,42 @@ class UserUniquenessTest(BaseUnitTest):
         self.assertNotEqual(calls[0], 0)
         self.assertNotEqual(calls[1], 0)
         self.assertNotEqual(calls[2], 0)
+
+@ddt
+class UserCounterHelperTest(BaseUnitTest):
+    class FakeQuery(object):
+        def __init__(self, count):
+            self._count = count
+
+        def count(self, max_size):
+            if max_size:
+                return min(self._count, max_size)
+            return self._count
+
+    def run_counter(self, queries, limit=None):
+        assignment = object()
+        fake_self = object()
+        def func(called_self, assign):
+            self.assertEqual(assignment, assign)
+            self.assertEqual(fake_self, called_self)
+            return queries
+
+        return models.make_num_counter(func)(fake_self, assignment, limit)
+
+    @data(
+        ((10, 2), None, 20),
+        ((10, 2), 5, 5),
+        ((10, 2), 6, 6),
+        ((10, 5), 6, 6),
+        ((1, 2), 5, 2),
+        )
+    @unpack
+    def test_make_num_counter(self, params, limit, result):
+        num_queries, query_size = params
+        queries = [self.FakeQuery(query_size) for _ in range(num_queries)]
+
+        answer = self.run_counter(queries, limit)
+        self.assertEqual(result, answer)
 
 if __name__ == "__main__":
     unittest.main()
