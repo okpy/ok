@@ -2,10 +2,10 @@
 
 import os
 os.environ['FLASK_CONF'] = 'TEST'
-from test_base import BaseTestCase 
+from test_base import BaseTestCase
 from test_base import make_fake_course
 from test_base import make_fake_assignment
-from test_base import make_fake_creator 
+from test_base import make_fake_creator
 
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
@@ -22,7 +22,7 @@ import json
 #Mocks: Course
 class AutograderTests(BaseTestCase):
 
-    def get_students(self): 
+    def get_students(self):
         return {
             "student0": models.User(
                 email=["dummy@student.com"],
@@ -35,7 +35,7 @@ class AutograderTests(BaseTestCase):
             )
         }
 
-    def get_messages(self): 
+    def get_messages(self):
         return {
             'message0': models.Message(
                 contents = json.dumps({"hello":0}),
@@ -136,7 +136,7 @@ class AutograderTests(BaseTestCase):
         self.Backups = self.get_backups()
 
         for backup in self.Backups.values():
-            backup.put()        
+            backup.put()
 
         self.Submissions = self.get_submissions()
 
@@ -152,7 +152,7 @@ class AutograderTests(BaseTestCase):
         add_all_taskqueue(self.course, self.assignment.key)
         q = taskqueue.Queue("pull-queue")
         files = lease_tasks()
-        self.assertEquals(len(files), 3)             
+        self.assertEquals(len(files), 3)
 
         # for bac in backups:
         #     self.assertIn(bac, self.Backups.values())
@@ -161,7 +161,7 @@ class AutograderTests(BaseTestCase):
         add_taskqueue(self.Submissions['submission0'])
         q = taskqueue.Queue("pull-queue")
         files = lease_tasks()
-        self.assertEquals(len(files), 1)             
+        self.assertEquals(len(files), 1)
 
 if __name__ == "__main__":
     unittest.main()
