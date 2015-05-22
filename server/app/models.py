@@ -180,6 +180,34 @@ class User(Base):
                 FinalSubmission.assignment==assignment_key,
                 FinalSubmission.submitter==self.key).get()
 
+    def get_submission_before(self, assignment_key, before_time):
+        """Get this users last submission before some server time"""
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
+        group = self.get_group(assignment_key)
+        if group and self.key in group.member:
+            subms = Submission.query(
+                Submission.submitter.IN(group.member),
+                Submission.assignment == assignment_key,
+                Submission.server_time < before_time).order(
+                  -Submission.server_time
+                ).fetch(100)
+        else:
+            subms = Submission.query(
+                Submission.submitter ==self.key,
+                Submission.assignment == assignment_key,
+                Submission.server_time < before_time,
+                ).order(
+                  -Submission.server_time
+                ).fetch(100)
+
+        has_files = lambda sb: 'file_contents' in sb.backup.get().get_messages()
+        subms_with_code = filter(has_files, subms)
+        subms_with_code.sort(key= lambda s: s.server_time)
+        if len(subms_with_code) > 0:
+          return subms_with_code[-1]
+        return []
+
     def _contains_files(self, backup):
         messages = backup.get_messages()
         if 'file_contents' in messages:
@@ -211,7 +239,7 @@ class User(Base):
         all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
         return all_backups[:num_backups]
-    
+
     def _get_submissions_helper(self, assignment):
         group = self.get_group(assignment)
         if not group or self.key not in group.member:
@@ -235,7 +263,7 @@ class User(Base):
         for results in subms:
             for s in results:
                 all_subms.append(s)
-        
+
         all_subms = [x.backup.get() for x in all_subms]
         all_subms = [x for x in all_subms if x.assignment == assignment \
                 and self._contains_files(x)]
@@ -420,7 +448,7 @@ class Course(Base):
         return [part.user for part in Participant.query(
             Participant.course == self.key,
             Participant.role == STAFF_ROLE).fetch()]
-        
+
     def students(self):
         return [part.user for part in Participant.query(
             Participant.course == self.key,
@@ -769,8 +797,9 @@ class Submission(Base):
 
     @classmethod
     def _can(cls, user, need, submission, query):
+        # TODO: FIX. Autograder currently allows all permissions.
         return True
-        # return Backup._can(user, need, submission.backup.get(), query)
+        #return Backup._can(user, need, submission.backup.get() if submission else None, query)
 
 
 class Diff(Base):

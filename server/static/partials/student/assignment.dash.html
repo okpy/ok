@@ -139,13 +139,13 @@
             <span class="col-1"><p>Date</p></span>
             <span class="col-2"><p>By</p></span>
           </li>
-          <li class="pop-item" id="1"  ng-repeat="subm in currAssign.submissions | orderBy:'created':true">
+          <li class="pop-item" id="1"  ng-repeat="subm in currAssign.submissions | orderBy:'server_time':true">
             <a class="flag" ng-class=" {active: currAssign.final.final_submission && subm.id == currAssign.final.backup.id }">
               <span class="label left"><p>Flagged for Grading</p></span>
               <span class="cloth"></span>
               <span class="stem"></span>
             </a>
-            <span class="col-1"><p>{{ subm.created | amCalendar }}</p></span>
+            <span class="col-1"><p>{{ subm.server_time | amCalendar }}</p></span>
             <span class="col-2"><p>{{ subm.submitter.email[0] }}</p></span>
             <a ui-sref='submission.detail({courseId: courseId, submissionId:subm.id})' class="light link view-submission">view &raquo;</a>
           </li>
@@ -166,8 +166,8 @@
             <span class="col-1"><p>Date</p></span>
             <span class="col-2"><p>By</p></span>
           </li>
-          <li class="pop-item" ng-repeat="backup in currAssign.backups | orderBy:'created':true" ng-if='backup.messages.file_contents'>
-            <span class="col-1"><p>{{ backup.created | amCalendar }} </p></span>
+          <li class="pop-item" ng-repeat="backup in currAssign.backups | orderBy:'server_time':true" ng-if='backup.messages.file_contents'>
+            <span class="col-1"><p>{{ backup.server_time | amCalendar }} </p></span>
             <span class="col-2"><p>{{ backup.submitter.email[0] }}</p></span>
             <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})" class="light link view-submission">view &raquo;</a>
           </li>
