@@ -522,6 +522,10 @@ header {
             width:75px;
             opacity:1;
             cursor:pointer;
+            line-height:60px;
+            text-align:center;
+            color:#FFF;
+            font-size:1.25em;
         }
             .option > span {
                 margin:30px;
@@ -574,9 +578,6 @@ header {
         .close.white {
             color:#FFF;
         }
-            .sidebar .option {
-                padding-left:30px;
-            }
             .blob-alert .close {
                 float:none;
                 margin-top:0.5em;

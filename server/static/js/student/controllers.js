@@ -163,8 +163,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               id: currGroup.id,
               email: member.email[0]
             }, function (err) {
-                $scope.currGroup = null;
-                $scope.currAssign.group = null
                 $scope.closeDetails();
                 $scope.reloadView();
             });
@@ -201,8 +199,14 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           Group.rejectInvitation({
             id: currGroup.id,
           }, function (err) {
-            currGroup = null
-            $scope.currAssign.group = null
+            $scope.closeDetails();
+            $window.swal({
+              title: "Invitation rejected.",
+              text: "You can now invite other members and/or be invited.",
+              timer: 3500,
+              type: "success"
+            });
+            $scope.reloadView();
           });
       };
 
@@ -210,7 +214,14 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           Group.acceptInvitation({
               id: currGroup.id,
           }, function (err) {
-            $scope.reloadView()
+            $scope.closeDetails();
+            $window.swal({
+              title: "Group joined!",
+              text: "You can now view submissions credited to this group.",
+              timer: 3500,
+              type: "success"
+            });
+            $scope.reloadView();
           });
       };
 
@@ -246,7 +257,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         FinalSubmissionChange.change({
           submission: submId
         }, function (response) {
-          $scope.reloadView()
+          $scope.reloadView();
           $window.swal({
               title: "Changed Submission",
               text: "We'll grade the submission you marked.",
@@ -269,7 +280,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
                 $scope.closeDetails();
                 $window.swal({
                   title: "Invitation Sent!",
-                  text: "They will need to login to okpy.org and accept the invite.",
+                  text: "Your partner will need to login to okpy.org and accept the invite.",
                   timer: 3500,
                   type: "success"
                 });
