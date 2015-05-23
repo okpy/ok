@@ -4,7 +4,7 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
             $(menu).addClass('active')
             $('.container-fluid').addClass('active').addClass('pushed')
         }
-        $scope.closeMenu = function() {
+        $window.closeMenu = function() {
             $('.menu').removeClass('active')
             $('.container-fluid').removeClass('active').removeClass('pushed')
         }
@@ -70,9 +70,7 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
   function($scope, $window, $location, $stateParams, $sce, $timeout, $anchorScroll, Submission) {
       var converter = new Showdown.converter();
       
-      $('.menu').removeClass('active')
-      $('.container-fluid').removeClass('active').removeClass('pushed')
-      // repeated code from line 8-9 :O
+      $window.closeMenu();
       
       $scope.convertMarkdown = function(text) {
         if (text == "" || text === undefined) {
@@ -296,7 +294,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
         }
         
-        $scope.closeDetails = function closeDetails() {
+        $window.closeDetails = $scope.closeDetails = function closeDetails() {
             $('.sidebar').removeClass('active');
             $('.container-fluid').removeClass('active');
         }

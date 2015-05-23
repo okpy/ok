@@ -1,4 +1,4 @@
-<span class="cover" ng-click="closeDetails()"></span>
+<span class="cover" onclick="closeDetails()"></span>
 <div class="sidebars col-md-4" ng-controller="AssignmentDashController">
     <div class="sidebar colored group" ng-repeat="assign in assignments"
          id="{{ assign.assignment.id }}" color="{{ randomColor(assign.assignment).color }}">
