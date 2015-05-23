@@ -282,7 +282,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.randomColor = function randomColor(assignment) {
         themes = ['blue','gold','green']
         if (!assignment.color) {
-            assignment.color = themes[Math.ceil(Math.random()*themes.length)-1]
+            var blob = $('.blob[id="'+assignment.id+'"]');
+            assignment.color = blob.length > 0 ? blob.attr('color') : themes[Math.ceil(Math.random()*themes.length)-1]
         }
         return assignment
       }
