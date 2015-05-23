@@ -4,7 +4,7 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
             $(menu).addClass('active')
             $('.container-fluid').addClass('active').addClass('pushed')
         }
-        $window.closeMenu = function() {
+        $window.closeMenu = $scope.closeMenu = function() {
             $('.menu').removeClass('active')
             $('.container-fluid').removeClass('active').removeClass('pushed')
         }
