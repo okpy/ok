@@ -163,9 +163,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               id: currGroup.id,
               email: member.email[0]
             }, function (err) {
-                $scope.reloadView()
                 $scope.currGroup = null;
                 $scope.currAssign.group = null
+                $scope.closeDetails();
+                $scope.reloadView();
             });
       };
 
@@ -265,14 +266,14 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             id: assignId,
             email: member
           }, function (response) {
-              $scope.reloadView()
-              $window.swal({
+                $scope.closeDetails();
+                $window.swal({
                   title: "Invitation Sent!",
                   text: "They will need to login to okpy.org and accept the invite.",
                   timer: 3500,
                   type: "success"
                 });
-
+                $scope.reloadView();
           }, function (err) {
             $window.swal("Oops...", "Can't add that user to your group.    Is that the right email? They might already be in a group or may not be in the course.", "error");
          });
