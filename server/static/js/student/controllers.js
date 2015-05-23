@@ -69,6 +69,11 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams', '$sce', '$timeout', '$anchorScroll', 'Submission',
   function($scope, $window, $location, $stateParams, $sce, $timeout, $anchorScroll, Submission) {
       var converter = new Showdown.converter();
+      
+      $('.menu').removeClass('active')
+      $('.container-fluid').removeClass('active').removeClass('pushed')
+      // repeated code from line 8-9 :O
+      
       $scope.convertMarkdown = function(text) {
         if (text == "" || text === undefined) {
           return $sce.trustAsHtml("")
