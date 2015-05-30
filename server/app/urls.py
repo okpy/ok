@@ -77,6 +77,7 @@ def enrollment():
             else:
                 term = year = None
             data.append({
+                'url': '/#/course/'+str(course.key.id()),
                 'display_name': course.display_name,
                 'institution': course.institution,
                 'term': term,
