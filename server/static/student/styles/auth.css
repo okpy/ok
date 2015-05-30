@@ -93,7 +93,6 @@ header a {
     -o-animation: fade-in .5s ease;
     animation: fade-in .5s ease;
     background-color: #205d9b;
-    height:500px;
 }
 .nav {
     padding: 40px 50px
@@ -235,49 +234,12 @@ h1.title {
     -o-animation: fade-in-5 3.5s ease;
     animation: fade-in-5 3.5s ease
 }
-.bar {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    left: 0;
-    background-color: rgba(0, 0, 0, .3);
-    padding: 30px 50px;
-    text-align: center;
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
+.rise {
+    margin-top:-100px;
     -webkit-animation: rise-up 3s ease;
     -moz-animation: rise-up 3s ease;
     -o-animation: rise-up 3s ease;
     animation: rise-up 3s ease
-}
-.bar .input {
-    display: inline-block;
-    float: none
-}
-.bar input {
-    background: 0 0;
-    color: #FFF;
-    font-size: 2em;
-    font-family: 'Roboto Condensed';
-    font-weight: 100;
-    opacity: .5;
-    text-align: center;
-    outline: 0;
-    border: none
-}
-.bar input:focus {
-    opacity: 1
-}
-.bar .msg {
-    color: #FFF;
-    text-transform: uppercase;
-    font-size: .75em;
-    letter-spacing: 1px;
-    line-height: 50px;
-    font-weight: 300;
-    position: absolute;
-    top: 30px;
-    left: 50px
 }
 .bar-input {
     color: rgba(255, 255, 255, .5);
@@ -564,34 +526,42 @@ footer p a:hover {
 }
 @-webkit-keyframes rise-up {
     0%, 88% {
-        margin-bottom: -200px
+        margin-top: 0;
+        opacity:0;
     }
     100% {
-        margin-bottom: 1
+        margin-top:-100px;
+        opacity:1;
     }
 }
 @-moz-keyframes rise-up {
     0%, 88% {
-        margin-bottom: -200px
+        margin-top: 0;
+        opacity:0;
     }
     100% {
-        margin-bottom: 1
+        margin-top:-100px;
+        opacity:1;
     }
 }
 @-o-keyframes rise-up {
     0%, 88% {
-        margin-bottom: -200px
+        margin-top: 0;
+        opacity:0;
     }
     100% {
-        margin-bottom: 1
+        margin-top:-100px;
+        opacity:1;
     }
 }
 @keyframes rise-up {
     0%, 88% {
-        margin-bottom: -200px
+        margin-top: 0;
+        opacity:0;
     }
     100% {
-        margin-bottom: 1
+        margin-top:-100px;
+        opacity:1;
     }
 }
 
@@ -856,4 +826,14 @@ section {
 }
 .arrow {
     display:none;
+}
+.empty p {
+    width:100%;
+    color:#666;
+    background-color:#f6f6f6;
+    border-radius:3px;
+    padding:50px 75px;
+    box-sizing:border-box;
+    margin-bottom:-30px;
+    line-height:200%;
 }
