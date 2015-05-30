@@ -92,6 +92,13 @@ indexes:
 
 - kind: Queuev2
   properties:
+  - name: course
+  - name: owner
+  - name: created
+    direction: desc
+
+- kind: Queuev2
+  properties:
   - name: owner
   - name: created
     direction: desc
