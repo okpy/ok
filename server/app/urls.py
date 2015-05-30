@@ -60,6 +60,9 @@ def landing():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("landing.html", **params)
 
+@app.route("/authSuccess")
+def authSuccess():
+    return render_template("authSuccess.html")
 
 @app.route("/sudo/su/<su_email>")
 def sudo(su_email):
