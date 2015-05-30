@@ -5,6 +5,7 @@ from functools import wraps
 import logging
 import traceback
 import collections
+import json
 
 import werkzeug
 from flask import render_template, session, request, Response, redirect, url_for
@@ -60,9 +61,20 @@ def landing():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("landing.html", **params)
 
-@app.route("/authSuccess")
-def authSuccess():
-    return render_template("authSuccess.html")
+@app.route("/enrollment")
+def enrollment():
+    user = models.User.lookup(request.args.get('email'))
+    data = []
+    if user is not None:
+        parts = api.CourseAPI().get_courses(None, user, {'user': user.key})
+        for part in parts:
+            course = part.course.get()
+            data.append({
+                'display_name': course.display_name,
+                'institution': course.institution,
+                'offering': course.offering
+            })
+    return json.dumps(data)
 
 @app.route("/sudo/su/<su_email>")
 def sudo(su_email):
