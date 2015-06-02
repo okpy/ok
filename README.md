@@ -95,6 +95,6 @@ Some useful things for developers to know:
 1. Testing with ok-client
    - To test with ok-client, please follow the instructions for the ok-client repo [here](https://github.com/Cal-CS-61A-Staff/ok-client).
    - Once you are inside the virtual environment for ok-client, you can make a new binary by using the command `ok-publish`.
-   - To run the server, run the shell script in `server/start`_server`
+   - To run the server, run the shell script in `server/start_server`
    - When running the ok binary, add the flags `--insecure --server localhost:<port>` to point it to the running ok-server
-
+   - To find demo assignments that you can use the binary with, look in [ok-client/demo](https://github.com/Cal-CS-61A-Staff/ok-client/tree/master/demo)
