@@ -148,13 +148,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.initAssignments(response.assignments);
-            $scope.hideLoader()
           }, function (error) {
-            $scope.hideLoader()
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           });
-        $scope.hidePopups();
 
         // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
@@ -232,13 +229,13 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           });
       };
 
-      $scope.subm_quantity = 10;
-      $scope.backup_quantity = 10;
+      $scope.subm_quantity = 5;
+      $scope.backup_quantity = 5;
 
 
       $scope.getSubmissions = function (assign,toIncrease) {
             if (toIncrease) {
-              $scope.subm_quantity += 50;
+              $scope.subm_quantity += 10;
             }
             User.getSubmissions({
               assignment: assign.assignment.id,
@@ -250,7 +247,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
 
       $scope.getBackups = function (assign, toIncrease) {
             if (toIncrease) {
-              $scope.backup_quantity += 50;
+              $scope.backup_quantity += 10;
             }
             User.getBackups({
               assignment: assign.assignment.id,
