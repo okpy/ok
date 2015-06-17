@@ -202,6 +202,9 @@ header {
 .blob[color="green"], .colored.sidebar[color="green"] { background-color: #698C00 }
 .blob[color="green"] .blob-alert { background-color: #A3D900 }
 
+.blob[color="purple"], .colored.sidebar[color="purple"] { background-color: #835186 }
+.blob[color="purple"] .blob-alert { background-color: #d976dc; }
+
 .blob[color="gold"], .colored.sidebar[color="gold"] { background-color:#D9A300 }
 .blob[color="gold"] .blob-alert { background-color:#FFC926 }
         
