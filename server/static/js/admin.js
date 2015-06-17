@@ -218,8 +218,15 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "StaffDetailCtrl"
     }
     
+    var student = {
+          name: 'student',
+          url: '/:courseId/students',
+          abstract: true,
+          templateUrl: '/static/partials/admin/student.base.html'
+        }
+    
     var studentList = {
-          name: 'student.list',
+          name: 'students.list',
           url: '/',
           templateUrl: '/static/partials/admin/student.list.html',
           controller: "StudentListCtrl"
@@ -312,6 +319,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(staff).
       state(staffList).
       state(staffDetail).
+      state(student).
+      state(studentList).
       state(versions).
       state(versionList).
       state(versionDetail).
