@@ -39,9 +39,13 @@
             </ul>
             <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action">Save</a>
         </div>
-        <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0">Invited Members</h2>
+        <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && !assign.group.invited">Invited Members</h2>
+        <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && assign.group.invited">Group Invitation</h2>
         <ul class="sidebar-list" ng-if="assign.group.group_info.invited.length > 0">
-            <li ng-repeat="invited in assign.group.group_info.invited">{{ invited.email[0] }}
+            <li ng-if="assign.group.invited" ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}</li>
+            <li ng-repeat="invited in assign.group.group_info.invited">
+                <span ng-if="assign.group.invited">Accept invitation?</span>
+                <span ng-if="!assign.group.invited">{{ invited.email[0] }}</span>
                 <div ng-if="assign.group.invited" class="options">
                     <span class="option good" ng-click="acceptInvite(assign.group.group_info)"><i class="fa fa-check"></i></span>
                     <span class="option bad" ng-click="rejectInvite(assign.group.group_info)"><i class="fa fa-close"></i></span>
@@ -64,7 +68,7 @@
             <li ng-repeat="subm in assign.submissions | orderBy:'created':true">
                 <a class="flag"
                    ng-class=" {active: assign.final.final_submission && subm.id == assign.final.backup.id }"
-                   ng-click="flagSubmission(subm.id)">
+                    ng-click="changeSubmission(subm.id)">
                     <span class="label right"><p>Flag for Grading</p></span>
                     <span class="cloth"></span>
                     <span class="stem"></span>
@@ -75,8 +79,8 @@
                 </a>
             </li>
         </ul>
-        <a ng-if="assign.submissions.length > 0"
-           ng-click="getSubmissions(assign.assignment.id, true);"
+        <a ng-if="assign.submissions.length >= subm_quantity"
+           ng-click="getSubmissions(assign, true);"
            class="action">Load More</a>
         <h2 class="sidebar-subtitle">Backups</h2>
         <ul class="sidebar-list">
@@ -88,8 +92,8 @@
                 </a>
             </li>
         </ul>
-        <a ng-if="assign.backups.length > 0"
-           ng-click="getBackups(assign.assignment, true);"
+        <a ng-if="assign.backups.length >= backup_quantity"
+           ng-click="getBackups(assign, true);"
            class="action">Load More</a>
     </div>
 </div>

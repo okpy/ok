@@ -102,10 +102,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.closeDetails();
-            $scope.assignments = response.assignments;
-            for (i = 0;i<response.assignments.length;i++) {
-                $scope.assignInit(response.assignments[i]);
-            }
+            $scope.initAssignments(response.assignments);
           }, function (error) {
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
@@ -118,6 +115,12 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         if (assign.submissions) {
             $scope.getSubmissions(assign, false);
         }
+      }
+      $scope.initAssignments = function(assignments) {
+         $scope.assignments = assignments;
+          for (i = 0;i<assignments.length;i++) {
+              $scope.assignInit(assignments[i]);
+          }
       }
       $scope.showComposition = function(score, backupId) {
         if (score) {
@@ -139,19 +142,16 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
       $scope.reloadView = function () {
         // oldToggle = $scope.currAssign.id
-          $scope.currAssign = null;
+//          $scope.currAssign = null;
 
           User.force_get({
             course: $stateParams.courseId,
           }, function (response) {
-            $scope.assignments = response.assignments;
-            $scope.hideLoader()
+            $scope.initAssignments(response.assignments);
           }, function (error) {
-            $scope.hideLoader()
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           });
-        $scope.hidePopups();
 
         // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
@@ -198,7 +198,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.rejectInvite = function(currGroup) {
           Group.rejectInvitation({
             id: currGroup.id,
-          }, function (err) {
+          }, function (response) {
             $scope.closeDetails();
             $window.swal({
               title: "Invitation rejected.",
@@ -207,13 +207,15 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
             $scope.reloadView();
+          }, function (err) {
+            $window.swal("Oops...", "Looks like this invitation has expired.", "error");
           });
       };
 
       $scope.acceptInvite = function(currGroup) {
           Group.acceptInvitation({
               id: currGroup.id,
-          }, function (err) {
+          }, function (response) {
             $scope.closeDetails();
             $window.swal({
               title: "Group joined!",
@@ -222,16 +224,18 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
             $scope.reloadView();
+          }, function (err) {
+            $window.swal("Oops...", "Looks like you've already joined this group..", "error");
           });
       };
 
-      $scope.subm_quantity = 10;
-      $scope.backup_quantity = 10;
+      $scope.subm_quantity = 5;
+      $scope.backup_quantity = 5;
 
 
       $scope.getSubmissions = function (assign,toIncrease) {
             if (toIncrease) {
-              $scope.subm_quantity += 50;
+              $scope.subm_quantity += 10;
             }
             User.getSubmissions({
               assignment: assign.assignment.id,
@@ -243,7 +247,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
 
       $scope.getBackups = function (assign, toIncrease) {
             if (toIncrease) {
-              $scope.backup_quantity += 50;
+              $scope.backup_quantity += 10;
             }
             User.getBackups({
               assignment: assign.assignment.id,
@@ -265,7 +269,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+//            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+            $window.swal("Oops...", "Please submit again, instead. This feature is not yet ready.", "error");
         })
       }
 
@@ -292,7 +297,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       };
       
       $scope.randomColor = function randomColor(assignment) {
-        themes = ['blue','gold','green']
+        themes = ['blue','gold','purple']
         if (!assignment.color) {
             var blob = $('.blob[id="'+assignment.id+'"]');
             assignment.color = blob.length > 0 ? blob.attr('color') : themes[Math.ceil(Math.random()*themes.length)-1]
@@ -311,16 +316,5 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $('.sidebar').removeClass('active');
             $('.container-fluid').removeClass('active');
         }
-        $scope.flagSubmission = function(submId) {
-            $window.swal({
-                title: 'Oops. Well, this is embarrassing.',
-                text: 'Flagging isn\'t ready yet. Resubmit an old copy, for now, or contact your GSI.',
-                showCancelButton: false,
-                icon: false,
-                allowEscapeKey: true,
-                allowOutsideClick: true,
-                confirmButtonText: "Ok",
-                closeOnConfirm: true});
-          }
-      }
+        }
 ]);
