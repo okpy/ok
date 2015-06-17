@@ -298,14 +298,27 @@ app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
   }
   ]);
 
-app.controller("CourseNewCtrl", ["$scope", "Course",
-  function ($scope, Course) {
+app.controller("CourseNewCtrl", ["$scope", "$state", "$window", "Course",
+  function ($scope, $state, $window, Course) {
     $scope.course = {};
-    $scope.test = {'test':3};
 
-    $scope.save = function() {
-      var course = new Course($scope.course);
-      course.$save();
+    $scope.createCourse = function() {
+      Course.create({
+        'display_name': $scope.course.name,
+        'institution': $scope.course.institution,
+        'offering': $scope.course.offering,
+        'active': true
+      },
+       function (response) {
+         $scope.courses = Course.query({},
+          function (response) {
+            $window.swal("Course Created!",'','success');
+           $state.transitionTo('course.list' , {} , { reload: true, inherit: true, notify: true });
+         });
+       }, function (error) {
+         $window.swal("Could not create course",'There was an error','error');
+
+       })
     };
   }
   ]);
