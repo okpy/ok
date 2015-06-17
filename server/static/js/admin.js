@@ -71,6 +71,15 @@ app.directive('staffList', function() {
             templateUrl: '/static/partials/admin/staff.list.html',
         };
     });
+    
+    
+app.directive('studentList', function() {
+            return {
+                restrict: 'E',
+                controller: "StudentListCtrl",
+                templateUrl: '/static/partials/admin/student.list.html',
+            };
+        });
 
 
 
@@ -208,6 +217,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/staff.detail.html',
       controller: "StaffDetailCtrl"
     }
+    
+    var studentList = {
+          name: 'student.list',
+          url: '/',
+          templateUrl: '/static/partials/admin/student.list.html',
+          controller: "StudentListCtrl"
+        }
 
     var versions = {
       name: 'version',

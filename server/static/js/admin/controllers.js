@@ -357,7 +357,13 @@ app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
     alert('hi');
   }
   ]);
-
+  
+  
+// Student Enrollment Controllers
+app.controller("StudentListCtrl", ["$scope",
+  function($scope) {
+    alert('hi');
+  }]);
 
 // Diff Controllers
 app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateParams',  'Submission',  "$sessionStorage", '$timeout',

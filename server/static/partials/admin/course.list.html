@@ -18,6 +18,8 @@
       <th ts-criteria="name">Name</th>
       <th ts-criteria="institution">Institution</th>
       <th ts-criteria="year">Offering</th>
+      <th>Staff</th>
+      <th>Manage</th>
     </tr>
     <tr ng-repeat="course in courses" ts-repeat>
       <td>
@@ -27,6 +29,16 @@
       </td>
       <td>{{course.institution}}</td>
       <td>{{course.offering}}</td>
+      <td>
+        <a ui-sref='staff.list({courseId:course.id})'>
+          Manage Staff
+        </a>
+      </td>
+      <td>
+        <a ui-sref='student.list({courseId:course.id})'>
+          Manage Enrollment
+        </a>
+      </td>
     </tr>
   </table>
 </div>
