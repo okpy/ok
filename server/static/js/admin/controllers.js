@@ -88,8 +88,8 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
   }
   ]);
   
-app.controller("AssignmentEditCtrl", ["$scope", "$window", "$stateParams", "Assignment", "Course",
-  function ($scope, $window, $stateParams, Assignment, Course) {
+app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $state, $stateParams, Assignment, Course) {
   
     $scope.reloadAssignment = function() {
       Assignment.get({
@@ -127,6 +127,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$stateParams", "Assi
     $scope.editAssign = function () {
         var due_date_time = $scope.assign.due_date + ' ' + $scope.assign.due_time
         Assignment.edit({
+          'id': $scope.assign.id,
           'display_name': $scope.assign.display_name,
           'name': $scope.assign.endpoint,
           'points': $scope.assign.points,
@@ -136,7 +137,11 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$stateParams", "Assi
           'course': $scope.assign.course.id,
         },
           function (response) {
-            $window.swal("Assignment Updated!",'','success');
+            $scope.assignments = Assignment.query({},
+              function (response) {
+              $window.swal("Assignment Updated!",'','success');
+              $state.transitionTo('assignment.list', null, {'reload': true})
+            });
           }, function (error) {
             console.log('error')
             $window.swal("Could not update assignment",'There was an error','error');

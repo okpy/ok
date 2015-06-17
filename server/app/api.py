@@ -725,7 +725,8 @@ class AssignmentAPI(APIResource):
         return super(AssignmentAPI, self).post(user, data)
 
     def edit(self, obj, user, data):
-        print('Editing!')
+        """ Save the assignment. """
+        return super(AssignmentAPI, self).put(obj, user, data)
 
     def assign(self, obj, user, data):
         need = Need('put')
