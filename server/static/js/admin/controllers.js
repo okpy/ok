@@ -90,26 +90,35 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
   
 app.controller("AssignmentEditCtrl", ["$scope", "$window", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $stateParams, Assignment, Course) {
-    $scope.existingAssign = Assignment.get({id: $stateParams.assignmentId});
-    $scope.newAssign = {
-      'due_time': '23:59:59.0000',
-      'max_group_size': 2
-    };
-    Course.get({}, function(resp) {
-        $scope.courses = resp.results;
-        $scope.newAssign.course = $scope.courses[0];
-    });
+  
+    $scope.reloadAssignment = function() {
+      Assignment.get({
+        id: $stateParams.assignmentId
+      }, function (response) {
+        $scope.assign = response;
+        $scope.assign.endpoint = $scope.assign.name;
+        parts = $scope.assign.due_date.split(' ');
+        $scope.assign.due_date = parts[0];
+        $scope.assign.due_time = parts[1];
+      });
+      
+      Course.get({}, function(resp) {
+          $scope.courses = resp.results;
+      });
+    }
+    
+    $scope.reloadAssignment();
 
-    $scope.editAssign = function () {
-        var due_date_time = $scope.editAssign.due_date + ' ' + $scope.editAssign.due_time
-        Assignment.create({
-          'display_name': $scope.editAssign.display_name,
-          'name': $scope.editAssign.endpoint,
-          'points': $scope.editAssign.points,
-          'max_group_size': $scope.editAssign.max_group_size,
+    $scope.assign = function () {
+        var due_date_time = $scope.assign.due_date + ' ' + $scope.assign.due_time
+        Assignment.edit({
+          'display_name': $scope.assign.display_name,
+          'name': $scope.assign.endpoint,
+          'points': $scope.assign.points,
+          'max_group_size': $scope.assign.max_group_size,
           'templates': {},
           'due_date': due_date_time,
-          'course': $scope.editAssign.course.id,
+          'course': $scope.assign.course.id,
         },
           function (response) {
             $window.swal("Assignment Updated!",'','success');
