@@ -218,6 +218,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "StaffDetailCtrl"
     }
     
+    var staffAdd = {
+        name: 'staff.add',
+        url: '/add',
+        templateUrl:'/static/partials/admin/staff.add.html',
+        controller: 'StaffAddCtrl'
+    }
+    
     var students = {
           name: 'students',
           url: '/:courseId/students',
@@ -317,6 +324,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(courseDetail).
       state(courseNew).
       state(staff).
+      state(staffAdd).
       state(staffList).
       state(staffDetail).
       state(students).

@@ -328,20 +328,8 @@ app.controller("CourseNewCtrl", ["$scope", "$state", "$window", "Course",
 // Staff Controllers
 app.controller("StaffListCtrl", ["$scope","$window", "$stateParams", "Course", "User",
   function($scope, $window, $stateParams, Course, User) {
-    $scope.members = Course.staff({id: $stateParams.courseId});
-    $scope.roles = ['staff', 'admin', 'user'];
-    $scope.newMember = {
-      role: 'staff'
-    }
-    $scope.save = function () {
-      Course.add_member({
-        id: $stateParams.courseId,
-        email: $scope.newMember.email
-      }, function() {
-        $window.swal("Added!", "Added "+$scope.newMember.email+" to the course staff", "success");
-        $scope.newMember.email = "";
-      });
-    };
+  $scope.course = Course.get({id: $stateParams.courseId});
+  $scope.members = Course.staff({id: $stateParams.courseId});
     $scope.remove = function (userEmail) {
       Course.remove_member({
         id: $stateParams.courseId,
@@ -365,9 +353,23 @@ app.controller("StaffDetailCtrl", ["$scope", "$stateParams", "Course", "User",
 
   }]);
 
-app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
-  function ($scope, $stateParams, Course) {
-    alert('hi');
+app.controller("StaffAddCtrl", ["$scope", "$stateParams", "$window", "Course",
+  function ($scope, $stateParams, $window, Course) {
+    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.roles = ['staff', 'admin', 'user'];
+    $scope.newMember = {
+      role: 'staff'
+    }
+    $scope.save = function () {
+      Course.add_member({
+        id: $stateParams.courseId,
+        email: $scope.newMember.email
+      }, function() {
+        $window.swal("Added!", "Added "+$scope.newMember.email+" to the course staff", "success");
+        $state.transitionTo('staff.list', {}, {'reload': true})
+        $scope.newMember.email = "";
+      });
+    };
   }
   ]);
   
