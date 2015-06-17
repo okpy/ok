@@ -298,14 +298,25 @@ app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
   }
   ]);
 
-app.controller("CourseNewCtrl", ["$scope", "Course",
-  function ($scope, Course) {
+app.controller("CourseNewCtrl", ["$scope", "$window", "Course",
+  function ($scope, $window, Course) {
     $scope.course = {};
     $scope.test = {'test':3};
 
-    $scope.save = function() {
-      var course = new Course($scope.course);
-      course.$save();
+    $scope.createCourse = function() {
+      Course.create({
+        'name': $scope.course.name,
+        'institution': $scope.course.institution,
+        'term': $scope.course.term,
+        'year': $scope.course.year,
+        'active': true
+      },
+       function (response) {
+         $window.swal("Assignment Created!",'','success');
+       }, function (error) {
+         $window.swal("Could not create assignment",'There was an error','error');
+
+       })
     };
   }
   ]);

@@ -1,14 +1,46 @@
-<form class="css-form">
-  {{test}}
-  Name: 
-    <input type="text" ng-model="course.name" required/> <br/>
-  Institution: 
-    <input type="text" ng-model="course.institution" required/> <br/>
-  Year:
-    <input type="text" ng-model="course.year" required/> <br/>
-  Term: 
-    <input type="text" ng-model="course.term" required/> <br/>
-  Staff:
-    <input type="text" ng-model="course.staff" required/> <br/>
-    <button ng-click="save()"> Save </button>
-</form>
+<div>
+  <section class="content-header" ng-hide="dashboard">
+    <ol class="breadcrumb">
+      <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+      <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
+      <li class="active"><i class="fa fa-plus"></i> New Course</li>
+    </ol>
+  </section>
+  <section>
+    <div class="row">
+      <div class="col-md-3">
+      </div>
+      <div class="col-md-6">
+
+        <div class="box" >
+          <form >
+            <div class="box-body">
+              <div class="form-group">
+                <label>Course Name</label>
+                <input type="text" class="form-control input-lg" ng-model="course.name" required/>
+              </div>
+              <div class="form-group">
+                <label>Institution</label>
+                <input type="text" class="form-control input-lg" ng-model="course.institution" required/>
+              </div>
+              <div class="form-group">
+                <label>Year</label>
+                <input type="text" class="form-control input-lg" ng-model="course.year" required/>
+              </div>
+              <div class="form-group">
+                <label>Term</label>
+                <input type="text" class="form-control input-lg" ng-model="course.term" required/>
+              </div>
+              
+              <button ng-click="createCourse()" class="btn btn-block btn-primary btn-lg">Create Course</button>
+
+            </div>
+          </form>
+
+        </div>
+
+      </div> <!-- xs.col.6 -->
+    </div> <!-- row -->
+  </section>
+
+</div>
