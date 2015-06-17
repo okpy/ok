@@ -301,7 +301,6 @@ app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
 app.controller("CourseNewCtrl", ["$scope", "$state", "$window", "Course",
   function ($scope, $state, $window, Course) {
     $scope.course = {};
-    $scope.test = {'test':3};
 
     $scope.createCourse = function() {
       Course.create({
@@ -311,8 +310,11 @@ app.controller("CourseNewCtrl", ["$scope", "$state", "$window", "Course",
         'active': true
       },
        function (response) {
-         $window.swal("Course Created!",'','success');
-         $state.transitionTo('course.list', null, { reload: true })
+         $scope.courses = Course.query({},
+          function (response) {
+            $window.swal("Course Created!",'','success');
+           $state.transitionTo('course.list' , {} , { reload: true, inherit: true, notify: true });
+         });
        }, function (error) {
          $window.swal("Could not create course",'There was an error','error');
 
