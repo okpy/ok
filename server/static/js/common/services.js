@@ -239,6 +239,13 @@ app.factory('Course', ['$resource',
           },
           cache: true
         },
+        create: {
+          method: "POST",
+          url: '/api/v1/course',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         get: {
           transformResponse: function(data) {
             return JSON.parse(data).data;
