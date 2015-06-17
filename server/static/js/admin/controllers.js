@@ -95,21 +95,36 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$stateParams", "Assi
       Assignment.get({
         id: $stateParams.assignmentId
       }, function (response) {
-        $scope.assign = response;
-        $scope.assign.endpoint = $scope.assign.name;
-        parts = $scope.assign.due_date.split(' ');
-        $scope.assign.due_date = parts[0];
-        $scope.assign.due_time = parts[1];
+        $scope.initAssignment(response);
       });
-      
+    }
+    
+    $scope.initAssignment = function(assign) {
+      $scope.assign = assign;
+      $scope.assign.endpoint = assign.name;
+      parts = assign.due_date.split(' ');
+      $scope.assign.due_date = parts[0];
+      $scope.assign.due_time = parts[1];
+      $scope.initCourses(assign);
+    }
+    
+    $scope.initCourses = function(assign) {
       Course.get({}, function(resp) {
           $scope.courses = resp.results;
+          for (var i=0;i<resp.results.length;i++) {
+            course = resp.results[i];
+            if (course.id == assign.course.id) {
+              assign.course = course;
+              console.log(assign.course);
+              break;
+            }
+          }
       });
     }
     
     $scope.reloadAssignment();
 
-    $scope.assign = function () {
+    $scope.editAssign = function () {
         var due_date_time = $scope.assign.due_date + ' ' + $scope.assign.due_time
         Assignment.edit({
           'display_name': $scope.assign.display_name,
