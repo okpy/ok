@@ -36,14 +36,13 @@ angular.module('student').value("RavenConfig", {
   //Additional config options here
   }
 });
-
-
-app.directive('assignmentModule', function() {
-        return {
-            restrict: 'E',
-            templateUrl: '/static/partials/student/assignment.module.html',
-        };
-    });
+    
+app.directive('assignmentDetails', function() {
+    return {
+        restrict: 'E',
+        templateUrl: '/static/partials/student/assignment.detail.html',
+    };
+});
 
 app.directive('assignmentList', function() {
         return {
@@ -119,7 +118,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissionDiff = {
       name: 'submission.diff',
       url: '/:submissionId/diff',
-      templateUrl: '/static/partials/common/submission.diff.html?cacheprevent1022',
+      templateUrl: '/static/partials/student/submission.diff.html?cacheprevent1022',
       controller: "SubmissionDiffCtrl"
     }
 

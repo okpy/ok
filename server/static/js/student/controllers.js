@@ -1,3 +1,15 @@
+app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams",
+    function ($scope, $window, $state, $stateParams) {
+        $scope.openMenu = function(menu) {
+            $(menu).addClass('active')
+            $('.container-fluid').addClass('active').addClass('pushed')
+        }
+        $window.closeMenu = $scope.closeMenu = function() {
+            $('.menu').removeClass('active')
+            $('.container-fluid').removeClass('active').removeClass('pushed')
+        }
+    }
+])
 
 app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$stateParams', 'Course',
     function ($scope, $window, $state, $stateParams, Course) {
@@ -57,6 +69,9 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams', '$sce', '$timeout', '$anchorScroll', 'Submission',
   function($scope, $window, $location, $stateParams, $sce, $timeout, $anchorScroll, Submission) {
       var converter = new Showdown.converter();
+      
+      $window.closeMenu();
+      
       $scope.convertMarkdown = function(text) {
         if (text == "" || text === undefined) {
           return $sce.trustAsHtml("")
@@ -73,73 +88,6 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           delete $scope.submission.messages.file_contents['submit'];
           $scope.isSubmit = true;
         }
-
-        if ($scope.submission.messages && $scope.isSubmit && !$scope.submission.assignment.active) {
-          $scope.isSubmit = true;
-          Submission.diff({id: $stateParams.submissionId},
-            function(results) {
-            $scope.diff = results;
-            numbers = [];
-            code = $scope.submission.messages.file_contents;
-            commStart = '<div class="comment-template"><div class="comment"><span class="comment-icon"></span><div class="comment-content"><div class="comment-text">';
-            commEnd = '</div></div></div></div>';
-            for (var key in code) {
-                if ($scope.diff.comments[key]) {
-                    commentList = $scope.diff.comments[key];
-                    file = code[key];
-                    html = "";
-                    if (file === file.toString()) {
-                      for (i=0;i<file.split('\n').length;i++) {
-                          comments = '';
-                          if (commentList[i]) { // Ugly hack. Replace with TR based approach!
-                              comments += commStart + '<h3>'+ commentList[i][0].author.email[0] + ' commented on line ' + (commentList[i][0].line).toString() + ': </h3> <p>' +
-                                  $scope.convertMarkdown(commentList[i][0].message)+'</p>' + commEnd
-                          }
-                          html += '<div class="line">'+(i+1)+comments+'</div>';
-                      }
-                      numbers.push(html);
-                    }
-                }
-            }
-
-            $('code').each(function(i, block) {
-                $(this).parent().find('.num-cont ul').html(numbers.shift());
-                hljs.highlightBlock(block);
-            });
-
-            });
-        } else {
-          $timeout(function() {
-
-            numbers = [];
-            code = $scope.submission.messages.file_contents;
-
-            for (var key in code) {
-                if (code.hasOwnProperty(key)) {
-                    comments = {}; // change this to ACTUAL dictionary of comments
-                    file = code[key];
-                    if (file && file === file.toString()) {
-                        html = "";
-                        for (i=0;i<file.split('\n').length;i++) {
-                            comments = '';
-                            html += '<div class="line">'+(i+1)+comments+'</div>';
-                         }
-                        numbers.push(html);
-                      }
-                }
-            }
-
-
-              $('code').each(function(i, block) {
-                $(this).parent().find('.num-cont ul').html(numbers.shift());
-                  hljs.highlightBlock(block);
-              });
-          }, 100);
-
-        }
-
-      }, function (error) {
-        $window.swal("Uhoh", "There was an error!", "error");
       });
   }]);
 
@@ -149,34 +97,30 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
   function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, FinalSubmissionChange, $timeout) {
       $scope.courseId = $stateParams.courseId
 
-      $scope.toggleAssign = function (assign) {
-        if ($scope.currAssign == assign) {
-          $scope.currAssign = null
-        } else {
-          $scope.currAssign = assign;
-        }
-      }
-
-      $scope.findAndToggle = function (assignId) {
-        for (var i = 0; i < $scope.assignments.length; i++) {
-          if ($scope.assignments[i].id == assignId) {
-            $scope.toggleAssign($scope.assignments[i])
-          }
-        }
-      }
-
       $scope.reloadAssignments = function () {
-        $scope.showLoader()
           User.get({
             course: $stateParams.courseId,
           }, function (response) {
-            $scope.assignments = response.assignments;
-            $scope.hideLoader()
+            $scope.closeDetails();
+            $scope.initAssignments(response.assignments);
           }, function (error) {
-            $scope.hideLoader()
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
+      }
+      $scope.assignInit = function(assign) {
+        if (assign.backups) {
+            $scope.getBackups(assign, false);
+        }
+        if (assign.submissions) {
+            $scope.getSubmissions(assign, false);
+        }
+      }
+      $scope.initAssignments = function(assignments) {
+         $scope.assignments = assignments;
+          for (i = 0;i<assignments.length;i++) {
+              $scope.assignInit(assignments[i]);
+          }
       }
       $scope.showComposition = function(score, backupId) {
         if (score) {
@@ -187,10 +131,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               allowEscapeKey: true,
               allowOutsideClick: true,
               confirmButtonText: "View Comments",
-              closeOnConfirm: false},
+              closeOnConfirm: true},
               function(isConfirm){
                 if (isConfirm) {
-                  $window.location.replace('/old#/submission/'+backupId.toString()+'/diff')
+                  $window.location.replace('#/'+$scope.courseId+'/submission/'+backupId.toString()+'/diff')
                 } else {
 
                 } });
@@ -198,33 +142,19 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
       $scope.reloadView = function () {
         // oldToggle = $scope.currAssign.id
-          $scope.currAssign = null;
+//          $scope.currAssign = null;
 
           User.force_get({
             course: $stateParams.courseId,
           }, function (response) {
-            $scope.assignments = response.assignments;
-            $scope.hideLoader()
+            $scope.initAssignments(response.assignments);
           }, function (error) {
-            $scope.hideLoader()
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           });
-        $scope.hidePopups();
 
         // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
-
-      $scope.showLoader = function showLoader() {
-        $('.loader').removeClass('hide');
-      }
-
-      $scope.hideLoader = function hideLoader() {
-        $('.loader').addClass('done hide');
-        setTimeout(function() {
-          $('.loader').removeClass('done')
-        },800)
-      }
 
       $scope.reloadAssignments()
 
@@ -233,14 +163,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               id: currGroup.id,
               email: member.email[0]
             }, function (err) {
-              $scope.hideGroup();
-              if (member.email[0] != $window.user) {
-                  $scope.reloadView()
-              } else {
-                $scope.currGroup = null;
-                $scope.currAssign.group = null
-
-              }
+                $scope.closeDetails();
+                $scope.reloadView();
             });
       };
 
@@ -274,48 +198,62 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.rejectInvite = function(currGroup) {
           Group.rejectInvitation({
             id: currGroup.id,
+          }, function (response) {
+            $scope.closeDetails();
+            $window.swal({
+              title: "Invitation rejected.",
+              text: "You can now invite other members and/or be invited.",
+              timer: 3500,
+              type: "success"
+            });
+            $scope.reloadView();
           }, function (err) {
-            currGroup = null
-            $scope.currAssign.group = null
+            $window.swal("Oops...", "Looks like this invitation has expired.", "error");
           });
       };
 
       $scope.acceptInvite = function(currGroup) {
           Group.acceptInvitation({
               id: currGroup.id,
+          }, function (response) {
+            $scope.closeDetails();
+            $window.swal({
+              title: "Group joined!",
+              text: "You can now view submissions credited to this group.",
+              timer: 3500,
+              type: "success"
+            });
+            $scope.reloadView();
           }, function (err) {
-            $scope.reloadView()
+            $window.swal("Oops...", "Looks like you've already joined this group..", "error");
           });
       };
 
-      $scope.subm_quantity = 10;
-      $scope.backup_quantity = 10;
+      $scope.subm_quantity = 5;
+      $scope.backup_quantity = 5;
 
 
-      $scope.getSubmissions = function (assignId,toIncrease) {
+      $scope.getSubmissions = function (assign,toIncrease) {
             if (toIncrease) {
-              $scope.subm_quantity += 50;
+              $scope.subm_quantity += 10;
             }
             User.getSubmissions({
-              assignment: assignId,
+              assignment: assign.assignment.id,
               quantity: $scope.subm_quantity
             }, function (response) {
-              $scope.currAssign.submissions = response;
-              $scope.showSubms();
+              assign.submissions = response;
             });
       }
 
-      $scope.getBackups = function (assignId, toIncrease) {
+      $scope.getBackups = function (assign, toIncrease) {
             if (toIncrease) {
-              $scope.backup_quantity += 50;
+              $scope.backup_quantity += 10;
             }
-
             User.getBackups({
-              assignment: assignId,
+              assignment: assign.assignment.id,
               quantity: $scope.backup_quantity
             }, function (response) {
-              $scope.currAssign.backups = response;
-              $scope.showBackups();
+                assign.backups = response;
             });
       }
 
@@ -323,7 +261,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         FinalSubmissionChange.change({
           submission: submId
         }, function (response) {
-          $scope.reloadView()
+          $scope.reloadView();
           $window.swal({
               title: "Changed Submission",
               text: "We'll grade the submission you marked.",
@@ -331,7 +269,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+//            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+            $window.swal("Oops...", "Please submit again, instead. This feature is not yet ready.", "error");
         })
       }
 
@@ -343,56 +282,39 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             id: assignId,
             email: member
           }, function (response) {
-              $scope.reloadView()
-              $window.swal({
+                $scope.closeDetails();
+                $window.swal({
                   title: "Invitation Sent!",
-                  text: "They will need to login to okpy.org and accept the invite.",
+                  text: "Your partner will need to login to okpy.org and accept the invite.",
                   timer: 3500,
                   type: "success"
                 });
-
+                $scope.reloadView();
           }, function (err) {
             $window.swal("Oops...", "Can't add that user to your group.    Is that the right email? They might already be in a group or may not be in the course.", "error");
          });
         }
       };
-
-      $scope.showGroup = function showGroup(group) {
-          $('.popups').addClass('active');
-          $('.popup').removeClass('active');
-          $('.popup.group').addClass('active').removeClass('hide');
-          $scope.currGroup = group
-      }
-
-      $scope.hideGroup = function hideGroup() {
-          $('.popups').removeClass('active');
-          $('.popup').removeClass('active');
-          $('.popup.group').addClass('active').addClass('hide');
-      }
-
-      $scope.showBackups = function showGroup(id) {
-          $('.popups').addClass('active');
-          $('.popup').removeClass('active');
-          $('.popup.backups').addClass('active').removeClass('hide');
-      }
-
-      $scope.showSubms = function showGroup(id) {
-          $('.popups').addClass('active');
-          $('.popup').removeClass('active');
-          $('.popup.submissions').addClass('active').removeClass('hide');
-      }
-
-      $scope.hidePopups =  function hidePopups() {
-          $('.assign').removeClass('s');
-          $('.popups').removeClass('active');
-          $('.popup').removeClass('active');
-          setTimeout(function() {
-            $('.popup').addClass('hide');
-          },400);
+      
+      $scope.randomColor = function randomColor(assignment) {
+        themes = ['blue','gold','purple']
+        if (!assignment.color) {
+            var blob = $('.blob[id="'+assignment.id+'"]');
+            assignment.color = blob.length > 0 ? blob.attr('color') : themes[Math.ceil(Math.random()*themes.length)-1]
         }
-
-
+        return assignment
       }
+
+        $scope.openDetails = function openDetails(assign) {
+            $scope.currGroup = assign.group
+            $scope.currAssign = assign
+            $('.container-fluid').addClass('active');
+            $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
+        }
+        
+        $window.closeDetails = $scope.closeDetails = function closeDetails() {
+            $('.sidebar').removeClass('active');
+            $('.container-fluid').removeClass('active');
+        }
+        }
 ]);
-
-
