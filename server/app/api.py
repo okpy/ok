@@ -1411,7 +1411,13 @@ class GroupAPI(APIResource):
             },
         'exit': {
             'methods': set(['PUT', 'POST']),
+            },
+        'save_order': {
+            'methods': {'PUT', 'POST'},
+            'web_args:': {
+                'order': Arg(dict, required=True)
             }
+        }
     }
 
     def add_member(self, group, user, data):
@@ -1478,6 +1484,10 @@ class GroupAPI(APIResource):
             raise need.exception()
 
         group.exit(user)
+        
+    def save_order(self, group, user, data):
+        """ Saves order of partners """
+        print('BABABA BABABANANA : Saving group order')
 
 
 class QueueAPI(APIResource):

@@ -162,8 +162,25 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
           }
         }
         
-      $scope.savePartners = function(group) {
-
+      $scope.saveOrder = function(group) {
+        order = {}
+        arr = group.group_info.member
+        for (var i = 0; i <arr.length;i++) {
+            member = arr[i];
+            order[member.id] = member.i;
+        }
+        Group.saveOrder({
+            id: group.group_info.id,
+            order: order
+        },
+        function (response) {
+            $window.swal({
+                title: "Order saved",
+                text: "The order you specified has been saved.",
+                timer: 3500,
+                type: "success"
+            })
+        })
       }
       
       $scope.reloadAssignments();
