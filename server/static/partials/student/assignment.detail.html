@@ -28,16 +28,16 @@
         </div>
         <div ng-if="assign.group.group_info.member.length > 1">
             <h2 class="sidebar-subtitle">Group</h2>
-            <ul class="sidebar-list sortable">
+            <ul class="sidebar-list {{ assign.assignment.active ? 'sortable' : '' }}">
                 <li ng-repeat="member in assign.group.group_info.member"  data-i="{{ member.i }}">
                     <span class="sidebar-member_label"><span class="member-letter">{{ member.letter }}</span>
-                        <span class="label right"><p>Drag to Reorder</p></span>
+                        <span ng-if="assign.assignment.active" class="label right"><p>Drag to Reorder</p></span>
                     </span>
                     {{ member.email[0] }}
                     <i class="fa fa-close" ng-click="removeMember(assign.group.group_info, member)"></i></span>
                 </li>
             </ul>
-            <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action">Save</a>
+            <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action" ng-click="savePartners(assign.group)">Save</a>
         </div>
         <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && !assign.group.invited">Invited Members</h2>
         <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && assign.group.invited">Group Invitation</h2>

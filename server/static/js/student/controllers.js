@@ -161,6 +161,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               }
           }
         }
+        
+      $scope.savePartners = function(group) {
+
+      }
       
       $scope.reloadAssignments();
       
