@@ -64,7 +64,7 @@
             <li ng-repeat="subm in assign.submissions | orderBy:'created':true">
                 <a class="flag"
                    ng-class=" {active: assign.final.final_submission && subm.id == assign.final.backup.id }"
-                    ng-click="flagSubmission(subm.id)">
+                    ng-click="changeSubmission(subm.id)">
                     <span class="label right"><p>Flag for Grading</p></span>
                     <span class="cloth"></span>
                     <span class="stem"></span>

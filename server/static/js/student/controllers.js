@@ -269,7 +269,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+//            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+            $window.swal("Oops...", "Please submit again, instead. This feature is not yet ready.", "error");
         })
       }
 
@@ -315,16 +316,5 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $('.sidebar').removeClass('active');
             $('.container-fluid').removeClass('active');
         }
-        $scope.flagSubmission = function(submId) {
-            $window.swal({
-                title: 'Oops. Well, this is embarrassing.',
-                text: 'Flagging isn\'t ready yet. Resubmit an old copy, for now, or contact your GSI.',
-                showCancelButton: false,
-                icon: false,
-                allowEscapeKey: true,
-                allowOutsideClick: true,
-                confirmButtonText: "Ok",
-                closeOnConfirm: true});
-          }
-      }
+        }
 ]);
