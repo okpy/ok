@@ -102,10 +102,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.closeDetails();
-            $scope.assignments = response.assignments;
-            for (i = 0;i<response.assignments.length;i++) {
-                $scope.assignInit(response.assignments[i]);
-            }
+            $scope.initAssignments(response.assignments);
           }, function (error) {
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
@@ -118,6 +115,12 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         if (assign.submissions) {
             $scope.getSubmissions(assign, false);
         }
+      }
+      $scope.initAssignments = function(assignments) {
+         $scope.assignments = assignments;
+          for (i = 0;i<assignments.length;i++) {
+              $scope.assignInit(assignments[i]);
+          }
       }
       $scope.showComposition = function(score, backupId) {
         if (score) {
@@ -139,12 +142,12 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
       $scope.reloadView = function () {
         // oldToggle = $scope.currAssign.id
-          $scope.currAssign = null;
+//          $scope.currAssign = null;
 
           User.force_get({
             course: $stateParams.courseId,
           }, function (response) {
-            $scope.assignments = response.assignments;
+            $scope.initAssignments(response.assignments);
             $scope.hideLoader()
           }, function (error) {
             $scope.hideLoader()
