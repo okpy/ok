@@ -559,9 +559,17 @@ header {
             .option.bad {
                 background-color:#cc4229;
             }
+                .option.bad .fa-close {
+                  float: none;
+                  color: #FFF;
+                  font-size: 1em;
+                }
             .option.good {
                 background-color:#690;
             }
+        .sortable li {
+            cursor:move;
+        }
     .cover {
         cursor:pointer;
         position:fixed;

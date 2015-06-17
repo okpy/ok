@@ -115,6 +115,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         if (assign.submissions) {
             $scope.getSubmissions(assign, false);
         }
+        
+        $scope.labelPartners(assign);
       }
       $scope.initAssignments = function(assignments) {
          $scope.assignments = assignments;
@@ -122,6 +124,46 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               $scope.assignInit(assignments[i]);
           }
       }
+      
+      $scope.labelPartners = function(assign) {
+        if (assign.group.group_info !== null) {
+            arr = assign.group.group_info.member;
+            for (var i = 0; i < arr.length; i++) {
+                arr[i].i = i;
+                arr[i].letter = String.fromCharCode(65 + i);
+            }
+        }
+      }
+      
+      $scope.initSortable = function(assign) {
+        $('.sortable').disableSelection();
+        $('.sortable').sortable({
+            update: function(event, ui) {
+                $scope.updatePartners(assign);
+            }
+        });
+      }
+      
+        $scope.updatePartners = function(assign) {
+          if (assign.group.group_info !== null) {
+              arr = assign.group.group_info.member;
+              order = {}
+              i = 0;
+              $('.sidebar.active .sortable li').each(function() {
+                  order[$(this).data('i')] = i
+                  i += 1;
+              });
+              console.log(arr);
+              for (var i = 0; i< arr.length; i++) {
+                arr[i].i = j = order[i];
+                arr[i].letter = letter = String.fromCharCode(65 + order[i]);
+                $('.sortable li[data-i="'+i+'"]').find('.member-letter').html(letter);
+              }
+          }
+        }
+      
+      $scope.reloadAssignments();
+      
       $scope.showComposition = function(score, backupId) {
         if (score) {
           $window.swal({title: 'Score: '+score.score+'/2',
@@ -148,6 +190,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.initAssignments(response.assignments);
+            $scope.initSortable();
           }, function (error) {
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
@@ -155,8 +198,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
 
         // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
-
-      $scope.reloadAssignments()
 
       $scope.removeMember = function(currGroup, member) {
             Group.removeMember({
@@ -310,6 +351,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $scope.currAssign = assign
             $('.container-fluid').addClass('active');
             $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
+            $scope.initSortable(assign);
         }
         
         $window.closeDetails = $scope.closeDetails = function closeDetails() {

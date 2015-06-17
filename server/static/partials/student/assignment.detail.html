@@ -28,9 +28,9 @@
         </div>
         <div ng-if="assign.group.group_info.member.length > 1">
             <h2 class="sidebar-subtitle">Group</h2>
-            <ul class="sidebar-list">
-                <li ng-repeat="member in assign.group.group_info.member">
-                    <span class="sidebar-member_label">0
+            <ul class="sidebar-list sortable">
+                <li ng-repeat="member in assign.group.group_info.member"  data-i="{{ member.i }}">
+                    <span class="sidebar-member_label"><span class="member-letter">{{ member.letter }}</span>
                         <span class="label right"><p>Drag to Reorder</p></span>
                     </span>
                     {{ member.email[0] }}
