@@ -305,16 +305,15 @@ app.controller("CourseNewCtrl", ["$scope", "$window", "Course",
 
     $scope.createCourse = function() {
       Course.create({
-        'name': $scope.course.name,
+        'display_name': $scope.course.name,
         'institution': $scope.course.institution,
-        'term': $scope.course.term,
-        'year': $scope.course.year,
+        'offering': $scope.course.offering,
         'active': true
       },
        function (response) {
-         $window.swal("Assignment Created!",'','success');
+         $window.swal("Course Created!",'','success');
        }, function (error) {
-         $window.swal("Could not create assignment",'There was an error','error');
+         $window.swal("Could not create course",'There was an error','error');
 
        })
     };

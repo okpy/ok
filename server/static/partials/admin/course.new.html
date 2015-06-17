@@ -17,19 +17,15 @@
             <div class="box-body">
               <div class="form-group">
                 <label>Course Name</label>
-                <input type="text" class="form-control input-lg" ng-model="course.name" required/>
+                <input type="text" class="form-control input-lg" ng-model="course.name" placeholder="CS61A" required/>
               </div>
               <div class="form-group">
                 <label>Institution</label>
-                <input type="text" class="form-control input-lg" ng-model="course.institution" required/>
+                <input type="text" class="form-control input-lg" ng-model="course.institution" placeholder="UC Berkeley"required/>
               </div>
               <div class="form-group">
-                <label>Year</label>
-                <input type="text" class="form-control input-lg" ng-model="course.year" required/>
-              </div>
-              <div class="form-group">
-                <label>Term</label>
-                <input type="text" class="form-control input-lg" ng-model="course.term" required/>
+                <label>Offering</label>
+                <input type="text" class="form-control input-lg" ng-model="course.offering" placeholder="sp15" required/>
               </div>
               
               <button ng-click="createCourse()" class="btn btn-block btn-primary btn-lg">Create Course</button>

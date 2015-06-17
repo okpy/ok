@@ -1263,16 +1263,15 @@ class CourseAPI(APIResource):
     methods = {
         'post': {
             'web_args': {
-                'name': Arg(str),
+                'display_name': Arg(str),
                 'institution': Arg(str, required=True),
-                'term': Arg(str, required=True),
-                'year': Arg(str, required=True),
+                'offering': Arg(str, required=True),
                 'active': BooleanArg(),
             }
         },
         'put': {
             'web_args': {
-                'name': Arg(str),
+                'display_name': Arg(str),
                 'institution': Arg(str),
                 'term': Arg(str),
                 'year': Arg(str),
