@@ -34,10 +34,10 @@
                         <span ng-if="assign.assignment.active" class="label right"><p>Drag to Reorder</p></span>
                     </span>
                     {{ member.email[0] }}
-                    <i class="fa fa-close" ng-click="removeMember(assign.group.group_info, member)"></i></span>
+                    <i class="fa fa-close" ng-if="assign.assignment.active" ng-click="removeMember(assign.group.group_info, member)"></i></span>
                 </li>
             </ul>
-            <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action" ng-click="savePartners(assign.group)">Save</a>
+            <a ng-click="" ng-if="assign.assignment.active && assign.group.group_info.member.length > 0" class="action" ng-click="savePartners(assign.group)">Save</a>
         </div>
         <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && !assign.group.invited">Invited Members</h2>
         <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && assign.group.invited">Group Invitation</h2>
@@ -55,7 +55,7 @@
                     <span class="icon-x">+</span></span>
             </li>
         </ul>
-        <form name="inviteGroup" ng-if="!assign.group.group_info || assign.assignment.max_group_size < assign.assignment.max_group_size">
+        <form name="inviteGroup" ng-if="assign.assignment.active && (!assign.group.group_info || assign.assignment.max_group_size < assign.assignment.max_group_size)">
             <h3 class="sidebar-subtitle">Invite to Group</h3>
 
             <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
