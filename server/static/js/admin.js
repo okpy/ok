@@ -218,18 +218,18 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "StaffDetailCtrl"
     }
     
-    var student = {
-          name: 'student',
+    var students = {
+          name: 'students',
           url: '/:courseId/students',
           abstract: true,
           templateUrl: '/static/partials/admin/student.base.html'
         }
     
-    var studentList = {
+    var studentsList = {
           name: 'students.list',
           url: '/',
           templateUrl: '/static/partials/admin/student.list.html',
-          controller: "StudentListCtrl"
+          controller: "StudentsListCtrl"
         }
 
     var versions = {
@@ -319,8 +319,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(staff).
       state(staffList).
       state(staffDetail).
-      state(student).
-      state(studentList).
+      state(students).
+      state(studentsList).
       state(versions).
       state(versionList).
       state(versionDetail).

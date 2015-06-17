@@ -373,9 +373,9 @@ app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
   
   
 // Student Enrollment Controllers
-app.controller("StudentListCtrl", ["$scope",
+app.controller("StudentsListCtrl", ["$scope",
   function($scope) {
-    alert('hi');
+
   }]);
 
 // Diff Controllers
