@@ -669,6 +669,18 @@ class AssignmentAPI(APIResource):
         },
         'get': {
         },
+        'edit': {
+            'methods': {'POST'},
+            'web_args': {
+                'name': Arg(str),
+                'display_name': Arg(str),
+                'points': Arg(float),
+                'course': KeyArg('Course'),
+                'max_group_size': Arg(int),
+                'due_date': DateTimeArg(),
+                'templates': Arg(str, use=lambda temps: json.dumps(temps))
+            }
+        },
         'index': {
             'web_args': {
                 'course': KeyArg('Course'),
@@ -711,6 +723,9 @@ class AssignmentAPI(APIResource):
             raise BadValueError(
                 'assignment with name %s exists already' % data['name'])
         return super(AssignmentAPI, self).post(user, data)
+
+    def edit(self, obj, user, data):
+        print('Editing!')
 
     def assign(self, obj, user, data):
         need = Need('put')

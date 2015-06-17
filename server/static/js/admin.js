@@ -153,6 +153,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/assignment.create.html',
       controller: "AssignmentCreateCtrl"
     }
+    
+    var assignmentEdit = {
+          name: 'assignment.edit',
+          url: '/edit',
+          templateUrl: '/static/partials/admin/assignment.edit.html',
+          controller: "AssignmentEditCtrl"
+        }
 
     var courses = {
       name: 'course',
@@ -288,6 +295,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(assignmentList).
       state(assignmentDetail).
       state(assignmentCreate).
+      state(assignmentEdit).
       state(courses).
       state(courseBase).
       state(courseList).

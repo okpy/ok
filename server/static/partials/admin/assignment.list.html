@@ -27,6 +27,7 @@
       <th ts-criteria="lock_date">Lock Date</th>
       <!-- Future Progress Bar -->
       <th style="width: 15%">Endpoint</th>
+      <th>Manager</th>
     </tr>
 
       <tr ng-repeat="assignment in assignments" ts-repeat>
@@ -49,6 +50,9 @@
           <span class="badge bg-info">{{assignment.name}}</span>
         </td>
           <!-- Future Progress Bar -->
+        <td>
+          <a ui-sref="assignment.edit({assignmentId:assignment.id})" class="btn btn-primary btn-sm">Edit</a>
+        </td>
           </tr>
         </tbody>
       </table>

@@ -87,6 +87,43 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
     }
   }
   ]);
+  
+app.controller("AssignmentEditCtrl", ["$scope", "$window", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $stateParams, Assignment, Course) {
+    $scope.existingAssign = Assignment.get({id: $stateParams.assignmentId});
+    $scope.newAssign = {
+      'due_time': '23:59:59.0000',
+      'max_group_size': 2
+    };
+    Course.get({}, function(resp) {
+        $scope.courses = resp.results;
+        $scope.newAssign.course = $scope.courses[0];
+    });
+
+    $scope.editAssign = function () {
+        var due_date_time = $scope.editAssign.due_date + ' ' + $scope.editAssign.due_time
+        Assignment.create({
+          'display_name': $scope.editAssign.display_name,
+          'name': $scope.editAssign.endpoint,
+          'points': $scope.editAssign.points,
+          'max_group_size': $scope.editAssign.max_group_size,
+          'templates': {},
+          'due_date': due_date_time,
+          'course': $scope.editAssign.course.id,
+        },
+          function (response) {
+            $window.swal("Assignment Updated!",'','success');
+          }, function (error) {
+            console.log('error')
+            $window.swal("Could not update assignment",'There was an error','error');
+
+          }
+        )
+
+    }
+  }
+  ]);
+
 app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
   function ($scope, $state, Submission) {
     $scope.itemsPerPage = 3;
