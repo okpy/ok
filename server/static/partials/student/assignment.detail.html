@@ -64,7 +64,7 @@
             <li ng-repeat="subm in assign.submissions | orderBy:'created':true">
                 <a class="flag"
                    ng-class=" {active: assign.final.final_submission && subm.id == assign.final.backup.id }"
-                    ng-click="flagSubmission(subm.id)">
+                    ng-click="changeSubmission(subm.id)">
                     <span class="label right"><p>Flag for Grading</p></span>
                     <span class="cloth"></span>
                     <span class="stem"></span>
@@ -75,8 +75,8 @@
                 </a>
             </li>
         </ul>
-        <a ng-if="assign.submissions.length > 0"
-           ng-click="getSubmissions(assign.assignment.id, true);"
+        <a ng-if="assign.submissions.length >= subm_quantity"
+           ng-click="getSubmissions(assign, true);"
            class="action">Load More</a>
         <h2 class="sidebar-subtitle">Backups</h2>
         <ul class="sidebar-list">
@@ -88,8 +88,8 @@
                 </a>
             </li>
         </ul>
-        <a ng-if="assign.backups.length > 0"
-           ng-click="getBackups(assign.assignment, true);"
+        <a ng-if="assign.backups.length >= backup_quantity"
+           ng-click="getBackups(assign, true);"
            class="action">Load More</a>
     </div>
 </div>
