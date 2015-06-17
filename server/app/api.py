@@ -1362,7 +1362,8 @@ class CourseAPI(APIResource):
 
     def get_students(self, course, user, data):
         query = models.Participant.query(
-            models.Participant.course == course.key)
+            models.Participant.course == course.key,
+            models.Participant.role == 'user')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()

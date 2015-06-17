@@ -375,9 +375,10 @@ app.controller("StaffAddCtrl", ["$scope", "$stateParams", "$window", "Course",
   
   
 // Student Enrollment Controllers
-app.controller("StudentsListCtrl", ["$scope",
-  function($scope) {
-
+app.controller("StudentsListCtrl", ["$scope", "$stateParams", "$window", "Course",
+  function($scope, $stateParams, $window, Course) {
+    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.members = Course.students({id: $stateParams.courseId});
   }]);
 
 // Diff Controllers

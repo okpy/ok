@@ -252,6 +252,13 @@ app.factory('Course', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        students: {
+          isArray: true,
+          url: '/api/v1/course/:id/get_students',
+         transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         add_member: {
           method: "POST",
           url: '/api/v1/course/:id/add_staff',
