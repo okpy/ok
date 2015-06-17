@@ -27,10 +27,10 @@
           <label>Points</label>
           <input ng-model="assign.points" type="number" step="any" min="0" class="form-control" placeholder="">
         </div>
-        <!--<div class="form-group">
-          <label>Assignment URL</label>
-          <input ng-model="assign.url" type="text" class="form-control" placeholder="http://cs61a.org/proj/scheme">
-        </div>-->
+          <div class="form-group">
+              <label>Templates</label>
+              <input ng-model="newAssign.templates" type="file" enctype="multipart/form-data" class="form-control" multiple>
+          </div>
         <div class="form-group">
           <label>Max Group Size</label>
           <input ng-model="assign.max_group_size" type="number" min="1" class="form-control" placeholder="">

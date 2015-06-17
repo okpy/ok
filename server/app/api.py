@@ -654,8 +654,8 @@ class AssignmentAPI(APIResource):
                 'due_date': DateTimeArg(required=True),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
                                  required=True),
-                'revision': Arg(bool, required=True),
-                'lock_date': DateTimeArg(required=True)
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
                 }
         },
         'put': {
