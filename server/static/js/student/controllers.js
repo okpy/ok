@@ -201,7 +201,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.rejectInvite = function(currGroup) {
           Group.rejectInvitation({
             id: currGroup.id,
-          }, function (err) {
+          }, function (response) {
             $scope.closeDetails();
             $window.swal({
               title: "Invitation rejected.",
@@ -210,13 +210,15 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
             $scope.reloadView();
+          }, function (err) {
+            $window.swal("Oops...", "Looks like this invitation has expired.", "error");
           });
       };
 
       $scope.acceptInvite = function(currGroup) {
           Group.acceptInvitation({
               id: currGroup.id,
-          }, function (err) {
+          }, function (response) {
             $scope.closeDetails();
             $window.swal({
               title: "Group joined!",
@@ -225,6 +227,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
             $scope.reloadView();
+          }, function (err) {
+            $window.swal("Oops...", "Looks like you've already joined this group..", "error");
           });
       };
 
