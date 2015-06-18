@@ -1324,6 +1324,12 @@ class CourseAPI(APIResource):
                 'email': Arg(str, required=True)
             }
         },
+        'add_students': {
+            'methods': set(['POST']),
+            'web_args': {
+                'emails': Arg(list, required=True)
+            }
+        },
         'remove_student': {
             'methods': set(['POST']),
             'web_args': {
@@ -1394,6 +1400,15 @@ class CourseAPI(APIResource):
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
         return list(query.fetch())
+
+    def add_students(self, course, user, data):
+        need = Need('staff') # Only staff can call this API
+        if not course.can(user, need, course):
+            raise need.exception()
+        
+        for email in set(data['emails']):  # to remove potential duplicates
+            user = models.User.get_or_insert(email)
+            models.Participant.add_role(user, course, STUDENT_ROLE)
 
     def add_student(self, course, user, data):
         need = Need('staff') # Only staff can call this API

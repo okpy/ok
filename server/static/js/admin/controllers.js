@@ -476,7 +476,7 @@ function($scope, $state, $stateParams, $window, Course, User) {
   $scope.newMember = {
     role: 'user'
   }
-  $scope.save = function () {
+       $scope.save = function () {
         Course.add_student({
           id: $stateParams.courseId,
           email: $scope.newMember.email
@@ -485,6 +485,28 @@ function($scope, $state, $stateParams, $window, Course, User) {
             id: $scope.course.id
           }, function () {
             $window.swal("Added!", "Enrolled "+$scope.newMember.email+" in the course.", "success");
+            $state.transitionTo('students.list', {courseId: $scope.course.id}, {'reload': true})
+            $scope.newMember.email = "";
+          })
+        }, function() {
+          $window.swal("Oops", "Could not enroll student", 'error')
+        });
+      };
+      
+      $scope.saves = function () {
+        arr = $scope.newMember.emails.split(',');
+        $scope.newMember.emails = new Array()
+        for (var i=0;i<arr.length;i++) {
+          $scope.newMember.emails.push(arr[i].trim());
+        }
+        Course.add_students({
+          id: $stateParams.courseId,
+          emails: $scope.newMember.emails
+        }, function() {
+          Course.students({
+            id: $scope.course.id
+          }, function () {
+            $window.swal("Added!", "Enrolled "+$scope.newMember.emails.toString().substr(1,-1)+" in the course.", "success");
             $state.transitionTo('students.list', {courseId: $scope.course.id}, {'reload': true})
             $scope.newMember.email = "";
           })

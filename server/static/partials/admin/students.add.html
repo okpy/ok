@@ -18,7 +18,23 @@
             </select>
         </div>
         <div class="box-footer">
-            <button type="button" ng-click="save()" class="btn btn-info">Enroll in Course</button>
+            <button type="button" ng-click="save()" class="btn btn-info">Enroll Student</button>
+        </div>
+    </div><!-- /.box-body -->
+</div>
+
+<div class="box box-info">
+    <div class="box-header">
+        <h3 class="box-title">Enroll Multiple Students</h3>
+    </div>
+    <div class="box-body">
+        <div class="form-group">
+            <label>Student Emails (must be comma-delimiting!)</label>
+            <input type="text" placeholder="Enter .edu here" class="form-control input-lg" ng-model="newMember.emails" required/>
+            </select>
+        </div>
+        <div class="box-footer">
+            <button type="button" ng-click="saves()" class="btn btn-info">Enroll All</button>
         </div>
     </div><!-- /.box-body -->
 </div>
