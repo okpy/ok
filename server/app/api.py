@@ -27,8 +27,9 @@ from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 from google.appengine.ext.ndb import stats
 from google.appengine.api import memcache
-import re
 
+import re
+import operator as op
 
 parser = FlaskParser()
 
@@ -1191,24 +1192,44 @@ class SearchAPI(APIResource):
             }
         }
     }
+    
+    defaults = {
+        'submitted': (op.__eq__, True)
+    }
+    
+    operators = {
+        'eq': op.__eq__,
+        'equal': op.__eq__,
+        'lt': op.__lt__,
+        'gt': op.__gt__,
+        'before': op.__lt__,
+        'after': op.__gt__,
+        'startswith': lambda string, prefix: string.startswith(prefix),
+        'endswith': lambda string, suffix: string.endswith(suffix),
+        'contains': lambda string, substr: substr in string
+    }
 
     def index(self, user, data):
-        blocks = SearchAPI.blockify(data['query'])
-        tokens = SearchAPI.tokenize(blocks)
-        print(tokens)
+        tokens = SearchAPI.tokenize(data['query'])
+        scope = SearchAPI.translate(tokens)
+        print(scope)
         
-    @staticmethod
-    def blockify(query):
-        blocks = re.compile('(-[\S]+\s+(--[\S]+\s+)?"?[\S]+[^"]"?)')
-        return blocks.findall(query)
     
     @staticmethod
-    def tokenize(blocks):
-        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"]+)"?')
-        tokens = []
-        for block in blocks:
-            tokens.append(tokenizer.match(block[0]).groupdict())
-        return tokens
+    def tokenize(query):
+        """ Parses each command for flag, op, and arg """
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?"?')
+        return tokenizer.findall(query)
+    
+    @staticmethod
+    def translate(tokens):
+        """ converts operators into appropriate functions and adds defaults """
+        scope = {k: tuple(v) for k, v in SearchAPI.defaults.items()}
+        for token in tokens:
+            flag, dummy, opr, arg = token
+            scope[flag] = (SearchAPI.operators[opr or 'eq'], arg)
+        return scope
+        
 
 
 class VersionAPI(APIResource):
