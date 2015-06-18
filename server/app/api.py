@@ -652,8 +652,7 @@ class AssignmentAPI(APIResource):
                 'course': KeyArg('Course', required=True),
                 'max_group_size': Arg(int, required=True),
                 'due_date': DateTimeArg(required=True),
-                'templates': Arg(str, use=lambda temps: json.dumps(temps),
-                                 required=True),
+                'templates': Arg(str),
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg()
                 }
@@ -666,7 +665,7 @@ class AssignmentAPI(APIResource):
                 'course': KeyArg('Course'),
                 'max_group_size': Arg(int),
                 'due_date': DateTimeArg(),
-                'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+                'templates': Arg(str),
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg()
                 }
@@ -682,7 +681,7 @@ class AssignmentAPI(APIResource):
                 'course': KeyArg('Course'),
                 'max_group_size': Arg(int),
                 'due_date': DateTimeArg(),
-                'templates': Arg(str, use=lambda temps: json.dumps(temps))
+                'templates': Arg(str)
             }
         },
         'index': {
@@ -696,7 +695,7 @@ class AssignmentAPI(APIResource):
         'invite': {
             'methods': set(['POST']),
             'web_args': {
-                'email': Arg(str, required=True)
+                'email': Arg(str)
             }
         },
         'group': {

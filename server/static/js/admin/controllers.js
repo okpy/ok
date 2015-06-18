@@ -55,11 +55,17 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
 app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
     $scope.existingAssign = Assignment.get({id: $stateParams.assignmentId});
+    var future = new Date();
+    future.setDate(future.getDate() + 31);
+    due_date = lock_date = future.getFullYear() + '-' + future.getMonth() + '-' + future.getDate()
     $scope.newAssign = {
+      'due_date': due_date,
+      'lock_date': lock_date,
       'due_time': '23:59:59.0000',
       'lock_time': '23:59:59.0000',
       'max_group_size': 2,
-      'revisions': false
+      'revisions': false,
+      'points': 4
     };
     Course.get({}, function(resp) {
         $scope.courses = resp.results;
