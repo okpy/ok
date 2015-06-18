@@ -174,6 +174,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/course.list.html',
       controller: "CourseListCtrl"
     }
+    
+    var courseAssignments = {
+        name: 'course.assignments',
+          url: '/assignments',
+          templateUrl: '/static/partials/admin/assignment.list.html',
+          controller: "CourseAssignmentsCtrl"
+    }
 
     var courseNew = {
       name: 'course.new',
@@ -298,6 +305,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(assignmentEdit).
       state(courses).
       state(courseBase).
+      state(courseAssignments).
       state(courseList).
       state(courseDetail).
       state(courseNew).

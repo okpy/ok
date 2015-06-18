@@ -45,6 +45,15 @@ app.controller("AssignmentListCtrl", ['$scope', '$http', 'Assignment',
        }
 
      }]);
+     
+app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams',
+  function($scope, $http, Assignment, Course, $stateParams) {
+   Assignment.query({
+    course: $stateParams.courseId
+   },function(response) {
+     $scope.assignments = response.results;
+   });
+ }]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
