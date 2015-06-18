@@ -1209,12 +1209,12 @@ class SearchAPI(APIResource):
     flags = {
         'user': lambda op, email:
             UserAPI.model.query(
-                op(UserAPI.model.email, email)),
+                op(UserAPI.model.email, email)).get(),
         'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
         'submitted': lambda op, boolean: bool(boolean),
         'assignment': lambda op, name:
             AssignmentAPI.model.query(
-                op(AssignmentAPI.model.display_name, name))
+                op(AssignmentAPI.model.display_name, name)).get()
     }
 
     def index(self, user, data):
@@ -1233,7 +1233,7 @@ class SearchAPI(APIResource):
     
     @classmethod
     def translate(cls, tokens):
-        """ converts operators into appropriate functions and adds defaults """
+        """ converts operators into appropriate string reps and adds defaults """
         scope = {k: tuple(v) for k, v in cls.defaults.items()}
         for token in tokens:
             flag, dummy, opr, arg = token
@@ -1253,7 +1253,8 @@ class SearchAPI(APIResource):
         """ converts mush into a query object """
         model = cls.get_model(prime)
         args = cls.get_args(model, prime)
-        return model(*args)
+        query = model.query(*args)
+        return query
     
     @staticmethod
     def get_model(prime):
@@ -1267,12 +1268,13 @@ class SearchAPI(APIResource):
     @staticmethod
     def get_args(model, prime):
         args, keys = [], prime.keys()
-        for item in ('assignment', 'user'):
-            if item in keys:
-                args.append(prime[item][1])
+        if 'assignment' in keys:
+            args.append(model.assignment == prime['assignment'][1].key)
+        if 'user' in keys:
+            args.append(model.submitter == prime['user'][1].key)
         if 'date' in keys:
-            op, arg = prime['date']
-            args.append(op(model.server_time, arg))
+            opr, arg = prime['date']
+            args.append(opr(model.server_time, arg))
         return args
 
 
