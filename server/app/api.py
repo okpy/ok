@@ -27,6 +27,7 @@ from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 from google.appengine.ext.ndb import stats
 from google.appengine.api import memcache
+import re
 
 
 parser = FlaskParser()
@@ -682,7 +683,7 @@ class AssignmentAPI(APIResource):
                 'course': KeyArg('Course'),
                 'max_group_size': Arg(int),
                 'due_date': DateTimeArg(),
-                'templates': Arg(str, Arg(str, use=lambda temps: json.dumps(temps)))
+                'templates': Arg(str, use=lambda temps: json.dumps(temps))
             }
         },
         'index': {
@@ -1176,6 +1177,38 @@ class SubmissionAPI(APIResource):
         return self.submit(user, data['assignment'],
                            data['messages'], submit_flag,
                            data.get('submitter'))
+
+
+class SearchAPI(APIResource):
+
+    methods = {
+        'index': {
+            'methods': {'GET'},
+            'web_args': {
+                'query': Arg(str, required=True),
+                'page': Arg(int, required=True),
+                'num_per_page': Arg(int, required=True)
+            }
+        }
+    }
+
+    def index(self, user, data):
+        blocks = SearchAPI.blockify(data['query'])
+        tokens = SearchAPI.tokenize(blocks)
+        print(tokens)
+        
+    @staticmethod
+    def blockify(query):
+        blocks = re.compile('(-[\S]+\s+(--[\S]+\s+)?"?[\S]+[^"]"?)')
+        return blocks.findall(query)
+    
+    @staticmethod
+    def tokenize(blocks):
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"]+)"?')
+        tokens = []
+        for block in blocks:
+            tokens.append(tokenizer.match(block[0]).groupdict())
+        return tokens
 
 
 class VersionAPI(APIResource):

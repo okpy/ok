@@ -374,5 +374,19 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
-
-
+  
+  
+app.factory('Search', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/search', {
+        }, {
+          query: {
+            url: '/api/v1/search',
+            transformResponse: function(data) {
+              return JSON.parse(data).data;
+            }
+          },
+        }
+      )
+    }
+  ]);
