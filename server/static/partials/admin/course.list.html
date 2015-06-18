@@ -31,6 +31,7 @@
       <th ts-criteria="year">Offering</th>
       <th>Staff</th>
       <th>Students</th>
+      <th>Assignments</th>
     </tr>
     <tr ng-repeat="course in courses" ts-repeat>
       <td>
@@ -48,6 +49,11 @@
       <td>
         <a class="btn btn-primary btn-sm" ui-sref='students.list({courseId:course.id})'>
           Manage Enrollment
+        </a>
+      </td>
+      <td>
+        <a class="btn btn-primary btn-sm" ui-sref='course.assignments({courseId:course.id})'>
+          Assignments
         </a>
       </td>
     </tr>

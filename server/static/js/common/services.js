@@ -252,6 +252,12 @@ app.factory('Course', ['$resource',
           },
           cache: true
         },
+        assignments: {
+           url:'/api/v1/course/:id/assignments',
+           transformResponse: function(data) {
+             return JSON.parse(data).data;
+           }
+        },
         staff: {
           isArray: true,
           url: '/api/v1/course/:id/get_staff',

@@ -45,15 +45,6 @@ app.controller("AssignmentListCtrl", ['$scope', '$http', 'Assignment',
        }
 
      }]);
-     
-app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams',
-  function($scope, $http, Assignment, Course, $stateParams) {
-   Assignment.query({
-    course: $stateParams.courseId
-   },function(response) {
-     $scope.assignments = response.results;
-   });
- }]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
@@ -367,6 +358,16 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
     $scope.courses = Course.query({});
   }]);
+  
+  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams',
+    function($scope, $http, Assignment, Course, $stateParams) {
+    $scope.course = Course.get({id: $stateParams.courseId});
+     Course.assignments({
+      id: $stateParams.courseId
+     },function(response) {
+       $scope.assignments = response.results;
+     });
+   }]);
 
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
   function ($scope, $stateParams, Course) {

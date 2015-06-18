@@ -186,8 +186,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
     
     var courseAssignments = {
         name: 'course.assignments',
-          url: '/assignments',
-          templateUrl: '/static/partials/admin/assignment.list.html',
+          url: '/:courseId/assignments',
+          templateUrl: '/static/partials/admin/course.assignments.html',
           controller: "CourseAssignmentsCtrl"
     }
 
