@@ -1222,6 +1222,7 @@ class SearchAPI(APIResource):
         scope = SearchAPI.translate(tokens)
         prime = SearchAPI.objectify(scope)
         query = SearchAPI.querify(prime)
+        print(query.fetch())
         return query.fetch()
         
     
@@ -1260,9 +1261,9 @@ class SearchAPI(APIResource):
     def get_model(prime):
         """ determine model using passed-in data """
         if prime['submitted']:
-            return models.Submission
+            return models.FinalSubmission
         else:
-            return models.Backup
+            return models.Submission
     
     
     @staticmethod
