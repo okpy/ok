@@ -1203,16 +1203,26 @@ class SearchAPI(APIResource):
         'lt': op.__lt__,
         'gt': op.__gt__,
         'before': op.__lt__,
-        'after': op.__gt__,
-        'startswith': lambda string, prefix: string.startswith(prefix),
-        'endswith': lambda string, suffix: string.endswith(suffix),
-        'contains': lambda string, substr: substr in string
+        'after': op.__gt__
+    }
+    
+    flags = {
+        'user': lambda op, email:
+            UserAPI.model.query(
+                op(UserAPI.model.email, email)),
+        'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
+        'submitted': lambda op, boolean: bool(boolean),
+        'assignment': lambda op, name:
+            AssignmentAPI.model.query(
+                op(AssignmentAPI.model.display_name, name))
     }
 
     def index(self, user, data):
         tokens = SearchAPI.tokenize(data['query'])
         scope = SearchAPI.translate(tokens)
-        print(scope)
+        prime = SearchAPI.objectify(scope)
+        query = SearchAPI.querify(prime)
+        return query.fetch()
         
     
     @staticmethod
@@ -1221,15 +1231,49 @@ class SearchAPI(APIResource):
         tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?"?')
         return tokenizer.findall(query)
     
-    @staticmethod
-    def translate(tokens):
+    @classmethod
+    def translate(cls, tokens):
         """ converts operators into appropriate functions and adds defaults """
-        scope = {k: tuple(v) for k, v in SearchAPI.defaults.items()}
+        scope = {k: tuple(v) for k, v in cls.defaults.items()}
         for token in tokens:
             flag, dummy, opr, arg = token
-            scope[flag] = (SearchAPI.operators[opr or 'eq'], arg)
+            scope[flag] = (cls.operators[opr or 'eq'], arg)
         return scope
-        
+    
+    @classmethod
+    def objectify(cls, scope):
+        """ converts keys into objects """
+        for k, v in scope.items():
+            op, arg = v
+            scope[k] = (op, cls.flags[k](op, arg))
+        return scope
+    
+    @classmethod
+    def querify(cls, prime):
+        """ converts mush into a query object """
+        model = cls.get_model(prime)
+        args = cls.get_args(model, prime)
+        return model(*args)
+    
+    @staticmethod
+    def get_model(prime):
+        """ determine model using passed-in data """
+        if prime['submitted']:
+            return models.Submission
+        else:
+            return models.Backup
+    
+    
+    @staticmethod
+    def get_args(model, prime):
+        args, keys = [], prime.keys()
+        for item in ('assignment', 'user'):
+            if item in keys:
+                args.append(prime[item][1])
+        if 'date' in keys:
+            op, arg = prime['date']
+            args.append(op(model.server_time, arg))
+        return args
 
 
 class VersionAPI(APIResource):
