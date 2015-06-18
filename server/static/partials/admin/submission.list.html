@@ -10,6 +10,13 @@
         <div class="box-body">
             <div class="form-group">
                 <label>Search for Submissions</label>
+                <br>
+                <p>All searches are composed of flags, operators, and their associated value. A flag is denoted 
+                    by one hyphen, a flag by two, and a string by either double quotations or no punctuation at all. 
+                    Missing comparison operators are automaticaly assumed to be --equal.<br><br>
+                    Available flags: user, date, submitted, assignment, caseSensitive<br>
+                    Available operators: after, before, lt, gt, equal, eq (alias for equal), startswith, endswith, contains<br>
+                    Example: -user "test@example.com" -date --before 2015-06-22 -submitted true -assignment --contains Scheme</p>
                 <input type="text" placeholder="Search" class="form-control" ng-model="query.string" required/>
                 </select>
             </div>
