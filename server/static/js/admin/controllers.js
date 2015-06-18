@@ -184,24 +184,7 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission
     $scope.currentPage = 1;
     $scope.getPage = function(page) {
       Submission.query({
-        fields: {
-          'created': true,
-          'db_created': true,
-          'id': true,
-          'submitter': {
-            'id': true
-          },
-          'tags': true,
-          'assignment': {
-            'name': true,
-            'display_name': true,
-            'id': true,
-            'active': true
-          },
-          'messages': {
-            'file_contents': "presence"
-          }
-        },
+        user: '',
         page: page,
         num_page: $scope.itemsPerPage,
         "messages.kind": "file_contents"
@@ -295,32 +278,20 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', 'Submission',
-  function($scope, Submission) {
+app.controller("SubmissionListCtrl", ['$scope', 'Submissions',
+  function($scope, Submissions) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
-    $scope.getPage = function(page) {
-      Submission.query({
-        fields: {
-          'created': true,
-          'db_created': true,
-          'id': true,
-          'submitter': {
-            'id': true
-          },
-          'tags': true,
-          'assignment': {
-            'name': true,
-            'display_name': true,
-            'id': true,
-          },
-          'messages': {
-            'file_contents': "presence"
-          }
-        },
+    $scope.query = {
+      'string': ''
+    }
+    
+    $scope.getPage = function(page, query) {
+      Submissions.search({
+        id:0,
+        query: query.string,
         page: page,
-        num_page: $scope.itemsPerPage,
-        "messages.kind": "file_contents"
+        num_per_page: $scope.itemsPerPage,
       }, function(response) {
         $scope.submissions = response.data.results;
         if (response.data.more) {
@@ -330,10 +301,14 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submission',
         }
       });
     }
+    
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
-    $scope.getPage(1);
+    
+    $scope.search = function() {
+      $scope.getPage($scope.currentPage, $scope.query)
+    }
   }]);
 
 

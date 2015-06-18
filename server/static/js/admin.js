@@ -109,7 +109,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissionList = {
       name: 'submission.list',
       url: '/',
-      templateUrl: '/static/partials/common/submission.list.html'
+      templateUrl: '/static/partials/admin/submission.list.html'
     }
 
     var submissionDetail = {

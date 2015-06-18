@@ -346,5 +346,20 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
-
-
+  
+  
+app.factory('Submissions', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/submissions', {
+        }, {
+          query: {},
+          search: {
+            url: '/api/v1/submissions',
+            transformResponse: function(data) {
+              return JSON.parse(data).data;
+            }
+          }
+        }
+      )
+    }
+  ]);

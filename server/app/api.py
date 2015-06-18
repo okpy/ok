@@ -1178,6 +1178,27 @@ class SubmissionAPI(APIResource):
                            data.get('submitter'))
 
 
+class SubmissionsAPI(APIResource):
+    model = models.Backup
+    diff_model = models.Diff
+
+    db = SubmitNDBImplementation()
+
+    methods = {
+        'index': {
+            'methods': {'GET'},
+            'web_args': {
+                'query': Arg(str, required=True),
+                'page': Arg(int, required=True),
+                'num_per_page': Arg(int, required=True)
+            }
+        }
+    }
+
+    def index(self, user, data):
+        print('SEARCHING')
+
+
 class VersionAPI(APIResource):
     model = models.Version
 
