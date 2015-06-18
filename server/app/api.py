@@ -1419,6 +1419,24 @@ class CourseAPI(APIResource):
                 'email': Arg(str, required=True)
             }
         },
+        'add_student': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
+        'add_students': {
+            'methods': set(['POST']),
+            'web_args': {
+                'emails': Arg(list, required=True)
+            }
+        },
+        'remove_student': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
         'assignments': {
             'methods': set(['GET']),
             'web_args': {
@@ -1431,14 +1449,8 @@ class CourseAPI(APIResource):
             }
         },
         'get_students': {
-        },
-        'add_student': {
-            'methods': set(['POST']),
-            'web_args': {
-                'student': KeyArg('User', required=True)
-            }
-        },
         }
+    }
 
     def post(self, user, data):
         """
@@ -1483,18 +1495,38 @@ class CourseAPI(APIResource):
 
     def get_students(self, course, user, data):
         query = models.Participant.query(
-            models.Participant.course == course.key)
+            models.Participant.course == course.key,
+            models.Participant.role == 'student')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
         return list(query.fetch())
 
+    def add_students(self, course, user, data):
+        need = Need('staff') # Only staff can call this API
+        if not course.can(user, need, course):
+            raise need.exception()
+        
+        for email in set(data['emails']):  # to remove potential duplicates
+            user = models.User.get_or_insert(email)
+            models.Participant.add_role(user, course, STUDENT_ROLE)
+
     def add_student(self, course, user, data):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        new_participant = models.Participant.add_role(user, course, STUDENT_ROLE)
-        new_participant.put()
+        
+        user = models.User.get_or_insert(data['email'])
+        models.Participant.add_role(user, course, STUDENT_ROLE)
+
+    def remove_student(self, course, user, data):
+        need = Need('staff')
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        removed_user = models.User.lookup(data['email'])
+        if removed_user:
+            models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
     def assignments(self, course, user, data):
         return list(course.assignments)
