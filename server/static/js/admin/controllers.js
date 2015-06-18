@@ -500,11 +500,12 @@ app.controller("StudentsListCtrl", ["$scope", "$stateParams", "$window", "Course
     $scope.members = Course.students({id: $stateParams.courseId});
     
     $scope.remove = function (userEmail) {
-      Course.remove_member({
+      Course.remove_student({
         id: $stateParams.courseId,
         email: userEmail
       }, function() {
         $window.swal("Removed!", "Removed " + userEmail + " from the course", "success");
+        $scope.members = Course.students({id: $stateParams.courseId});
       });
     };
   }]);
