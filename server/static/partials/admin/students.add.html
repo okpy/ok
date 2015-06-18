@@ -1,0 +1,40 @@
+<section class="content-header">
+    <ol class="breadcrumb">
+        <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+        <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
+        <li><a ui-sref="course.detail.stats({courseId:course.id})"><i class="fa fa-list"></i> {{course.display_name}}</a></li>
+        <li><a ui-sref="students.list({courseId:course.id})"><i class="fa fa-list"></i> All Students</a></li>
+        <li class="active"><i class="fa fa-pencil"></i> Enroll Student </a></li>
+    </ol>
+</section>
+<div class="box box-info">
+    <div class="box-header">
+        <h3 class="box-title">Enroll Student</h3>
+    </div>
+    <div class="box-body">
+        <div class="form-group">
+            <label>Student Email (Must be a Google Account)</label>
+            <input type="email" placeholder="Enter .edu here" class="form-control input-lg" ng-model="newMember.email" required/>
+            </select>
+        </div>
+        <div class="box-footer">
+            <button type="button" ng-click="save()" class="btn btn-info">Enroll Student</button>
+        </div>
+    </div><!-- /.box-body -->
+</div>
+
+<div class="box box-info">
+    <div class="box-header">
+        <h3 class="box-title">Enroll Multiple Students</h3>
+    </div>
+    <div class="box-body">
+        <div class="form-group">
+            <label>Student Emails (must be comma-delimiting!)</label>
+            <input type="text" placeholder="Enter .edu here" class="form-control input-lg" ng-model="newMember.emails" required/>
+            </select>
+        </div>
+        <div class="box-footer">
+            <button type="button" ng-click="saves()" class="btn btn-info">Enroll All</button>
+        </div>
+    </div><!-- /.box-body -->
+</div>

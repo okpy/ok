@@ -1,0 +1,24 @@
+<section class="content-header">
+    <ol class="breadcrumb">
+        <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+        <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
+        <li><a ui-sref="course.detail.stats({courseId:course.id})"><i class="fa fa-list"></i> {{course.display_name}}</a></li>
+        <li><a ui-sref="staff.list({courseId:course.id})"><i class="fa fa-list"></i> All Staff</a></li>
+        <li class="active"><i class="fa fa-pencil"></i> Add Staff </a></li>
+    </ol>
+</section>
+<div class="box box-info">
+    <div class="box-header">
+        <h3 class="box-title">Add Staff</h3>
+    </div>
+    <div class="box-body">
+        <div class="form-group">
+            <label>Staff Email (Must be a Google Account)</label>
+            <input type="email" placeholder="Enter .edu here" class="form-control input-lg" ng-model="newMember.email" required/>
+            </select>
+        </div>
+        <div class="box-footer">
+            <button type="button" ng-click="save()" class="btn btn-info">Add to Staff</button>
+        </div>
+    </div><!-- /.box-body -->
+</div>

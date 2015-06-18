@@ -266,6 +266,13 @@ app.factory('Course', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        students: {
+          isArray: true,
+          url: '/api/v1/course/:id/get_students',
+         transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         add_member: {
           method: "POST",
           url: '/api/v1/course/:id/add_staff',
@@ -276,6 +283,27 @@ app.factory('Course', ['$resource',
         remove_member: {
           method: "POST",
           url: '/api/v1/course/:id/remove_staff',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        add_student: {
+          method: "POST",
+          url: '/api/v1/course/:id/add_student',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        add_students: {
+          method: "POST",
+          url: '/api/v1/course/:id/add_students',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        remove_student: {
+          method: "POST",
+          url: '/api/v1/course/:id/remove_student',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -353,5 +381,19 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
-
-
+  
+  
+app.factory('Search', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/search', {
+        }, {
+          query: {
+            url: '/api/v1/search',
+            transformResponse: function(data) {
+              return JSON.parse(data).data;
+            }
+          },
+        }
+      )
+    }
+  ]);
