@@ -164,6 +164,13 @@ app.factory('Assignment', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        edit: {
+          method: "POST",
+          url: '/api/v1/assignment/:id/edit',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         group: {
           url: '/api/v1/assignment/:id/group',
           transformResponse: function(data) {
