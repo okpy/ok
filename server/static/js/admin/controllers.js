@@ -353,8 +353,8 @@ app.controller("StaffDetailCtrl", ["$scope", "$stateParams", "Course", "User",
 
   }]);
 
-app.controller("StaffAddCtrl", ["$scope", "$stateParams", "$window", "Course",
-  function ($scope, $stateParams, $window, Course) {
+app.controller("StaffAddCtrl", ["$scope", "$state", "$stateParams", "$window", "Course",
+  function ($scope, $state, $stateParams, $window, Course) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.roles = ['staff', 'admin', 'user'];
     $scope.newMember = {
@@ -365,9 +365,13 @@ app.controller("StaffAddCtrl", ["$scope", "$stateParams", "$window", "Course",
         id: $stateParams.courseId,
         email: $scope.newMember.email
       }, function() {
-        $window.swal("Added!", "Added "+$scope.newMember.email+" to the course staff", "success");
-        $state.transitionTo('staff.list', {}, {'reload': true})
-        $scope.newMember.email = "";
+        Course.staff({
+          id: $scope.course.id
+        }, function () {
+          $window.swal("Added!", "Added "+$scope.newMember.email+" to the course staff", "success");
+          $state.transitionTo('staff.list', {courseId: $scope.course.id}, {'reload': true})
+          $scope.newMember.email = "";
+        })
       });
     };
   }
@@ -375,8 +379,8 @@ app.controller("StaffAddCtrl", ["$scope", "$stateParams", "$window", "Course",
   
   
 // Student Enrollment Controllers
-app.controller("StudentsAddCtrl", ["$scope", "$stateParams", "$window", "Course",  "User",
-function($scope, $stateParams, $window, Course, User) {
+app.controller("StudentsAddCtrl", ["$scope", "$state", "$stateParams", "$window", "Course",  "User",
+function($scope, $state, $stateParams, $window, Course, User) {
   $scope.course = Course.get({id: $stateParams.courseId});
   $scope.newMember = {
     role: 'user'
@@ -384,11 +388,15 @@ function($scope, $stateParams, $window, Course, User) {
   $scope.save = function () {
         Course.add_student({
           id: $stateParams.courseId,
-          student: $scope.newMember.email
+          email: $scope.newMember.email
         }, function() {
-          $window.swal("Added!", "Enrolled "+$scope.newMember.email+" in the course.", "success");
-          $state.transitionTo('students.list', {}, {'reload': true})
-          $scope.newMember.email = "";
+          Course.students({
+            id: $scope.course.id
+          }, function () {
+            $window.swal("Added!", "Enrolled "+$scope.newMember.email+" in the course.", "success");
+            $state.transitionTo('students.list', {courseId: $scope.course.id}, {'reload': true})
+            $scope.newMember.email = "";
+          })
         }, function() {
           $window.swal("Oops", "Could not enroll student", 'error')
         });
@@ -399,6 +407,15 @@ app.controller("StudentsListCtrl", ["$scope", "$stateParams", "$window", "Course
   function($scope, $stateParams, $window, Course) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.members = Course.students({id: $stateParams.courseId});
+    
+    $scope.remove = function (userEmail) {
+      Course.remove_member({
+        id: $stateParams.courseId,
+        email: userEmail
+      }, function() {
+        $window.swal("Removed!", "Removed " + userEmail + " from the course", "success");
+      });
+    };
   }]);
 
 // Diff Controllers

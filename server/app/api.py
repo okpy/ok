@@ -1322,14 +1322,8 @@ class CourseAPI(APIResource):
             }
         },
         'get_students': {
-        },
-        'add_student': {
-            'methods': set(['POST']),
-            'web_args': {
-                'student': KeyArg('User', required=True)
-            }
-        },
         }
+    }
 
     def post(self, user, data):
         """
@@ -1375,7 +1369,7 @@ class CourseAPI(APIResource):
     def get_students(self, course, user, data):
         query = models.Participant.query(
             models.Participant.course == course.key,
-            models.Participant.role == 'user')
+            models.Participant.role == 'student')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
@@ -1385,7 +1379,9 @@ class CourseAPI(APIResource):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        models.Participant.add_role(data['student'], course, STUDENT_ROLE)
+        
+        user = models.User.get_or_insert(data['email'])
+        models.Participant.add_role(user, course, STUDENT_ROLE)
 
     def remove_student(self, course, user, data):
         need = Need('staff')
