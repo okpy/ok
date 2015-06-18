@@ -273,6 +273,20 @@ app.factory('Course', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        add_student: {
+          method: "POST",
+          url: '/api/v1/course/:id/add_student',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        remove_student: {
+          method: "POST",
+          url: '/api/v1/course/:id/remove_student',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
       });
     }
   ]);

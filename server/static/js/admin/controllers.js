@@ -375,6 +375,26 @@ app.controller("StaffAddCtrl", ["$scope", "$stateParams", "$window", "Course",
   
   
 // Student Enrollment Controllers
+app.controller("StudentsAddCtrl", ["$scope", "$stateParams", "$window", "Course",  "User",
+function($scope, $stateParams, $window, Course, User) {
+  $scope.course = Course.get({id: $stateParams.courseId});
+  $scope.newMember = {
+    role: 'user'
+  }
+  $scope.save = function () {
+        Course.add_student({
+          id: $stateParams.courseId,
+          student: $scope.newMember.email
+        }, function() {
+          $window.swal("Added!", "Enrolled "+$scope.newMember.email+" in the course.", "success");
+          $state.transitionTo('students.list', {}, {'reload': true})
+          $scope.newMember.email = "";
+        }, function() {
+          $window.swal("Oops", "Could not enroll student", 'error')
+        });
+      };
+}]);
+
 app.controller("StudentsListCtrl", ["$scope", "$stateParams", "$window", "Course",
   function($scope, $stateParams, $window, Course) {
     $scope.course = Course.get({id: $stateParams.courseId});
