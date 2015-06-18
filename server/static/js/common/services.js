@@ -348,17 +348,16 @@ app.factory('Queue', ['$resource',
   ]);
   
   
-app.factory('Submissions', ['$resource',
+app.factory('Search', ['$resource',
     function($resource) {
-      return $resource('/api/v1/submissions', {
+      return $resource('/api/v1/search', {
         }, {
-          query: {},
-          search: {
-            url: '/api/v1/submissions',
+          query: {
+            url: '/api/v1/search',
             transformResponse: function(data) {
               return JSON.parse(data).data;
             }
-          }
+          },
         }
       )
     }

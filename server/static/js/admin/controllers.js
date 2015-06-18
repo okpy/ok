@@ -278,8 +278,8 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', 'Submissions',
-  function($scope, Submissions) {
+app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
+  function($scope, $window, Search) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
     $scope.query = {
@@ -287,8 +287,7 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submissions',
     }
     
     $scope.getPage = function(page, query) {
-      Submissions.search({
-        id:0,
+      Search.query({
         query: query.string,
         page: page,
         num_per_page: $scope.itemsPerPage,
@@ -299,6 +298,8 @@ app.controller("SubmissionListCtrl", ['$scope', 'Submissions',
         } else {
           $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
         }
+      }, function(err) {
+        $window.swal('Uh oh', 'Something went wrong. Remember that your query must have a flag.', 'error');
       });
     }
     

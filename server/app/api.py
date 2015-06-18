@@ -27,6 +27,7 @@ from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 from google.appengine.ext.ndb import stats
 from google.appengine.api import memcache
+import re
 
 
 parser = FlaskParser()
@@ -1178,11 +1179,7 @@ class SubmissionAPI(APIResource):
                            data.get('submitter'))
 
 
-class SubmissionsAPI(APIResource):
-    model = models.Backup
-    diff_model = models.Diff
-
-    db = SubmitNDBImplementation()
+class SearchAPI(APIResource):
 
     methods = {
         'index': {
@@ -1196,7 +1193,22 @@ class SubmissionsAPI(APIResource):
     }
 
     def index(self, user, data):
-        print('SEARCHING')
+        blocks = SearchAPI.blockify(data['query'])
+        tokens = SearchAPI.tokenize(blocks)
+        print(tokens)
+        
+    @staticmethod
+    def blockify(query):
+        blocks = re.compile('(-[\S]+\s+(--[\S]+\s+)?"?[\S]+[^"]"?)')
+        return blocks.findall(query)
+    
+    @staticmethod
+    def tokenize(blocks):
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"]+)"?')
+        tokens = []
+        for block in blocks:
+            tokens.append(tokenizer.match(block[0]).groupdict())
+        return tokens
 
 
 class VersionAPI(APIResource):
