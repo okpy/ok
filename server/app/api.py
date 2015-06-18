@@ -1507,7 +1507,12 @@ class GroupAPI(APIResource):
         
     def save_order(self, group, user, data):
         """ Saves order of partners """
-        print('BABABA BABABANANA : Saving group order')
+        need = Need('save_order')
+        if not group.can(user, need, group):
+            raise need.exception()
+
+        self.order = data['order']
+        self.save()
 
 
 class QueueAPI(APIResource):

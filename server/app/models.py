@@ -911,6 +911,7 @@ class Group(Base):
     member = ndb.KeyProperty(User, repeated=True)
     invited = ndb.KeyProperty(User, repeated=True)
     assignment = ndb.KeyProperty(Assignment, required=True)
+    order = ndb.StringProperty()
 
     @classmethod
     def lookup(cls, user_key, assignment_key):
@@ -1027,7 +1028,7 @@ class Group(Base):
             return False
         if action in ("get", "exit"):
             return user.key in group.member or user.key in group.invited
-        elif action in ("invite", "remove"):
+        elif action in ("invite", "remove", "save_order"):
             return user.key in group.member
         elif action in "accept":
             return user.key in group.invited
