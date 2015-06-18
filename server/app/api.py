@@ -653,7 +653,9 @@ class AssignmentAPI(APIResource):
                 'max_group_size': Arg(int, required=True),
                 'due_date': DateTimeArg(required=True),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
-                                 required=True),
+                    required=True),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
                 }
         },
         'put': {
@@ -665,9 +667,23 @@ class AssignmentAPI(APIResource):
                 'max_group_size': Arg(int),
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
                 }
         },
         'get': {
+        },
+        'edit': {
+            'methods': {'POST'},
+            'web_args': {
+                'name': Arg(str),
+                'display_name': Arg(str),
+                'points': Arg(float),
+                'course': KeyArg('Course'),
+                'max_group_size': Arg(int),
+                'due_date': DateTimeArg(),
+                'templates': Arg(str, Arg(str, use=lambda temps: json.dumps(temps)))
+            }
         },
         'index': {
             'web_args': {
@@ -680,7 +696,7 @@ class AssignmentAPI(APIResource):
         'invite': {
             'methods': set(['POST']),
             'web_args': {
-                'email': Arg(str, required=True)
+                'email': Arg(str)
             }
         },
         'group': {
@@ -711,6 +727,10 @@ class AssignmentAPI(APIResource):
             raise BadValueError(
                 'assignment with name %s exists already' % data['name'])
         return super(AssignmentAPI, self).post(user, data)
+
+    def edit(self, obj, user, data):
+        """ Save the assignment. """
+        return super(AssignmentAPI, self).put(obj, user, data)
 
     def assign(self, obj, user, data):
         need = Need('put')
@@ -1267,16 +1287,16 @@ class CourseAPI(APIResource):
                 'institution': Arg(str, required=True),
                 'offering': Arg(str, required=True),
                 'active': BooleanArg(),
-                }
+            }
         },
         'put': {
             'web_args': {
-                'name': Arg(str),
+                'display_name': Arg(str),
                 'institution': Arg(str),
                 'term': Arg(str),
                 'year': Arg(str),
                 'active': BooleanArg(),
-                }
+            }
         },
         'delete': {
         },
