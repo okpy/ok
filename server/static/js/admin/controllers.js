@@ -52,12 +52,20 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   }
   ]);
 
-app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "Assignment", "Course",
-  function ($scope, $window, $stateParams, Assignment, Course) {
+app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $state, $stateParams, Assignment, Course) {
     $scope.existingAssign = Assignment.get({id: $stateParams.assignmentId});
+    var future = new Date();
+    future.setDate(future.getDate() + 31);
+    due_date = lock_date = future.getFullYear() + '-' + future.getMonth() + '-' + future.getDate()
     $scope.newAssign = {
+      'due_date': due_date,
+      'lock_date': lock_date,
       'due_time': '23:59:59.0000',
-      'max_group_size': 2
+      'lock_time': '23:59:59.0000',
+      'max_group_size': 2,
+      'revisions': false,
+      'points': 4
     };
     Course.get({}, function(resp) {
         $scope.courses = resp.results;
@@ -66,6 +74,7 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
 
     $scope.createAssign = function () {
         var due_date_time = $scope.newAssign.due_date + ' ' + $scope.newAssign.due_time
+        var lock_date_time = $scope.newAssign.lock_date + ' ' + $scope.newAssign.lock_time
         Assignment.create({
           'display_name': $scope.newAssign.display_name,
           'name': $scope.newAssign.endpoint,
@@ -74,9 +83,15 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
           'templates': {},
           'due_date': due_date_time,
           'course': $scope.newAssign.course.id,
+          'revision': $scope.newAssign.revisions,
+          'lock_date': lock_date_time
         },
           function (response) {
-            $window.swal("Assignment Created!",'','success');
+            $scope.courses = Course.query({},
+              function (response) {
+                $window.swal("Assignment Created!",'','success');
+               $state.transitionTo('assignment.list' , {} , { reload: true, inherit: true, notify: true });
+             });
           }, function (error) {
             console.log('error')
             $window.swal("Could not create assignment",'There was an error','error');
@@ -87,6 +102,82 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
     }
   }
   ]);
+  
+app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $state, $stateParams, Assignment, Course) {
+  
+    $scope.reloadAssignment = function() {
+      Assignment.get({
+        id: $stateParams.assignmentId
+      }, function (response) {
+        $scope.initAssignment(response);
+      });
+    }
+    
+    $scope.initAssignment = function(assign) {
+      $scope.assign = assign;
+      $scope.assign.endpoint = assign.name;
+      parts = assign.due_date.split(' ');
+      assign.due_date = parts[0];
+      assign.due_time = parts[1];
+      if (assign.lock_date != null) {
+        parts = assign.lock_date.split(' ');
+        assign.lock_date = parts[0];
+        assign.lock_time = parts[1];
+      }
+      if (assign.revisions == null) {
+        assign.revisions = false;
+      }
+      $scope.initCourses(assign);
+    }
+    
+    $scope.initCourses = function(assign) {
+      Course.get({}, function(resp) {
+          $scope.courses = resp.results;
+          for (var i=0;i<resp.results.length;i++) {
+            course = resp.results[i];
+            if (course.id == assign.course.id) {
+              assign.course = course;
+              break;
+            }
+          }
+      });
+    }
+    
+    $scope.reloadAssignment();
+
+    $scope.editAssign = function () {
+        var due_date_time = $scope.assign.due_date + ' ' + $scope.assign.due_time
+        var lock_date_time = $scope.assign.lock_date + ' ' + $scope.assign.lock_time
+        Assignment.edit({
+          'id': $scope.assign.id,
+          'display_name': $scope.assign.display_name,
+          'name': $scope.assign.endpoint,
+          'points': $scope.assign.points,
+          'max_group_size': $scope.assign.max_group_size,
+          'templates': {},
+          'due_date': due_date_time,
+          'course': $scope.assign.course.id,
+          'revision': $scope.assign.revisions,
+          'lock_date': lock_date_time
+        },
+          function (response) {
+            $scope.assignments = Assignment.query({},
+              function (response) {
+              $window.swal("Assignment Updated!",'','success');
+              $state.transitionTo('assignment.list', null, {'reload': true})
+            });
+          }, function (error) {
+            console.log('error')
+            $window.swal("Could not update assignment",'There was an error','error');
+
+          }
+        )
+
+    }
+  }
+  ]);
+
 app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
   function ($scope, $state, Submission) {
     $scope.itemsPerPage = 3;
