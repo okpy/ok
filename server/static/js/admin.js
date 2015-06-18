@@ -71,6 +71,15 @@ app.directive('staffList', function() {
             templateUrl: '/static/partials/admin/staff.list.html',
         };
     });
+    
+    
+app.directive('studentList', function() {
+            return {
+                restrict: 'E',
+                controller: "StudentListCtrl",
+                templateUrl: '/static/partials/admin/students.list.html',
+            };
+        });
 
 
 
@@ -215,6 +224,34 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/staff.detail.html',
       controller: "StaffDetailCtrl"
     }
+    
+    var staffAdd = {
+        name: 'staff.add',
+        url: '/add',
+        templateUrl:'/static/partials/admin/staff.add.html',
+        controller: 'StaffAddCtrl'
+    }
+    
+    var students = {
+          name: 'students',
+          url: '/:courseId/students',
+          abstract: true,
+          templateUrl: '/static/partials/admin/students.base.html'
+        }
+    
+    var studentsList = {
+          name: 'students.list',
+          url: '/',
+          templateUrl: '/static/partials/admin/students.list.html',
+          controller: "StudentsListCtrl"
+        }
+        
+    var studentsAdd = {
+        name: 'students.add',
+        url: '/add',
+        templateUrl: '/static/partials/admin/students.add.html',
+        controller: 'StudentsAddCtrl'
+    }
 
     var versions = {
       name: 'version',
@@ -302,8 +339,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(courseDetail).
       state(courseNew).
       state(staff).
+      state(staffAdd).
       state(staffList).
       state(staffDetail).
+      state(students).
+      state(studentsAdd).
+      state(studentsList).
       state(versions).
       state(versionList).
       state(versionDetail).
