@@ -890,7 +890,11 @@ class SubmissionAPI(APIResource):
         """
         
     def data_for_zip(self, obj):
-        name = obj.submitter.email+'-'+str(obj.created)
+        try:
+            user = models.User(key=obj.submitter)
+            name = user.email[0]+'-'+str(obj.created)
+        except IndexError:
+            name = str(obj.created)
         messages = obj.get_messages()
         if 'file_contents' not in messages:
             raise BadValueError('Submission has no contents to download')
@@ -1286,12 +1290,11 @@ class SearchAPI(APIResource):
             try:
                 if isinstance(result, models.Submission):
                     result = models.Backup(key=result.backup)
-                return subm.download(result, user, data)
                 name, file_contents = subm.data_for_zip(result)
                 zipfile = add_to_zip(zipfile, file_contents, name)
             except:
                 pass
-        # return subm.make_zip_response('query', finish_zip(zipfile_str, zipfile))
+        return subm.make_zip_response('query', finish_zip(zipfile_str, zipfile))
 
     
     @staticmethod
