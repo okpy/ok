@@ -32,14 +32,14 @@
       <h3 class="box-title" ng-if="submissions.length > 0">All Submissions</h3>
       <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
       <div class="box-tools" style="float:right;">
-          <button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button>
-          <button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1"> <i class="fa fa-download"></i>  Download Page</button>
-          <button class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1"> <i class="fa fa-download"></i>  Download</button>
+          <button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" ng-click="downloadPage()" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button>
+          <button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" ng-click="downloadQuery()"> <i class="fa fa-download"></i>  Download Page</button>
+          <button class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1" ng-click="downloadQuery()"> <i class="fa fa-download"></i>  Download</button>
       </div>
     </div>
     <!-- /.box-header -->
 
-    <div class="box-body no-padding table-responsive">
+    <div class="box-body table-responsive">
 
         <div class='text-center'>
           <pager items-per-page="itemsPerPage" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()"></pager>

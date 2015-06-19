@@ -314,23 +314,32 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
       $scope.getPage($scope.currentPage, $scope.query)
     }
     
-    $scope.download = function(all) {
+    $scope.download = function(query, page, itemsPerPage, all) {
       Search.download({
-        query: $scope.query.string,
+        query: query,
         page: page,
-        num_per_page: $scope.itemsPerPage,
-        all: all
+        num_per_page: itemsPerPage,
+        all: all,
+        "messages.kind": "file_contents"
       }, function (response) {
         console.log('Download!')
       })
     }
     
     $scope.downloadPage = function() {
-      $scope.download(false);
+      $scope.download(
+        $scope.query.string, 
+        $scope.currentPage, 
+        $scope.itemsPerPage, 
+        false);
     }
     
     $scope.downloadQuery = function() {
-      $scope.download(true);
+      $scope.download(
+        $scope.query.string,
+        $scope.currentPage, 
+        $scope.itemsPerPage, 
+        true);
     }
   }]);
 

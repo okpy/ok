@@ -6,6 +6,7 @@ import datetime
 import logging
 import ast
 import requests
+from zipfile import ZipFile
 
 from flask.views import View
 from flask.app import request, json
@@ -1232,6 +1233,10 @@ class SearchAPI(APIResource):
             results = self.index(user, data)['results']
         else:
             results = SearchAPI.querify(data['query']).fetch()
+        zip = ZipFile()
+        for i, result in enumerate(results):
+            zip.writestr(result.download())
+        return zip
 
     
     @staticmethod
