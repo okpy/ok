@@ -64,13 +64,6 @@
           <td>
             {{submission.created | amCalendar}}
           </td>
-          <!--<td>-->
-              <!--<div class="btn-group download-btn-group">-->
-                  <!--<a ui-sref='submission.detail({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">View</a>-->
-                  <!--<a href='/api/v1/submission/{{submission.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>-->
-                  <!--<a ui-sref='submission.diff({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">Diff</a>-->
-              <!--</div>-->
-          <!--</td>-->
           <!-- Future Progress Bar -->
           <td >
             <span class="badge bg-info">{{submission.assignment.display_name}}</span>
@@ -81,11 +74,6 @@
             </span>
 
           </td>
-    <!--       <td ng-show="submission.assignment.active">
-              <button ng-click='submitVersion(submission.id);' ng-disabled="clicked" type="button" class="btn btn-flat btn-success" ng-if="submission.tags.indexOf('Submit') <= -1">Submit</button>
-              <button ng-click='unSubmit(submission.id);' ng-disabled="clicked" type="button" class="btn btn-flat btn-danger" ng-if="submission.tags.indexOf('Submit') > -1">Un-submit</button>
-          </td>
-     -->
         </tr>
       </tbody>
     </table>
