@@ -1187,8 +1187,8 @@ class SearchAPI(APIResource):
             'methods': {'GET'},
             'web_args': {
                 'query': Arg(str, required=True),
-                'page': Arg(int, required=True),
-                'num_per_page': Arg(int, required=True)
+                'page': Arg(int, required=True, default=1),
+                'num_per_page': Arg(int, required=True, default=10)
             }
         }
     }
@@ -1216,10 +1216,7 @@ class SearchAPI(APIResource):
     }
 
     def index(self, user, data):
-        tokens = SearchAPI.tokenize(data['query'])
-        scope = SearchAPI.translate(tokens)
-        prime = SearchAPI.objectify(scope)
-        query = SearchAPI.querify(prime)
+        query = SearchAPI.querify(data['query'])
         start, end = SearchAPI.limits(data['page'], data['num_per_page'])
         results = query.fetch()[start:end]
         return dict(data={
@@ -1230,13 +1227,21 @@ class SearchAPI(APIResource):
     
     @staticmethod
     def tokenize(query):
-        """ Parses each command for flag, op, and arg """
-        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?"?')
+        """
+        Parses each command for flag, op, and arg
+        Regex captures first named group "flag" as a string preceded
+        by a single dash, followed by a space. Optionally captures 
+        second named group "op" as a string preceded by two dashes
+        and followed by a space. Captures final named group "arg"
+        with optional quotations.
+        """
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?')
         return tokenizer.findall(query)
     
     @classmethod
-    def translate(cls, tokens):
+    def translate(cls, query):
         """ converts operators into appropriate string reps and adds defaults """
+        tokens = cls.tokenize(query)
         scope = {k: tuple(v) for k, v in cls.defaults.items()}
         for token in tokens:
             flag, dummy, opr, arg = token
@@ -1244,18 +1249,20 @@ class SearchAPI(APIResource):
         return scope
     
     @classmethod
-    def objectify(cls, scope):
+    def objectify(cls, query):
         """ converts keys into objects """
+        scope = cls.translate(query)
         for k, v in scope.items():
             op, arg = v
             scope[k] = (op, cls.flags[k](op, arg))
         return scope
     
     @classmethod
-    def querify(cls, prime):
+    def querify(cls, query):
         """ converts mush into a query object """
-        model = cls.get_model(prime)
-        args = cls.get_args(model, prime)
+        objects = cls.objectify(query)
+        model = cls.get_model(objects)
+        args = cls.get_args(model, objects)
         query = model.query(*args)
         return query
     
