@@ -288,11 +288,12 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
     
     $scope.getPage = function(page) {
       Search.query({
-        query: $scope.query.string,
+        query: $scope.query.string || '',
         page: page,
         num_per_page: $scope.itemsPerPage,
       }, function(response) {
         $scope.submissions = response.data.results;
+        $scope.more = response.data.more;
         if (response.data.more) {
           $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
         } else {
