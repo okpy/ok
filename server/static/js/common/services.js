@@ -385,12 +385,6 @@ app.factory('Search', ['$resource',
             transformResponse: function(data) {
               return JSON.parse(data).data;
             }
-          },
-          download: {
-            url: '/api/v1/download',
-            transformResponse: function(data) {
-              return JSON.parse(data).data;
-            }
           }
         }
       )

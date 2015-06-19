@@ -227,9 +227,14 @@ class APIResource(View):
             method_name = {'GET': 'index', 'POST': 'post'}[http_method]
             return self.call_method(method_name, user, http_method,
                                     is_index=(method_name == 'index'))
-
+        
         path = path.split('/')
+
         if len(path) == 1:
+
+            if not getattr(self, 'contains_entities', True):
+                return self.call_method(path[0], user, http_method)
+            
             entity_id = path[0]
             try:
                 key = self.key_type(entity_id)
@@ -1182,14 +1187,25 @@ class SubmissionAPI(APIResource):
 
 
 class SearchAPI(APIResource):
+    
+    contains_entities = False
 
     methods = {
         'index': {
             'methods': {'GET'},
             'web_args': {
                 'query': Arg(str, required=True),
-                'page': Arg(int, required=True, default=1),
-                'num_per_page': Arg(int, required=True, default=10)
+                'page': Arg(int, default=1),
+                'num_per_page': Arg(int, default=10)
+            }
+        },
+        'download': {
+            'methods': {'GET'},
+            'web_args': {
+                'query': Arg(str, required=True),
+                'page': Arg(int, default=1),
+                'num_per_page': Arg(int, default=10),
+                'all': Arg(bool, default=False)
             }
         }
     }
@@ -1212,6 +1228,7 @@ class SearchAPI(APIResource):
             UserAPI.model.query(
                 op(UserAPI.model.email, email)).get(),
         'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
+        'backup': lambda op, boolean: boolean.lower() == 'true',
         'onlyfinal': lambda op, boolean: boolean.lower() == 'true',
         'onlywcode': lambda op, boolean: boolean.lower() == 'true',
         'assignment': lambda op, name:
@@ -1225,18 +1242,17 @@ class SearchAPI(APIResource):
         results = query.fetch()[start:end]
         return dict(data={
             'results': results,
-            'more': len(results) >= data['num_per_page']
+            'more': len(results) >= data['num_per_page'],
+            'query': data['query']
         })
     
     def download(self, user, data):
+        results = SearchAPI.querify(data['query']).fetch()
         if data.get('all', False):
-            results = self.index(user, data)['results']
-        else:
-            results = SearchAPI.querify(data['query']).fetch()
-        zip = ZipFile()
-        for i, result in enumerate(results):
-            zip.writestr(result.download())
-        return zip
+            start, end = SearchAPI.limits(data['page'], data['num_per_page'])
+            results = results[start:end]
+        for result in results:
+            return SubmissionAPI.download(SubmissionAPI(), result, user, data)
 
     
     @staticmethod
@@ -1284,6 +1300,9 @@ class SearchAPI(APIResource):
     def get_model(prime):
         """ determine model using passed-in data """
         op, onlyfinal = prime.get('onlyfinal', (None, False))
+        op, backup = prime.get('backup', (None, False))
+        if backup:
+            return models.Backup
         if onlyfinal:
             return models.FinalSubmission
         else:

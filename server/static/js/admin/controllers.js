@@ -294,6 +294,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
       }, function(response) {
         $scope.submissions = response.data.results;
         $scope.more = response.data.more;
+        $scope.search_query = encodeURIComponent(response.data.query);
         if (response.data.more) {
           $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
         } else {
@@ -312,34 +313,6 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
     
     $scope.search = function() {
       $scope.getPage($scope.currentPage, $scope.query)
-    }
-    
-    $scope.download = function(query, page, itemsPerPage, all) {
-      Search.download({
-        query: query,
-        page: page,
-        num_per_page: itemsPerPage,
-        all: all,
-        "messages.kind": "file_contents"
-      }, function (response) {
-        console.log('Download!')
-      })
-    }
-    
-    $scope.downloadPage = function() {
-      $scope.download(
-        $scope.query.string, 
-        $scope.currentPage, 
-        $scope.itemsPerPage, 
-        false);
-    }
-    
-    $scope.downloadQuery = function() {
-      $scope.download(
-        $scope.query.string,
-        $scope.currentPage, 
-        $scope.itemsPerPage, 
-        true);
     }
   }]);
 
