@@ -18,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -889,6 +889,15 @@ class SubmissionAPI(APIResource):
         :return:
         """
         
+    def data_for_zip(self, obj):
+        name = obj.submitter.email+'-'+str(obj.created)
+        messages = obj.get_messages()
+        if 'file_contents' not in messages:
+            raise BadValueError('Submission has no contents to download')
+        file_contents = messages['file_contents']
+        
+        return name, file_contents
+        
     def zip(self, obj, user, data):
         """ Grab all files in submission
         :param obj:
@@ -896,12 +905,7 @@ class SubmissionAPI(APIResource):
         :param data: 
         :return:
         """
-        messages = obj.get_messages()
-        if 'file_contents' not in messages:
-            raise BadValueError('Submission has no contents to download')
-        file_contents = messages['file_contents']
-
-        return self.zip_files(str(obj.created), file_contents)
+        return self.zip_files(*self.data_for_zip(obj))
 
     def zip_files(self, name, file_contents):
         """ Zip files
@@ -917,17 +921,17 @@ class SubmissionAPI(APIResource):
                 file_contents[key] = file_contents[key].encode('utf-8')
             except:
                 pass
-        zip = create_zip(file_contents)
-        return name, zip
+        zipfile = create_zip(file_contents)
+        return name, zipfile
 
-    def make_zip_response(self, name, zip):
+    def make_zip_response(self, name, zipfile):
         """
         Makes a zip response using a zip object.
         
         :param zip: 
         :return:
         """
-        response = make_response(zip)
+        response = make_response(zipfile)
         response.headers['Content-Disposition'] = (
             'attachment; filename=submission-%s.zip' % name)
         response.headers['Content-Type'] = 'application/zip'
@@ -1276,17 +1280,18 @@ class SearchAPI(APIResource):
         if data.get('all', False):
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
-        file_contents = {}
+        zipfile_str, zipfile = start_zip()
+        subm = SubmissionAPI()
         for result in results:
-            try :
+            try:
                 if isinstance(result, models.Submission):
                     result = models.Backup(key=result.backup)
-                name, zip = SubmissionAPI.zip(SubmissionAPI(), result, user, data)
-                file_contents[name] = zip
+                return subm.download(result, user, data)
+                name, file_contents = subm.data_for_zip(result)
+                zipfile = add_to_zip(zipfile, file_contents, name)
             except:
                 pass
-        subm = SubmissionAPI()
-        return subm.make_zip_response(*subm.zip_files('query', file_contents))
+        # return subm.make_zip_response('query', finish_zip(zipfile_str, zipfile))
 
     
     @staticmethod
