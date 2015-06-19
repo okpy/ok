@@ -888,6 +888,50 @@ class SubmissionAPI(APIResource):
         :param data: (dictionary) data
         :return:
         """
+        
+    def zip(self, obj, user, data):
+        """ Grab all files in submission
+        :param obj:
+        :param user: 
+        :param data: 
+        :return:
+        """
+        messages = obj.get_messages()
+        if 'file_contents' not in messages:
+            raise BadValueError('Submission has no contents to download')
+        file_contents = messages['file_contents']
+
+        return self.zip_files(str(obj.created), file_contents)
+
+    def zip_files(self, name, file_contents):
+        """ Zip files
+        :param file_contents:
+        :return:
+        """
+        if 'submit' in file_contents:
+            del file_contents['submit']
+
+        # Need to encode every file before it is.
+        for key in file_contents.keys():
+            try:
+                file_contents[key] = file_contents[key].encode('utf-8')
+            except:
+                pass
+        zip = create_zip(file_contents)
+        return name, zip
+
+    def make_zip_response(self, name, zip):
+        """
+        Makes a zip response using a zip object.
+        
+        :param zip: 
+        :return:
+        """
+        response = make_response(zip)
+        response.headers['Content-Disposition'] = (
+            'attachment; filename=submission-%s.zip' % name)
+        response.headers['Content-Type'] = 'application/zip'
+        return response
 
     def download(self, obj, user, data):
         """
@@ -898,26 +942,7 @@ class SubmissionAPI(APIResource):
         :param data: (dictionary) data
         :return: file contents in utf-8
         """
-        messages = obj.get_messages()
-        if 'file_contents' not in messages:
-            raise BadValueError('Submission has no contents to download')
-        file_contents = messages['file_contents']
-
-        if 'submit' in file_contents:
-            del file_contents['submit']
-
-        # Need to encode every file before it is.
-        for key in file_contents.keys():
-            try:
-                file_contents[key] = file_contents[key].encode('utf-8')
-            except:
-                pass
-        response = make_response(create_zip(file_contents))
-
-        response.headers['Content-Disposition'] = (
-            'attachment; filename=submission-%s.zip' % str(obj.created))
-        response.headers['Content-Type'] = 'application/zip'
-        return response
+        return self.make_zip_response(*self.zip(obj, user, data))
 
     def diff(self, obj, user, data):
         """
@@ -1228,7 +1253,7 @@ class SearchAPI(APIResource):
             UserAPI.model.query(
                 op(UserAPI.model.email, email)).get(),
         'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
-        'backup': lambda op, boolean: boolean.lower() == 'true',
+        'onlybackup': lambda op, boolean: boolean.lower() == 'true',
         'onlyfinal': lambda op, boolean: boolean.lower() == 'true',
         'onlywcode': lambda op, boolean: boolean.lower() == 'true',
         'assignment': lambda op, name:
@@ -1251,8 +1276,17 @@ class SearchAPI(APIResource):
         if data.get('all', False):
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
+        file_contents = {}
         for result in results:
-            return SubmissionAPI.download(SubmissionAPI(), result, user, data)
+            try :
+                if isinstance(result, models.Submission):
+                    result = models.Backup(key=result.backup)
+                name, zip = SubmissionAPI.zip(SubmissionAPI(), result, user, data)
+                file_contents[name] = zip
+            except:
+                pass
+        subm = SubmissionAPI()
+        return subm.make_zip_response(*subm.zip_files('query', file_contents))
 
     
     @staticmethod
@@ -1300,8 +1334,8 @@ class SearchAPI(APIResource):
     def get_model(prime):
         """ determine model using passed-in data """
         op, onlyfinal = prime.get('onlyfinal', (None, False))
-        op, backup = prime.get('backup', (None, False))
-        if backup:
+        op, onlybackup = prime.get('onlybackup', (None, False))
+        if onlybackup:
             return models.Backup
         if onlyfinal:
             return models.FinalSubmission
