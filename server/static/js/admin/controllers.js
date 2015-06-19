@@ -285,14 +285,16 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
     $scope.query = {
       'string': ''
     }
-
-    $scope.getPage = function(page, query) {
+    
+    $scope.getPage = function(page) {
       Search.query({
-        query: query.string,
+        query: $scope.query.string || '',
         page: page,
         num_per_page: $scope.itemsPerPage,
       }, function(response) {
         $scope.submissions = response.data.results;
+        $scope.more = response.data.more;
+        $scope.search_query = encodeURIComponent(response.data.query);
         if (response.data.more) {
           $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
         } else {
@@ -306,6 +308,8 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
+    
+    $scope.getPage(1);
 
     $scope.search = function() {
       $scope.getPage($scope.currentPage, $scope.query)

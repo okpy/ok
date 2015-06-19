@@ -8,6 +8,7 @@ import collections
 import logging
 import datetime
 import itertools
+from os.path import join
 
 try:
     from cStringIO import StringIO
@@ -86,16 +87,33 @@ def create_api_response(status, message, data=None):
     response.status_code = status
     return response
 
-def create_zip(obj):
+
+def create_zip(file_contents={}, dir=''):
+    return finish_zip(*start_zip(file_contents, dir))
+
+
+def start_zip(file_contents={}, dir=''):
     """
     Creates a file from the given dictionary of filenames to contents.
+    Uses specified dir to store all files.
     """
     zipfile_str = StringIO()
-    with zf.ZipFile(zipfile_str, 'w') as zipfile:
-        for filename, contents in obj.items():
-            zipfile.writestr(filename, contents)
-    zip_string = zipfile_str.getvalue()
-    return zip_string
+    zipfile = zf.ZipFile(zipfile_str, 'w')
+    zipfile = add_to_zip(zipfile, file_contents, dir)
+    return zipfile_str, zipfile
+
+
+def finish_zip(zipfile_str, zipfile):
+    return zipfile_str.getvalue()
+
+
+def add_to_zip(zipfile, file_contents, dir=''):
+    """
+    Adds files to a given zip file. Uses specified dir to store files.
+    """
+    for filename, contents in file_contents.items():
+        zipfile.writestr(join(dir, filename), contents)
+    return zipfile
 
 def paginate(entries, page, num_per_page):
     """
