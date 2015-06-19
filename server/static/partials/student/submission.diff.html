@@ -12,8 +12,8 @@
             <div class="blob-action">Back</div>
         </a>
     </div>
-    <div class="files wrap" ng-repeat="(file_name, contents) in submission.messages.file_contents">
-        <snippet/>
+    <div class="files wrap" ng-repeat="(file_name, contents) in diff.diff">
+        <diff/>
     </div>
 </div>
 

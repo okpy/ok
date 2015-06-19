@@ -27,6 +27,7 @@ from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 from google.appengine.ext.ndb import stats
 from google.appengine.api import memcache
+import re
 
 
 parser = FlaskParser()
@@ -653,7 +654,9 @@ class AssignmentAPI(APIResource):
                 'max_group_size': Arg(int, required=True),
                 'due_date': DateTimeArg(required=True),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
-                                 required=True),
+                    required=True),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
                 }
         },
         'put': {
@@ -665,9 +668,23 @@ class AssignmentAPI(APIResource):
                 'max_group_size': Arg(int),
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
                 }
         },
         'get': {
+        },
+        'edit': {
+            'methods': {'POST'},
+            'web_args': {
+                'name': Arg(str),
+                'display_name': Arg(str),
+                'points': Arg(float),
+                'course': KeyArg('Course'),
+                'max_group_size': Arg(int),
+                'due_date': DateTimeArg(),
+                'templates': Arg(str, use=lambda temps: json.dumps(temps))
+            }
         },
         'index': {
             'web_args': {
@@ -680,7 +697,7 @@ class AssignmentAPI(APIResource):
         'invite': {
             'methods': set(['POST']),
             'web_args': {
-                'email': Arg(str, required=True)
+                'email': Arg(str)
             }
         },
         'group': {
@@ -711,6 +728,10 @@ class AssignmentAPI(APIResource):
             raise BadValueError(
                 'assignment with name %s exists already' % data['name'])
         return super(AssignmentAPI, self).post(user, data)
+
+    def edit(self, obj, user, data):
+        """ Save the assignment. """
+        return super(AssignmentAPI, self).put(obj, user, data)
 
     def assign(self, obj, user, data):
         need = Need('put')
@@ -1158,6 +1179,39 @@ class SubmissionAPI(APIResource):
                            data['messages'], submit_flag,
                            data.get('submitter'))
 
+
+class SearchAPI(APIResource):
+
+    methods = {
+        'index': {
+            'methods': {'GET'},
+            'web_args': {
+                'query': Arg(str, required=True),
+                'page': Arg(int, required=True),
+                'num_per_page': Arg(int, required=True)
+            }
+        }
+    }
+
+    def index(self, user, data):
+        blocks = SearchAPI.blockify(data['query'])
+        tokens = SearchAPI.tokenize(blocks)
+        print(tokens)
+
+    @staticmethod
+    def blockify(query):
+        blocks = re.compile('(-[\S]+\s+(--[\S]+\s+)?"?[\S]+[^"]"?)')
+        return blocks.findall(query)
+
+    @staticmethod
+    def tokenize(blocks):
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"]+)"?')
+        tokens = []
+        for block in blocks:
+            tokens.append(tokenizer.match(block[0]).groupdict())
+        return tokens
+
+
 class VersionAPI(APIResource):
     model = models.Version
 
@@ -1267,16 +1321,16 @@ class CourseAPI(APIResource):
                 'institution': Arg(str, required=True),
                 'offering': Arg(str, required=True),
                 'active': BooleanArg(),
-                }
+            }
         },
         'put': {
             'web_args': {
-                'name': Arg(str),
+                'display_name': Arg(str),
                 'institution': Arg(str),
                 'term': Arg(str),
                 'year': Arg(str),
                 'active': BooleanArg(),
-                }
+            }
         },
         'delete': {
         },
@@ -1298,6 +1352,24 @@ class CourseAPI(APIResource):
                 'email': Arg(str, required=True)
             }
         },
+        'add_student': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
+        'add_students': {
+            'methods': set(['POST']),
+            'web_args': {
+                'emails': Arg(list, required=True)
+            }
+        },
+        'remove_student': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
         'assignments': {
             'methods': set(['GET']),
             'web_args': {
@@ -1310,14 +1382,8 @@ class CourseAPI(APIResource):
             }
         },
         'get_students': {
-        },
-        'add_student': {
-            'methods': set(['POST']),
-            'web_args': {
-                'student': KeyArg('User', required=True)
-            }
-        },
         }
+    }
 
     def post(self, user, data):
         """
@@ -1362,18 +1428,38 @@ class CourseAPI(APIResource):
 
     def get_students(self, course, user, data):
         query = models.Participant.query(
-            models.Participant.course == course.key)
+            models.Participant.course == course.key,
+            models.Participant.role == 'student')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
         return list(query.fetch())
 
+    def add_students(self, course, user, data):
+        need = Need('staff') # Only staff can call this API
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        for email in set(data['emails']):  # to remove potential duplicates
+            user = models.User.get_or_insert(email)
+            models.Participant.add_role(user, course, STUDENT_ROLE)
+
     def add_student(self, course, user, data):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        new_participant = models.Participant.add_role(user, course, STUDENT_ROLE)
-        new_participant.put()
+
+        user = models.User.get_or_insert(data['email'])
+        models.Participant.add_role(user, course, STUDENT_ROLE)
+
+    def remove_student(self, course, user, data):
+        need = Need('staff')
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        removed_user = models.User.lookup(data['email'])
+        if removed_user:
+            models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
     def assignments(self, course, user, data):
         return list(course.assignments)

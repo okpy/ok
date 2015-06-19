@@ -71,6 +71,15 @@ app.directive('staffList', function() {
             templateUrl: '/static/partials/admin/staff.list.html',
         };
     });
+    
+    
+app.directive('studentList', function() {
+            return {
+                restrict: 'E',
+                controller: "StudentListCtrl",
+                templateUrl: '/static/partials/admin/students.list.html',
+            };
+        });
 
 
 
@@ -109,7 +118,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissionList = {
       name: 'submission.list',
       url: '/',
-      templateUrl: '/static/partials/common/submission.list.html'
+      templateUrl: '/static/partials/admin/submission.list.html'
     }
 
     var submissionDetail = {
@@ -142,7 +151,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
     var assignmentDetail = {
       name: 'assignment.detail',
-      url: '/edit/:assignmentId',
+      url: '/detail/:assignmentId',
       templateUrl: '/static/partials/admin/assignment.detail.html',
       controller: "AssignmentDetailCtrl"
     }
@@ -153,6 +162,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/assignment.create.html',
       controller: "AssignmentCreateCtrl"
     }
+    
+    var assignmentEdit = {
+          name: 'assignment.edit',
+          url: '/edit/:assignmentId',
+          templateUrl: '/static/partials/admin/assignment.edit.html',
+          controller: "AssignmentEditCtrl"
+        }
 
     var courses = {
       name: 'course',
@@ -207,6 +223,34 @@ app.config(['$stateProvider', '$urlRouterProvider',
       url: '/:staffId',
       templateUrl: '/static/partials/admin/staff.detail.html',
       controller: "StaffDetailCtrl"
+    }
+    
+    var staffAdd = {
+        name: 'staff.add',
+        url: '/add',
+        templateUrl:'/static/partials/admin/staff.add.html',
+        controller: 'StaffAddCtrl'
+    }
+    
+    var students = {
+          name: 'students',
+          url: '/:courseId/students',
+          abstract: true,
+          templateUrl: '/static/partials/admin/students.base.html'
+        }
+    
+    var studentsList = {
+          name: 'students.list',
+          url: '/',
+          templateUrl: '/static/partials/admin/students.list.html',
+          controller: "StudentsListCtrl"
+        }
+        
+    var studentsAdd = {
+        name: 'students.add',
+        url: '/add',
+        templateUrl: '/static/partials/admin/students.add.html',
+        controller: 'StudentsAddCtrl'
     }
 
     var versions = {
@@ -288,14 +332,19 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(assignmentList).
       state(assignmentDetail).
       state(assignmentCreate).
+      state(assignmentEdit).
       state(courses).
       state(courseBase).
       state(courseList).
       state(courseDetail).
       state(courseNew).
       state(staff).
+      state(staffAdd).
       state(staffList).
       state(staffDetail).
+      state(students).
+      state(studentsAdd).
+      state(studentsList).
       state(versions).
       state(versionList).
       state(versionDetail).

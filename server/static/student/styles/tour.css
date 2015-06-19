@@ -2,7 +2,7 @@
 	float:left;
 	margin:0;
 	padding:0;
-	font-family:'Open Sans';
+	font-family:'Roboto';
 	font-weight:300;
 	position:relative;
 }
@@ -31,43 +31,43 @@ img {
 	width:100%;
 }
 .button {
-	background-color:#FF9326;
-	font-weight:700;
-	padding:15px 30px;
-	color:#FFF;
-	font-size:0.75em;
-	letter-spacing:2px;
-	border-radius:30px;
-	text-transform:uppercase;
-	display:inline-block;
-	float:none;
+	background-color:#2878c8;
+    font-weight:700;
+    padding:25px 50px;
+    color:#FFF;
+    font-size:1.1em;
+    letter-spacing:2px;
+    border-radius:5px;
+    text-transform:uppercase;
+    display:inline-block;
+    float:none;
 }
 	.button:hover {
-		background-color:rgba(255, 147, 38, 0.8);
+		background-color:#2060a1;
 	}
 section {
 	text-align:center;
-	height:100%;
+	min-height:100%;
 }
-	section::before {
-		content:"";
-		vertical-align:middle;
-		height:100%;
-		margin-left:-1px;
-		display:inline-block;
-		float:none;
-	}
 	.center {
-		vertical-align:middle;
-		display:inline-block;
 		float:none;
+		display:inline-block;
+		margin-top:3em;
+		width:50%;
+        max-width:600px;
+	}
+	.screen-title .center {
+		margin-top:10em;
+	}
+	.screen-end .center {
+		margin-top:15em;
 	}
 section:nth-child(odd) {
 	background-color:#eee;
 }
 	h1,h2 {
-		font-family:'Raleway';
-		font-size:50px;
+		font-family:'Roboto Condensed';
+		font-size:4em;
 	}
 	h1 {
 		margin-top:20px;
@@ -78,7 +78,12 @@ section:nth-child(odd) {
 	.deck {
 		width:100%;
 		color:#999;
+		font-size:1.5em;
+		box-sizing:border-box;
 	}
+		.screen-title .deck {
+			padding:0.75em 0 1em 0;
+		}
 		.deck + img {
 			margin-top:50px;
 		}
@@ -88,18 +93,21 @@ section:nth-child(odd) {
 		.screen-title .deck {
 			margin-bottom:20px;
 		}
+	.screenshot {
+		width:100%;
+	}
 	.blurb {
 		position:absolute;
 		width:150px;
 	}
 		.blurb.left {
-			left:0;
+			left:-35%;
 		}
 			.blurb.left * {
 				text-align:right;
 			}
 		.blurb.right {
-			right:0;
+			right:-35%;
 		}
 			.blurb.right * {
 				text-align:left;
@@ -107,12 +115,12 @@ section:nth-child(odd) {
 		.blurb h3 {
 			color:#777;
 			font-weight:700;
-			font-size:14px;
+			font-size:1em;
 			text-transform:uppercase;
 		}
 		.blurb p {
 			color:#AAA;
-			font-size:14px;
+			font-size:1em;
 		}
 	.line {
 		position:absolute;
@@ -153,16 +161,16 @@ section:nth-child(odd) {
 		top:85%;
 	}
 	.r31 {
-		top:50%;
+		top:30%;
 	}
 	.r32 {
 		top:80%;
 	}
 	.l31 {
-		top:63%;
+		top:40%;
 	}
 	.l32 {
-		top:85%;
+		top:60%;
 	}
 	.r41 {
 		top:70%;
@@ -234,3 +242,28 @@ section:nth-child(odd) {
 			.arrow.right.hide {
 				right:-60px;
 			}
+@media screen and (max-width: 900px) {
+	.blurb .line {
+		display:none;
+	}
+	div.blurb {
+		position:relative;
+        padding:20px 0;
+        width:100%;
+        font-size:1.5em;
+	}
+		div.blurb.right {
+			right:auto;
+		}
+		div.blurb.left {
+			left:auto;
+		}
+		div.blurb.left * {
+			text-align:left;
+		}
+	section.current {
+		height:100%;
+        overflow-y:scroll;
+        overflow-x:hidden;
+	}
+}

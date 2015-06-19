@@ -1,0 +1,95 @@
+<span class="cover" onclick="closeDetails()"></span>
+<div class="sidebars col-md-4" ng-controller="AssignmentDashController">
+    <div class="sidebar colored group" ng-repeat="assign in assignments"
+         id="{{ assign.assignment.id }}" color="{{ randomColor(assign.assignment).color }}">
+        <div class="sidebar-header">
+            <div class="close" ng-click="closeDetails()"><span>+</span></div>
+            <p class="blob-status" ng-if="!assign.final.final_submission && assign.assignment.active">Not submitted yet</p>
+            <p class="blob-status" ng-if="!assign.final.final_submission && !assign.assignment.active">No submission found</p>
+            <p class="blob-status" ng-if="assign.final.final_submission && !assign.final.final_submission.revision">Assignment submitted</p>
+            <p class="blob-status" ng-if="assign.final.final_submission &&  assign.final.final_submission.revision"> Revision submitted </p>
+            <h2 class="blob-title ng-binding">{{ assign.assignment.display_name }}</h2>
+
+            <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
+                {{ ::assign.assignment.due_date | amCalendar }}</p>
+            <p class="blob-copy" ng-if="assign.final.final_submission">
+                <a ng-hide="assign.final.submission.score.length > 0"
+                   ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'
+                   class="link view-submission">
+                    Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
+                </a><br>
+                <a ng-if="assign.final.submission.score.length > 0"
+                   ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"
+                   class="link view-submission">Revision ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
+            <p class="blob-copy" 
+               ng-click="showComposition(assign.final.submission.score[0],assign.final.backup.id)" 
+               ng-if="assign.final.submission && assign.final.submission.score.length > 0">
+                Composition Score: {{ assign.final.submission.score[0].score}}/2</p>
+        </div>
+        <div ng-if="assign.group.group_info.member.length > 1">
+            <h2 class="sidebar-subtitle">Group</h2>
+            <ul class="sidebar-list">
+                <li ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}
+                    <span class="close" ng-click="removeMember(assign.group.group_info, member)"><span class="icon-x">+</span></span>
+                </li>
+            </ul>
+            <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action">Save</a>
+        </div>
+        <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && !assign.group.invited">Invited Members</h2>
+        <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && assign.group.invited">Group Invitation</h2>
+        <ul class="sidebar-list" ng-if="assign.group.group_info.invited.length > 0">
+            <li ng-if="assign.group.invited" ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}</li>
+            <li ng-repeat="invited in assign.group.group_info.invited">
+                <span ng-if="assign.group.invited">Accept invitation?</span>
+                <span ng-if="!assign.group.invited">{{ invited.email[0] }}</span>
+                <div ng-if="assign.group.invited" class="options">
+                    <span class="option good" ng-click="acceptInvite(assign.group.group_info)"><i class="fa fa-check"></i></span>
+                    <span class="option bad" ng-click="rejectInvite(assign.group.group_info)"><i class="fa fa-close"></i></span>
+                </div>
+                <span class="close" ng-if="!assign.group.invited"
+                      ng-click="removeMember(assign.group.group_info, invited)">
+                    <span class="icon-x">+</span></span>
+            </li>
+        </ul>
+        <form name="inviteGroup" ng-if="!assign.group.group_info || assign.assignment.max_group_size < assign.assignment.max_group_size">
+            <h3 class="sidebar-subtitle">Invite to Group</h3>
+
+            <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
+            <a ng-click="addMember(assign, assign.invitee)" class="action">Invite</a>
+        </form>
+        
+        <h2 class="sidebar-subtitle">Submissions</h2>
+        <ul class="subms sidebar-list">
+            <li ng-if="!assign.submissions || assign.submissions.length == 0">No submissions found.</li>
+            <li ng-repeat="subm in assign.submissions | orderBy:'created':true">
+                <a class="flag"
+                   ng-class=" {active: assign.final.final_submission && subm.id == assign.final.backup.id }"
+                    ng-click="changeSubmission(subm.id)">
+                    <span class="label right"><p>Flag for Grading</p></span>
+                    <span class="cloth"></span>
+                    <span class="stem"></span>
+                </a>
+                {{ subm.created | amCalendar }} by {{ subm.submitter.email[0] }}
+                <a ui-sref="submission.detail({courseId: courseId, submissionId:subm.id})">view
+                    <span class="arrow right dark fat"></span>
+                </a>
+            </li>
+        </ul>
+        <a ng-if="assign.submissions.length >= subm_quantity"
+           ng-click="getSubmissions(assign, true);"
+           class="action">Load More</a>
+        <h2 class="sidebar-subtitle">Backups</h2>
+        <ul class="sidebar-list">
+            <li ng-if="!assign.backups || assign.backups.length == 0">No backups found. Have you run ok?</li>
+            <li ng-repeat="backup in assign.backups | orderBy:'created':true">
+                {{ backup.created | amCalendar }} by {{ backup.submitter.email[0] }}
+                <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})">view
+                    <span class="arrow right dark fat"></span>
+                </a>
+            </li>
+        </ul>
+        <a ng-if="assign.backups.length >= backup_quantity"
+           ng-click="getBackups(assign, true);"
+           class="action">Load More</a>
+    </div>
+</div>
