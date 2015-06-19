@@ -1257,6 +1257,7 @@ class SearchAPI(APIResource):
         'after': op.__gt__
     }
     
+    # maps flags to processing functions (e.g., instantiate objects)
     flags = {
         'user': lambda op, email:
             UserAPI.model.query(

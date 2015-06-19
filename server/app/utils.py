@@ -112,8 +112,6 @@ def add_to_zip(zipfile, file_contents, dir=''):
     Adds files to a given zip file. Uses specified dir to store files.
     """
     for filename, contents in file_contents.items():
-        if filename.endswith('.py'):
-            print(filename)
         zipfile.writestr(join(dir, filename), contents)
     return zipfile
 
