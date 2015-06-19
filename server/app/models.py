@@ -1028,7 +1028,7 @@ class Group(Base):
             return False
         if action in ("get", "exit"):
             return user.key in group.member or user.key in group.invited
-        elif action in ("invite", "remove", "save_order"):
+        elif action in ("invite", "remove", "reorder"):
             return user.key in group.member
         elif action in "accept":
             return user.key in group.invited

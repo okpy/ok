@@ -222,8 +222,8 @@ app.factory('Group', ['$resource',
             return JSON.parse(data).data;
           }
         },
-        saveOrder: {
-          url: '/api/v1/group/:id/save_order',
+        reorder: {
+          url: '/api/v1/group/:id/reorder',
           method: 'PUT',
           transformResponse: function(data) {
             return JSON.parse(data).data;

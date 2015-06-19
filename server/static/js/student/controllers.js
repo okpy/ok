@@ -124,13 +124,15 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               $scope.assignInit(assignments[i]);
           }
       }
-      
+
       $scope.labelPartners = function(assign) {
-        if (assign.group.group_info !== null) {
-            arr = assign.group.group_info.member;
+        info = assign.group.group_info;
+        if (info !== null) {
+            arr = info.member;
             for (var i = 0; i < arr.length; i++) {
-                arr[i].i = i;
-                arr[i].letter = String.fromCharCode(65 + i);
+                member = arr[i];
+                member.i = i;
+                member.letter = String.fromCharCode(65 + i);
             }
         }
       }
@@ -139,37 +141,39 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         $('.sortable').disableSelection();
         $('.sortable').sortable({
             update: function(event, ui) {
-                $scope.updatePartners(assign);
+                $scope.updatePartners(assign.group);
             }
         });
       }
       
-        $scope.updatePartners = function(assign) {
-          if (assign.group.group_info !== null) {
-              arr = assign.group.group_info.member;
+        $scope.updatePartners = function(group) {
+          info = group.group_info;
+          if (info !== null && info !== undefined) {
+              arr = info.member;
               order = {}
               i = 0;
               $('.sidebar.active .sortable li').each(function() {
                   order[$(this).data('i')] = i
                   i += 1;
               });
-              console.log(arr);
               for (var i = 0; i< arr.length; i++) {
-                arr[i].i = j = order[i];
-                arr[i].letter = letter = String.fromCharCode(65 + order[i]);
+                member = arr[i];
+                member.i = j = order[i];
+                member.letter = letter = String.fromCharCode(65 + order[i]);
                 $('.sortable li[data-i="'+i+'"]').find('.member-letter').html(letter);
               }
+              return arr
           }
         }
         
-      $scope.saveOrder = function(group) {
-        order = {}
-        arr = group.group_info.member
-        for (var i = 0; i <arr.length;i++) {
+      $scope.reorder = function(group) {
+        arr = $scope.updatePartners(group);
+        order = arr.concat()
+        for (var i=0;i<arr.length;i++) {
             member = arr[i];
-            order[member.id] = member.i;
+            order.splice(member.i, 1, member)
         }
-        Group.saveOrder({
+        Group.reorder({
             id: group.group_info.id,
             order: order
         },
