@@ -1193,7 +1193,9 @@ class SearchAPI(APIResource):
         }
     }
     
-    defaults = {}
+    defaults = {
+        'onlywcode': (__eq__, 'True')
+    }
     
     operators = {
         'eq': op.__eq__,
@@ -1210,9 +1212,10 @@ class SearchAPI(APIResource):
                 op(UserAPI.model.email, email)).get(),
         'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
         'onlyfinal': lambda op, boolean: boolean.lower() == 'true',
+        'onlywcode': lambda op, boolean: boolean.lower() == 'true',
         'assignment': lambda op, name:
             AssignmentAPI.model.query(
-                op(AssignmentAPI.model.display_name, name)).get()
+                op(AssignmentAPI.model.display_name, name)).get(),
     }
 
     def index(self, user, data):
@@ -1287,6 +1290,9 @@ class SearchAPI(APIResource):
         if 'date' in keys:
             opr, arg = prime['date']
             args.append(opr(model.server_time, arg))
+        if 'onlywcode' in keys:
+            pass
+            # TODO: complete onlywcode : query only submissions that have code
         return args
     
     @staticmethod
