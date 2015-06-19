@@ -102,10 +102,10 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
     }
   }
   ]);
-  
+
 app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
-  
+
     $scope.reloadAssignment = function() {
       Assignment.get({
         id: $stateParams.assignmentId
@@ -113,7 +113,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
         $scope.initAssignment(response);
       });
     }
-    
+
     $scope.initAssignment = function(assign) {
       $scope.assign = assign;
       $scope.assign.endpoint = assign.name;
@@ -130,7 +130,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
       }
       $scope.initCourses(assign);
     }
-    
+
     $scope.initCourses = function(assign) {
       Course.get({}, function(resp) {
           $scope.courses = resp.results;
@@ -143,7 +143,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
           }
       });
     }
-    
+
     $scope.reloadAssignment();
 
     $scope.editAssign = function () {
@@ -285,7 +285,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
     $scope.query = {
       'string': ''
     }
-    
+
     $scope.getPage = function(page, query) {
       Search.query({
         query: query.string,
@@ -302,11 +302,11 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
         $window.swal('Uh oh', 'Something went wrong. Remember that your query must have a flag.', 'error');
       });
     }
-    
+
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
-    
+
     $scope.search = function() {
       $scope.getPage($scope.currentPage, $scope.query)
     }
@@ -443,8 +443,8 @@ app.controller("StaffAddCtrl", ["$scope", "$state", "$stateParams", "$window", "
     };
   }
   ]);
-  
-  
+
+
 // Student Enrollment Controllers
 app.controller("StudentsAddCtrl", ["$scope", "$state", "$stateParams", "$window", "Course",  "User",
 function($scope, $state, $stateParams, $window, Course, User) {
@@ -468,7 +468,7 @@ function($scope, $state, $stateParams, $window, Course, User) {
           $window.swal("Oops", "Could not enroll student", 'error')
         });
       };
-      
+
       $scope.saves = function () {
         arr = $scope.newMember.emails.split(',');
         $scope.newMember.emails = new Array()
@@ -496,7 +496,7 @@ app.controller("StudentsListCtrl", ["$scope", "$stateParams", "$window", "Course
   function($scope, $stateParams, $window, Course) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.members = Course.students({id: $stateParams.courseId});
-    
+
     $scope.remove = function (userEmail) {
       Course.remove_student({
         id: $stateParams.courseId,
@@ -907,18 +907,24 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
     $scope.save = function() {
       var version = new Version($scope.version);
       if (version.current) {
-        delete version.current;
         version.current_version = version.version;
       }
       var oldVersion = $scope.versions && version.name in $scope.versions;
 
       if (oldVersion) {
-        version.$update({"id": version.name});
+        version.$update({"id": version.name},
+          function (resp) {
+            $state.go('^.list');
+          }, function (err) {
+            alert(err);
+          }
+        );
       }
       else{
-        version.$save();
+        version.$save(function(resp) {
+          $state.go('^.list');
+        });
       }
-      $state.go('^.list');
     };
   }
   ]);
