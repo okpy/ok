@@ -286,9 +286,9 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
       'string': ''
     }
     
-    $scope.getPage = function(page, query) {
+    $scope.getPage = function(page) {
       Search.query({
-        query: query.string,
+        query: $scope.query.string,
         page: page,
         num_per_page: $scope.itemsPerPage,
       }, function(response) {
@@ -307,7 +307,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
       $scope.getPage($scope.currentPage);
     }
     
-    $scope.getPage(1, $scope.query);
+    $scope.getPage(1);
     
     $scope.search = function() {
       $scope.getPage($scope.currentPage, $scope.query)

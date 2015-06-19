@@ -109,6 +109,11 @@ indexes:
   - name: server_time
     direction: desc
 
+- kind: Submissionv2
+  properties:
+  - name: submitter
+  - name: server_time
+
 - kind: Submissionvtwo
   properties:
   - name: assignment

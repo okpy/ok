@@ -1220,9 +1220,11 @@ class SearchAPI(APIResource):
         scope = SearchAPI.translate(tokens)
         prime = SearchAPI.objectify(scope)
         query = SearchAPI.querify(prime)
+        start, end = SearchAPI.limits(data['page'], data['num_per_page'])
+        results = query.fetch()[start:end]
         return dict(data={
-            'results': query.fetch(),
-            'more': False
+            'results': results,
+            'more': len(results) >= data['num_per_page']
         })
         
     
@@ -1269,6 +1271,7 @@ class SearchAPI(APIResource):
     
     @staticmethod
     def get_args(model, prime):
+        """ Creates all Filter Nodes """
         args, keys = [], prime.keys()
         if 'assignment' in keys:
             args.append(model.assignment == prime['assignment'][1].key)
@@ -1278,6 +1281,11 @@ class SearchAPI(APIResource):
             opr, arg = prime['date']
             args.append(opr(model.server_time, arg))
         return args
+    
+    @staticmethod
+    def limits(page, num_per_page):
+        """ returns start and ends number based on page and num_per_page """
+        return (page-1)*num_per_page, page*num_per_page
 
 
 class VersionAPI(APIResource):
