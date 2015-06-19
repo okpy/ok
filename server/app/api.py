@@ -900,6 +900,16 @@ class SubmissionAPI(APIResource):
             raise BadValueError('Submission has no contents to download')
         file_contents = messages['file_contents']
         
+        if 'submit' in file_contents:
+            del file_contents['submit']
+
+        # Need to encode every file before it is.
+        for key in file_contents.keys():
+            try:
+                file_contents[key] = file_contents[key].encode('utf-8')
+            except:
+                pass
+        
         return name, file_contents
         
     def zip(self, obj, user, data):
@@ -916,15 +926,6 @@ class SubmissionAPI(APIResource):
         :param file_contents:
         :return:
         """
-        if 'submit' in file_contents:
-            del file_contents['submit']
-
-        # Need to encode every file before it is.
-        for key in file_contents.keys():
-            try:
-                file_contents[key] = file_contents[key].encode('utf-8')
-            except:
-                pass
         zipfile = create_zip(file_contents)
         return name, zipfile
 
@@ -1292,7 +1293,7 @@ class SearchAPI(APIResource):
                     result = models.Backup(key=result.backup)
                 name, file_contents = subm.data_for_zip(result)
                 zipfile = add_to_zip(zipfile, file_contents, name)
-            except:
+            except BadValueError as e:
                 pass
         return subm.make_zip_response('query', finish_zip(zipfile_str, zipfile))
 
