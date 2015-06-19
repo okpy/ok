@@ -391,7 +391,7 @@ app.factory('Search', ['$resource',
             transformResponse: function(data) {
               return JSON.parse(data).data;
             }
-          },
+          }
         }
       )
     }
