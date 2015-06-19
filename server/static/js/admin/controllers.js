@@ -369,7 +369,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
      Course.assignments({
       id: $stateParams.courseId
      },function(response) {
-       $scope.assignments = response.results;
+       $scope.assignments = response
      });
    }]);
 
