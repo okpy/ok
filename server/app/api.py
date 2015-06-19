@@ -6,6 +6,7 @@ import datetime
 import logging
 import ast
 import requests
+from zipfile import ZipFile
 
 from flask.views import View
 from flask.app import request, json
@@ -17,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -27,8 +28,9 @@ from google.appengine.ext import ndb
 from google.appengine.ext import deferred
 from google.appengine.ext.ndb import stats
 from google.appengine.api import memcache
-import re
 
+import re
+import operator as op
 
 parser = FlaskParser()
 
@@ -225,9 +227,14 @@ class APIResource(View):
             method_name = {'GET': 'index', 'POST': 'post'}[http_method]
             return self.call_method(method_name, user, http_method,
                                     is_index=(method_name == 'index'))
-
+        
         path = path.split('/')
+
         if len(path) == 1:
+
+            if not getattr(self, 'contains_entities', True):
+                return self.call_method(path[0], user, http_method)
+            
             entity_id = path[0]
             try:
                 key = self.key_type(entity_id)
@@ -881,6 +888,59 @@ class SubmissionAPI(APIResource):
         :param data: (dictionary) data
         :return:
         """
+        
+    def data_for_zip(self, obj):
+        try:
+            user = obj.submitter.get()
+            name = user.email[0]+'-'+str(obj.created)
+        except IndexError:
+            name = str(obj.created)
+        messages = obj.get_messages()
+        if 'file_contents' not in messages:
+            raise BadValueError('Submission has no contents to download')
+        file_contents = messages['file_contents']
+        
+        if 'submit' in file_contents:
+            del file_contents['submit']
+
+        # Need to encode every file before it is.
+        for key in file_contents.keys():
+            try:
+                file_contents[key] = file_contents[key].encode('utf-8')
+            except:
+                pass
+        
+        return name, file_contents
+        
+    def zip(self, obj, user, data):
+        """ Grab all files in submission
+        :param obj:
+        :param user: 
+        :param data: 
+        :return:
+        """
+        return self.zip_files(*self.data_for_zip(obj))
+
+    def zip_files(self, name, file_contents):
+        """ Zip files
+        :param file_contents:
+        :return:
+        """
+        zipfile = create_zip(file_contents)
+        return name, zipfile
+
+    def make_zip_response(self, name, zipfile):
+        """
+        Makes a zip response using a zip object.
+        
+        :param zip: 
+        :return:
+        """
+        response = make_response(zipfile)
+        response.headers['Content-Disposition'] = (
+            'attachment; filename=submission-%s.zip' % name)
+        response.headers['Content-Type'] = 'application/zip'
+        return response
 
     def download(self, obj, user, data):
         """
@@ -891,26 +951,7 @@ class SubmissionAPI(APIResource):
         :param data: (dictionary) data
         :return: file contents in utf-8
         """
-        messages = obj.get_messages()
-        if 'file_contents' not in messages:
-            raise BadValueError('Submission has no contents to download')
-        file_contents = messages['file_contents']
-
-        if 'submit' in file_contents:
-            del file_contents['submit']
-
-        # Need to encode every file before it is.
-        for key in file_contents.keys():
-            try:
-                file_contents[key] = file_contents[key].encode('utf-8')
-            except:
-                pass
-        response = make_response(create_zip(file_contents))
-
-        response.headers['Content-Disposition'] = (
-            'attachment; filename=submission-%s.zip' % str(obj.created))
-        response.headers['Content-Type'] = 'application/zip'
-        return response
+        return self.make_zip_response(*self.zip(obj, user, data))
 
     def diff(self, obj, user, data):
         """
@@ -1180,35 +1221,159 @@ class SubmissionAPI(APIResource):
 
 
 class SearchAPI(APIResource):
+    
+    contains_entities = False
 
     methods = {
         'index': {
             'methods': {'GET'},
             'web_args': {
                 'query': Arg(str, required=True),
-                'page': Arg(int, required=True),
-                'num_per_page': Arg(int, required=True)
+                'page': Arg(int, default=1),
+                'num_per_page': Arg(int, default=10)
+            }
+        },
+        'download': {
+            'methods': {'GET'},
+            'web_args': {
+                'query': Arg(str, required=True),
+                'page': Arg(int, default=1),
+                'num_per_page': Arg(int, default=10),
+                'all': Arg(bool, default=False)
             }
         }
     }
+    
+    defaults = {
+        'onlywcode': (op.__eq__, 'True')
+    }
+    
+    operators = {
+        'eq': op.__eq__,
+        'equal': op.__eq__,
+        'lt': op.__lt__,
+        'gt': op.__gt__,
+        'before': op.__lt__,
+        'after': op.__gt__
+    }
+    
+    # maps flags to processing functions (e.g., instantiate objects)
+    flags = {
+        'user': lambda op, email:
+            UserAPI.model.query(
+                op(UserAPI.model.email, email)).get(),
+        'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
+        'onlybackup': lambda op, boolean: boolean.lower() == 'true',
+        'onlyfinal': lambda op, boolean: boolean.lower() == 'true',
+        'onlywcode': lambda op, boolean: boolean.lower() == 'true',
+        'assignment': lambda op, name:
+            AssignmentAPI.model.query(
+                op(AssignmentAPI.model.display_name, name)).get(),
+    }
 
     def index(self, user, data):
-        blocks = SearchAPI.blockify(data['query'])
-        tokens = SearchAPI.tokenize(blocks)
-        print(tokens)
-        
-    @staticmethod
-    def blockify(query):
-        blocks = re.compile('(-[\S]+\s+(--[\S]+\s+)?"?[\S]+[^"]"?)')
-        return blocks.findall(query)
+        query = SearchAPI.querify(data['query'])
+        start, end = SearchAPI.limits(data['page'], data['num_per_page'])
+        results = query.fetch()[start:end]
+        return dict(data={
+            'results': results,
+            'more': len(results) >= data['num_per_page'],
+            'query': data['query']
+        })
+    
+    def download(self, user, data):
+        results = SearchAPI.querify(data['query']).fetch()
+        if data.get('all', False):
+            start, end = SearchAPI.limits(data['page'], data['num_per_page'])
+            results = results[start:end]
+        zipfile_str, zipfile = start_zip()
+        subm = SubmissionAPI()
+        for result in results:
+            try:
+                if isinstance(result, models.Submission):
+                    result = result.backup.get()
+                name, file_contents = subm.data_for_zip(result)
+                zipfile = add_to_zip(zipfile, file_contents, name)
+            except BadValueError as e:
+                if str(e) != 'Submission has no contents to download':
+                    raise e
+        return subm.make_zip_response('query', finish_zip(zipfile_str, zipfile))
+
     
     @staticmethod
-    def tokenize(blocks):
-        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"]+)"?')
-        tokens = []
-        for block in blocks:
-            tokens.append(tokenizer.match(block[0]).groupdict())
-        return tokens
+    def tokenize(query):
+        """
+        Parses each command for flag, op, and arg
+        Regex captures first named group "flag" as a string preceded
+        by a single dash, followed by a space. Optionally captures 
+        second named group "op" as a string preceded by two dashes
+        and followed by a space. Captures final named group "arg"
+        with optional quotations.
+        """
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?')
+        return tokenizer.findall(query)
+    
+    @classmethod
+    def translate(cls, query):
+        """ converts operators into appropriate string reps and adds defaults """
+        tokens = cls.tokenize(query)
+        scope = {k: tuple(v) for k, v in cls.defaults.items()}
+        for token in tokens:
+            flag, dummy, opr, arg = token
+            scope[flag] = (cls.operators[opr or 'eq'], arg)
+        return scope
+    
+    @classmethod
+    def objectify(cls, query):
+        """ converts keys into objects """
+        scope = cls.translate(query)
+        for k, v in scope.items():
+            op, arg = v
+            scope[k] = (op, cls.flags[k](op, arg))
+        return scope
+    
+    @classmethod
+    def querify(cls, query):
+        """ converts mush into a query object """
+        objects = cls.objectify(query)
+        model = cls.get_model(objects)
+        args = cls.get_args(model, objects)
+        query = model.query(*args)
+        return query
+    
+    @staticmethod
+    def get_model(prime):
+        """ determine model using passed-in data """
+        op, onlyfinal = prime.get('onlyfinal', (None, False))
+        op, onlybackup = prime.get('onlybackup', (None, False))
+        if onlybackup:
+            return models.Backup
+        if onlyfinal:
+            return models.FinalSubmission
+        else:
+            return models.Submission
+    
+    
+    @staticmethod
+    def get_args(model, prime):
+        """ Creates all Filter Nodes """
+        args, keys = [], prime.keys()
+        if 'assignment' in keys:
+            args.append(model.assignment == prime['assignment'][1].key)
+        if 'user' in keys:
+            args.append(model.submitter == prime['user'][1].key)
+        if 'date' in keys:
+            opr, arg = prime['date']
+            args.append(opr(model.server_time, arg))
+        if 'onlywcode' in keys:
+            pass
+            # TODO: complete onlywcode : query only submissions that have code
+        return args
+    
+    @staticmethod
+    def limits(page, num_per_page):
+        """ returns start and ends number based on page and num_per_page """
+        return (page-1)*num_per_page, page*num_per_page
 
 
 class VersionAPI(APIResource):
