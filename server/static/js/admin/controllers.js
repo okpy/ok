@@ -312,6 +312,25 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
     $scope.search = function() {
       $scope.getPage($scope.currentPage, $scope.query)
     }
+    
+    $scope.download = function(all) {
+      Search.download({
+        query: $scope.query.string,
+        page: page,
+        num_per_page: $scope.itemsPerPage,
+        all: all
+      }, function (response) {
+        console.log('Download!')
+      })
+    }
+    
+    $scope.downloadPage = function() {
+      $scope.download(false);
+    }
+    
+    $scope.downloadQuery = function() {
+      $scope.download(true);
+    }
   }]);
 
 

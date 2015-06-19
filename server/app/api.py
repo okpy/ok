@@ -1194,7 +1194,7 @@ class SearchAPI(APIResource):
     }
     
     defaults = {
-        'onlywcode': (__eq__, 'True')
+        'onlywcode': (op.__eq__, 'True')
     }
     
     operators = {
@@ -1226,7 +1226,13 @@ class SearchAPI(APIResource):
             'results': results,
             'more': len(results) >= data['num_per_page']
         })
-        
+    
+    def download(self, user, data):
+        if data.get('all', False):
+            results = self.index(user, data)['results']
+        else:
+            results = SearchAPI.querify(data['query']).fetch()
+
     
     @staticmethod
     def tokenize(query):
