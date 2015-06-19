@@ -307,6 +307,8 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
       $scope.getPage($scope.currentPage);
     }
     
+    $scope.getPage(1, $scope.query);
+    
     $scope.search = function() {
       $scope.getPage($scope.currentPage, $scope.query)
     }
