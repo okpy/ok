@@ -15,9 +15,9 @@
                     by one hyphen, a flag by two, and a string in double quotations or no punctuation at all.
                     Dates, for example, or any other name with hyphens must be enclosed by double quotations.
                     Missing comparison operators are automaticaly assumed to be --equal.<br><br>
-                    Available flags: user (email), date (YYYY-MM-DD), assignment (name), submitted (true/false)<br>
+                    Available flags: user (email), date (YYYY-MM-DD), assignment (name), onlysubmitted (true/false)<br>
                     Available operators: after, before, lt, gt, equal, eq (alias for equal)<br>
-                    Example: -user "test@example.com" -date --before "2015-06-22" -assignment Scheme -submitted true</p>
+                    Example: -user "partner0@teamwork.com" -date --before "2015-06-22" -assignment Scheme -onlysubmitted true</p>
                 <input type="text" placeholder="Search" class="form-control" ng-model="query.string" required/>
                 </select>
             </div>
@@ -51,7 +51,7 @@
           <th style="width: 15%">Tags</th>
       </tr>
 
-        <tr ng-repeat="submission in submissions" ng-if='submission.messages.file_contents' ts-repeat>
+        <tr ng-repeat="submission in submissions" ts-repeat>
           <td>
             <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
           </td>
@@ -61,9 +61,9 @@
           </td>
           <td>
               <div class="btn-group download-btn-group">
-                  <a ui-sref='submission.detail({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">View</a>
-                  <a href='/api/v1/submission/{{submission.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
-                  <a ui-sref='submission.diff({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">Diff</a>
+                  <!--<a ui-sref='submission.detail({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">View</a>-->
+                  <!--<a href='/api/v1/submission/{{submission.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>-->
+                  <!--<a ui-sref='submission.diff({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">Diff</a>-->
               </div>
           </td>
           <!-- Future Progress Bar -->

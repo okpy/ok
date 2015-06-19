@@ -293,7 +293,6 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
         num_per_page: $scope.itemsPerPage,
       }, function(response) {
         $scope.submissions = response.data.results;
-        alert('YAY');
         if (response.data.more) {
           $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
         } else {

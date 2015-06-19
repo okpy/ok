@@ -1193,9 +1193,7 @@ class SearchAPI(APIResource):
         }
     }
     
-    defaults = {
-        'submitted': (op.__eq__, True)
-    }
+    defaults = {}
     
     operators = {
         'eq': op.__eq__,
@@ -1211,7 +1209,7 @@ class SearchAPI(APIResource):
             UserAPI.model.query(
                 op(UserAPI.model.email, email)).get(),
         'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
-        'submitted': lambda op, boolean: bool(boolean),
+        'onlyfinal': lambda op, boolean: boolean.lower() == 'true',
         'assignment': lambda op, name:
             AssignmentAPI.model.query(
                 op(AssignmentAPI.model.display_name, name)).get()
@@ -1222,8 +1220,10 @@ class SearchAPI(APIResource):
         scope = SearchAPI.translate(tokens)
         prime = SearchAPI.objectify(scope)
         query = SearchAPI.querify(prime)
-        print(query.fetch())
-        return query.fetch()
+        return dict(data={
+            'results': query.fetch(),
+            'more': False
+        })
         
     
     @staticmethod
@@ -1260,7 +1260,8 @@ class SearchAPI(APIResource):
     @staticmethod
     def get_model(prime):
         """ determine model using passed-in data """
-        if prime['submitted']:
+        op, onlyfinal = prime.get('onlyfinal', (None, False))
+        if onlyfinal:
             return models.FinalSubmission
         else:
             return models.Submission
