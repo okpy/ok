@@ -278,8 +278,8 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
-  function($scope, $window, Search) {
+app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course',
+  function($scope, $stateParams, $window, Search, Course) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
     $scope.query = {
@@ -291,6 +291,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
         query: $scope.query.string || '',
         page: page,
         num_per_page: $scope.itemsPerPage,
+        courseId: $scope.course.id
       }, function(response) {
         $scope.submissions = response.data.results;
         $scope.more = response.data.more;
@@ -305,14 +306,17 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
       });
     }
 
+    $scope.course = Course.get({
+      id: $stateParams.courseId
+    }, function (response) {
+      $scope.getPage(1);
+    });
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
 
-    $scope.getPage(1);
-
     $scope.search = function() {
-      $scope.getPage($scope.currentPage, $scope.query)
+      $scope.getPage($scope.currentPage)
     }
   }]);
 
