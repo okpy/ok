@@ -30,7 +30,7 @@ function filter_rows(items) {
 
 app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$stateParams', 'Course',
     function ($scope, $window, $state, $stateParams, Course) {
-      Course.get(function(response) {
+      Course.get_if_enrolled(function(response) {
         $scope.rows = filter_rows(response.results);
       });
       if ($window.user.indexOf("berkeley.edu") == -1) {
@@ -54,6 +54,12 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
       } else {
          $window.location.hash = "";
       }
+      
+      $scope.loadAll(function(response) {
+        Course.get(function(response) {
+            $scope.rows = filter_rows(response.results);
+          });
+      })
     }
 ]);
 

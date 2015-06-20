@@ -1560,6 +1560,8 @@ class CourseAPI(APIResource):
             }
         },
         'get_students': {
+        },
+        'get_if_enrolled': {
         }
     }
 
@@ -1641,6 +1643,9 @@ class CourseAPI(APIResource):
 
     def assignments(self, course, user, data):
         return course.assignments.fetch()
+    
+    def get_if_enrolled(self, course, user, data):
+        pass
 
 
 class GroupAPI(APIResource):
