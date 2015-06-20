@@ -8,7 +8,7 @@ def get_images():
     conn.request("GET", '/images/json')
     resp = conn.getresponse()
     responses = resp.read()
-    print responses
+    print(responses)
     conn.close()
 
 def make_docker_file():
@@ -22,7 +22,7 @@ def make_docker_file():
     df.run('yes | sudo pip install --upgrade oauth2client')
     df.run('yes | sudo pip install --upgrade google-api-python-client')
     df.run('yes | sudo apt-get install python-openssl')
-    
+
     #replace with adding grading files
     df.add_file('grading_script.py')
     df.add_file('grading')
@@ -33,7 +33,7 @@ def make_docker_file():
     #run grading script
     return df
 
-    
+
 def build_file():
     client = DockerClientWrapper('104.154.38.163:4243')
     df = make_docker_file()
@@ -69,7 +69,7 @@ def create_container():
     params = json.dumps(args)
     conn.request("POST","/containers/create", params, headers)
     response = conn.getresponse()
-    print response.status, response.reason
+    print(response.status, response.reason)
     r = response.read()
     r = r.split(",")[0]
     r = r.split(':')
@@ -82,29 +82,29 @@ def delete_container(cont_id):
     conn = httplib.HTTPConnection("104.154.38.163:4243")
     conn.request("DELETE", '/containers/' + cont_id)
     response = conn.getresponse()
-    print response.status, response.reason
+    print(response.status, response.reason)
     conn.close()
 
 def list_containers():
     conn = httplib.HTTPConnection("104.154.38.163:4243")
     conn.request('GET', '/containers/json')
     response = conn.getresponse()
-    print response.status, response.reason
-    print response.read()
+    print(response.status, response.reason)
+    print(response.read())
     conn.close()
 
 def start_container(cont_id):
     conn = httplib.HTTPConnection("104.154.38.163:4243")
     conn.request('POST', '/containers/' + cont_id + '/start')
     response = conn.getresponse()
-    print response.status, response.reason
+    print(response.status, response.reason)
     conn.close()
 
 def stop_container(cont_id):
     conn = httplib.HTTPConnection("104.154.38.163:4243")
     conn.request('POST', '/containers/' + cont_id + '/stop')
     response = conn.getresponse()
-    print response.status, response.reason
+    print(response.status, response.reason)
     conn.close()
 
 

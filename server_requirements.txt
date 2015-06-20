@@ -30,3 +30,5 @@ pytz==2014.10
 coverage==3.7.1
 docker-map==0.3.3
 docker-py==1.2.1
+oauth2client==1.4.11
+apiclient==1.0.2

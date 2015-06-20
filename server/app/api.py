@@ -1283,7 +1283,6 @@ class SearchAPI(APIResource):
     }
 
     def index(self, user, data):
-<<<<<<< HEAD
         query = SearchAPI.querify(data['query'])
         start, end = SearchAPI.limits(data['page'], data['num_per_page'])
         results = query.fetch()[start:end]
@@ -1849,41 +1848,6 @@ class FinalSubmissionAPI(APIResource):
 
         submission.put()
 
-        return score
-
-
-class GradeAPI(APIResource):
-    model = models.Submission
-
-    methods = {
-        'get': {
-        },
-        'add_grade': {
-            'methods': set(['POST']),
-            'web_args': {
-                'score': Arg(int, required=True),
-            }
-        }
-    }
-
-    def add_grade(self, obj, user, data):
-        """
-        Sets autograder score
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: (int) score
-        """
-        score = models.Score(
-            score=data['score'],
-            autograder=True)
-
-        score.put()
-        # submission = obj.get()
-        obj.score = [composition for composition in obj.score if not score.autograder]
-        obj.score.append(score)
-        obj.put()
         return score
 
 
