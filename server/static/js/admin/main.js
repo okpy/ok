@@ -4,7 +4,9 @@ app.directive('snippet', function() {
             restrict: 'E',
             templateUrl: '/static/partials/common/snippet.html',
             link: function(scope, elem, attrs) {
-                scope.contents = scope.contents.split('\n');
+                if (scope.contents) {
+                  scope.contents = scope.contents.split('\n');
+                }
             }
         };
     });
