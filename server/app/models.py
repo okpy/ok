@@ -495,10 +495,9 @@ class Assignment(Base):
             return query
         if user.is_admin and need.action != "delete":
             return True
-
         if need.action == "get":
             return True
-        elif need.action == "create":
+        elif need.action == "create" or need.action == "put":
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         elif need.action == "grade":
