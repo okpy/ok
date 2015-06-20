@@ -1283,7 +1283,7 @@ class SearchAPI(APIResource):
 
     def index(self, user, data):
         self.check_permissions(user, data)
-        
+
         query = SearchAPI.querify(data['query'])
         start, end = SearchAPI.limits(data['page'], data['num_per_page'])
         results = query.fetch()[start:end]
@@ -1292,10 +1292,10 @@ class SearchAPI(APIResource):
             'more': len(results) >= data['num_per_page'],
             'query': data['query']
         })
-    
+
     def download(self, user, data):
         self.check_permissions(user, data)
-        
+
         results = SearchAPI.querify(data['query']).fetch()
         if data.get('all', False):
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
