@@ -800,9 +800,6 @@ class Submission(Base):
             course_key = submission.assignment.get().course
             return Participant.has_role(user, course_key, STAFF_ROLE)
         return Backup._can(user, need, submission.backup.get() if submission else None, query)
-        # TODO: FIX. Autograder currently allows all permissions.
-        return True
-        #return Backup._can(user, need, submission.backup.get() if submission else None, query)
 
 
 class Diff(Base):
