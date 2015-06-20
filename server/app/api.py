@@ -1272,6 +1272,9 @@ class SearchAPI(APIResource):
     }
 
     def index(self, user, data):
+        # Temporary permission error while permissions are figured out.
+        raise need.exception()
+
         query = SearchAPI.querify(data['query'])
         start, end = SearchAPI.limits(data['page'], data['num_per_page'])
         results = query.fetch()[start:end]
@@ -1280,8 +1283,11 @@ class SearchAPI(APIResource):
             'more': len(results) >= data['num_per_page'],
             'query': data['query']
         })
-    
+
     def download(self, user, data):
+        # Temporary permission error while permissions are figured out.
+        raise need.exception()
+
         results = SearchAPI.querify(data['query']).fetch()
         if data.get('all', False):
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
