@@ -712,7 +712,8 @@ class AssignmentAPI(APIResource):
         },
         'assign': {
             'methods': set(['POST'])
-        }
+        },
+
     }
 
     def post(self, user, data):
@@ -876,7 +877,15 @@ class SubmissionAPI(APIResource):
         },
         'win_rate': {
             'methods': set(['GET']),
-        }
+        },
+        'score': {
+            'methods': set(['POST']),
+            'web_args': {
+                'key': Arg(str, required=True),
+                'score': Arg(int, required=True),
+                'message': Arg(str, required=True),
+            }
+        },
     }
 
     def graded(self, obj, user, data):
@@ -1103,7 +1112,7 @@ class SubmissionAPI(APIResource):
 
     def win_rate(self, obj, user, data):
         """
-        Gets the win_rate for the submission. This method will be removed shortly.
+        Gets the win_rate for the submission.
 
         :param obj: (object) target
         :param user: -- unused --
@@ -1130,27 +1139,28 @@ class SubmissionAPI(APIResource):
           memcache.add('%s:hog_win' % obj.key.id(), q.json(), 86400)
           return q.json()
 
-
     def score(self, obj, user, data):
         """
-        Sets composition score
+        Sets a score.
 
         :param obj: (object) target
         :param user: (object) caller
         :param data: (dictionary) data
         :return: (int) score
         """
+        need = Need('grade')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
         score = models.Score(
+            key=data['key'],
             score=data['score'],
             message=data['message'],
-            grader=user.key)
-        score.put()
+            grader=user.key).put()
 
-        if 'Composition' not in obj.tags:
-            obj.tags.append('Composition')
-
-        obj.compScore = score.key
+        obj.score.append(score)
         obj.put()
+
         return score
 
     def get_assignment(self, name):
@@ -1369,7 +1379,7 @@ class SearchAPI(APIResource):
             pass
             # TODO: complete onlywcode : query only submissions that have code
         return args
-    
+
     @staticmethod
     def limits(page, num_per_page):
         """ returns start and ends number based on page and num_per_page """
@@ -1603,7 +1613,7 @@ class CourseAPI(APIResource):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        
+
         for email in set(data['emails']):  # to remove potential duplicates
             user = models.User.get_or_insert(email)
             models.Participant.add_role(user, course, STUDENT_ROLE)
@@ -1612,7 +1622,7 @@ class CourseAPI(APIResource):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        
+
         user = models.User.get_or_insert(data['email'])
         models.Participant.add_role(user, course, STUDENT_ROLE)
 
@@ -1787,14 +1797,6 @@ class FinalSubmissionAPI(APIResource):
         },
         'index': {
         },
-        'score': {
-            'methods': set(['POST']),
-            'web_args': {
-                'score': Arg(int, required=True),
-                'message': Arg(str, required=True),
-                'source': Arg(str, required=True),
-              }
-        },
         'post': {
             'web_args': {
                 'submission': KeyArg('Submission', required=True)
@@ -1813,40 +1815,6 @@ class FinalSubmissionAPI(APIResource):
         subm = attributes['submission'].get()
         subm.mark_as_final()
         return subm.get_final()
-
-    def score(self, obj, user, data):
-        """
-        Sets composition score
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: (int) score
-        """
-        need = Need('grade')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
-        score = models.Score(
-            score=data['score'],
-            message=data['message'],
-            grader=user.key)
-        grade = score.put()
-
-        submission = obj.submission.get()
-
-        # Create or updated based on existing scores.
-        if data['source'] == 'composition':
-          # Only keep any autograded scores.
-          submission.score = [autograde for autograde in submission.score \
-            if score.autograder]
-          submission.score.append(score)
-        else:
-          submission.score.append(score)
-
-        submission.put()
-
-        return score
 
 class AnalyticsAPI(APIResource):
     """
@@ -1892,3 +1860,4 @@ class AnalyticsAPI(APIResource):
         return (201, 'success', {
             'key': job.job_dump.key.id()
         })
+
