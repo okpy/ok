@@ -35,11 +35,22 @@ Testing the Installation
 ------------------------
 * Run `./run_tests`. For a successful installation, all tests should pass.
 
-Starting the Server
--------------
+Local Server
+------------
+To run the server locally:
+
 ```bash
 $ cd server
 $ ./start_server
+```
+
+Deploying
+---------
+To deploy the current branch:
+
+```bash
+$ gcloud auth login
+$ appcfg.py update
 ```
 
 Customizing seed content
