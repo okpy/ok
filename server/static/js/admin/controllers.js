@@ -282,7 +282,6 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
   function($scope, $stateParams, $window, Search, Course) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
-    $scope.course = Course.get({id: $stateParams.courseId });
     $scope.query = {
       'string': ''
     }
@@ -292,7 +291,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
         query: $scope.query.string || '',
         page: page,
         num_per_page: $scope.itemsPerPage,
-        
+        courseId: $scope.course.id
       }, function(response) {
         $scope.submissions = response.data.results;
         $scope.more = response.data.more;
@@ -307,14 +306,14 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
       });
     }
 
-    $scope.pageChanged = function() {
-      $scope.getPage($scope.currentPage);
-    }
-    
-    $scope.getPage(1);
+    $scope.course = Course.get({
+      id: $stateParams.courseId 
+    }, function (response) {
+      $scope.getPage(1);
+    });
 
     $scope.search = function() {
-      $scope.getPage($scope.currentPage, $scope.query)
+      $scope.getPage($scope.currentPage)
     }
   }]);
 

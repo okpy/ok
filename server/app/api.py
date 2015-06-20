@@ -1230,7 +1230,8 @@ class SearchAPI(APIResource):
             'web_args': {
                 'query': Arg(str, required=True),
                 'page': Arg(int, default=1),
-                'num_per_page': Arg(int, default=10)
+                'num_per_page': Arg(int, default=10),
+                'courseId': Arg(int, required=True)
             }
         },
         'download': {
@@ -1272,6 +1273,13 @@ class SearchAPI(APIResource):
     }
 
     def index(self, user, data):
+        course = CourseAPI()
+        key = course.key_type(data['courseId'])
+        course = course.get_instance(key, user)
+        
+        if user.key not in course.staff:
+            raise Need('get').exception()
+        
         query = SearchAPI.querify(data['query'])
         start, end = SearchAPI.limits(data['page'], data['num_per_page'])
         results = query.fetch()[start:end]
