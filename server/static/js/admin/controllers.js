@@ -278,10 +278,11 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
-  function($scope, $window, Search) {
+app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course',
+  function($scope, $stateParams, $window, Search, Course) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
+    $scope.course = Course.get({id: $stateParams.courseId });
     $scope.query = {
       'string': ''
     }
@@ -291,6 +292,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
         query: $scope.query.string || '',
         page: page,
         num_per_page: $scope.itemsPerPage,
+        
       }, function(response) {
         $scope.submissions = response.data.results;
         $scope.more = response.data.more;
