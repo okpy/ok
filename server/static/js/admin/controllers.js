@@ -302,7 +302,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
           $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
         }
       }, function(err) {
-        $window.swal('Uh oh', 'Something went wrong. Remember that your query must have a flag.', 'error');
+        $window.swal('Uh oh', 'We couldn\'t complete the search. Remember that your query must have valid flags.', 'error');
       });
     }
 
