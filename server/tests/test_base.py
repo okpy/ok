@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-#pylint: disable=no-init,invalid-name,missing-docstring,maybe-no-member
+#pylint: disable=no-init, missing-docstring, no-member, too-many-instance-attributes, all
 
 """
 Server test case scaffolding
@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(
 from flask import json
 
 from google.appengine.ext import testbed
+from google.appengine.api import apiproxy_stub_map
 
 try:
     import unittest2 as unittest
@@ -34,17 +35,22 @@ import app
 from app import models
 from app import auth
 from app.constants import API_PREFIX
-from app.authenticator import Authenticator, AuthenticationException
+from app.authenticator import Authenticator, AuthenticationException #pylint: disable=relative-import
 
 def make_fake_course(creator):
+    """
+    Returns a fake course
+    """
     return models.Course(
         institution="UC Soumya",
         instructor=[creator.key],
         offering="cal/cs61a/fa14",
         active=True)
 
-
 def make_fake_assignment(course, creator):
+    """
+    Returns a fake assignment
+    """
     return models.Assignment(
         name='hw1',
         points=3,
@@ -54,6 +60,18 @@ def make_fake_assignment(course, creator):
         creator=creator.key,
         max_group_size=4,
         due_date=datetime.datetime.now())
+
+def make_fake_grade(grade):
+    return models.Grade(
+        grade=grade,
+        message="This is a fake grade.")
+
+def make_fake_creator():
+    """
+    Returns a fake creator
+    """
+    return models.User(
+        email=["dummy@student.com"])
 
 class BaseTestCase(unittest.TestCase):
     """
@@ -71,7 +89,8 @@ class BaseTestCase(unittest.TestCase):
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_user_stub()
         self.testbed.init_memcache_stub()
-        self.testbed.init_taskqueue_stub()
+        path = os.path.dirname(os.path.dirname("queue.yaml"))
+        self.testbed.init_taskqueue_stub(root_path=path)
         self.taskqueue_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
         self._mocks = []
 

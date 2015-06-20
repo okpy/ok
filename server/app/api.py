@@ -1163,6 +1163,7 @@ class SubmissionAPI(APIResource):
 
         return score
 
+
     def get_assignment(self, name):
         """
         Look up an assignment by name
@@ -1282,6 +1283,7 @@ class SearchAPI(APIResource):
     }
 
     def index(self, user, data):
+<<<<<<< HEAD
         query = SearchAPI.querify(data['query'])
         start, end = SearchAPI.limits(data['page'], data['num_per_page'])
         results = query.fetch()[start:end]
@@ -1350,7 +1352,7 @@ class SearchAPI(APIResource):
         args = cls.get_args(model, objects)
         query = model.query(*args)
         return query
-    
+
     @staticmethod
     def get_model(prime):
         """ determine model using passed-in data """
@@ -1362,8 +1364,7 @@ class SearchAPI(APIResource):
             return models.FinalSubmission
         else:
             return models.Submission
-    
-    
+
     @staticmethod
     def get_args(model, prime):
         """ Creates all Filter Nodes """
@@ -1815,6 +1816,76 @@ class FinalSubmissionAPI(APIResource):
         subm = attributes['submission'].get()
         subm.mark_as_final()
         return subm.get_final()
+
+    def score(self, obj, user, data):
+        """
+        Sets composition score
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
+        """
+        need = Need('grade')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        score = models.Score(
+            score=data['score'],
+            message=data['message'],
+            grader=user.key)
+        grade = score.put()
+
+        submission = obj.submission.get()
+
+        # Create or updated based on existing scores.
+        if data['source'] == 'composition':
+          # Only keep any autograded scores.
+          submission.score = [autograde for autograde in submission.score \
+            if score.autograder]
+          submission.score.append(score)
+        else:
+          submission.score.append(score)
+
+        submission.put()
+
+        return score
+
+
+class GradeAPI(APIResource):
+    model = models.Submission
+
+    methods = {
+        'get': {
+        },
+        'add_grade': {
+            'methods': set(['POST']),
+            'web_args': {
+                'score': Arg(int, required=True),
+            }
+        }
+    }
+
+    def add_grade(self, obj, user, data):
+        """
+        Sets autograder score
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
+        """
+        score = models.Score(
+            score=data['score'],
+            autograder=True)
+
+        score.put()
+        # submission = obj.get()
+        obj.score = [composition for composition in obj.score if not score.autograder]
+        obj.score.append(score)
+        obj.put()
+        return score
+
 
 class AnalyticsAPI(APIResource):
     """

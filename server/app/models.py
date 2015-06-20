@@ -449,6 +449,11 @@ class Course(Base):
             Participant.course == self.key,
             Participant.role == STAFF_ROLE).fetch()]
 
+    def students(self):
+        return [part.user for part in Participant.query(
+            Participant.course == self.key,
+            Participant.role == STUDENT_ROLE).fetch()]
+
     @classmethod
     def _can(cls, user, need, course, query):
         action = need.action
@@ -616,7 +621,6 @@ def disjunction(query, filters):
     else:
         return query.filter(filters[0])
 
-
 class Backup(Base):
     """A backup is sent each time a student runs the client."""
     submitter = ndb.KeyProperty(User)
@@ -714,7 +718,8 @@ class Score(Base):
     key = ndb.TextProperty() # E.g., "Partner 0" or "composition"
     score = ndb.IntegerProperty()
     message = ndb.TextProperty() # Plain text
-    grader = ndb.KeyProperty(User) # For autograders, the user who authenticated
+    grader = ndb.KeyProperty(User)
+    autograder = ndb.BooleanProperty(default=False)
 
 
 class Submission(Base):
@@ -795,6 +800,9 @@ class Submission(Base):
             course_key = submission.assignment.get().course
             return Participant.has_role(user, course_key, STAFF_ROLE)
         return Backup._can(user, need, submission.backup.get() if submission else None, query)
+        # TODO: FIX. Autograder currently allows all permissions.
+        return True
+        #return Backup._can(user, need, submission.backup.get() if submission else None, query)
 
 
 class Diff(Base):
