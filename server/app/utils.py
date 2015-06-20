@@ -24,7 +24,7 @@ from google.appengine.api import taskqueue
 
 from app import app
 
-from app.http_requests import send
+# from app.http_requests import send
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
