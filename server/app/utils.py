@@ -115,6 +115,18 @@ def add_to_zip(zipfile, file_contents, dir=''):
         zipfile.writestr(join(dir, filename), contents)
     return zipfile
 
+def create_csv(content):
+    """ 
+    Creates csv file from content. content must be a list of lists.
+    """
+    scsv = StringIO()
+    writer = csv.writer(scsv)
+    try:
+        writer.writerows(content)
+    except csv.Error as e:
+        sys.exit('Error creating CSV: {}'.format(e))
+    return scsv.getvalue()
+
 def paginate(entries, page, num_per_page):
     """
     Added stuff from

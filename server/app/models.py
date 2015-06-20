@@ -471,6 +471,17 @@ class Course(Base):
         """Return a query for assignments."""
         return Assignment.query(Assignment.course == self.key)
 
+    def get_students(self, user):
+        need = Need('staff')
+        if not Participant.can(user, need, self.key, query):
+            raise need.exception()
+
+        query = Participant.query(
+            Participant.course == self.key,
+            Participant.role == 'student')
+        
+        return list(query.fetch())
+
 
 class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
