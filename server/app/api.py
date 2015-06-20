@@ -1626,7 +1626,7 @@ class CourseAPI(APIResource):
             models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
     def assignments(self, course, user, data):
-        return list(course.assignments)
+        return course.assignments.fetch()
 
 
 class GroupAPI(APIResource):
