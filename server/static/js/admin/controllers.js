@@ -306,11 +306,8 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
       });
     }
 
-    $scope.course = Course.get({
-      id: $stateParams.courseId
-    }, function (response) {
-      $scope.getPage(1);
-    });
+    $scope.course = Course.get({id: $stateParams.courseId});
+
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
