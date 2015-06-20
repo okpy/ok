@@ -257,7 +257,8 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission
 app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$sessionStorage', '$window', '$state', '$anchorScroll','FinalSubmission', 'Submission',
   function($scope, $location, $stateParams, $sessionStorage, $window, $state, $anchorScroll, FinalSubmission,Submission) {
     FinalSubmission.get({
-      id: $stateParams.finalId
+      id: $stateParams.finalId,
+      key: 'composition'
     }, function (response){
       $scope.finalSubmission = response;
       $scope.submission = response.submission;
