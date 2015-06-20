@@ -4,7 +4,7 @@ app.controller("SidebarCntrl", ['$scope', 'Assignment',
     Assignment.query(function(response) {
       $scope.assignments = response.results;
     });
-    $scope.course_name = "CS61A Spring 2015"
+    $scope.course_name = "Ok Admin"
   }]);
 
 // Submission Controllers
@@ -285,7 +285,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     $scope.query = {
       'string': ''
     }
-    
+
     $scope.getPage = function(page) {
       Search.query({
         query: $scope.query.string || '',
@@ -307,10 +307,13 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     }
 
     $scope.course = Course.get({
-      id: $stateParams.courseId 
+      id: $stateParams.courseId
     }, function (response) {
       $scope.getPage(1);
     });
+    $scope.pageChanged = function() {
+      $scope.getPage($scope.currentPage);
+    }
 
     $scope.search = function() {
       $scope.getPage($scope.currentPage)
@@ -363,7 +366,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
     $scope.courses = Course.query({});
   }]);
-  
+
   app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams',
     function($scope, $http, Assignment, Course, $stateParams) {
     $scope.course = Course.get({id: $stateParams.courseId});
