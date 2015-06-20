@@ -1,5 +1,8 @@
 <div class="wrap toBlur">
     <section class="screen courses" ng-controller="CourseSelectorController">
+        <p ng-if="rows == undefined">No courses found.</p>
+        <p ng-if="courses.length == 0">Looks like you aren't enrolled in any courses. <a ng-click="loadAll()">View all courses?</a></p>
+        <a ng-if="courses.length != 0" ng-click="loadAll()">View all courses</a>
         <div class="row" ng-repeat="row in rows">
             <div ng-repeat="course in row">
                 <div class="col-md-4">
