@@ -30,8 +30,15 @@ function filter_rows(items) {
 
 app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$stateParams', 'Course',
     function ($scope, $window, $state, $stateParams, Course) {
-      Course.get_if_enrolled(function(response) {
-        $scope.rows = filter_rows(response.results);
+      Course.get({
+        'onlyenrolled': true
+      },function(response) {
+        if (response.results) {
+            $scope.courses = response.results;
+            $scope.rows = filter_rows(response.results);
+        } else {
+            $scope.courses = $scope.rows = []
+        }
       });
       if ($window.user.indexOf("berkeley.edu") == -1) {
         $window.swal({
@@ -55,11 +62,15 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
          $window.location.hash = "";
       }
       
-      $scope.loadAll(function(response) {
+      $scope.loadAll = function() {
         Course.get(function(response) {
-            $scope.rows = filter_rows(response.results);
+            if (response.results) {
+                $scope.rows = filter_rows(response.results);
+            } else {
+                $scope.courses = $scope.rows = undefined;
+            }
           });
-      })
+      }
     }
 ]);
 

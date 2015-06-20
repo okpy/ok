@@ -252,12 +252,6 @@ app.factory('Course', ['$resource',
           },
           cache: true
         },
-        get_if_enrolled: {
-          url:'/api/v1/course/:courseId/get_if_enrolled'
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          },
-        },
         assignments: {
            isArray: true,
            url:'/api/v1/course/:id/assignments',

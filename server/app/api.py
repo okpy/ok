@@ -1515,6 +1515,9 @@ class CourseAPI(APIResource):
         'get': {
         },
         'index': {
+            'web_args': {
+                'onlyenrolled': Arg(str, default='false')
+            }
         },
         'get_staff': {
         },
@@ -1560,8 +1563,6 @@ class CourseAPI(APIResource):
             }
         },
         'get_students': {
-        },
-        'get_if_enrolled': {
         }
     }
 
@@ -1570,6 +1571,14 @@ class CourseAPI(APIResource):
         The POST HTTP method
         """
         return super(CourseAPI, self).post(user, data)
+    
+    def index(self, user, data):
+        onlyenrolled = data['onlyenrolled'].lower() == 'true'
+        if onlyenrolled:
+            return dict(results=list(models.Participant.query(
+                models.Participant.user == user.key)))
+        else:
+            return super(CourseAPI, self).index(user, data)
 
     def add_staff(self, course, user, data):
         need = Need('staff')
@@ -1643,9 +1652,9 @@ class CourseAPI(APIResource):
 
     def assignments(self, course, user, data):
         return course.assignments.fetch()
-    
-    def get_if_enrolled(self, course, user, data):
-        pass
+
+    def get_my_courses(self, course, user, data):
+        return self.get_courses(course, user, dict(user=user))
 
 
 class GroupAPI(APIResource):
