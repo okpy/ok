@@ -1,7 +1,9 @@
-<div ng-controller="AssignmentListCtrl">
+<div ng-controller="CourseAssignmentsCtrl">
   <section class="content-header" ng-hide="dashboard">
       <ol class="breadcrumb" >
-          <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+        <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+        <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
+        <li><a ui-sref="course.detail.stats({courseId:course.id})"><i class="fa fa-list"></i> {{course.display_name}}</a></li>
           <li class="active"><i class="fa fa-list"></i> All Assignments</li>
       </ol>
   </section>
@@ -11,8 +13,7 @@
     <h3 class="box-title" ng-if="assignments.$resolved && assignments.length == 0" >No Assignments</h3>
     <h3 class="box-title" ng-if="assignments.length > 0">Assignments</h3>
     <div class="box-tools" style="float:right;">
-      <button class="btn btn-primary" ui-sref="course.list" style="margin-right:10px"> <i class="fa fa-view"></i> View By Course</a>
-      <button class="btn btn-primary" ui-sref="assignment.create"> <i class="fa fa-plus"></i> Create Assignment</a>
+      <button class="btn btn-primary" ui-sref="assignment.create"> <i class="fa fa-plus"></i> Create Assignment</button>
     </div>
 
   </div><!-- /.box-header -->

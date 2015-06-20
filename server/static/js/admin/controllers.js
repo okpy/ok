@@ -362,6 +362,16 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
     $scope.courses = Course.query({});
   }]);
+  
+  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams',
+    function($scope, $http, Assignment, Course, $stateParams) {
+    $scope.course = Course.get({id: $stateParams.courseId});
+     Course.assignments({
+      id: $stateParams.courseId
+     },function(response) {
+       $scope.assignments = response
+     });
+   }]);
 
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
   function ($scope, $stateParams, Course) {
