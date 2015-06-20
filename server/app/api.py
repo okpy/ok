@@ -1575,8 +1575,8 @@ class CourseAPI(APIResource):
     def index(self, user, data):
         onlyenrolled = data['onlyenrolled'].lower() == 'true'
         if onlyenrolled:
-            return dict(results=list(models.Participant.query(
-                models.Participant.user == user.key)))
+            return dict(results=[result.course for result in models.Participant.query(
+                models.Participant.user == user.key)])
         else:
             return super(CourseAPI, self).index(user, data)
 
