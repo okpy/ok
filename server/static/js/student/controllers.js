@@ -11,10 +11,27 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
     }
 ])
 
+function filter_rows(items) {
+    rows = [];
+    row = [];
+    for (var i=0;i<items.length;i++) {
+        item = items[i];
+        if (i%3 == 0 && i != 0) {
+            rows.push(row);
+            row = [];
+        }
+        row.push(item);
+    }
+    if (row.length > 0) {
+        rows.push(row);
+    }
+    return rows;
+}
+
 app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$stateParams', 'Course',
     function ($scope, $window, $state, $stateParams, Course) {
       Course.get(function(response) {
-        $scope.courses = response.results
+        $scope.rows = filter_rows(response.results);
       });
       if ($window.user.indexOf("berkeley.edu") == -1) {
         $window.swal({
@@ -117,7 +134,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         }
       }
       $scope.initAssignments = function(assignments) {
-         $scope.assignments = assignments;
+         $scope.rows = filter_rows(assignments);
           for (i = 0;i<assignments.length;i++) {
               $scope.assignInit(assignments[i]);
           }
