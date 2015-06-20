@@ -209,7 +209,8 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission
 app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$sessionStorage', '$window', '$state', '$anchorScroll','FinalSubmission', 'Submission',
   function($scope, $location, $stateParams, $sessionStorage, $window, $state, $anchorScroll, FinalSubmission,Submission) {
     FinalSubmission.get({
-      id: $stateParams.finalId
+      id: $stateParams.finalId,
+      key: 'composition'
     }, function (response){
       $scope.finalSubmission = response;
       $scope.submission = response.submission;
@@ -252,11 +253,11 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }
 
   $scope.submitGrade = function() {
-    FinalSubmission.score({
+    Submission.addScore({
       id: $stateParams.finalId,
       score: $scope.compScore,
       message: $scope.compMessage,
-      source: "composition"
+      key: "composition"
     }, $scope.goTo($scope.nextId));
   }
 

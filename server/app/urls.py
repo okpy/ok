@@ -1,6 +1,9 @@
 """
 URL dispatch route mappings and error handlers
 """
+#pylint: disable-all
+
+
 from functools import wraps
 import logging
 import traceback

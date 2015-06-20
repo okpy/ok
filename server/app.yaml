@@ -18,6 +18,8 @@ libraries:
   version: "2.6"
 - name: markupsafe
   version: "0.15"
+- name: ssl
+  version: latest
 
 inbound_services:
 - warmup
