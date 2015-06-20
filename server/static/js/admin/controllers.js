@@ -300,11 +300,11 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }
 
   $scope.submitGrade = function() {
-    FinalSubmission.score({
+    Submission.addScore({
       id: $stateParams.finalId,
       score: $scope.compScore,
       message: $scope.compMessage,
-      source: "composition"
+      key: "composition"
     }, $scope.goTo($scope.nextId));
   }
 

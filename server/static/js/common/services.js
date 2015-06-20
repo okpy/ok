@@ -127,13 +127,6 @@ app.factory('FinalSubmission', ['$resource',
             return JSON.parse(data).data;
           }
         },
-        score: {
-          method: "POST",
-          url: '/api/v1/final_submission/:id/score',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
       });
     }
   ]);
