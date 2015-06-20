@@ -11,7 +11,7 @@
             <div class="form-group">
                 <label>Search for Submissions</label>
                 <br>
-                <p>All searches are composed of flags, operators, and their associated value. A flag is denoted 
+                <p>All searches are composed of flags, operators, and their associated value. A flag is denoted
                     by one hyphen, a flag by two, and a string in double quotations or no punctuation at all.
                     Dates, for example, or any other name with hyphens must be enclosed by double quotations.
                     Missing comparison operators are automaticaly assumed to be --equal.<br><br>
@@ -26,7 +26,7 @@
             </div>
         </div><!-- /.box-body -->
     </div>
-    
+
     <div class="box"  ng-cloak>
     <div class="box-header">
       <h3 class="box-title" ng-if="submissions.length > 0">All Submissions</h3>
@@ -72,7 +72,12 @@
             <span ng-repeat="tag in submission.tags" class="badge bg-blue">
               {{ tag }}
             </span>
-
+            <td>
+              <div class="btn-group download-btn-group">
+                  <a ui-sref='submission.detail({submissionId:submission.id})' type="button" class="btn btn-flat btn-info">View</a>
+                  <a href='/api/v1/submission/{{submission.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
+               </div>
+            </td>
           </td>
         </tr>
       </tbody>
