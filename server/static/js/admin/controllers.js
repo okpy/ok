@@ -356,7 +356,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
     $scope.courses = Course.query({});
   }]);
 
-  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+  app.controller("CourseAssignmentListCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
     function($scope, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.reloadView = function() {

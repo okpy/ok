@@ -156,23 +156,30 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "CourseListCtrl"
     }
     
-    var courseAssignments = {
-        name: 'course.assignments',
-          url: '/:courseId/assignments',
-          templateUrl: '/static/partials/admin/course.assignments.html',
-          controller: "CourseAssignmentsCtrl"
+    var courseAssignmentBase = {
+      name: 'course.assignment',
+      abstract: true,
+      url: '/:courseId/assignment',
+      templateUrl: '/static/partials/admin/assignment.base.html',
     }
     
-    var assignmentCreate = {
-      name: 'assignment.create',
-      url: '/:courseId/assignment/create',
+    var courseAssignmentList = {
+        name: 'course.assignment.list',
+          url: '/',
+          templateUrl: '/static/partials/admin/course.assignment.list.html',
+          controller: "CourseAssignmentListCtrl"
+    }
+    
+    var courseAssignmentCreate = {
+      name: 'course.assignment.create',
+      url: '/create',
       templateUrl: '/static/partials/admin/assignment.create.html',
       controller: "AssignmentCreateCtrl"
     }
 
-    var assignmentEdit = {
-      name: 'assignment.edit',
-      url: '/:courseId/assignment/edit/:assignmentId',
+    var courseAssignmentEdit = {
+      name: 'course.assignment.edit',
+      url: '/edit/:assignmentId',
       templateUrl: '/static/partials/admin/assignment.edit.html',
       controller: "AssignmentEditCtrl"
     }
@@ -330,11 +337,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(submissionDiff).
       state(assignments).
       state(assignmentDetail).
-      state(assignmentCreate).
-      state(assignmentEdit).
       state(courses).
       state(courseBase).
-      state(courseAssignments).
+      state(courseAssignmentBase).
+      state(courseAssignmentList).
+      state(courseAssignmentCreate).
+      state(courseAssignmentEdit).
       state(courseList).
       state(courseDetail).
       state(courseNew).
