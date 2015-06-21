@@ -29,9 +29,23 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
 
 app.controller("AssignmentListCtrl", ['$scope', '$http', 'Assignment',
   function($scope, $http, Assignment) {
+    $scope.reloadView = function() {
     Assignment.query(function(response) {
       $scope.assignments = response.results;
     });
+    }
+    $scope.delete = function(assign) {
+     Assignment.delete({
+       id: assign.id
+     }, function(response) {
+       $window.swal('Success', 'Assignment deleted.', 'success');
+       $scope.reloadView();
+     }, function(error) {
+      $window.swal('Error', 'Could not delete assignment.', 'error')
+     })
+    }
+    
+    $scope.reloadView();
 
     $scope.assign = function (assignmentId) {
          // if (confirm('Are you sure you want to assign this to staff? Only submit if you are sure. ')) {
@@ -367,21 +381,25 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
   app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
     function($scope, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
-     Course.assignments({
-      id: $stateParams.courseId
-     },function(response) {
-       $scope.assignments = response
-     });
-     
+    $scope.reloadView = function() {
+       Course.assignments({
+        id: $stateParams.courseId
+       },function(response) {
+         $scope.assignments = response
+       });
+     }
+
      $scope.delete = function(assign) {
        Assignment.delete({
          id: assign.id
        }, function(response) {
          $window.swal('Success', 'Assignment deleted.', 'success');
+         $scope.reloadView();
        }, function(error) {
         $window.swal('Error', 'Could not delete assignment.', 'error')
        })
       }
+     $scope.reloadView();
    }]);
 
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
