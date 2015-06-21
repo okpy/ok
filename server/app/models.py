@@ -486,6 +486,10 @@ class Assignment(Base):
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
     revision = ndb.BooleanProperty(default=False)
+    autograding_enabled = ndb.BooleanProperty(default=True)
+    grading_script_file = ndb.StringProperty()
+    zip_file_url = ndb.StringProperty()
+    access_token = ndb.StringProperty()
 
     # TODO Add services requested
 
