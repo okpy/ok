@@ -716,7 +716,7 @@ class AssignmentAPI(APIResource):
             'methods': set(['POST'])
         },
         'delete': {
-            'methods': {'POST'}
+            'methods': {'DELETE'}
         }
     }
 
@@ -760,13 +760,7 @@ class AssignmentAPI(APIResource):
         err = models.Group.invite_to_group(user.key, data['email'], obj.key)
         if err:
             raise BadValueError(err)
-        
-    def delete(self, obj, user, data):
-        need = Need('delete')
-        if not obj.can(user, need, obj):
-            raise need.exception()
 
-        obj.key.delete()
 
 
 class SubmitNDBImplementation(object):

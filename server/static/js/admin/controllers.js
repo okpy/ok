@@ -47,6 +47,12 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
       'revisions': false,
       'points': 4
     };
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
+    // TODO: only allow user to create assignment for specified course - no more dropdown!
     Course.get({}, function(resp) {
         $scope.courses = resp.results;
         $scope.newAssign.course = $scope.courses[0];
@@ -70,7 +76,7 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
             $scope.courses = Course.query({},
               function (response) {
                 $window.swal("Assignment Created!",'','success');
-               $state.transitionTo('assignment.list' , {} , { reload: true, inherit: true, notify: true });
+               $state.transitionTo('course.assignments' , {courseId: $scope.course.id} , { reload: true, inherit: true, notify: true });
              });
           }, function (error) {
             console.log('error')
@@ -85,6 +91,12 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
 
 app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
+  
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
 
     $scope.reloadAssignment = function() {
       Assignment.get({
@@ -145,7 +157,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             $scope.assignments = Assignment.query({},
               function (response) {
               $window.swal("Assignment Updated!",'','success');
-              $state.transitionTo('assignment.list', null, {'reload': true})
+              $state.transitionTo('course.assignments', {courseId: $scope.course.id}, {'reload': true})
             });
           }, function (error) {
             console.log('error')
