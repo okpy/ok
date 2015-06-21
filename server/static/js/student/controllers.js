@@ -152,6 +152,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
       $scope.initAssignments = function(assignments) {
         $scope.assignments = assignments;
+        console.log(assignments);
          $scope.rows = filter_rows(assignments);
           for (i = 0;i<assignments.length;i++) {
               $scope.assignInit(assignments[i]);
