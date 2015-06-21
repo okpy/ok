@@ -716,7 +716,7 @@ class AssignmentAPI(APIResource):
             'methods': set(['POST'])
         },
         'delete': {
-            'methods': {'DELETE'}
+            'methods': set(['DELETE'])
         }
     }
 
