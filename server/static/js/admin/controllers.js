@@ -364,14 +364,24 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
     $scope.courses = Course.query({});
   }]);
 
-  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams',
-    function($scope, $http, Assignment, Course, $stateParams) {
+  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+    function($scope, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
      Course.assignments({
       id: $stateParams.courseId
      },function(response) {
        $scope.assignments = response
      });
+     
+     $scope.delete = function(assign) {
+       Assignment.delete({
+         id: assign.id
+       }, function(response) {
+         $window.swal('Success', 'Assignment deleted.', 'success');
+       }, function(error) {
+        $window.swal('Error', 'Could not delete assignment.', 'error')
+       })
+      }
    }]);
 
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",

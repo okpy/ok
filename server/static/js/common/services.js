@@ -157,6 +157,13 @@ app.factory('Assignment', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        delete: {
+          method: "POST",
+          url: '/api/v1/assignment/:id/delete',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         create: {
           method: "POST",
           url: '/api/v1/assignment',
@@ -183,7 +190,7 @@ app.factory('Assignment', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
-        },
+        }
       });
     }
   ]);
