@@ -227,14 +227,14 @@ class APIResource(View):
             method_name = {'GET': 'index', 'POST': 'post'}[http_method]
             return self.call_method(method_name, user, http_method,
                                     is_index=(method_name == 'index'))
-        
+
         path = path.split('/')
 
         if len(path) == 1:
 
             if not getattr(self, 'contains_entities', True):
                 return self.call_method(path[0], user, http_method)
-            
+
             entity_id = path[0]
             try:
                 key = self.key_type(entity_id)
@@ -690,7 +690,9 @@ class AssignmentAPI(APIResource):
                 'course': KeyArg('Course'),
                 'max_group_size': Arg(int),
                 'due_date': DateTimeArg(),
-                'templates': Arg(str, use=lambda temps: json.dumps(temps))
+                'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
             }
         },
         'index': {
@@ -888,7 +890,7 @@ class SubmissionAPI(APIResource):
         :param data: (dictionary) data
         :return:
         """
-        
+
     def data_for_zip(self, obj):
         try:
             user = obj.submitter.get()
@@ -899,7 +901,7 @@ class SubmissionAPI(APIResource):
         if 'file_contents' not in messages:
             raise BadValueError('Submission has no contents to download')
         file_contents = messages['file_contents']
-        
+
         if 'submit' in file_contents:
             del file_contents['submit']
 
@@ -909,14 +911,14 @@ class SubmissionAPI(APIResource):
                 file_contents[key] = file_contents[key].encode('utf-8')
             except:
                 pass
-        
+
         return name, file_contents
-        
+
     def zip(self, obj, user, data):
         """ Grab all files in submission
         :param obj:
-        :param user: 
-        :param data: 
+        :param user:
+        :param data:
         :return:
         """
         return self.zip_files(*self.data_for_zip(obj))
@@ -932,8 +934,8 @@ class SubmissionAPI(APIResource):
     def make_zip_response(self, name, zipfile):
         """
         Makes a zip response using a zip object.
-        
-        :param zip: 
+
+        :param zip:
         :return:
         """
         response = make_response(zipfile)
@@ -1221,7 +1223,7 @@ class SubmissionAPI(APIResource):
 
 
 class SearchAPI(APIResource):
-    
+
     contains_entities = False
 
     methods = {
@@ -1230,7 +1232,8 @@ class SearchAPI(APIResource):
             'web_args': {
                 'query': Arg(str, required=True),
                 'page': Arg(int, default=1),
-                'num_per_page': Arg(int, default=10)
+                'num_per_page': Arg(int, default=10),
+                'courseId': Arg(int, required=True)
             }
         },
         'download': {
@@ -1239,15 +1242,16 @@ class SearchAPI(APIResource):
                 'query': Arg(str, required=True),
                 'page': Arg(int, default=1),
                 'num_per_page': Arg(int, default=10),
-                'all': Arg(bool, default=False)
+                'all': Arg(bool, default=False),
+                'courseId': Arg(int, required=True)
             }
         }
     }
-    
+
     defaults = {
         'onlywcode': (op.__eq__, 'True')
     }
-    
+
     operators = {
         'eq': op.__eq__,
         'equal': op.__eq__,
@@ -1256,7 +1260,7 @@ class SearchAPI(APIResource):
         'before': op.__lt__,
         'after': op.__gt__
     }
-    
+
     # maps flags to processing functions (e.g., instantiate objects)
     flags = {
         'user': lambda op, email:
@@ -1271,7 +1275,17 @@ class SearchAPI(APIResource):
                 op(AssignmentAPI.model.display_name, name)).get(),
     }
 
+    def check_permissions(self, user, data):
+        course = CourseAPI()
+        key = course.key_type(data['courseId'])
+        course = course.get_instance(key, user)
+
+        if user.key not in course.staff and not user.is_admin:
+            raise Need('get').exception()
+
     def index(self, user, data):
+        self.check_permissions(user, data)
+
         query = SearchAPI.querify(data['query'])
         start, end = SearchAPI.limits(data['page'], data['num_per_page'])
         results = query.fetch()[start:end]
@@ -1280,8 +1294,10 @@ class SearchAPI(APIResource):
             'more': len(results) >= data['num_per_page'],
             'query': data['query']
         })
-    
+
     def download(self, user, data):
+        self.check_permissions(user, data)
+
         results = SearchAPI.querify(data['query']).fetch()
         if data.get('all', False):
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
@@ -1299,20 +1315,20 @@ class SearchAPI(APIResource):
                     raise e
         return subm.make_zip_response('query', finish_zip(zipfile_str, zipfile))
 
-    
+
     @staticmethod
     def tokenize(query):
         """
         Parses each command for flag, op, and arg
         Regex captures first named group "flag" as a string preceded
-        by a single dash, followed by a space. Optionally captures 
+        by a single dash, followed by a space. Optionally captures
         second named group "op" as a string preceded by two dashes
         and followed by a space. Captures final named group "arg"
         with optional quotations.
         """
         tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?')
         return tokenizer.findall(query)
-    
+
     @classmethod
     def translate(cls, query):
         """ converts operators into appropriate string reps and adds defaults """
@@ -1322,7 +1338,7 @@ class SearchAPI(APIResource):
             flag, dummy, opr, arg = token
             scope[flag] = (cls.operators[opr or 'eq'], arg)
         return scope
-    
+
     @classmethod
     def objectify(cls, query):
         """ converts keys into objects """
@@ -1331,7 +1347,7 @@ class SearchAPI(APIResource):
             op, arg = v
             scope[k] = (op, cls.flags[k](op, arg))
         return scope
-    
+
     @classmethod
     def querify(cls, query):
         """ converts mush into a query object """
@@ -1340,7 +1356,7 @@ class SearchAPI(APIResource):
         args = cls.get_args(model, objects)
         query = model.query(*args)
         return query
-    
+
     @staticmethod
     def get_model(prime):
         """ determine model using passed-in data """
@@ -1352,8 +1368,8 @@ class SearchAPI(APIResource):
             return models.FinalSubmission
         else:
             return models.Submission
-    
-    
+
+
     @staticmethod
     def get_args(model, prime):
         """ Creates all Filter Nodes """
@@ -1369,7 +1385,7 @@ class SearchAPI(APIResource):
             pass
             # TODO: complete onlywcode : query only submissions that have code
         return args
-    
+
     @staticmethod
     def limits(page, num_per_page):
         """ returns start and ends number based on page and num_per_page """
@@ -1501,6 +1517,9 @@ class CourseAPI(APIResource):
         'get': {
         },
         'index': {
+            'web_args': {
+                'onlyenrolled': Arg(bool, default=False)
+            }
         },
         'get_staff': {
         },
@@ -1554,6 +1573,13 @@ class CourseAPI(APIResource):
         The POST HTTP method
         """
         return super(CourseAPI, self).post(user, data)
+    
+    def index(self, user, data):
+        if data['onlyenrolled']:
+            return dict(results=[result.course for result in models.Participant.query(
+                models.Participant.user == user.key)])
+        else:
+            return super(CourseAPI, self).index(user, data)
 
     def add_staff(self, course, user, data):
         need = Need('staff')
@@ -1603,7 +1629,7 @@ class CourseAPI(APIResource):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        
+
         for email in set(data['emails']):  # to remove potential duplicates
             user = models.User.get_or_insert(email)
             models.Participant.add_role(user, course, STUDENT_ROLE)
@@ -1612,7 +1638,7 @@ class CourseAPI(APIResource):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        
+
         user = models.User.get_or_insert(data['email'])
         models.Participant.add_role(user, course, STUDENT_ROLE)
 
@@ -1627,6 +1653,9 @@ class CourseAPI(APIResource):
 
     def assignments(self, course, user, data):
         return course.assignments.fetch()
+
+    def get_my_courses(self, course, user, data):
+        return self.get_courses(course, user, dict(user=user))
 
 
 class GroupAPI(APIResource):

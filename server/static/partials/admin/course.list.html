@@ -32,6 +32,7 @@
       <th>Staff</th>
       <th>Students</th>
       <th>Assignments</th>
+      <th>Search</th>
     </tr>
     <tr ng-repeat="course in courses" ts-repeat>
       <td>
@@ -54,6 +55,11 @@
       <td>
         <a class="btn btn-primary btn-sm" ui-sref='course.assignments({courseId:course.id})'>
           Assignments
+        </a>
+      </td>
+      <td>
+        <a class="btn btn-primary btn-sm" ui-sref='course.submissions({courseId:course.id})'>
+          <i class="fa fa-search"></i>
         </a>
       </td>
     </tr>

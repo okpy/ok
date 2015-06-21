@@ -114,13 +114,6 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "FinalSubmissionCtrl"
     }
 
-
-    var submissionList = {
-      name: 'submission.list',
-      url: '/',
-      templateUrl: '/static/partials/admin/submission.list.html'
-    }
-
     var submissionDetail = {
       name: 'submission.detail',
       url: '/:submissionId',
@@ -211,6 +204,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/course.detail.html',
       controller: "CourseDetailCtrl"
     }
+    
+    var submissionList = {
+          name: 'course.submissions',
+          url: '/:courseId/submissions',
+          templateUrl: '/static/partials/admin/submission.list.html'
+    }
+    
     var staff = {
       name: 'staff',
       url: '/:courseId/staff',

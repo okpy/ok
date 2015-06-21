@@ -4,7 +4,7 @@ app.controller("SidebarCntrl", ['$scope', 'Assignment',
     Assignment.query(function(response) {
       $scope.assignments = response.results;
     });
-    $scope.course_name = "CS61A Spring 2015"
+    $scope.course_name = "Ok Admin"
   }]);
 
 // Submission Controllers
@@ -278,19 +278,20 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
-  function($scope, $window, Search) {
+app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course',
+  function($scope, $stateParams, $window, Search, Course) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
     $scope.query = {
       'string': ''
     }
-    
+
     $scope.getPage = function(page) {
       Search.query({
         query: $scope.query.string || '',
         page: page,
         num_per_page: $scope.itemsPerPage,
+        courseId: $scope.course.id
       }, function(response) {
         $scope.submissions = response.data.results;
         $scope.more = response.data.more;
@@ -301,18 +302,18 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
           $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
         }
       }, function(err) {
-        $window.swal('Uh oh', 'Something went wrong. Remember that your query must have a flag.', 'error');
+        $window.swal('Uh oh', 'We couldn\'t complete the search. Remember that your query must have valid flags.', 'error');
       });
     }
+
+    $scope.course = Course.get({id: $stateParams.courseId});
 
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
-    
-    $scope.getPage(1);
 
     $scope.search = function() {
-      $scope.getPage($scope.currentPage, $scope.query)
+      $scope.getPage($scope.currentPage)
     }
   }]);
 
@@ -362,7 +363,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
     $scope.courses = Course.query({});
   }]);
-  
+
   app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams',
     function($scope, $http, Assignment, Course, $stateParams) {
     $scope.course = Course.get({id: $stateParams.courseId});
