@@ -26,6 +26,8 @@ PERMISSIONS_TESTS = [
           "anon", "Assignment", "first", "create", False),
     PTest("anon_edit_assignment",
           "anon", "Assignment", "first", "put", False),
+    PTest("anon_delete_assignment",
+          "anon", "Assignment", "first", "delete", False),
     PTest("staff_edit_assignment",
           "staff", "Assignment", "first", "put", True),
     PTest("admin_edit_assignment",
