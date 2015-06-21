@@ -762,7 +762,7 @@ class AssignmentAPI(APIResource):
             raise BadValueError(err)
         
     def delete(self, obj, user, data):
-        print('DELETING')
+        obj.key.delete()
 
 
 class SubmitNDBImplementation(object):
