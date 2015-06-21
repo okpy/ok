@@ -493,7 +493,7 @@ class Assignment(Base):
     def _can(cls, user, need, obj, query):
         if need.action == "index":
             return query
-        if user.is_admin and need.action != "delete":
+        if user.is_admin:
             return True
         if need.action == "get":
             return True

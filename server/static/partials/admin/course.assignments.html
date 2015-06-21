@@ -13,7 +13,7 @@
     <h3 class="box-title" ng-if="assignments.$resolved && assignments.length == 0" >No Assignments</h3>
     <h3 class="box-title" ng-if="assignments.length > 0">Assignments</h3>
     <div class="box-tools" style="float:right;">
-      <button class="btn btn-primary" ui-sref="assignment.create"> <i class="fa fa-plus"></i> Create Assignment</button>
+      <button class="btn btn-primary" ui-sref="assignment.create({courseId:course.id})"> <i class="fa fa-plus"></i> Create Assignment</button>
     </div>
 
   </div><!-- /.box-header -->
@@ -57,7 +57,7 @@
         </td>
           <!-- Future Progress Bar -->
         <td>
-          <a ui-sref="assignment.edit({assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+          <a ui-sref="assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
         </td>
           </tr>
         </tbody>

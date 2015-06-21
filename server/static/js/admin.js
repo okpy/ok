@@ -142,20 +142,6 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "AssignmentDetailCtrl"
     }
 
-    var assignmentCreate = {
-      name: 'assignment.create',
-      url: '/create',
-      templateUrl: '/static/partials/admin/assignment.create.html',
-      controller: "AssignmentCreateCtrl"
-    }
-    
-    var assignmentEdit = {
-          name: 'assignment.edit',
-          url: '/edit/:assignmentId',
-          templateUrl: '/static/partials/admin/assignment.edit.html',
-          controller: "AssignmentEditCtrl"
-        }
-
     var courses = {
       name: 'course',
       abstract: true,
@@ -175,6 +161,20 @@ app.config(['$stateProvider', '$urlRouterProvider',
           url: '/:courseId/assignments',
           templateUrl: '/static/partials/admin/course.assignments.html',
           controller: "CourseAssignmentsCtrl"
+    }
+    
+    var assignmentCreate = {
+      name: 'assignment.create',
+      url: '/:courseId/assignment/create',
+      templateUrl: '/static/partials/admin/assignment.create.html',
+      controller: "AssignmentCreateCtrl"
+    }
+
+    var assignmentEdit = {
+      name: 'assignment.edit',
+      url: '/:courseId/assignment/edit/:assignmentId',
+      templateUrl: '/static/partials/admin/assignment.edit.html',
+      controller: "AssignmentEditCtrl"
     }
 
     var courseNew = {
