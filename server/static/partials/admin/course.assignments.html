@@ -31,6 +31,7 @@
       <!-- Future Progress Bar -->
       <th style="width: 15%">Endpoint</th>
       <th>Edit</th>
+      <th>Autograde</th>
     </tr>
 
       <tr ng-repeat="assignment in assignments" ts-repeat>
@@ -58,6 +59,9 @@
           <!-- Future Progress Bar -->
         <td>
           <a ui-sref="assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+        </td>
+        <td>
+          <a ui-sref="" class="btn btn-primary btn-sm"><i class="fa fa-flash"></i></a>
         </td>
           </tr>
         </tbody>
