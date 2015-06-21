@@ -51,8 +51,8 @@
                     <span class="icon-x">+</span></span>
             </li>
         </ul>
-        <form name="inviteGroup" ng-if="!assign.group.group_info || assign.assignment.max_group_size < assign.assignment.max_group_size">
-            <h3 class="sidebar-subtitle">Invite to Group</h3>
+        <form name="inviteGroup" ng-if="assign.assignment.max_group_size > 1 && (!assign.group.group_info || assign.group.group_info.member.length < assign.assignment.max_group_size)">
+            <h3 class="sidebar-subtitle">Invite to Group <span>(max {{ assign.assignment.max_group_size }} members)</span></h3>
 
             <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
             <a ng-click="addMember(assign, assign.invitee)" class="action">Invite</a>
