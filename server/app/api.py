@@ -1516,7 +1516,7 @@ class CourseAPI(APIResource):
         },
         'index': {
             'web_args': {
-                'onlyenrolled': Arg(str, default='false')
+                'onlyenrolled': Arg(bool, default=False)
             }
         },
         'get_staff': {
@@ -1573,8 +1573,7 @@ class CourseAPI(APIResource):
         return super(CourseAPI, self).post(user, data)
     
     def index(self, user, data):
-        onlyenrolled = data['onlyenrolled'].lower() == 'true'
-        if onlyenrolled:
+        if data['onlyenrolled']:
             return dict(results=[result.course for result in models.Participant.query(
                 models.Participant.user == user.key)])
         else:
