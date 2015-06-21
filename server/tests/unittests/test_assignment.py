@@ -33,11 +33,11 @@ PERMISSIONS_TESTS = [
     PTest("admin_delete_normal",
           "admin", "Assignment", "first", "delete", False),
     PTest("staff_delete_normal",
-          "staff", "Assignment", "first", "delete", False),
+          "staff", "Assignment", "first", "delete", True),
     PTest("admin_delete_empty",
           "admin", "Assignment", "empty", "delete", False),
     PTest("staff_delete_empty",
-          "staff", "Assignment", "empty", "delete", False),
+          "staff", "Assignment", "empty", "delete", True),
     PTest("staff_delete_empty",
           "empty_staff", "Assignment", "empty", "delete", False),
 ]

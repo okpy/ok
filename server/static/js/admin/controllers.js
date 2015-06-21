@@ -26,40 +26,6 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
   }
   ]);
 
-
-app.controller("AssignmentListCtrl", ['$scope', '$http', 'Assignment',
-  function($scope, $http, Assignment) {
-    $scope.reloadView = function() {
-    Assignment.query(function(response) {
-      $scope.assignments = response.results;
-    });
-    }
-    $scope.delete = function(assign) {
-     Assignment.delete({
-       id: assign.id
-     }, function(response) {
-       $window.swal('Success', 'Assignment deleted.', 'success');
-       $scope.reloadView();
-     }, function(error) {
-      $window.swal('Error', 'Could not delete assignment.', 'error')
-     })
-    }
-    
-    $scope.reloadView();
-
-    $scope.assign = function (assignmentId) {
-         // if (confirm('Are you sure you want to assign this to staff? Only submit if you are sure. ')) {
-         //      $http({
-         //          url: '/api/v1/assignment/'+assignmentId+'/assign',
-         //          method: "POST",
-         //          data: { 'message' : 'hello' }
-         //      })
-         // }
-         console.log('Unsupported for now');
-       }
-
-     }]);
-
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
     $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
@@ -390,15 +356,31 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
      }
 
      $scope.delete = function(assign) {
-       Assignment.delete({
-         id: assign.id
-       }, function(response) {
-         $window.swal('Success', 'Assignment deleted.', 'success');
-         $scope.reloadView();
-       }, function(error) {
-        $window.swal('Error', 'Could not delete assignment.', 'error')
-       })
+      $window.swal({
+          title: "Are you sure?",
+          text: "You will not be able to recover this assignment!",
+          type: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "Yes, delete it!",
+          closeOnConfirm: false,
+          html: false
+        }, function(){
+          $scope.deleteAssignment(assign);
+        });
       }
+      
+      $scope.deleteAssignment = function(assign) {
+        Assignment.delete({
+           id: assign.id
+         }, function(response) {
+           $window.swal('Success', 'Assignment deleted.', 'success');
+           $scope.reloadView();
+         }, function(error) {
+          $window.swal('Error', 'Could not delete assignment.', 'error')
+         });
+      }
+      
      $scope.reloadView();
    }]);
 

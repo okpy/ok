@@ -762,6 +762,10 @@ class AssignmentAPI(APIResource):
             raise BadValueError(err)
         
     def delete(self, obj, user, data):
+        need = Need('delete')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
         obj.key.delete()
 
 
