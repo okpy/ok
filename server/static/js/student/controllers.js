@@ -34,7 +34,6 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
         'onlyenrolled': true
       },function(response) {
         if (response.results) {
-            console.log(response.results)
             $scope.courses = response.results;
             $scope.rows = filter_rows(response.results);
         } else {
