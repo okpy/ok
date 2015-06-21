@@ -690,7 +690,9 @@ class AssignmentAPI(APIResource):
                 'course': KeyArg('Course'),
                 'max_group_size': Arg(int),
                 'due_date': DateTimeArg(),
-                'templates': Arg(str, use=lambda temps: json.dumps(temps))
+                'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
             }
         },
         'index': {
