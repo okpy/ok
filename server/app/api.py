@@ -795,7 +795,6 @@ class AssignmentAPI(APIResource):
           subm_ids.append(fsub.submission.id())
 
         ag_url = "http://104.154.46.183:5000"
-        subm_ids = [5001925430870016 for i in range(15)]
         data = {'subm_ids': subm_ids,
         'assign_name': obj.display_name,
         'starter_zip_url': obj.zip_file_url,
