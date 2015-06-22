@@ -3,8 +3,8 @@
     <ol class="breadcrumb">
         <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
         <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
-        <li><a ui-sref="course.detail.stats({id: course.id})"><i class="fa fa-list"></i> {{course.display_name}}</a></li>
-        <li><a ui-sref="course.assignments({courseId: course.id})"><i class="fa fa-list"> All Assignments</i></a></li>
+        <li><a ui-sref="course.detail.stats({courseId: course.id})"><i class="fa fa-institution"></i> {{course.display_name}}</a></li>
+        <li><a ui-sref="course.assignment.list({courseId: course.id})"><i class="fa fa-list"> All Assignments</i></a></li>
         <li class="active"><i class="fa fa-plus"></i> Edit</li>
     </ol>
   </section>
@@ -91,6 +91,25 @@
         </div>
 
  -->
+          <div class="form-group">
+              <label>Autograding Enabled?</label>
+
+               <select class="form-control" required ng-model="assign.autograding_enabled" ng-options="option for option in [true, false]">
+                        </select>
+
+          </div>
+          <div class="form-group">
+              <label>Grading Script File</label>
+              <input ng-model="assign.grading_script_file" type="text" class="form-control" placeholder="">
+          </div>
+          <div class="form-group">
+              <label>Zip File URL</label>
+              <input ng-model="assign.zip_file_url" type="text" class="form-control" placeholder="">
+          </div>
+          <div class="form-group">
+              <label>Access Token</label>
+              <input ng-model="assign.access_token" type="text" class="form-control" placeholder="">
+          </div>
          <button ng-click="editAssign()" class="btn btn-block btn-primary btn-lg">Save</button>
 
       </div>

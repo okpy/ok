@@ -663,7 +663,11 @@ class AssignmentAPI(APIResource):
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
                     required=True),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool, default=True),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
                 }
         },
         'put': {
@@ -676,8 +680,12 @@ class AssignmentAPI(APIResource):
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
-                }
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool, default=True),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
+            }
         },
         'get': {
         },
@@ -692,7 +700,11 @@ class AssignmentAPI(APIResource):
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
             }
         },
         'index': {

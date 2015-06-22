@@ -45,7 +45,8 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
       'lock_time': '23:59:59.0000',
       'max_group_size': 2,
       'revisions': false,
-      'points': 4
+      'points': 4,
+      'autograding_enabled': true
     };
     Course.get({
       id: $stateParams.courseId
@@ -70,13 +71,17 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
           'due_date': due_date_time,
           'course': $scope.newAssign.course.id,
           'revision': $scope.newAssign.revisions,
-          'lock_date': lock_date_time
+          'lock_date': lock_date_time,
+          'autograding_enabled': $scope.newAssign.autograding_enabled,
+          'grading_script_file': $scope.newAssign.grading_script_file,
+          'zip_file_url': $scope.newAssign.zip_file_url,
+          'access_token': $scope.newAssign.access_token
         },
           function (response) {
             $scope.courses = Course.query({},
               function (response) {
                 $window.swal("Assignment Created!",'','success');
-               $state.transitionTo('course.assignments' , {courseId: $scope.course.id} , { reload: true, inherit: true, notify: true });
+               $state.transitionTo('course.assignment.list' , {courseId: $scope.course.id} , { reload: true, inherit: true, notify: true });
              });
           }, function (error) {
             console.log('error')
@@ -151,13 +156,17 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
           'due_date': due_date_time,
           'course': $scope.assign.course.id,
           'revision': $scope.assign.revisions,
-          'lock_date': lock_date_time
+          'lock_date': lock_date_time,
+          'autograding_enabled': $scope.assign.autograding_enabled,
+          'grading_script_file': $scope.assign.grading_script_file,
+          'zip_file_url': $scope.assign.zip_file_url,
+          'access_token': $scope.assign.access_token
         },
           function (response) {
             $scope.assignments = Assignment.query({},
               function (response) {
               $window.swal("Assignment Updated!",'','success');
-              $state.transitionTo('course.assignments', {courseId: $scope.course.id}, {'reload': true})
+              $state.transitionTo('course.assignment.list', {courseId: $scope.course.id}, {'reload': true})
             });
           }, function (error) {
             console.log('error')
@@ -356,7 +365,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
     $scope.courses = Course.query({});
   }]);
 
-  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+  app.controller("CourseAssignmentListCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
     function($scope, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.reloadView = function() {
