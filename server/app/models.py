@@ -486,8 +486,8 @@ class Assignment(Base):
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
     revision = ndb.BooleanProperty(default=False)
-    autograding_enabled = ndb.BooleanProperty(default=True)
-    grading_script_file = ndb.StringProperty()
+    autograding_enabled = ndb.BooleanProperty(default=False)
+    grading_script_file = ndb.TextProperty()
     zip_file_url = ndb.StringProperty()
     access_token = ndb.StringProperty()
 

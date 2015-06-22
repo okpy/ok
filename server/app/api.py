@@ -664,7 +664,7 @@ class AssignmentAPI(APIResource):
                     required=True),
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
-                'autograding_enabled': Arg(bool, default=True),
+                'autograding_enabled': Arg(bool),
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
                 'access_token': Arg(str)
@@ -681,7 +681,7 @@ class AssignmentAPI(APIResource):
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
-                'autograding_enabled': Arg(bool, default=True),
+                'autograding_enabled': Arg(bool),
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
                 'access_token': Arg(str)
@@ -729,6 +729,12 @@ class AssignmentAPI(APIResource):
         },
         'delete': {
             'methods': set(['DELETE'])
+        },
+        'autograde': {
+            'methods': set(['POST']),
+            'web_args': {
+                'grade_final': BooleanArg()
+            }
         }
     }
 
@@ -773,7 +779,38 @@ class AssignmentAPI(APIResource):
         if err:
             raise BadValueError(err)
 
+    def autograde(self, obj, user, data):
+      need = Need('grade')
+      if not obj.can(user, need, obj):
+          raise need.exception()
+      subm_ids = []
+      if not obj.autograding_enabled:
+        raise BadValueError('Autograding is not enabled for this assignment.')
 
+      if 'grade_final' in data and data['grade_final']:
+        #Collect all final submissions and run grades.
+        fsubs = list(
+            models.FinalSubmission.query(models.FinalSubmission.assignment == obj.key))
+        for fsub in fsubs:
+          subm_ids.append(fsub.submission.id())
+
+        ag_url = "http://104.154.46.183:5000"
+        subm_ids = [5001925430870016 for i in range(15)]
+        data = {'subm_ids': subm_ids,
+        'assign_name': obj.display_name,
+        'starter_zip_url': obj.zip_file_url,
+        'access_token': obj.access_token,
+        'grade_script': obj.grading_script_file}
+
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        r = requests.post(ag_url+'/grade/batch', data=json.dumps(data), headers=headers)
+        if r.status_code == requests.codes.ok:
+          return {'status_url': ag_url+'/rq', 'length': str(len(subm_ids))}
+        else:
+          raise BadValueError('The autograder the rejected your request')
+      else:
+        # TODO
+        raise BadValueError('Only supports batch uploading.')
 
 class SubmitNDBImplementation(object):
     """
@@ -1589,7 +1626,7 @@ class CourseAPI(APIResource):
         The POST HTTP method
         """
         return super(CourseAPI, self).post(user, data)
-    
+
     def index(self, user, data):
         if data['onlyenrolled']:
             return dict(results=[result.course for result in models.Participant.query(

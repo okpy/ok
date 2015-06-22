@@ -1,4 +1,4 @@
-<div ng-controller="CourseAssignmentListCtrl">
+<div>
   <section class="content-header" ng-hide="dashboard">
       <ol class="breadcrumb" >
         <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
@@ -50,7 +50,7 @@
           {{assignment.due_date | amCalendar}}
         </td>
         <td>
-          {{assignment.lock_date | amCalendar}}
+          {{(assignment.lock_date | amCalendar) || 'None'}}
         </td>
 
         <td>
@@ -60,8 +60,12 @@
         <td>
           <a ui-sref="course.assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
         </td>
-        <td>
-          <a ui-sref="" class="btn btn-primary btn-sm"><i class="fa fa-flash"></i></a>
+        <!-- Autograding enabled -->
+        <td ng-show="assignment.autograding_enabled">
+            <a class="btn btn-primary btn-sm" ng-click="autograde(assignment)"><i class="fa fa-flash"></i> Grade All Final Submissions</a>
+        </td>
+        <td ng-hide="assignment.autograding_enabled">
+            <a class="btn btn-primary btn-sm disabled"><i class="fa fa-flash"></i> Disabled </a>
         </td>
           </tr>
         </tbody>

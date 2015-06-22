@@ -177,6 +177,13 @@ app.factory('Assignment', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        autograde: {
+          method: "POST",
+          url: '/api/v1/assignment/:id/autograde',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         invite: {
           method: "POST",
           url: '/api/v1/assignment/:id/invite',
@@ -381,8 +388,8 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
-  
-  
+
+
 app.factory('Search', ['$resource',
     function($resource) {
       return $resource('/api/v1/search', {
