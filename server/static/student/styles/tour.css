@@ -47,20 +47,20 @@ img {
 	}
 section {
 	text-align:center;
-	height:100%;
+	min-height:100%;
 }
-	section::before {
-		content:"";
-		vertical-align:middle;
-		height:100%;
-		margin-left:-1px;
-		display:inline-block;
-		float:none;
-	}
 	.center {
-		vertical-align:middle;
-		display:inline-block;
 		float:none;
+		display:inline-block;
+		margin-top:3em;
+		width:50%;
+        max-width:600px;
+	}
+	.screen-title .center {
+		margin-top:10em;
+	}
+	.screen-end .center {
+		margin-top:15em;
 	}
 section:nth-child(odd) {
 	background-color:#eee;
@@ -93,18 +93,21 @@ section:nth-child(odd) {
 		.screen-title .deck {
 			margin-bottom:20px;
 		}
+	.screenshot {
+		width:100%;
+	}
 	.blurb {
 		position:absolute;
 		width:150px;
 	}
 		.blurb.left {
-			left:10%;
+			left:-35%;
 		}
 			.blurb.left * {
 				text-align:right;
 			}
 		.blurb.right {
-			right:10%;
+			right:-35%;
 		}
 			.blurb.right * {
 				text-align:left;
@@ -112,12 +115,12 @@ section:nth-child(odd) {
 		.blurb h3 {
 			color:#777;
 			font-weight:700;
-			font-size:14px;
+			font-size:1em;
 			text-transform:uppercase;
 		}
 		.blurb p {
 			color:#AAA;
-			font-size:14px;
+			font-size:1em;
 		}
 	.line {
 		position:absolute;
@@ -239,3 +242,28 @@ section:nth-child(odd) {
 			.arrow.right.hide {
 				right:-60px;
 			}
+@media screen and (max-width: 900px) {
+	.blurb .line {
+		display:none;
+	}
+	div.blurb {
+		position:relative;
+        padding:20px 0;
+        width:100%;
+        font-size:1.5em;
+	}
+		div.blurb.right {
+			right:auto;
+		}
+		div.blurb.left {
+			left:auto;
+		}
+		div.blurb.left * {
+			text-align:left;
+		}
+	section.current {
+		height:100%;
+        overflow-y:scroll;
+        overflow-x:hidden;
+	}
+}

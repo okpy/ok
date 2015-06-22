@@ -4,7 +4,7 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
             $(menu).addClass('active')
             $('.container-fluid').addClass('active').addClass('pushed')
         }
-        $scope.closeMenu = function() {
+        $window.closeMenu = $scope.closeMenu = function() {
             $('.menu').removeClass('active')
             $('.container-fluid').removeClass('active').removeClass('pushed')
         }
@@ -33,10 +33,34 @@ app.controller("NotificationsController", ["$scope", "$window", "$state", "$stat
     }
 ])
 
+function filter_rows(items) {
+    rows = [];
+    row = [];
+    for (var i=0;i<items.length;i++) {
+        item = items[i];
+        if (i%3 == 0 && i != 0) {
+            rows.push(row);
+            row = [];
+        }
+        row.push(item);
+    }
+    if (row.length > 0) {
+        rows.push(row);
+    }
+    return rows;
+}
+
 app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$stateParams', 'Course',
     function ($scope, $window, $state, $stateParams, Course) {
-      Course.get(function(response) {
-        $scope.courses = response.results
+      Course.get({
+        'onlyenrolled': true
+      },function(response) {
+        if (response.results) {
+            $scope.courses = response.results;
+            $scope.rows = filter_rows(response.results);
+        } else {
+            $scope.courses = $scope.rows = []
+        }
       });
       if ($window.user.indexOf("berkeley.edu") == -1) {
         $window.swal({
@@ -58,6 +82,16 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
         });
       } else {
          $window.location.hash = "";
+      }
+      
+      $scope.loadAll = function() {
+        Course.get(function(response) {
+            if (response.results) {
+                $scope.rows = filter_rows(response.results);
+            } else {
+                $scope.courses = $scope.rows = undefined;
+            }
+          });
       }
     }
 ]);
@@ -91,6 +125,9 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams', '$sce', '$timeout', '$anchorScroll', 'Submission',
   function($scope, $window, $location, $stateParams, $sce, $timeout, $anchorScroll, Submission) {
       var converter = new Showdown.converter();
+      
+      $window.closeMenu();
+      
       $scope.convertMarkdown = function(text) {
         if (text == "" || text === undefined) {
           return $sce.trustAsHtml("")
@@ -112,8 +149,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
 
 
 // Main dashboard controller. Should be modularized later.
-app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', '$timeout',
-  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, $timeout) {
+app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', 'FinalSubmissionChange', '$timeout',
+  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, FinalSubmissionChange, $timeout) {
       $scope.courseId = $stateParams.courseId
 
       $scope.reloadAssignments = function () {
@@ -121,10 +158,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.closeDetails();
-            $scope.assignments = response.assignments;
-            for (i = 0;i<response.assignments.length;i++) {
-                $scope.assignInit(response.assignments[i]);
-            }
+            $scope.initAssignments(response.assignments);
           }, function (error) {
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
@@ -137,6 +171,13 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         if (assign.submissions) {
             $scope.getSubmissions(assign, false);
         }
+      }
+      $scope.initAssignments = function(assignments) {
+        $scope.assignments = assignments;
+         $scope.rows = filter_rows(assignments);
+          for (i = 0;i<assignments.length;i++) {
+              $scope.assignInit(assignments[i]);
+          }
       }
       $scope.showComposition = function(score, backupId) {
         if (score) {
@@ -158,7 +199,18 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
       $scope.reloadView = function () {
         // oldToggle = $scope.currAssign.id
-        $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
+//          $scope.currAssign = null;
+
+          User.force_get({
+            course: $stateParams.courseId,
+          }, function (response) {
+            $scope.initAssignments(response.assignments);
+          }, function (error) {
+            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
+            $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
+          });
+
+        // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
 
       $scope.reloadAssignments()
@@ -168,9 +220,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               id: currGroup.id,
               email: member.email[0]
             }, function (err) {
-                $scope.reloadView()
-                $scope.currGroup = null;
-                $scope.currAssign.group = null
+                $scope.closeDetails();
+                $scope.reloadView();
             });
       };
 
@@ -204,27 +255,44 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.rejectInvite = function(currGroup) {
           Group.rejectInvitation({
             id: currGroup.id,
+          }, function (response) {
+            $scope.closeDetails();
+            $window.swal({
+              title: "Invitation rejected.",
+              text: "You can now invite other members and/or be invited.",
+              timer: 3500,
+              type: "success"
+            });
+            $scope.reloadView();
           }, function (err) {
-            currGroup = null
-            $scope.currAssign.group = null
+            $window.swal("Oops...", "Looks like this invitation has expired.", "error");
           });
       };
 
       $scope.acceptInvite = function(currGroup) {
           Group.acceptInvitation({
               id: currGroup.id,
+          }, function (response) {
+            $scope.closeDetails();
+            $window.swal({
+              title: "Group joined!",
+              text: "You can now view submissions credited to this group.",
+              timer: 3500,
+              type: "success"
+            });
+            $scope.reloadView();
           }, function (err) {
-            $scope.reloadView()
+            $window.swal("Oops...", "Looks like you've already joined this group..", "error");
           });
       };
 
-      $scope.subm_quantity = 10;
-      $scope.backup_quantity = 10;
+      $scope.subm_quantity = 5;
+      $scope.backup_quantity = 5;
 
 
       $scope.getSubmissions = function (assign,toIncrease) {
             if (toIncrease) {
-              $scope.subm_quantity += 50;
+              $scope.subm_quantity += 10;
             }
             User.getSubmissions({
               assignment: assign.assignment.id,
@@ -236,7 +304,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
 
       $scope.getBackups = function (assign, toIncrease) {
             if (toIncrease) {
-              $scope.backup_quantity += 50;
+              $scope.backup_quantity += 10;
             }
             User.getBackups({
               assignment: assign.assignment.id,
@@ -244,6 +312,23 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             }, function (response) {
                 assign.backups = response;
             });
+      }
+
+      $scope.changeSubmission = function (submId) {
+        FinalSubmissionChange.change({
+          submission: submId
+        }, function (response) {
+          $scope.reloadView();
+          $window.swal({
+              title: "Changed Submission",
+              text: "We'll grade the submission you marked.",
+              timer: 3500,
+              type: "success"
+            });
+        }, function (error) {
+//            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
+            $window.swal("Oops...", "Please submit again, instead. This feature is not yet ready.", "error");
+        })
       }
 
 
@@ -254,14 +339,14 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             id: assignId,
             email: member
           }, function (response) {
-              $scope.reloadView()
-              $window.swal({
+                $scope.closeDetails();
+                $window.swal({
                   title: "Invitation Sent!",
-                  text: "They will need to login to okpy.org and accept the invite.",
+                  text: "Your partner will need to login to okpy.org and accept the invite.",
                   timer: 3500,
                   type: "success"
                 });
-
+                $scope.reloadView();
           }, function (err) {
             $window.swal("Oops...", "Can't add that user to your group.    Is that the right email? They might already be in a group or may not be in the course.", "error");
          });
@@ -269,9 +354,10 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       };
       
       $scope.randomColor = function randomColor(assignment) {
-        themes = ['blue','gold','green']
+        themes = ['blue','gold','purple']
         if (!assignment.color) {
-            assignment.color = themes[Math.ceil(Math.random()*themes.length)-1]
+            var blob = $('.blob[id="'+assignment.id+'"]');
+            assignment.color = blob.length > 0 ? blob.attr('color') : themes[Math.ceil(Math.random()*themes.length)-1]
         }
         return assignment
       }
@@ -283,20 +369,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
         }
         
-        $scope.closeDetails = function closeDetails() {
+        $window.closeDetails = $scope.closeDetails = function closeDetails() {
             $('.sidebar').removeClass('active');
             $('.container-fluid').removeClass('active');
         }
-        $scope.flagSubmission = function(submId) {
-            $window.swal({
-                title: 'Oops. Well, this is embarrassing.',
-                text: 'Flagging isn\'t ready yet. Resubmit an old copy, for now, or contact your GSI.',
-                showCancelButton: false,
-                icon: false,
-                allowEscapeKey: true,
-                allowOutsideClick: true,
-                confirmButtonText: "Ok",
-                closeOnConfirm: true});
-          }
-      }
+        }
 ]);

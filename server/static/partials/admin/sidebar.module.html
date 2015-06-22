@@ -27,27 +27,19 @@
             </a>
         </li>
 
-        <li>
-            <a ui-sref="course.list">
-                <i class="fa fa-list"></i> <span>Course List</span>
-            </a>
-        </li>
-
-         <li class="treeview">
+        <li class="treeview">
             <a>
                 <i class="fa fa-bar-chart-o"></i>
-                <span>Assignments</span> &nbsp;
-                <small class="badge bg-green">{{ assignments.length }}</small>
+                <span>Courses</span> &nbsp;
+                <small class="badge bg-green">{{ courses.length }}</small>
             </a>
-            <ul class="treeview-menu" style="" ng-repeat="assignment in assignments">
-                    <li><a ui-sref='assignment.detail({assignmentId:assignment.id})' style="margin-left: 20px;"><i class="fa fa-inbox"></i> {{assignment.display_name}}</a></li>
+            <ul class="treeview-menu" style="display: block;" >
+                <li><a ui-sref='course.new' style="margin-left: 20px;"><i class="fa fa-plus"></i> Create Course</a> </li>
             </ul>
             <ul class="treeview-menu" style="display: block;" >
-                <li><a ui-sref='assignment.create' style="margin-left: 20px;"><i class="fa fa-plus"></i> Create Assignment</a> </li>
+                <li><a ui-sref='course.list' style="margin-left: 20px;"><i class="fa fa-list"></i> All Courses</a> </li>
             </ul>
-            <ul class="treeview-menu" style="display: block;" >
-                <li><a ui-sref='assignment.list' style="margin-left: 20px;"><i class="fa fa-list"></i> All Assignments</a> </li>
-            </ul>
+        </li>
         </li>
         <li class="treeview">
             <a>

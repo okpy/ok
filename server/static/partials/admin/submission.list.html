@@ -1,0 +1,90 @@
+<div ng-controller="SubmissionListCtrl">
+    <section class="content-header" ng-hide="dashboard">
+        <ol class="breadcrumb" >
+            <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+            <li class="active"><i class="fa fa-list"></i> All Submissions</li>
+        </ol>
+    </section>
+
+    <div class="box box-info">
+        <div class="box-body">
+            <div class="form-group">
+                <label>Search for Submissions</label>
+                <br>
+                <p>All searches are composed of flags, operators, and their associated value. A flag is denoted
+                    by one hyphen, a flag by two, and a string in double quotations or no punctuation at all.
+                    Dates, for example, or any other name with hyphens must be enclosed by double quotations.
+                    Missing comparison operators are automaticaly assumed to be --equal.<br><br>
+                    Available flags: user (email), date (YYYY-MM-DD), assignment (name), onlyfinal (true/false), onlybackup (true/false)<br>
+                    Available operators: after, before, lt, gt, equal, eq (alias for equal)<br>
+                    Example: -user "partner0@teamwork.com" -date --before "2015-06-22" -assignment Hog -onlyfinal false</p>
+                <input type="text" placeholder="Search" class="form-control" ng-model="query.string" required/>
+                </select>
+            </div>
+            <div class="box-footer">
+                <button type="button" ng-click="search()" class="btn btn-info">Search</button>
+            </div>
+        </div><!-- /.box-body -->
+    </div>
+
+    <div class="box"  ng-cloak>
+    <div class="box-header">
+      <h3 class="box-title" ng-if="submissions.length > 0">All Submissions</h3>
+      <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
+      <div class="box-tools" style="float:right;">
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=true&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button></a>
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=false&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" href="/api/v1/search/download"> <i class="fa fa-download"></i>  Download Page</button></a>
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=true&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1" href="/api/v1/search/download"> <i class="fa fa-download"></i>  Download</button></a>
+      </div>
+    </div>
+    <!-- /.box-header -->
+
+    <div class="box-body table-responsive">
+
+        <div class='text-center'>
+          <pager items-per-page="itemsPerPage" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()"></pager>
+        </div>
+      <table ts-wrapper ng-if="submissions.length > 0" class="table table-striped table-bordered table-responsive ">
+
+      <tbody>
+
+        <tr>
+          <th ts-criteria="assignment.display_name">Assignment</th>
+          <th ts-criteria="submitter.id" >Submitter</th>
+          <th ts-criteria="created">Time</th>
+          <th>Tags</th>
+          <th style="width: 20%">View Code</th>
+      </tr>
+
+        <tr ng-repeat="submission in submissions" ts-repeat>
+          <td>
+            <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
+          </td>
+          <td>{{submission.submitter.email[0]}}</td>
+          <td>
+            {{submission.created | amCalendar}}
+          </td>
+          <!-- Future Progress Bar -->
+          <td >
+            <span class="badge bg-info">{{submission.assignment.display_name}}</span>
+            <span class="badge bg-green" ng-if="submission.messages.file_contents.submit">Marked As Submit</span>
+
+            <span ng-repeat="tag in submission.tags" class="badge bg-blue">
+              {{ tag }}
+            </span>
+            <td>
+              <div class="btn-group download-btn-group">
+                  <a ui-sref='submission.detail({submissionId:submission.backup.id})' type="button" class="btn btn-flat btn-info">View</a>
+                  <a href='/api/v1/submission/{{submission.backup.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
+               </div>
+            </td>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+        <div class='text-center'>
+          <pager items-per-page="itemsPerPage" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()"></pager>
+        </div>
+      </div><!-- /.box-body -->
+    </div><!-- /.box -->

@@ -5,6 +5,7 @@ from functools import wraps
 import logging
 import traceback
 import collections
+import json
 
 import werkzeug
 from flask import render_template, session, request, Response, redirect, url_for
@@ -60,6 +61,29 @@ def landing():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("landing.html", **params)
 
+@app.route("/enrollment")
+def enrollment():
+    user = models.User.lookup(request.args.get('email'))
+    data = []
+    if user is not None:
+        parts = api.CourseAPI().get_courses(None, user, {'user': user.key})
+        for part in parts:
+            course = part.course.get()
+            offering = course.offering.split('/')
+            if len(offering) >= 3:
+                # will die if prefix other than 'fa', 'su' or 'sp' is used
+                term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
+                year = '20'+offering[2][2:]
+            else:
+                term = year = None
+            data.append({
+                'url': '/#/course/'+str(course.key.id()),
+                'display_name': course.display_name,
+                'institution': course.institution,
+                'term': term,
+                'year': year
+            })
+    return json.dumps(data)
 
 @app.route("/sudo/su/<su_email>")
 def sudo(su_email):
@@ -233,6 +257,7 @@ def register_api(view, endpoint, url):
 
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
+register_api(api.SearchAPI, 'search_api', 'search')
 register_api(api.VersionAPI, 'version_api', 'version')
 register_api(api.CourseAPI, 'course_api', 'course')
 register_api(api.GroupAPI, 'group_api', 'group')

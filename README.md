@@ -24,7 +24,7 @@ To install:
 * Clone this repo
 * Install [Google App Engine SDK](https://developers.google.com/appengine/downloads) and add it to your `$PATH`. You can do `brew install google-app-engine` on a mac.
 * `export GAE_SDK=<location of unzipped GAE SDK>`
-  - For brew, this location should be in /usr/local/Cellar/google-app-engine/1.9.11/share/google-app-engine.
+  - For brew, this location should be in /usr/local/Cellar/google-app-engine/1.9.X/share/google-app-engine.
   - Some files that should be present when running `ls $GAE_SDK` are `dev_appserver.py` and `api_server.py`.
 * Install `virtualenv`. You can do `brew install virtualenv` on a mac or `pip install virtualenv` or `apt-get install python-virtualenv`
   - If brew cannot find `virtualenv`, use `brew install pyenv-virtualenv`.
@@ -35,11 +35,22 @@ Testing the Installation
 ------------------------
 * Run `./run_tests`. For a successful installation, all tests should pass.
 
-Starting the Server
--------------
+Local Server
+------------
+To run the server locally:
+
 ```bash
 $ cd server
 $ ./start_server
+```
+
+Deploying
+---------
+To deploy the current branch:
+
+```bash
+$ gcloud auth login
+$ appcfg.py update
 ```
 
 Customizing seed content
@@ -61,14 +72,40 @@ To exit this environment, type ``deactivate``.
 Core Features
 -------------
 
-TODO
+Backup Maintainence
+- Best-effort maintenance of student backups that occur when ok is run.
+
+Composition Grading
+- Allow staff to comment on student composition of projects and assign grades.
+
+Autograding
+- Automatic grading of student submissions
 
 Projects using ok.py
 --------------------
 
-TODO
+[CS61A](cs61a.org) uses ok.py for all assignments.
 
 Developer Guidelines
 --------------------
 
-TODO
+To add features to ok, please do the following:
+
+- Follow the Installation instructions in order to install the ok server.
+- Name your branch according to our convention of &lt;category&gt;/&lt;GithubUsername&gt;/&lt;branch name&gt;
+  * Category is one of the following things:
+    - 'enhancement': This is a new feature that is being added to ok.
+    - 'bug': This is when the purpose of the branch is to fix a bug in the current codebase.
+    - 'cleanup': This is when technical debt is being reduced (e.g. adding tests, improving code style, etc)
+  * Githubusername is the username of one person who is the point of contact for the branch. The point of contact should be the first person that will field questions about the branch- there might be many other people working on it.
+  * branch name: A descriptive name for the branch
+- Make a pull request, which will get code-reviewed and merged.
+
+Some useful things for developers to know:
+
+1. Testing with ok-client
+   - To test with ok-client, please follow the instructions for the ok-client repo [here](https://github.com/Cal-CS-61A-Staff/ok-client).
+   - Once you are inside the virtual environment for ok-client, you can make a new binary by using the command `ok-publish`.
+   - To run the server, run the shell script in `server/start_server`
+   - When running the ok binary, add the flags `--insecure --server localhost:<port>` to point it to the running ok-server
+   - To find demo assignments that you can use the binary with, look in [ok-client/demo](https://github.com/Cal-CS-61A-Staff/ok-client/tree/master/demo)

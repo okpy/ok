@@ -6,6 +6,7 @@ import datetime
 import logging
 import ast
 import requests
+from zipfile import ZipFile
 
 from flask.views import View
 from flask.app import request, json
@@ -17,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -28,6 +29,8 @@ from google.appengine.ext import deferred
 from google.appengine.ext.ndb import stats
 from google.appengine.api import memcache
 
+import re
+import operator as op
 
 parser = FlaskParser()
 
@@ -226,7 +229,12 @@ class APIResource(View):
                                     is_index=(method_name == 'index'))
 
         path = path.split('/')
+
         if len(path) == 1:
+
+            if not getattr(self, 'contains_entities', True):
+                return self.call_method(path[0], user, http_method)
+
             entity_id = path[0]
             try:
                 key = self.key_type(entity_id)
@@ -465,6 +473,13 @@ class UserAPI(APIResource):
                 'quantity': Arg(int, default=10)
             }
         },
+        'timed_submission': {
+            'methods': set(['GET']),
+            'web_args': {
+                'assignment': KeyArg('Assignment', required=True),
+                'before': DateTimeArg()
+            }
+        },
         'merge_user': {
             'methods': set(['POST']),
             'web_args': {
@@ -617,6 +632,9 @@ class UserAPI(APIResource):
     def get_submissions(self, obj, user, data):
         return obj.get_submissions(data['assignment'], data['quantity'])
 
+    def timed_submission(self, obj, user, data):
+        return obj.get_submission_before(data['assignment'], data['before'])
+
     def merge_user(self, obj, user, data):
         """
         Merges this user with another user.
@@ -649,7 +667,9 @@ class AssignmentAPI(APIResource):
                 'max_group_size': Arg(int, required=True),
                 'due_date': DateTimeArg(required=True),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
-                                 required=True),
+                    required=True),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
                 }
         },
         'put': {
@@ -661,9 +681,25 @@ class AssignmentAPI(APIResource):
                 'max_group_size': Arg(int),
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
                 }
         },
         'get': {
+        },
+        'edit': {
+            'methods': {'POST'},
+            'web_args': {
+                'name': Arg(str),
+                'display_name': Arg(str),
+                'points': Arg(float),
+                'course': KeyArg('Course'),
+                'max_group_size': Arg(int),
+                'due_date': DateTimeArg(),
+                'templates': Arg(str, use=lambda temps: json.dumps(temps)),
+                'revision': Arg(bool),
+                'lock_date': DateTimeArg()
+            }
         },
         'index': {
             'web_args': {
@@ -676,7 +712,7 @@ class AssignmentAPI(APIResource):
         'invite': {
             'methods': set(['POST']),
             'web_args': {
-                'email': Arg(str, required=True)
+                'email': Arg(str)
             }
         },
         'group': {
@@ -684,6 +720,9 @@ class AssignmentAPI(APIResource):
         },
         'assign': {
             'methods': set(['POST'])
+        },
+        'delete': {
+            'methods': set(['DELETE'])
         }
     }
 
@@ -708,6 +747,10 @@ class AssignmentAPI(APIResource):
                 'assignment with name %s exists already' % data['name'])
         return super(AssignmentAPI, self).post(user, data)
 
+    def edit(self, obj, user, data):
+        """ Save the assignment. """
+        return super(AssignmentAPI, self).put(obj, user, data)
+
     def assign(self, obj, user, data):
         need = Need('put')
         if not obj.can(user, need, obj):
@@ -723,6 +766,7 @@ class AssignmentAPI(APIResource):
         err = models.Group.invite_to_group(user.key, data['email'], obj.key)
         if err:
             raise BadValueError(err)
+
 
 
 class SubmitNDBImplementation(object):
@@ -857,15 +901,12 @@ class SubmissionAPI(APIResource):
         :return:
         """
 
-    def download(self, obj, user, data):
-        """
-        Download submission, but check if it has content and encode all files.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: file contents in utf-8
-        """
+    def data_for_zip(self, obj):
+        try:
+            user = obj.submitter.get()
+            name = user.email[0]+'-'+str(obj.created)
+        except IndexError:
+            name = str(obj.created)
         messages = obj.get_messages()
         if 'file_contents' not in messages:
             raise BadValueError('Submission has no contents to download')
@@ -880,12 +921,49 @@ class SubmissionAPI(APIResource):
                 file_contents[key] = file_contents[key].encode('utf-8')
             except:
                 pass
-        response = make_response(create_zip(file_contents))
 
+        return name, file_contents
+
+    def zip(self, obj, user, data):
+        """ Grab all files in submission
+        :param obj:
+        :param user:
+        :param data:
+        :return:
+        """
+        return self.zip_files(*self.data_for_zip(obj))
+
+    def zip_files(self, name, file_contents):
+        """ Zip files
+        :param file_contents:
+        :return:
+        """
+        zipfile = create_zip(file_contents)
+        return name, zipfile
+
+    def make_zip_response(self, name, zipfile):
+        """
+        Makes a zip response using a zip object.
+
+        :param zip:
+        :return:
+        """
+        response = make_response(zipfile)
         response.headers['Content-Disposition'] = (
-            'attachment; filename=submission-%s.zip' % str(obj.created))
+            'attachment; filename=submission-%s.zip' % name)
         response.headers['Content-Type'] = 'application/zip'
         return response
+
+    def download(self, obj, user, data):
+        """
+        Download submission, but check if it has content and encode all files.
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: file contents in utf-8
+        """
+        return self.make_zip_response(*self.zip(obj, user, data))
 
     def diff(self, obj, user, data):
         """
@@ -1154,6 +1232,176 @@ class SubmissionAPI(APIResource):
                            data.get('submitter'))
 
 
+class SearchAPI(APIResource):
+
+    contains_entities = False
+
+    methods = {
+        'index': {
+            'methods': {'GET'},
+            'web_args': {
+                'query': Arg(str, required=True),
+                'page': Arg(int, default=1),
+                'num_per_page': Arg(int, default=10),
+                'courseId': Arg(int, required=True)
+            }
+        },
+        'download': {
+            'methods': {'GET'},
+            'web_args': {
+                'query': Arg(str, required=True),
+                'page': Arg(int, default=1),
+                'num_per_page': Arg(int, default=10),
+                'all': Arg(bool, default=False),
+                'courseId': Arg(int, required=True)
+            }
+        }
+    }
+
+    defaults = {
+        'onlywcode': (op.__eq__, 'True')
+    }
+
+    operators = {
+        'eq': op.__eq__,
+        'equal': op.__eq__,
+        'lt': op.__lt__,
+        'gt': op.__gt__,
+        'before': op.__lt__,
+        'after': op.__gt__
+    }
+
+    # maps flags to processing functions (e.g., instantiate objects)
+    flags = {
+        'user': lambda op, email:
+            UserAPI.model.query(
+                op(UserAPI.model.email, email)).get(),
+        'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
+        'onlybackup': lambda op, boolean: boolean.lower() == 'true',
+        'onlyfinal': lambda op, boolean: boolean.lower() == 'true',
+        'onlywcode': lambda op, boolean: boolean.lower() == 'true',
+        'assignment': lambda op, name:
+            AssignmentAPI.model.query(
+                op(AssignmentAPI.model.display_name, name)).get(),
+    }
+
+    def check_permissions(self, user, data):
+        course = CourseAPI()
+        key = course.key_type(data['courseId'])
+        course = course.get_instance(key, user)
+
+        if user.key not in course.staff and not user.is_admin:
+            raise Need('get').exception()
+
+    def index(self, user, data):
+        self.check_permissions(user, data)
+
+        query = SearchAPI.querify(data['query'])
+        start, end = SearchAPI.limits(data['page'], data['num_per_page'])
+        results = query.fetch()[start:end]
+        return dict(data={
+            'results': results,
+            'more': len(results) >= data['num_per_page'],
+            'query': data['query']
+        })
+
+    def download(self, user, data):
+        self.check_permissions(user, data)
+
+        results = SearchAPI.querify(data['query']).fetch()
+        if data.get('all', False):
+            start, end = SearchAPI.limits(data['page'], data['num_per_page'])
+            results = results[start:end]
+        zipfile_str, zipfile = start_zip()
+        subm = SubmissionAPI()
+        for result in results:
+            try:
+                if isinstance(result, models.Submission):
+                    result = result.backup.get()
+                name, file_contents = subm.data_for_zip(result)
+                zipfile = add_to_zip(zipfile, file_contents, name)
+            except BadValueError as e:
+                if str(e) != 'Submission has no contents to download':
+                    raise e
+        return subm.make_zip_response('query', finish_zip(zipfile_str, zipfile))
+
+
+    @staticmethod
+    def tokenize(query):
+        """
+        Parses each command for flag, op, and arg
+        Regex captures first named group "flag" as a string preceded
+        by a single dash, followed by a space. Optionally captures
+        second named group "op" as a string preceded by two dashes
+        and followed by a space. Captures final named group "arg"
+        with optional quotations.
+        """
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?')
+        return tokenizer.findall(query)
+
+    @classmethod
+    def translate(cls, query):
+        """ converts operators into appropriate string reps and adds defaults """
+        tokens = cls.tokenize(query)
+        scope = {k: tuple(v) for k, v in cls.defaults.items()}
+        for token in tokens:
+            flag, dummy, opr, arg = token
+            scope[flag] = (cls.operators[opr or 'eq'], arg)
+        return scope
+
+    @classmethod
+    def objectify(cls, query):
+        """ converts keys into objects """
+        scope = cls.translate(query)
+        for k, v in scope.items():
+            op, arg = v
+            scope[k] = (op, cls.flags[k](op, arg))
+        return scope
+
+    @classmethod
+    def querify(cls, query):
+        """ converts mush into a query object """
+        objects = cls.objectify(query)
+        model = cls.get_model(objects)
+        args = cls.get_args(model, objects)
+        query = model.query(*args)
+        return query
+
+    @staticmethod
+    def get_model(prime):
+        """ determine model using passed-in data """
+        op, onlyfinal = prime.get('onlyfinal', (None, False))
+        op, onlybackup = prime.get('onlybackup', (None, False))
+        if onlybackup:
+            return models.Backup
+        if onlyfinal:
+            return models.FinalSubmission
+        else:
+            return models.Submission
+
+
+    @staticmethod
+    def get_args(model, prime):
+        """ Creates all Filter Nodes """
+        args, keys = [], prime.keys()
+        if 'assignment' in keys:
+            args.append(model.assignment == prime['assignment'][1].key)
+        if 'user' in keys:
+            args.append(model.submitter == prime['user'][1].key)
+        if 'date' in keys:
+            opr, arg = prime['date']
+            args.append(opr(model.server_time, arg))
+        if 'onlywcode' in keys:
+            pass
+            # TODO: complete onlywcode : query only submissions that have code
+        return args
+
+    @staticmethod
+    def limits(page, num_per_page):
+        """ returns start and ends number based on page and num_per_page """
+        return (page-1)*num_per_page, page*num_per_page
+
+
 class VersionAPI(APIResource):
     model = models.Version
 
@@ -1263,22 +1511,25 @@ class CourseAPI(APIResource):
                 'institution': Arg(str, required=True),
                 'offering': Arg(str, required=True),
                 'active': BooleanArg(),
-                }
+            }
         },
         'put': {
             'web_args': {
-                'name': Arg(str),
+                'display_name': Arg(str),
                 'institution': Arg(str),
                 'term': Arg(str),
                 'year': Arg(str),
                 'active': BooleanArg(),
-                }
+            }
         },
         'delete': {
         },
         'get': {
         },
         'index': {
+            'web_args': {
+                'onlyenrolled': Arg(bool, default=False)
+            }
         },
         'get_staff': {
         },
@@ -1289,6 +1540,24 @@ class CourseAPI(APIResource):
             }
         },
         'remove_staff': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
+        'add_student': {
+            'methods': set(['POST']),
+            'web_args': {
+                'email': Arg(str, required=True)
+            }
+        },
+        'add_students': {
+            'methods': set(['POST']),
+            'web_args': {
+                'emails': Arg(list, required=True)
+            }
+        },
+        'remove_student': {
             'methods': set(['POST']),
             'web_args': {
                 'email': Arg(str, required=True)
@@ -1319,13 +1588,20 @@ class CourseAPI(APIResource):
                 'count': Arg(int)
             }
         }
-        }
+    }
 
     def post(self, user, data):
         """
         The POST HTTP method
         """
         return super(CourseAPI, self).post(user, data)
+    
+    def index(self, user, data):
+        if data['onlyenrolled']:
+            return dict(results=[result.course for result in models.Participant.query(
+                models.Participant.user == user.key)])
+        else:
+            return super(CourseAPI, self).index(user, data)
 
     def add_staff(self, course, user, data):
         need = Need('staff')
@@ -1364,18 +1640,38 @@ class CourseAPI(APIResource):
 
     def get_students(self, course, user, data):
         query = models.Participant.query(
-            models.Participant.course == course.key)
+            models.Participant.course == course.key,
+            models.Participant.role == 'student')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
         return list(query.fetch())
 
+    def add_students(self, course, user, data):
+        need = Need('staff') # Only staff can call this API
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        for email in set(data['emails']):  # to remove potential duplicates
+            user = models.User.get_or_insert(email)
+            models.Participant.add_role(user, course, STUDENT_ROLE)
+
     def add_student(self, course, user, data):
         need = Need('staff') # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
-        new_participant = models.Participant.add_role(user, course, STUDENT_ROLE)
-        new_participant.put()
+
+        user = models.User.get_or_insert(data['email'])
+        models.Participant.add_role(user, course, STUDENT_ROLE)
+
+    def remove_student(self, course, user, data):
+        need = Need('staff')
+        if not course.can(user, need, course):
+            raise need.exception()
+
+        removed_user = models.User.lookup(data['email'])
+        if removed_user:
+            models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
     def assignments(self, course, user, data):
         return list(course.assignments)
@@ -1396,6 +1692,9 @@ class CourseAPI(APIResource):
         )
 
         return list(query.fetch())
+
+    def get_my_courses(self, course, user, data):
+        return self.get_courses(course, user, dict(user=user))
 
 
 class GroupAPI(APIResource):
@@ -1563,9 +1862,25 @@ class FinalSubmissionAPI(APIResource):
                 'message': Arg(str, required=True),
                 'source': Arg(str, required=True),
               }
+        },
+        'post': {
+            'web_args': {
+                'submission': KeyArg('Submission', required=True)
+            }
+        },
         }
 
-        }
+    def new_entity(self, attributes):
+        """
+        Creates a new entity with given attributes.
+
+        :param attributes: (dictionary)
+        :return: (entity, error_response) should be ignored if error_response
+        is a True value
+        """
+        subm = attributes['submission'].get()
+        subm.mark_as_final()
+        return subm.get_final()
 
     def score(self, obj, user, data):
         """

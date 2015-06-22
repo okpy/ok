@@ -180,6 +180,34 @@ class User(Base):
                 FinalSubmission.assignment==assignment_key,
                 FinalSubmission.submitter==self.key).get()
 
+    def get_submission_before(self, assignment_key, before_time):
+        """Get this users last submission before some server time"""
+        if isinstance(assignment_key, Assignment):
+            assignment_key = assignment_key.key
+        group = self.get_group(assignment_key)
+        if group and self.key in group.member:
+            subms = Submission.query(
+                Submission.submitter.IN(group.member),
+                Submission.assignment == assignment_key,
+                Submission.server_time < before_time).order(
+                  -Submission.server_time
+                ).fetch(100)
+        else:
+            subms = Submission.query(
+                Submission.submitter ==self.key,
+                Submission.assignment == assignment_key,
+                Submission.server_time < before_time,
+                ).order(
+                  -Submission.server_time
+                ).fetch(100)
+
+        has_files = lambda sb: 'file_contents' in sb.backup.get().get_messages()
+        subms_with_code = filter(has_files, subms)
+        subms_with_code.sort(key= lambda s: s.server_time)
+        if len(subms_with_code) > 0:
+          return subms_with_code[-1]
+        return []
+
     def _contains_files(self, backup):
         messages = backup.get_messages()
         if 'file_contents' in messages:
@@ -211,7 +239,7 @@ class User(Base):
         all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
 
         return all_backups[:num_backups]
-    
+
     def _get_submissions_helper(self, assignment):
         group = self.get_group(assignment)
         if not group or self.key not in group.member:
@@ -222,19 +250,20 @@ class User(Base):
         all_submissions = []
         for member in members:
             all_submissions.append(Submission.query(
-                Submission.submitter==member))
+                Submission.submitter==member,
+                Submission.assignment==assignment))
 
         return all_submissions
 
     def get_submissions(self, assignment, num_submissions=10):
         queries = self._get_submissions_helper(assignment)
 
-        subms = [query.fetch(num_submissions) for query in queries]
+        subms = [query.fetch() for query in queries]
         all_subms = []
         for results in subms:
             for s in results:
                 all_subms.append(s)
-        
+
         all_subms = [x.backup.get() for x in all_subms]
         all_subms = [x for x in all_subms if x.assignment == assignment \
                 and self._contains_files(x)]
@@ -464,15 +493,11 @@ class Assignment(Base):
     def _can(cls, user, need, obj, query):
         if need.action == "index":
             return query
-        if user.is_admin and need.action != "delete":
+        if user.is_admin:
             return True
-
         if need.action == "get":
             return True
-        elif need.action == "create":
-            if obj and isinstance(obj, Assignment):
-                return Participant.has_role(user, obj.course, STAFF_ROLE)
-        elif need.action == "grade":
+        elif need.action in ["grade", 'delete', 'create', 'put']:
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
@@ -702,6 +727,7 @@ class Submission(Base):
     server_time = ndb.DateTimeProperty(auto_now_add=True)
     is_revision = ndb.BooleanProperty(default=False)
 
+
     def get_final(self):
         assignment = self.assignment
         # I have no idea why this works... need it to pass tests
@@ -763,7 +789,7 @@ class Submission(Base):
 
     @classmethod
     def _can(cls, user, need, submission, query):
-        return Backup._can(user, need, submission.backup.get(), query)
+        return Backup._can(user, need, submission.backup.get() if submission else None, query)
 
 
 class Diff(Base):
@@ -1158,6 +1184,11 @@ class FinalSubmission(Base):
 
     @classmethod
     def _can(cls, user, need, final, query):
+        action = need.action
+        if action in ("create", "put") and final:
+            group = final.submission.get().backup.get().group
+            if group:
+              return user.logged_in and user.key in group.member
         return Submission._can(
             user, need, final.submission.get() if final else None, query)
 

@@ -10,6 +10,13 @@ app.factory('User', ['$resource',
           },
           cache: true
         },
+        force_get: {
+          method: "GET",
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          },
+          cache: false
+        },
         create: {
           method: "POST",
           transformResponse: function(data) {
@@ -157,6 +164,13 @@ app.factory('Assignment', ['$resource',
             return JSON.parse(data).data;
           }
         },
+        edit: {
+          method: "POST",
+          url: '/api/v1/assignment/:id/edit',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         group: {
           url: '/api/v1/assignment/:id/group',
           transformResponse: function(data) {
@@ -169,7 +183,7 @@ app.factory('Assignment', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
-        },
+        }
       });
     }
   ]);
@@ -225,16 +239,37 @@ app.factory('Course', ['$resource',
           },
           cache: true
         },
+        create: {
+          method: "POST",
+          url: '/api/v1/course',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         get: {
           transformResponse: function(data) {
             return JSON.parse(data).data;
           },
           cache: true
         },
+        assignments: {
+           isArray: true,
+           url:'/api/v1/course/:id/assignments',
+           transformResponse: function(data) {
+             return JSON.parse(data).data;
+           }
+        },
         staff: {
           isArray: true,
           url: '/api/v1/course/:id/get_staff',
           transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        students: {
+          isArray: true,
+          url: '/api/v1/course/:id/get_students',
+         transformResponse: function(data) {
             return JSON.parse(data).data;
           }
         },
@@ -248,6 +283,27 @@ app.factory('Course', ['$resource',
         remove_member: {
           method: "POST",
           url: '/api/v1/course/:id/remove_staff',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        add_student: {
+          method: "POST",
+          url: '/api/v1/course/:id/add_student',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        add_students: {
+          method: "POST",
+          url: '/api/v1/course/:id/add_students',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        remove_student: {
+          method: "POST",
+          url: '/api/v1/course/:id/remove_student',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -282,6 +338,21 @@ app.factory('Version', ['$resource',
     }
   ]);
 
+app.factory('FinalSubmissionChange', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/final_submission', {}, {
+        change: {
+          method: "POST",
+          url: "/api/v1/final_submission",
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+      });
+    }
+  ]);
+
+
 app.factory('Queue', ['$resource',
     function($resource) {
       return $resource('/api/v1/queue/:id', {
@@ -310,5 +381,19 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
-
-
+  
+  
+app.factory('Search', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/search', {
+        }, {
+          query: {
+            url: '/api/v1/search',
+            transformResponse: function(data) {
+              return JSON.parse(data).data;
+            }
+          }
+        }
+      )
+    }
+  ]);

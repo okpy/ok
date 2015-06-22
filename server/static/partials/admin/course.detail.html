@@ -34,9 +34,15 @@
     </tr>
   </table>
 
-    <staff-list />
     <a class="btn btn-primary" ui-sref='staff.list({courseId:course.id})'>
       View/Edit Staff
     </a>
 
+  <a class="btn btn-primary" ui-sref='students.list({courseId:course.id})'>
+    View/Edit Student Enrollment
+  </a>
+
+  <a class="btn btn-primary" ui-sref='course.assignments({courseId:course.id})'>
+    Course Assignments
+  </a>
 </div>

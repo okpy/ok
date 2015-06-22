@@ -200,6 +200,9 @@ header {
 .blob[color="green"], .colored.sidebar[color="green"] { background-color: #698C00 }
 .blob[color="green"] .blob-alert { background-color: #A3D900 }
 
+.blob[color="purple"], .colored.sidebar[color="purple"] { background-color: #835186 }
+.blob[color="purple"] .blob-alert { background-color: #d976dc; }
+
 .blob[color="gold"], .colored.sidebar[color="gold"] { background-color:#D9A300 }
 .blob[color="gold"] .blob-alert { background-color:#FFC926 }
         
@@ -520,6 +523,10 @@ header {
             width:75px;
             opacity:1;
             cursor:pointer;
+            line-height:60px;
+            text-align:center;
+            color:#FFF;
+            font-size:1.25em;
         }
             .option > span {
                 margin:30px;
@@ -569,12 +576,15 @@ header {
             .sidebars .close:hover {
                 color:rgba(0,0,0,0.75);
             }
+            .sidebar h3 span {
+                font-family: 'Roboto';
+              font-size: 11px;
+              font-weight: 400;
+              opacity: 0.5;
+            }
         .close.white {
             color:#FFF;
         }
-            .sidebar .option {
-                padding-left:30px;
-            }
             .blob-alert .close {
                 float:none;
                 margin-top:0.5em;

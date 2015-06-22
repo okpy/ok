@@ -4,7 +4,7 @@ app.controller("SidebarCntrl", ['$scope', 'Assignment',
     Assignment.query(function(response) {
       $scope.assignments = response.results;
     });
-    $scope.course_name = "CS61A Spring 2015"
+    $scope.course_name = "Ok Admin"
   }]);
 
 // Submission Controllers
@@ -26,39 +26,33 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
   }
   ]);
 
-
-app.controller("AssignmentListCtrl", ['$scope', '$http', 'Assignment',
-  function($scope, $http, Assignment) {
-    Assignment.query(function(response) {
-      $scope.assignments = response.results;
-    });
-
-    $scope.assign = function (assignmentId) {
-         // if (confirm('Are you sure you want to assign this to staff? Only submit if you are sure. ')) {
-         //      $http({
-         //          url: '/api/v1/assignment/'+assignmentId+'/assign',
-         //          method: "POST",
-         //          data: { 'message' : 'hello' }
-         //      })
-         // }
-         console.log('Unsupported for now');
-       }
-
-     }]);
-
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
     $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
   }
   ]);
 
-app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "Assignment", "Course",
-  function ($scope, $window, $stateParams, Assignment, Course) {
+app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $state, $stateParams, Assignment, Course) {
     $scope.existingAssign = Assignment.get({id: $stateParams.assignmentId});
+    var future = new Date();
+    future.setDate(future.getDate() + 31);
+    due_date = lock_date = future.getFullYear() + '-' + future.getMonth() + '-' + future.getDate()
     $scope.newAssign = {
+      'due_date': due_date,
+      'lock_date': lock_date,
       'due_time': '23:59:59.0000',
-      'max_group_size': 2
+      'lock_time': '23:59:59.0000',
+      'max_group_size': 2,
+      'revisions': false,
+      'points': 4
     };
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
+    // TODO: only allow user to create assignment for specified course - no more dropdown!
     Course.get({}, function(resp) {
         $scope.courses = resp.results;
         $scope.newAssign.course = $scope.courses[0];
@@ -66,6 +60,7 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
 
     $scope.createAssign = function () {
         var due_date_time = $scope.newAssign.due_date + ' ' + $scope.newAssign.due_time
+        var lock_date_time = $scope.newAssign.lock_date + ' ' + $scope.newAssign.lock_time
         Assignment.create({
           'display_name': $scope.newAssign.display_name,
           'name': $scope.newAssign.endpoint,
@@ -74,9 +69,15 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
           'templates': {},
           'due_date': due_date_time,
           'course': $scope.newAssign.course.id,
+          'revision': $scope.newAssign.revisions,
+          'lock_date': lock_date_time
         },
           function (response) {
-            $window.swal("Assignment Created!",'','success');
+            $scope.courses = Course.query({},
+              function (response) {
+                $window.swal("Assignment Created!",'','success');
+               $state.transitionTo('course.assignments' , {courseId: $scope.course.id} , { reload: true, inherit: true, notify: true });
+             });
           }, function (error) {
             console.log('error')
             $window.swal("Could not create assignment",'There was an error','error');
@@ -87,30 +88,95 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$stateParams", "As
     }
   }
   ]);
+
+app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $state, $stateParams, Assignment, Course) {
+  
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
+
+    $scope.reloadAssignment = function() {
+      Assignment.get({
+        id: $stateParams.assignmentId
+      }, function (response) {
+        $scope.initAssignment(response);
+      });
+    }
+
+    $scope.initAssignment = function(assign) {
+      $scope.assign = assign;
+      $scope.assign.endpoint = assign.name;
+      parts = assign.due_date.split(' ');
+      assign.due_date = parts[0];
+      assign.due_time = parts[1];
+      if (assign.lock_date != null) {
+        parts = assign.lock_date.split(' ');
+        assign.lock_date = parts[0];
+        assign.lock_time = parts[1];
+      }
+      if (assign.revisions == null) {
+        assign.revisions = false;
+      }
+      $scope.initCourses(assign);
+    }
+
+    $scope.initCourses = function(assign) {
+      Course.get({}, function(resp) {
+          $scope.courses = resp.results;
+          for (var i=0;i<resp.results.length;i++) {
+            course = resp.results[i];
+            if (course.id == assign.course.id) {
+              assign.course = course;
+              break;
+            }
+          }
+      });
+    }
+
+    $scope.reloadAssignment();
+
+    $scope.editAssign = function () {
+        var due_date_time = $scope.assign.due_date + ' ' + $scope.assign.due_time
+        var lock_date_time = $scope.assign.lock_date + ' ' + $scope.assign.lock_time
+        Assignment.edit({
+          'id': $scope.assign.id,
+          'display_name': $scope.assign.display_name,
+          'name': $scope.assign.endpoint,
+          'points': $scope.assign.points,
+          'max_group_size': $scope.assign.max_group_size,
+          'templates': {},
+          'due_date': due_date_time,
+          'course': $scope.assign.course.id,
+          'revision': $scope.assign.revisions,
+          'lock_date': lock_date_time
+        },
+          function (response) {
+            $scope.assignments = Assignment.query({},
+              function (response) {
+              $window.swal("Assignment Updated!",'','success');
+              $state.transitionTo('course.assignments', {courseId: $scope.course.id}, {'reload': true})
+            });
+          }, function (error) {
+            console.log('error')
+            $window.swal("Could not update assignment",'There was an error','error');
+
+          }
+        )
+
+    }
+  }
+  ]);
+
 app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
   function ($scope, $state, Submission) {
     $scope.itemsPerPage = 3;
     $scope.currentPage = 1;
     $scope.getPage = function(page) {
       Submission.query({
-        fields: {
-          'created': true,
-          'db_created': true,
-          'id': true,
-          'submitter': {
-            'id': true
-          },
-          'tags': true,
-          'assignment': {
-            'name': true,
-            'display_name': true,
-            'id': true,
-            'active': true
-          },
-          'messages': {
-            'file_contents': "presence"
-          }
-        },
+        user: '',
         page: page,
         num_page: $scope.itemsPerPage,
         "messages.kind": "file_contents"
@@ -204,45 +270,43 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', 'Submission',
-  function($scope, Submission) {
+app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course',
+  function($scope, $stateParams, $window, Search, Course) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
+    $scope.query = {
+      'string': ''
+    }
+
     $scope.getPage = function(page) {
-      Submission.query({
-        fields: {
-          'created': true,
-          'db_created': true,
-          'id': true,
-          'submitter': {
-            'id': true
-          },
-          'tags': true,
-          'assignment': {
-            'name': true,
-            'display_name': true,
-            'id': true,
-          },
-          'messages': {
-            'file_contents': "presence"
-          }
-        },
+      Search.query({
+        query: $scope.query.string || '',
         page: page,
-        num_page: $scope.itemsPerPage,
-        "messages.kind": "file_contents"
+        num_per_page: $scope.itemsPerPage,
+        courseId: $scope.course.id
       }, function(response) {
         $scope.submissions = response.data.results;
+        $scope.more = response.data.more;
+        $scope.search_query = encodeURIComponent(response.data.query);
         if (response.data.more) {
           $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
         } else {
           $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
         }
+      }, function(err) {
+        $window.swal('Uh oh', 'We couldn\'t complete the search. Remember that your query must have valid flags.', 'error');
       });
     }
+
+    $scope.course = Course.get({id: $stateParams.courseId});
+
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
-    $scope.getPage(1);
+
+    $scope.search = function() {
+      $scope.getPage($scope.currentPage)
+    }
   }]);
 
 
@@ -292,20 +356,73 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
     $scope.courses = Course.query({});
   }]);
 
+  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+    function($scope, $http, Assignment, Course, $stateParams, $window) {
+    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.reloadView = function() {
+       Course.assignments({
+        id: $stateParams.courseId
+       },function(response) {
+         $scope.assignments = response
+       });
+     }
+
+     $scope.delete = function(assign) {
+      $window.swal({
+          title: "Are you sure?",
+          text: "You will not be able to recover this assignment!",
+          type: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "Yes, delete it!",
+          closeOnConfirm: false,
+          html: false
+        }, function(){
+          $scope.deleteAssignment(assign);
+        });
+      }
+      
+      $scope.deleteAssignment = function(assign) {
+        Assignment.delete({
+           id: assign.id
+         }, function(response) {
+           $window.swal('Success', 'Assignment deleted.', 'success');
+           $scope.reloadView();
+         }, function(error) {
+          $window.swal('Error', 'Could not delete assignment.', 'error')
+         });
+      }
+      
+     $scope.reloadView();
+   }]);
+
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
   function ($scope, $stateParams, Course) {
     $scope.course = Course.get({id: $stateParams.courseId});
   }
   ]);
 
-app.controller("CourseNewCtrl", ["$scope", "Course",
-  function ($scope, Course) {
+app.controller("CourseNewCtrl", ["$scope", "$state", "$window", "Course",
+  function ($scope, $state, $window, Course) {
     $scope.course = {};
-    $scope.test = {'test':3};
 
-    $scope.save = function() {
-      var course = new Course($scope.course);
-      course.$save();
+    $scope.createCourse = function() {
+      Course.create({
+        'display_name': $scope.course.name,
+        'institution': $scope.course.institution,
+        'offering': $scope.course.offering,
+        'active': true
+      },
+       function (response) {
+         $scope.courses = Course.query({},
+          function (response) {
+            $window.swal("Course Created!",'','success');
+           $state.transitionTo('course.list' , {} , { reload: true, inherit: true, notify: true });
+         });
+       }, function (error) {
+         $window.swal("Could not create course",'There was an error','error');
+
+       })
     };
   }
   ]);
@@ -315,20 +432,8 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
 // Staff Controllers
 app.controller("StaffListCtrl", ["$scope","$window", "$stateParams", "Course", "User",
   function($scope, $window, $stateParams, Course, User) {
-    $scope.members = Course.staff({id: $stateParams.courseId});
-    $scope.roles = ['staff', 'admin', 'user'];
-    $scope.newMember = {
-      role: 'staff'
-    }
-    $scope.save = function () {
-      Course.add_member({
-        id: $stateParams.courseId,
-        email: $scope.newMember.email
-      }, function() {
-        $window.swal("Added!", "Added "+$scope.newMember.email+" to the course staff", "success");
-        $scope.newMember.email = "";
-      });
-    };
+  $scope.course = Course.get({id: $stateParams.courseId});
+  $scope.members = Course.staff({id: $stateParams.courseId});
     $scope.remove = function (userEmail) {
       Course.remove_member({
         id: $stateParams.courseId,
@@ -352,12 +457,93 @@ app.controller("StaffDetailCtrl", ["$scope", "$stateParams", "Course", "User",
 
   }]);
 
-app.controller("StaffNewCtrl", ["$scope", "$stateParams", "Course",
-  function ($scope, $stateParams, Course) {
-    alert('hi');
+app.controller("StaffAddCtrl", ["$scope", "$state", "$stateParams", "$window", "Course",
+  function ($scope, $state, $stateParams, $window, Course) {
+    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.roles = ['staff', 'admin', 'user'];
+    $scope.newMember = {
+      role: 'staff'
+    }
+    $scope.save = function () {
+      Course.add_member({
+        id: $stateParams.courseId,
+        email: $scope.newMember.email
+      }, function() {
+        Course.staff({
+          id: $scope.course.id
+        }, function () {
+          $window.swal("Added!", "Added "+$scope.newMember.email+" to the course staff", "success");
+          $state.transitionTo('staff.list', {courseId: $scope.course.id}, {'reload': true})
+          $scope.newMember.email = "";
+        })
+      });
+    };
   }
   ]);
 
+
+// Student Enrollment Controllers
+app.controller("StudentsAddCtrl", ["$scope", "$state", "$stateParams", "$window", "Course",  "User",
+function($scope, $state, $stateParams, $window, Course, User) {
+  $scope.course = Course.get({id: $stateParams.courseId});
+  $scope.newMember = {
+    role: 'user'
+  }
+       $scope.save = function () {
+        Course.add_student({
+          id: $stateParams.courseId,
+          email: $scope.newMember.email
+        }, function() {
+          Course.students({
+            id: $scope.course.id
+          }, function () {
+            $window.swal("Added!", "Enrolled "+$scope.newMember.email+" in the course.", "success");
+            $state.transitionTo('students.list', {courseId: $scope.course.id}, {'reload': true})
+            $scope.newMember.email = "";
+          })
+        }, function() {
+          $window.swal("Oops", "Could not enroll student", 'error')
+        });
+      };
+
+      $scope.saves = function () {
+        arr = $scope.newMember.emails.split(',');
+        $scope.newMember.emails = new Array()
+        for (var i=0;i<arr.length;i++) {
+          $scope.newMember.emails.push(arr[i].trim());
+        }
+        Course.add_students({
+          id: $stateParams.courseId,
+          emails: $scope.newMember.emails
+        }, function() {
+          Course.students({
+            id: $scope.course.id
+          }, function () {
+            $window.swal("Added!", "Enrolled "+$scope.newMember.emails.toString().substr(1,-1)+" in the course.", "success");
+            $state.transitionTo('students.list', {courseId: $scope.course.id}, {'reload': true})
+            $scope.newMember.email = "";
+          })
+        }, function() {
+          $window.swal("Oops", "Could not enroll student", 'error')
+        });
+      };
+}]);
+
+app.controller("StudentsListCtrl", ["$scope", "$stateParams", "$window", "Course",
+  function($scope, $stateParams, $window, Course) {
+    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.members = Course.students({id: $stateParams.courseId});
+
+    $scope.remove = function (userEmail) {
+      Course.remove_student({
+        id: $stateParams.courseId,
+        email: userEmail
+      }, function() {
+        $window.swal("Removed!", "Removed " + userEmail + " from the course", "success");
+        $scope.members = Course.students({id: $stateParams.courseId});
+      });
+    };
+  }]);
 
 // Diff Controllers
 app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateParams',  'Submission',  "$sessionStorage", '$timeout',
@@ -758,18 +944,24 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
     $scope.save = function() {
       var version = new Version($scope.version);
       if (version.current) {
-        delete version.current;
         version.current_version = version.version;
       }
       var oldVersion = $scope.versions && version.name in $scope.versions;
 
       if (oldVersion) {
-        version.$update({"id": version.name});
+        version.$update({"id": version.name},
+          function (resp) {
+            $state.go('^.list');
+          }, function (err) {
+            alert(err);
+          }
+        );
       }
       else{
-        version.$save();
+        version.$save(function(resp) {
+          $state.go('^.list');
+        });
       }
-      $state.go('^.list');
     };
   }
   ]);
