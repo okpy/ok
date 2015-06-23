@@ -178,6 +178,24 @@ def seed():
                 queue=queue)
             fs.put()
 
+    def make_final(subm, assign, submitter):
+        fs = models.FinalSubmission(submission=subm.key,
+            assignment=assign.key,
+            submitter=submitter.key)
+        fs.put()
+        return fs
+
+    def compScore_seed_submission(subm, score, msg, grader):
+        """ Add composition score """
+        score = models.Score(
+            score=score,
+            message=msg,
+            grader=grader.key)
+        score.put()
+
+        subm.submission.get().score.append(score)
+        subm.put()
+
     # Start putting things in the DB.
 
 
@@ -199,6 +217,7 @@ def seed():
 
     students = []
     group_members = []
+    staff = []
 
     for i in range(4):
         s = models.User(
@@ -215,6 +234,16 @@ def seed():
         s.put()
         models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
         students += [s]
+
+    # Luise
+    for i in range(0, 9):
+        s = models.User(
+            email=["grader" + str(i) + "@staff.com"],
+        )
+        s.put()
+        models.Participant.add_role(s.key, course.key, STAFF_ROLE)
+        staff += [s]
+
 
     k = models.User(
         email=["dummy2@admin.com"],
@@ -282,6 +311,11 @@ def seed():
         subm = make_seed_submission(assign, students[i], True)
         subm.put()
         subms.append(subm)
+
+        #Luise
+        final = make_final(subm, assign, students[i])
+        compScore_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
+
 
     # Seed a queue. This should be auto-generated.
     make_queue(assign, subms[:len(subms)//2], c)

@@ -768,23 +768,24 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
 
-        course_name, content = self.data_for_composition(obj, user)
+        course_name, content = self.data_for_composition(user)
         csv_file = create_csv(content)
 
         return self.make_csv_response(course_name, csv_file)
 
 
-    def data_for_composition(self, obj, user):
+    def data_for_composition(self, user):
         content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER']]
-        students = obj.course.get()get_students(course, user).fetch()
+        students = obj.course.get().get_students(course, user).fetch()
         course_name = obj.course.get().name.replace('/', '_')
 
         for student in students:
             fs = models.User.get_final_submission(student, obj.key)
             submission = fs.submission.get()
-            if 'Composition' in submission.tags:
-                score = submission.compScore
-                content.append([student.email[0], score.score, score.message, score.grader])
+            compScores = [score for score in submission.score if not score.autograder]
+            if len(compScores) > 0:
+                compScore = compScores[0]
+                content.append([student.email[0], compScore.score, compScore.message, compScore.grader])
             else:
                 content.append([student.email[0], 'N/A', 'N/A', 'N/A'])
         return course_name, content
@@ -1097,7 +1098,7 @@ class SubmissionAPI(APIResource):
 
     def add_tag(self, obj, user, data):
         """
-        Removes a tag from the submission.
+        Adds a tag to the submission.
         Validates existence.
 
         :param obj: (object) target
@@ -1125,7 +1126,7 @@ class SubmissionAPI(APIResource):
 
     def remove_tag(self, obj, user, data):
         """
-        Adds a tag to this submission.
+        Removes a tag from this submission.
         Validates uniqueness.
 
         :param obj: (object) target
