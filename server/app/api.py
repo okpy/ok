@@ -682,7 +682,7 @@ class AssignmentAPI(APIResource):
         'get': {
         },
         'edit': {
-            'methods': {'POST'},
+            'methods': set(['POST']),
             'web_args': {
                 'name': Arg(str),
                 'display_name': Arg(str),
