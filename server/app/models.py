@@ -472,9 +472,6 @@ class Course(Base):
         return Assignment.query(Assignment.course == self.key)
 
     def get_students(self, user):
-        need = Need('staff')
-        if not Participant.can(user, need, self.key, query):
-            raise need.exception()
 
         query = Participant.query(
             Participant.course == self.key,
@@ -1210,3 +1207,6 @@ class FinalSubmission(Base):
     def _pre_put_hook(self):
         # TODO Remove when submitter is a computed property
         self.submitter = self.submission.get().submitter
+
+    
+

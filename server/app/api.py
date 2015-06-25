@@ -768,27 +768,37 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
 
-        course_name, content = self.data_for_composition(user)
+        course_name, content = self.data_for_composition(obj, user)
         csv_file = create_csv(content)
 
         return self.make_csv_response(course_name, csv_file)
 
 
-    def data_for_composition(self, user):
+    def data_for_composition(self, obj, user):
         content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER']]
-        students = obj.course.get().get_students(course, user).fetch()
-        course_name = obj.course.get().name.replace('/', '_')
+        course = obj.course.get()
+
+        students = [part.user.get() for part in course.get_students(user)]
+        course_name = course.offering.replace('/', '_')
 
         for student in students:
+
             fs = models.User.get_final_submission(student, obj.key)
-            submission = fs.submission.get()
-            compScores = [score for score in submission.score if not score.autograder]
-            if len(compScores) > 0:
-                compScore = compScores[0]
-                content.append([student.email[0], compScore.score, compScore.message, compScore.grader])
-            else:
-                content.append([student.email[0], 'N/A', 'N/A', 'N/A'])
+
+            if fs:
+                submission = fs.submission.get()
+                compScores = [score for score in submission.score if not score.autograder]
+                
+                if len(compScores) > 0:
+                    compScore = compScores[0]
+                    content.append([student.email[0], compScore.score, compScore.message, compScore.grader.get().email[0]])
+                    continue
+
+            # if no final submission, or the final submission has no composition score
+            content.append([student.email[0], 0, None, None])
+
         return course_name, content
+
 
     def make_csv_response(self, course_name, csv_file):
         response = make_response(csv_file)
