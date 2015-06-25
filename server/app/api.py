@@ -1249,6 +1249,7 @@ class SubmissionAPI(APIResource):
                     'late': True,
                     })
 
+        models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
         return (201, 'success', {
