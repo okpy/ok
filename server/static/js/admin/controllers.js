@@ -257,8 +257,7 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission
 app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$sessionStorage', '$window', '$state', '$anchorScroll','FinalSubmission', 'Submission',
   function($scope, $location, $stateParams, $sessionStorage, $window, $state, $anchorScroll, FinalSubmission,Submission) {
     FinalSubmission.get({
-      id: $stateParams.finalId,
-      key: 'composition'
+      id: $stateParams.finalId
     }, function (response){
       $scope.finalSubmission = response;
       $scope.submission = response.submission;
@@ -302,11 +301,16 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
 
   $scope.submitGrade = function() {
     Submission.addScore({
-      id: $stateParams.finalId,
+      id: $scope.backupId,
+      submission: $scope.submission.id,
       score: $scope.compScore,
       message: $scope.compMessage,
       key: "composition"
-    }, $scope.goTo($scope.nextId));
+    }, function (resp) {
+      $scope.goTo($scope.nextId)
+    }, function (err,msg) {
+      $window.swal({ title: "Uh-oh!", type: 'error',  text: "The grade wasnt submitted. "+msg})
+    });
   }
 
     // Goes to the next submission

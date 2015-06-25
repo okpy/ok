@@ -872,7 +872,7 @@ class SubmissionAPI(APIResource):
     """
     model = models.Backup
     diff_model = models.Diff
-
+    subm_model = models.Submission
     db = SubmitNDBImplementation()
 
     methods = {
@@ -928,12 +928,10 @@ class SubmissionAPI(APIResource):
                 'tag': Arg(str, required=True)
             }
         },
-        'win_rate': {
-            'methods': set(['GET']),
-        },
         'score': {
             'methods': set(['POST']),
             'web_args': {
+                'submission': KeyArg('Submission', required=True),
                 'key': Arg(str, required=True),
                 'score': Arg(int, required=True),
                 'message': Arg(str, required=True),
@@ -1132,12 +1130,12 @@ class SubmissionAPI(APIResource):
         if tag in obj.tags:
             raise BadValueError('Tag already exists')
 
-        submit_tag = models.Submission.SUBMITTED_TAG
+        submit_tag = subm_model.SUBMITTED_TAG
         if tag == submit_tag:
-            previous = models.Submission.query().filter(
-                models.Submission.assignment == obj.assignment).filter(
-                    models.Submission.submitter == obj.submitter).filter(
-                        models.Submission.tags == submit_tag)
+            previous = subm_model.query().filter(
+                subm_model.assignment == obj.assignment).filter(
+                    subm_model.submitter == obj.submitter).filter(
+                        subm_model.tags == submit_tag)
 
             previous = previous.get(keys_only=True)
             if previous:
@@ -1163,58 +1161,44 @@ class SubmissionAPI(APIResource):
         obj.tags.remove(tag)
         obj.put()
 
-    def win_rate(self, obj, user, data):
-        """
-        Gets the win_rate for the submission.
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: Reponse from Autograder.
-        """
-        messages = obj.get_messages()
-        if 'file_contents' not in obj.get_messages():
-            raise BadValueError('Submission has no contents to diff')
-        file_contents = messages['file_contents']
-
-        if 'hog.py' not in file_contents:
-            raise BadValueError('Submission is not for Hog')
-        cached = memcache.get('%s:hog_win' % obj.key.id())
-        if cached is not None:
-          return cached
-        else:
-          hog_code = file_contents['hog.py'].encode('utf-8')
-          payload = {'strategy': hog_code}
-          headers={'content-type': 'application/json'}
-          q = requests.post('http://hog.cs61a.org/winrate',
-             data=json.dumps(payload),
-             headers=headers)
-          memcache.add('%s:hog_win' % obj.key.id(), q.json(), 86400)
-          return q.json()
-
     def score(self, obj, user, data):
         """
         Sets a score.
 
-        :param obj: (object) target
+        :param obj: (object) backup - ignored.
         :param user: (object) caller
         :param data: (dictionary) data
         :return: (int) score
         """
+
         need = Need('grade')
-        if not obj.can(user, need, obj):
+        subm_q = self.subm_model.query(self.subm_model.key == data['submission'])
+        subm = subm_q.get()
+
+        # Perform check on the submission because obj is a backup
+        if not self.subm_model.can(user, need, subm, subm_q):
             raise need.exception()
 
+        if not subm.backup() == obj.key:
+          raise ValueError('Submission does not match backup')
+
         score = models.Score(
-            key=data['key'],
+            tag=data['key'],
             score=data['score'],
             message=data['message'],
-            grader=user.key).put()
+            grader=user.key)
+        score.put()
 
-        obj.score.append(score)
-        obj.put()
+        if data['key'] == 'composition':
+          # Create a new composition score - but retain everything else.
+          subm.score = [autograde for autograde in subm.score \
+           if autograde.key != 'composition']
+          subm.score.append(score)
+        else:
+          subm.score.append(score)
 
-        return score
+        subm.put()
+        return {1:1}
 
     def get_assignment(self, name):
         """

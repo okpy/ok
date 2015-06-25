@@ -711,7 +711,7 @@ class Backup(Base):
 
 class Score(Base):
     """The score for a submission, either from a grader or autograder."""
-    key = ndb.TextProperty() # E.g., "Partner 0" or "composition"
+    tag = ndb.TextProperty() # E.g., "Partner 0" or "composition"
     score = ndb.IntegerProperty()
     message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User) # For autograders, the user who authenticated
