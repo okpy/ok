@@ -22,7 +22,6 @@
     <table ts-wrapper ng-if="assignments.length > 0" class="table table-responsive table-striped table-bordered">
     <tbody>
     <tr>
-      <th>Delete</th>
       <th ts-criteria="display_name">Name</th>
       <th ts-criteria="active" ts-default>Active</th>
       <th ts-criteria="points | parseFloat">Points</th>
@@ -31,15 +30,13 @@
       <!-- Future Progress Bar -->
       <th style="width: 15%">Endpoint</th>
       <th>Edit</th>
+      <th>Delete</th>
       <th>Autograde</th>
     </tr>
 
       <tr ng-repeat="assignment in assignments" ts-repeat>
         <td>
-          <a ng-click="delete(assignment)" class="btn btn-danger btn-sm"><i class="fa fa-trash-o"></i></a>
-        </td>
-        <td>
-          <a ui-sref='assignment.detail({assignmentId:assignment.id})'>{{assignment.display_name}} </a>
+          <a ui-sref='course.assignment.edit({courseId: course.id, assignmentId:assignment.id})'>{{assignment.display_name}} </a>
         </td>
         <td>
           <span ng-show="assignment.active">Yes</span>
@@ -60,6 +57,10 @@
         <td>
           <a ui-sref="course.assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
         </td>
+        <td>
+          <a ng-click="delete(assignment)" class="btn btn-danger btn-sm"><i class="fa fa-trash-o"></i></a>
+        </td>
+
         <!-- Autograding enabled -->
         <td ng-show="assignment.autograding_enabled">
             <a class="btn btn-primary btn-sm" ng-click="autograde(assignment)"><i class="fa fa-flash"></i> Grade All Final Submissions</a>
