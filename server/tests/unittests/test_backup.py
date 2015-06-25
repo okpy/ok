@@ -52,6 +52,13 @@ BACKUP_TESTS = [
          "student0", "Backup", "first", "delete", False),
    PTest("student_modify_submission",
          "student0", "Backup", "first", "modify", False),
+   PTest("staff_grade_assign",
+         "staff", "Backup", "first", "grade", True),
+   PTest("admin_grade_assign",
+         "admin", "Backup", "first", "grade", True),
+   PTest("student0_grade_assign",
+         "student0", "Backup", "first", "grade", False),
+
 ]
 
 #pylint: disable=no-init, missing-docstring
