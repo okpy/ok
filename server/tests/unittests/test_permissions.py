@@ -144,7 +144,7 @@ class BaseUnitTest(BaseTestCase):
                 backup=self.backups["third"].key
                 ),
             }
-        for submission in self.submission.values():
+        for submission in self.submissions.values():
             submission.put()
 
         self.groups = {
