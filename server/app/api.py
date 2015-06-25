@@ -799,7 +799,8 @@ class AssignmentAPI(APIResource):
         'assign_name': obj.display_name,
         'starter_zip_url': obj.zip_file_url,
         'access_token': obj.access_token,
-        'grade_script': obj.grading_script_file}
+        'grade_script': obj.grading_script_file,
+        'testing': True}
 
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         r = requests.post(ag_url+'/grade/batch', data=json.dumps(data), headers=headers)
