@@ -783,7 +783,7 @@ class AssignmentAPI(APIResource):
       need = Need('grade')
       if not obj.can(user, need, obj):
           raise need.exception()
-      subm_ids = []
+      subm_ids = {}
       if not obj.autograding_enabled:
         raise BadValueError('Autograding is not enabled for this assignment.')
 
@@ -792,7 +792,7 @@ class AssignmentAPI(APIResource):
         fsubs = list(
             models.FinalSubmission.query(models.FinalSubmission.assignment == obj.key))
         for fsub in fsubs:
-          subm_ids.append(fsub.submission.id())
+          subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
 
         ag_url = "http://104.154.46.183:5000"
         data = {'subm_ids': subm_ids,
