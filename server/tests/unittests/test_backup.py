@@ -53,11 +53,11 @@ BACKUP_TESTS = [
    PTest("student_modify_submission",
          "student0", "Backup", "first", "modify", False),
    PTest("staff_grade_assign",
-         "staff", "Backup", "first", "grade", True),
+         "staff", "Submission", "first", "grade", True),
    PTest("admin_grade_assign",
-         "admin", "Backup", "first", "grade", True),
+         "admin", "Submission", "first", "grade", True),
    PTest("student0_grade_assign",
-         "student0", "Backup", "first", "grade", False),
+         "student1", "Submission", "first", "grade", True),
 
 ]
 
