@@ -185,7 +185,7 @@ def seed():
         fs.put()
         return fs
 
-    def compScore_seed_submission(subm, score, msg, grader):
+    def compScore_seed_submission(final, score, msg, grader):
         """ Add composition score """
         score = models.Score(
             score=score,
@@ -193,7 +193,8 @@ def seed():
             grader=grader.key)
         score.put()
 
-        subm.submission.get().score.append(score)
+        subm = final.submission.get()
+        subm.score = [score]
         subm.put()
 
     # Start putting things in the DB.
@@ -312,14 +313,14 @@ def seed():
         subm.put()
         subms.append(subm)
 
-        #Luise
+
         final = make_final(subm, assign, students[i])
         compScore_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
 
 
     # Seed a queue. This should be auto-generated.
-    make_queue(assign, subms[:len(subms)//2], c)
-    make_queue(assign, subms[len(subms)//2:], k)
+    # make_queue(assign, subms[:len(subms)//2], c)
+    # make_queue(assign, subms[len(subms)//2:], k)
 
     #utils.add_to_grading_queues(assign.key)
 
