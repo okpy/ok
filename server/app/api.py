@@ -775,28 +775,22 @@ class AssignmentAPI(APIResource):
 
 
     def data_for_composition(self, obj, user):
-        content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER']]
+        
         course = obj.course.get()
-
         students = [part.user.get() for part in course.get_students(user)]
-        course_name = course.offering.replace('/', '_')
+        content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER']]
 
         for student in students:
-
             fs = models.User.get_final_submission(student, obj.key)
-
             if fs:
-                submission = fs.submission.get()
-                compScores = [score for score in submission.score if not score.autograder]
-                
-                if len(compScores) > 0:
-                    compScore = compScores[0]
-                    content.append([student.email[0], compScore.score, compScore.message, compScore.grader.get().email[0]])
+                comp_score = fs.get_comp_score()
+                if comp_score:
+                    content.append(comp_score)
                     continue
-
             # if no final submission, or the final submission has no composition score
             content.append([student.email[0], 0, None, None])
 
+        course_name = course.offering.replace('/', '_')
         return course_name, content
 
 
