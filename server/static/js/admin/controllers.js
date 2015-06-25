@@ -4,7 +4,7 @@ app.controller("SidebarCntrl", ['$scope', 'Assignment',
     Assignment.query(function(response) {
       $scope.assignments = response.results;
     });
-    $scope.course_name = "CS61A Spring 2015"
+    $scope.course_name = "Ok Admin"
   }]);
 
 // Submission Controllers
@@ -25,26 +25,6 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
     });
   }
   ]);
-
-
-app.controller("AssignmentListCtrl", ['$scope', '$http', 'Assignment',
-  function($scope, $http, Assignment) {
-    Assignment.query(function(response) {
-      $scope.assignments = response.results;
-    });
-
-    $scope.assign = function (assignmentId) {
-         // if (confirm('Are you sure you want to assign this to staff? Only submit if you are sure. ')) {
-         //      $http({
-         //          url: '/api/v1/assignment/'+assignmentId+'/assign',
-         //          method: "POST",
-         //          data: { 'message' : 'hello' }
-         //      })
-         // }
-         console.log('Unsupported for now');
-       }
-
-     }]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
@@ -70,6 +50,12 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
       'revisions': false,
       'points': 4
     };
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
+    // TODO: only allow user to create assignment for specified course - no more dropdown!
     Course.get({}, function(resp) {
         $scope.courses = resp.results;
         $scope.newAssign.course = $scope.courses[0];
@@ -93,7 +79,7 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
             $scope.courses = Course.query({},
               function (response) {
                 $window.swal("Assignment Created!",'','success');
-               $state.transitionTo('assignment.list' , {} , { reload: true, inherit: true, notify: true });
+               $state.transitionTo('course.assignments' , {courseId: $scope.course.id} , { reload: true, inherit: true, notify: true });
              });
           }, function (error) {
             console.log('error')
@@ -108,6 +94,12 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
 
 app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
+  
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
 
     $scope.reloadAssignment = function() {
       Assignment.get({
@@ -168,7 +160,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             $scope.assignments = Assignment.query({},
               function (response) {
               $window.swal("Assignment Updated!",'','success');
-              $state.transitionTo('assignment.list', null, {'reload': true})
+              $state.transitionTo('course.assignments', {courseId: $scope.course.id}, {'reload': true})
             });
           }, function (error) {
             console.log('error')
@@ -281,19 +273,20 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
-  function($scope, $window, Search) {
+app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course',
+  function($scope, $stateParams, $window, Search, Course) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
     $scope.query = {
       'string': ''
     }
-    
+
     $scope.getPage = function(page) {
       Search.query({
         query: $scope.query.string || '',
         page: page,
         num_per_page: $scope.itemsPerPage,
+        courseId: $scope.course.id
       }, function(response) {
         $scope.submissions = response.data.results;
         $scope.more = response.data.more;
@@ -304,18 +297,18 @@ app.controller("SubmissionListCtrl", ['$scope', '$window', 'Search',
           $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
         }
       }, function(err) {
-        $window.swal('Uh oh', 'Something went wrong. Remember that your query must have a flag.', 'error');
+        $window.swal('Uh oh', 'We couldn\'t complete the search. Remember that your query must have valid flags.', 'error');
       });
     }
+
+    $scope.course = Course.get({id: $stateParams.courseId});
 
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
-    
-    $scope.getPage(1);
 
     $scope.search = function() {
-      $scope.getPage($scope.currentPage, $scope.query)
+      $scope.getPage($scope.currentPage)
     }
   }]);
 
@@ -365,15 +358,45 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
   function($scope, Course) {
     $scope.courses = Course.query({});
   }]);
-  
-  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams',
-    function($scope, $http, Assignment, Course, $stateParams) {
+
+  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+    function($scope, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
-     Course.assignments({
-      id: $stateParams.courseId
-     },function(response) {
-       $scope.assignments = response
-     });
+    $scope.reloadView = function() {
+       Course.assignments({
+        id: $stateParams.courseId
+       },function(response) {
+         $scope.assignments = response
+       });
+     }
+
+     $scope.delete = function(assign) {
+      $window.swal({
+          title: "Are you sure?",
+          text: "You will not be able to recover this assignment!",
+          type: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "Yes, delete it!",
+          closeOnConfirm: false,
+          html: false
+        }, function(){
+          $scope.deleteAssignment(assign);
+        });
+      }
+      
+      $scope.deleteAssignment = function(assign) {
+        Assignment.delete({
+           id: assign.id
+         }, function(response) {
+           $window.swal('Success', 'Assignment deleted.', 'success');
+           $scope.reloadView();
+         }, function(error) {
+          $window.swal('Error', 'Could not delete assignment.', 'error')
+         });
+      }
+      
+     $scope.reloadView();
    }]);
 
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",

@@ -183,6 +183,7 @@ app.factory('Assignment', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
+<<<<<<< HEAD
         },
         download_composition_scores: {
           method: "GET",
@@ -191,6 +192,9 @@ app.factory('Assignment', ['$resource',
             return JSON.parse(data).data;
           }          
         },
+=======
+        }
+>>>>>>> master
       });
     }
   ]);

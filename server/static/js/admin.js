@@ -114,13 +114,6 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "FinalSubmissionCtrl"
     }
 
-
-    var submissionList = {
-      name: 'submission.list',
-      url: '/',
-      templateUrl: '/static/partials/admin/submission.list.html'
-    }
-
     var submissionDetail = {
       name: 'submission.detail',
       url: '/:submissionId',
@@ -142,33 +135,12 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/common/assignment.base.html',
     }
 
-    var assignmentList = {
-      name: 'assignment.list',
-      url: '/',
-      templateUrl: '/static/partials/admin/assignment.list.html',
-      controller: "AssignmentListCtrl"
-    }
-
     var assignmentDetail = {
       name: 'assignment.detail',
       url: '/detail/:assignmentId',
       templateUrl: '/static/partials/admin/assignment.detail.html',
       controller: "AssignmentDetailCtrl"
     }
-
-    var assignmentCreate = {
-      name: 'assignment.create',
-      url: '/create',
-      templateUrl: '/static/partials/admin/assignment.create.html',
-      controller: "AssignmentCreateCtrl"
-    }
-    
-    var assignmentEdit = {
-          name: 'assignment.edit',
-          url: '/edit/:assignmentId',
-          templateUrl: '/static/partials/admin/assignment.edit.html',
-          controller: "AssignmentEditCtrl"
-        }
 
     var courses = {
       name: 'course',
@@ -189,6 +161,20 @@ app.config(['$stateProvider', '$urlRouterProvider',
           url: '/:courseId/assignments',
           templateUrl: '/static/partials/admin/course.assignments.html',
           controller: "CourseAssignmentsCtrl"
+    }
+    
+    var assignmentCreate = {
+      name: 'assignment.create',
+      url: '/:courseId/assignment/create',
+      templateUrl: '/static/partials/admin/assignment.create.html',
+      controller: "AssignmentCreateCtrl"
+    }
+
+    var assignmentEdit = {
+      name: 'assignment.edit',
+      url: '/:courseId/assignment/edit/:assignmentId',
+      templateUrl: '/static/partials/admin/assignment.edit.html',
+      controller: "AssignmentEditCtrl"
     }
 
     var courseNew = {
@@ -211,6 +197,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/course.detail.html',
       controller: "CourseDetailCtrl"
     }
+    
+    var submissionList = {
+          name: 'course.submissions',
+          url: '/:courseId/submissions',
+          templateUrl: '/static/partials/admin/submission.list.html'
+    }
+    
     var staff = {
       name: 'staff',
       url: '/:courseId/staff',
@@ -336,7 +329,6 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(submissionDetail).
       state(submissionDiff).
       state(assignments).
-      state(assignmentList).
       state(assignmentDetail).
       state(assignmentCreate).
       state(assignmentEdit).

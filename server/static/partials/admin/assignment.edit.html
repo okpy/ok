@@ -1,9 +1,11 @@
 <div>
   <section class="content-header" ng-hide="dashboard">
     <ol class="breadcrumb">
-      <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
-      <li><a ui-sref="assignment.list"><i class="fa fa-list"></i> All Assignments</a></li>
-      <li class="active"><i class="fa fa-plus"></i> Edit</li>
+        <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+        <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
+        <li><a ui-sref="course.detail.stats({id: course.id})"><i class="fa fa-list"></i> {{course.display_name}}</a></li>
+        <li><a ui-sref="course.assignments({courseId: course.id})"><i class="fa fa-list"> All Assignments</i></a></li>
+        <li class="active"><i class="fa fa-plus"></i> Edit</li>
     </ol>
   </section>
   <section>
@@ -27,10 +29,6 @@
           <label>Points</label>
           <input ng-model="assign.points" type="number" step="any" min="0" class="form-control" placeholder="">
         </div>
-          <div class="form-group">
-              <label>Templates</label>
-              <input ng-model="newAssign.templates" type="file" enctype="multipart/form-data" class="form-control" multiple>
-          </div>
         <div class="form-group">
           <label>Max Group Size</label>
           <input ng-model="assign.max_group_size" type="number" min="1" class="form-control" placeholder="">
@@ -70,7 +68,7 @@
                         </select>
 
           </div>
-          
+
         <div class="form-group">
           <label>Course</label>
 
@@ -78,10 +76,6 @@
           </select>
 
         </div>
-          <div class="form-group">
-              <label>Points</label>
-              <input ng-model="assign.points" type="number" step="any" min="0" class="form-control" placeholder="">
-          </div>
 
 <!--
           <div class="bootstrap-timepicker">
