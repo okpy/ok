@@ -135,13 +135,13 @@ class BaseUnitTest(BaseTestCase):
 
         self.submissions = {
             "first": models.Submission(
-                backup=self.backup["student0"].key
+                backup=self.backups["first"].key
                 ),
             "second": models.Submission(
-                backup=self.backup["student1"].key
+                backup=self.backups["second"].key
                 ),
             "third": models.Submission(
-                backup=self.backup["student2"].key
+                backup=self.backups["third"].key
                 ),
             }
         for submission in self.submission.values():
@@ -218,7 +218,7 @@ class PermissionsUnitTest(BaseUnitTest):
         elif model == "Backup":
             obj = self.backups[obj_name]
         elif model == "Submission":
-            obj = self.submission[obj_name]
+            obj = self.submissions[obj_name]
         elif model == "Assignment":
             obj = self.assignments[obj_name]
         elif model == "Course":
