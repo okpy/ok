@@ -18,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, create_csv
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -682,7 +682,7 @@ class AssignmentAPI(APIResource):
         'get': {
         },
         'edit': {
-            'methods': {'POST'},
+            'methods': set(['POST']),
             'web_args': {
                 'name': Arg(str),
                 'display_name': Arg(str),
@@ -714,6 +714,9 @@ class AssignmentAPI(APIResource):
         },
         'assign': {
             'methods': set(['POST'])
+        },
+        'download_composition_scores': {
+            'methods': set(['GET'])
         },
         'delete': {
             'methods': set(['DELETE'])
@@ -760,6 +763,47 @@ class AssignmentAPI(APIResource):
         err = models.Group.invite_to_group(user.key, data['email'], obj.key)
         if err:
             raise BadValueError(err)
+
+    def download_composition_scores(self, obj, user, data):
+        """
+        Download all composition scores for this assignment. 
+        Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER'.
+        """
+        need = Need('staff')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        course_name, content = self.data_for_composition(obj, user)
+        csv_file = create_csv(content)
+
+        return self.make_csv_response(course_name, csv_file)
+
+
+    def data_for_composition(self, obj, user):
+        
+        course = obj.course.get()
+        students = [part.user.get() for part in course.get_students(user)]
+        content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER']]
+
+        for student in students:
+            fs = models.User.get_final_submission(student, obj.key)
+            if fs:
+                comp_score = fs.get_comp_score()
+                if comp_score:
+                    content.append(comp_score)
+                    continue
+            # if no final submission, or the final submission has no composition score
+            content.append([student.email[0], 0, None, None])
+
+        course_name = course.offering.replace('/', '_')
+        return course_name, content
+
+
+    def make_csv_response(self, course_name, csv_file):
+        response = make_response(csv_file)
+        response.headers["Content-Disposition"] = ('attachment; filename=compScores-%s.csv' % course_name)
+        response.headers['Content-Type'] = 'text/csv'
+        return response
 
 
 
@@ -1064,7 +1108,7 @@ class SubmissionAPI(APIResource):
 
     def add_tag(self, obj, user, data):
         """
-        Removes a tag from the submission.
+        Adds a tag to the submission.
         Validates existence.
 
         :param obj: (object) target
@@ -1092,7 +1136,7 @@ class SubmissionAPI(APIResource):
 
     def remove_tag(self, obj, user, data):
         """
-        Adds a tag to this submission.
+        Removes a tag from this submission.
         Validates uniqueness.
 
         :param obj: (object) target
@@ -1204,7 +1248,6 @@ class SubmissionAPI(APIResource):
                 return (403, 'late', {
                     'late': True,
                     })
-
 
         models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)
         submission = self.db.create_submission(user, valid_assignment,

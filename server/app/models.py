@@ -471,6 +471,14 @@ class Course(Base):
         """Return a query for assignments."""
         return Assignment.query(Assignment.course == self.key)
 
+    def get_students(self, user):
+
+        query = Participant.query(
+            Participant.course == self.key,
+            Participant.role == 'student')
+        
+        return list(query.fetch())
+
 
 class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
@@ -1195,3 +1203,17 @@ class FinalSubmission(Base):
     def _pre_put_hook(self):
         # TODO Remove when submitter is a computed property
         self.submitter = self.submission.get().submitter
+
+    def get_comp_score(self):
+        """ 
+        Return a list of the format [student, score, message, grader] 
+        if the submission has a composition score. Otherwise None. 
+        """
+        subm = self.submission.get()
+        comp_scores = [score for score in subm.score if not score.autograder]
+
+        if len(comp_scores) > 0:
+            comp_score = comp_scores[0]
+            return [self.submitter.get().email[0], \
+            comp_score.score, comp_score.message, \
+            comp_score.grader.get().email[0]]

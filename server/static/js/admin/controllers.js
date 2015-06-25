@@ -29,7 +29,10 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
     $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
-  }
+
+    $scope.download_compScores = function() {
+      Assignment.download_composition_scores({});
+    }
   ]);
 
 app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
