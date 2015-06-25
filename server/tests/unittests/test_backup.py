@@ -52,14 +52,6 @@ BACKUP_TESTS = [
          "student0", "Backup", "first", "delete", False),
    PTest("student_modify_submission",
          "student0", "Backup", "first", "modify", False),
-   PTest("student_grade_submission",
-         "student0", "Submission", "first", "grade", False),
-   PTest("student_grade_submission",
-         "student1", "Submission", "first", "grade", False),
-   PTest("staff_grade_submission",
-         "student0", "Submission", "first", "grade", True),
-   PTest("admin_grade_submission",
-         "student0", "Submission", "first", "grade", True),
 ]
 
 # TODO: Better place for Submission tests.
