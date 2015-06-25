@@ -443,7 +443,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
           }
           Assignment.autograde({
             id: assign.id,
-            grade_final: 'true',
+            grade_final: true,
             token: inputValue,
           }, function(response) {
              $window.swal('Success', 'Queued for autograding.', 'success');
