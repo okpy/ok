@@ -45,7 +45,7 @@ BACKUP_TESTS = [
    PTest("admin_delete_own_student",
          "admin", "Backup", "first", "delete", False),
    PTest("staff_delete_own_student",
-         "admin", "Backp", "first", "delete", False),
+         "admin", "Backup", "first", "delete", False),
    PTest("anon_delete_own_student",
          "anon", "Backup", "first", "delete", False),
    PTest("student_delete_submission",
