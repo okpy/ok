@@ -1328,7 +1328,7 @@ class SearchAPI(APIResource):
         and followed by a space. Captures final named group "arg"
         with optional quotations.
         """
-        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?')
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S ]+[^"\s]+)"?')
         return tokenizer.findall(query)
 
     @classmethod
