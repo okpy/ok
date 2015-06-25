@@ -90,7 +90,6 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
           'autograding_enabled': $scope.newAssign.autograding_enabled,
           'grading_script_file': $scope.newAssign.grading_script_file,
           'zip_file_url': $scope.newAssign.zip_file_url,
-          'access_token': $scope.newAssign.access_token
         },
           function (response) {
             $scope.courses = Course.query({},
@@ -205,7 +204,6 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'autograding_enabled': $scope.assign.autograding_enabled,
             'grading_script_file': $scope.assign.grading_script_file,
             'zip_file_url': $scope.assign.zip_file_url,
-            'access_token': $scope.assign.access_token
           }
         }
         Assignment.edit(updatedAssign,
@@ -429,15 +427,33 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
      }
 
      $scope.autograde = function (assign) {
-      Assignment.autograde({
-        id: assign.id,
-        grade_final: 'true',
-      }, function(response) {
-         $window.swal('Success', 'Queued for autograding.', 'success');
-       }, function(error) {
-        $window.swal('Error', 'Could not autograde.', 'error')
-       });
-     }
+       $window.swal({title: "Enter your access token below",
+        text: "You can access it by running the following command in an ok folder \n"+
+          'python3 -c "import pickle; print(pickle.load(open(\'.ok_refresh\', \'rb\'))[\'access_token\'])"',
+        type: "input",
+        showCancelButton: true,
+        closeOnConfirm: true,
+        animation: "slide-from-top",
+        inputPlaceholder: "Paste your access token here. format: ya29.longcode"},
+        function(inputValue) {
+          if (inputValue === false) return false;
+          if (inputValue === "") {
+            swal.showInputError("You need to write something!");
+            return false
+          }
+          Assignment.autograde({
+            id: assign.id,
+            grade_final: 'true',
+            token: inputValue,
+          }, function(response) {
+             $window.swal('Success', 'Queued for autograding.', 'success');
+           }, function(error) {
+            $window.swal('Error', 'Could not autograde.', 'error')
+           });
+         });
+       }
+
+
 
      $scope.delete = function(assign) {
       $window.swal({

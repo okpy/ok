@@ -798,7 +798,7 @@ class AssignmentAPI(APIResource):
         data = {'subm_ids': subm_ids,
         'assign_name': obj.display_name,
         'starter_zip_url': obj.zip_file_url,
-        'access_token': obj.access_token,
+        'access_token': data['token'],
         'grade_script': obj.grading_script_file,
         'testing': True}
 
@@ -1210,7 +1210,6 @@ class SubmissionAPI(APIResource):
             raise a validation error
         """
         assignments = self.db.lookup_assignments_by_name(name)
-
         if not assignments:
             raise BadValueError('Assignment \'%s\' not found' % name)
         if len(assignments) > 1:

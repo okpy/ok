@@ -489,7 +489,6 @@ class Assignment(Base):
     autograding_enabled = ndb.BooleanProperty(default=False)
     grading_script_file = ndb.TextProperty()
     zip_file_url = ndb.StringProperty()
-    access_token = ndb.StringProperty()
 
     # TODO Add services requested
 
