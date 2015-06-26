@@ -404,10 +404,12 @@ class APIResource(View):
         return {}
 
 
-class GeneralAPI(APIResource):
+class ParticipantAPI(APIResource):
     """
     Root-level API functions
     """
+    
+    model = models.Participant
 
     methods = {
         'enrollment': {
