@@ -112,6 +112,13 @@ def seed():
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
+
+        score = models.Score(
+            score=10
+        )
+
+        score.put()
+
         backup = models.Backup(
             messages=messages,
             assignment=assignment.key,
@@ -120,7 +127,7 @@ def seed():
 
         backup.put()
 
-        return models.Submission(backup=backup.key)
+        return models.Submission(backup=backup.key, score=[score])
 
 
     def make_seed_scheme_submission(assignment, submitter, final=False):
