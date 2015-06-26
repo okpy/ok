@@ -404,28 +404,38 @@ class APIResource(View):
         return {}
 
 
-def enrollment():
-    user = models.User.lookup(request.args.get('email'))
-    data = []
-    if user is not None:
-        parts = CourseAPI().get_courses(None, user, {'user': user.key})
-        for part in parts:
-            course = part.course.get()
-            offering = course.offering.split('/')
-            if len(offering) >= 3:
-                # will die if prefix other than 'fa', 'su' or 'sp' is used
-                term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
-                year = '20'+offering[2][2:]
-            else:
-                term = year = None
-            data.append({
-                'url': '/#/course/'+str(course.key.id()),
-                'display_name': course.display_name,
-                'institution': course.institution,
-                'term': term,
-                'year': year
-            })
-    return json.dumps(data)
+class GeneralAPI(APIResource):
+    """
+    Root-level API functions
+    """
+
+    methods = {
+        'enrollment': {
+        }
+    }
+    
+    def enrollment(self):
+        user = models.User.lookup(request.args.get('email'))
+        data = []
+        if user is not None:
+            parts = CourseAPI().get_courses(None, user, {'user': user.key})
+            for part in parts:
+                course = part.course.get()
+                offering = course.offering.split('/')
+                if len(offering) >= 3:
+                    # will die if prefix other than 'fa', 'su' or 'sp' is used
+                    term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
+                    year = '20'+offering[2][2:]
+                else:
+                    term = year = None
+                data.append({
+                    'url': '/#/course/'+str(course.key.id()),
+                    'display_name': course.display_name,
+                    'institution': course.institution,
+                    'term': term,
+                    'year': year
+                })
+        return json.dumps(data)
 
 
 class UserAPI(APIResource):

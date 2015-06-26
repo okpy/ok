@@ -230,6 +230,13 @@ def register_api(view, endpoint, url):
     app.add_url_rule(
         '%s/<path:path>' % url, view_func=api_wrapper,
         methods=['GET', 'POST', 'DELETE', 'PUT'])
+    
+
+def register_root_api(api):
+    api = api()
+    for method, value in api.methods.items():
+        app.add_url_rule('/%s' % method, view_func=getattr(api, method))
+
 
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
@@ -241,4 +248,4 @@ register_api(api.UserAPI, 'user_api', 'user')
 register_api(api.QueueAPI, 'queue_api', 'queue')
 register_api(api.FinalSubmissionAPI, 'final_submission_api', 'final_submission')
 register_api(api.AnalyticsAPI, 'analytics_api', 'analytics')
-app.add_url_rule('/enrollment', view_func=api.enrollment)
+register_root_api(api.GeneralAPI)
