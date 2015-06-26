@@ -80,7 +80,12 @@
                </div>
             </td>
           </td>
-            <td>{{submission.score}}</td>
+            <td>
+                <span ng-if="submission.score.length == 0" class="badge">None</span>
+                <span ng-repeat="score in submission.score" class="badge bg-blue">
+                  {{ score.score }}
+                </span>
+            </td>
         </tr>
       </tbody>
     </table>
