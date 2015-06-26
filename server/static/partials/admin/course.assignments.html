@@ -30,6 +30,7 @@
       <th ts-criteria="lock_date">Lock Date</th>
       <!-- Future Progress Bar -->
       <th style="width: 15%">Endpoint</th>
+      <th>Composition Scores</th>
       <th>Edit</th>
     </tr>
 
@@ -56,6 +57,9 @@
           <span class="badge bg-info">{{assignment.name}}</span>
         </td>
           <!-- Future Progress Bar -->
+        <td>
+          <a href="#"><button class="btn btn-primary btn-sm" ng-click="download_comp_scores(assignment);"> <i class="fa fa-download"></i>Download</button></a>
+        </td>
         <td>
           <a ui-sref="assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
         </td>

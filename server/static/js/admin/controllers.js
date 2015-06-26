@@ -30,9 +30,6 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
     $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
 
-    $scope.download_compScores = function() {
-      Assignment.download_composition_scores({});
-    }
   ]);
 
 app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
@@ -370,6 +367,12 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
        });
      }
 
+    $scope.download_comp_scores = function(assign) {
+      Assignment.download_composition_scores({
+        id: assign.id
+      });
+    }
+
      $scope.delete = function(assign) {
       $window.swal({
           title: "Are you sure?",
@@ -395,6 +398,8 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
           $window.swal('Error', 'Could not delete assignment.', 'error')
          });
       }
+
+
       
      $scope.reloadView();
    }]);

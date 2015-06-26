@@ -801,7 +801,7 @@ class AssignmentAPI(APIResource):
 
     def make_csv_response(self, course_name, csv_file):
         response = make_response(csv_file)
-        response.headers["Content-Disposition"] = ('attachment; filename=compScores-%s.csv' % course_name)
+        response.headers["Content-Disposition"] = ('attachment; filename=comp_scores-%s.csv' % course_name)
         response.headers['Content-Type'] = 'text/csv'
         return response
 
