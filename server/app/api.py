@@ -714,6 +714,9 @@ class AssignmentAPI(APIResource):
         },
         'assign': {
             'methods': set(['POST'])
+        },
+        'delete': {
+            'methods': set(['DELETE'])
         }
     }
 
@@ -757,6 +760,7 @@ class AssignmentAPI(APIResource):
         err = models.Group.invite_to_group(user.key, data['email'], obj.key)
         if err:
             raise BadValueError(err)
+
 
 
 class SubmitNDBImplementation(object):
@@ -1326,7 +1330,7 @@ class SearchAPI(APIResource):
         and followed by a space. Captures final named group "arg"
         with optional quotations.
         """
-        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S][^"\s]+)"?')
+        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S ]+[^"\s]+)"?')
         return tokenizer.findall(query)
 
     @classmethod

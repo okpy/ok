@@ -183,7 +183,7 @@ app.factory('Assignment', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
-        },
+        }
       });
     }
   ]);
