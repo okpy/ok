@@ -422,18 +422,18 @@ class GeneralAPI(APIResource):
             for part in parts:
                 course = part.course.get()
                 offering = course.offering.split('/')
-                if len(offering) >= 3:
-                    # will die if prefix other than 'fa', 'su' or 'sp' is used
+                try:
                     term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
                     year = '20'+offering[2][2:]
-                else:
+                except (IndexError, KeyError):
                     term = year = None
                 data.append({
                     'url': '/#/course/'+str(course.key.id()),
                     'display_name': course.display_name,
                     'institution': course.institution,
                     'term': term,
-                    'year': year
+                    'year': year,
+                    'offering': course.offering
                 })
         return json.dumps(data)
 
