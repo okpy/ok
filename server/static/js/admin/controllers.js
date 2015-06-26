@@ -294,11 +294,18 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
           $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
         }
       }, function(err) {
-        $window.swal('Uh oh', 'We couldn\'t complete the search. Remember that your query must have valid flags.', 'error');
+        $window.swal('Uh oh', 'We couldn\'t complete the search.', 'error');
       });
     }
 
-    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.course = Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      if ($stateParams.query) {
+        $scope.query.string = $stateParams.query;
+        $scope.getPage(1);
+      }
+    });
 
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);

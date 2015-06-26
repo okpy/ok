@@ -54,6 +54,7 @@
           <th ts-criteria="created">Time</th>
           <th>Tags</th>
           <th style="width: 20%">View Code</th>
+            <th>Score</th>
       </tr>
 
         <tr ng-repeat="submission in submissions" ts-repeat>
@@ -79,6 +80,7 @@
                </div>
             </td>
           </td>
+            <td>{{submission.score}}</td>
         </tr>
       </tbody>
     </table>
