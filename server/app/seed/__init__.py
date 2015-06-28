@@ -319,8 +319,8 @@ def seed():
 
 
     # Seed a queue. This should be auto-generated.
-    # make_queue(assign, subms[:len(subms)//2], c)
-    # make_queue(assign, subms[len(subms)//2:], k)
+    make_queue(assign, subms[:len(subms)//2], c)
+    make_queue(assign, subms[len(subms)//2:], k)
 
     #utils.add_to_grading_queues(assign.key)
 

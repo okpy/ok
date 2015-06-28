@@ -29,7 +29,7 @@ app.controller("AssignmentModuleController", ["$scope", "Assignment",
 app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
     $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
-
+  }
   ]);
 
 app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
