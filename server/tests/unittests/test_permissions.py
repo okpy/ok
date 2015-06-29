@@ -133,6 +133,20 @@ class BaseUnitTest(BaseTestCase):
         for backup in self.backups.values():
             backup.put()
 
+        self.submissions = {
+            "first": models.Submission(
+                backup=self.backups["first"].key
+                ),
+            "second": models.Submission(
+                backup=self.backups["second"].key
+                ),
+            "third": models.Submission(
+                backup=self.backups["third"].key
+                ),
+            }
+        for submission in self.submissions.values():
+            submission.put()
+
         self.groups = {
             'group1': models.Group(
                 member=[self.accounts['student0'].key,
@@ -203,6 +217,8 @@ class PermissionsUnitTest(BaseUnitTest):
             obj = self.accounts[obj_name]
         elif model == "Backup":
             obj = self.backups[obj_name]
+        elif model == "Submission":
+            obj = self.submissions[obj_name]
         elif model == "Assignment":
             obj = self.assignments[obj_name]
         elif model == "Course":
