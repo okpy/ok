@@ -125,8 +125,11 @@ def create_csv(content):
     try:
         writer.writerows(content)
     except csv.Error as e:
+        scsv.close()
         sys.exit('Error creating CSV: {}'.format(e))
-    return scsv.getvalue()
+    contents = scsv.getvalue()
+    scsv.close()
+    return contents
 
 def paginate(entries, page, num_per_page):
     """

@@ -775,7 +775,6 @@ class AssignmentAPI(APIResource):
 
         course_name, content = self.data_for_composition(obj, user)
         csv_file = create_csv(content)
-        logging.info("***Done with csv***") #testing
         return self.make_csv_response(course_name, csv_file)
 
 
@@ -786,7 +785,6 @@ class AssignmentAPI(APIResource):
         content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER']]
 
         for student in students:
-            logging.info("Score for %s", student.email[0]) #testing
             fs = models.User.get_final_submission(student, obj.key)
             if fs:
                 comp_score = fs.get_comp_score()
@@ -795,17 +793,14 @@ class AssignmentAPI(APIResource):
                     continue
             # if no final submission, or the final submission has no composition score
             content.append([student.email[0], 0, None, None])
-        logging.info("*** Done with data_for_composition ***") #testing
         course_name = course.offering.replace('/', '_')
         return course_name, content
 
 
     def make_csv_response(self, course_name, csv_file):
         response = make_response(csv_file)
-        logging.info("Making response") #testing
         response.headers["Content-Disposition"] = ('attachment; filename=comp_scores-%s.csv' % course_name)
         response.headers['Content-Type'] = 'text/csv'
-        logging.info("Done making response") #testing
         return response
 
 
