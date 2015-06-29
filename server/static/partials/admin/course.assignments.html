@@ -58,7 +58,7 @@
         </td>
           <!-- Future Progress Bar -->
         <td>
-          <a href="#"><button class="btn btn-primary btn-sm" ng-click="download_comp_scores(assignment)"> <i class="fa fa-download"></i>Download</button></a>
+          <a href="/api/v1/assignment/{{assignment.id}}/download_composition_scores"><button class="btn btn-primary btn-sm"> <i class="fa fa-download"></i>Download</button></a>
         </td>
         <td>
           <a ui-sref="assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
