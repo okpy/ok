@@ -367,11 +367,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
        });
      }
 
-    $scope.download_comp_scores = function(assign) {
-      Assignment.download_composition_scores({
-        id: assign.id
-      });
-    }
+    
 
      $scope.delete = function(assign) {
       $window.swal({
