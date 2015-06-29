@@ -110,8 +110,16 @@ def seed():
                 'submit': final
             }
 
+        g = models.User(
+            email=["test@example.com"],
+            is_admin=True
+        )
+        g.put()
+
         score = models.Score(
-            score=88
+            score=88,
+            tag='test',
+            grader=g.key
         )
         score.put()
 

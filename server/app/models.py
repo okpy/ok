@@ -1208,16 +1208,27 @@ class FinalSubmission(Base):
         # TODO Remove when submitter is a computed property
         self.submitter = self.submission.get().submitter
 
-    def get_comp_score(self):
+    def get_scores(self):
         """ 
-        Return a list of the format [student, score, message, grader] 
-        if the submission has a composition score. Otherwise None. 
+        Return a list lists of the format [[student, score, message, grader, tag]]
+        if the submission has been scored. Otherwise None. 
+        If the submission is a group submission, there will be a nested list for each
+        student in the group. 
         """
-        subm = self.submission.get()
-        comp_scores = [score for score in subm.score if score.tag == 'composition']
-
-        if len(comp_scores) > 0:
-            comp_score = comp_scores[0]
-            return [self.submitter.get().email[0], \
-            comp_score.score, comp_score.message, \
-            comp_score.grader.get().email[0]]
+        all_scores = []
+        if self.group:
+            for member in self.group.get().member:
+                for score in self.submission.get().score:
+                    all_scores.append([member.get().email[0],
+                            score.score, 
+                            score.message,
+                            score.grader.get().email[0],
+                            score.tag])
+        else:
+            for score in self.submission.get().score:
+                    all_scores.append([self.submitter.get().email[0],
+                            score.score, 
+                            score.message,
+                            score.grader.get().email[0],
+                            score.tag])
+        return all_scores

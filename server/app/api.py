@@ -802,16 +802,16 @@ class AssignmentAPI(APIResource):
         
         course = obj.course.get()
         students = [part.user.get() for part in course.get_students(user)]
-        content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER']]
+        content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
 
         for student in students:
             fs = models.User.get_final_submission(student, obj.key)
             if fs:
-                comp_score = fs.get_comp_score()
-                if comp_score:
-                    content.append(comp_score)
+                scores = fs.get_scores()
+                if scores:
+                    content.extend(scores)
                     continue
-            # if no final submission, or the final submission has no composition score
+            # if no final submission, or the final submission has no scores
             content.append([student.email[0], 0, None, None])
         course_name = course.offering.replace('/', '_')
         return course_name, content
