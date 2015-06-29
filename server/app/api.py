@@ -663,7 +663,11 @@ class AssignmentAPI(APIResource):
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
                     required=True),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
                 }
         },
         'put': {
@@ -676,8 +680,12 @@ class AssignmentAPI(APIResource):
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
-                }
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
+            }
         },
         'get': {
         },
@@ -692,7 +700,11 @@ class AssignmentAPI(APIResource):
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
             }
         },
         'index': {
@@ -720,6 +732,13 @@ class AssignmentAPI(APIResource):
         },
         'delete': {
             'methods': set(['DELETE'])
+        },
+        'autograde': {
+            'methods': set(['POST']),
+            'web_args': {
+                'grade_final': BooleanArg(),
+                'token': Arg(str)
+            }
         }
     }
 
@@ -764,6 +783,7 @@ class AssignmentAPI(APIResource):
         if err:
             raise BadValueError(err)
 
+
     def download_composition_scores(self, obj, user, data):
         """
         Download all composition scores for this assignment. 
@@ -803,6 +823,39 @@ class AssignmentAPI(APIResource):
         response.headers['Content-Type'] = 'text/csv'
         return response
 
+
+    def autograde(self, obj, user, data):
+      need = Need('grade')
+      if not obj.can(user, need, obj):
+          raise need.exception()
+      subm_ids = {}
+      if not obj.autograding_enabled:
+        raise BadValueError('Autograding is not enabled for this assignment.')
+
+      if 'grade_final' in data and data['grade_final']:
+        #Collect all final submissions and run grades.
+        fsubs = list(
+            models.FinalSubmission.query(models.FinalSubmission.assignment == obj.key))
+        for fsub in fsubs:
+          subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
+
+        ag_url = "http://104.154.46.183:5000"
+        data = {'subm_ids': subm_ids,
+        'assign_name': obj.display_name,
+        'starter_zip_url': obj.zip_file_url,
+        'access_token': data['token'],
+        'grade_script': obj.grading_script_file,
+        'testing': True}
+
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        r = requests.post(ag_url+'/grade/batch', data=json.dumps(data), headers=headers)
+        if r.status_code == requests.codes.ok:
+          return {'status_url': ag_url+'/rq', 'length': str(len(subm_ids))}
+        else:
+          raise BadValueError('The autograder the rejected your request')
+      else:
+        # TODO
+        raise BadValueError('Only supports batch uploading.')
 
 
 class SubmitNDBImplementation(object):
@@ -866,7 +919,7 @@ class SubmissionAPI(APIResource):
     """
     model = models.Backup
     diff_model = models.Diff
-
+    subm_model = models.Submission
     db = SubmitNDBImplementation()
 
     methods = {
@@ -922,9 +975,15 @@ class SubmissionAPI(APIResource):
                 'tag': Arg(str, required=True)
             }
         },
-        'win_rate': {
-            'methods': set(['GET']),
-        }
+        'score': {
+            'methods': set(['POST']),
+            'web_args': {
+                'submission': KeyArg('Submission', required=True),
+                'key': Arg(str, required=True),
+                'score': Arg(int, required=True),
+                'message': Arg(str, required=True),
+            }
+        },
     }
 
     def graded(self, obj, user, data):
@@ -1118,12 +1177,12 @@ class SubmissionAPI(APIResource):
         if tag in obj.tags:
             raise BadValueError('Tag already exists')
 
-        submit_tag = models.Submission.SUBMITTED_TAG
+        submit_tag = subm_model.SUBMITTED_TAG
         if tag == submit_tag:
-            previous = models.Submission.query().filter(
-                models.Submission.assignment == obj.assignment).filter(
-                    models.Submission.submitter == obj.submitter).filter(
-                        models.Submission.tags == submit_tag)
+            previous = subm_model.query().filter(
+                subm_model.assignment == obj.assignment).filter(
+                    subm_model.submitter == obj.submitter).filter(
+                        subm_model.tags == submit_tag)
 
             previous = previous.get(keys_only=True)
             if previous:
@@ -1149,57 +1208,44 @@ class SubmissionAPI(APIResource):
         obj.tags.remove(tag)
         obj.put()
 
-    def win_rate(self, obj, user, data):
-        """
-        Gets the win_rate for the submission. This method will be removed shortly.
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: Reponse from Autograder.
-        """
-        messages = obj.get_messages()
-        if 'file_contents' not in obj.get_messages():
-            raise BadValueError('Submission has no contents to diff')
-        file_contents = messages['file_contents']
-
-        if 'hog.py' not in file_contents:
-            raise BadValueError('Submission is not for Hog')
-        cached = memcache.get('%s:hog_win' % obj.key.id())
-        if cached is not None:
-          return cached
-        else:
-          hog_code = file_contents['hog.py'].encode('utf-8')
-          payload = {'strategy': hog_code}
-          headers={'content-type': 'application/json'}
-          q = requests.post('http://hog.cs61a.org/winrate',
-             data=json.dumps(payload),
-             headers=headers)
-          memcache.add('%s:hog_win' % obj.key.id(), q.json(), 86400)
-          return q.json()
-
-
     def score(self, obj, user, data):
         """
-        Sets composition score
+        Sets a score.
 
-        :param obj: (object) target
+        :param obj: (object) backup - ignored.
         :param user: (object) caller
         :param data: (dictionary) data
         :return: (int) score
         """
+
+        need = Need('grade')
+        subm_q = self.subm_model.query(self.subm_model.key == data['submission'])
+        subm = subm_q.get()
+
+        # Perform check on the submission because obj is a backup
+        if not self.subm_model.can(user, need, subm, subm_q):
+            raise need.exception()
+
+        if not subm.backup() == obj.key:
+          raise ValueError('Submission does not match backup')
+
         score = models.Score(
+            tag=data['key'],
             score=data['score'],
             message=data['message'],
             grader=user.key)
         score.put()
 
-        if 'Composition' not in obj.tags:
-            obj.tags.append('Composition')
+        if data['key'] == 'composition':
+          # Create a new composition score - but retain everything else.
+          subm.score = [autograde for autograde in subm.score \
+           if autograde.key != 'composition']
+          subm.score.append(score)
+        else:
+          subm.score.append(score)
 
-        obj.compScore = score.key
-        obj.put()
-        return score
+        subm.put()
+        return {1:1}
 
     def get_assignment(self, name):
         """
@@ -1210,7 +1256,6 @@ class SubmissionAPI(APIResource):
             raise a validation error
         """
         assignments = self.db.lookup_assignments_by_name(name)
-
         if not assignments:
             raise BadValueError('Assignment \'%s\' not found' % name)
         if len(assignments) > 1:
@@ -1617,7 +1662,7 @@ class CourseAPI(APIResource):
         The POST HTTP method
         """
         return super(CourseAPI, self).post(user, data)
-    
+
     def index(self, user, data):
         if data['onlyenrolled']:
             return dict(results=[result.course for result in models.Participant.query(
@@ -1860,14 +1905,6 @@ class FinalSubmissionAPI(APIResource):
         },
         'index': {
         },
-        'score': {
-            'methods': set(['POST']),
-            'web_args': {
-                'score': Arg(int, required=True),
-                'message': Arg(str, required=True),
-                'source': Arg(str, required=True),
-              }
-        },
         'post': {
             'web_args': {
                 'submission': KeyArg('Submission', required=True)
@@ -1886,40 +1923,6 @@ class FinalSubmissionAPI(APIResource):
         subm = attributes['submission'].get()
         subm.mark_as_final()
         return subm.get_final()
-
-    def score(self, obj, user, data):
-        """
-        Sets composition score
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: (int) score
-        """
-        need = Need('grade')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
-        score = models.Score(
-            score=data['score'],
-            message=data['message'],
-            grader=user.key)
-        grade = score.put()
-
-        submission = obj.submission.get()
-
-        # Create or updated based on existing scores.
-        if data['source'] == 'composition':
-          # Only keep any autograded scores.
-          submission.score = [autograde for autograde in submission.score \
-            if score.autograder]
-          submission.score.append(score)
-        else:
-          submission.score.append(score)
-
-        submission.put()
-
-        return score
 
 class AnalyticsAPI(APIResource):
     """
@@ -1965,3 +1968,4 @@ class AnalyticsAPI(APIResource):
         return (201, 'success', {
             'key': job.job_dump.key.id()
         })
+

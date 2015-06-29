@@ -3,8 +3,8 @@
     <ol class="breadcrumb">
       <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
       <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
-      <li><a ui-sref="course.details.stat({id: course.id})"><i class="fa fa-list"></i> {{course.display_name}}</a></li>
-        <li><a ui-sref="course.assignments({courseId: course.id})"><i class="fa fa-list"> All Assignments</i></a></li>
+        <li><a ui-sref="course.detail.stats({courseId: course.id})"><i class="fa fa-institution"></i> {{course.display_name}}</a></li>
+        <li><a ui-sref="course.assignment.list({courseId: course.id})"><i class="fa fa-list"> All Assignments</i></a></li>
       <li class="active"><i class="fa fa-plus"></i> New Assignment</li>
     </ol>
   </section>
@@ -28,10 +28,6 @@
         <div class="form-group">
           <label>Points</label>
           <input ng-model="newAssign.points" type="number" step="any" min="0" class="form-control" placeholder="">
-        </div>
-        <div class="form-group">
-          <label>Templates</label>
-          <input ng-model="newAssign.templates" type="file" enctype="multipart/form-data" class="form-control" multiple>
         </div>
         <div class="form-group">
           <label>Max Group Size</label>
@@ -80,20 +76,24 @@
 
         </div>
 
-<!--
-          <div class="bootstrap-timepicker">
           <div class="form-group">
-            <label>Time picker:</label>
-            <div class="input-group">
-              <input  type="text" value="23:59 PM"class="form-control timepicker">
-              <div class="input-group-addon">
-                <i class="fa fa-clock-o"></i>
-              </div>
-            </div>
-          </div>
-        </div>
+              <label>Autograding Enabled?</label>
 
- -->
+              <select class="form-control" required ng-model="newAssign.autograding_enabled" ng-options="option for option in [false, true]">
+              </select>
+          </div>
+          <div ng-hide="!newAssign.autograding_enabled">
+            <div class="form-group">
+                <label>Zip File URL</label>
+                <input ng-model="newAssign.zip_file_url" type="text" class="form-control" placeholder="http://cs61a.org/lab/lab01/lab01.zip">
+            </div>
+
+            <div class="form-group" >
+                <label>Grading Script File </label>
+                <textarea ng-model="newAssign.grading_script_file" style="height: 20em;" class="form-control"></textarea>
+            </div>
+
+          </div>
          <button ng-click="createAssign()" class="btn btn-block btn-primary btn-lg">Create Assignment</button>
 
       </div>
