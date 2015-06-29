@@ -454,6 +454,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
        }
 
 
+
      $scope.delete = function(assign) {
       $window.swal({
           title: "Are you sure?",
@@ -479,12 +480,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
           $window.swal('Error', 'Could not delete assignment.', 'error')
          });
       }
-
-<<<<<<< HEAD
-
       
-=======
->>>>>>> master
      $scope.reloadView();
    }]);
 

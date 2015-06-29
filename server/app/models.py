@@ -1214,7 +1214,7 @@ class FinalSubmission(Base):
         if the submission has a composition score. Otherwise None. 
         """
         subm = self.submission.get()
-        comp_scores = [score for score in subm.score if not score.autograder]
+        comp_scores = [score for score in subm.score if score.tag == 'composition']
 
         if len(comp_scores) > 0:
             comp_score = comp_scores[0]

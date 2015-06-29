@@ -110,6 +110,11 @@ def seed():
                 'submit': final
             }
 
+        score = models.Score(
+            score=88
+        )
+        score.put()
+
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
         backup = models.Backup(
@@ -120,7 +125,7 @@ def seed():
 
         backup.put()
 
-        return models.Submission(backup=backup.key)
+        return models.Submission(backup=backup.key, score=[score])
 
 
     def make_seed_scheme_submission(assignment, submitter, final=False):
@@ -188,14 +193,16 @@ def seed():
     def compScore_seed_submission(final, score, msg, grader):
         """ Add composition score """
         score = models.Score(
+            tag='composition',
             score=score,
             message=msg,
             grader=grader.key)
         score.put()
 
         subm = final.submission.get()
-        subm.score = [score]
+        subm.score.append(score)
         subm.put()
+
 
     # Start putting things in the DB.
 
