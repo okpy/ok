@@ -249,7 +249,7 @@ def seed():
         models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
         group_members += [s]
 
-    for i in range(0, 9):
+    for i in range(9):
         s = models.User(
             email=["student" + str(i) + "@student.com"],
         )
@@ -321,7 +321,7 @@ def seed():
     final = make_final_with_group(group_subm, assign, group_members[1], g1)
     score_seed_submission(final, 2, "Nice job, group 1!", staff[8]) 
     subms.append(group_subm)
-    
+
     # Make this one be a final submission though.
     # subm = make_seed_submission(assign, group_members[1], True)
     # subm.put()
