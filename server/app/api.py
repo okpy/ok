@@ -811,12 +811,12 @@ class AssignmentAPI(APIResource):
 
         students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
         for student in students:
-            content.extend(self.scores_for_student(student, obj)[0])
+            content.extend(self.scores_for_student_or_group(student, obj)[0])
 
         course_name = course.offering.replace('/', '_')
         return course_name, content
 
-    def scores_for_student(self, student, assignment):
+    def scores_for_student_or_group(self, student, assignment):
         """ Returns a tuple of two elements: 
                 1) Score data (list of lists) for STUDENT's final submission for ASSIGNMENT.
                     There is an element for each score. 
@@ -824,6 +824,7 @@ class AssignmentAPI(APIResource):
                     element for each combination of group member and score.
                 2) A boolean indicating whether the student had a
                     scored final submission for ASSIGNMENT. 
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
         """
         fs = models.User.get_final_submission(student, assignment.key)
         scores = []
@@ -837,14 +838,15 @@ class AssignmentAPI(APIResource):
             There is one element for each combination of 
             group member and score.
             Ensures that each student only appears once in the list. 
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
         """
         content = []
         for m in group.member:
             member = m.get()
-            data, success = self.scores_for_student(member, assignment)
+            data, success = self.scores_for_student_or_group(member, assignment)
             content.extend(data)
             if success:
-                # get_scores_for_student will return scores for all group members. 
+                # get_scores_for_student_or_group will return scores for all group members. 
                 return content
         return [[member.email[0], 0, None, None, None]]
 
