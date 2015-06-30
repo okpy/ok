@@ -799,32 +799,39 @@ class AssignmentAPI(APIResource):
 
 
     def data_for_scores(self, obj, user):
-        
-        course = obj.course.get()
-        students = [part.user.get() for part in course.get_students(user)]
         content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
-
+        course = obj.course.get()
+        
+        groups = models.Group.lookup_by_assignment(obj)
         seen_members = set()
 
-        for student in students:
-            # avoid group members multiple times
-            if student.key not in seen_members:
-                fs = models.User.get_final_submission(student, obj.key)
+        for group in groups:
+            members = group.member
+            seen_members |= set(members)
+            for m in group.member:
+                member = m.get()
+                fs = models.User.get_final_submission(member, obj.key)
                 if fs:
                     scores = fs.get_scores()
                     if scores:
                         content.extend(scores)
-                        if fs.group:
-                            seen_members |= set(fs.group.get().member)
-                        continue
+                        break
+                content.append([member.email[0], 0, None, None, None])
+
+        students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
+        
+        for student in students:
+            fs = models.User.get_final_submission(student, obj.key)
+            if fs:
+                scores = fs.get_scores()
+                if scores:
+                    content.extend(scores)
+                    continue
             # if no final submission, or the final submission has no scores
             content.append([student.email[0], 0, None, None, None])
-            if fs and fs.group:
-                seen_members |= set(fs.group.get().member)
 
         course_name = course.offering.replace('/', '_')
         return course_name, content
-
 
     def make_csv_response(self, course_name, csv_file):
         response = make_response(csv_file)

@@ -943,6 +943,13 @@ class Group(Base):
             assignment_key = assignment_key.key
         return Group(member=[user_key], invited=[], assignment=assignment_key)
 
+    @classmethod
+    def lookup_by_assignment(cls, assignment):
+        """ Returns all groups with the given assignment """
+        if isinstance(assignment, Assignment):
+            assign_key = assignment.key
+        return Group.query(Group.assignment == assign_key).fetch()
+
     #@ndb.transactional
     def invite(self, email):
         """Invites a user to the group. Returns an error message or None."""
