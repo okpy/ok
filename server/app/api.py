@@ -801,37 +801,52 @@ class AssignmentAPI(APIResource):
     def data_for_scores(self, obj, user):
         content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
         course = obj.course.get()
-        
         groups = models.Group.lookup_by_assignment(obj)
         seen_members = set()
 
         for group in groups:
             members = group.member
             seen_members |= set(members)
-            for m in group.member:
-                member = m.get()
-                fs = models.User.get_final_submission(member, obj.key)
-                if fs:
-                    scores = fs.get_scores()
-                    if scores:
-                        content.extend(scores)
-                        break
-                content.append([member.email[0], 0, None, None, None])
+            content.extend(self.scores_for_group_members(group, obj))
 
         students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
-        
         for student in students:
-            fs = models.User.get_final_submission(student, obj.key)
-            if fs:
-                scores = fs.get_scores()
-                if scores:
-                    content.extend(scores)
-                    continue
-            # if no final submission, or the final submission has no scores
-            content.append([student.email[0], 0, None, None, None])
+            content.extend(self.scores_for_student(student, obj)[0])
 
         course_name = course.offering.replace('/', '_')
         return course_name, content
+
+    def scores_for_student(self, student, assignment):
+        """ Returns a tuple of two elements: 
+                1) Score data (list of lists) for STUDENT's final submission for ASSIGNMENT.
+                    There is an element for each score. 
+                    * OBS * If the student is in a group, the list will contain an
+                    element for each combination of group member and score.
+                2) A boolean indicating whether the student had a
+                    scored final submission for ASSIGNMENT. 
+        """
+        fs = models.User.get_final_submission(student, assignment.key)
+        scores = []
+        if fs:
+            scores = fs.get_scores()
+        return (scores, True) if scores else ([[student.email[0], 0, None, None, None]], False)
+
+    def scores_for_group_members(self, group, assignment):
+        """ Returns a list of lists containing score data
+            for the groups's final submission for ASSIGNMENT. 
+            There is one element for each combination of 
+            group member and score.
+            Ensures that each student only appears once in the list. 
+        """
+        content = []
+        for m in group.member:
+            member = m.get()
+            data, success = self.scores_for_student(member, assignment)
+            content.extend(data)
+            if success:
+                # get_scores_for_student will return scores for all group members. 
+                return content
+        return [[member.email[0], 0, None, None, None]]
 
     def make_csv_response(self, course_name, csv_file):
         response = make_response(csv_file)
