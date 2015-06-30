@@ -1210,25 +1210,24 @@ class FinalSubmission(Base):
 
     def get_scores(self):
         """ 
-        Return a list lists of the format [[student, score, message, grader, tag]]
-        if the submission has been scored. Otherwise None. 
-        If the submission is a group submission, there will be a nested list for each
-        student in the group. 
+        Return a list of lists of the format [[student, score, message, grader, tag]]
+        if the submission has been scored. Otherwise an empty list. 
+        If the submission is a group submission, there will be an element 
+        for each combination of student and score.
         """
+        # TODO: get the most recent score for each tag. 
+        # Question: will all scores have a grader? In particular the scores from the autograder. 
         all_scores = []
         if self.group:
-            for member in self.group.get().member:
-                for score in self.submission.get().score:
-                    all_scores.append([member.get().email[0],
-                            score.score, 
-                            score.message,
-                            score.grader.get().email[0],
-                            score.tag])
-        else:
+            members = [member for member in self.group.get().member]
+        else: 
+            members = [self.submitter]
+        for member in members:
+            email = member.get().email[0]
             for score in self.submission.get().score:
-                    all_scores.append([self.submitter.get().email[0],
-                            score.score, 
-                            score.message,
-                            score.grader.get().email[0],
-                            score.tag])
+                all_scores.append([email,
+                        score.score, 
+                        score.message,
+                        score.grader.get().email[0],
+                        score.tag])
         return all_scores

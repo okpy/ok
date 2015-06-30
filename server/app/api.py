@@ -727,7 +727,7 @@ class AssignmentAPI(APIResource):
         'assign': {
             'methods': set(['POST'])
         },
-        'download_composition_scores': {
+        'download_scores': {
             'methods': set(['GET'])
         },
         'delete': {
@@ -784,21 +784,21 @@ class AssignmentAPI(APIResource):
             raise BadValueError(err)
 
 
-    def download_composition_scores(self, obj, user, data):
+    def download_scores(self, obj, user, data):
         """
         Download all composition scores for this assignment. 
-        Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER'.
+        Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
         """
         need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
 
-        course_name, content = self.data_for_composition(obj, user)
+        course_name, content = self.data_for_scores(obj, user)
         csv_file = create_csv(content)
         return self.make_csv_response(course_name, csv_file)
 
 
-    def data_for_composition(self, obj, user):
+    def data_for_scores(self, obj, user):
         
         course = obj.course.get()
         students = [part.user.get() for part in course.get_students(user)]
@@ -812,14 +812,14 @@ class AssignmentAPI(APIResource):
                     content.extend(scores)
                     continue
             # if no final submission, or the final submission has no scores
-            content.append([student.email[0], 0, None, None])
+            content.append([student.email[0], 0, None, None, None])
         course_name = course.offering.replace('/', '_')
         return course_name, content
 
 
     def make_csv_response(self, course_name, csv_file):
         response = make_response(csv_file)
-        response.headers["Content-Disposition"] = ('attachment; filename=comp_scores-%s.csv' % course_name)
+        response.headers["Content-Disposition"] = ('attachment; filename=scores-%s.csv' % course_name)
         response.headers['Content-Type'] = 'text/csv'
         return response
 
