@@ -241,7 +241,7 @@ def seed():
     group_members = []
     staff = []
 
-    for i in range(4):
+    for i in range(6):
         s = models.User(
             email=["partner" + str(i) + "@teamwork.com"],
         )
@@ -306,6 +306,11 @@ def seed():
     g2 = make_invited_group(assign, team2)
     g2.put()
 
+    team3 = group_members[4:6]
+    g3 = make_group(assign, team3)
+    g3.put()
+
+
     # Have each member in the group submit one
     for member in group_members:
         subm = make_seed_submission(assign, member)
@@ -315,12 +320,19 @@ def seed():
     #     subm = make_seed_scheme_submission(assign2, member)
     #     subm.put()
 
-    group_subm = make_seed_submission(assign, group_members[1])
-    group_subm.put()
+    group1_subm = make_seed_submission(assign, group_members[1])
+    group1_subm.put()
     # Make team 1's submission final and score it. 
-    final = make_final_with_group(group_subm, assign, group_members[1], g1)
+    final = make_final_with_group(group1_subm, assign, group_members[1], g1)
     score_seed_submission(final, 2, "Nice job, group 1!", staff[8]) 
-    subms.append(group_subm)
+    subms.append(group1_subm)
+
+    group3_subm = make_seed_submission(assign, group_members[5])
+    group3_subm.put()
+    # Make team 1's submission final and score it. 
+    final3 = make_final_with_group(group3_subm, assign, group_members[5], g3)
+    score_seed_submission(final3, 1, "Awesome job, group 3!", staff[8]) 
+    subms.append(group3_subm)
 
     # Make this one be a final submission though.
     # subm = make_seed_submission(assign, group_members[1], True)
