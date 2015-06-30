@@ -804,15 +804,24 @@ class AssignmentAPI(APIResource):
         students = [part.user.get() for part in course.get_students(user)]
         content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
 
+        seen_members = set()
+
         for student in students:
-            fs = models.User.get_final_submission(student, obj.key)
-            if fs:
-                scores = fs.get_scores()
-                if scores:
-                    content.extend(scores)
-                    continue
+            # avoid group members multiple times
+            if student.key not in seen_members:
+                fs = models.User.get_final_submission(student, obj.key)
+                if fs:
+                    scores = fs.get_scores()
+                    if scores:
+                        content.extend(scores)
+                        if fs.group:
+                            seen_members |= set(fs.group.get().member)
+                        continue
             # if no final submission, or the final submission has no scores
             content.append([student.email[0], 0, None, None, None])
+            if fs and fs.group:
+                seen_members |= set(fs.group.get().member)
+
         course_name = course.offering.replace('/', '_')
         return course_name, content
 

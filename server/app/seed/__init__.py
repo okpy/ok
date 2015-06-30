@@ -191,6 +191,14 @@ def seed():
                 queue=queue)
             fs.put()
 
+    def make_final_with_group(subm, assign, submitter, group):
+        fs = models.FinalSubmission(submission=subm.key,
+            assignment=assign.key,
+            submitter=submitter.key,
+            group=group.key)
+        fs.put()
+        return fs
+
     def make_final(subm, assign, submitter):
         fs = models.FinalSubmission(submission=subm.key,
             assignment=assign.key,
@@ -198,7 +206,7 @@ def seed():
         fs.put()
         return fs
 
-    def compScore_seed_submission(final, score, msg, grader):
+    def score_seed_submission(final, score, msg, grader):
         """ Add composition score """
         score = models.Score(
             tag='composition',
@@ -211,9 +219,7 @@ def seed():
         subm.score.append(score)
         subm.put()
 
-
     # Start putting things in the DB.
-
 
     c = models.User(
         email=["test@example.com"],
@@ -251,8 +257,7 @@ def seed():
         models.Participant.add_role(s.key, course.key, STUDENT_ROLE)
         students += [s]
 
-    # Luise
-    for i in range(0, 9):
+    for i in range(9):
         s = models.User(
             email=["grader" + str(i) + "@staff.com"],
         )
@@ -296,6 +301,7 @@ def seed():
     g1 = make_group(assign, team1)
     g1.put()
 
+
     team2 = group_members[2:4]
     g2 = make_invited_group(assign, team2)
     g2.put()
@@ -309,10 +315,18 @@ def seed():
     #     subm = make_seed_scheme_submission(assign2, member)
     #     subm.put()
 
+    group_subm = make_seed_submission(assign, group_members[1])
+    group_subm.put()
+    # Make team 1's submission final and score it. 
+    final = make_final_with_group(group_subm, assign, group_members[1], g1)
+    score_seed_submission(final, 2, "Nice job, group 1!", staff[8]) 
+    subms.append(group_subm)
+    
     # Make this one be a final submission though.
-    subm = make_seed_submission(assign, group_members[1], True)
-    subm.put()
-    subms.append(subm)
+    # subm = make_seed_submission(assign, group_members[1], True)
+    # subm.put()
+    # subms.append(subm)
+    
 
     # scheme final
     # subm = make_seed_scheme_submission(assign2, group_members[1], True)
@@ -328,14 +342,14 @@ def seed():
         subm.put()
         subms.append(subm)
 
-
+        # Make each individual submission final and score it. 
         final = make_final(subm, assign, students[i])
-        compScore_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
+        score_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
 
 
     # Seed a queue. This should be auto-generated.
-    make_queue(assign, subms[:len(subms)//2], c)
-    make_queue(assign, subms[len(subms)//2:], k)
+    # make_queue(assign, subms[:len(subms)//2], c)
+    # make_queue(assign, subms[len(subms)//2:], k)
 
     #utils.add_to_grading_queues(assign.key)
 
