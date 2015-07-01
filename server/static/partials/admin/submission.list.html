@@ -86,8 +86,8 @@
                     <span class="score-blurb">
                         <label>Tag</label>
                         <p>{{ score.tag }}</p>
-                        <label>Message</label>
-                        <p>{{ score.message }}</p>
+                        <label ng-if="score.message">Message</label>
+                        <p ng-if="score.message">{{ score.message }}</p>
                         <label>Grader</label>
                         <p>{{ score.grader.email[0] }}</p>
                     </span>
