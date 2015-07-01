@@ -404,6 +404,42 @@ class APIResource(View):
         return {}
 
 
+class ParticipantAPI(APIResource):
+    """
+    Root-level API functions
+    """
+    
+    model = models.Participant
+
+    methods = {
+        'enrollment': {
+        }
+    }
+    
+    def enrollment(self):
+        user = models.User.lookup(request.args.get('email'))
+        data = []
+        if user is not None:
+            parts = CourseAPI().get_courses(None, user, {'user': user.key})
+            for part in parts:
+                course = part.course.get()
+                offering = course.offering.split('/')
+                try:
+                    term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
+                    year = '20'+offering[2][2:]
+                except (IndexError, KeyError):
+                    term = year = None
+                data.append({
+                    'url': '/#/course/'+str(course.key.id()),
+                    'display_name': course.display_name,
+                    'institution': course.institution,
+                    'term': term,
+                    'year': year,
+                    'offering': course.offering
+                })
+        return json.dumps(data)
+
+
 class UserAPI(APIResource):
     """
     The API resource for the User Object
