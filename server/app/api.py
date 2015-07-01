@@ -18,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, create_csv
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -690,7 +690,7 @@ class AssignmentAPI(APIResource):
         'get': {
         },
         'edit': {
-            'methods': {'POST'},
+            'methods': set(['POST']),
             'web_args': {
                 'name': Arg(str),
                 'display_name': Arg(str),
@@ -726,6 +726,9 @@ class AssignmentAPI(APIResource):
         },
         'assign': {
             'methods': set(['POST'])
+        },
+        'download_scores': {
+            'methods': set(['GET'])
         },
         'delete': {
             'methods': set(['DELETE'])
@@ -780,6 +783,80 @@ class AssignmentAPI(APIResource):
         if err:
             raise BadValueError(err)
 
+
+    def download_scores(self, obj, user, data):
+        """
+        Download all composition scores for this assignment. 
+        Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
+        """
+        need = Need('staff')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        course_name, content = self.data_for_scores(obj, user)
+        csv_file = create_csv(content)
+        return self.make_csv_response(course_name, csv_file)
+
+
+    def data_for_scores(self, obj, user):
+        content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+        course = obj.course.get()
+        groups = models.Group.lookup_by_assignment(obj)
+        seen_members = set()
+
+        for group in groups:
+            members = group.member
+            seen_members |= set(members)
+            content.extend(self.scores_for_group_members(group, obj))
+
+        students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
+        for student in students:
+            content.extend(self.scores_for_student_or_group(student, obj)[0])
+
+        course_name = course.offering.replace('/', '_')
+        return course_name, content
+
+    def scores_for_student_or_group(self, student, assignment):
+        """ Returns a tuple of two elements: 
+                1) Score data (list of lists) for STUDENT's final submission for ASSIGNMENT.
+                    There is an element for each score. 
+                    * OBS * If the student is in a group, the list will contain an
+                    element for each combination of group member and score.
+                2) A boolean indicating whether the student had a
+                    scored final submission for ASSIGNMENT. 
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+        """
+        fs = models.User.get_final_submission(student, assignment.key)
+        scores = []
+        if fs:
+            scores = fs.get_scores()
+        return (scores, True) if scores else ([[student.email[0], 0, None, None, None]], False)
+
+    def scores_for_group_members(self, group, assignment):
+        """ Returns a list of lists containing score data
+            for the groups's final submission for ASSIGNMENT. 
+            There is one element for each combination of 
+            group member and score.
+            Ensures that each student only appears once in the list. 
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+        """
+        content = []
+        for m in group.member:
+            member = m.get()
+            data, success = self.scores_for_student_or_group(member, assignment)
+            content.extend(data)
+            if success:
+                # get_scores_for_student_or_group will return scores for all group members. 
+                return content
+        return [[member.email[0], 0, None, None, None]]
+
+    def make_csv_response(self, course_name, csv_file):
+        response = make_response(csv_file)
+        response.headers["Content-Disposition"] = ('attachment; filename=scores-%s.csv' % course_name)
+        response.headers['Content-Type'] = 'text/csv'
+        return response
+
+
     def autograde(self, obj, user, data):
       need = Need('grade')
       if not obj.can(user, need, obj):
@@ -812,6 +889,7 @@ class AssignmentAPI(APIResource):
       else:
         # TODO
         raise BadValueError('Only supports batch uploading.')
+
 
 class SubmitNDBImplementation(object):
     """
@@ -1120,7 +1198,7 @@ class SubmissionAPI(APIResource):
 
     def add_tag(self, obj, user, data):
         """
-        Removes a tag from the submission.
+        Adds a tag to the submission.
         Validates existence.
 
         :param obj: (object) target
@@ -1148,7 +1226,7 @@ class SubmissionAPI(APIResource):
 
     def remove_tag(self, obj, user, data):
         """
-        Adds a tag to this submission.
+        Removes a tag from this submission.
         Validates uniqueness.
 
         :param obj: (object) target
@@ -1247,8 +1325,6 @@ class SubmissionAPI(APIResource):
                     'late': True,
                     })
 
-
-        models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
         return (201, 'success', {

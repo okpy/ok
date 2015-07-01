@@ -480,7 +480,6 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
           $window.swal('Error', 'Could not delete assignment.', 'error')
          });
       }
-
      $scope.reloadView();
    }]);
 

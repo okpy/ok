@@ -15,6 +15,7 @@ try:
 except:
     from StringIO import StringIO
 import zipfile as zf
+import csv
 from flask import jsonify, request, Response, json
 
 from google.appengine.api import memcache
@@ -114,6 +115,21 @@ def add_to_zip(zipfile, file_contents, dir=''):
     for filename, contents in file_contents.items():
         zipfile.writestr(join(dir, filename), contents)
     return zipfile
+
+def create_csv(content):
+    """ 
+    Creates csv file from content. content must be a list of lists.
+    """
+    scsv = StringIO()
+    writer = csv.writer(scsv)
+    try:
+        writer.writerows(content)
+    except csv.Error as e:
+        scsv.close()
+        sys.exit('Error creating CSV: {}'.format(e))
+    contents = scsv.getvalue()
+    scsv.close()
+    return contents
 
 def paginate(entries, page, num_per_page):
     """

@@ -29,6 +29,7 @@
       <th ts-criteria="lock_date">Lock Date</th>
       <!-- Future Progress Bar -->
       <th style="width: 15%">Endpoint</th>
+      <th>Scores</th>
       <th>Edit</th>
       <th>Delete</th>
       <th>Autograde</th>
@@ -54,6 +55,9 @@
           <span class="badge bg-info">{{assignment.name}}</span>
         </td>
           <!-- Future Progress Bar -->
+        <td>
+          <a href="/api/v1/assignment/{{assignment.id}}/download_scores"><button class="btn btn-primary btn-sm"> <i class="fa fa-download"></i>Download</button></a>
+        </td>
         <td>
           <a ui-sref="course.assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
         </td>
