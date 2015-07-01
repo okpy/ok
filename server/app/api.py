@@ -135,6 +135,7 @@ def BooleanArg(**kwargs):
     :return: (Arg) type of argument
     """
     def parse_bool(arg):
+        arg = arg.lower()
         if isinstance(arg, bool):
             return arg
         if arg == 'false':
@@ -1400,7 +1401,7 @@ class SearchAPI(APIResource):
                 'query': Arg(str, required=True),
                 'page': Arg(int, default=1),
                 'num_per_page': Arg(int, default=10),
-                'all': Arg(bool, default=False),
+                'all': Arg(bool, default=True),
                 'courseId': Arg(int, required=True)
             }
         }
@@ -1457,7 +1458,7 @@ class SearchAPI(APIResource):
         self.check_permissions(user, data)
 
         results = SearchAPI.querify(data['query']).fetch()
-        if data.get('all', False):
+        if not data.get('all', True):
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
         zipfile_str, zipfile = start_zip()
