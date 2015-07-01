@@ -18,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, create_csv
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -404,6 +404,42 @@ class APIResource(View):
         return {}
 
 
+class ParticipantAPI(APIResource):
+    """
+    Root-level API functions
+    """
+    
+    model = models.Participant
+
+    methods = {
+        'enrollment': {
+        }
+    }
+    
+    def enrollment(self):
+        user = models.User.lookup(request.args.get('email'))
+        data = []
+        if user is not None:
+            parts = CourseAPI().get_courses(None, user, {'user': user.key})
+            for part in parts:
+                course = part.course.get()
+                offering = course.offering.split('/')
+                try:
+                    term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
+                    year = '20'+offering[2][2:]
+                except (IndexError, KeyError):
+                    term = year = None
+                data.append({
+                    'url': '/#/course/'+str(course.key.id()),
+                    'display_name': course.display_name,
+                    'institution': course.institution,
+                    'term': term,
+                    'year': year,
+                    'offering': course.offering
+                })
+        return json.dumps(data)
+
+
 class UserAPI(APIResource):
     """
     The API resource for the User Object
@@ -663,7 +699,11 @@ class AssignmentAPI(APIResource):
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
                     required=True),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
                 }
         },
         'put': {
@@ -676,13 +716,17 @@ class AssignmentAPI(APIResource):
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
-                }
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
+            }
         },
         'get': {
         },
         'edit': {
-            'methods': {'POST'},
+            'methods': set(['POST']),
             'web_args': {
                 'name': Arg(str),
                 'display_name': Arg(str),
@@ -692,7 +736,11 @@ class AssignmentAPI(APIResource):
                 'due_date': DateTimeArg(),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps)),
                 'revision': Arg(bool),
-                'lock_date': DateTimeArg()
+                'lock_date': DateTimeArg(),
+                'autograding_enabled': Arg(bool),
+                'grading_script_file': Arg(str),
+                'zip_file_url': Arg(str),
+                'access_token': Arg(str)
             }
         },
         'index': {
@@ -715,8 +763,18 @@ class AssignmentAPI(APIResource):
         'assign': {
             'methods': set(['POST'])
         },
+        'download_scores': {
+            'methods': set(['GET'])
+        },
         'delete': {
             'methods': set(['DELETE'])
+        },
+        'autograde': {
+            'methods': set(['POST']),
+            'web_args': {
+                'grade_final': BooleanArg(),
+                'token': Arg(str)
+            }
         }
     }
 
@@ -761,6 +819,112 @@ class AssignmentAPI(APIResource):
         if err:
             raise BadValueError(err)
 
+
+    def download_scores(self, obj, user, data):
+        """
+        Download all composition scores for this assignment. 
+        Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
+        """
+        need = Need('staff')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        course_name, content = self.data_for_scores(obj, user)
+        csv_file = create_csv(content)
+        return self.make_csv_response(course_name, csv_file)
+
+
+    def data_for_scores(self, obj, user):
+        content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+        course = obj.course.get()
+        groups = models.Group.lookup_by_assignment(obj)
+        seen_members = set()
+
+        for group in groups:
+            members = group.member
+            seen_members |= set(members)
+            content.extend(self.scores_for_group_members(group, obj))
+
+        students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
+        for student in students:
+            content.extend(self.scores_for_student_or_group(student, obj)[0])
+
+        course_name = course.offering.replace('/', '_')
+        return course_name, content
+
+    def scores_for_student_or_group(self, student, assignment):
+        """ Returns a tuple of two elements: 
+                1) Score data (list of lists) for STUDENT's final submission for ASSIGNMENT.
+                    There is an element for each score. 
+                    * OBS * If the student is in a group, the list will contain an
+                    element for each combination of group member and score.
+                2) A boolean indicating whether the student had a
+                    scored final submission for ASSIGNMENT. 
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+        """
+        fs = models.User.get_final_submission(student, assignment.key)
+        scores = []
+        if fs:
+            scores = fs.get_scores()
+        return (scores, True) if scores else ([[student.email[0], 0, None, None, None]], False)
+
+    def scores_for_group_members(self, group, assignment):
+        """ Returns a list of lists containing score data
+            for the groups's final submission for ASSIGNMENT. 
+            There is one element for each combination of 
+            group member and score.
+            Ensures that each student only appears once in the list. 
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+        """
+        content = []
+        for m in group.member:
+            member = m.get()
+            data, success = self.scores_for_student_or_group(member, assignment)
+            content.extend(data)
+            if success:
+                # get_scores_for_student_or_group will return scores for all group members. 
+                return content
+        return [[member.email[0], 0, None, None, None]]
+
+    def make_csv_response(self, course_name, csv_file):
+        response = make_response(csv_file)
+        response.headers["Content-Disposition"] = ('attachment; filename=scores-%s.csv' % course_name)
+        response.headers['Content-Type'] = 'text/csv'
+        return response
+
+
+    def autograde(self, obj, user, data):
+      need = Need('grade')
+      if not obj.can(user, need, obj):
+          raise need.exception()
+      subm_ids = {}
+      if not obj.autograding_enabled:
+        raise BadValueError('Autograding is not enabled for this assignment.')
+
+      if 'grade_final' in data and data['grade_final']:
+        #Collect all final submissions and run grades.
+        fsubs = list(
+            models.FinalSubmission.query(models.FinalSubmission.assignment == obj.key))
+        for fsub in fsubs:
+          subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
+
+        ag_url = "http://104.154.46.183:5000"
+        data = {'subm_ids': subm_ids,
+        'assign_name': obj.display_name,
+        'starter_zip_url': obj.zip_file_url,
+        'access_token': data['token'],
+        'grade_script': obj.grading_script_file,
+        'testing': True}
+
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        r = requests.post(ag_url+'/grade/batch', data=json.dumps(data), headers=headers)
+        if r.status_code == requests.codes.ok:
+          return {'status_url': ag_url+'/rq', 'length': str(len(subm_ids))}
+        else:
+          raise BadValueError('The autograder the rejected your request')
+      else:
+        # TODO
+        raise BadValueError('Only supports batch uploading.')
 
 
 class SubmitNDBImplementation(object):
@@ -824,7 +988,7 @@ class SubmissionAPI(APIResource):
     """
     model = models.Backup
     diff_model = models.Diff
-
+    subm_model = models.Submission
     db = SubmitNDBImplementation()
 
     methods = {
@@ -880,9 +1044,15 @@ class SubmissionAPI(APIResource):
                 'tag': Arg(str, required=True)
             }
         },
-        'win_rate': {
-            'methods': set(['GET']),
-        }
+        'score': {
+            'methods': set(['POST']),
+            'web_args': {
+                'submission': KeyArg('Submission', required=True),
+                'key': Arg(str, required=True),
+                'score': Arg(int, required=True),
+                'message': Arg(str, required=True),
+            }
+        },
     }
 
     def graded(self, obj, user, data):
@@ -1064,7 +1234,7 @@ class SubmissionAPI(APIResource):
 
     def add_tag(self, obj, user, data):
         """
-        Removes a tag from the submission.
+        Adds a tag to the submission.
         Validates existence.
 
         :param obj: (object) target
@@ -1076,12 +1246,12 @@ class SubmissionAPI(APIResource):
         if tag in obj.tags:
             raise BadValueError('Tag already exists')
 
-        submit_tag = models.Submission.SUBMITTED_TAG
+        submit_tag = subm_model.SUBMITTED_TAG
         if tag == submit_tag:
-            previous = models.Submission.query().filter(
-                models.Submission.assignment == obj.assignment).filter(
-                    models.Submission.submitter == obj.submitter).filter(
-                        models.Submission.tags == submit_tag)
+            previous = subm_model.query().filter(
+                subm_model.assignment == obj.assignment).filter(
+                    subm_model.submitter == obj.submitter).filter(
+                        subm_model.tags == submit_tag)
 
             previous = previous.get(keys_only=True)
             if previous:
@@ -1092,7 +1262,7 @@ class SubmissionAPI(APIResource):
 
     def remove_tag(self, obj, user, data):
         """
-        Adds a tag to this submission.
+        Removes a tag from this submission.
         Validates uniqueness.
 
         :param obj: (object) target
@@ -1107,57 +1277,44 @@ class SubmissionAPI(APIResource):
         obj.tags.remove(tag)
         obj.put()
 
-    def win_rate(self, obj, user, data):
-        """
-        Gets the win_rate for the submission. This method will be removed shortly.
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: Reponse from Autograder.
-        """
-        messages = obj.get_messages()
-        if 'file_contents' not in obj.get_messages():
-            raise BadValueError('Submission has no contents to diff')
-        file_contents = messages['file_contents']
-
-        if 'hog.py' not in file_contents:
-            raise BadValueError('Submission is not for Hog')
-        cached = memcache.get('%s:hog_win' % obj.key.id())
-        if cached is not None:
-          return cached
-        else:
-          hog_code = file_contents['hog.py'].encode('utf-8')
-          payload = {'strategy': hog_code}
-          headers={'content-type': 'application/json'}
-          q = requests.post('http://hog.cs61a.org/winrate',
-             data=json.dumps(payload),
-             headers=headers)
-          memcache.add('%s:hog_win' % obj.key.id(), q.json(), 86400)
-          return q.json()
-
-
     def score(self, obj, user, data):
         """
-        Sets composition score
+        Sets a score.
 
-        :param obj: (object) target
+        :param obj: (object) backup - ignored.
         :param user: (object) caller
         :param data: (dictionary) data
         :return: (int) score
         """
+
+        need = Need('grade')
+        subm_q = self.subm_model.query(self.subm_model.key == data['submission'])
+        subm = subm_q.get()
+
+        # Perform check on the submission because obj is a backup
+        if not self.subm_model.can(user, need, subm, subm_q):
+            raise need.exception()
+
+        if not subm.backup() == obj.key:
+          raise ValueError('Submission does not match backup')
+
         score = models.Score(
+            tag=data['key'],
             score=data['score'],
             message=data['message'],
             grader=user.key)
         score.put()
 
-        if 'Composition' not in obj.tags:
-            obj.tags.append('Composition')
+        if data['key'] == 'composition':
+          # Create a new composition score - but retain everything else.
+          subm.score = [autograde for autograde in subm.score \
+           if autograde.key != 'composition']
+          subm.score.append(score)
+        else:
+          subm.score.append(score)
 
-        obj.compScore = score.key
-        obj.put()
-        return score
+        subm.put()
+        return {1:1}
 
     def get_assignment(self, name):
         """
@@ -1168,7 +1325,6 @@ class SubmissionAPI(APIResource):
             raise a validation error
         """
         assignments = self.db.lookup_assignments_by_name(name)
-
         if not assignments:
             raise BadValueError('Assignment \'%s\' not found' % name)
         if len(assignments) > 1:
@@ -1205,8 +1361,6 @@ class SubmissionAPI(APIResource):
                     'late': True,
                     })
 
-
-        models.Participant.add_role(user, valid_assignment.course, STUDENT_ROLE)
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
         return (201, 'success', {
@@ -1577,7 +1731,7 @@ class CourseAPI(APIResource):
         The POST HTTP method
         """
         return super(CourseAPI, self).post(user, data)
-    
+
     def index(self, user, data):
         if data['onlyenrolled']:
             return dict(results=[result.course for result in models.Participant.query(
@@ -1820,14 +1974,6 @@ class FinalSubmissionAPI(APIResource):
         },
         'index': {
         },
-        'score': {
-            'methods': set(['POST']),
-            'web_args': {
-                'score': Arg(int, required=True),
-                'message': Arg(str, required=True),
-                'source': Arg(str, required=True),
-              }
-        },
         'post': {
             'web_args': {
                 'submission': KeyArg('Submission', required=True)
@@ -1846,40 +1992,6 @@ class FinalSubmissionAPI(APIResource):
         subm = attributes['submission'].get()
         subm.mark_as_final()
         return subm.get_final()
-
-    def score(self, obj, user, data):
-        """
-        Sets composition score
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: (int) score
-        """
-        need = Need('grade')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
-        score = models.Score(
-            score=data['score'],
-            message=data['message'],
-            grader=user.key)
-        grade = score.put()
-
-        submission = obj.submission.get()
-
-        # Create or updated based on existing scores.
-        if data['source'] == 'composition':
-          # Only keep any autograded scores.
-          submission.score = [autograde for autograde in submission.score \
-            if score.autograder]
-          submission.score.append(score)
-        else:
-          submission.score.append(score)
-
-        submission.put()
-
-        return score
 
 class AnalyticsAPI(APIResource):
     """
@@ -1925,3 +2037,4 @@ class AnalyticsAPI(APIResource):
         return (201, 'success', {
             'key': job.job_dump.key.id()
         })
+

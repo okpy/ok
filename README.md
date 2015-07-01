@@ -40,7 +40,8 @@ Local Server
 To run the server locally:
 
 ```bash
-$ cd server
+$ source activate_server.sh 
+$ bower install  # to install frontend CSS/JS libraries
 $ ./start_server
 ```
 
@@ -49,6 +50,7 @@ Deploying
 To deploy the current branch:
 
 ```bash
+$ bower install 
 $ gcloud auth login
 $ appcfg.py update
 ```

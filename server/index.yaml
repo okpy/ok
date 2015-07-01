@@ -27,12 +27,6 @@ indexes:
   - name: created
     direction: desc
 
-- kind: Assignmentv2
-  properties:
-  - name: course
-  - name: created
-    direction: desc
-
 - kind: Backupv2
   properties:
   - name: assignment
@@ -101,11 +95,6 @@ indexes:
   - name: owner
   - name: created
     direction: desc
-
-- kind: Submissionv2
-  properties:
-  - name: assignment
-  - name: server_time
 
 - kind: Submissionv2
   properties:
