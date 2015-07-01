@@ -334,16 +334,6 @@ def seed():
     score_seed_submission(final3, 1, "Awesome job, group 3!", staff[8]) 
     subms.append(group3_subm)
 
-    # Make this one be a final submission though.
-    # subm = make_seed_submission(assign, group_members[1], True)
-    # subm.put()
-    # subms.append(subm)
-    
-
-    # scheme final
-    # subm = make_seed_scheme_submission(assign2, group_members[1], True)
-    # subm.put()
-
     # Now create indiviual submission
     for i in range(9):
         subm = make_seed_submission(assign, students[i])

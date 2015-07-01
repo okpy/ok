@@ -1230,11 +1230,15 @@ class FinalSubmission(Base):
         else: 
             members = [self.submitter]
         for member in members:
-            email = member.get().email[0]
+            mem_email = member.get().email[0]
+            grader_email = None
+            
             for score in self.submission.get().score:
-                all_scores.append([email,
+                if score.grader:
+                    grader_email = score.grader.get().email[0]
+                all_scores.append([mem_email,
                         score.score, 
                         score.message,
-                        score.grader.get().email[0],
+                        grader_email,
                         score.tag])
         return all_scores
