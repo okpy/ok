@@ -1892,7 +1892,7 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        new_order = [models.User.lookup(user['email'][0]).key
+        new_order = [models.User.lookup(user['email']).key
                      for user in data['order']]
 
         if len(new_order) != len(group.member):
