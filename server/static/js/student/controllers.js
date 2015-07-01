@@ -206,8 +206,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         order = arr.concat()
         for (var i=0;i<arr.length;i++) {
             member = arr[i];
-            order.splice(member.i, 1, member)
-            member.email = member.email[0];
+            order.splice(member.i, 1, member.email[0]);
         }
         
         Group.reorder({

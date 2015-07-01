@@ -1892,8 +1892,8 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        new_order = [models.User.lookup(user['email']).key
-                     for user in data['order']]
+        new_order = [models.User.lookup(email).key
+                     for email in data['order']]
 
         if len(new_order) != len(group.member):
             raise BadValueError('Incorrect number of group members.')
