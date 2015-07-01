@@ -208,18 +208,20 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             member = arr[i];
             order.splice(member.i, 1, member)
         }
-        console.log(order);
+        
         Group.reorder({
             id: group.group_info.id,
             order: order
         },
         function (response) {
+            $scope.closeDetails();
+            $scope.reloadView();
             $window.swal({
                 title: "Order saved",
                 text: "The order you specified has been saved.",
                 timer: 3500,
                 type: "success"
-            })
+            });
         },
         function (error) {
             $window.swal('Uh oh', 'There was issue saving the new order.', 'error')
