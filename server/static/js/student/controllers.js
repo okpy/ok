@@ -149,6 +149,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         if (assign.submissions) {
             $scope.getSubmissions(assign, false);
         }
+        
+        $scope.labelPartners(assign);
       }
       $scope.initAssignments = function(assignments) {
         $scope.assignments = assignments;
@@ -157,6 +159,77 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               $scope.assignInit(assignments[i]);
           }
       }
+
+      $scope.labelPartners = function(assign) {
+        info = assign.group.group_info;
+        if (info !== null) {
+            arr = info.member;
+            for (var i = 0; i < arr.length; i++) {
+                member = arr[i];
+                member.i = i;
+                member.letter = String.fromCharCode(65 + i);
+            }
+        }
+      }
+      
+      $scope.initSortable = function(assign) {
+        $('.sortable').disableSelection();
+        $('.sortable').sortable({
+            update: function(event, ui) {
+                $scope.updatePartners(assign.group);
+            }
+        });
+      }
+      
+        $scope.updatePartners = function(group) {
+          info = group.group_info;
+          if (info !== null && info !== undefined) {
+              arr = info.member;
+              order = {}
+              i = 0;
+              $('.sidebar.active .sortable li').each(function() {
+                  order[$(this).data('i')] = i
+                  i += 1;
+              });
+              for (var i = 0; i< arr.length; i++) {
+                member = arr[i];
+                member.i = j = order[i];
+                member.letter = letter = String.fromCharCode(65 + order[i]);
+                $('.sortable li[data-i="'+i+'"]').find('.member-letter').html(letter);
+              }
+              return arr
+          }
+        }
+        
+      $scope.reorder = function(group) {
+        arr = $scope.updatePartners(group);
+        order = arr.concat()
+        for (var i=0;i<arr.length;i++) {
+            member = arr[i];
+            order.splice(member.i, 1, member.email[0]);
+        }
+        
+        Group.reorder({
+            id: group.group_info.id,
+            order: order
+        },
+        function (response) {
+            $scope.closeDetails();
+            $scope.reloadView();
+            $window.swal({
+                title: "Order saved",
+                text: "The order you specified has been saved.",
+                timer: 3500,
+                type: "success"
+            });
+        },
+        function (error) {
+            $window.swal('Uh oh', 'There was issue saving the new order.', 'error')
+        })
+      }
+      
+      $scope.reloadAssignments();
+      
       $scope.showComposition = function(score, backupId) {
         if (score) {
           $window.swal({title: 'Score: '+score.score+'/2',
@@ -183,6 +256,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.initAssignments(response.assignments);
+            $scope.initSortable();
           }, function (error) {
             $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
@@ -190,8 +264,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
 
         // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
-
-      $scope.reloadAssignments()
 
       $scope.removeMember = function(currGroup, member) {
             Group.removeMember({
@@ -345,6 +417,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $scope.currAssign = assign
             $('.container-fluid').addClass('active');
             $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
+            $scope.initSortable(assign);
         }
         
         $window.closeDetails = $scope.closeDetails = function closeDetails() {

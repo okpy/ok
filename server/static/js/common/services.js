@@ -221,6 +221,13 @@ app.factory('Group', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
+        },
+        reorder: {
+          url: '/api/v1/group/:id/reorder',
+          method: 'PUT',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
         }
       });
     }
