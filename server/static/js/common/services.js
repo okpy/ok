@@ -127,13 +127,6 @@ app.factory('FinalSubmission', ['$resource',
             return JSON.parse(data).data;
           }
         },
-        score: {
-          method: "POST",
-          url: '/api/v1/final_submission/:id/score',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
       });
     }
   ]);
@@ -173,6 +166,13 @@ app.factory('Assignment', ['$resource',
         },
         group: {
           url: '/api/v1/assignment/:id/group',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
+        autograde: {
+          method: "POST",
+          url: '/api/v1/assignment/:id/autograde',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
@@ -388,8 +388,8 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
-  
-  
+
+
 app.factory('Search', ['$resource',
     function($resource) {
       return $resource('/api/v1/search', {

@@ -32,12 +32,26 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
   }
   ]);
 
+
 app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
     $scope.existingAssign = Assignment.get({id: $stateParams.assignmentId});
     var future = new Date();
     future.setDate(future.getDate() + 31);
     due_date = lock_date = future.getFullYear() + '-' + future.getMonth() + '-' + future.getDate()
+
+    var autogradeScriptTemplate =
+       ['# run as bash, your zip will be extracted into the folder',
+        '#layout: info.py grade.sh student_files extracted_zip_files',
+        '# CHANGE these lines: ',
+        'mv lab01/* .;',
+        'python3 ok --local --score;',
+        "#Format: echo 'Score:\\n\\tTotal: 2.0\\nBlah\\nOk';",
+        "# Please cleanup your files",
+        "rm -rf ./*;"
+       ].join('\n');
+
+
     $scope.newAssign = {
       'due_date': due_date,
       'lock_date': lock_date,
@@ -45,7 +59,9 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
       'lock_time': '23:59:59.0000',
       'max_group_size': 2,
       'revisions': false,
-      'points': 4
+      'points': 4,
+      'autograding_enabled': false,
+      'grading_script_file': autogradeScriptTemplate
     };
     Course.get({
       id: $stateParams.courseId
@@ -70,13 +86,16 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
           'due_date': due_date_time,
           'course': $scope.newAssign.course.id,
           'revision': $scope.newAssign.revisions,
-          'lock_date': lock_date_time
+          'lock_date': lock_date_time,
+          'autograding_enabled': $scope.newAssign.autograding_enabled,
+          'grading_script_file': $scope.newAssign.grading_script_file,
+          'zip_file_url': $scope.newAssign.zip_file_url,
         },
           function (response) {
             $scope.courses = Course.query({},
               function (response) {
                 $window.swal("Assignment Created!",'','success');
-               $state.transitionTo('course.assignments' , {courseId: $scope.course.id} , { reload: true, inherit: true, notify: true });
+               $state.transitionTo('course.assignment.list' , {courseId: $scope.course.id} , { reload: true, inherit: true, notify: true });
              });
           }, function (error) {
             console.log('error')
@@ -91,7 +110,7 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
 
 app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
-  
+
     Course.get({
       id: $stateParams.courseId
     }, function(response) {
@@ -120,6 +139,21 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
       if (assign.revisions == null) {
         assign.revisions = false;
       }
+      if (assign.autograding_enabled == null) {
+        assign.autograding_enabled = false;
+      }
+      if (!assign.autograding_enabled) {
+        assign.grading_script_file =
+       ['# run as bash, your zip will be extracted into the folder',
+        '#layout: info.py grade.sh student_files extracted_zip_files',
+        '# CHANGE these lines: ',
+        'mv lab01/* .;',
+        'python3 ok --local --score;',
+        "#Format: echo 'Score:\\n\\tTotal: 2.0\\nBlah\\nOk';",
+        "# Please cleanup your files",
+        "rm -rf ./*;"
+       ].join('\n');
+      }
       $scope.initCourses(assign);
     }
 
@@ -141,26 +175,46 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
     $scope.editAssign = function () {
         var due_date_time = $scope.assign.due_date + ' ' + $scope.assign.due_time
         var lock_date_time = $scope.assign.lock_date + ' ' + $scope.assign.lock_time
-        Assignment.edit({
-          'id': $scope.assign.id,
-          'display_name': $scope.assign.display_name,
-          'name': $scope.assign.endpoint,
-          'points': $scope.assign.points,
-          'max_group_size': $scope.assign.max_group_size,
-          'templates': {},
-          'due_date': due_date_time,
-          'course': $scope.assign.course.id,
-          'revision': $scope.assign.revisions,
-          'lock_date': lock_date_time
-        },
+        var updatedAssign = {}
+        if (!$scope.assign.autograding_enabled) {
+          updatedAssign = {
+            'id': $scope.assign.id,
+            'display_name': $scope.assign.display_name,
+            'name': $scope.assign.endpoint,
+            'points': $scope.assign.points,
+            'max_group_size': $scope.assign.max_group_size,
+            'templates': {},
+            'due_date': due_date_time,
+            'course': $scope.assign.course.id,
+            'revision': $scope.assign.revisions,
+            'lock_date': lock_date_time,
+          }
+        } else {
+          updatedAssign = {
+            'id': $scope.assign.id,
+            'display_name': $scope.assign.display_name,
+            'name': $scope.assign.endpoint,
+            'points': $scope.assign.points,
+            'max_group_size': $scope.assign.max_group_size,
+            'templates': {},
+            'due_date': due_date_time,
+            'course': $scope.assign.course.id,
+            'revision': $scope.assign.revisions,
+            'lock_date': lock_date_time,
+            'autograding_enabled': $scope.assign.autograding_enabled,
+            'grading_script_file': $scope.assign.grading_script_file,
+            'zip_file_url': $scope.assign.zip_file_url,
+          }
+        }
+        Assignment.edit(updatedAssign,
           function (response) {
             $scope.assignments = Assignment.query({},
               function (response) {
               $window.swal("Assignment Updated!",'','success');
-              $state.transitionTo('course.assignments', {courseId: $scope.course.id}, {'reload': true})
+              $state.transitionTo('course.assignment.list', {courseId: $scope.course.id}, {'reload': true})
             });
           }, function (error) {
-            console.log('error')
+            console.log('error', error)
             $window.swal("Could not update assignment",'There was an error','error');
 
           }
@@ -244,12 +298,17 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }
 
   $scope.submitGrade = function() {
-    FinalSubmission.score({
-      id: $stateParams.finalId,
+    Submission.addScore({
+      id: $scope.backupId,
+      submission: $scope.submission.id,
       score: $scope.compScore,
       message: $scope.compMessage,
-      source: "composition"
-    }, $scope.goTo($scope.nextId));
+      key: "composition"
+    }, function (resp) {
+      $scope.goTo($scope.nextId)
+    }, function (err,msg) {
+      $window.swal({ title: "Uh-oh!", type: 'error',  text: "The grade wasnt submitted. "+msg})
+    });
   }
 
     // Goes to the next submission
@@ -356,7 +415,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
     $scope.courses = Course.query({});
   }]);
 
-  app.controller("CourseAssignmentsCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+  app.controller("CourseAssignmentListCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
     function($scope, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.reloadView = function() {
@@ -366,6 +425,35 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
          $scope.assignments = response
        });
      }
+
+     $scope.autograde = function (assign) {
+       $window.swal({title: "Enter your access token below",
+        text: "You can access it by running the following command in an ok folder \n"+
+          'python3 -c "import pickle; print(pickle.load(open(\'.ok_refresh\', \'rb\'))[\'access_token\'])"',
+        type: "input",
+        showCancelButton: true,
+        closeOnConfirm: true,
+        animation: "slide-from-top",
+        inputPlaceholder: "Paste your access token here. format: ya29.longcode"},
+        function(inputValue) {
+          if (inputValue === false) return false;
+          if (inputValue === "") {
+            swal.showInputError("You need to write something!");
+            return false
+          }
+          Assignment.autograde({
+            id: assign.id,
+            grade_final: true,
+            token: inputValue,
+          }, function(response) {
+             $window.swal('Success', 'Queued for autograding.', 'success');
+           }, function(error) {
+            $window.swal('Error', 'Could not autograde.', 'error')
+           });
+         });
+       }
+
+
 
      $scope.delete = function(assign) {
       $window.swal({
@@ -381,7 +469,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
           $scope.deleteAssignment(assign);
         });
       }
-      
+
       $scope.deleteAssignment = function(assign) {
         Assignment.delete({
            id: assign.id
@@ -392,7 +480,6 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
           $window.swal('Error', 'Could not delete assignment.', 'error')
          });
       }
-      
      $scope.reloadView();
    }]);
 

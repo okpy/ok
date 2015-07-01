@@ -471,6 +471,14 @@ class Course(Base):
         """Return a query for assignments."""
         return Assignment.query(Assignment.course == self.key)
 
+    def get_students(self, user):
+
+        query = Participant.query(
+            Participant.course == self.key,
+            Participant.role == 'student')
+        
+        return list(query.fetch())
+
 
 class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
@@ -486,6 +494,9 @@ class Assignment(Base):
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
     revision = ndb.BooleanProperty(default=False)
+    autograding_enabled = ndb.BooleanProperty(default=False)
+    grading_script_file = ndb.TextProperty()
+    zip_file_url = ndb.StringProperty()
 
     # TODO Add services requested
 
@@ -684,11 +695,6 @@ class Backup(Base):
             return bool(group and user.key in group.member)
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
-        if action == "grade":
-            if user.is_admin:
-              return True
-            course_key = backup.assignment.get().course
-            return Participant.has_role(user, course_key, STAFF_ROLE)
         if action == "index":
             if not user.logged_in:
                 return False
@@ -712,10 +718,10 @@ class Backup(Base):
 
 class Score(Base):
     """The score for a submission, either from a grader or autograder."""
+    tag = ndb.TextProperty() # E.g., "Partner 0" or "composition"
     score = ndb.IntegerProperty()
     message = ndb.TextProperty() # Plain text
-    grader = ndb.KeyProperty(User)
-    autograder = ndb.TextProperty()
+    grader = ndb.KeyProperty(User) # For autograders, the user who authenticated
 
 
 class Submission(Base):
@@ -726,7 +732,6 @@ class Submission(Base):
     assignment = ndb.ComputedProperty(lambda x: x.backup.get().assignment)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
     is_revision = ndb.BooleanProperty(default=False)
-
 
     def get_final(self):
         assignment = self.assignment
@@ -789,6 +794,13 @@ class Submission(Base):
 
     @classmethod
     def _can(cls, user, need, submission, query):
+        if need.action == "grade":
+            if not submission or not isinstance(submission, Submission):
+                raise ValueError("Need Submission instance for grade action")
+            if user.is_admin:
+                return True
+            course_key = submission.assignment.get().course
+            return Participant.has_role(user, course_key, STAFF_ROLE)
         return Backup._can(user, need, submission.backup.get() if submission else None, query)
 
 
@@ -931,6 +943,13 @@ class Group(Base):
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key
         return Group(member=[user_key], invited=[], assignment=assignment_key)
+
+    @classmethod
+    def lookup_by_assignment(cls, assignment):
+        """ Returns all groups with the given assignment """
+        if isinstance(assignment, Assignment):
+            assign_key = assignment.key
+        return Group.query(Group.assignment == assign_key).fetch()
 
     #@ndb.transactional
     def invite(self, email):
@@ -1196,3 +1215,27 @@ class FinalSubmission(Base):
     def _pre_put_hook(self):
         # TODO Remove when submitter is a computed property
         self.submitter = self.submission.get().submitter
+
+    def get_scores(self):
+        """ 
+        Return a list of lists of the format [[student, score, message, grader, tag]]
+        if the submission has been scored. Otherwise an empty list. 
+        If the submission is a group submission, there will be an element 
+        for each combination of student and score.
+        """
+        # TODO: get the most recent score for each tag. 
+        # Question: will all scores have a grader? In particular the scores from the autograder. 
+        all_scores = []
+        if self.group:
+            members = [member for member in self.group.get().member]
+        else: 
+            members = [self.submitter]
+        for member in members:
+            email = member.get().email[0]
+            for score in self.submission.get().score:
+                all_scores.append([email,
+                        score.score, 
+                        score.message,
+                        score.grader.get().email[0],
+                        score.tag])
+        return all_scores
