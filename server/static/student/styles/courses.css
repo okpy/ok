@@ -401,6 +401,7 @@ header {
     .sidebar {
         height:100%;
         width:100%;
+        min-width:400px;
         background-color:#FFF;
         padding:0 0 0 5px;
         margin-right:-1px;
