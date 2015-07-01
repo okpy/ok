@@ -1815,8 +1815,8 @@ class GroupAPI(APIResource):
             },
         'reorder': {
             'methods': {'PUT', 'POST'},
-            'web_args:': {
-                'order': Arg(dict, required=True)
+            'web_args': {
+                'order': Arg(list, required=True)
             }
         }
     }
@@ -1892,21 +1892,18 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        print(data)
+        new_order = [models.User.lookup(user['email'][0]).key
+                     for user in data['order']]
 
-        # new_order = data['order']
-        # 
-        # if len(new_order) != len(group.member):
-        #     raise BadValueError('Incorrect number of group members.')
-        # 
-        # for member in group.member:
-        #     if member not in new_order:
-        #         raise BadValueError('Intruding group member does not belong.')
-        #     
-        # group.member = new_order
-        # group.save()
+        if len(new_order) != len(group.member):
+            raise BadValueError('Incorrect number of group members.')
         
-            
+        for member in group.member:
+            if member not in new_order:
+                raise BadValueError('Intruding group member does not belong.')
+
+        group.member = new_order
+        group.put()
 
 
 class QueueAPI(APIResource):
