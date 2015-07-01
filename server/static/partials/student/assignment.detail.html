@@ -21,19 +21,23 @@
                 <a ng-if="assign.final.submission.score.length > 0"
                    ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"
                    class="link view-submission">Revision ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
-            <p class="blob-copy" 
-               ng-click="showComposition(assign.final.submission.score[0],assign.final.backup.id)" 
+            <p class="blob-copy"
+               ng-click="showComposition(assign.final.submission.score[0],assign.final.backup.id)"
                ng-if="assign.final.submission && assign.final.submission.score.length > 0">
                 Composition Score: {{ assign.final.submission.score[0].score}}/2</p>
         </div>
         <div ng-if="assign.group.group_info.member.length > 1">
             <h2 class="sidebar-subtitle">Group</h2>
-            <ul class="sidebar-list">
-                <li ng-repeat="member in assign.group.group_info.member">{{ member.email[0] }}
-                    <span class="close" ng-click="removeMember(assign.group.group_info, member)"><span class="icon-x">+</span></span>
+            <ul class="sidebar-list {{ assign.assignment.active ? 'sortable' : '' }}">
+                <li ng-repeat="member in assign.group.group_info.member"  data-i="{{ member.i }}">
+                    <span class="sidebar-member_label"><span class="member-letter">{{ member.letter }}</span>
+                        <span ng-if="assign.assignment.active" class="label right"><p>Drag to Reorder</p></span>
+                    </span>
+                    {{ member.email[0] }}
+                    <i class="fa fa-close" ng-if="assign.assignment.active" ng-click="removeMember(assign.group.group_info, member)"></i></span>
                 </li>
             </ul>
-            <a ng-click="" ng-if="assign.group.group_info.member.length > 0" class="action">Save</a>
+            <a ng-if="assign.assignment.active && assign.group.group_info.member.length > 0" class="action" ng-click="reorder(assign.group)">Save</a>
         </div>
         <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && !assign.group.invited">Invited Members</h2>
         <h2 class="sidebar-subtitle" ng-if="assign.group.group_info.invited.length > 0 && assign.group.invited">Group Invitation</h2>
@@ -51,13 +55,12 @@
                     <span class="icon-x">+</span></span>
             </li>
         </ul>
-        <form name="inviteGroup" ng-if="assign.assignment.max_group_size > 1 && (!assign.group.group_info || assign.group.group_info.member.length < assign.assignment.max_group_size)">
+        <form name="inviteGroup" ng-if="assign.assignment.max_group_size > 1 && (!assign.group.group_info || assign.group.group_info.member.length < assign.assignment.max_group_size) && assign.assignment.active">
             <h3 class="sidebar-subtitle">Invite to Group <span>(max {{ assign.assignment.max_group_size }} members)</span></h3>
-
             <input type="email" class="invite email" placeholder="ok@cs61a.org" ng-model="assign.invitee" required>
             <a ng-click="addMember(assign, assign.invitee)" class="action">Invite</a>
         </form>
-        
+
         <h2 class="sidebar-subtitle">Submissions</h2>
         <ul class="subms sidebar-list">
             <li ng-if="!assign.submissions || assign.submissions.length == 0">No submissions found.</li>
