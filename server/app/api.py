@@ -2017,11 +2017,39 @@ class QueuesAPI(APIResource):
     }
     
     def generate(self, user, data):
+        """ Splits up submissions among staff members """
         self.check_permissions(user, data)
+        
+        staff = self.grab_participants(user, data['staff'], data, 'STAFF')
+        students = self.grab_participants(user, data['students'], data, 'STUDENT')
+        
+        pass
 
+    def grab_participants(self, user, csv, data, type):
+        course = data['course']
+        if type == 'STAFF':
+            parts = CourseAPI().get_staff(course, user, data)
+        elif type == 'STUDENT':
+            parts = CourseAPI().get_students(course, user, data)
+        else:
+            raise BadValueError('Invalid key')
+        keys = [part.key for part in parts]
+        
+        if csv == '*':
+            lst = [key.get() for key in keys]
+        else:
+            break_csv = [k.strip() for k in csv.split(',')]
+            lst = [models.User.lookup(email) for email in break_csv]
+            usrs = [usr.key for usr in lst]
+            
+            for key in usrs:
+                if key not in keys:
+                    raise BadValueError('Invalid '+type)
+        
+        return lst
 
     def check_permissions(self, user, data):
-        course = data['course'].get()
+        course = data['course'] = data['course'].get()
 
         if user.key not in course.staff and not user.is_admin:
             raise Need('get').exception()
