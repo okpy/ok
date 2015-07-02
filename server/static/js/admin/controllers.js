@@ -242,12 +242,12 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
         $window.swal('Error', 'Could not load assignment. Wrong page?', 'error')
        });
     }
-    
     $scope.reloadQueues = function() {
         Assignment.queues({
             id: $stateParams.assignmentId
         },function (response) {
             $scope.queues = response;
+            console.log(response);
         }, function (err) {
             $window.swal('Error', 'Could not load queues. Maybe none exist?', 'error')
         });
@@ -259,7 +259,7 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
             assignment: $scope.assignment.id
         }, function (response) {
             $window.swal('Success', 'Queues generated', 'success');
-            $state.transitionTo("course.assignment.queue.list", {'courseId': $scope.course.id, 'assignmentId': $scope.assignment.id}, {'reload': true});
+            $scope.queues = response;
         }, function (err) {
             $window.swal('Error', 'Queues could not be generated.', 'error');
         });

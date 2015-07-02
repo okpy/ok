@@ -947,7 +947,7 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
 
-        return models.Queue.query(models.Queue.assignment == obj.key).get()
+        return models.Queue.query(models.Queue.assignment == obj.key).fetch()
 
 
 class SubmitNDBImplementation(object):
@@ -2062,6 +2062,8 @@ class QueuesAPI(APIResource):
             subm.queue = queues[i].key
             subm.put()
             i = (i + 1) % len(staff)
+            
+        return queues
 
     def check_permissions(self, user, data):
         course = data['course'].get()

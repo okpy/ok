@@ -417,6 +417,7 @@ app.factory('Queues', ['$resource',
       return $resource('/api/v1/queues', {
         }, {
           generate: {
+            isArray:true,
             method: 'POST',
             url: '/api/v1/queues/generate',
             transformResponse: function(data) {

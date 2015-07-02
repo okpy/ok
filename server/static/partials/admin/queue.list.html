@@ -26,23 +26,18 @@
     <table ts-wrapper ng-if="queues.length > 0" class="table table-responsive table-striped table-bordered">
       <tbody>
         <tr>
-          <th ts-criteria="display_name">Name</th>
-          <th ts-criteria="active" ts-default>Active</th>
-          <th ts-criteria="points | parseFloat">Points</th>
-          <th ts-criteria="due_date" ts-default>Due Date</th>
-          <th ts-criteria="lock_date">Lock Date</th>
-          <!-- Future Progress Bar -->
-          <th style="width: 15%">Endpoint</th>
-          <th>Scores</th>
-          <th>Edit</th>
-          <th>Delete</th>
-          <th>Autograde</th>
-          <th>Comp Qs</th>
+          <th>Name</th>
+          <th>Submissions</th>
+          <th>Complete?</th>
         </tr>
 
-        <tr ng-repeat="queue for queues" ts-repeat>
-          <td>{{ queue.owner.email }}</td>
-          <td></td>
+        <tr ng-repeat="queue in queues" ts-repeat>
+          <td>{{ queue.owner }}</td>
+          <th>{{ queue.submissions.length }}</th>
+          <td>
+            <span class="badge bg-blue" ng-if="queue.graded == queue.submissions.length">Yes</span>
+            <span class="badge" ng-if="queue.graded < queue.submissions.length">No</span>
+          </td>
           </tr>
         </tbody>
       </table>
