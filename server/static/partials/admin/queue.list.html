@@ -15,8 +15,6 @@
     <h3 class="box-title" ng-if="queues.length == 0" >No Composition Queues</h3>
     <h3 class="box-title" ng-if="queues.length > 0">Composition Queues</h3>
     <div class="box-tools" style="float:right;">
-      <!--<a ng-click="#"><button class="btn btn-primary btn-sm"><i class="fa fa-plus"> Add Queue</i></button></a>-->
-      <!--<a ui-sref="course.assignment.queue.generate({courseId:course.id, assignmentId:assignment.id})"><button class="btn btn-primary btn-sm"><i class="fa fa-flash"> Generate Queues</i></button></a>-->
       <button class="btn btn-primary btn-sm" ng-click="generateQueues()"><i class="fa fa-flash"> Generate Queues</i></button>
     </div>
 
@@ -29,14 +27,23 @@
           <th>Name</th>
           <th>Submissions</th>
           <th>Complete?</th>
+          <th>View</th>
         </tr>
 
         <tr ng-repeat="queue in queues" ts-repeat>
           <td>{{ queue.owner }}</td>
           <th>{{ queue.submissions.length }}</th>
           <td>
-            <span class="badge bg-blue" ng-if="queue.graded == queue.submissions.length">Yes</span>
+            <span class="badge" ng-if="queue.submissions.length == 0">Empty</span>
+            <span class="badge bg-blue" ng-if="queue.submissions.length != 0 && queue.graded == queue.submissions.length">Yes</span>
             <span class="badge" ng-if="queue.graded < queue.submissions.length">No</span>
+          </td>
+          <td>
+            <a ui-sref="queue.detail({queueId: queue.id})">
+              <button class="btn btn-primary btn-sm">
+                <i class="fa fa-eye"></i>
+              </button>
+            </a>
           </td>
           </tr>
         </tbody>

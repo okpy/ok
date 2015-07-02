@@ -2021,8 +2021,6 @@ class QueuesAPI(APIResource):
         'generate': {
             'methods': set(['POST']),
             'web_args': {
-                # 'students': Arg(str, default='*'),
-                # 'staff': Arg(str, default='*'),
                 'course': KeyArg('Course', required=True),
                 'assignment': KeyArg('Assignment', required=True)
             }
