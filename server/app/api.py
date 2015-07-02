@@ -440,13 +440,16 @@ class ParticipantAPI(APIResource):
         return json.dumps(data)
 
     def check(self, emails, course, role):
+        parts = []
         for email in emails:
-            if not models.Participant.has_role(
+            part = models.Participant.has_role(
                 models.User.lookup(email).key,
                 course,
-                role
-            ):
+                role)
+            if not part:
                 raise BadValueError('Check failed.')
+            parts.append(part)
+        return parts
 
 
 class UserAPI(APIResource):
@@ -2030,9 +2033,13 @@ class QueuesAPI(APIResource):
         """ Splits up submissions among staff members """
         self.check_permissions(user, data)
         
-        staff = self.grab_participants(user, data['staff'], data, 'STAFF')
-        students = self.grab_participants(user, data['students'], data, 'STUDENT')
+        listify = lambda string: [k.strip() for k in string.split(',')]
+        staff, students = listify(data['staff']), listify(data['students'])
+        course = data['course'].get()
         
+        staff = self.participants(staff[0] == '*', STAFF_ROLE, staff, course.key)
+        students = self.participants(students[0] == '*', STUDENT_ROLE, students, course.key)
+
         subms = []
         
         for student in students:
@@ -2054,31 +2061,17 @@ class QueuesAPI(APIResource):
         print('SUBMS :'+str(len(subms)))
         print('QUEUES :'+str(len(queues)))
 
-    def grab_participants(self, user, csv, data, type):
-        course = data['course']
-        if type == 'STAFF':
-            parts = CourseAPI().get_staff(course, user, data)
-        elif type == 'STUDENT':
-            parts = CourseAPI().get_students(course, user, data)
+
+    def participants(self, all, role, emails, course_key):
+        if all:
+            return models.Participant.query(
+                models.Participant.role == role,
+                models.Participant.course == course_key)
         else:
-            raise BadValueError('Invalid key')
-        keys = [part.key for part in parts]
-        
-        if csv == '*':
-            lst = [key.get() for key in keys]
-        else:
-            break_csv = [k.strip() for k in csv.split(',')]
-            lst = [models.User.lookup(email) for email in break_csv]
-            usrs = [usr.key for usr in lst]
-            
-            for key in usrs:
-                if key not in keys:
-                    raise BadValueError('Invalid '+type)
-        
-        return lst
+            return ParticipantAPI().check(emails, course_key, role)
 
     def check_permissions(self, user, data):
-        course = data['course'] = data['course'].get()
+        course = data['course'].get()
 
         if user.key not in course.staff and not user.is_admin:
             raise Need('get').exception()
