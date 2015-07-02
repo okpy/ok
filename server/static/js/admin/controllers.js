@@ -287,8 +287,10 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
             staff: $scope.newQs.staff
         }, function (response) {
             $window.swal('Success', 'Queues generated', 'success');
-            $scope.transitionTo();
-        })
+            $state.transitionTo("course.assignment.queue.list", {'courseId': $scope.course.id, 'assignmentId': $scope.assignment.id}, {'reload': true});
+        }, function (err) {
+            $window.swal('Error', 'Queues could not be generated.', 'error');
+        });
     }
     
     $scope.reloadAssignment();
