@@ -2021,54 +2021,47 @@ class QueuesAPI(APIResource):
         'generate': {
             'methods': set(['POST']),
             'web_args': {
-                'students': Arg(str, default='*'),
-                'staff': Arg(str, default='*'),
+                # 'students': Arg(str, default='*'),
+                # 'staff': Arg(str, default='*'),
                 'course': KeyArg('Course', required=True),
-                'assign': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True)
             }
         }
     }
     
     def generate(self, user, data):
         """ Splits up submissions among staff members """
+        
         self.check_permissions(user, data)
+        course, assignment = data['course'].get(), data['assignment'].get()
+        userify = lambda parts: [part.user.get() for part in parts]
         
-        listify = lambda string: [k.strip() for k in string.split(',')]
-        staff, students = listify(data['staff']), listify(data['students'])
-        course = data['course'].get()
-        
-        staff = self.participants(staff[0] == '*', STAFF_ROLE, staff, course.key)
-        students = self.participants(students[0] == '*', STUDENT_ROLE, students, course.key)
+        staff = userify(models.Participant.query(
+            models.Participant.role == STAFF_ROLE,
+            models.Participant.course == course.key).fetch())
 
-        subms = []
+        students = userify(models.Participant.query(
+            models.Participant.role == STUDENT_ROLE,
+            models.Participant.course == course.key).fetch())
+        
+        subms, queues = [], []
         
         for student in students:
-            pass
-        queues = []
+            subm = models.User.get_final_submission(student, assignment.key)
+            if subm:
+                subms.append(subm)
         
         for instr in staff:
-            q = models.Queue(models.Queue.owner == instr.key)
+            q = models.Queue(owner=instr.key, assignment=assignment.key)
             q.put()
             queues.append(q)
 
         i = 0
         
         for subm in subms:
-            subm.queue = queues[i]
+            subm.queue = queues[i].key
             subm.put()
             i = (i + 1) % len(staff)
-
-        print('SUBMS :'+str(len(subms)))
-        print('QUEUES :'+str(len(queues)))
-
-
-    def participants(self, all, role, emails, course_key):
-        if all:
-            return models.Participant.query(
-                models.Participant.role == role,
-                models.Participant.course == course_key)
-        else:
-            return ParticipantAPI().check(emails, course_key, role)
 
     def check_permissions(self, user, data):
         course = data['course'].get()

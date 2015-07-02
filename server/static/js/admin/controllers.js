@@ -224,8 +224,8 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
   }
   ]);
   
-app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queue",
-  function ($scope, $window, $state, $stateParams, Assignment, Course, Queue) {
+app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queues",
+  function ($scope, $window, $state, $stateParams, Assignment, Course, Queues) {
     Course.get({
       id: $stateParams.courseId
     }, function(response) {
@@ -253,10 +253,23 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
         });
     }
     
+    $scope.generateQueues = function() {
+        Queues.generate({
+            course: $scope.course.id,
+            assignment: $scope.assignment.id
+        }, function (response) {
+            $window.swal('Success', 'Queues generated', 'success');
+            $state.transitionTo("course.assignment.queue.list", {'courseId': $scope.course.id, 'assignmentId': $scope.assignment.id}, {'reload': true});
+        }, function (err) {
+            $window.swal('Error', 'Queues could not be generated.', 'error');
+        });
+    }
+    
     $scope.reloadAssignment();
     $scope.reloadQueues();
 }])
 
+// obsolete for now, may need for more composition queue functionality
 app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queues",
   function ($scope, $window, $state, $stateParams, Assignment, Course, Queues) {
     $scope.newQs = {
@@ -283,6 +296,7 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
     $scope.generateQs = function() {
         Queues.generate({
             course: $scope.course.id,
+            assignment: $scope.assignment.id,
             students: $scope.newQs.students,
             staff: $scope.newQs.staff
         }, function (response) {
