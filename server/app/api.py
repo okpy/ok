@@ -2051,7 +2051,8 @@ class QueuesAPI(APIResource):
         
         for instr in staff:
             q = models.Queue(owner=instr.key, assignment=assignment.key)
-            q.put()
+            if not q.get():
+                q.put()
             queues.append(q)
 
         i = 0

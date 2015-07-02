@@ -1183,6 +1183,8 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParam
       id: $stateParams.queueId
     }, function (result) {
       $scope.queue = result;
+      $scope.assignment = $scope.queue.assignment.id;
+      $scope.course = $scope.assignment.course;
       result['submissions'].sort(function(a, b) {
         return a.id - b.id;
       });
