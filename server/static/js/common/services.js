@@ -411,3 +411,19 @@ app.factory('Search', ['$resource',
       )
     }
   ]);
+
+app.factory('Queues', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/queues', {
+        }, {
+          generate: {
+            method: 'POST',
+            url: '/api/v1/queues/generate',
+            transformResponse: function(data) {
+              return JSON.parse(data).data;
+            }
+          }
+        }
+      )
+    }
+  ]);

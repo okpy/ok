@@ -257,8 +257,8 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
     $scope.reloadQueues();
 }])
 
-app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queue",
-  function ($scope, $window, $state, $stateParams, Assignment, Course, Queue) {
+app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queues",
+  function ($scope, $window, $state, $stateParams, Assignment, Course, Queues) {
     $scope.newQs = {
         'students': '*',
         'staff': '*'
@@ -280,9 +280,14 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
        });
     }
     
-    $scope.generateQueues = function() {
-        Queue.generate({
-            
+    $scope.generateQs = function() {
+        Queues.generate({
+            course: $scope.course.id,
+            students: $scope.newQs.students,
+            staff: $scope.newQs.staff
+        }, function (response) {
+            $window.swal('Success', 'Queues generated', 'success');
+            $scope.transitionTo();
         })
     }
     

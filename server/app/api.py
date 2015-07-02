@@ -2011,7 +2011,7 @@ class QueuesAPI(APIResource):
             'web_args': {
                 'students': Arg(str, default='*'),
                 'staff': Arg(str, default='*'),
-                'courseId': KeyArg('Course', required=True)
+                'course': KeyArg('Course', required=True)
             }
         }
     }
