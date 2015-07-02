@@ -135,7 +135,6 @@ def BooleanArg(**kwargs):
     :return: (Arg) type of argument
     """
     def parse_bool(arg):
-        arg = arg.lower()
         if isinstance(arg, bool):
             return arg
         if arg == 'false':
