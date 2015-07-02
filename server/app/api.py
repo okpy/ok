@@ -2037,8 +2037,17 @@ class QueuesAPI(APIResource):
         staff = userify(models.Participant.query(
             models.Participant.role == STAFF_ROLE,
             models.Participant.course == course.key).fetch())
-        
-        queues = []
+
+        students = userify(models.Participant.query(
+            models.Participant.role == STUDENT_ROLE,
+            models.Participant.course == course.key).fetch())
+
+        subms, queues = [], []
+
+        for student in students:
+            subm = models.User.get_final_submission(student, assignment.key)
+            if subm:
+                subms.append(subm)
         
         for instr in staff:
             q = models.Queue.query(
@@ -2052,7 +2061,12 @@ class QueuesAPI(APIResource):
                 q.put()
             queues.append(q)
 
-        deferred.defer(add_to_grading_queues, assignment.key)
+        i = 0
+
+        for subm in subms:
+            subm.queue = queues[i].key
+            subm.put()
+            i = (i + 1) % len(staff)
             
         return queues
 
