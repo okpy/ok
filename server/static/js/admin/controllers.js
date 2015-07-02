@@ -224,20 +224,28 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
   }
   ]);
   
-app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
-  function ($scope, $window, $state, $stateParams, Assignment, Course) {
+app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queue",
+  function ($scope, $window, $state, $stateParams, Assignment, Course, Queue) {
     Course.get({
       id: $stateParams.courseId
     }, function(response) {
       $scope.course = response;
     });
 
+    // combine into one call?
     $scope.reloadAssignment = function() {
       Assignment.get({
         id: $stateParams.assignmentId
       }, function (response) {
         $scope.assignment = response;
+        $scope.reloadQueues();
       });
+    }
+    
+    $scope.reloadQueues = function() {
+        Assignment.queues(function (response) {
+            $scope.queues = queues;
+        });
     }
 }])
 

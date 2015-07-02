@@ -183,6 +183,13 @@ app.factory('Assignment', ['$resource',
           transformResponse: function(data) {
             return JSON.parse(data).data;
           }
+        },
+        queues: {
+          method: "POST",
+          url: '/api/v1/assignment/:id/queues',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
         }
       });
     }
