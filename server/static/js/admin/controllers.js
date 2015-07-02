@@ -257,6 +257,27 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
     $scope.reloadQueues();
 }])
 
+app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queue",
+  function ($scope, $window, $state, $stateParams, Assignment, Course, Queue) {
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
+
+    $scope.reloadAssignment = function() {
+      Assignment.get({
+        id: $stateParams.assignmentId
+      }, function (response) {
+        $scope.assignment = response;
+      }, function (err) {
+        $window.swal('Error', 'Could not load assignment. Wrong page?', 'error')
+       });
+    }
+    
+    $scope.reloadAssignment();
+}]);
+
 app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
   function ($scope, $state, Submission) {
     $scope.itemsPerPage = 3;

@@ -206,6 +206,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
         templateUrl:'/static/partials/admin/queue.list.html',
         controller: "AssignmentQueueListCtrl"
     }
+    
+    var courseAssignmentQueueGenerate = {
+        name: 'course.assignment.queue.generate',
+        url: '/generate',
+        templateUrl:'/static/partials/admin/queue.generate.html',
+        controller: "AssignmentQueueGenerateCtrl"
+    }
 
     var courseNew = {
       name: 'course.new',
@@ -368,6 +375,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(courseAssignmentEdit).
       state(courseAssignmentQueueBase).
       state(courseAssignmentQueueList).
+      state(courseAssignmentQueueGenerate).
       state(courseList).
       state(courseDetail).
       state(courseNew).
