@@ -439,6 +439,15 @@ class ParticipantAPI(APIResource):
                 })
         return json.dumps(data)
 
+    def check(self, emails, course, role):
+        for email in emails:
+            if not models.Participant.has_role(
+                models.User.lookup(email).key,
+                course,
+                role
+            ):
+                raise BadValueError('Check failed.')
+
 
 class UserAPI(APIResource):
     """
