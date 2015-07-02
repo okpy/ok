@@ -32,9 +32,9 @@
       <h3 class="box-title" ng-if="submissions.length > 0">All Submissions</h3>
       <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
       <div class="box-tools" style="float:right;">
-          <a href="/api/v1/search/download?courseId={{course.id}}&all=true&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button></a>
-          <a href="/api/v1/search/download?courseId={{course.id}}&all=false&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" href="/api/v1/search/download"> <i class="fa fa-download"></i>  Download Page</button></a>
-          <a href="/api/v1/search/download?courseId={{course.id}}&all=true&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1" href="/api/v1/search/download"> <i class="fa fa-download"></i>  Download</button></a>
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=True&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button></a>
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=False&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1"> <i class="fa fa-download"></i>  Download Page</button></a>
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=True&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1"> <i class="fa fa-download"></i>  Download</button></a>
       </div>
     </div>
     <!-- /.box-header -->
