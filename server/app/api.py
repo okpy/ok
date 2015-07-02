@@ -775,6 +775,9 @@ class AssignmentAPI(APIResource):
                 'grade_final': BooleanArg(),
                 'token': Arg(str)
             }
+        },
+        'queues': {
+            'methods': set(['POST']),
         }
     }
 
@@ -925,6 +928,14 @@ class AssignmentAPI(APIResource):
       else:
         # TODO
         raise BadValueError('Only supports batch uploading.')
+
+    def queues(self, obj, user, data):
+        """ Return all composition queues for this assignment """
+        need = Need('staff')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+        
+        return models.Queue.query(models.Queue.assignment == obj.key)
 
 
 class SubmitNDBImplementation(object):
