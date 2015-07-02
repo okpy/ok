@@ -238,15 +238,23 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
         id: $stateParams.assignmentId
       }, function (response) {
         $scope.assignment = response;
-        $scope.reloadQueues();
-      });
+      }, function (err) {
+        $window.swal('Error', 'Could not load assignment. Wrong page?', 'error')
+       });
     }
     
     $scope.reloadQueues = function() {
-        Assignment.queues(function (response) {
-            $scope.queues = queues;
+        Assignment.queues({
+            id: $stateParams.assignmentId
+        },function (response) {
+            $scope.queues = response;
+        }, function (err) {
+            $window.swal('Error', 'Could not load queues. Maybe none exist?', 'error')
         });
     }
+    
+    $scope.reloadAssignment();
+    $scope.reloadQueues();
 }])
 
 app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",

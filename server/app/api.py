@@ -777,7 +777,7 @@ class AssignmentAPI(APIResource):
             }
         },
         'queues': {
-            'methods': set(['POST']),
+            'methods': set(['GET']),
         }
     }
 
@@ -934,8 +934,8 @@ class AssignmentAPI(APIResource):
         need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
-        
-        return models.Queue.query(models.Queue.assignment == obj.key)
+
+        return models.Queue.query(models.Queue.assignment == obj.key).get()
 
 
 class SubmitNDBImplementation(object):

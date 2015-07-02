@@ -21,7 +21,14 @@
   </div><!-- /.box-header -->
 
   <div class="box-body no-padding table-responsive">
-    <table ts-wrapper ng-if="assignments.length > 0" class="table table-responsive table-striped table-bordered">
+    <table ts-wrapper ng-if="queues.length == 0" class="table table-responsive table-striped table-bordered">
+      <tbody>
+        <tr>
+          <td>No queues found!</td>
+        </tr>
+      </tbody>
+    </table>
+    <table ts-wrapper ng-if="queues.length > 0" class="table table-responsive table-striped table-bordered">
       <tbody>
         <tr>
           <th ts-criteria="display_name">Name</th>
@@ -39,7 +46,8 @@
         </tr>
 
         <tr ng-repeat="queue for queues" ts-repeat>
-
+          <td>{{ queue.owner.email }}</td>
+          <td></td>
           </tr>
         </tbody>
       </table>

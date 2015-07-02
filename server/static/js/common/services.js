@@ -185,7 +185,7 @@ app.factory('Assignment', ['$resource',
           }
         },
         queues: {
-          method: "POST",
+          isArray:true,
           url: '/api/v1/assignment/:id/queues',
           transformResponse: function(data) {
             return JSON.parse(data).data;
