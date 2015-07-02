@@ -192,6 +192,20 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/assignment.edit.html',
       controller: "AssignmentEditCtrl"
     }
+    
+    var courseAssignmentQueueBase = {
+        name: 'course.assignment.queue',
+        abstract: true,
+        url: '/queues/:assignmentId',
+        templateUrl:'/static/partials/admin/queue.base.html'
+    }
+    
+    var courseAssignmentQueueList = {
+        name: 'course.assignment.queue.list',
+        url: '/',
+        templateUrl:'/static/partials/admin/queue.list.html',
+        controller: "AssignmentQueueListCtrl"
+    }
 
     var courseNew = {
       name: 'course.new',
@@ -352,6 +366,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(courseAssignmentList).
       state(courseAssignmentCreate).
       state(courseAssignmentEdit).
+      state(courseAssignmentQueueBase).
+      state(courseAssignmentQueueList).
       state(courseList).
       state(courseDetail).
       state(courseNew).

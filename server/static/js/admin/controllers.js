@@ -223,6 +223,23 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
     }
   }
   ]);
+  
+app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $state, $stateParams, Assignment, Course) {
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
+
+    $scope.reloadAssignment = function() {
+      Assignment.get({
+        id: $stateParams.assignmentId
+      }, function (response) {
+        $scope.assignment = response;
+      });
+    }
+}])
 
 app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
   function ($scope, $state, Submission) {
