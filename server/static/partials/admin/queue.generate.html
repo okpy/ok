@@ -20,12 +20,12 @@
     <form >
       <div class="box-body">
         <div class="form-group">
-          <label>Assignment Name</label>
-          <input ng-model="queue." type="text" class="form-control input-lg" placeholder="Scheme Project">
+          <label>Student Emails (CSV) <a ui-sref="students.list({courseId:course.id})">All Students</a></label>
+          <input ng-model="newQ.students" type="text" class="form-control input-lg" placeholder="bob@doe.com, apples@okpy.org">
         </div>
         <div class="form-group">
-          <label>Endpoint</label>
-          <input ng-model="newAssign.endpoint" type="text" class="form-control input-lg" placeholder="cal/cs61a/sp15/scheme">
+          <label>Staff Emails (CSV) <a ui-sref="staff.list({courseId:course.id})">All Staff</a></label>
+          <input ng-model="newQ.staff" type="text" class="form-control input-lg" placeholder="admin@okpy.org, apples@okpy.org">
         </div>
          <button ng-click="createAssign()" class="btn btn-block btn-primary btn-lg">Generate Queues</button>
 

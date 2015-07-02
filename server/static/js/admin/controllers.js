@@ -259,6 +259,11 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
 
 app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queue",
   function ($scope, $window, $state, $stateParams, Assignment, Course, Queue) {
+    $scope.newQ = {
+        'students': '*',
+        'staff': '*'
+    }
+  
     Course.get({
       id: $stateParams.courseId
     }, function(response) {
