@@ -2011,7 +2011,8 @@ class QueuesAPI(APIResource):
             'web_args': {
                 'students': Arg(str, default='*'),
                 'staff': Arg(str, default='*'),
-                'course': KeyArg('Course', required=True)
+                'course': KeyArg('Course', required=True),
+                'assign': KeyArg('Assignment', required=True)
             }
         }
     }
@@ -2023,7 +2024,26 @@ class QueuesAPI(APIResource):
         staff = self.grab_participants(user, data['staff'], data, 'STAFF')
         students = self.grab_participants(user, data['students'], data, 'STUDENT')
         
-        pass
+        subms = []
+        
+        for student in students:
+            pass
+        queues = []
+        
+        for instr in staff:
+            q = models.Queue(models.Queue.owner == instr.key)
+            q.put()
+            queues.append(q)
+
+        i = 0
+        
+        for subm in subms:
+            subm.queue = queues[i]
+            subm.put()
+            i = (i + 1) % len(staff)
+
+        print('SUBMS :'+str(len(subms)))
+        print('QUEUES :'+str(len(queues)))
 
     def grab_participants(self, user, csv, data, type):
         course = data['course']
