@@ -259,7 +259,7 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
 
 app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queue",
   function ($scope, $window, $state, $stateParams, Assignment, Course, Queue) {
-    $scope.newQ = {
+    $scope.newQs = {
         'students': '*',
         'staff': '*'
     }
@@ -278,6 +278,12 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
       }, function (err) {
         $window.swal('Error', 'Could not load assignment. Wrong page?', 'error')
        });
+    }
+    
+    $scope.generateQueues = function() {
+        Queue.generate({
+            
+        })
     }
     
     $scope.reloadAssignment();

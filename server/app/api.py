@@ -1998,6 +1998,34 @@ class QueueAPI(APIResource):
         ent.assigned_staff = [models.User.get_or_insert(
             user.id()).key for user in ent.assigned_staff]
         return ent
+    
+    
+class QueuesAPI(APIResource):
+    """ API resource for sets of queues """
+    
+    contains_entities = False
+
+    methods = {
+        'generate': {
+            'methods': set(['POST']),
+            'web_args': {
+                'students': Arg(str, default='*'),
+                'staff': Arg(str, default='*'),
+                'courseId': KeyArg('Course', required=True)
+            }
+        }
+    }
+    
+    def generate(self, user, data):
+        self.check_permissions(user, data)
+
+
+    def check_permissions(self, user, data):
+        course = data['course'].get()
+
+        if user.key not in course.staff and not user.is_admin:
+            raise Need('get').exception()
+    
 
 class FinalSubmissionAPI(APIResource):
     """
