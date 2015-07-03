@@ -556,5 +556,30 @@ class SearchAPITest(APIBaseTestCase):
         tokens = self.API.tokenize(query)
         self.assertEquals(tokens[0], ('assignment', '', '', 'Hog Project'))
 
+    def test_multiple_flags(self):
+        """ Tests that the multiple groups can be parsed together. """
+        query = '-assignment Hog -date --before 2015-06-22'
+        tokens = self.API.tokenize(query)
+        self.assertEquals(tokens[0], ('assignment', '', '', 'Hog'))
+        self.assertEquals(tokens[1], ('date', '--before', 'before', '2015-06-22'))
+        
+    def test_datatype_int(self):
+        """ Tests that integers are parsed normally. """
+        query = '-price 10'
+        tokens = self.API.tokenize(query)
+        self.assertEquals(tokens[0], ('price', '', '', '10'))
+        
+    def test_datatype_boolean(self):
+        """ Tests that booleans are parsed normally. """
+        query = '-pricey true'
+        tokens = self.API.tokenize(query)
+        self.assertEquals(tokens[0], ('pricey', '', '', 'true'))
+
+    def test_single_character_arg(self):
+        """ Tests that an arg with only length one can be parsed normally. """
+        query = '-price 1'
+        tokens = self.API.tokenize(query)
+        self.assertEquals(tokens[0], ('price', '', '', '1'))
+
 if __name__ == '__main__':
     unittest.main()
