@@ -22,7 +22,7 @@ angular.module('ErrorCatcher', [])
   }]);
 
 
-var app = angular.module('student', ['ngResource', 'ErrorCatcher', 'ui.router', 'angular-loading-bar', 'ui.bootstrap', 'angularMoment']);
+var app = angular.module('student', ['ngResource', 'ErrorCatcher', 'ui.router', 'angular-loading-bar', 'angularMoment']);
 
 angular.module('student').constant('angularMomentConfig', {
     timezone: 'America/Los_Angeles'
