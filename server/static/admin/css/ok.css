@@ -120,4 +120,43 @@
   background-color: #fff;
 }
 
-
+.badge {
+    position:relative;
+    cursor:pointer;
+}
+    .badge:hover .score-blurb {
+        display:block
+    }
+.score-blurb {
+    position:absolute;
+    bottom:100%;
+    min-width:125px;
+    border-radius:2px;
+    background-color:#333;
+    box-sizing:border-box;
+    padding:10px;
+    text-align:left;
+    left:-60px;
+    margin-bottom:5px;
+    display:none;
+}
+    .score-blurb label {
+        font-size:0.9em;
+        color:rgba(255,255,255,0.5);
+        text-transform:uppercase;
+    }
+    .score-blurb p {
+        font-size:1.15em;
+    }
+    .score-blurb::before {
+        content:"";
+        width:0;
+        height:0;
+        border-top:3px solid #333;
+        border-left:3px solid transparent;
+        border-right:3px solid transparent;
+        position:absolute;
+        top:100%;
+        left:50%;
+        margin-left:-2px;
+    }

@@ -125,6 +125,13 @@ def seed():
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
+
+        score = models.Score(
+            score=10
+        )
+
+        score.put()
+
         backup = models.Backup(
             messages=messages,
             assignment=assignment.key,
