@@ -404,7 +404,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
                 });
                 $scope.reloadView();
           }, function (err) {
-            $window.swal("Oops...", "Can't add that user to your group.    Is that the right email? They might already be in a group or may not be in the course.", "error");
+            console.log(err);
+            $window.swal("Oops.", err.data.message, "error");
          });
         }
       };

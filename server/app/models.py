@@ -290,8 +290,9 @@ class User(Base):
 
         info = {'user': self}
         info['assignments'] = []
+        assignments = sorted(course.assignments)
 
-        for assignment in course.assignments:
+        for assignment in assignments:
             assign_info = {}
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
@@ -484,6 +485,7 @@ class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
     name = ndb.StringProperty() # E.g., cal/cs61a/fa14/proj1
     display_name = ndb.StringProperty()
+    url = ndb.StringProperty()
     points = ndb.FloatProperty()
     templates = ndb.JsonProperty()
     creator = ndb.KeyProperty(User)
@@ -497,7 +499,7 @@ class Assignment(Base):
     autograding_enabled = ndb.BooleanProperty(default=False)
     grading_script_file = ndb.TextProperty()
     zip_file_url = ndb.StringProperty()
-
+    
     # TODO Add services requested
 
     @classmethod
@@ -512,6 +514,10 @@ class Assignment(Base):
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
+    
+    def __lt__(self, other):
+        """ Allows us to sort assignments - reverse order so that latest due dates come first """
+        return self.due_date > other.due_date
 
 
 class Participant(Base):
@@ -956,7 +962,7 @@ class Group(Base):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
         if not user:
-            return "{} cannot be found".format(email)
+            return "{} is not a valid user".format(email)
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "{} is not enrolled in {}".format(email, course.get().display_name)
