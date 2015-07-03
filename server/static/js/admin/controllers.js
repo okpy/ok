@@ -250,7 +250,6 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
             id: $stateParams.assignmentId
         },function (response) {
             $scope.queues = response;
-            console.log(response);
         }, function (err) {
             $window.swal('Error', 'Could not load queues. Maybe none exist?', 'error')
         });
@@ -284,8 +283,15 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
       id: $stateParams.courseId
     }, function(response) {
       $scope.course = response;
-      $scope.stafflist = $scope.selection = $scope.course.staff;
     });
+    
+    $scope.hideStaffList = function hideStaffList() {
+        $scope.stafflist = $scope.selection = [];
+    }
+    
+    $scope.showStaffList = function showStaffList() {
+        $scope.stafflist = $scope.selection = $scope.course.instructor;
+    }
     
     // http://stackoverflow.com/a/14520103/4855984
     $scope.toggleSelection = function toggleSelection(staffEmail) {
@@ -317,7 +323,7 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
             course: $scope.course.id,
             assignment: $scope.assignment.id,
             students: $scope.newQs.students,
-            staff: $scope.newQs.staff
+            staff: $scope.selection || $scope.newQs.staff
         }, function (response) {
             $window.swal('Success', 'Queues generated', 'success');
             $state.transitionTo("course.assignment.queue.list", {'courseId': $scope.course.id, 'assignmentId': $scope.assignment.id}, {'reload': true});
