@@ -7,7 +7,7 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
             container.add('pushed');
         }
         $window.closeMenu = $scope.closeMenu = function() {
-            document.querySelectorAll('.menu').classList.remove('active');
+            document.querySelector('.menu').classList.remove('active');
             container = document.querySelector('.container-fluid').classList;
             container.remove('active');
             container.remove('pushed');
