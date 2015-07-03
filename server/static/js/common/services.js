@@ -1,9 +1,16 @@
 function defaultTransformer(data) {
-  json = JSON.parse(data)
-  if (json.status != '200') {
-    return json;
-  } else {
+  json = JSON.parse(data);
+  if (json.status == '200') {
     return json.data;
+  } else {
+    console.log(json);
+    if (json.status == '500') {
+      if (json.message == 'internal server error :(') {
+        json.message = 'Object failed to instantiate.'
+      }
+      return json;
+    }
+    return json;
   }
 }
 
