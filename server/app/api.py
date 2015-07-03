@@ -2026,8 +2026,7 @@ class QueuesAPI(APIResource):
             'web_args': {
                 'course': KeyArg('Course', required=True),
                 'assignment': KeyArg('Assignment', required=True),
-                'staff': Arg(list, required=True),
-                'students': Arg(list, required=True)
+                'staff': Arg(list, required=True)
             }
         }
     }
@@ -2037,19 +2036,20 @@ class QueuesAPI(APIResource):
         
         if self.check_permissions(user, data):
             raise Need('get').exception()
-        
-        raise UserWarning(data['staff'])
 
         course_key, assignment_key = data['course'], data['assignment']
         userify = lambda parts: [part.user.get() for part in parts]
+
         
         staff = userify(models.Participant.query(
             models.Participant.role == STAFF_ROLE,
             models.Participant.course == course_key).fetch())
 
+
         subms = models.FinalSubmission.query(
             models.FinalSubmission.assignment == assignment_key
         ).fetch()
+        
         queues = []
         
         for instr in staff:

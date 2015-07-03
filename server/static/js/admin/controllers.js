@@ -271,7 +271,6 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
     $scope.reloadQueues();
 }])
 
-// obsolete for now, may need for more composition queue functionality
 app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queues",
   function ($scope, $window, $state, $stateParams, Assignment, Course, Queues) {
     $scope.newQs = {
@@ -283,6 +282,7 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
       id: $stateParams.courseId
     }, function(response) {
       $scope.course = response;
+      $scope.hideStaffList();
     });
     
     $scope.hideStaffList = function hideStaffList() {
@@ -290,16 +290,20 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
     }
     
     $scope.showStaffList = function showStaffList() {
-        $scope.stafflist = [];
-        instructors = $scope.course.instructor;
-        for (var i = 0;i<instructors.length;i++) {
-            var instructor = instructors[i];
-            var email = instructor.email[0];
-            if ($scope.stafflist.indexOf(email) == -1) {
-                $scope.stafflist.push(email);
+        Course.staff({
+            id: $stateParams.courseId
+        },function (response) {
+            $scope.stafflist = [];
+            console.log(response);
+            for (var i = 0;i<response.length;i++) {
+                var instructor = response[i];
+                var email = instructor.user.email[0];
+                if ($scope.stafflist.indexOf(email) == -1) {
+                    $scope.stafflist.push(email);
+                }
             }
-        }
-        $scope.selection = $scope.stafflist.slice();
+            $scope.selection = $scope.stafflist.slice();
+        });
     }
     
     // http://stackoverflow.com/a/14520103/4855984
@@ -332,7 +336,7 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
         Queues.generate({
             course: $scope.course.id,
             assignment: $scope.assignment.id,
-            students: [$scope.newQs.students],
+//            students: [$scope.newQs.students],
             staff: staff
         }, function (response) {
             $window.swal('Success', 'Queues generated', 'success');
