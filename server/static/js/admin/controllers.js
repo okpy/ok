@@ -471,6 +471,8 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
         id: $stateParams.courseId
        },function(response) {
          $scope.assignments = response
+       }, function(err) {
+           report_error($window, err);
        });
      }
 
@@ -495,8 +497,8 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
             token: inputValue,
           }, function(response) {
              $window.swal('Success', 'Queued for autograding.', 'success');
-           }, function(error) {
-            $window.swal('Error', 'Could not autograde.', 'error')
+           }, function(err) {
+               report_error($window, err);
            });
          });
        }
@@ -524,8 +526,8 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
          }, function(response) {
            $window.swal('Success', 'Assignment deleted.', 'success');
            $scope.reloadView();
-         }, function(error) {
-          $window.swal('Error', 'Could not delete assignment.', 'error')
+         }, function(err) {
+             report_error($window, err);
          });
       }
      $scope.reloadView();
@@ -533,7 +535,11 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
 
 app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
   function ($scope, $stateParams, Course) {
-    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.course = Course.get({id: $stateParams.courseId
+    }, function(response) {
+    }, function(err) {
+        report_error($window, err);
+    });
   }
   ]);
 
@@ -554,9 +560,8 @@ app.controller("CourseNewCtrl", ["$scope", "$state", "$window", "Course",
             $window.swal("Course Created!",'','success');
            $state.transitionTo('course.list' , {} , { reload: true, inherit: true, notify: true });
          });
-       }, function (error) {
-         $window.swal("Could not create course",'There was an error','error');
-
+       }, function(err) {
+           report_error($window, err);
        })
     };
   }
@@ -575,6 +580,8 @@ app.controller("StaffListCtrl", ["$scope","$window", "$stateParams", "Course", "
         email: userEmail
       }, function() {
         $window.swal("Removed!", "Removed " + userEmail + " from the course staff", "success");
+      }, function(err) {
+          report_error($window, err);
       });
     };
 
@@ -610,7 +617,11 @@ app.controller("StaffAddCtrl", ["$scope", "$state", "$stateParams", "$window", "
           $window.swal("Added!", "Added "+$scope.newMember.email+" to the course staff", "success");
           $state.transitionTo('staff.list', {courseId: $scope.course.id}, {'reload': true})
           $scope.newMember.email = "";
+        }, function(err) {
+            report_error($window, err);
         })
+      }, function(err) {
+          report_error($window, err);
       });
     };
   }
@@ -636,8 +647,8 @@ function($scope, $state, $stateParams, $window, Course, User) {
             $state.transitionTo('students.list', {courseId: $scope.course.id}, {'reload': true})
             $scope.newMember.email = "";
           })
-        }, function() {
-          $window.swal("Oops", "Could not enroll student", 'error')
+        }, function(err) {
+            report_error($window, err);
         });
       };
 
@@ -657,9 +668,11 @@ function($scope, $state, $stateParams, $window, Course, User) {
             $window.swal("Added!", "Enrolled "+$scope.newMember.emails.toString().substr(1,-1)+" in the course.", "success");
             $state.transitionTo('students.list', {courseId: $scope.course.id}, {'reload': true})
             $scope.newMember.email = "";
+          }, function(err) {
+              report_error($window, err);
           })
-        }, function() {
-          $window.swal("Oops", "Could not enroll student", 'error')
+        }, function(err) {
+            report_error($window, err);
         });
       };
 }]);
@@ -676,6 +689,8 @@ app.controller("StudentsListCtrl", ["$scope", "$stateParams", "$window", "Course
       }, function() {
         $window.swal("Removed!", "Removed " + userEmail + " from the course", "success");
         $scope.members = Course.students({id: $stateParams.courseId});
+      }, function(err) {
+          report_error($window, err);
       });
     };
   }]);
@@ -703,6 +718,8 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
         $scope.compScore = $scope.submission.compScore.score;
         $scope.compMessage = $scope.submission.compScore.message;
       }
+    }, function(err) {
+        report_error($window, err);
     });
 
     if ($scope.storage.currentQueue) {
@@ -733,7 +750,10 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
       id: $stateParams.submissionId,
       score: $scope.compScore,
       message: $scope.compMessage
-    }, $scope.nextSubm);
+    }, $scope.nextSubm
+    , function(err) {
+       report_error($window, err);
+   });
   }
 
     // Goes to the next submission
@@ -890,6 +910,8 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
         }, function (result){
           $scope.toggleBox()
           $scope.comment = false;
+        }, function(err) {
+            report_error($window, err);
         });
       });
     }
@@ -922,6 +944,8 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
             $scope.codeline.comments = [resp]
           }
           $scope.toggleWriter()
+        }, function(err) {
+            report_error($window, err);
         });
       }
     }
@@ -973,7 +997,10 @@ app.controller("MemberController", ["$scope", "$modal", "Group",
         Group.removeMember({
           member: $scope.member.email,
           id: $scope.group.id
-        }, $scope.refreshGroup);
+        }, $scope.refreshGroup
+        , function(err) {
+             report_error($window, err);
+         });
       });
     }
   }
@@ -986,7 +1013,10 @@ app.controller("AddMemberController", ["$scope", "$stateParams", "$window", "$ti
         Group.addMember({
           member: $scope.newMember,
           id: $scope.group.id
-        }, $scope.refreshGroup);
+        }, $scope.refreshGroup
+        , function(err) {
+           report_error($window, err);
+       });
       }
     }
   }
@@ -1012,6 +1042,8 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
         }, function() {
           $scope.refreshInvitations();
           $scope.refreshGroup();
+        }, function(err) {
+            report_error($window, err);
         });
       } else {
       }
@@ -1021,7 +1053,10 @@ app.controller("InvitationsController", ["$scope", "$stateParams", "$window", "$
       $event.stopPropagation();
       Group.rejectInvitation({
         id: invitation.id
-      }, $scope.refreshInvitations);
+      }, $scope.refreshInvitations
+      , function(err) {
+         report_error($window, err);
+     });
     }
   }
   ]);
@@ -1087,8 +1122,8 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
         version.$update({"id": version.name},
           function (resp) {
             $state.go('^.list');
-          }, function (err) {
-            alert(err);
+          }, function(err) {
+              report_error($window, err);
           }
         );
       }
@@ -1113,6 +1148,8 @@ app.controller("QueueModuleController", ["$scope", "Queue",
       } else {
         $scope.num_submissions = 0;
       }
+    }, function(err) {
+        report_error($window, err);
     });
   }]);
 
@@ -1125,6 +1162,8 @@ app.controller("QueueListCtrl", ['$scope', 'Queue',
      $scope.refresh = function () {
       Queue.pull(function (response) {
           $scope.queues = response['results']
+       }, function(err) {
+           report_error($window, err);
        });
      }
   }]);
@@ -1134,6 +1173,9 @@ app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
 
     $scope.queues = Queue.query({
       "owner": $window.keyId
+    }, function(response) {
+    }, function(err) {
+        report_error($window, err);
     });
 
   }]);
@@ -1150,6 +1192,8 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParam
       });
       $scope.$storage.currentQueue = JSON.stringify(result);
       $scope.submList = result['submissions'];
+    }, function(err) {
+        report_error($window, err);
     });
 
 
