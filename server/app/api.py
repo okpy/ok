@@ -2045,6 +2045,7 @@ class QueuesAPI(APIResource):
             models.Participant.role == STAFF_ROLE,
             models.Participant.course == course_key).fetch())
             if staff_list[0] == '*' or staff.email[0] in staff_list]
+        ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
 
         subms = models.FinalSubmission.query(
             models.FinalSubmission.assignment == assignment_key

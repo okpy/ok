@@ -294,7 +294,6 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
             id: $stateParams.courseId
         },function (response) {
             $scope.stafflist = [];
-            console.log(response);
             for (var i = 0;i<response.length;i++) {
                 var instructor = response[i];
                 var email = instructor.user.email[0];
@@ -332,7 +331,8 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
     }
     
     $scope.generateQs = function() {
-        var staff = $scope.selection.length > 0 ? $scope.selection : [$scope.newQs.staff];
+        var staff = $scope.selection.length > 0 ? $scope.selection : $scope.newQs.staff.split(',');
+        console.log(staff);
         Queues.generate({
             course: $scope.course.id,
             assignment: $scope.assignment.id,
