@@ -31,7 +31,6 @@ from google.appengine.api import memcache
 
 import re
 import operator as op
-from server.app.exceptions import BadValueError, BadKeyError
 
 parser = FlaskParser()
 
