@@ -704,7 +704,7 @@ class AssignmentAPI(APIResource):
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
                 'access_token': Arg(str),
-                'link': Arg(str)
+                'url': Arg(str)
             }
         },
         'put': {
@@ -722,7 +722,7 @@ class AssignmentAPI(APIResource):
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
                 'access_token': Arg(str),
-                'link': Arg(str)
+                'url': Arg(str)
             }
         },
         'get': {
@@ -743,7 +743,7 @@ class AssignmentAPI(APIResource):
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
                 'access_token': Arg(str),
-                'link': Arg(str)
+                'url': Arg(str)
             }
         },
         'index': {
