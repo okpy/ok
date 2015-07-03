@@ -1179,15 +1179,9 @@ class FinalSubmission(Base):
     revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
     server_time = ndb.ComputedProperty(lambda q: q.submission.get().server_time)
-    submitter = ndb.ComputedProperty(lambda q: q.submission.get().submitter)
+    submitter = ndb.ComputedProperty(lambda q: q.submission.get().submitter.get())
+    backup = ndb.ComputedProperty(lambda q: q.submission.get().backup.get())
     published = ndb.BooleanProperty(default=False)
-
-    @property
-    def server_time(self):
-        """
-        Returns the server time the final submission was created at.
-        """
-        return self.submission.get().server_time
 
     @property
     def assigned(self):
@@ -1195,14 +1189,7 @@ class FinalSubmission(Base):
         Return whether or not this assignment has been assigned to a queue.
         """
         return bool(self.queue)
-
-    @property
-    def backup(self):
-        """
-        Return the associated backup.
-        """
-        return self.submission.get().backup.get()
-
+    
     @classmethod
     def _can(cls, user, need, final, query):
         action = need.action

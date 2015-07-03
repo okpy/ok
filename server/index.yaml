@@ -52,6 +52,12 @@ indexes:
   properties:
   - name: created
 
+- kind: FinalSubmissionv2
+  properties:
+  - name: assignment
+  - name: server_time
+    direction: desc
+
 - kind: Groupv2
   properties:
   - name: assignment
