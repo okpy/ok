@@ -2035,6 +2035,8 @@ class QueuesAPI(APIResource):
         
         if self.check_permissions(user, data):
             raise Need('get').exception()
+        
+        raise UserWarning(data['staff'])
 
         course_key, assignment_key = data['course'], data['assignment']
         userify = lambda parts: [part.user.get() for part in parts]

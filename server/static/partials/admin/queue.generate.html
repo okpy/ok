@@ -27,14 +27,14 @@
           <label ng-hide="stafflist.length > 0">Staff Emails (CSV) &middot; <a ng-click="showStaffList()">Use Staff List (checkboxes)</a> &middot; <a ui-sref="staff.list({courseId:course.id})">View staff list</a></label>
           <input ng-hide="stafflist.length > 0" ng-model="newQs.staff" type="text" class="form-control input-lg" placeholder="admin@okpy.org, apples@okpy.org">
           <label ng-show="stafflist.length > 0" style="margin-bottom:15px">Staff List (Checkboxes) &middot; <a ng-click="hideStaffList()">Use Staff CSV (text input)</a> &middot; <a ui-sref="staff.list({courseId:course.id})">View staff list</a></label>
-            <label ng-show="stafflist.length > 0" ng-repeat="staff in stafflist" style="width:100%">
+            <label ng-show="stafflist.length > 0" ng-repeat="staffEmail in stafflist" style="width:100%">
                 <input
                     type="checkbox"
                     name="selectedStaff[]"
-                    value="{{staff.email[0]}}"
-                    ng-checked="selection.indexOf(staff) > -1"
-                    ng-click="toggleSelection(staff)"
-                > {{ staff.email[0] }}
+                    value="{{staffEmail}}"
+                    ng-checked="selection.indexOf(staffEmail) > -1"
+                    ng-click="toggleSelection(staffEmail)"
+                > {{ staffEmail }}
             </label>
         </div>
          <button ng-click="generateQs()" class="btn btn-block btn-primary btn-lg">Generate Queues</button>

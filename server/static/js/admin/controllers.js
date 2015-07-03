@@ -290,7 +290,16 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
     }
     
     $scope.showStaffList = function showStaffList() {
-        $scope.stafflist = $scope.selection = $scope.course.instructor;
+        $scope.stafflist = [];
+        instructors = $scope.course.instructor;
+        for (var i = 0;i<instructors.length;i++) {
+            var instructor = instructors[i];
+            var email = instructor.email[0];
+            if ($scope.stafflist.indexOf(email) == -1) {
+                $scope.stafflist.push(email);
+            }
+        }
+        $scope.selection = $scope.stafflist.slice();
     }
     
     // http://stackoverflow.com/a/14520103/4855984
@@ -319,11 +328,12 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
     }
     
     $scope.generateQs = function() {
+        var staff = $scope.selection.length > 0 ? $scope.selection : $scope.newQs.staff;
         Queues.generate({
             course: $scope.course.id,
             assignment: $scope.assignment.id,
             students: $scope.newQs.students,
-            staff: $scope.selection || $scope.newQs.staff
+            staff: staff
         }, function (response) {
             $window.swal('Success', 'Queues generated', 'success');
             $state.transitionTo("course.assignment.queue.list", {'courseId': $scope.course.id, 'assignmentId': $scope.assignment.id}, {'reload': true});
