@@ -609,6 +609,17 @@ class SearchAPITest(APIBaseTestCase):
         self.assertTrue('price' in tokens[0])
         self.assertTrue('1' in tokens[0])
         
+    def test_laziness_with_quotations(self):
+        """ Tests that quotations are lazily matched """
+        query = '-date --before "2015-06-22" -assignment "Homework 1"'
+        tokens = self.API.tokenize(query)
+        self.assertTrue('date' in tokens[0])
+        self.assertTrue('before' in tokens[0])
+        self.assertTrue('2015-06-22' in tokens[0])
+        self.assertTrue('assignment' in tokens[1])
+        self.assertTrue('Homework 1' in tokens[1])
+        
+        
     #######################
     # TRANSLATE OPERATORS #
     #######################
@@ -644,6 +655,8 @@ class SearchAPITest(APIBaseTestCase):
         query = '-assignment %s -onlybackup %s'
         self.API.querify(query % (self.assignment_name, 'true'))
         self.API.querify(query % (self.assignment_name, 'false'))
+        
+
 
 if __name__ == '__main__':
     unittest.main()

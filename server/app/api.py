@@ -31,6 +31,7 @@ from google.appengine.api import memcache
 
 import re
 import operator as op
+from server.app.exceptions import BadValueError, BadKeyError
 
 parser = FlaskParser()
 
@@ -1488,7 +1489,7 @@ class SearchAPI(APIResource):
         a second, identical quote must be found.
         """
         tokenizer = re.compile(
-            ur'-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s*)?(?P<quote>"|\')?(?P<arg>(?(quote)[\S ]*|[\S]*))(?(quote)\4)')
+            r'-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s*)?(?P<quote>"|\')?(?P<arg>(?(quote)[\S ]*?|[\S]*))(?(quote)\4)')
         return tokenizer.findall(query)
 
     @classmethod
@@ -1517,8 +1518,8 @@ class SearchAPI(APIResource):
         model = cls.get_model(objects)
         args = cls.get_args(model, objects)
         query = model.query(*args)
-        return query
-
+        return cls.order(model, query)
+        
     @staticmethod
     def get_model(prime):
         """ determine model using passed-in data """
@@ -1531,6 +1532,12 @@ class SearchAPI(APIResource):
         else:
             return models.Submission
 
+    @classmethod
+    def order(cls, model, query):
+        if hasattr(model, 'server_time'):
+            return query.order(-model.server_time)
+        else:
+            return query
 
     @staticmethod
     def get_args(model, prime):
