@@ -715,8 +715,9 @@ class AssignmentAPI(APIResource):
                 'autograding_enabled': Arg(bool),
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
-                'access_token': Arg(str)
-                }
+                'access_token': Arg(str),
+                'url': Arg(str)
+            }
         },
         'put': {
             'web_args': {
@@ -732,7 +733,8 @@ class AssignmentAPI(APIResource):
                 'autograding_enabled': Arg(bool),
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
-                'access_token': Arg(str)
+                'access_token': Arg(str),
+                'url': Arg(str)
             }
         },
         'get': {
@@ -752,7 +754,8 @@ class AssignmentAPI(APIResource):
                 'autograding_enabled': Arg(bool),
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
-                'access_token': Arg(str)
+                'access_token': Arg(str),
+                'url': Arg(str)
             }
         },
         'index': {

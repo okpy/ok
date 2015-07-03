@@ -90,6 +90,7 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
           'autograding_enabled': $scope.newAssign.autograding_enabled,
           'grading_script_file': $scope.newAssign.grading_script_file,
           'zip_file_url': $scope.newAssign.zip_file_url,
+          'url': $scope.newAssign.url
         },
           function (response) {
             $scope.courses = Course.query({},
@@ -188,6 +189,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'course': $scope.assign.course.id,
             'revision': $scope.assign.revisions,
             'lock_date': lock_date_time,
+            'url': $scope.assign.url
           }
         } else {
           updatedAssign = {
@@ -204,6 +206,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'autograding_enabled': $scope.assign.autograding_enabled,
             'grading_script_file': $scope.assign.grading_script_file,
             'zip_file_url': $scope.assign.zip_file_url,
+            'url': $scope.assign.url
           }
         }
         Assignment.edit(updatedAssign,
