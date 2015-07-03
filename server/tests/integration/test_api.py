@@ -533,6 +533,29 @@ class SearchAPITest(APIBaseTestCase):
         self._assign = make_fake_assignment(self._course, self.user)
         self._assign.name = self._assign.display_name = self.assignment_name
         self._assign.put()
+        self._backup = self.make_fake_backup(self._assign, self.user)
+        self._submission = self.make_fake_submission(self._backup)
+        self._finalsubmission = self.make_fake_finalsubmission(self._submission, self._assign, self.user)
+        
+    def make_fake_backup(self, assignment, user):
+        rval = models.Backup(
+            submitter=user.key,
+            assignment=assignment.key)
+        rval.put()
+        return rval
+    
+    def make_fake_submission(self, backup):
+        rval = models.Submission(backup=backup.key)
+        rval.put()
+        return rval
+    
+    def make_fake_finalsubmission(self, submission, assignment, user):
+        rval = models.FinalSubmission(
+            submission=submission.key,
+            submitter=user.key,
+            assignment=assignment.key)
+        rval.put()
+        return rval
         
     def get_accounts(self):
         return APITest().get_accounts()
@@ -619,7 +642,6 @@ class SearchAPITest(APIBaseTestCase):
         self.assertTrue('assignment' in tokens[1])
         self.assertTrue('Homework 1' in tokens[1])
         
-        
     #######################
     # TRANSLATE OPERATORS #
     #######################
@@ -662,7 +684,23 @@ class SearchAPITest(APIBaseTestCase):
         self.API.querify(query % (self.assignment_name, 'true'))
         self.API.querify(query % (self.assignment_name, 'false'))
         
+    def test_flag_onlybackup_results(self):
+        """ Testing if onlybackup actually returns ONLY backups. """
+        query = '-assignment "%s" -onlybackup true' % self.assignment_name
+        results = self.API.querify(query).fetch()
+        self.assertTrue(len(results) > 0)
+        
+        for result in results:
+            self.assertTrue(isinstance(result, models.Backup))
 
+    def test_flag_onlyfinal_results(self):
+        """ Testing if onlybackup actually returns ONLY backups. """
+        query = '-assignment "%s" -onlyfinal true' % self.assignment_name
+        results = self.API.querify(query).fetch()
+        self.assertTrue(len(results) > 0)
+
+        for result in results:
+            self.assertTrue(isinstance(result, models.FinalSubmission))
 
 if __name__ == '__main__':
     unittest.main()
