@@ -227,8 +227,8 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
   }
   ]);
 
-app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission",
-  function ($scope, $state, Submission) {
+app.controller("SubmissionDashboardController", ["$scope", "$window", "$state", "Submission",
+  function ($scope, $window, $state, Submission) {
     $scope.itemsPerPage = 3;
     $scope.currentPage = 1;
     $scope.getPage = function(page) {
@@ -379,8 +379,8 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
   }]);
 
 
-app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
-  function($scope, $location, $stateParams, $timeout, $anchorScroll, Submission) {
+app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams',  '$timeout', '$anchorScroll', 'Submission',
+  function($scope, $window, $location, $stateParams, $timeout, $anchorScroll, Submission) {
     $scope.tagToAdd = "";
     $scope.submission = Submission.get({id: $stateParams.submissionId});
     $scope.validTags = [
@@ -406,8 +406,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
     }
   }]);
 
-app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams',
-  function($scope, Submission, $stateParams) {
+app.controller("TagCtrl", ['$scope', '$window', 'Submission', '$stateParams',
+  function($scope, $window, Submission, $stateParams) {
     var submission = $scope.$parent.$parent.$parent.submission;
     $scope.remove = function() {
       Submission.removeTag({
@@ -425,8 +425,8 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
     $scope.courses = Course.query({});
   }]);
 
-  app.controller("CourseAssignmentListCtrl", ['$scope', '$http', 'Assignment', 'Course', '$stateParams', '$window',
-    function($scope, $http, Assignment, Course, $stateParams, $window) {
+  app.controller("CourseAssignmentListCtrl", ['$scope', '$window', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+    function($scope, $window, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.reloadView = function() {
        Course.assignments({
@@ -493,14 +493,18 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
      $scope.reloadView();
    }]);
 
-app.controller("CourseDetailCtrl", ["$scope", "$stateParams", "Course",
-  function ($scope, $stateParams, Course) {
-    $scope.course = Course.get({id: $stateParams.courseId});
+app.controller("CourseDetailCtrl", ["$scope", "$window", "$stateParams", "Course",
+  function ($scope, $window, $stateParams, Course) {
+    $scope.course = Course.get({id: $stateParams.courseId
+    }, function(response) {
+    }, function(err) {
+        report_error($window, err);
+    });
   }
   ]);
 
-app.controller("CourseNewCtrl", ["$scope", "$state", "$window", "Course",
-  function ($scope, $state, $window, Course) {
+app.controller("CourseNewCtrl", ["$scope", "$window", "$state", "$window", "Course",
+  function ($scope, $window, $state, $window, Course) {
     $scope.course = {};
 
     $scope.createCourse = function() {
@@ -856,8 +860,8 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
   }
   ]);
 
-app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Submission",
-  function ($scope, $sce, $stateParams, Submission) {
+app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$stateParams", "Submission",
+  function ($scope, $window, $sce, $stateParams, Submission) {
     var converter = new Showdown.converter();
     $scope.convertMarkdown = function(text) {
       if (text == "" || text === undefined) {
@@ -889,8 +893,8 @@ app.controller("WriteCommentController", ["$scope", "$sce", "$stateParams", "Sub
   ]);
 
 // Group Controllers
-app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeout", "Group",
-  function ($scope, $stateParams, $window, $timeout, Group) {
+app.controller("GroupController", ["$scope", "$window", "$stateParams", "$window", "$timeout", "Group",
+  function ($scope, $window, $stateParams, $window, $timeout, Group) {
     $scope.loadGroup = function() {
       Group.query({assignment: $stateParams.assignmentId}, function(groups) {
         if (groups.length == 1) {
@@ -911,13 +915,16 @@ app.controller("GroupController", ["$scope", "$stateParams", "$window", "$timeou
     $scope.createGroup = function() {
       Group.save({
         assignment: $stateParams.assignmentId,
-      }, $scope.refreshGroup);
+      }, $scope.refreshGroup
+      , function(err) {
+        report_error($window, err);
+    });
     }
   }
   ]);
 
-app.controller("MemberController", ["$scope", "$modal", "Group",
-  function ($scope, $modal, Group) {
+app.controller("MemberController", ["$scope", "$window", "$modal", "Group",
+  function ($scope, $window, $modal, Group) {
     $scope.remove = function() {
       var modal = $modal.open({
         templateUrl: '/static/partials/common/removemember.modal.html',
@@ -1007,8 +1014,8 @@ app.controller("VersionDetailCtrl", ["$scope", "$stateParams", "Version", "$stat
   }
   ]);
 
-app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
-  function ($scope, Version, $state, $stateParams) {
+app.controller("VersionNewCtrl", ["$scope", "$window", "Version", "$state", "$stateParams",
+  function ($scope, $window, Version, $state, $stateParams) {
     $scope.versions = {};
     Version.query(function (versions) {
       angular.forEach(versions, function (version) {
@@ -1055,14 +1062,16 @@ app.controller("VersionNewCtrl", ["$scope", "Version", "$state", "$stateParams",
       else{
         version.$save(function(resp) {
           $state.go('^.list');
-        });
+        }, function(err) {
+             report_error($window, err);
+         });
       }
     };
   }
   ]);
 
-app.controller("QueueModuleController", ["$scope", "Queue",
-  function ($scope, Queue) {
+app.controller("QueueModuleController", ["$scope", "$window", "Queue",
+  function ($scope, $window, Queue) {
     $scope.queues = Queue.get(function (response) {
       $scope.num_submissions = 0;
       res = response['results']
@@ -1076,8 +1085,8 @@ app.controller("QueueModuleController", ["$scope", "Queue",
     });
   }]);
 
-app.controller("QueueListCtrl", ['$scope', 'Queue',
-  function($scope, Queue) {
+app.controller("QueueListCtrl", ['$scope', '$window', 'Queue',
+  function($scope, $window, Queue) {
     /* TODO: Fields to this query */
      Queue.get(function (response) {
         $scope.queues = response['results']
@@ -1098,8 +1107,8 @@ app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
 
   }]);
 
-app.controller("QueueDetailCtrl", ["$scope", "Queue", "Submission", "$stateParams", "$sessionStorage",
-  function ($scope, Queue, Submission, $stateParams, $sessionStorage) {
+app.controller("QueueDetailCtrl", ["$scope", "Queue", "$window", "Submission", "$stateParams", "$sessionStorage",
+  function ($scope, Queue, $window, Submission, $stateParams, $sessionStorage) {
     $scope.$storage = $sessionStorage;
     Queue.pull({
       id: $stateParams.queueId
