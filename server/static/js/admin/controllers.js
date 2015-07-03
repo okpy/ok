@@ -1,41 +1,62 @@
+// Error Handling
+function report_error($window, err) {
+    $window.swal('Error', err.data.message, 'error');
+}
+
 // Admin Sidebar
-app.controller("SidebarCntrl", ['$scope', 'Assignment',
-  function($scope, Assignment) {
+app.controller("SidebarCntrl", ['$scope', '$window', 'Assignment',
+  function($scope, $window, Assignment) {
     Assignment.query(function(response) {
       $scope.assignments = response.results;
+    }, function(err) {
+        report_error($window, err);
     });
     $scope.course_name = "Ok Admin"
   }]);
 
 // Submission Controllers
-app.controller("SubmissionModuleController", ["$scope", "Submission",
-  function ($scope, Submission) {
+app.controller("SubmissionModuleController", ["$scope", "$window", "Submission",
+  function ($scope, $window, Submission) {
     Submission.query(function(response) {
       $scope.num_submissions = response.results.length;
-    });
+    }, function(err) {
+         report_error($window, err);
+     });
   }
   ]);
 
 
 // Assignment Controllers
-app.controller("AssignmentModuleController", ["$scope", "Assignment",
-  function ($scope, Assignment) {
+app.controller("AssignmentModuleController", ["$scope", "$window", "Assignment",
+  function ($scope, $window, Assignment) {
     Assignment.query(function(response) {
       $scope.assignments = response.results;
-    });
+    }, function(err) {
+         report_error($window, err);
+     });
   }
   ]);
 
-app.controller("AssignmentDetailCtrl", ["$scope", "$stateParams", "Assignment",
+app.controller("AssignmentDetailCtrl", ["$scope", "$window", "$stateParams", "Assignment",
   function ($scope, $stateParams, Assignment) {
-    $scope.assignment = Assignment.get({id: $stateParams.assignmentId});
+    $scope.assignment = Assignment.get({
+        id: $stateParams.assignmentId
+    }, function (response) {
+    }, function(err) {
+        report_error($window, err);
+    });
   }
   ]);
 
 
 app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
-    $scope.existingAssign = Assignment.get({id: $stateParams.assignmentId});
+    $scope.existingAssign = Assignment.get({
+        id: $stateParams.assignmentId
+    }, function (response) {
+    }, function (err) {
+        report_error($window, err);
+    });
     var future = new Date();
     future.setDate(future.getDate() + 31);
     due_date = lock_date = future.getFullYear() + '-' + future.getMonth() + '-' + future.getDate()
@@ -67,12 +88,16 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
       id: $stateParams.courseId
     }, function(response) {
       $scope.course = response;
-    });
+    }, function(err) {
+         report_error($window, err);
+     });
     // TODO: only allow user to create assignment for specified course - no more dropdown!
     Course.get({}, function(resp) {
         $scope.courses = resp.results;
         $scope.newAssign.course = $scope.courses[0];
-    });
+    }, function(err) {
+         report_error($window, err);
+     });
 
     $scope.createAssign = function () {
         var due_date_time = $scope.newAssign.due_date + ' ' + $scope.newAssign.due_time
@@ -99,9 +124,7 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
                $state.transitionTo('course.assignment.list' , {courseId: $scope.course.id} , { reload: true, inherit: true, notify: true });
              });
           }, function (error) {
-            console.log('error')
-            $window.swal("Could not create assignment",'There was an error','error');
-
+            report_error($window, error);
           }
         )
 
@@ -116,14 +139,18 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
       id: $stateParams.courseId
     }, function(response) {
       $scope.course = response;
-    });
+    }, function(err) {
+         report_error($window, err);
+     });
 
     $scope.reloadAssignment = function() {
       Assignment.get({
         id: $stateParams.assignmentId
       }, function (response) {
         $scope.initAssignment(response);
-      });
+      }, function(err) {
+           report_error($window, err);
+       });
     }
 
     $scope.initAssignment = function(assign) {
@@ -168,7 +195,9 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
               break;
             }
           }
-      });
+      }, function(err) {
+           report_error($window, err);
+       });
     }
 
     $scope.reloadAssignment();
@@ -216,11 +245,9 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
               $window.swal("Assignment Updated!",'','success');
               $state.transitionTo('course.assignment.list', {courseId: $scope.course.id}, {'reload': true})
             });
-          }, function (error) {
-            console.log('error', error)
-            $window.swal("Could not update assignment",'There was an error','error');
-
-          }
+          }, function(err) {
+               report_error($window, err);
+           }
         )
 
     }
@@ -245,7 +272,9 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "Submission
         } else {
           $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
         }
-      });
+      }, function(err) {
+           report_error($window, err);
+       });
     }
 
     $scope.pageChanged = function() {
@@ -271,7 +300,9 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
         $scope.compScore = null;
         $scope.compMessage = null;
       }
-    });
+    }, function(err) {
+         report_error($window, err);
+     });
     $scope.storage = $sessionStorage
     $scope.hideEmpty = false;
     $scope.toggleBlank = function () {
@@ -309,9 +340,9 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       key: "composition"
     }, function (resp) {
       $scope.goTo($scope.nextId)
-    }, function (err,msg) {
-      $window.swal({ title: "Uh-oh!", type: 'error',  text: "The grade wasnt submitted. "+msg})
-    });
+    }, function(err) {
+         report_error($window, err);
+     });
   }
 
     // Goes to the next submission
@@ -356,8 +387,8 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
           $scope.totalItems = ($scope.currentPage - 1) * $scope.itemsPerPage + response.data.results.length;
         }
       }, function(err) {
-        $window.swal('Uh oh', 'We couldn\'t complete the search.', 'error');
-      });
+           report_error($window, err);
+       });
     }
 
     $scope.course = Course.get({
@@ -367,7 +398,9 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
         $scope.query.string = $stateParams.query;
         $scope.getPage(1);
       }
-    });
+    }, function(err) {
+         report_error($window, err);
+     });
 
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
@@ -401,7 +434,9 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$location', '$stateParams',  
         tag: $scope.tagToAdd
       }, function() {
         $scope.submission.tags.push($scope.tagToAdd);
-      });
+      }, function(err) {
+           report_error($window, err);
+       });
       $scope.toggle();
     }
   }]);
@@ -413,7 +448,10 @@ app.controller("TagCtrl", ['$scope', 'Submission', '$stateParams',
       Submission.removeTag({
         id: $stateParams.submissionId,
         tag: $scope.tag
-      });
+      }, function(response) {
+      }, function(err) {
+           report_error($window, err);
+       });
       var index = submission.tags.indexOf($scope.tag);
       submission.tags.splice(index, 1);
     }
