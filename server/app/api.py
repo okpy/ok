@@ -2044,14 +2044,14 @@ class QueuesAPI(APIResource):
             models.Participant.course == course_key).fetch())
 
         subms = models.FinalSubmission.query(
-            models.FinalSubmission.assignment==assignment_key
+            models.FinalSubmission.assignment == assignment_key
         ).fetch()
         queues = []
         
         for instr in staff:
             q = models.Queue.query(
-                models.Queue.owner==instr.key,
-                models.Queue.assignment==assignment_key).get()
+                models.Queue.owner == instr.key,
+                models.Queue.assignment == assignment_key).get()
             if not q:
                 q = models.Queue(
                     owner=instr.key, 
