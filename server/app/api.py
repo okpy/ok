@@ -2033,35 +2033,29 @@ class QueuesAPI(APIResource):
     def generate(self, user, data):
         """ Splits up submissions among staff members """
         
-        if not self.check_permissions(user, data):
-        	raise Need('get').exception()
+        if self.check_permissions(user, data):
+            raise Need('get').exception()
 
-        course, assignment = data['course'].get(), data['assignment'].get()
+        course_key, assignment_key = data['course'], data['assignment']
         userify = lambda parts: [part.user.get() for part in parts]
         
         staff = userify(models.Participant.query(
             models.Participant.role == STAFF_ROLE,
-            models.Participant.course == course.key).fetch())
+            models.Participant.course == course_key).fetch())
 
-        students = userify(models.Participant.query(
-            models.Participant.role == STUDENT_ROLE,
-            models.Participant.course == course.key).fetch())
-
-        subms, queues = [], []
-
-        for student in students:
-            subm = models.User.get_final_submission(student, assignment.key)
-            if subm:
-                subms.append(subm)
+        subms = models.FinalSubmission.query(
+            models.FinalSubmission.assignment==assignment_key
+        ).fetch()
+        queues = []
         
         for instr in staff:
             q = models.Queue.query(
                 models.Queue.owner==instr.key,
-                models.Queue.assignment==assignment.key).get()
+                models.Queue.assignment==assignment_key).get()
             if not q:
                 q = models.Queue(
                     owner=instr.key, 
-                    assignment=assignment.key,
+                    assignment=assignment_key,
                     assigned_staff=[instr.key])
                 q.put()
             queues.append(q)
@@ -2077,7 +2071,7 @@ class QueuesAPI(APIResource):
 
     def check_permissions(self, user, data):
         course = data['course'].get()
-        return user.key not in course.staff and not user.is_admin:
+        return user.key not in course.staff and not user.is_admin
     
 
 class FinalSubmissionAPI(APIResource):
