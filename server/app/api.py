@@ -1496,10 +1496,7 @@ class SearchAPI(APIResource):
         tokens = cls.tokenize(query)
         scope = {k: tuple(v) for k, v in cls.defaults.items()}
         for token in tokens:
-            if len(token) == 4:
-                flag, dummy, opr, arg = token
-            else:
-                flag, dummy, opr, quote, arg = token
+            flag, dummy, opr, quote, arg = token
             scope[flag] = (cls.operators[opr or 'eq'], arg)
         return scope
 
