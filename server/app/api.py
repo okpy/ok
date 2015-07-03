@@ -2030,7 +2030,9 @@ class QueuesAPI(APIResource):
     def generate(self, user, data):
         """ Splits up submissions among staff members """
         
-        self.check_permissions(user, data)
+        if not self.check_permissions(user, data):
+        	raise Need('get').exception()
+
         course, assignment = data['course'].get(), data['assignment'].get()
         userify = lambda parts: [part.user.get() for part in parts]
         
@@ -2072,9 +2074,7 @@ class QueuesAPI(APIResource):
 
     def check_permissions(self, user, data):
         course = data['course'].get()
-
-        if user.key not in course.staff and not user.is_admin:
-            raise Need('get').exception()
+        return user.key not in course.staff and not user.is_admin:
     
 
 class FinalSubmissionAPI(APIResource):
