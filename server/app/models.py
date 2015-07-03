@@ -1179,9 +1179,16 @@ class FinalSubmission(Base):
     revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
     server_time = ndb.ComputedProperty(lambda q: q.submission.get().server_time)
-    submitter = ndb.ComputedProperty(lambda q: q.submission.get().submitter.get())
-    backup = ndb.ComputedProperty(lambda q: q.submission.get().backup.get())
+    # submitter = ndb.ComputedProperty(lambda q: q.submission.get().submitter.get())
+    submitter = ndb.KeyProperty(User)
     published = ndb.BooleanProperty(default=False)
+
+    @property
+    def backup(self):
+        """
+        Return the associated backup.
+        """
+        return self.submission.get().backup.get()
 
     @property
     def assigned(self):
