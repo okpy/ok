@@ -962,7 +962,7 @@ class Group(Base):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
         if not user:
-            return "{} cannot be found".format(email)
+            return "{} is not a valid user".format(email)
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "{} is not enrolled in {}".format(email, course.get().display_name)
