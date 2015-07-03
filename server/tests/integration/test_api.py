@@ -536,50 +536,69 @@ class SearchAPITest(APIBaseTestCase):
         """ Tests that the single-dash is parsed normally. """
         query = '-assignment Hog'
         tokens = self.API.tokenize(query)
-        self.assertEquals(tokens[0], ('assignment', '', '', 'Hog'))
+        self.assertTrue('assignment' in tokens[0])
+        self.assertTrue('Hog' in tokens[0])
         
     def test_tokenize_operator(self):
         """ Tests that both flag and operator are parsed normally. """
         query = '-assignment --startswith Hog'
         tokens = self.API.tokenize(query)
-        self.assertEquals(tokens[0], ('assignment', '--startswith', 'startswith', 'Hog'))
-        
+        self.assertTrue('assignment' in tokens[0])
+        self.assertTrue('Hog' in tokens[0])
+        self.assertTrue('startswith' in tokens[0])
+
     def test_tokenize_dashes(self):
         """ Tests that dashes inside the arg are okay. """
         query = '-date --before 2015-06-22'
         tokens = self.API.tokenize(query)
-        self.assertEquals(tokens[0], ('date', '--before', 'before', '2015-06-22'))
+        self.assertTrue('date' in tokens[0])
+        self.assertTrue('before' in tokens[0])
+        self.assertTrue('2015-06-22' in tokens[0])
         
     def test_tokenize_quoted_string(self):
         """ Tests that args with spaces can be grouped by quotations """
         query = '-assignment "Hog Project"'
         tokens = self.API.tokenize(query)
-        self.assertEquals(tokens[0], ('assignment', '', '', 'Hog Project'))
+        self.assertTrue('assignment' in tokens[0])
+        self.assertTrue('Hog Project' in tokens[0])
+
+    def test_tokenize_single_quoted_string(self):
+        """ Tests that args with spaces can be grouped by single quotations """
+        query = "-assignment 'Hog Project'"
+        tokens = self.API.tokenize(query)
+        self.assertTrue('assignment' in tokens[0])
+        self.assertTrue('Hog Project' in tokens[0])
 
     def test_multiple_flags(self):
         """ Tests that the multiple groups can be parsed together. """
         query = '-assignment Hog -date --before 2015-06-22'
         tokens = self.API.tokenize(query)
-        self.assertEquals(tokens[0], ('assignment', '', '', 'Hog'))
-        self.assertEquals(tokens[1], ('date', '--before', 'before', '2015-06-22'))
+        self.assertTrue('assignment' in tokens[0])
+        self.assertTrue('Hog' in tokens[0])
+        self.assertTrue('date' in tokens[1])
+        self.assertTrue('before' in tokens[1])
+        self.assertTrue('2015-06-22' in tokens[1])
         
     def test_datatype_int(self):
         """ Tests that integers are parsed normally. """
         query = '-price 10'
         tokens = self.API.tokenize(query)
-        self.assertEquals(tokens[0], ('price', '', '', '10'))
+        self.assertTrue('price' in tokens[0])
+        self.assertTrue('10' in tokens[0])
         
     def test_datatype_boolean(self):
         """ Tests that booleans are parsed normally. """
         query = '-pricey true'
         tokens = self.API.tokenize(query)
-        self.assertEquals(tokens[0], ('pricey', '', '', 'true'))
+        self.assertTrue('pricey' in tokens[0])
+        self.assertTrue('true' in tokens[0])
 
     def test_single_character_arg(self):
         """ Tests that an arg with only length one can be parsed normally. """
         query = '-price 1'
         tokens = self.API.tokenize(query)
-        self.assertEquals(tokens[0], ('price', '', '', '1'))
+        self.assertTrue('price' in tokens[0])
+        self.assertTrue('1' in tokens[0])
 
 if __name__ == '__main__':
     unittest.main()
