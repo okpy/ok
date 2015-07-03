@@ -191,15 +191,17 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               arr = info.member;
               order = {}
               i = 0;
-              $('.sidebar.active .sortable li').each(function() {
-                  order[$(this).data('i')] = i
+              lis = document.querySelectorAll('.sidebar.active .sortable li');
+              for (var i = 0;i<lis.length;i++) {
+                  li = lis[i];
+                  order[li.getAttribute('data-i')] = i
                   i += 1;
-              });
+              }
               for (var i = 0; i< arr.length; i++) {
                 member = arr[i];
                 member.i = j = order[i];
                 member.letter = letter = String.fromCharCode(65 + order[i]);
-                $('.sortable li[data-i="'+i+'"]').find('.member-letter').html(letter);
+                document.querySelector('.sortable li[data-i="'+i+'"] .member-letter').innerHTML = letter;
               }
               return arr
           }
@@ -410,8 +412,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.randomColor = function randomColor(assignment) {
         themes = ['blue','gold','purple']
         if (!assignment.color) {
-            var blob = $('.blob[id="'+assignment.id+'"]');
-            assignment.color = blob.length > 0 ? blob.attr('color') : themes[Math.ceil(Math.random()*themes.length)-1]
+            var blob = document.querySelectorAll('.blob[id="'+assignment.id+'"]');
+            assignment.color = blob.length > 0 ? blob[0].getAttribute('color') : themes[Math.ceil(Math.random()*themes.length)-1]
         }
         return assignment
       }
@@ -419,14 +421,19 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         $scope.openDetails = function openDetails(assign) {
             $scope.currGroup = assign.group
             $scope.currAssign = assign
-            $('.container-fluid').addClass('active');
-            $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
+            document.querySelector('.container-fluid').classList.add('active');
+            document.querySelector('.sidebar[id="'+assign.assignment.id+'"]').classList.add('active');
             $scope.initSortable(assign);
         }
 
         $window.closeDetails = $scope.closeDetails = function closeDetails() {
-            $('.sidebar').removeClass('active');
-            $('.container-fluid').removeClass('active');
+            document.querySelector('.menu').classList.remove('active');
+            document.querySelector('.container-fluid').classList.remove('active');
+            sidebars = document.querySelectorAll('.sidebar');
+            for (var i=0;i<sidebars.length;i++) {
+                sidebar = sidebars[i];
+                sidebar.classList.remove('active');
+            }
         }
-        }
+    }
 ]);
