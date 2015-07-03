@@ -13,7 +13,7 @@ tests.py
 import os
 os.environ['FLASK_CONF'] = 'TEST'
 import datetime
-from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
+from test_base import APIBaseTestCase, unittest, api #pylint: disable=relative-import
 from test_base import make_fake_assignment, make_fake_course #pylint: disable=relative-import
 from google.appengine.ext import ndb
 from app import models, constants
@@ -519,6 +519,8 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
 
 class SearchAPITest(APIBaseTestCase):
+    
+    API = api.SearchAPI
 
     def setUp(self):
         super(SearchAPITest, self).setUp()
@@ -526,12 +528,33 @@ class SearchAPITest(APIBaseTestCase):
     def get_accounts(self):
         return APITest().get_accounts()
 
-    ##############
-    # TEST PARSE #
-    ##############
+    #################
+    # TEST TOKENIZE #
+    #################
     
-    def test_parse_basic(self):
-        assert False
+    def test_tokenize_basic(self):
+        """ Tests that the single-dash is parsed normally. """
+        query = '-assignment Hog'
+        tokens = self.API.tokenize(query)
+        self.assertEquals(tokens[0], ('assignment', '', '', 'Hog'))
+        
+    def test_tokenize_operator(self):
+        """ Tests that both flag and operator are parsed normally. """
+        query = '-assignment --startswith Hog'
+        tokens = self.API.tokenize(query)
+        self.assertEquals(tokens[0], ('assignment', '--startswith', 'startswith', 'Hog'))
+        
+    def test_tokenize_dashes(self):
+        """ Tests that dashes inside the arg are okay. """
+        query = '-date --before 2015-06-22'
+        tokens = self.API.tokenize(query)
+        self.assertEquals(tokens[0], ('date', '--before', 'before', '2015-06-22'))
+        
+    def test_tokenize_quoted_string(self):
+        """ Tests that args with spaces can be grouped by quotations """
+        query = '-assignment "Hog Project"'
+        tokens = self.API.tokenize(query)
+        self.assertEquals(tokens[0], ('assignment', '', '', 'Hog Project'))
 
 if __name__ == '__main__':
     unittest.main()
