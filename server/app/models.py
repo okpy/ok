@@ -290,8 +290,9 @@ class User(Base):
 
         info = {'user': self}
         info['assignments'] = []
+        assignments = sorted(course.assignments)
 
-        for assignment in course.assignments:
+        for assignment in assignments:
             assign_info = {}
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
@@ -513,6 +514,10 @@ class Assignment(Base):
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
+    
+    def __lt__(self, other):
+        """ Allows us to sort assignments - reverse order so that latest due dates come first """
+        return self.due_date > other.due_date
 
 
 class Participant(Base):
