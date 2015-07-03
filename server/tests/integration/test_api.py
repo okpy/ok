@@ -662,9 +662,9 @@ class SearchAPITest(APIBaseTestCase):
         self.assertEqual(operator, op.__eq__)
         self.assertEqual(arg, 'Scheme')
 
-    ###########
-    # QUERIFY #
-    ###########
+    #################
+    # QUERY RESULTS #
+    #################
         
     def test_flag_onlyfinal(self):
         """ Testing if onlyfinal flag operates without error """
@@ -701,6 +701,24 @@ class SearchAPITest(APIBaseTestCase):
 
         for result in results:
             self.assertTrue(isinstance(result, models.FinalSubmission))
+
+    def test_flag_onlybackup_negated(self):
+        """ Testing that onlybackup negated does not limit results. """
+        query = '-assignment "%s" -onlybackup false' % self.assignment_name
+        results = self.API.querify(query).fetch()
+        self.assertTrue(len(results) > 0)
+
+        backups = [result for result in results if isinstance(result, models.Backup)]
+        self.assertNotEqual(backups, results)
+
+    def test_flag_onlyfinal_negated(self):
+        """ Testing that onlyfinal negated does not limit results. """
+        query = '-assignment "%s" -onlyfinal false' % self.assignment_name
+        results = self.API.querify(query).fetch()
+        self.assertTrue(len(results) > 0)
+
+        finals = [result for result in results if isinstance(result, models.FinalSubmission)]
+        self.assertNotEqual(finals, results)
 
 if __name__ == '__main__':
     unittest.main()
