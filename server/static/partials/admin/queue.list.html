@@ -15,7 +15,7 @@
     <h3 class="box-title" ng-if="queues.length == 0" >No Composition Queues</h3>
     <h3 class="box-title" ng-if="queues.length > 0">Composition Queues</h3>
     <div class="box-tools" style="float:right;">
-      <button class="btn btn-primary btn-sm" ng-click="generateQueues()"><i class="fa fa-flash"> Generate Queues</i></button>
+      <a ui-sref="course.assignment.queue.generate({courseId: course.id, assignmentId: assignment.id})"><button class="btn btn-primary btn-sm"><i class="fa fa-flash"> Generate Queues</i></button></a>
     </div>
 
   </div><!-- /.box-header -->
