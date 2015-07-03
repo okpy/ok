@@ -240,7 +240,11 @@ app.config(['$stateProvider', '$urlRouterProvider',
           url: '/:courseId/submissions',
           templateUrl: '/static/partials/admin/submission.list.html'
     }
-
+    var submissionListQuery = {
+          name: 'course.submissions.query',
+          url: '/:query',
+          templateUrl: '/static/partials/admin/submission.list.html'
+    }
     var staff = {
       name: 'staff',
       url: '/:courseId/staff',
@@ -363,6 +367,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(submissions).
       state(submissionFinal).
       state(submissionList).
+      state(submissionListQuery).
       state(submissionDetail).
       state(submissionDiff).
       state(assignments).
