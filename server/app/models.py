@@ -1179,7 +1179,7 @@ class FinalSubmission(Base):
     revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
     server_time = ndb.ComputedProperty(lambda q: q.submission.get().server_time)
-    submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
+    submitter = ndb.ComputedProperty(lambda q: q.submission.get().submitter)
     published = ndb.BooleanProperty(default=False)
 
     @property
