@@ -517,6 +517,8 @@ class GroupAPITest(APITest, APIBaseTestCase):
     def test_entity_create_basic(self):
         pass # No creation
 
+import operator as op
+
 
 class SearchAPITest(APIBaseTestCase):
     
@@ -528,9 +530,9 @@ class SearchAPITest(APIBaseTestCase):
     def get_accounts(self):
         return APITest().get_accounts()
 
-    #################
-    # TEST TOKENIZE #
-    #################
+    ############
+    # TOKENIZE #
+    ############
     
     def test_tokenize_basic(self):
         """ Tests that the single-dash is parsed normally. """
@@ -599,6 +601,26 @@ class SearchAPITest(APIBaseTestCase):
         tokens = self.API.tokenize(query)
         self.assertTrue('price' in tokens[0])
         self.assertTrue('1' in tokens[0])
+        
+    #######################
+    # TRANSLATE OPERATORS #
+    #######################
+
+    def test_translate_basic(self):
+        """ Basic extraction of arg and operator """
+        query = '-date --before 2015-06-22'
+        scope = self.API.translate(query)
+        operator, arg = scope['date']
+        self.assertEqual(operator, op.__lt__)
+        self.assertEqual(arg, '2015-06-22')
+        
+    def test_translate_operators(self):
+        """ Translate to eq if no operator specified """
+        query = '-assignment Scheme'
+        scope = self.API.translate(query)
+        operator, arg = scope['assignment']
+        self.assertEqual(operator, op.__eq__)
+        self.assertEqual(arg, 'Scheme')
 
 if __name__ == '__main__':
     unittest.main()

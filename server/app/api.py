@@ -1493,7 +1493,7 @@ class SearchAPI(APIResource):
 
     @classmethod
     def translate(cls, query):
-        """ converts operators into appropriate string reps and adds defaults """
+        """ converts operators into appropriate operators and adds defaults """
         tokens = cls.tokenize(query)
         scope = {k: tuple(v) for k, v in cls.defaults.items()}
         for token in tokens:
