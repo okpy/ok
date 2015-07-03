@@ -290,8 +290,9 @@ class User(Base):
 
         info = {'user': self}
         info['assignments'] = []
+        assignments = sorted(course.assignments)
 
-        for assignment in course.assignments:
+        for assignment in assignments:
             assign_info = {}
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
@@ -513,6 +514,10 @@ class Assignment(Base):
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
+    
+    def __lt__(self, other):
+        """ Allows us to sort assignments - reverse order so that latest due dates come first """
+        return self.due_date > other.due_date
 
 
 class Participant(Base):
@@ -957,7 +962,7 @@ class Group(Base):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
         if not user:
-            return "{} cannot be found".format(email)
+            return "{} is not a valid user".format(email)
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "{} is not enrolled in {}".format(email, course.get().display_name)
@@ -1179,22 +1184,10 @@ class FinalSubmission(Base):
     submission = ndb.KeyProperty(Submission)
     revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
-    submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
+    server_time = ndb.ComputedProperty(lambda q: q.submission.get().server_time)
+    # submitter = ndb.ComputedProperty(lambda q: q.submission.get().submitter.get())
+    submitter = ndb.KeyProperty(User)
     published = ndb.BooleanProperty(default=False)
-
-    @property
-    def server_time(self):
-        """
-        Returns the server time the final submission was created at.
-        """
-        return self.submission.get().server_time
-
-    @property
-    def assigned(self):
-        """
-        Return whether or not this assignment has been assigned to a queue.
-        """
-        return bool(self.queue)
 
     @property
     def backup(self):
@@ -1203,6 +1196,13 @@ class FinalSubmission(Base):
         """
         return self.submission.get().backup.get()
 
+    @property
+    def assigned(self):
+        """
+        Return whether or not this assignment has been assigned to a queue.
+        """
+        return bool(self.queue)
+    
     @classmethod
     def _can(cls, user, need, final, query):
         action = need.action
