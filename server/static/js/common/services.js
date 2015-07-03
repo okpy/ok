@@ -3,7 +3,6 @@ function defaultTransformer(data) {
   if (json.status == '200') {
     return json.data;
   } else {
-    console.log(json);
     if (json.status == '500') {
       if (json.message == 'internal server error :(') {
         json.message = 'Object failed to instantiate.'

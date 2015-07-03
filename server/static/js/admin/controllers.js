@@ -1,5 +1,6 @@
 // Error Handling
 function report_error($window, err) {
+    console.log(err);
     $window.swal('Error', err.data.message, 'error');
 }
 
