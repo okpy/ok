@@ -1486,17 +1486,21 @@ class SearchAPI(APIResource):
         second named group "op" as a string preceded by two dashes
         and followed by a space. Captures final named group "arg"
         with optional quotations.
+        
+        If quotes are detected, the string inside is allowed spaces and
+        a second, identical quote must be found.
         """
-        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S ]{0,}[^"\s]+)"?')
+        tokenizer = re.compile(
+            r'-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s*)?(?P<quote>"|\')?(?P<arg>(?(quote)[\S ]*?|[\S]*))(?(quote)\4)')
         return tokenizer.findall(query)
 
     @classmethod
     def translate(cls, query):
-        """ converts operators into appropriate string reps and adds defaults """
+        """ converts operators into appropriate operators and adds defaults """
         tokens = cls.tokenize(query)
         scope = {k: tuple(v) for k, v in cls.defaults.items()}
         for token in tokens:
-            flag, dummy, opr, arg = token
+            flag, dummy, opr, quote, arg = token
             scope[flag] = (cls.operators[opr or 'eq'], arg)
         return scope
 
@@ -1516,8 +1520,8 @@ class SearchAPI(APIResource):
         model = cls.get_model(objects)
         args = cls.get_args(model, objects)
         query = model.query(*args)
-        return query
-
+        return cls.order(model, query)
+        
     @staticmethod
     def get_model(prime):
         """ determine model using passed-in data """
@@ -1530,6 +1534,14 @@ class SearchAPI(APIResource):
         else:
             return models.Submission
 
+    @classmethod
+    def order(cls, model, query):
+        try:
+            if hasattr(model, 'server_time'):
+                return query.order(-model.server_time)
+        except TypeError:
+            pass
+        return query
 
     @staticmethod
     def get_args(model, prime):

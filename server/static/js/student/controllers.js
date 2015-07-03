@@ -1,12 +1,16 @@
 app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams",
     function ($scope, $window, $state, $stateParams) {
         $scope.openMenu = function(menu) {
-            $(menu).addClass('active')
-            $('.container-fluid').addClass('active').addClass('pushed')
+            document.querySelector('.menu').classList.add('active');
+            container = document.querySelector('.container-fluid').classList;
+            container.add('active');
+            container.add('pushed');
         }
         $window.closeMenu = $scope.closeMenu = function() {
-            $('.menu').removeClass('active')
-            $('.container-fluid').removeClass('active').removeClass('pushed')
+            document.querySelector('.menu').classList.remove('active');
+            container = document.querySelector('.container-fluid').classList;
+            container.remove('active');
+            container.remove('pushed');
         }
     }
 ])
@@ -61,7 +65,7 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
       } else {
          $window.location.hash = "";
       }
-      
+
       $scope.loadAll = function() {
         Course.get(function(response) {
             if (response.results) {
@@ -103,9 +107,9 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams', '$sce', '$timeout', '$anchorScroll', 'Submission',
   function($scope, $window, $location, $stateParams, $sce, $timeout, $anchorScroll, Submission) {
       var converter = new Showdown.converter();
-      
+
       $window.closeMenu();
-      
+
       $scope.convertMarkdown = function(text) {
         if (text == "" || text === undefined) {
           return $sce.trustAsHtml("")
@@ -149,7 +153,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         if (assign.submissions) {
             $scope.getSubmissions(assign, false);
         }
-        
+
         $scope.labelPartners(assign);
       }
       $scope.initAssignments = function(assignments) {
@@ -171,7 +175,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             }
         }
       }
-      
+
       $scope.initSortable = function(assign) {
         $('.sortable').disableSelection();
         $('.sortable').sortable({
@@ -180,27 +184,29 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             }
         });
       }
-      
+
         $scope.updatePartners = function(group) {
           info = group.group_info;
           if (info !== null && info !== undefined) {
               arr = info.member;
               order = {}
               i = 0;
-              $('.sidebar.active .sortable li').each(function() {
-                  order[$(this).data('i')] = i
+              lis = document.querySelectorAll('.sidebar.active .sortable li');
+              for (var i = 0;i<lis.length;i++) {
+                  li = lis[i];
+                  order[li.getAttribute('data-i')] = i
                   i += 1;
-              });
+              }
               for (var i = 0; i< arr.length; i++) {
                 member = arr[i];
                 member.i = j = order[i];
                 member.letter = letter = String.fromCharCode(65 + order[i]);
-                $('.sortable li[data-i="'+i+'"]').find('.member-letter').html(letter);
+                document.querySelector('.sortable li[data-i="'+i+'"] .member-letter').innerHTML = letter;
               }
               return arr
           }
         }
-        
+
       $scope.reorder = function(group) {
         arr = $scope.updatePartners(group);
         order = arr.concat()
@@ -208,7 +214,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             member = arr[i];
             order.splice(member.i, 1, member.email[0]);
         }
-        
+
         Group.reorder({
             id: group.group_info.id,
             order: order
@@ -227,9 +233,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $window.swal('Uh oh', error.data.message, 'error')
         })
       }
-      
+
       $scope.reloadAssignments();
-      
+
       $scope.showComposition = function(score, backupId) {
         if (score) {
           $window.swal({title: 'Score: '+score.score+'/2',
@@ -403,12 +409,12 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
          });
         }
       };
-      
+
       $scope.randomColor = function randomColor(assignment) {
         themes = ['blue','gold','purple']
         if (!assignment.color) {
-            var blob = $('.blob[id="'+assignment.id+'"]');
-            assignment.color = blob.length > 0 ? blob.attr('color') : themes[Math.ceil(Math.random()*themes.length)-1]
+            var blob = document.querySelectorAll('.blob[id="'+assignment.id+'"]');
+            assignment.color = blob.length > 0 ? blob[0].getAttribute('color') : themes[Math.ceil(Math.random()*themes.length)-1]
         }
         return assignment
       }
@@ -416,14 +422,19 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         $scope.openDetails = function openDetails(assign) {
             $scope.currGroup = assign.group
             $scope.currAssign = assign
-            $('.container-fluid').addClass('active');
-            $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
+            document.querySelector('.container-fluid').classList.add('active');
+            document.querySelector('.sidebar[id="'+assign.assignment.id+'"]').classList.add('active');
             $scope.initSortable(assign);
         }
-        
+
         $window.closeDetails = $scope.closeDetails = function closeDetails() {
-            $('.sidebar').removeClass('active');
-            $('.container-fluid').removeClass('active');
+            document.querySelector('.menu').classList.remove('active');
+            document.querySelector('.container-fluid').classList.remove('active');
+            sidebars = document.querySelectorAll('.sidebar');
+            for (var i=0;i<sidebars.length;i++) {
+                sidebar = sidebars[i];
+                sidebar.classList.remove('active');
+            }
         }
-        }
+    }
 ]);
