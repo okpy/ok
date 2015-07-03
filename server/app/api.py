@@ -1533,10 +1533,12 @@ class SearchAPI(APIResource):
 
     @classmethod
     def order(cls, model, query):
-        if hasattr(model, 'server_time'):
-            return query.order(-model.server_time)
-        else:
-            return query
+        try:
+            if hasattr(model, 'server_time'):
+                return query.order(-model.server_time)
+        except TypeError:
+            pass
+        return query
 
     @staticmethod
     def get_args(model, prime):

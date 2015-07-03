@@ -526,7 +526,7 @@ class SearchAPITest(APIBaseTestCase):
 
     def setUp(self):
         super(SearchAPITest, self).setUp()
-        self.assignment_name = 'Scheme'
+        self.assignment_name = 'Hog Project'
         self.user = self.accounts['dummy_student2']
         self._course = make_fake_course(self.user)
         self._course.put()
@@ -646,13 +646,19 @@ class SearchAPITest(APIBaseTestCase):
         
     def test_flag_onlyfinal(self):
         """ Testing if onlyfinal flag operates without error """
-        query = '-assignment %s -onlyfinal %s'
+        query = '-assignment "%s" -onlyfinal %s'
+        self.API.querify(query % (self.assignment_name, 'true'))
+        self.API.querify(query % (self.assignment_name, 'false'))
+
+    def test_flag_onlyfinal_with_quotations(self):
+        """ Testing if onlyfinal flag with double quotations operates without error """
+        query = '-date --after "2015-06-22" -assignment "%s" -onlyfinal %s'
         self.API.querify(query % (self.assignment_name, 'true'))
         self.API.querify(query % (self.assignment_name, 'false'))
 
     def test_flag_onlybackup(self):
         """ Testing if onlybackup flag operates without error """
-        query = '-assignment %s -onlybackup %s'
+        query = '-assignment "%s" -onlybackup %s'
         self.API.querify(query % (self.assignment_name, 'true'))
         self.API.querify(query % (self.assignment_name, 'false'))
         
