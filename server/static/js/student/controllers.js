@@ -15,6 +15,10 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
     }
 ])
 
+function report_error($window, err) {
+    $window.swal('Error', err.data.message, 'error');
+}
+
 function filter_rows(items) {
     rows = [];
     row = [];
@@ -43,7 +47,9 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
         } else {
             $scope.courses = $scope.rows = []
         }
-      });
+      }, function(err) {
+           report_error($window, err);
+       });
       if ($window.user.indexOf("berkeley.edu") == -1) {
         $window.swal({
             title: "Is this the right login?",
@@ -73,7 +79,9 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
             } else {
                 $scope.courses = $scope.rows = undefined;
             }
-          });
+          }, function(err) {
+            report_error($window, err);
+        });
       }
     }
 ]);
@@ -91,7 +99,9 @@ app.controller("AssignmentOverviewController", ['$scope', 'Assignment', 'User', 
         created: true,
       }}, function(response) {
       $scope.assignments = response.results;
-    })}
+    }, function(err) {
+         report_error($window, err);
+     })}
 ]);
 
 // Assignment Controllers
@@ -99,7 +109,9 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
   function($scope, Assignment, User, $timeout) {
     Group.query(function(response) {
       $scope.assignments = response.results;
-    })}
+    }, function(err) {
+         report_error($window, err);
+     })}
 ]);
 
 
@@ -126,7 +138,9 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           delete $scope.submission.messages.file_contents['submit'];
           $scope.isSubmit = true;
         }
-      });
+      }, function(err) {
+           report_error($window, err);
+       });
   }]);
 
 
@@ -142,7 +156,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $scope.closeDetails();
             $scope.initAssignments(response.assignments);
           }, function (error) {
-            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
+            report_error($window, error);
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
       }
@@ -228,9 +242,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
                 timer: 3500,
                 type: "success"
             });
-        },
-        function (error) {
-            $window.swal('Uh oh', error.data.message, 'error')
+        }, function(err) {
+            report_error($window, err);
         })
       }
 
@@ -264,7 +277,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $scope.initAssignments(response.assignments);
             $scope.initSortable();
           }, function (error) {
-            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
+            report_error($window, error);
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           });
 
@@ -275,10 +288,13 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             Group.removeMember({
               id: currGroup.id,
               email: member.email[0]
-            }, function (err) {
+            }, function (response) {
+                $window.swal('Removed!', 'You may now invite additional members to your group.', 'success');
                 $scope.closeDetails();
                 $scope.reloadView();
-            });
+            }, function(err) {
+                  report_error($window, err);
+              });
       };
 
       $scope.winRate = function (assign, backupId) {
@@ -304,7 +320,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             'error': true
           }
 
-          $window.swal("Uhoh",'There was an error','error')
+          report_error($window, err);
         });
       }
 
@@ -321,7 +337,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             });
             $scope.reloadView();
           }, function (err) {
-            $window.swal("Oops...", "Looks like this invitation has expired.", "error");
+            report_error($window, err);
           });
       };
 
@@ -338,7 +354,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             });
             $scope.reloadView();
           }, function (err) {
-            $window.swal("Oops...", "Looks like you've already joined this group..", "error");
+            report_error($window, err);
           });
       };
 
@@ -355,7 +371,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               quantity: $scope.subm_quantity
             }, function (response) {
               assign.submissions = response;
-            });
+            }, function(err) {
+                 report_error($window, err);
+             });
       }
 
       $scope.getBackups = function (assign, toIncrease) {
@@ -367,7 +385,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               quantity: $scope.backup_quantity
             }, function (response) {
                 assign.backups = response;
-            });
+            }, function(err) {
+                 report_error($window, err);
+             });
       }
 
       $scope.changeSubmission = function (submId) {
@@ -382,7 +402,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-//            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
             $window.swal("Oops...", "Please submit again, instead. This feature is not yet ready.", "error");
         })
       }
@@ -403,10 +422,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
                   type: "success"
                 });
                 $scope.reloadView();
-          }, function (err) {
-            console.log(err);
-            $window.swal("Oops.", err.data.message, "error");
-         });
+          }, function(err) {
+               report_error($window, err);
+           });
         }
       };
 
