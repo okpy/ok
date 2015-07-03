@@ -52,6 +52,12 @@ indexes:
   properties:
   - name: created
 
+- kind: FinalSubmissionv2
+  properties:
+  - name: assignment
+  - name: server_time
+    direction: desc
+
 - kind: Groupv2
   properties:
   - name: assignment
@@ -106,6 +112,17 @@ indexes:
 - kind: Submissionv2
   properties:
   - name: assignment
+  - name: server_time
+
+- kind: Submissionv2
+  properties:
+  - name: assignment
+  - name: server_time
+    direction: desc
+
+- kind: Submissionv2
+  properties:
+  - name: assignment
   - name: submitter
   - name: server_time
 
@@ -120,6 +137,12 @@ indexes:
   properties:
   - name: submitter
   - name: server_time
+
+- kind: Submissionv2
+  properties:
+  - name: submitter
+  - name: server_time
+    direction: desc
 
 - kind: Submissionvtwo
   properties:
