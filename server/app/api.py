@@ -1410,7 +1410,7 @@ class SearchAPI(APIResource):
     }
 
     defaults = {
-        'onlywcode': (op.__eq__, 'True')
+        # 'onlywcode': (op.__eq__, 'True')
     }
 
     operators = {
@@ -1501,7 +1501,12 @@ class SearchAPI(APIResource):
         scope = {k: tuple(v) for k, v in cls.defaults.items()}
         for token in tokens:
             flag, dummy, opr, quote, arg = token
-            scope[flag] = (cls.operators[opr or 'eq'], arg)
+            try:
+                scope[flag] = (cls.operators[opr or 'eq'], arg)
+            except KeyError:
+                raise BadValueError('No such operator "%s". \
+                Only these are allowed: eq, equal, lt, gt, \
+                before, after.' % opr)
         return scope
 
     @classmethod
@@ -1510,7 +1515,14 @@ class SearchAPI(APIResource):
         scope = cls.translate(query)
         for k, v in scope.items():
             op, arg = v
-            scope[k] = (op, cls.flags[k](op, arg))
+            try:
+                scope[k] = (op, cls.flags[k](op, arg))
+            except KeyError:
+                raise BadValueError('No such flag "%s". Only \
+                these are allowed: %s' % (k, str(
+                    ', '.join(cls.flags.keys()))))
+            except ValueError as e:
+                raise BadValueError(str(e))
         return scope
 
     @classmethod
@@ -1555,8 +1567,7 @@ class SearchAPI(APIResource):
             opr, arg = prime['date']
             args.append(opr(model.server_time, arg))
         if 'onlywcode' in keys:
-            pass
-            # TODO: complete onlywcode : query only submissions that have code
+            raise BadValueError('-onlywcode is not yet implemented, sorry.')
         return args
 
     @staticmethod
