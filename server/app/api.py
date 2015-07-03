@@ -1487,7 +1487,8 @@ class SearchAPI(APIResource):
         If quotes are detected, the string inside is allowed spaces and
         a second, identical quote must be found.
         """
-        tokenizer = re.compile(ur'-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s*)?(?P<quote>"|\')?(?P<arg>(?(quote)[\S ]*|[\S]*))(?(quote)\4)')
+        tokenizer = re.compile(
+            ur'-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s*)?(?P<quote>"|\')?(?P<arg>(?(quote)[\S ]*|[\S]*))(?(quote)\4)')
         return tokenizer.findall(query)
 
     @classmethod
