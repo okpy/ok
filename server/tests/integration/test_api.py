@@ -526,6 +526,13 @@ class SearchAPITest(APIBaseTestCase):
 
     def setUp(self):
         super(SearchAPITest, self).setUp()
+        self.assignment_name = 'Scheme'
+        self.user = self.accounts['dummy_student2']
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assign = make_fake_assignment(self._course, self.user)
+        self._assign.name = self._assign.display_name = self.assignment_name
+        self._assign.put()
         
     def get_accounts(self):
         return APITest().get_accounts()
@@ -621,6 +628,22 @@ class SearchAPITest(APIBaseTestCase):
         operator, arg = scope['assignment']
         self.assertEqual(operator, op.__eq__)
         self.assertEqual(arg, 'Scheme')
+
+    ###########
+    # QUERIFY #
+    ###########
+        
+    def test_flag_onlyfinal(self):
+        """ Testing if onlyfinal flag operates without error """
+        query = '-assignment %s -onlyfinal %s'
+        self.API.querify(query % (self.assignment_name, 'true'))
+        self.API.querify(query % (self.assignment_name, 'false'))
+
+    def test_flag_onlybackup(self):
+        """ Testing if onlybackup flag operates without error """
+        query = '-assignment %s -onlybackup %s'
+        self.API.querify(query % (self.assignment_name, 'true'))
+        self.API.querify(query % (self.assignment_name, 'false'))
 
 if __name__ == '__main__':
     unittest.main()
