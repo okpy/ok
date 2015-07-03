@@ -2037,14 +2037,14 @@ class QueuesAPI(APIResource):
         if self.check_permissions(user, data):
             raise Need('get').exception()
 
-        course_key, assignment_key = data['course'], data['assignment']
+        course_key, assignment_key, staff_list = data['course'], data['assignment'], data['staff']
         userify = lambda parts: [part.user.get() for part in parts]
-
         
-        staff = userify(models.Participant.query(
+        staff = [staff for staff in
+            userify(models.Participant.query(
             models.Participant.role == STAFF_ROLE,
             models.Participant.course == course_key).fetch())
-
+            if staff_list[0] == '*' or staff.email[0] in staff_list]
 
         subms = models.FinalSubmission.query(
             models.FinalSubmission.assignment == assignment_key
