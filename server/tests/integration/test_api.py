@@ -517,6 +517,21 @@ class GroupAPITest(APITest, APIBaseTestCase):
     def test_entity_create_basic(self):
         pass # No creation
 
+
+class SearchAPITest(APIBaseTestCase):
+
+    def setUp(self):
+        super(SearchAPITest, self).setUp()
+        
+    def get_accounts(self):
+        return APITest().get_accounts()
+
+    ##############
+    # TEST PARSE #
+    ##############
+    
+    def test_parse_basic(self):
+        assert False
+
 if __name__ == '__main__':
     unittest.main()
-
