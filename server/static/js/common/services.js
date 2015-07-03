@@ -213,9 +213,7 @@ app.factory('Course', ['$resource',
         assignments: {
            isArray: true,
            url:'/api/v1/course/:id/assignments',
-           transformResponse: function(data) {
-             return JSON.parse(data).data;
-           }
+           transformResponse: defaultTransformer
         },
         staff: {
           isArray: true,
@@ -325,9 +323,7 @@ app.factory('Search', ['$resource',
         }, {
           query: {
             url: '/api/v1/search',
-            transformResponse: function(data) {
-              return JSON.parse(data).data;
-            }
+            transformResponse: defaultTransformer
           }
         }
       )
