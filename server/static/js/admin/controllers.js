@@ -284,7 +284,23 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
       id: $stateParams.courseId
     }, function(response) {
       $scope.course = response;
+      $scope.stafflist = $scope.selection = $scope.course.staff;
     });
+    
+    // http://stackoverflow.com/a/14520103/4855984
+    $scope.toggleSelection = function toggleSelection(staffEmail) {
+        var idx = $scope.selection.indexOf(staffEmail);
+
+        // is currently selected
+        if (idx > -1) {
+          $scope.selection.splice(idx, 1);
+        }
+
+        // is newly selected
+        else {
+          $scope.selection.push(staffEmail);
+        }
+      };
 
     $scope.reloadAssignment = function() {
       Assignment.get({

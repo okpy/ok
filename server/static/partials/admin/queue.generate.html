@@ -20,12 +20,21 @@
     <form >
       <div class="box-body">
         <div class="form-group">
-          <label>Student Emails (CSV) <a ui-sref="students.list({courseId:course.id})">View all students</a></label>
+          <label>Student Emails (CSV) <a ui-sref="students.list({courseId:course.id})">View student list</a></label>
           <input ng-model="newQs.students" type="text" class="form-control input-lg" placeholder="bob@doe.com, apples@okpy.org">
         </div>
         <div class="form-group">
-          <label>Staff Emails (CSV) <a ui-sref="staff.list({courseId:course.id})">View all staff</a></label>
-          <input ng-model="newQs.staff" type="text" class="form-control input-lg" placeholder="admin@okpy.org, apples@okpy.org">
+          <label ng-hide="stafflist.length > 0">Staff Emails (CSV) <a ui-sref="staff.list({courseId:course.id})">View staff list</a></label>
+          <input ng-hide="stafflist.length > 0" ng-model="newQs.staff" type="text" class="form-control input-lg" placeholder="admin@okpy.org, apples@okpy.org">
+            <label ng-show="stafflist.length > 0" ng-repeat="staff in stafflist">
+                <input
+                    type="checkbox"
+                    name="selectedStaff[]"
+                    value="{{staff.email[0]}}"
+                    ng-checked="selection.indexOf(staff.email[0]) > -1"
+                    ng-click="toggleSelection(staff.email[0])"
+                > {{ staff.email[0] }}
+            </label>
         </div>
          <button ng-click="generateQs()" class="btn btn-block btn-primary btn-lg">Generate Queues</button>
 
