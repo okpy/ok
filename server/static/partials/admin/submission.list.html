@@ -59,7 +59,7 @@
 
         <tr ng-repeat="submission in submissions" ts-repeat>
           <td>
-            <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
+              <a ui-sref='course.assignment.edit({courseId: course.id, assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}} </a>
           </td>
           <td>{{submission.submitter.email[0]}}</td>
           <td>
