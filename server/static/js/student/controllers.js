@@ -224,7 +224,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             });
         },
         function (error) {
-            $window.swal('Uh oh', 'There was issue saving the new order.', 'error')
+            $window.swal('Uh oh', error.data.message, 'error')
         })
       }
       
