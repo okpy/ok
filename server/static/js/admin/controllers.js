@@ -676,8 +676,6 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
        submissions.push(submDict[key]['id']);
      }
      var currSubm = submissions.indexOf(parseInt($stateParams.submissionId));
-     console.log(currSubm)
-     console.log(submissions)
 
      $scope.allSubmissions = submissions;
      $scope.currentPage = currSubm;
