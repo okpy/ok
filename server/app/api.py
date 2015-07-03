@@ -2025,7 +2025,9 @@ class QueuesAPI(APIResource):
             'methods': set(['POST']),
             'web_args': {
                 'course': KeyArg('Course', required=True),
-                'assignment': KeyArg('Assignment', required=True)
+                'assignment': KeyArg('Assignment', required=True),
+                'staff': Arg(list, required=True),
+                'students': Arg(list, required=True)
             }
         }
     }

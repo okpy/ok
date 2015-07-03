@@ -328,11 +328,11 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
     }
     
     $scope.generateQs = function() {
-        var staff = $scope.selection.length > 0 ? $scope.selection : $scope.newQs.staff;
+        var staff = $scope.selection.length > 0 ? $scope.selection : [$scope.newQs.staff];
         Queues.generate({
             course: $scope.course.id,
             assignment: $scope.assignment.id,
-            students: $scope.newQs.students,
+            students: [$scope.newQs.students],
             staff: staff
         }, function (response) {
             $window.swal('Success', 'Queues generated', 'success');
