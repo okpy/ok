@@ -484,6 +484,7 @@ class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
     name = ndb.StringProperty() # E.g., cal/cs61a/fa14/proj1
     display_name = ndb.StringProperty()
+    url = ndb.StringProperty()
     points = ndb.FloatProperty()
     templates = ndb.JsonProperty()
     creator = ndb.KeyProperty(User)
@@ -497,7 +498,7 @@ class Assignment(Base):
     autograding_enabled = ndb.BooleanProperty(default=False)
     grading_script_file = ndb.TextProperty()
     zip_file_url = ndb.StringProperty()
-
+    
     # TODO Add services requested
 
     @classmethod
