@@ -702,26 +702,21 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
     $scope.storage = $sessionStorage;
 
-    $scope.submission = Submission.get({
-      fields: {
-        created: true,
-        compScore: true,
-        tags: true,
-        message: true
-      }
-    }, {
+    Submission.get({
       id: $stateParams.submissionId
-    }, function () {
+    }, function(response) {
+      $scope.submission = response;
       if ($scope.submission.compScore == null) {
-        $scope.compScore = null;
-        $scope.compMessage = null;
-      } else {
-        $scope.compScore = $scope.submission.compScore.score;
-        $scope.compMessage = $scope.submission.compScore.message;
-      }
-    }, function(err) {
-        report_error($window, err);
+          $scope.compScore = null;
+          $scope.compMessage = null;
+        } else {
+          $scope.compScore = $scope.submission.compScore.score;
+          $scope.compMessage = $scope.submission.compScore.message;
+        }
+    }, function(error) {
+      report_error($window, error);
     });
+
 
     if ($scope.storage.currentQueue) {
       var queue = JSON.parse($scope.storage.currentQueue);
