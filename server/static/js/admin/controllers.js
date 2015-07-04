@@ -931,7 +931,7 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
       text = $scope.commentText.text;
       if (text !== undefined && text.trim() != "") {
         Submission.addComment({
-          id: $scope.backupId,
+          id: $stateParams.submissionId,
           file: $scope.file_name,
           index: $scope.codeline.rightNum - 1,
           message: text,
