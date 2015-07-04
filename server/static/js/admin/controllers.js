@@ -879,6 +879,7 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
     $scope.showWriter = true;
     $scope.toggleComment = function() {
       $scope.showComment = !$scope.showComment;
+      $scope.hideBox = !$scope.showComment;
     }
     $scope.toggleBox = function() {
       $scope.hideBox = !$scope.hideBox;
@@ -907,8 +908,9 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
           id: $stateParams.submissionId,
           comment: $scope.comment.id
         }, function (result){
-          $scope.toggleBox()
-          $scope.comment = false;
+          $scope.toggleBox();
+          $scope.toggleComment();
+          $scope.toggleWriter();
         }, function(err) {
             report_error($window, err);
         });
