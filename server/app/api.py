@@ -439,6 +439,18 @@ class ParticipantAPI(APIResource):
                 })
         return json.dumps(data)
 
+    def check(self, emails, course, role):
+        parts = []
+        for email in emails:
+            part = models.Participant.has_role(
+                models.User.lookup(email).key,
+                course,
+                role)
+            if not part:
+                raise BadValueError('Check failed.')
+            parts.append(part)
+        return parts
+
 
 class UserAPI(APIResource):
     """
@@ -778,6 +790,9 @@ class AssignmentAPI(APIResource):
                 'grade_final': BooleanArg(),
                 'token': Arg(str)
             }
+        },
+        'queues': {
+            'methods': set(['GET']),
         }
     }
 
@@ -929,6 +944,14 @@ class AssignmentAPI(APIResource):
         # TODO
         raise BadValueError('Only supports batch uploading.')
 
+    def queues(self, obj, user, data):
+        """ Return all composition queues for this assignment """
+        need = Need('staff')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        return models.Queue.query(models.Queue.assignment == obj.key).fetch()
+
 
 class SubmitNDBImplementation(object):
     """
@@ -1074,6 +1097,7 @@ class SubmissionAPI(APIResource):
             name = user.email[0]+'-'+str(obj.created)
         except IndexError:
             name = str(obj.created)
+        name = name.replace('.', '-').replace(' ', '_')
         messages = obj.get_messages()
         if 'file_contents' not in messages:
             raise BadValueError('Submission has no contents to download')
@@ -2013,6 +2037,71 @@ class QueueAPI(APIResource):
         ent.assigned_staff = [models.User.get_or_insert(
             user.id()).key for user in ent.assigned_staff]
         return ent
+    
+    
+class QueuesAPI(APIResource):
+    """ API resource for sets of queues """
+    
+    contains_entities = False
+
+    methods = {
+        'generate': {
+            'methods': set(['POST']),
+            'web_args': {
+                'course': KeyArg('Course', required=True),
+                'assignment': KeyArg('Assignment', required=True),
+                'staff': Arg(list, required=True)
+            }
+        }
+    }
+    
+    def generate(self, user, data):
+        """ Splits up submissions among staff members """
+        
+        if self.check_permissions(user, data):
+            raise Need('get').exception()
+
+        course_key, assignment_key, staff_list = data['course'], data['assignment'], data['staff']
+        userify = lambda parts: [part.user.get() for part in parts]
+        
+        staff = [staff for staff in
+            userify(models.Participant.query(
+            models.Participant.role == STAFF_ROLE,
+            models.Participant.course == course_key).fetch())
+            if staff_list[0] == '*' or staff.email[0] in staff_list]
+        ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
+
+        subms = models.FinalSubmission.query(
+            models.FinalSubmission.assignment == assignment_key
+        ).fetch()
+        
+        queues = []
+        
+        for instr in staff:
+            q = models.Queue.query(
+                models.Queue.owner == instr.key,
+                models.Queue.assignment == assignment_key).get()
+            if not q:
+                q = models.Queue(
+                    owner=instr.key, 
+                    assignment=assignment_key,
+                    assigned_staff=[instr.key])
+                q.put()
+            queues.append(q)
+
+        i = 0
+
+        for subm in subms:
+            subm.queue = queues[i].key
+            subm.put()
+            i = (i + 1) % len(staff)
+            
+        return queues
+
+    def check_permissions(self, user, data):
+        course = data['course'].get()
+        return user.key not in course.staff and not user.is_admin
+    
 
 class FinalSubmissionAPI(APIResource):
     """

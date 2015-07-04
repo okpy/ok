@@ -1,5 +1,6 @@
 // Error Handling
 function report_error($window, err) {
+    console.log(err);
     $window.swal('Error', err.data.message, 'error');
 }
 
@@ -253,6 +254,128 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
     }
   }
   ]);
+  
+app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queues",
+  function ($scope, $window, $state, $stateParams, Assignment, Course, Queues) {
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+    });
+
+    // combine into one call?
+    $scope.reloadAssignment = function() {
+      Assignment.get({
+        id: $stateParams.assignmentId
+      }, function (response) {
+        $scope.assignment = response;
+      }, function (err) {
+        $window.swal('Error', 'Could not load assignment. Wrong page?', 'error')
+       });
+    }
+    $scope.reloadQueues = function() {
+        Assignment.queues({
+            id: $stateParams.assignmentId
+        },function (response) {
+            $scope.queues = response;
+        }, function (err) {
+            $window.swal('Error', 'Could not load queues. Maybe none exist?', 'error')
+        });
+    }
+    
+    $scope.generateQueues = function() {
+        Queues.generate({
+            course: $scope.course.id,
+            assignment: $scope.assignment.id
+        }, function (response) {
+            $window.swal('Success', 'Queues generated', 'success');
+            $scope.queues = response;
+        }, function (err) {
+            $window.swal('Error', 'Queues could not be generated.', 'error');
+        });
+    }
+    
+    $scope.reloadAssignment();
+    $scope.reloadQueues();
+}])
+
+app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queues",
+  function ($scope, $window, $state, $stateParams, Assignment, Course, Queues) {
+    $scope.newQs = {
+        'students': '*',
+        'staff': '*'
+    }
+  
+    Course.get({
+      id: $stateParams.courseId
+    }, function(response) {
+      $scope.course = response;
+      $scope.hideStaffList();
+    });
+    
+    $scope.hideStaffList = function hideStaffList() {
+        $scope.stafflist = $scope.selection = [];
+    }
+    
+    $scope.showStaffList = function showStaffList() {
+        Course.staff({
+            id: $stateParams.courseId
+        },function (response) {
+            $scope.stafflist = [];
+            for (var i = 0;i<response.length;i++) {
+                var instructor = response[i];
+                var email = instructor.user.email[0];
+                if ($scope.stafflist.indexOf(email) == -1) {
+                    $scope.stafflist.push(email);
+                }
+            }
+            $scope.selection = $scope.stafflist.slice();
+        });
+    }
+    
+    // http://stackoverflow.com/a/14520103/4855984
+    $scope.toggleSelection = function toggleSelection(staffEmail) {
+        var idx = $scope.selection.indexOf(staffEmail);
+
+        // is currently selected
+        if (idx > -1) {
+          $scope.selection.splice(idx, 1);
+        }
+
+        // is newly selected
+        else {
+          $scope.selection.push(staffEmail);
+        }
+      };
+
+    $scope.reloadAssignment = function() {
+      Assignment.get({
+        id: $stateParams.assignmentId
+      }, function (response) {
+        $scope.assignment = response;
+      }, function (err) {
+        $window.swal('Error', 'Could not load assignment. Wrong page?', 'error')
+       });
+    }
+    
+    $scope.generateQs = function() {
+        var staff = $scope.selection.length > 0 ? $scope.selection : $scope.newQs.staff.split(',');
+        console.log(staff);
+        Queues.generate({
+            course: $scope.course.id,
+            assignment: $scope.assignment.id,
+//            students: [$scope.newQs.students],
+            staff: staff
+        }, function (response) {
+            $window.swal('Success', 'Queues generated', 'success');
+            $state.transitionTo("course.assignment.queue.list", {'courseId': $scope.course.id, 'assignmentId': $scope.assignment.id}, {'reload': true});
+        }, function (err) {
+            $window.swal('Error', 'Queues could not be generated.', 'error');
+        });
+    }
+    
+    $scope.reloadAssignment();
+}]);
 
 app.controller("SubmissionDashboardController", ["$scope", "$window", "$state", "Submission",
   function ($scope, $window, $state, Submission) {
@@ -701,26 +824,21 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
     $scope.storage = $sessionStorage;
 
-    $scope.submission = Submission.get({
-      fields: {
-        created: true,
-        compScore: true,
-        tags: true,
-        message: true
-      }
-    }, {
+    Submission.get({
       id: $stateParams.submissionId
-    }, function () {
+    }, function(response) {
+      $scope.submission = response;
       if ($scope.submission.compScore == null) {
-        $scope.compScore = null;
-        $scope.compMessage = null;
-      } else {
-        $scope.compScore = $scope.submission.compScore.score;
-        $scope.compMessage = $scope.submission.compScore.message;
-      }
-    }, function(err) {
-        report_error($window, err);
+          $scope.compScore = null;
+          $scope.compMessage = null;
+        } else {
+          $scope.compScore = $scope.submission.compScore.score;
+          $scope.compMessage = $scope.submission.compScore.message;
+        }
+    }, function(error) {
+      report_error($window, error);
     });
+
 
     if ($scope.storage.currentQueue) {
       var queue = JSON.parse($scope.storage.currentQueue);
@@ -731,8 +849,6 @@ app.controller("SubmissionDiffCtrl", ['$scope', '$location', '$window', '$stateP
        submissions.push(submDict[key]['id']);
      }
      var currSubm = submissions.indexOf(parseInt($stateParams.submissionId));
-     console.log(currSubm)
-     console.log(submissions)
 
      $scope.allSubmissions = submissions;
      $scope.currentPage = currSubm;
@@ -880,6 +996,7 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
     $scope.showWriter = true;
     $scope.toggleComment = function() {
       $scope.showComment = !$scope.showComment;
+      $scope.hideBox = !$scope.showComment;
     }
     $scope.toggleBox = function() {
       $scope.hideBox = !$scope.hideBox;
@@ -905,11 +1022,13 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
       });
       modal.result.then(function() {
         Submission.deleteComment({
-          id: $scope.backupId,
+          id: $stateParams.submissionId,
           comment: $scope.comment.id
         }, function (result){
-          $scope.toggleBox()
-          $scope.comment = false;
+          $scope.toggleBox();
+          $scope.toggleComment();
+          $scope.toggleWriter();
+          document.querySelector('#comment-'+$scope.comment.id).remove();
         }, function(err) {
             report_error($window, err);
         });
@@ -932,7 +1051,7 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
       text = $scope.commentText.text;
       if (text !== undefined && text.trim() != "") {
         Submission.addComment({
-          id: $scope.backupId,
+          id: $stateParams.submissionId,
           file: $scope.file_name,
           index: $scope.codeline.rightNum - 1,
           message: text,
@@ -1192,6 +1311,8 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$window", "Submission", "
       id: $stateParams.queueId
     }, function (result) {
       $scope.queue = result;
+      $scope.assignment = $scope.queue.assignment.id;
+      $scope.course = $scope.assignment.course;
       result['submissions'].sort(function(a, b) {
         return a.id - b.id;
       });

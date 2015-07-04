@@ -1,3 +1,9 @@
+// Error Handling
+function report_error($window, err) {
+    console.log(err);
+    $window.swal('Error', err.data.message, 'error');
+}
+
 app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams",
     function ($scope, $window, $state, $stateParams) {
         $scope.openMenu = function(menu) {
@@ -14,10 +20,6 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
         }
     }
 ])
-
-function report_error($window, err) {
-    $window.swal('Error', err.data.message, 'error');
-}
 
 function filter_rows(items) {
     rows = [];
