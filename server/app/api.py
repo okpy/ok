@@ -1788,8 +1788,8 @@ class CourseAPI(APIResource):
         },
         'get_notifications': {
             'web_args': {
-                'start': Arg(int),
-                'count': Arg(int)
+                'page': Arg(int),
+                'num_per_page': Arg(int)
             }
         }
     }
@@ -1882,17 +1882,15 @@ class CourseAPI(APIResource):
     
     def get_notifications(self, course, user, data):
         """
-        Fetches latest notifications by course, based on start and count.
+        Fetches latest notifications by course.
 
         :param course:
         :param user:
         :param data:
         :return:
         """
-        start = data['start'] if data['start'] is not None else 0
-        count = data['count'] if data['count'] is not None else 10
         query = models.Notification.query(
-            course = course.id
+            models.Notification.course == course.key
         )
 
         return list(query.fetch())

@@ -21,20 +21,25 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
     }
 ])
 
-app.controller("NotificationsController", ["$scope", "$window", "$state", "$stateParams", 'Course',
-    function ($scope, $window, Course, User) {
+app.controller("NotificationsController", ["$scope", "$window", "$state", "$stateParams", 'Course', 'User',
+    function ($scope, $window, $state, $stateParams, Course, User) {
         $scope.notfs_per_page = 10;
         $scope.page = 1;
+        
+        $scope.loadMore = function() {
+            $scope.page += 1;
+            $scope.getNotifications($scope.page);
+        }
 
         $scope.getNotifications = function(page) {
             $scope.page = page;
-            
-            Course.getNotifications({
+            Course.get_notifications({
                 id: $stateParams.courseId,
                 page: $scope.page,
                 num_per_page: $scope.notfs_per_page
             }, function (response) {
-                $scope.notfs = response.results;
+                console.log(response);
+                $scope.notfs = response;
             });
         }
 
@@ -42,7 +47,7 @@ app.controller("NotificationsController", ["$scope", "$window", "$state", "$stat
             $('.notfs').toggleClass('active');
         }
 
-        $scope.getNotifications();
+        $scope.getNotifications(1);
     }
 ])
 

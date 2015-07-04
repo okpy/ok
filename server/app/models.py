@@ -1249,6 +1249,7 @@ class FinalSubmission(Base):
                                    score.tag])
         return all_scores
 
+
 class Notification(Base):
     """Notification to send out to users or to all members of a course"""
     message = ndb.StringProperty(required=True)
