@@ -966,7 +966,9 @@ class Group(Base):
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "{} is not enrolled in {}".format(email, course.get().display_name)
-        if user.key in self.member or user.key in self.invited:
+        if user.key in self.invited:
+            return '{} has already been invited'.format(email)
+        if user.key in self.member:
             return "{} is already in the group".format(email)
         has_user = ndb.OR(Group.member == user.key, Group.invited == user.key)
         if Group.query(has_user, Group.assignment == self.assignment).get():
@@ -1024,6 +1026,12 @@ class Group(Base):
 
         error = self.validate()
         if error:
+            subm = FinalSubmission.query(
+                FinalSubmission.group==self.key
+            ).get()
+            if subm:
+                subm.group = None
+                subm.put()
             self.key.delete()
         else:
             self.put()
