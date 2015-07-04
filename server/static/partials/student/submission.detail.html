@@ -5,7 +5,7 @@
         <div class="blob-main {{ !assign.final.final_submission ? (submission.assignment.active ? 'attn' : 'bad') : 'good'}}">
             <h2 class="blob-title ng-binding">{{ ::submission.assignment.display_name }}</h2>
             <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
-                {{ submission.assignment.due_date | amCalendar }}</p>
+                {{ submission.assignment.due_date | amCalendar }} &middot; <a href="/api/v1/submission/{{ submission.id }}/download"><i class="fa fa-download"></i> Download</a></p>
             <p class="blob-copy" ng-if="tag">{{tag}}</p>
         </div>
         <a ui-sref="student({courseId: courseId})">
