@@ -261,6 +261,11 @@ app.factory('Course', ['$resource',
           url: '/api/v1/course/:id/remove_student',
           transformResponse: defaultTransformer
         },
+        get_notifications: {
+          isArray: true,
+          url: '/api/v1/course/:id/get_notifications',
+          transformResponse: defaultTransformer
+        }
       });
     }
   ]);
