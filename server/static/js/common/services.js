@@ -1,9 +1,15 @@
 function defaultTransformer(data) {
-  json = JSON.parse(data)
-  if (json.status != '200') {
-    return json;
-  } else {
+  json = JSON.parse(data);
+  if (json.status == '200') {
     return json.data;
+  } else {
+    if (json.status == '500') {
+      if (json.message == 'internal server error :(') {
+        json.message = 'Object failed to instantiate.'
+      }
+      return json;
+    }
+    return json;
   }
 }
 
@@ -213,9 +219,7 @@ app.factory('Course', ['$resource',
         assignments: {
            isArray: true,
            url:'/api/v1/course/:id/assignments',
-           transformResponse: function(data) {
-             return JSON.parse(data).data;
-           }
+           transformResponse: defaultTransformer
         },
         staff: {
           isArray: true,
@@ -325,9 +329,7 @@ app.factory('Search', ['$resource',
         }, {
           query: {
             url: '/api/v1/search',
-            transformResponse: function(data) {
-              return JSON.parse(data).data;
-            }
+            transformResponse: defaultTransformer
           }
         }
       )
