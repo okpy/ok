@@ -1074,6 +1074,7 @@ class SubmissionAPI(APIResource):
             name = user.email[0]+'-'+str(obj.created)
         except IndexError:
             name = str(obj.created)
+        name = name.replace('.', '-').replace(' ', '_')
         messages = obj.get_messages()
         if 'file_contents' not in messages:
             raise BadValueError('Submission has no contents to download')
