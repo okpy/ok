@@ -229,17 +229,15 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               arr = info.member;
               order = {}
               i = 0;
-              lis = document.querySelectorAll('.sidebar.active .sortable li');
-              for (var i = 0;i<lis.length;i++) {
-                  li = lis[i];
-                  order[li.getAttribute('data-i')] = i
+              $('.sidebar.active .sortable li').each(function() {
+                  order[$(this).data('i')] = i
                   i += 1;
-              }
+              });
               for (var i = 0; i< arr.length; i++) {
                 member = arr[i];
                 member.i = j = order[i];
                 member.letter = letter = String.fromCharCode(65 + order[i]);
-                document.querySelector('.sortable li[data-i="'+i+'"] .member-letter').innerHTML = letter;
+                $('.sortable li[data-i="'+i+'"]').find('.member-letter').html(letter);
               }
               return arr
           }

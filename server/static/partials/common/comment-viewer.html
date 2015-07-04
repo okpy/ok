@@ -17,10 +17,10 @@
           <div ng-bind-html="convertMarkdown(comment.message)"></div>
         </div>
       </div>
-    </div>
-    <div ng-if="!showComment">
-      <div>
-        <button ng-click="toggleComment()" class='btn btn-primary'>Reply</button>
+      <div ng-if="!showComment">
+        <div>
+          <a href="mailto:{{comment.author.email[0]}}"><button class='btn btn-primary'>Email Reply</button></a>
+        </div>
       </div>
     </div>
     <div ng-controller="WriteCommentController" class='comment-form' class='row' ng-if="showComment">
