@@ -911,6 +911,7 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
           $scope.toggleBox();
           $scope.toggleComment();
           $scope.toggleWriter();
+          document.querySelector('#comment-'+$scope.comment.id).remove();
         }, function(err) {
             report_error($window, err);
         });
