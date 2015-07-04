@@ -1,0 +1,89 @@
+<div>
+  <section class="content-header" ng-hide="dashboard">
+      <ol class="breadcrumb" >
+        <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+        <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
+        <li><a ui-sref="course.detail.stats({courseId:course.id})"><i class="fa fa-institution"></i> {{course.display_name}}</a></li>
+          <li class="active"><i class="fa fa-list"></i> All Assignments</li>
+      </ol>
+  </section>
+
+  <div class="box" >
+  <div class="box-header">
+    <h3 class="box-title" ng-if="assignments.$resolved && assignments.length == 0" >No Assignments</h3>
+    <h3 class="box-title" ng-if="assignments.length > 0">Assignments</h3>
+    <div class="box-tools" style="float:right;">
+      <button class="btn btn-primary" ui-sref="course.assignment.create({courseId:course.id})"> <i class="fa fa-plus"></i> Create Assignment</button>
+    </div>
+
+  </div><!-- /.box-header -->
+
+  <div class="box-body no-padding table-responsive">
+    <table ts-wrapper ng-if="assignments.length > 0" class="table table-responsive table-striped table-bordered">
+    <tbody>
+    <tr>
+      <th ts-criteria="display_name">Name</th>
+      <th ts-criteria="active" ts-default>Active</th>
+      <th ts-criteria="points | parseFloat">Points</th>
+      <th ts-criteria="due_date" ts-default>Due Date</th>
+      <th ts-criteria="lock_date">Lock Date</th>
+      <!-- Future Progress Bar -->
+      <th style="width: 15%">Endpoint</th>
+      <th>Submissions</th>
+      <th>Scores</th>
+      <th>Edit</th>
+      <th>Delete</th>
+      <th>Autograde</th>
+      <th>Queues</th>
+    </tr>
+
+      <tr ng-repeat="assignment in assignments" ts-repeat>
+        <td>
+          <a ui-sref='course.assignment.edit({courseId: course.id, assignmentId:assignment.id})'>{{assignment.display_name}} </a>
+        </td>
+        <td>
+          <span ng-show="assignment.active">Yes</span>
+          <span ng-hide="assignment.active">No</span>
+        </td>
+        <td>{{assignment.points}}</td>
+        <td>
+          {{assignment.due_date | amCalendar}}
+        </td>
+        <td>
+          {{(assignment.lock_date | amCalendar) || 'None'}}
+        </td>
+
+        <td>
+          <span class="badge bg-info">{{assignment.name}}</span>
+        </td>
+          <!-- Future Progress Bar -->
+        <td>
+          <a ui-sref='course.submissions.query({courseId:course.id, query: "-assignment \""+assignment.display_name+"\""})' class="btn btn-primary btn-sm"><i class="fa fa-list"></i></a>
+        </td>
+        <td>
+          <a href="/api/v1/assignment/{{assignment.id}}/download_scores"><button class="btn btn-primary btn-sm"> <i class="fa fa-download"></i></button></a>
+        </td>
+        <td>
+          <a ui-sref="course.assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+        </td>
+        <td>
+          <a ng-click="delete(assignment)" class="btn btn-danger btn-sm"><i class="fa fa-trash-o"></i></a>
+        </td>
+
+        <!-- Autograding enabled -->
+        <td ng-show="assignment.autograding_enabled">
+            <a class="btn btn-primary btn-sm" ng-click="autograde(assignment)"><i class="fa fa-flash"></i> Grade All Final Submissions</a>
+        </td>
+        <td ng-hide="assignment.autograding_enabled">
+            <a class="btn btn-primary btn-sm disabled"><i class="fa fa-flash"></i> Disabled </a>
+        </td>
+        <td>
+            <a ui-sref="course.assignment.queue.list({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+        </td>
+          </tr>
+        </tbody>
+      </table>
+    </div><!-- /.box-body -->
+  </div><!-- /.box -->
+</div>
+

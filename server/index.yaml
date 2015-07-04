@@ -27,12 +27,6 @@ indexes:
   - name: created
     direction: desc
 
-- kind: Assignmentv2
-  properties:
-  - name: course
-  - name: created
-    direction: desc
-
 - kind: Backupv2
   properties:
   - name: assignment
@@ -57,6 +51,12 @@ indexes:
   ancestor: yes
   properties:
   - name: created
+
+- kind: FinalSubmissionv2
+  properties:
+  - name: assignment
+  - name: server_time
+    direction: desc
 
 - kind: Groupv2
   properties:
@@ -98,6 +98,13 @@ indexes:
 
 - kind: Queuev2
   properties:
+  - name: course
+  - name: owner
+  - name: created
+    direction: desc
+
+- kind: Queuev2
+  properties:
   - name: owner
   - name: created
     direction: desc
@@ -110,6 +117,12 @@ indexes:
 - kind: Submissionv2
   properties:
   - name: assignment
+  - name: server_time
+    direction: desc
+
+- kind: Submissionv2
+  properties:
+  - name: assignment
   - name: submitter
   - name: server_time
 
@@ -124,6 +137,12 @@ indexes:
   properties:
   - name: submitter
   - name: server_time
+
+- kind: Submissionv2
+  properties:
+  - name: submitter
+  - name: server_time
+    direction: desc
 
 - kind: Submissionvtwo
   properties:

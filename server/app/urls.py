@@ -61,30 +61,6 @@ def landing():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("landing.html", **params)
 
-@app.route("/enrollment")
-def enrollment():
-    user = models.User.lookup(request.args.get('email'))
-    data = []
-    if user is not None:
-        parts = api.CourseAPI().get_courses(None, user, {'user': user.key})
-        for part in parts:
-            course = part.course.get()
-            offering = course.offering.split('/')
-            if len(offering) >= 3:
-                # will die if prefix other than 'fa', 'su' or 'sp' is used
-                term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
-                year = '20'+offering[2][2:]
-            else:
-                term = year = None
-            data.append({
-                'url': '/#/course/'+str(course.key.id()),
-                'display_name': course.display_name,
-                'institution': course.institution,
-                'term': term,
-                'year': year
-            })
-    return json.dumps(data)
-
 @app.route("/sudo/su/<su_email>")
 def sudo(su_email):
     user = users.get_current_user()
@@ -254,6 +230,13 @@ def register_api(view, endpoint, url):
     app.add_url_rule(
         '%s/<path:path>' % url, view_func=api_wrapper,
         methods=['GET', 'POST', 'DELETE', 'PUT'])
+    
+
+def register_root_api(api):
+    api = api()
+    for method, value in api.methods.items():
+        app.add_url_rule('/%s' % method, view_func=getattr(api, method))
+
 
 register_api(api.AssignmentAPI, 'assignment_api', 'assignment')
 register_api(api.SubmissionAPI, 'submission_api', 'submission')
@@ -263,5 +246,7 @@ register_api(api.CourseAPI, 'course_api', 'course')
 register_api(api.GroupAPI, 'group_api', 'group')
 register_api(api.UserAPI, 'user_api', 'user')
 register_api(api.QueueAPI, 'queue_api', 'queue')
+register_api(api.QueuesAPI, 'queues_api', 'queues')
 register_api(api.FinalSubmissionAPI, 'final_submission_api', 'final_submission')
 register_api(api.AnalyticsAPI, 'analytics_api', 'analytics')
+register_root_api(api.ParticipantAPI)

@@ -30,7 +30,7 @@
         </tr>
         <tr ng-repeat="member in members" ts-repeat>
           <td>
-            <a ui-sref='staff.detail({staffId:member.user.id})'>
+            <a ui-sref='course.submissions.query({courseId:course.id, query: "-user \""+member.user.email[0]+"\""})' >
               {{member.user.email[0]}}
             </a>
           </td>

@@ -1,3 +1,18 @@
+function defaultTransformer(data) {
+  json = JSON.parse(data);
+  if (json.status == '200') {
+    return json.data;
+  } else {
+    if (json.status == '500') {
+      if (json.message == 'internal server error :(') {
+        json.message = 'Object failed to instantiate.'
+      }
+      return json;
+    }
+    return json;
+  }
+}
+
 app.factory('User', ['$resource',
     function($resource) {
       return $resource('/api/v1/user/:id', {
@@ -5,53 +20,39 @@ app.factory('User', ['$resource',
         id: window.user,
       }, {
         get: {
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          },
+          transformResponse: defaultTransformer,
           cache: true
         },
         force_get: {
           method: "GET",
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          },
+          transformResponse: defaultTransformer,
           cache: false
         },
         create: {
           method: "POST",
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         invitations: {
           url: '/api/v1/user/:id/invitations',
           isArray: true,
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         finalsub: {
           method: "GET",
           url: '/api/v1/user/:id/final_submission',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         getBackups: {
           method: "GET",
           isArray: true,
           url: '/api/v1/user/:id/get_backups',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         getSubmissions: {
           method: "GET",
           isArray: true,
           url: '/api/v1/user/:id/get_submissions',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
       });
     }
@@ -66,51 +67,37 @@ app.factory('Submission', ['$resource',
         query: {
         },
         get: {
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          },
+          transformResponse: defaultTransformer,
           cache: true
         },
         diff: {
           url: '/api/v1/submission/:id/diff',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         addScore: {
           method: "POST",
           url: '/api/v1/submission/:id/score',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         addComment: {
           method: "POST",
           url: '/api/v1/submission/:id/add_comment',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         deleteComment: {
           method: "POST",
           url: '/api/v1/submission/:id/delete_comment',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         addTag: {
           method: "PUT",
           url: '/api/v1/submission/:id/add_tag',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         removeTag: {
           method: "PUT",
           url: '/api/v1/submission/:id/remove_tag',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         }
       });
     }
@@ -123,16 +110,7 @@ app.factory('FinalSubmission', ['$resource',
         id: "@id"
       }, {
         get: {
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
-        },
-        score: {
-          method: "POST",
-          url: '/api/v1/final_submission/:id/score',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
       });
     }
@@ -147,42 +125,40 @@ app.factory('Assignment', ['$resource',
       }, {
         query: {
           isArray: false,
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          },
+          transformResponse: defaultTransformer,
           cache: true
         },
         get: {
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         create: {
           method: "POST",
           url: '/api/v1/assignment',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         edit: {
           method: "POST",
           url: '/api/v1/assignment/:id/edit',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         group: {
           url: '/api/v1/assignment/:id/group',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
+        },
+        autograde: {
+          method: "POST",
+          url: '/api/v1/assignment/:id/autograde',
+          transformResponse: defaultTransformer
         },
         invite: {
           method: "POST",
           url: '/api/v1/assignment/:id/invite',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
+        },
+        queues: {
+          isArray:true,
+          url: '/api/v1/assignment/:id/queues',
+          transformResponse: defaultTransformer
         }
       });
     }
@@ -197,30 +173,27 @@ app.factory('Group', ['$resource',
         addMember: {
           url: '/api/v1/group/:id/add_member',
           method: 'PUT',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         removeMember: {
           url: '/api/v1/group/:id/remove_member',
           method: 'PUT',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         acceptInvitation: {
           url: '/api/v1/group/:id/accept',
           method: 'PUT',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         rejectInvitation: {
           url: '/api/v1/group/:id/decline',
           method: 'PUT',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
+        },
+        reorder: {
+          url: '/api/v1/group/:id/reorder',
+          method: 'PUT',
+          transformResponse: defaultTransformer
         }
       });
     }
@@ -242,71 +215,51 @@ app.factory('Course', ['$resource',
         create: {
           method: "POST",
           url: '/api/v1/course',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         get: {
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          },
+          transformResponse: defaultTransformer,
           cache: true
         },
         assignments: {
            isArray: true,
            url:'/api/v1/course/:id/assignments',
-           transformResponse: function(data) {
-             return JSON.parse(data).data;
-           }
+           transformResponse: defaultTransformer
         },
         staff: {
           isArray: true,
           url: '/api/v1/course/:id/get_staff',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         students: {
           isArray: true,
           url: '/api/v1/course/:id/get_students',
-         transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+         transformResponse: defaultTransformer
         },
         add_member: {
           method: "POST",
           url: '/api/v1/course/:id/add_staff',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         remove_member: {
           method: "POST",
           url: '/api/v1/course/:id/remove_staff',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         add_student: {
           method: "POST",
           url: '/api/v1/course/:id/add_student',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         add_students: {
           method: "POST",
           url: '/api/v1/course/:id/add_students',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         remove_student: {
           method: "POST",
           url: '/api/v1/course/:id/remove_student',
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
       });
     }
@@ -325,9 +278,7 @@ app.factory('Version', ['$resource',
         },
         get: {
           isArray: false,
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         update: {
           method: "PUT",
@@ -344,9 +295,7 @@ app.factory('FinalSubmissionChange', ['$resource',
         change: {
           method: "POST",
           url: "/api/v1/final_submission",
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
       });
     }
@@ -360,17 +309,13 @@ app.factory('Queue', ['$resource',
       }, {
         get: {
           cache: true,
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         pull: {
           method: "GET",
           url: "/api/v1/queue/:id",
           cache: false,
-          transformResponse: function(data) {
-            return JSON.parse(data).data;
-          }
+          transformResponse: defaultTransformer
         },
         query: {
           isArray: true,
@@ -381,14 +326,29 @@ app.factory('Queue', ['$resource',
       });
     }
   ]);
-  
-  
+
+
 app.factory('Search', ['$resource',
     function($resource) {
       return $resource('/api/v1/search', {
         }, {
           query: {
             url: '/api/v1/search',
+            transformResponse: defaultTransformer
+          }
+        }
+      )
+    }
+  ]);
+
+app.factory('Queues', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/queues', {
+        }, {
+          generate: {
+            isArray:true,
+            method: 'POST',
+            url: '/api/v1/queues/generate',
             transformResponse: function(data) {
               return JSON.parse(data).data;
             }
