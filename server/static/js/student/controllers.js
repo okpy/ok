@@ -23,23 +23,26 @@ app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams
 
 app.controller("NotificationsController", ["$scope", "$window", "$state", "$stateParams", 'Course',
     function ($scope, $window, Course, User) {
-        $scope.notfs_quantity = 10;
-        
-        $scope.getNotifications = function(toIncrease) {
-            if (toIncrease) {
-                $scope.notfs_quantity += 50;
-            }
+        $scope.notfs_per_page = 10;
+        $scope.page = 1;
+
+        $scope.getNotifications = function(page) {
+            $scope.page = page;
+            
+            Course.getNotifications({
+                id: $stateParams.courseId,
+                page: $scope.page,
+                num_per_page: $scope.notfs_per_page
+            }, function (response) {
+                $scope.notfs = response.results;
+            });
         }
-        
+
         $scope.toggleNotfs = function() {
             $('.notfs').toggleClass('active');
         }
-        
-        Course.getNotifications({
 
-        }, function (response) {
-            $scope.notfs = response.results;
-        });
+        $scope.getNotifications();
     }
 ])
 
