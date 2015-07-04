@@ -89,8 +89,8 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
 ]);
 
 // Assignment Controllers
-app.controller("AssignmentOverviewController", ['$scope', 'Assignment', 'User', '$timeout',
-  function($scope, Assignment, User, $timeout) {
+app.controller("AssignmentOverviewController", ['$scope', "$window",'Assignment', 'User', '$timeout',
+  function($scope, $window, Assignment, User, $timeout) {
     Assignment.query({
       fields: {
         id: true,
@@ -107,8 +107,8 @@ app.controller("AssignmentOverviewController", ['$scope', 'Assignment', 'User', 
 ]);
 
 // Assignment Controllers
-app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$timeout',
-  function($scope, Assignment, User, $timeout) {
+app.controller("GroupOverviewController", ['$scope', "$window",'Assignment', 'User', '$timeout',
+  function($scope, $window, Assignment, User, $timeout) {
     Group.query(function(response) {
       $scope.assignments = response.results;
     }, function(err) {
