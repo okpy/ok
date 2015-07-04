@@ -154,6 +154,11 @@ app.factory('Assignment', ['$resource',
           method: "POST",
           url: '/api/v1/assignment/:id/invite',
           transformResponse: defaultTransformer
+        },
+        queues: {
+          isArray:true,
+          url: '/api/v1/assignment/:id/queues',
+          transformResponse: defaultTransformer
         }
       });
     }
@@ -330,6 +335,23 @@ app.factory('Search', ['$resource',
           query: {
             url: '/api/v1/search',
             transformResponse: defaultTransformer
+          }
+        }
+      )
+    }
+  ]);
+
+app.factory('Queues', ['$resource',
+    function($resource) {
+      return $resource('/api/v1/queues', {
+        }, {
+          generate: {
+            isArray:true,
+            method: 'POST',
+            url: '/api/v1/queues/generate',
+            transformResponse: function(data) {
+              return JSON.parse(data).data;
+            }
           }
         }
       )
