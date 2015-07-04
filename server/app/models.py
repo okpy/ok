@@ -1026,10 +1026,10 @@ class Group(Base):
 
         error = self.validate()
         if error:
-            subm = FinalSubmission.query(
+            subms = FinalSubmission.query(
                 FinalSubmission.group==self.key
-            ).get()
-            if subm:
+            ).fetch()
+            for subm in subms:
                 subm.group = None
                 subm.put()
             self.key.delete()
