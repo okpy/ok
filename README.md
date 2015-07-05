@@ -1,6 +1,5 @@
 ok.py
 =====
-[![Coverage Status](https://coveralls.io/repos/Cal-CS-61A-Staff/ok/badge.svg)](https://coveralls.io/r/Cal-CS-61A-Staff/ok)
 
 The ok.py server performs and displays analysis of student progress
 based on logging sent from client scripts.
@@ -10,6 +9,7 @@ based on logging sent from client scripts.
 The ok.py software was developed for CS 61A at UC Berkeley.
 
 [![Build Status](https://travis-ci.org/Cal-CS-61A-Staff/ok.svg?branch=master)](https://travis-ci.org/Cal-CS-61A-Staff/ok)
+[![Coverage Status](https://coveralls.io/repos/Cal-CS-61A-Staff/ok/badge.svg)](https://coveralls.io/r/Cal-CS-61A-Staff/ok)
 
 Installation
 -------------
