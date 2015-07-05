@@ -1,0 +1,13 @@
+                            <li class="notfs" ng-controller="NotificationsController" ng-if="course">
+                                <img src="/static/student/images/icon-bell.png" ng-click="toggleNotfs()">
+                                <span class="notfs-count">5</span>
+                                <div class="notifications">
+                                    <div class="notfs-cont" ng-if="notfs.length > 0">
+                                        <a class="notf" ng-repeat="notf in notfs">
+                                            <p class="notf-copy">{{ notf.message }}</p>
+                                            <p class="notf-caption">{{ course.display_name }} <span>- {{ notf.written }}</span></p>
+                                        </a>
+                                        <div class="notf-action">load more</div>
+                                    </div>
+                                </div>
+                            </li>

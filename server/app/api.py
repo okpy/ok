@@ -534,6 +534,12 @@ class UserAPI(APIResource):
                 'other_email': Arg(str, required=True),
             }
         },
+        'get_notifications': {
+            'methods': set(['GET']),
+            'web_args': {
+                
+            }
+        }
     }
 
     def get(self, obj, user, data):
@@ -1773,6 +1779,18 @@ class CourseAPI(APIResource):
             }
         },
         'get_students': {
+        },
+        'add_student': {
+            'methods': set(['POST']),
+            'web_args': {
+                'student': KeyArg('User', required=True)
+            }
+        },
+        'get_notifications': {
+            'web_args': {
+                'page': Arg(int),
+                'num_per_page': Arg(int)
+            }
         }
     }
 
@@ -1860,7 +1878,22 @@ class CourseAPI(APIResource):
             models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
     def assignments(self, course, user, data):
-        return course.assignments.fetch()
+        return list(course.assignments)
+    
+    def get_notifications(self, course, user, data):
+        """
+        Fetches latest notifications by course.
+
+        :param course:
+        :param user:
+        :param data:
+        :return:
+        """
+        query = models.Notification.query(
+            models.Notification.course == course.key
+        )
+
+        return list(query.fetch())
 
     def get_my_courses(self, course, user, data):
         return self.get_courses(course, user, dict(user=user))
@@ -2133,6 +2166,41 @@ class FinalSubmissionAPI(APIResource):
         subm.mark_as_final()
         return subm.get_final()
 
+    def score(self, obj, user, data):
+        """
+        Sets composition score
+
+        :param obj: (object) target
+        :param user: (object) caller
+        :param data: (dictionary) data
+        :return: (int) score
+        """
+        need = Need('grade')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        score = models.Score(
+            score=data['score'],
+            message=data['message'],
+            grader=user.key)
+        grade = score.put()
+
+        submission = obj.submission.get()
+
+        # Create or updated based on existing scores.
+        if data['source'] == 'composition':
+          # Only keep any autograded scores.
+          submission.score = [autograde for autograde in submission.score \
+            if score.autograder]
+          submission.score.append(score)
+        else:
+          submission.score.append(score)
+
+        submission.put()
+
+        return score
+
+
 class AnalyticsAPI(APIResource):
     """
     The API resource for the AnalyticsDump Object
@@ -2178,3 +2246,54 @@ class AnalyticsAPI(APIResource):
             'key': job.job_dump.key.id()
         })
 
+
+class NotificationsAPI(APIResource):
+    """
+    The API resource for Notifications
+    """
+    
+    model = models.Notification
+    
+    methods = {
+        'add': {
+            'methods': set(['POST']),
+            'web_args': {
+                'message': Arg(str, required=True),
+                'url': Arg(str),
+                'course': KeyArg('Course', required=True),
+                'expiration': Arg(datetime)
+            }
+        },
+        'read': {
+        },
+        'index': {
+        }
+    }
+    
+    def add(self, course, user, data):
+        """
+        Adds a new notification to the database.
+        
+        :param course: target course 
+        :param user: user making the call
+        :param data: passed in via URL queries
+        :return: 
+        """
+        need = Need('staff')
+        if not course.can(user, need, course):
+            raise need.exception()
+        
+        notification = models.Notification(
+            message=data['message'],
+            url=data['url'],
+            course=course.key,
+            expiration=data['expiration'])
+        
+        notification.put()
+    
+    def read(self, obj, user, data):
+        pass
+        # implementation not complete
+    
+    def index(self, obj, user, data):
+        pass

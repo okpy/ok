@@ -1226,25 +1226,62 @@ class FinalSubmission(Base):
         self.submitter = self.submission.get().submitter
 
     def get_scores(self):
-        """ 
+        """
         Return a list of lists of the format [[student, score, message, grader, tag]]
-        if the submission has been scored. Otherwise an empty list. 
-        If the submission is a group submission, there will be an element 
+        if the submission has been scored. Otherwise an empty list.
+        If the submission is a group submission, there will be an element
         for each combination of student and score.
         """
-        # TODO: get the most recent score for each tag. 
-        # Question: will all scores have a grader? In particular the scores from the autograder. 
+        # TODO: get the most recent score for each tag.
+        # Question: will all scores have a grader? In particular the scores from the autograder.
         all_scores = []
         if self.group:
             members = [member for member in self.group.get().member]
-        else: 
+        else:
             members = [self.submitter]
         for member in members:
             email = member.get().email[0]
             for score in self.submission.get().score:
                 all_scores.append([email,
-                        score.score, 
-                        score.message,
-                        score.grader.get().email[0],
-                        score.tag])
+                                   score.score,
+                                   score.message,
+                                   score.grader.get().email[0],
+                                   score.tag])
         return all_scores
+
+
+class Notification(Base):
+    """Notification to send out to users or to all members of a course"""
+    message = ndb.StringProperty(required=True)
+    URL = ndb.StringProperty()
+    count = ndb.FloatProperty()
+    expiration = ndb.DateTimeProperty()
+    course = ndb.KeyProperty(Course)
+    status = ndb.IntegerProperty()
+    written = ndb.DateTimeProperty()
+    users = ndb.KeyProperty(kind='User', repeated=True)
+
+    @classmethod
+    def _can(cls, user, need, obj=None, query=None):
+        action = need.action
+        if not user.logged_in:
+            return False
+
+        if action == "index":
+            if user.is_admin:
+                return query
+            return False
+
+        if user.is_admin:
+            return True
+
+        return False
+
+
+class Receipts(Base):
+    """
+    Read receipts for notifications
+    """
+    user = ndb.KeyProperty(User)
+    notification = ndb.KeyProperty(Notification)
+    read = ndb.BooleanProperty()
