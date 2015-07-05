@@ -1,5 +1,6 @@
 ok.py
 =====
+[![Coverage Status](https://coveralls.io/repos/Cal-CS-61A-Staff/ok/badge.svg)](https://coveralls.io/r/Cal-CS-61A-Staff/ok)
 
 The ok.py server performs and displays analysis of student progress
 based on logging sent from client scripts.
