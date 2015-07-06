@@ -50,6 +50,7 @@ def convert_timezone(utc_dt):
 class Base(ndb.Model):
     """Shared utility methods and properties."""
     created = ndb.DateTimeProperty(auto_now_add=True)
+    statuses = ['inactive', 'active']
 
     @classmethod
     def from_dict(cls, values):
@@ -151,8 +152,7 @@ class User(Base):
     """
     email = ndb.StringProperty(repeated=True)
     is_admin = ndb.BooleanProperty(default=False)
-    status_choices = ['inactive', 'active']
-    status = ndb.IntegerProperty(choices=range(len(status_choices)), default=1)
+    status = ndb.StringProperty(choices=Base.statuses, default='active')
     # TODO add a name
     # TODO add a student ID
 
@@ -390,7 +390,7 @@ class User(Base):
         """Retrieve a user by email or return None."""
         assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
         email = email.lower()
-        users = cls.query(cls.email == email).fetch()
+        users = cls.query(cls.email == email, cls.status != 'inactive').fetch()
         if not users:
             return None
         if len(users) > 1:
@@ -527,6 +527,7 @@ class Participant(Base):
     user = ndb.KeyProperty(User)
     course = ndb.KeyProperty(Course)
     role = ndb.StringProperty() # See constants.py for roles
+    status = ndb.StringProperty(choices=Base.statuses, default='active')
 
     @classmethod
     def _can(cls, user, need, course, query):

@@ -355,6 +355,13 @@ def merge_user(user_key, dup_user_key):
         G.invited == dup_user_key)).fetch()
     for group in groups:
         group.exit(dup_user_key)
+        
+    # Deactivate all enrollments
+    E = ModelProxy.Participant
+    enrolls = E.query(E.user == dup_user_key).fetch()
+    for enroll in enrolls:
+        enroll.status = 'inactive'
+        enroll.put_async()
 
     # Re-submit submissions
     S = ModelProxy.Submission
@@ -373,7 +380,7 @@ def merge_user(user_key, dup_user_key):
 
     # Invalidate emails
     dup_user.email = ['#'+email for email in dup_user.email]
-    dup_user.status = 0 # inactive
+    dup_user.status = 'inactive'
     dup_user.put_async()
     user.put_async()
 
