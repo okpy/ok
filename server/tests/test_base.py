@@ -56,6 +56,30 @@ def make_fake_assignment(course, creator):
         max_group_size=4,
         due_date=datetime.datetime.now())
 
+
+def make_fake_backup(assignment, user):
+    rval = models.Backup(
+        submitter=user.key,
+        assignment=assignment.key)
+    rval.put()
+    return rval
+
+
+def make_fake_submission(backup):
+    rval = models.Submission(backup=backup.key)
+    rval.put()
+    return rval
+
+
+def make_fake_finalsubmission(submission, assignment, user):
+    rval = models.FinalSubmission(
+        submission=submission.key,
+        submitter=user.key,
+        assignment=assignment.key)
+    rval.put()
+    return rval
+
+
 class BaseTestCase(unittest.TestCase):
     """
     Base test case.
