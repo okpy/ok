@@ -71,6 +71,12 @@ indexes:
   - name: created
     direction: desc
 
+- kind: Participantv2
+  properties:
+  - name: course
+  - name: role
+  - name: status
+
 - kind: Queuev2
   properties:
   - name: assigned_staff
@@ -242,3 +248,8 @@ indexes:
   - name: submitter
   - name: created
     direction: desc
+
+- kind: Userv2
+  properties:
+  - name: email
+  - name: status

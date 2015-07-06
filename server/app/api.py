@@ -1823,11 +1823,11 @@ class CourseAPI(APIResource):
         query = models.Participant.can(user, need, course, query)
         return list(query)
 
-
     def get_students(self, course, user, data):
         query = models.Participant.query(
             models.Participant.course == course.key,
-            models.Participant.role == 'student')
+            models.Participant.role == 'student',
+            models.Participant.status != 'inactive')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()

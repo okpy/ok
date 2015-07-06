@@ -474,14 +474,6 @@ class Course(Base):
         """Return a query for assignments."""
         return Assignment.query(Assignment.course == self.key)
 
-    def get_students(self, user):
-
-        query = Participant.query(
-            Participant.course == self.key,
-            Participant.role == 'student')
-        
-        return list(query.fetch())
-
 
 class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
