@@ -14,7 +14,7 @@ import os
 os.environ['FLASK_CONF'] = 'TEST'
 import datetime
 from test_base import APIBaseTestCase, unittest, api #pylint: disable=relative-import
-from test_base import make_fake_assignment, make_fake_course #pylint: disable=relative-import
+from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
 from google.appengine.ext import ndb
 from app import models, constants, utils
 from ddt import ddt, data, unpack
@@ -533,29 +533,9 @@ class SearchAPITest(APIBaseTestCase):
         self._assign = make_fake_assignment(self._course, self.user)
         self._assign.name = self._assign.display_name = self.assignment_name
         self._assign.put()
-        self._backup = self.make_fake_backup(self._assign, self.user)
-        self._submission = self.make_fake_submission(self._backup)
-        self._finalsubmission = self.make_fake_finalsubmission(self._submission, self._assign, self.user)
-        
-    def make_fake_backup(self, assignment, user):
-        rval = models.Backup(
-            submitter=user.key,
-            assignment=assignment.key)
-        rval.put()
-        return rval
-    
-    def make_fake_submission(self, backup):
-        rval = models.Submission(backup=backup.key)
-        rval.put()
-        return rval
-    
-    def make_fake_finalsubmission(self, submission, assignment, user):
-        rval = models.FinalSubmission(
-            submission=submission.key,
-            submitter=user.key,
-            assignment=assignment.key)
-        rval.put()
-        return rval
+        self._backup = make_fake_backup(self._assign, self.user)
+        self._submission = make_fake_submission(self._backup)
+        self._finalsubmission = make_fake_finalsubmission(self._submission, self._assign, self.user)
         
     def get_accounts(self):
         return APITest().get_accounts()
@@ -736,6 +716,9 @@ class ParticipantAPITest(APIBaseTestCase):
         self._assign = make_fake_assignment(self._course, self.user)
         self._assign.name = self._assign.display_name = self.assignment_name
         self._assign.put()
+        self._backup = make_fake_backup(self._assign, self.user2)
+        self._submission = make_fake_submission(self._backup)
+        self._finalsubmission = make_fake_finalsubmission(self._submission, self._assign, self.user2)
 
     def get_accounts(self):
         return APITest().get_accounts()
@@ -754,6 +737,14 @@ class ParticipantAPITest(APIBaseTestCase):
         group = models.Group.query(models.Group.assignment==self._assign.key).get()
         self.assertEqual(group.member, [self.user1.key, self.user3.key])
 
+    def test_copy_submissions(self):
+        query1 = models.FinalSubmission.query(models.FinalSubmission.submitter==self.user1.key)
+        query2 = models.FinalSubmission.query(models.FinalSubmission.submitter==self.user2.key)
+        self.assertEqual([], list(query1.fetch()))
+        self.assertNotEqual([], list(query2.fetch()))
+        self.merge_users()
+        self.assertNotEqual([], list(query1.fetch()))  # user1 receives user2 subs
+        self.assertEqual([], list(query2.fetch()))  # user2 is no longe the owner
 
 if __name__ == '__main__':
     unittest.main()
