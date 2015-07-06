@@ -746,5 +746,22 @@ class ParticipantAPITest(APIBaseTestCase):
         self.assertNotEqual([], list(query1.fetch()))  # user1 receives user2 subs
         self.assertEqual([], list(query2.fetch()))  # user2 is no longe the owner
 
+    def test_deactivate_enrollment(self):
+        part1 = models.Participant(
+            course=self._course.key,
+            role='student',
+            user=self.user1.key
+        )
+        part2 = models.Participant(
+            course=self._course.key,
+            role='student',
+            user=self.user2.key
+        )
+        part1.put()
+        part2.put()
+        self.merge_users()
+        course = self._course.key.get()
+        self.assertEqual([part1], course.get_students(self.user))
+
 if __name__ == '__main__':
     unittest.main()
