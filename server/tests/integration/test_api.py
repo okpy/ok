@@ -16,7 +16,7 @@ import datetime
 from test_base import APIBaseTestCase, unittest, api #pylint: disable=relative-import
 from test_base import make_fake_assignment, make_fake_course #pylint: disable=relative-import
 from google.appengine.ext import ndb
-from app import models, constants
+from app import models, constants, utils
 from ddt import ddt, data, unpack
 
 @ddt
@@ -719,6 +719,41 @@ class SearchAPITest(APIBaseTestCase):
 
         finals = [result for result in results if isinstance(result, models.FinalSubmission)]
         self.assertNotEqual(finals, results)
+
+class ParticipantAPITest(APIBaseTestCase):
+
+    API = api.ParticipantAPI
+
+    def setUp(self):
+        super(ParticipantAPITest, self).setUp()
+        self.user = self.accounts['dummy_admin']
+        self.user1 = self.accounts['dummy_student']
+        self.user2 = self.accounts['dummy_student2']
+        self.user3 = self.accounts['dummy_student3']
+        self.assignment_name = 'Hog Project'
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assign = make_fake_assignment(self._course, self.user)
+        self._assign.name = self._assign.display_name = self.assignment_name
+        self._assign.put()
+
+    def get_accounts(self):
+        return APITest().get_accounts()
+    
+    # test merge user
+    
+    def merge_users(self):
+        utils.merge_user(self.user1.key, self.user2.key)
+        
+    def test_leave_group(self):
+        group = models.Group(
+            assignment=self._assign.key,
+            member=[self.user1.key, self.user2.key, self.user3.key])
+        group.put()
+        self.merge_users()
+        group = models.Group.query(models.Group.assignment==self._assign.key).get()
+        self.assertEqual(group.member, [self.user1.key, self.user3.key])
+
 
 if __name__ == '__main__':
     unittest.main()
