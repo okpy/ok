@@ -751,17 +751,28 @@ class ParticipantAPITest(APIBaseTestCase):
             course=self._course.key,
             role='student',
             user=self.user1.key
-        )
-        part2 = models.Participant(
+        ).put()
+        models.Participant(
             course=self._course.key,
             role='student',
             user=self.user2.key
-        )
-        part1.put()
-        part2.put()
+        ).put()
         self.merge_users()
-        course = self._course.key.get()
-        self.assertEqual([part1], course.get_students(self.user))
+        self.assertEqual([part1.get()], self._course.get_students(self.user))
+        
+    def test_emails_transferred(self):
+        self.assertEqual(['dummy2@student.com'], self.user2.email)
+        self.assertEqual(['dummy@student.com'], self.user1.email)
+        self.merge_users()
+        self.assertEqual(['#dummy2@student.com'], self.user2.key.get().email)
+        self.assertEqual(['dummy@student.com', 'dummy2@student.com'], self.user1.key.get().email)
+        
+    def test_user_status(self):
+        self.assertEqual('active', self.user2.status)
+        self.assertEqual('active', self.user1.status)
+        self.merge_users()
+        self.assertEqual('inactive', self.user2.key.get().status)
+        self.assertEqual('active', self.user1.key.get().status)
 
 if __name__ == '__main__':
     unittest.main()
