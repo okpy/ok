@@ -371,7 +371,9 @@ def merge_user(user_key, dup_user_key):
         if email.lower() not in lowered_emails:
             user.email.append(email.lower())
 
-    dup_user.email = [email + email for email in dup_user.email]
+    # Invalidate emails
+    dup_user.email = ['#'+email for email in dup_user.email]
+    dup_user.status = 0 # inactive
     dup_user.put_async()
     user.put_async()
 

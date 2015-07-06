@@ -151,6 +151,8 @@ class User(Base):
     """
     email = ndb.StringProperty(repeated=True)
     is_admin = ndb.BooleanProperty(default=False)
+    status_choices = ['inactive', 'active']
+    status = ndb.IntegerProperty(choices=range(len(status_choices)), default=1)
     # TODO add a name
     # TODO add a student ID
 
