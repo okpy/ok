@@ -2115,6 +2115,11 @@ class FinalSubmissionAPI(APIResource):
         },
         'index': {
         },
+        'post': {
+            'web_args': {
+                'submission': KeyArg('Submission', required=True)
+            }
+        },
         'mark_backup': {
             'methods': set(['POST']),
             'web_args': {
@@ -2125,7 +2130,7 @@ class FinalSubmissionAPI(APIResource):
 
     def mark_backup(self, user, data):
         """
-        Creates a new entity with given attributes.
+        Converts backup to Finalsubmission
 
         :param attributes: (dictionary)
         :return: None
@@ -2140,9 +2145,26 @@ class FinalSubmissionAPI(APIResource):
             raise need.exception()
         
         subm = models.Submission.query(
-            models.Submission.backup==backup.key
+            models.Submission.backup == backup.key
         ).get()
+
+        if not subm:
+            raise BadValueError('No such submission exists.')
         
+        return self.new_entity(dict(submission=subm.key))
+
+    def new_entity(self, attributes):
+        """
+        Creates a new entity with given attributes.
+        - when POSTing directly, new_entity has its own
+        permissions checks
+
+        :param attributes: (dictionary)
+        :return: (entity, error_response) should be ignored if error_response
+        is a True value
+        """
+        subm = attributes['submission'].get()
+
         if not subm:
             raise BadValueError('No such submission exists.')
         
