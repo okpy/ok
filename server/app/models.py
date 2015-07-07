@@ -50,6 +50,7 @@ def convert_timezone(utc_dt):
 class Base(ndb.Model):
     """Shared utility methods and properties."""
     created = ndb.DateTimeProperty(auto_now_add=True)
+    statuses = ['inactive', 'active']
 
     @classmethod
     def from_dict(cls, values):
@@ -151,6 +152,7 @@ class User(Base):
     """
     email = ndb.StringProperty(repeated=True)
     is_admin = ndb.BooleanProperty(default=False)
+    status = ndb.StringProperty(choices=Base.statuses, default='active')
     # TODO add a name
     # TODO add a student ID
 
@@ -290,8 +292,9 @@ class User(Base):
 
         info = {'user': self}
         info['assignments'] = []
+        assignments = sorted(course.assignments)
 
-        for assignment in course.assignments:
+        for assignment in assignments:
             assign_info = {}
             group = self.get_group(assignment.key)
             assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
@@ -387,7 +390,7 @@ class User(Base):
         """Retrieve a user by email or return None."""
         assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
         email = email.lower()
-        users = cls.query(cls.email == email).fetch()
+        users = cls.query(cls.email == email, cls.status != 'inactive').fetch()
         if not users:
             return None
         if len(users) > 1:
@@ -475,8 +478,9 @@ class Course(Base):
 
         query = Participant.query(
             Participant.course == self.key,
-            Participant.role == 'student')
-        
+            Participant.role == 'student',
+            Participant.status != 'inactive')
+
         return list(query.fetch())
 
 
@@ -484,6 +488,7 @@ class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
     name = ndb.StringProperty() # E.g., cal/cs61a/fa14/proj1
     display_name = ndb.StringProperty()
+    url = ndb.StringProperty()
     points = ndb.FloatProperty()
     templates = ndb.JsonProperty()
     creator = ndb.KeyProperty(User)
@@ -497,7 +502,7 @@ class Assignment(Base):
     autograding_enabled = ndb.BooleanProperty(default=False)
     grading_script_file = ndb.TextProperty()
     zip_file_url = ndb.StringProperty()
-
+    
     # TODO Add services requested
 
     @classmethod
@@ -512,6 +517,10 @@ class Assignment(Base):
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
+    
+    def __lt__(self, other):
+        """ Allows us to sort assignments - reverse order so that latest due dates come first """
+        return self.due_date > other.due_date
 
 
 class Participant(Base):
@@ -519,6 +528,7 @@ class Participant(Base):
     user = ndb.KeyProperty(User)
     course = ndb.KeyProperty(Course)
     role = ndb.StringProperty() # See constants.py for roles
+    status = ndb.StringProperty(choices=Base.statuses, default='active')
 
     @classmethod
     def _can(cls, user, need, course, query):
@@ -919,6 +929,7 @@ class Group(Base):
     member = ndb.KeyProperty(User, repeated=True)
     invited = ndb.KeyProperty(User, repeated=True)
     assignment = ndb.KeyProperty(Assignment, required=True)
+    order = ndb.StringProperty()
 
     @classmethod
     def lookup(cls, user_key, assignment_key):
@@ -955,11 +966,13 @@ class Group(Base):
         """Invites a user to the group. Returns an error message or None."""
         user = User.lookup(email)
         if not user:
-            return "{} cannot be found".format(email)
+            return "{} is not a valid user".format(email)
         course = self.assignment.get().course
         if not Participant.has_role(user, course, STUDENT_ROLE):
             return "{} is not enrolled in {}".format(email, course.get().display_name)
-        if user.key in self.member or user.key in self.invited:
+        if user.key in self.invited:
+            return '{} has already been invited'.format(email)
+        if user.key in self.member:
             return "{} is already in the group".format(email)
         has_user = ndb.OR(Group.member == user.key, Group.invited == user.key)
         if Group.query(has_user, Group.assignment == self.assignment).get():
@@ -1017,6 +1030,12 @@ class Group(Base):
 
         error = self.validate()
         if error:
+            subms = FinalSubmission.query(
+                FinalSubmission.group==self.key
+            ).fetch()
+            for subm in subms:
+                subm.group = None
+                subm.put()
             self.key.delete()
         else:
             self.put()
@@ -1042,7 +1061,7 @@ class Group(Base):
             return False
         if action in ("get", "exit"):
             return user.key in group.member or user.key in group.invited
-        elif action in ("invite", "remove"):
+        elif action in ("invite", "remove", "reorder"):
             return user.key in group.member
         elif action in "accept":
             return user.key in group.invited
@@ -1177,22 +1196,10 @@ class FinalSubmission(Base):
     submission = ndb.KeyProperty(Submission)
     revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
-    submitter = ndb.KeyProperty(User) # TODO Change to ComputedProperty
+    server_time = ndb.ComputedProperty(lambda q: q.submission.get().server_time)
+    # submitter = ndb.ComputedProperty(lambda q: q.submission.get().submitter.get())
+    submitter = ndb.KeyProperty(User)
     published = ndb.BooleanProperty(default=False)
-
-    @property
-    def server_time(self):
-        """
-        Returns the server time the final submission was created at.
-        """
-        return self.submission.get().server_time
-
-    @property
-    def assigned(self):
-        """
-        Return whether or not this assignment has been assigned to a queue.
-        """
-        return bool(self.queue)
 
     @property
     def backup(self):
@@ -1201,6 +1208,13 @@ class FinalSubmission(Base):
         """
         return self.submission.get().backup.get()
 
+    @property
+    def assigned(self):
+        """
+        Return whether or not this assignment has been assigned to a queue.
+        """
+        return bool(self.queue)
+    
     @classmethod
     def _can(cls, user, need, final, query):
         action = need.action

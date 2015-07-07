@@ -405,6 +405,54 @@ class APIResource(View):
         return {}
 
 
+class ParticipantAPI(APIResource):
+    """
+    Root-level API functions
+    """
+    
+    model = models.Participant
+
+    methods = {
+        'enrollment': {
+        }
+    }
+    
+    def enrollment(self):
+        user = models.User.lookup(request.args.get('email'))
+        data = []
+        if user is not None:
+            parts = CourseAPI().get_courses(None, user, {'user': user.key})
+            for part in parts:
+                course = part.course.get()
+                offering = course.offering.split('/')
+                try:
+                    term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
+                    year = '20'+offering[2][2:]
+                except (IndexError, KeyError):
+                    term = year = None
+                data.append({
+                    'url': '/#/course/'+str(course.key.id()),
+                    'display_name': course.display_name,
+                    'institution': course.institution,
+                    'term': term,
+                    'year': year,
+                    'offering': course.offering
+                })
+        return json.dumps(data)
+
+    def check(self, emails, course, role):
+        parts = []
+        for email in emails:
+            part = models.Participant.has_role(
+                models.User.lookup(email).key,
+                course,
+                role)
+            if not part:
+                raise BadValueError('Check failed.')
+            parts.append(part)
+        return parts
+
+
 class UserAPI(APIResource):
     """
     The API resource for the User Object
@@ -668,8 +716,9 @@ class AssignmentAPI(APIResource):
                 'autograding_enabled': Arg(bool),
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
-                'access_token': Arg(str)
-                }
+                'access_token': Arg(str),
+                'url': Arg(str)
+            }
         },
         'put': {
             'web_args': {
@@ -685,7 +734,8 @@ class AssignmentAPI(APIResource):
                 'autograding_enabled': Arg(bool),
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
-                'access_token': Arg(str)
+                'access_token': Arg(str),
+                'url': Arg(str)
             }
         },
         'get': {
@@ -705,7 +755,8 @@ class AssignmentAPI(APIResource):
                 'autograding_enabled': Arg(bool),
                 'grading_script_file': Arg(str),
                 'zip_file_url': Arg(str),
-                'access_token': Arg(str)
+                'access_token': Arg(str),
+                'url': Arg(str)
             }
         },
         'index': {
@@ -740,6 +791,9 @@ class AssignmentAPI(APIResource):
                 'grade_final': BooleanArg(),
                 'token': Arg(str)
             }
+        },
+        'queues': {
+            'methods': set(['GET']),
         }
     }
 
@@ -891,6 +945,14 @@ class AssignmentAPI(APIResource):
         # TODO
         raise BadValueError('Only supports batch uploading.')
 
+    def queues(self, obj, user, data):
+        """ Return all composition queues for this assignment """
+        need = Need('staff')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        return models.Queue.query(models.Queue.assignment == obj.key).fetch()
+
 
 class SubmitNDBImplementation(object):
     """
@@ -1036,6 +1098,7 @@ class SubmissionAPI(APIResource):
             name = user.email[0]+'-'+str(obj.created)
         except IndexError:
             name = str(obj.created)
+        name = name.replace('.', '-').replace(' ', '_')
         messages = obj.get_messages()
         if 'file_contents' not in messages:
             raise BadValueError('Submission has no contents to download')
@@ -1365,14 +1428,14 @@ class SearchAPI(APIResource):
                 'query': Arg(str, required=True),
                 'page': Arg(int, default=1),
                 'num_per_page': Arg(int, default=10),
-                'all': Arg(bool, default=False),
-                'courseId': Arg(int, required=True)
+                'all': Arg(str, default='True'),
+                'courseId': Arg(int, required=True),
             }
         }
     }
 
     defaults = {
-        'onlywcode': (op.__eq__, 'True')
+        # 'onlywcode': (op.__eq__, 'True')
     }
 
     operators = {
@@ -1422,7 +1485,7 @@ class SearchAPI(APIResource):
         self.check_permissions(user, data)
 
         results = SearchAPI.querify(data['query']).fetch()
-        if data.get('all', False):
+        if data.get('all', 'true').lower() != 'true':
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
         zipfile_str, zipfile = start_zip()
@@ -1448,18 +1511,27 @@ class SearchAPI(APIResource):
         second named group "op" as a string preceded by two dashes
         and followed by a space. Captures final named group "arg"
         with optional quotations.
+        
+        If quotes are detected, the string inside is allowed spaces and
+        a second, identical quote must be found.
         """
-        tokenizer = re.compile('-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s+)?"?(?P<arg>[\S ]+[^"\s]+)"?')
+        tokenizer = re.compile(
+            r'-(?P<flag>[\S]+)\s+(--(?P<op>[\S]+)\s*)?(?P<quote>"|\')?(?P<arg>(?(quote)[\S ]*?|[\S]*))(?(quote)\4)')
         return tokenizer.findall(query)
 
     @classmethod
     def translate(cls, query):
-        """ converts operators into appropriate string reps and adds defaults """
+        """ converts operators into appropriate operators and adds defaults """
         tokens = cls.tokenize(query)
         scope = {k: tuple(v) for k, v in cls.defaults.items()}
         for token in tokens:
-            flag, dummy, opr, arg = token
-            scope[flag] = (cls.operators[opr or 'eq'], arg)
+            flag, dummy, opr, quote, arg = token
+            try:
+                scope[flag] = (cls.operators[opr or 'eq'], arg)
+            except KeyError:
+                raise BadValueError('No such operator "%s". \
+                Only these are allowed: eq, equal, lt, gt, \
+                before, after.' % opr)
         return scope
 
     @classmethod
@@ -1468,7 +1540,14 @@ class SearchAPI(APIResource):
         scope = cls.translate(query)
         for k, v in scope.items():
             op, arg = v
-            scope[k] = (op, cls.flags[k](op, arg))
+            try:
+                scope[k] = (op, cls.flags[k](op, arg))
+            except KeyError:
+                raise BadValueError('No such flag "%s". Only \
+                these are allowed: %s' % (k, str(
+                    ', '.join(cls.flags.keys()))))
+            except ValueError as e:
+                raise BadValueError(str(e))
         return scope
 
     @classmethod
@@ -1478,8 +1557,8 @@ class SearchAPI(APIResource):
         model = cls.get_model(objects)
         args = cls.get_args(model, objects)
         query = model.query(*args)
-        return query
-
+        return cls.order(model, query)
+        
     @staticmethod
     def get_model(prime):
         """ determine model using passed-in data """
@@ -1492,6 +1571,14 @@ class SearchAPI(APIResource):
         else:
             return models.Submission
 
+    @classmethod
+    def order(cls, model, query):
+        try:
+            if hasattr(model, 'server_time'):
+                return query.order(-model.server_time)
+        except TypeError:
+            pass
+        return query
 
     @staticmethod
     def get_args(model, prime):
@@ -1505,8 +1592,7 @@ class SearchAPI(APIResource):
             opr, arg = prime['date']
             args.append(opr(model.server_time, arg))
         if 'onlywcode' in keys:
-            pass
-            # TODO: complete onlywcode : query only submissions that have code
+            raise BadValueError('-onlywcode is not yet implemented, sorry.')
         return args
 
     @staticmethod
@@ -1738,11 +1824,11 @@ class CourseAPI(APIResource):
         query = models.Participant.can(user, need, course, query)
         return list(query)
 
-
     def get_students(self, course, user, data):
         query = models.Participant.query(
             models.Participant.course == course.key,
-            models.Participant.role == 'student')
+            models.Participant.role == 'student',
+            models.Participant.status != 'inactive')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
@@ -1813,7 +1899,13 @@ class GroupAPI(APIResource):
             },
         'exit': {
             'methods': set(['PUT', 'POST']),
+            },
+        'reorder': {
+            'methods': {'PUT', 'POST'},
+            'web_args': {
+                'order': Arg(list, required=True)
             }
+        }
     }
 
     def add_member(self, group, user, data):
@@ -1880,6 +1972,25 @@ class GroupAPI(APIResource):
             raise need.exception()
 
         group.exit(user)
+        
+    def reorder(self, group, user, data):
+        """ Saves order of partners """
+        need = Need('reorder')
+        if not group.can(user, need, group):
+            raise need.exception()
+
+        new_order = [models.User.lookup(email).key
+                     for email in data['order']]
+
+        if len(new_order) != len(group.member):
+            raise BadValueError('Incorrect number of group members.')
+        
+        for member in group.member:
+            if member not in new_order:
+                raise BadValueError('Intruding group member does not belong.')
+
+        group.member = new_order
+        group.put()
 
 
 class QueueAPI(APIResource):
@@ -1927,6 +2038,71 @@ class QueueAPI(APIResource):
         ent.assigned_staff = [models.User.get_or_insert(
             user.id()).key for user in ent.assigned_staff]
         return ent
+    
+    
+class QueuesAPI(APIResource):
+    """ API resource for sets of queues """
+    
+    contains_entities = False
+
+    methods = {
+        'generate': {
+            'methods': set(['POST']),
+            'web_args': {
+                'course': KeyArg('Course', required=True),
+                'assignment': KeyArg('Assignment', required=True),
+                'staff': Arg(list, required=True)
+            }
+        }
+    }
+    
+    def generate(self, user, data):
+        """ Splits up submissions among staff members """
+        
+        if self.check_permissions(user, data):
+            raise Need('get').exception()
+
+        course_key, assignment_key, staff_list = data['course'], data['assignment'], data['staff']
+        userify = lambda parts: [part.user.get() for part in parts]
+        
+        staff = [staff for staff in
+            userify(models.Participant.query(
+            models.Participant.role == STAFF_ROLE,
+            models.Participant.course == course_key).fetch())
+            if staff_list[0] == '*' or staff.email[0] in staff_list]
+        ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
+
+        subms = models.FinalSubmission.query(
+            models.FinalSubmission.assignment == assignment_key
+        ).fetch()
+        
+        queues = []
+        
+        for instr in staff:
+            q = models.Queue.query(
+                models.Queue.owner == instr.key,
+                models.Queue.assignment == assignment_key).get()
+            if not q:
+                q = models.Queue(
+                    owner=instr.key, 
+                    assignment=assignment_key,
+                    assigned_staff=[instr.key])
+                q.put()
+            queues.append(q)
+
+        i = 0
+
+        for subm in subms:
+            subm.queue = queues[i].key
+            subm.put()
+            i = (i + 1) % len(staff)
+            
+        return queues
+
+    def check_permissions(self, user, data):
+        course = data['course'].get()
+        return user.key not in course.staff and not user.is_admin
+    
 
 class FinalSubmissionAPI(APIResource):
     """

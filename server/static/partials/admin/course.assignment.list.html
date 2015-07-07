@@ -29,10 +29,12 @@
       <th ts-criteria="lock_date">Lock Date</th>
       <!-- Future Progress Bar -->
       <th style="width: 15%">Endpoint</th>
+      <th>Submissions</th>
       <th>Scores</th>
       <th>Edit</th>
       <th>Delete</th>
       <th>Autograde</th>
+      <th>Queues</th>
     </tr>
 
       <tr ng-repeat="assignment in assignments" ts-repeat>
@@ -56,7 +58,10 @@
         </td>
           <!-- Future Progress Bar -->
         <td>
-          <a href="/api/v1/assignment/{{assignment.id}}/download_scores"><button class="btn btn-primary btn-sm"> <i class="fa fa-download"></i>Download</button></a>
+          <a ui-sref='course.submissions.query({courseId:course.id, query: "-assignment \""+assignment.display_name+"\""})' class="btn btn-primary btn-sm"><i class="fa fa-list"></i></a>
+        </td>
+        <td>
+          <a href="/api/v1/assignment/{{assignment.id}}/download_scores"><button class="btn btn-primary btn-sm"> <i class="fa fa-download"></i></button></a>
         </td>
         <td>
           <a ui-sref="course.assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
@@ -71,6 +76,9 @@
         </td>
         <td ng-hide="assignment.autograding_enabled">
             <a class="btn btn-primary btn-sm disabled"><i class="fa fa-flash"></i> Disabled </a>
+        </td>
+        <td>
+            <a ui-sref="course.assignment.queue.list({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
         </td>
           </tr>
         </tbody>

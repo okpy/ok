@@ -401,6 +401,7 @@ header {
     .sidebar {
         height:100%;
         width:100%;
+        min-width:400px;
         background-color:#FFF;
         padding:0 0 0 5px;
         margin-right:-1px;
@@ -434,6 +435,18 @@ header {
             z-index:35;
             background-color:rgba(0,0,0,0.2);
         }
+            .sidebar-member_label {
+                line-height:30px;
+                text-align:center;
+                width:30px;
+                height:30px;
+                display:inline-block;
+                background-color:#666;
+                color:#FFF;
+                border-radius:50%;
+                margin-left:-10px;
+                margin-right:10px;
+            }
             .colored .sidebar-subtitle::before {
                 background-color:rgba(0,0,0,0.5);
             }
@@ -448,6 +461,17 @@ header {
             z-index:36;
             background-color:rgba(255,255,255,0.8);
         }
+        .sidebar .fa-close {
+            float:right;
+            font-size:1.5em;
+            line-height:30px;
+            cursor:pointer;
+            color:#CCC;
+            position:relative;
+        }
+            .sidebar .fa-close:hover {
+                color:#999
+            }
     .sidebar-header {
         padding:35px 45px;
     }
@@ -470,7 +494,7 @@ header {
     }
     .sidebar li {
         width:100%;
-        padding:20px 95px 20px 25px;
+        padding:20px 30px 20px 25px;
         background-color:#FFF;
         color:#666;
     }
@@ -536,9 +560,17 @@ header {
             .option.bad {
                 background-color:#cc4229;
             }
+                .option.bad .fa-close {
+                  float: none;
+                  color: #FFF;
+                  font-size: 1em;
+                }
             .option.good {
                 background-color:#690;
             }
+        .sortable li {
+            cursor:move;
+        }
     .cover {
         cursor:pointer;
         position:fixed;
@@ -633,7 +665,7 @@ header {
                 color:#FFF;
                 opacity:0;
             }
-                .flag:hover .label {
+                .flag:hover .label,span:hover .label {
                     opacity:1;
                     margin-left:5px;
                 }

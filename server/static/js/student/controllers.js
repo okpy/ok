@@ -1,12 +1,22 @@
+// Error Handling
+function report_error($window, err) {
+    console.log(err);
+    $window.swal('Error', err.data.message, 'error');
+}
+
 app.controller("HeaderController", ["$scope", "$window", "$state", "$stateParams",
     function ($scope, $window, $state, $stateParams) {
         $scope.openMenu = function(menu) {
-            $(menu).addClass('active')
-            $('.container-fluid').addClass('active').addClass('pushed')
+            document.querySelector('.menu').classList.add('active');
+            container = document.querySelector('.container-fluid').classList;
+            container.add('active');
+            container.add('pushed');
         }
         $window.closeMenu = $scope.closeMenu = function() {
-            $('.menu').removeClass('active')
-            $('.container-fluid').removeClass('active').removeClass('pushed')
+            document.querySelector('.menu').classList.remove('active');
+            container = document.querySelector('.container-fluid').classList;
+            container.remove('active');
+            container.remove('pushed');
         }
     }
 ])
@@ -39,7 +49,9 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
         } else {
             $scope.courses = $scope.rows = []
         }
-      });
+      }, function(err) {
+           report_error($window, err);
+       });
       if ($window.user.indexOf("berkeley.edu") == -1) {
         $window.swal({
             title: "Is this the right login?",
@@ -61,7 +73,7 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
       } else {
          $window.location.hash = "";
       }
-      
+
       $scope.loadAll = function() {
         Course.get(function(response) {
             if (response.results) {
@@ -69,14 +81,16 @@ app.controller("CourseSelectorController", ["$scope", "$window", "$state", '$sta
             } else {
                 $scope.courses = $scope.rows = undefined;
             }
-          });
+          }, function(err) {
+            report_error($window, err);
+        });
       }
     }
 ]);
 
 // Assignment Controllers
-app.controller("AssignmentOverviewController", ['$scope', 'Assignment', 'User', '$timeout',
-  function($scope, Assignment, User, $timeout) {
+app.controller("AssignmentOverviewController", ['$scope', "$window",'Assignment', 'User', '$timeout',
+  function($scope, $window, Assignment, User, $timeout) {
     Assignment.query({
       fields: {
         id: true,
@@ -87,15 +101,19 @@ app.controller("AssignmentOverviewController", ['$scope', 'Assignment', 'User', 
         created: true,
       }}, function(response) {
       $scope.assignments = response.results;
-    })}
+    }, function(err) {
+         report_error($window, err);
+     })}
 ]);
 
 // Assignment Controllers
-app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$timeout',
-  function($scope, Assignment, User, $timeout) {
+app.controller("GroupOverviewController", ['$scope', "$window",'Assignment', 'User', '$timeout',
+  function($scope, $window, Assignment, User, $timeout) {
     Group.query(function(response) {
       $scope.assignments = response.results;
-    })}
+    }, function(err) {
+         report_error($window, err);
+     })}
 ]);
 
 
@@ -103,9 +121,9 @@ app.controller("GroupOverviewController", ['$scope', 'Assignment', 'User', '$tim
 app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stateParams', '$sce', '$timeout', '$anchorScroll', 'Submission',
   function($scope, $window, $location, $stateParams, $sce, $timeout, $anchorScroll, Submission) {
       var converter = new Showdown.converter();
-      
+
       $window.closeMenu();
-      
+
       $scope.convertMarkdown = function(text) {
         if (text == "" || text === undefined) {
           return $sce.trustAsHtml("")
@@ -122,7 +140,9 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
           delete $scope.submission.messages.file_contents['submit'];
           $scope.isSubmit = true;
         }
-      });
+      }, function(err) {
+           report_error($window, err);
+       });
   }]);
 
 
@@ -138,7 +158,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             $scope.closeDetails();
             $scope.initAssignments(response.assignments);
           }, function (error) {
-            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
+            report_error($window, error);
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           })
       }
@@ -149,6 +169,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         if (assign.submissions) {
             $scope.getSubmissions(assign, false);
         }
+
+        $scope.labelPartners(assign);
       }
       $scope.initAssignments = function(assignments) {
         $scope.assignments = assignments;
@@ -157,6 +179,76 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               $scope.assignInit(assignments[i]);
           }
       }
+
+      $scope.labelPartners = function(assign) {
+        info = assign.group.group_info;
+        if (info !== null) {
+            arr = info.member;
+            for (var i = 0; i < arr.length; i++) {
+                member = arr[i];
+                member.i = i;
+                member.letter = String.fromCharCode(65 + i);
+            }
+        }
+      }
+
+      $scope.initSortable = function(assign) {
+        $('.sortable').disableSelection();
+        $('.sortable').sortable({
+            update: function(event, ui) {
+                $scope.updatePartners(assign.group);
+            }
+        });
+      }
+
+        $scope.updatePartners = function(group) {
+          info = group.group_info;
+          if (info !== null && info !== undefined) {
+              arr = info.member;
+              order = {}
+              i = 0;
+              $('.sidebar.active .sortable li').each(function() {
+                  order[$(this).data('i')] = i
+                  i += 1;
+              });
+              for (var i = 0; i< arr.length; i++) {
+                member = arr[i];
+                member.i = j = order[i];
+                member.letter = letter = String.fromCharCode(65 + order[i]);
+                $('.sortable li[data-i="'+i+'"]').find('.member-letter').html(letter);
+              }
+              return arr
+          }
+        }
+
+      $scope.reorder = function(group) {
+        arr = $scope.updatePartners(group);
+        order = arr.concat()
+        for (var i=0;i<arr.length;i++) {
+            member = arr[i];
+            order.splice(member.i, 1, member.email[0]);
+        }
+
+        Group.reorder({
+            id: group.group_info.id,
+            order: order
+        },
+        function (response) {
+            $scope.closeDetails();
+            $scope.reloadView();
+            $window.swal({
+                title: "Order saved",
+                text: "The order you specified has been saved.",
+                timer: 3500,
+                type: "success"
+            });
+        }, function(err) {
+            report_error($window, err);
+        })
+      }
+
+      $scope.reloadAssignments();
+
       $scope.showComposition = function(score, backupId) {
         if (score) {
           $window.swal({title: 'Score: '+score.score+'/2',
@@ -183,24 +275,26 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             course: $stateParams.courseId,
           }, function (response) {
             $scope.initAssignments(response.assignments);
+            $scope.initSortable();
           }, function (error) {
-            $window.swal('Unknown Course', 'Whoops. There was an error', 'error');
+            report_error($window, error);
             $state.transitionTo('courseLanding', null, { reload: true, inherit: true, notify: true })
           });
 
         // $state.transitionTo($state.current, angular.copy($stateParams), { reload: true, inherit: true, notify: true });
       };
 
-      $scope.reloadAssignments()
-
       $scope.removeMember = function(currGroup, member) {
             Group.removeMember({
               id: currGroup.id,
               email: member.email[0]
-            }, function (err) {
+            }, function (response) {
+                $window.swal('Removed!', 'You may now invite additional members to your group.', 'success');
                 $scope.closeDetails();
                 $scope.reloadView();
-            });
+            }, function(err) {
+                  report_error($window, err);
+              });
       };
 
       $scope.winRate = function (assign, backupId) {
@@ -226,7 +320,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             'error': true
           }
 
-          $window.swal("Uhoh",'There was an error','error')
+          report_error($window, err);
         });
       }
 
@@ -243,7 +337,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             });
             $scope.reloadView();
           }, function (err) {
-            $window.swal("Oops...", "Looks like this invitation has expired.", "error");
+            report_error($window, err);
           });
       };
 
@@ -260,7 +354,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
             });
             $scope.reloadView();
           }, function (err) {
-            $window.swal("Oops...", "Looks like you've already joined this group..", "error");
+            report_error($window, err);
           });
       };
 
@@ -277,7 +371,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               quantity: $scope.subm_quantity
             }, function (response) {
               assign.submissions = response;
-            });
+            }, function(err) {
+                 report_error($window, err);
+             });
       }
 
       $scope.getBackups = function (assign, toIncrease) {
@@ -289,7 +385,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               quantity: $scope.backup_quantity
             }, function (response) {
                 assign.backups = response;
-            });
+            }, function(err) {
+                 report_error($window, err);
+             });
       }
 
       $scope.changeSubmission = function (submId) {
@@ -304,7 +402,6 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-//            $window.swal("Oops...", "Couldn't change your submission (the deadline to do so may have passed).", "error");
             $window.swal("Oops...", "Please submit again, instead. This feature is not yet ready.", "error");
         })
       }
@@ -325,17 +422,17 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
                   type: "success"
                 });
                 $scope.reloadView();
-          }, function (err) {
-            $window.swal("Oops...", "Can't add that user to your group.    Is that the right email? They might already be in a group or may not be in the course.", "error");
-         });
+          }, function(err) {
+               report_error($window, err);
+           });
         }
       };
-      
+
       $scope.randomColor = function randomColor(assignment) {
         themes = ['blue','gold','purple']
         if (!assignment.color) {
-            var blob = $('.blob[id="'+assignment.id+'"]');
-            assignment.color = blob.length > 0 ? blob.attr('color') : themes[Math.ceil(Math.random()*themes.length)-1]
+            var blob = document.querySelectorAll('.blob[id="'+assignment.id+'"]');
+            assignment.color = blob.length > 0 ? blob[0].getAttribute('color') : themes[Math.ceil(Math.random()*themes.length)-1]
         }
         return assignment
       }
@@ -343,13 +440,19 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         $scope.openDetails = function openDetails(assign) {
             $scope.currGroup = assign.group
             $scope.currAssign = assign
-            $('.container-fluid').addClass('active');
-            $('.sidebar[id="'+assign.assignment.id+'"]').addClass('active');
+            document.querySelector('.container-fluid').classList.add('active');
+            document.querySelector('.sidebar[id="'+assign.assignment.id+'"]').classList.add('active');
+            $scope.initSortable(assign);
         }
-        
+
         $window.closeDetails = $scope.closeDetails = function closeDetails() {
-            $('.sidebar').removeClass('active');
-            $('.container-fluid').removeClass('active');
+            document.querySelector('.menu').classList.remove('active');
+            document.querySelector('.container-fluid').classList.remove('active');
+            sidebars = document.querySelectorAll('.sidebar');
+            for (var i=0;i<sidebars.length;i++) {
+                sidebar = sidebars[i];
+                sidebar.classList.remove('active');
+            }
         }
-        }
+    }
 ]);

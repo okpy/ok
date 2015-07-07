@@ -168,26 +168,13 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
 app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
   function($scope, $stateParams, Submission, $timeout) {
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
-    $scope.submission = Submission.get({
-      fields: {
-        id: true,
-        created: true,
-        compScore: true,
-        db_created: true,
-        tags: true,
-        'assignment': {
-          'name': true,
-          'display_name': true,
-          'id': true,
-        },
-        'submitter': {
-          'id': true,
-          'email': true,
-        },
-        'messages': true,
-      }
-    }, {
+    
+    Submission.get({
       id: $stateParams.submissionId
+    }, function(response) {
+      $scope.submission = response;
+    }, function(error) {
+      report_error($window, error);
     });
 
     $scope.hideEmpty = false;

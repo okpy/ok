@@ -133,7 +133,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
     var submissionDiff = {
       name: 'submission.diff',
       url: '/:submissionId/diff',
-      templateUrl: '/static/partials/admin/submission.diff.html',
+      templateUrl: '/static/partials/student/submission.diff.html',
       controller: "SubmissionDiffCtrl"
     }
 
@@ -192,6 +192,27 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/assignment.edit.html',
       controller: "AssignmentEditCtrl"
     }
+    
+    var courseAssignmentQueueBase = {
+        name: 'course.assignment.queue',
+        abstract: true,
+        url: '/queues/:assignmentId',
+        templateUrl:'/static/partials/admin/queue.base.html'
+    }
+    
+    var courseAssignmentQueueList = {
+        name: 'course.assignment.queue.list',
+        url: '/',
+        templateUrl:'/static/partials/admin/queue.list.html',
+        controller: "AssignmentQueueListCtrl"
+    }
+    
+    var courseAssignmentQueueGenerate = {
+        name: 'course.assignment.queue.generate',
+        url: '/generate',
+        templateUrl:'/static/partials/admin/queue.generate.html',
+        controller: "AssignmentQueueGenerateCtrl"
+    }
 
     var courseNew = {
       name: 'course.new',
@@ -219,7 +240,11 @@ app.config(['$stateProvider', '$urlRouterProvider',
           url: '/:courseId/submissions',
           templateUrl: '/static/partials/admin/submission.list.html'
     }
-
+    var submissionListQuery = {
+          name: 'course.submissions.query',
+          url: '/:query',
+          templateUrl: '/static/partials/admin/submission.list.html'
+    }
     var staff = {
       name: 'staff',
       url: '/:courseId/staff',
@@ -342,6 +367,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(submissions).
       state(submissionFinal).
       state(submissionList).
+      state(submissionListQuery).
       state(submissionDetail).
       state(submissionDiff).
       state(assignments).
@@ -352,6 +378,9 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(courseAssignmentList).
       state(courseAssignmentCreate).
       state(courseAssignmentEdit).
+      state(courseAssignmentQueueBase).
+      state(courseAssignmentQueueList).
+      state(courseAssignmentQueueGenerate).
       state(courseList).
       state(courseDetail).
       state(courseNew).

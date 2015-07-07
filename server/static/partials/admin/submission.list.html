@@ -32,9 +32,9 @@
       <h3 class="box-title" ng-if="submissions.length > 0">All Submissions</h3>
       <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
       <div class="box-tools" style="float:right;">
-          <a href="/api/v1/search/download?courseId={{course.id}}&all=true&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button></a>
-          <a href="/api/v1/search/download?courseId={{course.id}}&all=false&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" href="/api/v1/search/download"> <i class="fa fa-download"></i>  Download Page</button></a>
-          <a href="/api/v1/search/download?courseId={{course.id}}&all=true&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1" href="/api/v1/search/download"> <i class="fa fa-download"></i>  Download</button></a>
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=True&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button></a>
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=False&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="more || currentPage != 1"> <i class="fa fa-download"></i>  Download Page</button></a>
+          <a href="/api/v1/search/download?courseId={{course.id}}&all=True&query={{ search_query }}"><button class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1"> <i class="fa fa-download"></i>  Download</button></a>
       </div>
     </div>
     <!-- /.box-header -->
@@ -49,16 +49,17 @@
       <tbody>
 
         <tr>
-          <th ts-criteria="assignment.display_name">Assignment</th>
-          <th ts-criteria="submitter.id" >Submitter</th>
-          <th ts-criteria="created">Time</th>
+          <th>Assignment</th>
+          <th>Submitter</th>
+          <th>Time</th>
           <th>Tags</th>
           <th style="width: 20%">View Code</th>
+            <th>Score</th>
       </tr>
 
         <tr ng-repeat="submission in submissions" ts-repeat>
           <td>
-            <a ui-sref='assignment.detail({assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}}
+              <a ui-sref='course.assignment.edit({courseId: course.id, assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}} </a>
           </td>
           <td>{{submission.submitter.email[0]}}</td>
           <td>
@@ -79,6 +80,20 @@
                </div>
             </td>
           </td>
+            <td>
+                <span ng-if="submission.score.length == 0" class="badge">None</span>
+                <span ng-repeat="score in submission.score" class="badge bg-blue">
+                    <span class="score-blurb">
+                        <label>Tag</label>
+                        <p>{{ score.tag }}</p>
+                        <label ng-if="score.message">Message</label>
+                        <p ng-if="score.message">{{ score.message }}</p>
+                        <label>Grader</label>
+                        <p>{{ score.grader.email[0] }}</p>
+                    </span>
+                    {{ score.score }}
+                </span>
+            </td>
         </tr>
       </tbody>
     </table>

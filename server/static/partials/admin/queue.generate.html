@@ -1,0 +1,52 @@
+<div>
+    <section class="content-header" ng-hide="dashboard">
+        <ol class="breadcrumb" >
+            <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+            <li><a ui-sref="course.list"><i class="fa fa-list"></i> All Courses</a></li>
+            <li><a ui-sref="course.detail.stats({courseId:course.id})"><i class="fa fa-institution"></i> {{course.display_name}}</a></li>
+            <li><a ui-sref="course.assignment.list({courseId:course.id})"><i class="fa fa-list"></i> All Assignments</a></li>
+            <li><a ui-sref="course.assignment.queue.list({courseId:course.id, assignmentId:assignment.id})"><i class="fa fa-archive"></i> {{ assignment.display_name }} Queues</a></li>
+            <li><i class="fa fa-flash"></i> Generate Queues</li>
+
+        </ol>
+    </section>
+  <section>
+    <div class="row">
+      <div class="col-md-3">
+      </div>
+      <div class="col-md-6">
+
+  <div class="box" >
+    <form >
+      <div class="box-body">
+        <!--<div class="form-group">
+          <label>Student Emails (CSV) &middot; <a ui-sref="students.list({courseId:course.id})">View student list</a></label>
+          <input ng-model="newQs.students" type="text" class="form-control input-lg" placeholder="bob@doe.com, apples@okpy.org">
+        </div>-->
+        <div class="form-group">
+          <label ng-hide="stafflist.length > 0">Staff Emails (CSV) &middot; <a ng-click="showStaffList()">Use Staff List (checkboxes)</a> &middot; <a ui-sref="staff.list({courseId:course.id})">Manage staff</a></label>
+          <label ng-show="stafflist.length > 0">Staff List (Checkboxes) &middot; <a ng-click="hideStaffList()">Use Staff CSV (text input)</a> &middot; <a ui-sref="staff.list({courseId:course.id})">Manage staff</a></label>
+          <p>Generating queues again will either create or update existing queues; duplicate queues will not created, and all final submissions are redistributed with each queue generation.</p>
+          <input ng-hide="stafflist.length > 0" ng-model="newQs.staff" type="text" class="form-control input-lg" placeholder="admin@okpy.org, apples@okpy.org">
+            <label ng-show="stafflist.length > 0" ng-repeat="staffEmail in stafflist" style="width:100%">
+                <input
+                    type="checkbox"
+                    name="selectedStaff[]"
+                    value="{{staffEmail}}"
+                    ng-checked="selection.indexOf(staffEmail) > -1"
+                    ng-click="toggleSelection(staffEmail)"
+                > {{ staffEmail }}
+            </label>
+        </div>
+         <button ng-click="generateQs()" class="btn btn-block btn-primary btn-lg">Generate Queues</button>
+
+      </div>
+    </form>
+
+  </div>
+
+      </div> <!-- xs.col.6 -->
+    </div> <!-- row -->
+  </section>
+
+</div>
