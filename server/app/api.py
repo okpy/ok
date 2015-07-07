@@ -2134,7 +2134,11 @@ class FinalSubmissionAPI(APIResource):
         
         if not backup:
             raise BadValueError('No such backup exists.')
-
+        
+        need = Need('get')  # allows group, staff members
+        if not backup.can(user, need, backup):
+            raise need.exception()
+        
         subm = models.Submission.query(
             models.Submission.backup==backup.key
         ).get()
