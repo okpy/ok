@@ -18,6 +18,7 @@ from test_base import make_fake_assignment, make_fake_course, make_fake_backup, 
 from google.appengine.ext import ndb
 from app import models, constants, utils
 from ddt import ddt, data, unpack
+from app.exceptions import *
 
 @ddt
 class APITest(object): #pylint: disable=no-init
@@ -700,6 +701,7 @@ class SearchAPITest(APIBaseTestCase):
         finals = [result for result in results if isinstance(result, models.FinalSubmission)]
         self.assertNotEqual(finals, results)
 
+
 class ParticipantAPITest(APIBaseTestCase):
 
     API = api.ParticipantAPI
@@ -729,6 +731,7 @@ class ParticipantAPITest(APIBaseTestCase):
         utils.merge_user(self.user1.key, self.user2.key)
         
     def test_leave_group(self):
+        """ Tests that merged users are removed from all groups """
         group = models.Group(
             assignment=self._assign.key,
             member=[self.user1.key, self.user2.key, self.user3.key])
@@ -738,6 +741,7 @@ class ParticipantAPITest(APIBaseTestCase):
         self.assertEqual(group.member, [self.user1.key, self.user3.key])
 
     def test_copy_submissions(self):
+        """ Tests that all submissions are copied to the new user successfully """
         query1 = models.FinalSubmission.query(models.FinalSubmission.submitter==self.user1.key)
         query2 = models.FinalSubmission.query(models.FinalSubmission.submitter==self.user2.key)
         self.assertEqual([], list(query1.fetch()))
@@ -747,6 +751,7 @@ class ParticipantAPITest(APIBaseTestCase):
         self.assertEqual([], list(query2.fetch()))  # user2 is no longe the owner
 
     def test_deactivate_enrollment(self):
+        """ Tests that the merged user has been unenrolled from all courses """
         part1 = models.Participant(
             course=self._course.key,
             role='student',
@@ -761,6 +766,7 @@ class ParticipantAPITest(APIBaseTestCase):
         self.assertEqual([part1.get()], self._course.get_students(self.user))
         
     def test_emails_transferred(self):
+        """ Tests that emails have been merged in. """
         self.assertEqual(['dummy2@student.com'], self.user2.email)
         self.assertEqual(['dummy@student.com'], self.user1.email)
         self.merge_users()
@@ -768,11 +774,64 @@ class ParticipantAPITest(APIBaseTestCase):
         self.assertEqual(['dummy@student.com', 'dummy2@student.com'], self.user1.key.get().email)
         
     def test_user_status(self):
+        """ Tests that the old user has been deactivated. """
         self.assertEqual('active', self.user2.status)
         self.assertEqual('active', self.user1.status)
         self.merge_users()
         self.assertEqual('inactive', self.user2.key.get().status)
         self.assertEqual('active', self.user1.key.get().status)
 
+
+class FinalSubmissionAPITest(APIBaseTestCase):
+
+    API = api.FinalSubmissionAPI
+    
+    def setUp(self):
+        super(FinalSubmissionAPITest, self).setUp()
+        self.user = self.accounts['dummy_admin']
+        self.user1 = self.accounts['dummy_student']
+        self.user2 = self.accounts['dummy_student2']
+        self.user3 = self.accounts['dummy_student3']
+        self.assignment_name = 'Hog Project'
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assign = make_fake_assignment(self._course, self.user)
+        self._assign.name = self._assign.display_name = self.assignment_name
+        self._assign.put()
+        self._backup = make_fake_backup(self._assign, self.user2)
+        self._submission = make_fake_submission(self._backup)
+    
+    def get_accounts(self):
+        return APITest().get_accounts()
+    
+    # test mark as final
+    
+    def test_mark_as_final(self):
+        """ Tests that marking works, at the basic level """
+        self.API().mark_backup(self.user, dict(backup=self._backup.key))
+        
+        assert models.FinalSubmission.query(
+            models.FinalSubmission.submission==self._submission.key
+        ).get() is not None
+        
+    
+    def test_ERROR_mark_as_final_backup(self):
+        """ Tests that a missing backup raises the correct error. """
+        try:
+            key = self._backup.key
+            key.delete()
+            self.API().mark_backup(self.user, dict(backup=key))
+        except BadValueError as e:
+            self.assertEqual(str(e), 'No such backup exists.')
+            
+    def test_ERROR_mark_as_final_subm(self):
+        """ Tests that a missing submission raises the correct error. """
+        try:
+            self._submission.key.delete()
+            self.API().mark_backup(self.user, dict(backup=self._backup.key))
+        except BadValueError as e:
+            self.assertEqual(str(e), 'No such submission exists.')
+    
+    
 if __name__ == '__main__':
     unittest.main()

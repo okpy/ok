@@ -221,13 +221,7 @@ class FinalSubmissionTest(APIBaseTestCase):
 
     def set_as_final_submission(self, backup):
         fs_api = api.FinalSubmissionAPI()
-        subm = models.Submission.query(
-            models.Submission.backup == backup.key).get()
-        self.assertIsNotNone(subm)
-        data = {
-                'submission': subm.key
-        }
-        return fs_api.post(self.user, data)
+        return fs_api.mark_backup(self.user, dict(backup=backup.key))
 
     def test_set_different_submission_as_final_submission(self):
         self.login('student0')

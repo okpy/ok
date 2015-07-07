@@ -2108,30 +2108,47 @@ class FinalSubmissionAPI(APIResource):
     The API resource for the Assignment Object
     """
     model = models.FinalSubmission
-
+    contains_entities = False
+    
     methods = {
         'get': {
         },
         'index': {
         },
-        'post': {
+        'mark_backup': {
+            'methods': set(['POST']),
             'web_args': {
-                'submission': KeyArg('Submission', required=True)
+                'backup': KeyArg('Backup', required=True)
             }
         },
-        }
+    }
 
-    def new_entity(self, attributes):
+    def mark_backup(self, user, data):
         """
         Creates a new entity with given attributes.
 
         :param attributes: (dictionary)
-        :return: (entity, error_response) should be ignored if error_response
-        is a True value
+        :return: None
         """
-        subm = attributes['submission'].get()
+        backup = data['backup'].get()
+        
+        if not backup:
+            raise BadValueError('No such backup exists.')
+        
+        need = Need('get')  # allows group, staff members
+        if not backup.can(user, need, backup):
+            raise need.exception()
+        
+        subm = models.Submission.query(
+            models.Submission.backup==backup.key
+        ).get()
+        
+        if not subm:
+            raise BadValueError('No such submission exists.')
+        
         subm.mark_as_final()
         return subm.get_final()
+
 
 class AnalyticsAPI(APIResource):
     """
