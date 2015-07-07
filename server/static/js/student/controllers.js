@@ -390,10 +390,11 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
              });
       }
 
-      $scope.changeSubmission = function (submId) {
+      $scope.changeSubmission = function (backup) {
         FinalSubmissionChange.change({
-          submission: submId
+          backup: backup.id
         }, function (response) {
+            $scope.closeDetails();
           $scope.reloadView();
           $window.swal({
               title: "Changed Submission",
@@ -402,7 +403,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-            report_error($window, err);
+            report_error($window, error);
         })
       }
 

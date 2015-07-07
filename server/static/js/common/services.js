@@ -5,7 +5,7 @@ function defaultTransformer(data) {
   } else {
     if (json.status == '500') {
       if (json.message == 'internal server error :(') {
-        json.message = 'Object failed to instantiate.'
+        json.message = 'An uncaught error or exception has been thrown. If this is urgent, please contact your instructors.'
       }
       return json;
     }

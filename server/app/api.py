@@ -2116,7 +2116,7 @@ class FinalSubmissionAPI(APIResource):
         },
         'post': {
             'web_args': {
-                'submission': KeyArg('Submission', required=True)
+                'backup': KeyArg('Backup', required=True)
             }
         },
     }
@@ -2126,10 +2126,16 @@ class FinalSubmissionAPI(APIResource):
         Creates a new entity with given attributes.
 
         :param attributes: (dictionary)
-        :return: (entity, error_response) should be ignored if error_response
-        is a True value
+        :return: None
         """
-        subm = attributes['submission'].get()
+        backup = attributes['backup'].get()
+        subm = models.Submission.query(
+            models.Submission.backup==backup.key
+        ).get()
+        
+        if not subm:
+            raise BadValueError('No such submission exists.')
+        
         subm.mark_as_final()
         return subm.get_final()
 

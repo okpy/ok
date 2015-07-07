@@ -672,6 +672,12 @@ header {
                 .label p {
                     margin-bottom:0;
                 }
+            .flag.active {
+                background-color:#ccc;
+            }
+                .flag.active .label {
+                    background-color:#690;
+                }
 /* submission */
 .submission .blob {
     margin-top:-1px;
