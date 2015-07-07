@@ -2119,7 +2119,7 @@ class FinalSubmissionAPI(APIResource):
                 'submission': KeyArg('Submission', required=True)
             }
         },
-        }
+    }
 
     def new_entity(self, attributes):
         """
@@ -2132,6 +2132,7 @@ class FinalSubmissionAPI(APIResource):
         subm = attributes['submission'].get()
         subm.mark_as_final()
         return subm.get_final()
+
 
 class AnalyticsAPI(APIResource):
     """

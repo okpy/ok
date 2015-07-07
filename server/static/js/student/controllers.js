@@ -402,7 +402,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-            $window.swal("Oops...", "Please submit again, instead. This feature is not yet ready.", "error");
+            report_error($window, err);
         })
       }
 
