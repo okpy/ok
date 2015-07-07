@@ -147,8 +147,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
 
 
 // Main dashboard controller. Should be modularized later.
-app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', 'FinalSubmissionChange', '$timeout',
-  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, FinalSubmissionChange, $timeout) {
+app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', 'FinalSubmission', '$timeout',
+  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, FinalSubmission, $timeout) {
       $scope.courseId = $stateParams.courseId
 
       $scope.reloadAssignments = function () {
@@ -391,7 +391,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
 
       $scope.changeSubmission = function (backup) {
-        FinalSubmissionChange.change({
+        FinalSubmission.mark_backup({
           backup: backup.id
         }, function (response) {
             $scope.closeDetails();

@@ -112,7 +112,12 @@ app.factory('FinalSubmission', ['$resource',
         get: {
           transformResponse: defaultTransformer
         },
-      });
+        mark_backup: {
+          method: "POST",
+          url: "/api/v1/final_submission/mark_backup",
+          transformResponse: defaultTransformer
+        }
+      })
     }
   ]);
 
@@ -285,18 +290,6 @@ app.factory('Version', ['$resource',
           url: "/api/v1/version/:id/new",
           params: {}
         }
-      });
-    }
-  ]);
-
-app.factory('FinalSubmissionChange', ['$resource',
-    function($resource) {
-      return $resource('/api/v1/final_submission', {}, {
-        change: {
-          method: "POST",
-          url: "/api/v1/final_submission",
-          transformResponse: defaultTransformer
-        },
       });
     }
   ]);
