@@ -54,8 +54,6 @@ PERMISSIONS_TESTS = [
          "student0", "Submission", "first", "modify", False),
 ]
 
-# TODO: Better place for Submission tests.
-
 #pylint: disable=no-init, missing-docstring
 @ddt
 class SubmissionPermissionsUnitTest(PermissionsUnitTest):
