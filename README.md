@@ -8,8 +8,8 @@ based on logging sent from client scripts.
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
-[![Build Status](https://travis-ci.org/Cal-CS-61A-Staff/ok.svg?branch=master)](https://travis-ci.org/Cal-CS-61A-Staff/ok)
-[![Coverage Status](https://coveralls.io/repos/Cal-CS-61A-Staff/ok/badge.svg)](https://coveralls.io/r/Cal-CS-61A-Staff/ok)
+[![Build Status](https://travis-ci.org/Cal-CS-61A-Staff/ok.svg?branch=master&style=flat-square)](https://travis-ci.org/Cal-CS-61A-Staff/ok)
+[![Coverage Status](https://coveralls.io/repos/Cal-CS-61A-Staff/ok/badge.svg?style=flat-square)](https://coveralls.io/r/Cal-CS-61A-Staff/ok)
 
 Installation
 -------------
