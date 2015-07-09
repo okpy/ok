@@ -1,7 +1,6 @@
 """The public API."""
 
 #pylint: disable=no-member,unused-argument
-#TEsting 
 
 import datetime
 import logging
@@ -14,7 +13,7 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, BUCKET_NAME
 
 from app import models, app, analytics
 from app.codereview import compare
