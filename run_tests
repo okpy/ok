@@ -2,13 +2,13 @@
 
 if env | grep -q '^VIRTUAL_ENV='
 then
-    deactivate
+    source deactivate
 fi
 
 source env/server/bin/activate
-cd server
-FLASK_CONF=TEST python apptest.py $@
+
+FLASK_CONF=TEST python server/apptest.py --quiet $@
 RESULT=$?
-cd ..
+
 deactivate
 exit $RESULT

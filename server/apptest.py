@@ -51,8 +51,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.quiet:
-        from app import urls
-        urls.logging.disable(urls.logging.exception)
+        import logging
+        logging.disable(logging.exception)
 
     if not args.sdk_location:
         parser.print_help()
