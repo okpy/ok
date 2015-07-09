@@ -156,13 +156,20 @@ class BaseUnitTest(BaseTestCase):
 
         self.groups['group1'].put()
 
-        group_submission = models.Backup(
+        group_backup = models.Backup(
             submitter=self.accounts['student0'].key,
             assignment=self.assignments['first'].key,
         )
 
+        group_backup.put()
+        self.backups['group'] = group_backup
+
+        group_submission = models.Submission(
+            backup=group_backup.key
+        )
+
         group_submission.put()
-        self.backups['group'] = group_submission
+        self.submissions['group'] = group_submission
 
         self.queues = {
             "first": models.Queue(
@@ -210,25 +217,13 @@ class PermissionsUnitTest(BaseUnitTest):
 
     def access(self, value):
         user_id, model, obj_name, need = value.input
-        self.login(user_id) # sets self.user
+        self.login(user_id)  # sets self.user
 
         obj = None
         if model == "User":
             obj = self.accounts[obj_name]
-        elif model == "Backup":
-            obj = self.backups[obj_name]
-        elif model == "Submission":
-            obj = self.submissions[obj_name]
-        elif model == "Assignment":
-            obj = self.assignments[obj_name]
-        elif model == "Course":
-            obj = self.courses[obj_name]
-        elif model == "Queue":
-            obj = self.queues[obj_name]
-        elif model == "Comment":
-            obj = self.comments[obj_name]
-        elif model == "Group":
-            obj = self.groups[obj_name]
+        else:
+            obj = getattr(self, model.lower()+'s')[obj_name]
 
         if not obj:
             self.assertTrue(False, "Invalid test arguments %s" % model)

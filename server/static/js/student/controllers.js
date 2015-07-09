@@ -147,8 +147,8 @@ app.controller("SubmissionDetailCtrl", ['$scope', '$window', '$location', '$stat
 
 
 // Main dashboard controller. Should be modularized later.
-app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', 'FinalSubmissionChange', '$timeout',
-  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, FinalSubmissionChange, $timeout) {
+app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$stateParams', 'Assignment', 'User', 'Group', 'Submission', 'FinalSubmission', '$timeout',
+  function($scope, $window, $state,  $stateParams, Assignment, User, Group, Submission, FinalSubmission, $timeout) {
       $scope.courseId = $stateParams.courseId
 
       $scope.reloadAssignments = function () {
@@ -390,10 +390,11 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
              });
       }
 
-      $scope.changeSubmission = function (submId) {
-        FinalSubmissionChange.change({
-          submission: submId
+      $scope.changeSubmission = function (backup) {
+        FinalSubmission.mark_backup({
+          backup: backup.id
         }, function (response) {
+            $scope.closeDetails();
           $scope.reloadView();
           $window.swal({
               title: "Changed Submission",
@@ -402,7 +403,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-            $window.swal("Oops...", "Please submit again, instead. This feature is not yet ready.", "error");
+            report_error($window, error);
         })
       }
 

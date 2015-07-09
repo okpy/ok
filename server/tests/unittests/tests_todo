@@ -1,20 +1,21 @@
 Need to make sure all cases covered / Add more tests
 
-Assignment -- permissions
-Backup -- get_messages, to_json, permissions
-Comment -- permissions
-Queue -- permissions, to_json
-User -- append_email, delete_email, get_final_submission, get_or_insert, lookup, permissions
-Course -- permissions
+- Assignment -- permissions
+- Backup -- get_messages, to_json, permissions
+- Comment -- permissions
+- Queue -- permissions, to_json
+- User -- append_email, delete_email, get_final_submission, get_or_insert, lookup, permissions
+- Course -- permissions
 
 Not triaged yet
 
-FinalSubmission -- permissions (hook check at some point)
-AuditLog -- none
-Group -- permissions, classmethods, invitation, acceptance, leaving, validation
-Version -- download_link, to_json, permissions
-Diff -- permissions, to_json
-Submission -- permissions (same as backup)
-Score -- none
-Message -- permissions (almost same as backup)
-Participant -- has_role (CM), courses (CM), permissions
+- FinalSubmission -- permissions (hook check at some point)
+- AuditLog -- none
+- Group -- permissions, classmethods, invitation, acceptance, leaving, validation
+- Version -- download_link, to_json, permissions
+- Diff -- permissions, to_json
+- Score -- none
+- Message -- permissions (almost same as backup)
+- Participant -- has_role (CM), courses (CM), permissions
+
++ Submission -- permissions (same as backup)

@@ -219,16 +219,6 @@ class FinalSubmissionTest(APIBaseTestCase):
         # Invite
         # TODO
 
-    def set_as_final_submission(self, backup):
-        fs_api = api.FinalSubmissionAPI()
-        subm = models.Submission.query(
-            models.Submission.backup == backup.key).get()
-        self.assertIsNotNone(subm)
-        data = {
-                'submission': subm.key
-        }
-        return fs_api.post(self.user, data)
-
     def test_set_different_submission_as_final_submission(self):
         self.login('student0')
 
@@ -246,9 +236,37 @@ class FinalSubmissionTest(APIBaseTestCase):
         self.run_deferred()
 
         self.assertNumFinalSubmissions(1)
+        
+        subm = models.Submission.query(
+            models.Submission.backup == self.backups['second'].key
+        ).get()
 
-        self.set_as_final_submission(self.backups['second'])
+        api.FinalSubmissionAPI().post(
+            self.user,
+            dict(submission=subm.key))
 
+        self.assertFinalSubmission(self.user, self.backups['second'])
+        
+    def test_set_different_backup_as_final_submission(self):
+        self.login('student0')
+
+        self.assertNoFinalSubmissions()
+
+        # Submit
+        self.submit()
+        self.run_deferred()
+        self.assertNumFinalSubmissions(1)
+
+        self.logout()
+        self.login('student1')
+        self.set_due_date(NOW - datetime.timedelta(days=1))
+        self.submit(self.backups['second'])
+        self.run_deferred()
+
+        self.assertNumFinalSubmissions(1)
+
+        api.FinalSubmissionAPI().mark_backup(
+            self.user, dict(backup=self.backups['second'].key))
         self.assertFinalSubmission(self.user, self.backups['second'])
 
     def test_create_group(self):

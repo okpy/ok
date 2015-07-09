@@ -8,9 +8,7 @@ python:
 
 install: pip install -r server_requirements.txt
 
-script:
-  - FLASK_CONF=TEST python $CMD --sdk_location $GAE_SDK --quiet
-  - coverage run server/apptest.py
+script: FLASK_CONF=TEST coverage run --source=server $CMD --sdk_location $GAE_SDK --quiet
 
 before_script:
   - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_$GAE_VERSION.zip -o gae_sdk.zip
