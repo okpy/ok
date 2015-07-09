@@ -6,20 +6,20 @@ env:
 python:
   - "2.7"
 
-install: pip install -r server_requirements.txt
+install:
+  - pip install -r server_requirements.txt
 
-script: FLASK_CONF=TEST coverage run --source=server $CMD --sdk_location $GAE_SDK --quiet
+script:
+  - FLASK_CONF=TEST coverage run --source=server $CMD --sdk_location $GAE_SDK --quiet
 
 before_script:
-  - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_$GAE_VERSION.zip -o gae_sdk.zip
-  - unzip -q google_appengine_$GAE_VERSION.zip
-  - mv google_appengine gae_sdk
-  - export GAE_SDK=$PWD/gae_sdk
-  - export PATH=$PATH:$GAE_SDK
-  - export PYTHONPATH=$PYTHONPATH:$GAE_SDK
-  - python server/app/generate_keys.py
+  - bash server/before_script.sh
 
 after_success:
   - coveralls
   
 sudo: false
+
+cache:
+  directories:
+  - /home/travis/virtualenv/python2.7.9/
