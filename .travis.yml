@@ -21,3 +21,5 @@ before_script:
 
 after_success:
   - coveralls
+  
+sudo: false
