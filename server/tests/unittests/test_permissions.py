@@ -144,8 +144,16 @@ class BaseUnitTest(BaseTestCase):
                 backup=self.backups["third"].key
                 ),
             }
-        for submission in self.submissions.values():
+        
+        self.finalsubmissions = {}
+        
+        for key, submission in self.submissions.items():
             submission.put()
+            self.finalsubmissions[key] = fs = \
+            models.FinalSubmission(
+                submission=submission.key
+            )
+            fs.put()
 
         self.groups = {
             'group1': models.Group(
@@ -170,6 +178,13 @@ class BaseUnitTest(BaseTestCase):
 
         group_submission.put()
         self.submissions['group'] = group_submission
+        
+        group_finalsubmission = models.FinalSubmission(
+            submission=group_submission.key
+        )
+        
+        group_finalsubmission.put()
+        self.finalsubmissions['group'] = group_finalsubmission
 
         self.queues = {
             "first": models.Queue(
