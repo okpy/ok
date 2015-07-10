@@ -54,8 +54,6 @@ BACKUP_TESTS = [
          "student0", "Backup", "first", "modify", False),
 ]
 
-# TODO: Better place for Submission tests.
-
 #pylint: disable=no-init, missing-docstring
 @ddt
 class BackupPermissionsUnitTest(PermissionsUnitTest):
