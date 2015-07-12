@@ -390,7 +390,7 @@ class User(Base):
         """Retrieve a user by email or return None."""
         assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
         email = email.lower()
-        users = cls.query(cls.email == email, cls.status != 'inactive').fetch()
+        users = cls.query(cls.email == email).fetch()
         if not users:
             return None
         if len(users) > 1:
@@ -502,7 +502,7 @@ class Assignment(Base):
     autograding_enabled = ndb.BooleanProperty(default=False)
     grading_script_file = ndb.TextProperty()
     zip_file_url = ndb.StringProperty()
-    
+
     # TODO Add services requested
 
     @classmethod
@@ -517,7 +517,7 @@ class Assignment(Base):
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
-    
+
     def __lt__(self, other):
         """ Allows us to sort assignments - reverse order so that latest due dates come first """
         return self.due_date > other.due_date
@@ -1214,7 +1214,7 @@ class FinalSubmission(Base):
         Return whether or not this assignment has been assigned to a queue.
         """
         return bool(self.queue)
-    
+
     @classmethod
     def _can(cls, user, need, final, query):
         action = need.action
@@ -1230,24 +1230,24 @@ class FinalSubmission(Base):
         self.submitter = self.submission.get().submitter
 
     def get_scores(self):
-        """ 
+        """
         Return a list of lists of the format [[student, score, message, grader, tag]]
-        if the submission has been scored. Otherwise an empty list. 
-        If the submission is a group submission, there will be an element 
+        if the submission has been scored. Otherwise an empty list.
+        If the submission is a group submission, there will be an element
         for each combination of student and score.
         """
-        # TODO: get the most recent score for each tag. 
-        # Question: will all scores have a grader? In particular the scores from the autograder. 
+        # TODO: get the most recent score for each tag.
+        # Question: will all scores have a grader? In particular the scores from the autograder.
         all_scores = []
         if self.group:
             members = [member for member in self.group.get().member]
-        else: 
+        else:
             members = [self.submitter]
         for member in members:
             email = member.get().email[0]
             for score in self.submission.get().score:
                 all_scores.append([email,
-                        score.score, 
+                        score.score,
                         score.message,
                         score.grader.get().email[0],
                         score.tag])
