@@ -1,5 +1,5 @@
 cron:
 - description: Ok Daily Backup
   url: /_ah/datastore_admin/backup.create?name=2015DailyBackup&kind=Submissionv2&kind=Userv2&filesystem=gs&gs_bucket_name=ok_2015_backups
-  schedule: every 24 hours
+  schedule: every day 17:00
   target: ah-builtin-python-bundle
