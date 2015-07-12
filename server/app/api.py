@@ -408,14 +408,14 @@ class ParticipantAPI(APIResource):
     """
     Root-level API functions
     """
-    
+
     model = models.Participant
 
     methods = {
         'enrollment': {
         }
     }
-    
+
     def enrollment(self):
         user = models.User.lookup(request.args.get('email'))
         data = []
@@ -840,7 +840,7 @@ class AssignmentAPI(APIResource):
 
     def download_scores(self, obj, user, data):
         """
-        Download all composition scores for this assignment. 
+        Download all composition scores for this assignment.
         Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
         """
         need = Need('staff')
@@ -871,13 +871,13 @@ class AssignmentAPI(APIResource):
         return course_name, content
 
     def scores_for_student_or_group(self, student, assignment):
-        """ Returns a tuple of two elements: 
+        """ Returns a tuple of two elements:
                 1) Score data (list of lists) for STUDENT's final submission for ASSIGNMENT.
-                    There is an element for each score. 
+                    There is an element for each score.
                     * OBS * If the student is in a group, the list will contain an
                     element for each combination of group member and score.
                 2) A boolean indicating whether the student had a
-                    scored final submission for ASSIGNMENT. 
+                    scored final submission for ASSIGNMENT.
             Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
         """
         fs = models.User.get_final_submission(student, assignment.key)
@@ -888,10 +888,10 @@ class AssignmentAPI(APIResource):
 
     def scores_for_group_members(self, group, assignment):
         """ Returns a list of lists containing score data
-            for the groups's final submission for ASSIGNMENT. 
-            There is one element for each combination of 
+            for the groups's final submission for ASSIGNMENT.
+            There is one element for each combination of
             group member and score.
-            Ensures that each student only appears once in the list. 
+            Ensures that each student only appears once in the list.
             Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
         """
         content = []
@@ -900,7 +900,7 @@ class AssignmentAPI(APIResource):
             data, success = self.scores_for_student_or_group(member, assignment)
             content.extend(data)
             if success:
-                # get_scores_for_student_or_group will return scores for all group members. 
+                # get_scores_for_student_or_group will return scores for all group members.
                 return content
         return [[member.email[0], 0, None, None, None]]
 
@@ -1510,7 +1510,7 @@ class SearchAPI(APIResource):
         second named group "op" as a string preceded by two dashes
         and followed by a space. Captures final named group "arg"
         with optional quotations.
-        
+
         If quotes are detected, the string inside is allowed spaces and
         a second, identical quote must be found.
         """
@@ -1557,7 +1557,7 @@ class SearchAPI(APIResource):
         args = cls.get_args(model, objects)
         query = model.query(*args)
         return cls.order(model, query)
-        
+
     @staticmethod
     def get_model(prime):
         """ determine model using passed-in data """
@@ -1826,8 +1826,7 @@ class CourseAPI(APIResource):
     def get_students(self, course, user, data):
         query = models.Participant.query(
             models.Participant.course == course.key,
-            models.Participant.role == 'student',
-            models.Participant.status != 'inactive')
+            models.Participant.role == 'student')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
@@ -1971,7 +1970,7 @@ class GroupAPI(APIResource):
             raise need.exception()
 
         group.exit(user)
-        
+
     def reorder(self, group, user, data):
         """ Saves order of partners """
         need = Need('reorder')
@@ -1983,7 +1982,7 @@ class GroupAPI(APIResource):
 
         if len(new_order) != len(group.member):
             raise BadValueError('Incorrect number of group members.')
-        
+
         for member in group.member:
             if member not in new_order:
                 raise BadValueError('Intruding group member does not belong.')
@@ -2037,11 +2036,11 @@ class QueueAPI(APIResource):
         ent.assigned_staff = [models.User.get_or_insert(
             user.id()).key for user in ent.assigned_staff]
         return ent
-    
-    
+
+
 class QueuesAPI(APIResource):
     """ API resource for sets of queues """
-    
+
     contains_entities = False
 
     methods = {
@@ -2054,16 +2053,16 @@ class QueuesAPI(APIResource):
             }
         }
     }
-    
+
     def generate(self, user, data):
         """ Splits up submissions among staff members """
-        
+
         if self.check_permissions(user, data):
             raise Need('get').exception()
 
         course_key, assignment_key, staff_list = data['course'], data['assignment'], data['staff']
         userify = lambda parts: [part.user.get() for part in parts]
-        
+
         staff = [staff for staff in
             userify(models.Participant.query(
             models.Participant.role == STAFF_ROLE,
@@ -2074,16 +2073,16 @@ class QueuesAPI(APIResource):
         subms = models.FinalSubmission.query(
             models.FinalSubmission.assignment == assignment_key
         ).fetch()
-        
+
         queues = []
-        
+
         for instr in staff:
             q = models.Queue.query(
                 models.Queue.owner == instr.key,
                 models.Queue.assignment == assignment_key).get()
             if not q:
                 q = models.Queue(
-                    owner=instr.key, 
+                    owner=instr.key,
                     assignment=assignment_key,
                     assigned_staff=[instr.key])
                 q.put()
@@ -2095,13 +2094,13 @@ class QueuesAPI(APIResource):
             subm.queue = queues[i].key
             subm.put()
             i = (i + 1) % len(staff)
-            
+
         return queues
 
     def check_permissions(self, user, data):
         course = data['course'].get()
         return user.key not in course.staff and not user.is_admin
-    
+
 
 class FinalSubmissionAPI(APIResource):
     """
@@ -2109,7 +2108,7 @@ class FinalSubmissionAPI(APIResource):
     """
     model = models.FinalSubmission
     contains_entities = False
-    
+
     methods = {
         'get': {
         },
@@ -2136,21 +2135,21 @@ class FinalSubmissionAPI(APIResource):
         :return: None
         """
         backup = data['backup'].get()
-        
+
         if not backup:
             raise BadValueError('No such backup exists.')
-        
+
         need = Need('get')  # allows group, staff members
         if not backup.can(user, need, backup):
             raise need.exception()
-        
+
         subm = models.Submission.query(
             models.Submission.backup == backup.key
         ).get()
 
         if not subm:
             raise BadValueError('No such submission exists.')
-        
+
         return self.new_entity(dict(submission=subm.key))
 
     def new_entity(self, attributes):
@@ -2167,7 +2166,7 @@ class FinalSubmissionAPI(APIResource):
 
         if not subm:
             raise BadValueError('No such submission exists.')
-        
+
         subm.mark_as_final()
         return subm.get_final()
 
