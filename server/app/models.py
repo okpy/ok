@@ -478,8 +478,7 @@ class Course(Base):
 
         query = Participant.query(
             Participant.course == self.key,
-            Participant.role == 'student',
-            Participant.status != 'inactive')
+            Participant.role == 'student')
 
         return list(query.fetch())
 
