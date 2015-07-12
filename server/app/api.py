@@ -964,8 +964,6 @@ class SubmissionAPI(APIResource):
             }
         },
         'get': {
-            'web_args': {
-            }
         },
         'index': {
             'web_args': {
@@ -2040,7 +2038,6 @@ class FinalSubmissionAPI(APIResource):
     The API resource for the Assignment Object
     """
     model = models.FinalSubmission
-    contains_entities = False
 
     methods = {
         'get': {
