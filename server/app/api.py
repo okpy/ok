@@ -1332,7 +1332,7 @@ class SubmissionAPI(APIResource):
 
         # Replace old score with key if it exists.
         subm.score = [autograde for autograde in subm.score \
-         if autograde.key != data['key']]
+         if autograde.tag != data['key']]
         subm.score.append(score)
 
         subm.put()
