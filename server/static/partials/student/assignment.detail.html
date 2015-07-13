@@ -76,7 +76,7 @@
                     <span class="stem"></span>
                 </a>
                 {{ subm.created | amCalendar }} by {{ subm.submitter.email[0] }}
-                <a ui-sref="submission.detail({courseId: courseId, submissionId:subm.id})">view
+                <a ui-sref="submission.detail({courseId: courseId, submissionId:subm.backup.id})">view
                     <span class="arrow right dark fat"></span>
                 </a>
             </li>
