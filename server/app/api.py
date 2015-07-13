@@ -18,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, make_gcs_filename
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -841,12 +841,13 @@ class AssignmentAPI(APIResource):
         """
         Write all composition scores for this assignment as a GCS file. 
         Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
+        Returns the name of the created GCS file. 
         """
         need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
-
         deferred.defer(scores_to_gcs, obj, user)
+        return '{}'.format(make_gcs_filename(obj.course.get().offering, 'scores'))
 
     def autograde(self, obj, user, data):
       need = Need('grade')
