@@ -69,14 +69,14 @@
                    ng-class=" {active: assign.final.final_submission && subm.id == assign.final.backup.id }"
                     ng-click="changeSubmission(subm)">
                     <span class="label right">
-                        <p ng-hide="assign.final.final_submission && subm.id == assign.final.backup.id">Flag for Grading</p>
-                        <p ng-show="assign.final.final_submission && subm.id == assign.final.backup.id">Flagged for Grading</p>
+                        <p ng-hide="assign.final.final_submission && subm.id == assign.final.submission.id">Flag for Grading</p>
+                        <p ng-show="assign.final.final_submission && subm.id == assign.final.submission.id">Flagged for Grading</p>
                     </span>
                     <span class="cloth"></span>
                     <span class="stem"></span>
                 </a>
                 {{ subm.created | amCalendar }} by {{ subm.submitter.email[0] }}
-                <a ui-sref="submission.detail({courseId: courseId, submissionId:subm.id})">view
+                <a ui-sref="submission.detail({courseId: courseId, submissionId:subm.backup.id})">view
                     <span class="arrow right dark fat"></span>
                 </a>
             </li>
