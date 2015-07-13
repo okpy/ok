@@ -69,8 +69,8 @@
                    ng-class=" {active: assign.final.final_submission && subm.id == assign.final.submission.id }"
                     ng-click="changeSubmission(subm)">
                     <span class="label right">
-                        <p ng-hide="assign.final.final_submission && subm.id == assign.final.backup.id">Flag for Grading</p>
-                        <p ng-show="assign.final.final_submission && subm.id == assign.final.backup.id">Flagged for Grading</p>
+                        <p ng-hide="assign.final.final_submission && subm.id == assign.final.submission.id">Flag for Grading</p>
+                        <p ng-show="assign.final.final_submission && subm.id == assign.final.submission.id">Flagged for Grading</p>
                     </span>
                     <span class="cloth"></span>
                     <span class="stem"></span>
