@@ -21,8 +21,10 @@ from flask import jsonify, request, Response, json
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
+import cloudstorage as gcs
 
 from app import app
+from app.constants import GRADES_BUCKET
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
@@ -118,7 +120,7 @@ def add_to_zip(zipfile, file_contents, dir=''):
 
 def create_csv(content):
     """ 
-    Creates csv file from content. content must be a list of lists.
+    Return all contents in CSV file format. Content must be a list of lists.
     """
     scsv = StringIO()
     writer = csv.writer(scsv)
@@ -130,6 +132,56 @@ def create_csv(content):
     contents = scsv.getvalue()
     scsv.close()
     return contents
+
+def scores_to_gcs(assignment, user):
+    """ Creates and writes all final submission 
+        scores for the given assignment to GCS """
+    course_name, content = data_for_scores(assignment, user)
+    csv_contents = create_csv(content)
+    create_gcs_file(course_name, csv_contents, 'scores')
+
+def data_for_scores(assignment, user):
+    """ 
+    Returns a tuple of two values:
+        1) The course name of assignment
+        2) A list of lists of score info for assignment.
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']] 
+    """
+    content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+    course = assignment.course.get()
+    groups = ModelProxy.Group.lookup_by_assignment(assignment)
+    seen_members = set()
+
+    for group in groups:
+        members = group.member
+        seen_members |= set(members)
+        content.extend(group.scores_for_assignment(assignment))
+
+    students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
+    for student in students:
+        content.extend(student.scores_for_assignment(assignment)[0])
+
+    course_name = course.offering.replace('/', '_')
+    return course_name, content
+
+def create_gcs_file(course, contents, info_type):
+    """ 
+    Creates a GCS csv file with contents CONTENTS. 
+    Filename: INFO_TYPE-COURSE.csv
+    """
+    try:
+        gcs_filename = '/{}/{}-{}.csv'.format(GRADES_BUCKET, info_type, course)
+        gcs_file = gcs.open(gcs_filename, 'w', content_type='text/csv', options={'x-goog-acl':'project-private'})
+        gcs_file.write(contents)
+        gcs_file.close()
+    except Exception as e:
+        logging.exception("ERROR: {}".format(e))
+        try:
+            gcs.delete(gcs_filename)
+        except gcs.NotFoundError:
+            logging.info("Could not delete file " + gcs_filename)
+    logging.info("Created a file " + gcs_filename)
+
 
 def paginate(entries, page, num_per_page):
     """

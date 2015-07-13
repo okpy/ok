@@ -13,12 +13,12 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, BUCKET_NAME
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, create_csv
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -837,46 +837,16 @@ class AssignmentAPI(APIResource):
         if err:
             raise BadValueError(err)
 
-
     def download_scores(self, obj, user, data):
         """
-        Download all composition scores for this assignment. 
+        Write all composition scores for this assignment as a GCS file. 
         Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
         """
         need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
 
-        course_name, content = self.data_for_scores(obj, user)
-        csv_file = create_csv(content)
-        return self.make_csv_response(course_name, csv_file)
-
-
-    def data_for_scores(self, obj, user):
-        content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
-        course = obj.course.get()
-        groups = models.Group.lookup_by_assignment(obj)
-        seen_members = set()
-
-        for group in groups:
-            members = group.member
-            seen_members |= set(members)
-            content.extend(group.scores_for_assignment(obj))
-
-        students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
-        for student in students:
-            content.extend(student.scores_for_assignment(obj)[0])
-
-        course_name = course.offering.replace('/', '_')
-        return course_name, content
-
-
-    def make_csv_response(self, course_name, csv_file):
-        response = make_response(csv_file)
-        response.headers["Content-Disposition"] = ('attachment; filename=scores-%s.csv' % course_name)
-        response.headers['Content-Type'] = 'text/csv'
-        return response
-
+        scores_to_gcs(obj, user)
 
     def autograde(self, obj, user, data):
       need = Need('grade')
