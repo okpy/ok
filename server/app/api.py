@@ -18,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, make_gcs_filename
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -408,14 +408,14 @@ class ParticipantAPI(APIResource):
     """
     Root-level API functions
     """
-
+    
     model = models.Participant
 
     methods = {
         'enrollment': {
         }
     }
-
+    
     def enrollment(self):
         user = models.User.lookup(request.args.get('email'))
         data = []
@@ -672,7 +672,7 @@ class UserAPI(APIResource):
         return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return [subm.submission for subm in obj.get_submissions(data['assignment'], data['quantity'])]
+        return obj.get_submissions(data['assignment'], data['quantity'])
 
     def timed_submission(self, obj, user, data):
         return obj.get_submission_before(data['assignment'], data['before'])
@@ -841,14 +841,12 @@ class AssignmentAPI(APIResource):
         """
         Write all composition scores for this assignment as a GCS file. 
         Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
-        Returns the name of the created GCS file. 
         """
         need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
 
         deferred.defer(scores_to_gcs, obj, user)
-        return '{}'.format(make_gcs_filename(obj.course.get().offering, 'scores'))
 
     def autograde(self, obj, user, data):
       need = Need('grade')
@@ -966,6 +964,8 @@ class SubmissionAPI(APIResource):
             }
         },
         'get': {
+            'web_args': {
+            }
         },
         'index': {
             'web_args': {
@@ -1015,7 +1015,7 @@ class SubmissionAPI(APIResource):
                 'score': Arg(int, required=True),
                 'message': Arg(str, required=True),
             }
-        }
+        },
     }
 
     def graded(self, obj, user, data):
@@ -1259,7 +1259,7 @@ class SubmissionAPI(APIResource):
         if not self.subm_model.can(user, need, subm, subm_q):
             raise need.exception()
 
-        if not subm.backup == obj.key:
+        if not subm.backup() == obj.key:
           raise ValueError('Submission does not match backup')
 
         score = models.Score(
@@ -1269,13 +1269,16 @@ class SubmissionAPI(APIResource):
             grader=user.key)
         score.put()
 
-        # Replace old score with key if it exists.
-        subm.score = [autograde for autograde in subm.score \
-         if autograde.tag != data['key']]
-        subm.score.append(score)
+        if data['key'] == 'composition':
+          # Create a new composition score - but retain everything else.
+          subm.score = [autograde for autograde in subm.score \
+           if autograde.key != 'composition']
+          subm.score.append(score)
+        else:
+          subm.score.append(score)
 
         subm.put()
-        return score
+        return {1:1}
 
     def get_assignment(self, name):
         """
@@ -1444,7 +1447,7 @@ class SearchAPI(APIResource):
         second named group "op" as a string preceded by two dashes
         and followed by a space. Captures final named group "arg"
         with optional quotations.
-
+        
         If quotes are detected, the string inside is allowed spaces and
         a second, identical quote must be found.
         """
@@ -1491,7 +1494,7 @@ class SearchAPI(APIResource):
         args = cls.get_args(model, objects)
         query = model.query(*args)
         return cls.order(model, query)
-
+        
     @staticmethod
     def get_model(prime):
         """ determine model using passed-in data """
@@ -1760,7 +1763,8 @@ class CourseAPI(APIResource):
     def get_students(self, course, user, data):
         query = models.Participant.query(
             models.Participant.course == course.key,
-            models.Participant.role == 'student')
+            models.Participant.role == 'student',
+            models.Participant.status != 'inactive')
         need = Need('staff')
         if not models.Participant.can(user, need, course, query):
             raise need.exception()
@@ -1904,7 +1908,7 @@ class GroupAPI(APIResource):
             raise need.exception()
 
         group.exit(user)
-
+        
     def reorder(self, group, user, data):
         """ Saves order of partners """
         need = Need('reorder')
@@ -1916,7 +1920,7 @@ class GroupAPI(APIResource):
 
         if len(new_order) != len(group.member):
             raise BadValueError('Incorrect number of group members.')
-
+        
         for member in group.member:
             if member not in new_order:
                 raise BadValueError('Intruding group member does not belong.')
@@ -1970,11 +1974,11 @@ class QueueAPI(APIResource):
         ent.assigned_staff = [models.User.get_or_insert(
             user.id()).key for user in ent.assigned_staff]
         return ent
-
-
+    
+    
 class QueuesAPI(APIResource):
     """ API resource for sets of queues """
-
+    
     contains_entities = False
 
     methods = {
@@ -1987,16 +1991,16 @@ class QueuesAPI(APIResource):
             }
         }
     }
-
+    
     def generate(self, user, data):
         """ Splits up submissions among staff members """
-
+        
         if self.check_permissions(user, data):
             raise Need('get').exception()
 
         course_key, assignment_key, staff_list = data['course'], data['assignment'], data['staff']
         userify = lambda parts: [part.user.get() for part in parts]
-
+        
         staff = [staff for staff in
             userify(models.Participant.query(
             models.Participant.role == STAFF_ROLE,
@@ -2007,16 +2011,16 @@ class QueuesAPI(APIResource):
         subms = models.FinalSubmission.query(
             models.FinalSubmission.assignment == assignment_key
         ).fetch()
-
+        
         queues = []
-
+        
         for instr in staff:
             q = models.Queue.query(
                 models.Queue.owner == instr.key,
                 models.Queue.assignment == assignment_key).get()
             if not q:
                 q = models.Queue(
-                    owner=instr.key,
+                    owner=instr.key, 
                     assignment=assignment_key,
                     assigned_staff=[instr.key])
                 q.put()
@@ -2028,20 +2032,21 @@ class QueuesAPI(APIResource):
             subm.queue = queues[i].key
             subm.put()
             i = (i + 1) % len(staff)
-
+            
         return queues
 
     def check_permissions(self, user, data):
         course = data['course'].get()
         return user.key not in course.staff and not user.is_admin
-
+    
 
 class FinalSubmissionAPI(APIResource):
     """
     The API resource for the Assignment Object
     """
     model = models.FinalSubmission
-
+    contains_entities = False
+    
     methods = {
         'get': {
         },
@@ -2051,8 +2056,39 @@ class FinalSubmissionAPI(APIResource):
             'web_args': {
                 'submission': KeyArg('Submission', required=True)
             }
-        }
+        },
+        'mark_backup': {
+            'methods': set(['POST']),
+            'web_args': {
+                'backup': KeyArg('Backup', required=True)
+            }
+        },
     }
+
+    def mark_backup(self, user, data):
+        """
+        Converts backup to Finalsubmission
+
+        :param attributes: (dictionary)
+        :return: None
+        """
+        backup = data['backup'].get()
+        
+        if not backup:
+            raise BadValueError('No such backup exists.')
+        
+        need = Need('get')  # allows group, staff members
+        if not backup.can(user, need, backup):
+            raise need.exception()
+        
+        subm = models.Submission.query(
+            models.Submission.backup == backup.key
+        ).get()
+
+        if not subm:
+            raise BadValueError('No such submission exists.')
+        
+        return self.new_entity(dict(submission=subm.key))
 
     def new_entity(self, attributes):
         """
@@ -2068,7 +2104,7 @@ class FinalSubmissionAPI(APIResource):
 
         if not subm:
             raise BadValueError('No such submission exists.')
-
+        
         subm.mark_as_final()
         return subm.get_final()
 

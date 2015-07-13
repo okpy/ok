@@ -161,7 +161,7 @@ def data_for_scores(assignment, user):
     for student in students:
         content.extend(student.scores_for_assignment(assignment)[0])
 
-    course_name = course.offering
+    course_name = course.offering.replace('/', '_')
     return course_name, content
 
 def create_gcs_file(course, contents, info_type):
@@ -170,7 +170,7 @@ def create_gcs_file(course, contents, info_type):
     Filename: INFO_TYPE-COURSE.csv
     """
     try:
-        gcs_filename = make_gcs_filename(course, info_type)
+        gcs_filename = '/{}/{}-{}.csv'.format(GRADES_BUCKET, info_type, course)
         gcs_file = gcs.open(gcs_filename, 'w', content_type='text/csv', options={'x-goog-acl':'project-private'})
         gcs_file.write(contents)
         gcs_file.close()
@@ -181,10 +181,6 @@ def create_gcs_file(course, contents, info_type):
         except gcs.NotFoundError:
             logging.info("Could not delete file " + gcs_filename)
     logging.info("Created a file " + gcs_filename)
-
-def make_gcs_filename(course_offering, info_type):
-    course_name = course_offering.replace('/', '_').replace(' ', '_')
-    return '/{}/{}-{}.csv'.format(GRADES_BUCKET, info_type, course_name)
 
 
 def paginate(entries, page, num_per_page):
@@ -416,7 +412,7 @@ def merge_user(user_key, dup_user_key):
     E = ModelProxy.Participant
     enrolls = E.query(E.user == dup_user_key).fetch()
     for enroll in enrolls:
-        # enroll.status = 'inactive'
+        enroll.status = 'inactive'
         enroll.put_async()
 
     # Re-submit submissions
@@ -436,7 +432,7 @@ def merge_user(user_key, dup_user_key):
 
     # Invalidate emails
     dup_user.email = ['#'+email for email in dup_user.email]
-    # dup_user.status = 'inactive'
+    dup_user.status = 'inactive'
     dup_user.put_async()
     user.put_async()
 

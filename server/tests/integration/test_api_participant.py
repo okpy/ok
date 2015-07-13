@@ -68,20 +68,20 @@ class ParticipantAPITest(APIBaseTestCase):
 		self.assertNotEqual([], list(query1.fetch()))  # user1 receives user2 subs
 		self.assertEqual([], list(query2.fetch()))  # user2 is no longe the owner
 
-	# def test_deactivate_enrollment(self):
-	# 	""" Tests that the merged user has been unenrolled from all courses """
-	# 	part1 = models.Participant(
-	# 		course=self._course.key,
-	# 		role='student',
-	# 		user=self.user1.key
-	# 	).put()
-	# 	models.Participant(
-	# 		course=self._course.key,
-	# 		role='student',
-	# 		user=self.user2.key
-	# 	).put()
-	# 	self.merge_users()
-	# 	self.assertEqual([part1.get()], self._course.get_students(self.user))
+	def test_deactivate_enrollment(self):
+		""" Tests that the merged user has been unenrolled from all courses """
+		part1 = models.Participant(
+			course=self._course.key,
+			role='student',
+			user=self.user1.key
+		).put()
+		models.Participant(
+			course=self._course.key,
+			role='student',
+			user=self.user2.key
+		).put()
+		self.merge_users()
+		self.assertEqual([part1.get()], self._course.get_students(self.user))
 
 	def test_emails_transferred(self):
 		""" Tests that emails have been merged in. """
@@ -91,10 +91,10 @@ class ParticipantAPITest(APIBaseTestCase):
 		self.assertEqual(['#dummy2@student.com'], self.user2.key.get().email)
 		self.assertEqual(['dummy@student.com', 'dummy2@student.com'], self.user1.key.get().email)
 
-	# def test_user_status(self):
-	# 	""" Tests that the old user has been deactivated. """
-	# 	self.assertEqual('active', self.user2.status)
-	# 	self.assertEqual('active', self.user1.status)
-	# 	self.merge_users()
-	# 	self.assertEqual('inactive', self.user2.key.get().status)
-	# 	self.assertEqual('active', self.user1.key.get().status)
+	def test_user_status(self):
+		""" Tests that the old user has been deactivated. """
+		self.assertEqual('active', self.user2.status)
+		self.assertEqual('active', self.user1.status)
+		self.merge_users()
+		self.assertEqual('inactive', self.user2.key.get().status)
+		self.assertEqual('active', self.user1.key.get().status)

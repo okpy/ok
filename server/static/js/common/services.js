@@ -110,10 +110,11 @@ app.factory('FinalSubmission', ['$resource',
         id: "@id"
       }, {
         get: {
-          url: '/api/v1/final_submission/:id/get',
           transformResponse: defaultTransformer
         },
-        post: {
+        mark_backup: {
+          method: "POST",
+          url: "/api/v1/final_submission/mark_backup",
           transformResponse: defaultTransformer
         }
       })

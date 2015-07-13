@@ -329,27 +329,17 @@ def seed():
 
     group1_subm = make_seed_submission(assign, group_members[1])
     group1_subm.put()
-    # Make team 1's submission final and score it.
+    # Make team 1's submission final and score it. 
     final = make_final_with_group(group1_subm, assign, group_members[1], g1)
-    score_seed_submission(final, 2, "Nice job, group 1!", staff[8])
+    score_seed_submission(final, 2, "Nice job, group 1!", staff[8]) 
     subms.append(group1_subm)
 
     group3_subm = make_seed_submission(assign, group_members[5])
     group3_subm.put()
-    # Make team 1's submission final and score it.
+    # Make team 1's submission final and score it. 
     final3 = make_final_with_group(group3_subm, assign, group_members[5], g3)
-    score_seed_submission(final3, 1, "Awesome job, group 3!", staff[8])
+    score_seed_submission(final3, 1, "Awesome job, group 3!", staff[8]) 
     subms.append(group3_subm)
-
-    # Make this one be a final submission though.
-    # subm = make_seed_submission(assign, group_members[1], True)
-    # subm.put()
-    # subms.append(subm)
-
-
-    # scheme final
-    # subm = make_seed_scheme_submission(assign2, group_members[1], True)
-    # subm.put()
 
     # Now create indiviual submission
     for i in range(9):
@@ -361,16 +351,16 @@ def seed():
         subm.put()
         subms.append(subm)
 
-        # Make each individual submission final and score it.
+        # Make each individual submission final and score it. 
         final = make_final(subm, assign, students[i])
         score_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
 
 
     # Seed a queue. This should be auto-generated.
-    make_queue(assign, subms[:len(subms)//2], c)
-    make_queue(assign, subms[len(subms)//2:], k)
+    # make_queue(assign, subms[:len(subms)//2], c)
+    # make_queue(assign, subms[len(subms)//2:], k)
 
-    utils.add_to_grading_queues(assign.key)
+    #utils.add_to_grading_queues(assign.key)
 
 
 
