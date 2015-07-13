@@ -626,7 +626,18 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
          });
        }
 
-
+      // $scope.downloadScores = function(assign) {
+      //   var filename = 'scores-' + assign.course.offering.replace('/', '_').replace(' ', '_') + '.csv'
+      //   Assignment.download_scores({
+      //     id: assign.id
+      //   }, function() {
+      //     $window.swal('Success', 'Wrote scores to file ' + filename +
+      //       '\n View in https://console.developers.google.com/storage/browser/ok_grade_bucket/', 
+      //       'success');
+      //   }, function(err) {
+      //     report_error($window, err);
+      //   });
+      // }
 
      $scope.delete = function(assign) {
       $window.swal({

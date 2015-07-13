@@ -161,7 +161,7 @@ def data_for_scores(assignment, user):
     for student in students:
         content.extend(student.scores_for_assignment(assignment)[0])
 
-    course_name = course.offering.replace('/', '_')
+    course_name = course.offering
     return course_name, content
 
 def create_gcs_file(course, contents, info_type):
@@ -170,7 +170,7 @@ def create_gcs_file(course, contents, info_type):
     Filename: INFO_TYPE-COURSE.csv
     """
     try:
-        gcs_filename = '/{}/{}-{}.csv'.format(GRADES_BUCKET, info_type, course)
+        gcs_filename = '/{}/{}'.format(GRADES_BUCKET, make_filename(course, info_type))
         gcs_file = gcs.open(gcs_filename, 'w', content_type='text/csv', options={'x-goog-acl':'project-private'})
         gcs_file.write(contents)
         gcs_file.close()
@@ -182,6 +182,9 @@ def create_gcs_file(course, contents, info_type):
             logging.info("Could not delete file " + gcs_filename)
     logging.info("Created a file " + gcs_filename)
 
+def make_filename(course_offering, info_type):
+    course_name = course_offering.replace('/', '_').replace(' ', '_')
+    return '{}-{}.csv'.format(info_type, course_name)
 
 def paginate(entries, page, num_per_page):
     """
