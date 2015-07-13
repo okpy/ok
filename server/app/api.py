@@ -846,7 +846,7 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
 
-        scores_to_gcs(obj, user)
+        deferred.defer(scores_to_gcs, obj, user)
 
     def autograde(self, obj, user, data):
       need = Need('grade')
