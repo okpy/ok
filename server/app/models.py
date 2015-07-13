@@ -1,5 +1,24 @@
-"""Data Models.
+"""
 
+DATA MODELS
+
+This file is responsible for models and business logic. In 
+here, all methods should handle:
+
+    - permission checks
+      Check user for each operation.
+      
+    - basic operations
+      Get, put, delete. All of those go in here.
+      
+    - queries
+      Search queries all go in here.
+
+Methods in here should try to throw information BadValueErrors
+upon failure.
+
+Parsing web arguments and error handling go in api.py.
+      
 Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 """
 

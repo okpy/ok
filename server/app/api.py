@@ -1,4 +1,26 @@
-"""The public API."""
+"""
+
+THE PUBLIC API
+
+This file is responsible for API endpoints. In here, all
+methods should handle:
+
+    - web arguments
+      Parse and "translate" web arguments where need be,
+      so that models.py can easily generate queries or
+      perform business logic.
+
+    - file formats
+      Prepare .zip, .csv etc. files.
+      
+    - errors
+      Catch and return errors, so that the front-end can
+      feed that information back to the user.
+
+Other data-related and logic functionality should go in
+models.py. See that file for more information
+
+"""
 
 #pylint: disable=no-member,unused-argument
 
