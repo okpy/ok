@@ -672,7 +672,7 @@ class UserAPI(APIResource):
         return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return obj.get_submissions(data['assignment'], data['quantity'])
+        return [subm.submission for subm in obj.get_submissions(data['assignment'], data['quantity'])]
 
     def timed_submission(self, obj, user, data):
         return obj.get_submission_before(data['assignment'], data['before'])
@@ -1076,7 +1076,7 @@ class SubmissionAPI(APIResource):
                 'score': Arg(int, required=True),
                 'message': Arg(str, required=True),
             }
-        },
+        }
     }
 
     def graded(self, obj, user, data):
@@ -2115,39 +2115,8 @@ class FinalSubmissionAPI(APIResource):
             'web_args': {
                 'submission': KeyArg('Submission', required=True)
             }
-        },
-        'mark_backup': {
-            'methods': set(['POST']),
-            'web_args': {
-                'backup': KeyArg('Backup', required=True)
-            }
-        },
+        }
     }
-
-    def mark_backup(self, user, data):
-        """
-        Converts backup to Finalsubmission
-
-        :param attributes: (dictionary)
-        :return: None
-        """
-        backup = data['backup'].get()
-
-        if not backup:
-            raise BadValueError('No such backup exists.')
-
-        need = Need('get')  # allows group, staff members
-        if not backup.can(user, need, backup):
-            raise need.exception()
-
-        subm = models.Submission.query(
-            models.Submission.backup == backup.key
-        ).get()
-
-        if not subm:
-            raise BadValueError('No such submission exists.')
-
-        return self.new_entity(dict(submission=subm.key))
 
     def new_entity(self, attributes):
         """

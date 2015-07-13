@@ -391,8 +391,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
 
       $scope.changeSubmission = function (backup) {
-        FinalSubmission.mark_backup({
-          backup: backup.id
+        FinalSubmission.post({
+          submission: backup.id
         }, function (response) {
             $scope.closeDetails();
           $scope.reloadView();
@@ -403,13 +403,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-           $window.swal({
-             title: "Sorry",
-             text: "Feature temporarily disabled.",
-             timer: 3500,
-             type: "error"
-           });
-//            report_error($window, error);
+            report_error($window, error);
         })
       }
 
