@@ -416,7 +416,7 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       $scope.submission = response.submission;
       $scope.backupId = response.submission.backup.id;
       $scope.diff = Submission.diff({id: $scope.backupId});
-      // TODO: Only show composition scores.
+
       if (response.submission.score.length > 0) {
         $scope.compScore = response.submission.score[0].score
         $scope.compMessage = response.submission.score[0].message
@@ -1023,7 +1023,7 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
       });
       modal.result.then(function() {
         Submission.deleteComment({
-          id: $stateParams.submissionId,
+          id: $scope.backupId,
           comment: $scope.comment.id
         }, function (result){
           $scope.toggleBox();
@@ -1052,7 +1052,7 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
       text = $scope.commentText.text;
       if (text !== undefined && text.trim() != "") {
         Submission.addComment({
-          id: $stateParams.submissionId,
+          id: $scope.backupId,
           file: $scope.file_name,
           index: $scope.codeline.rightNum - 1,
           message: text,
