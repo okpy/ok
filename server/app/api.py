@@ -1320,7 +1320,7 @@ class SubmissionAPI(APIResource):
         if not self.subm_model.can(user, need, subm, subm_q):
             raise need.exception()
 
-        if not subm.backup() == obj.key:
+        if not subm.backup == obj.key:
           raise ValueError('Submission does not match backup')
 
         score = models.Score(
@@ -1330,16 +1330,12 @@ class SubmissionAPI(APIResource):
             grader=user.key)
         score.put()
 
-        if data['key'] == 'composition':
-          # Create a new composition score - but retain everything else.
-          subm.score = [autograde for autograde in subm.score \
-           if autograde.key != 'composition']
-          subm.score.append(score)
-        else:
-          subm.score.append(score)
+        subm.score = [autograde for autograde in subm.score \
+         if autograde.key != data['key'] ]
+        subm.score.append(score)
 
         subm.put()
-        return {1:1}
+        return score
 
     def get_assignment(self, name):
         """
