@@ -736,6 +736,7 @@ class Score(Base):
     score = ndb.IntegerProperty()
     message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User) # For autograders, the user who authenticated
+    server_time = ndb.DateTimeProperty(auto_now_add=True)
 
 
 class Submission(Base):

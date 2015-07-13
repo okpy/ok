@@ -254,7 +254,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
     }
   }
   ]);
-  
+
 app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course", "Queues",
   function ($scope, $window, $state, $stateParams, Assignment, Course, Queues) {
     Course.get({
@@ -282,7 +282,7 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
             $window.swal('Error', 'Could not load queues. Maybe none exist?', 'error')
         });
     }
-    
+
     $scope.generateQueues = function() {
         Queues.generate({
             course: $scope.course.id,
@@ -294,7 +294,7 @@ app.controller("AssignmentQueueListCtrl", ["$scope", "$window", "$state", "$stat
             $window.swal('Error', 'Queues could not be generated.', 'error');
         });
     }
-    
+
     $scope.reloadAssignment();
     $scope.reloadQueues();
 }])
@@ -305,18 +305,18 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
         'students': '*',
         'staff': '*'
     }
-  
+
     Course.get({
       id: $stateParams.courseId
     }, function(response) {
       $scope.course = response;
       $scope.hideStaffList();
     });
-    
+
     $scope.hideStaffList = function hideStaffList() {
         $scope.stafflist = $scope.selection = [];
     }
-    
+
     $scope.showStaffList = function showStaffList() {
         Course.staff({
             id: $stateParams.courseId
@@ -332,7 +332,7 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
             $scope.selection = $scope.stafflist.slice();
         });
     }
-    
+
     // http://stackoverflow.com/a/14520103/4855984
     $scope.toggleSelection = function toggleSelection(staffEmail) {
         var idx = $scope.selection.indexOf(staffEmail);
@@ -357,7 +357,7 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
         $window.swal('Error', 'Could not load assignment. Wrong page?', 'error')
        });
     }
-    
+
     $scope.generateQs = function() {
         var staff = $scope.selection.length > 0 ? $scope.selection : $scope.newQs.staff.split(',');
         console.log(staff);
@@ -373,7 +373,7 @@ app.controller("AssignmentQueueGenerateCtrl", ["$scope", "$window", "$state", "$
             $window.swal('Error', 'Queues could not be generated.', 'error');
         });
     }
-    
+
     $scope.reloadAssignment();
 }]);
 
@@ -416,6 +416,7 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       $scope.submission = response.submission;
       $scope.backupId = response.submission.backup.id;
       $scope.diff = Submission.diff({id: $scope.backupId});
+      // TODO: Only show composition scores.
       if (response.submission.score.length > 0) {
         $scope.compScore = response.submission.score[0].score
         $scope.compMessage = response.submission.score[0].message
