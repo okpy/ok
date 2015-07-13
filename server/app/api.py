@@ -1270,7 +1270,7 @@ class SubmissionAPI(APIResource):
         score.put()
 
         subm.score = [autograde for autograde in subm.score \
-         if autograde.key != data['key'] ]
+            if autograde.tag != data['key']]
         subm.score.append(score)
 
         subm.put()
