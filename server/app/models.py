@@ -50,7 +50,6 @@ def convert_timezone(utc_dt):
 class Base(ndb.Model):
     """Shared utility methods and properties."""
     created = ndb.DateTimeProperty(auto_now_add=True)
-    statuses = ['inactive', 'active']
 
     @classmethod
     def from_dict(cls, values):
@@ -152,7 +151,6 @@ class User(Base):
     """
     email = ndb.StringProperty(repeated=True)
     is_admin = ndb.BooleanProperty(default=False)
-    status = ndb.StringProperty(choices=Base.statuses, default='active')
     # TODO add a name
     # TODO add a student ID
 
@@ -266,12 +264,17 @@ class User(Base):
             for s in results:
                 all_subms.append(s)
 
-        all_subms = [x.backup.get() for x in all_subms]
+        def update(x):
+            b = x.backup.get()
+            b.submission = x
+            return b
+        
+        all_subms = [update(x) for x in all_subms]
         all_subms = [x for x in all_subms if x.assignment == assignment \
                 and self._contains_files(x)]
 
         all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
-
+        
         return all_subms[:num_submissions]
 
     get_num_submissions = make_num_counter(_get_submissions_helper)
@@ -390,7 +393,7 @@ class User(Base):
         """Retrieve a user by email or return None."""
         assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
         email = email.lower()
-        users = cls.query(cls.email == email, cls.status != 'inactive').fetch()
+        users = cls.query(cls.email == email).fetch()
         if not users:
             return None
         if len(users) > 1:
@@ -494,8 +497,7 @@ class Course(Base):
 
         query = Participant.query(
             Participant.course == self.key,
-            Participant.role == 'student',
-            Participant.status != 'inactive')
+            Participant.role == 'student')
 
         return list(query.fetch())
 
@@ -518,7 +520,7 @@ class Assignment(Base):
     autograding_enabled = ndb.BooleanProperty(default=False)
     grading_script_file = ndb.TextProperty()
     zip_file_url = ndb.StringProperty()
-    
+
     # TODO Add services requested
 
     @classmethod
@@ -533,7 +535,7 @@ class Assignment(Base):
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
-    
+
     def __lt__(self, other):
         """ Allows us to sort assignments - reverse order so that latest due dates come first """
         return self.due_date > other.due_date
@@ -544,7 +546,6 @@ class Participant(Base):
     user = ndb.KeyProperty(User)
     course = ndb.KeyProperty(Course)
     role = ndb.StringProperty() # See constants.py for roles
-    status = ndb.StringProperty(choices=Base.statuses, default='active')
 
     @classmethod
     def _can(cls, user, need, course, query):
@@ -748,6 +749,7 @@ class Score(Base):
     score = ndb.IntegerProperty()
     message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User) # For autograders, the user who authenticated
+    server_time = ndb.DateTimeProperty(auto_now_add=True)
 
 
 class Submission(Base):
@@ -1248,7 +1250,7 @@ class FinalSubmission(Base):
         Return whether or not this assignment has been assigned to a queue.
         """
         return bool(self.queue)
-    
+
     @classmethod
     def _can(cls, user, need, final, query):
         action = need.action
@@ -1264,18 +1266,18 @@ class FinalSubmission(Base):
         self.submitter = self.submission.get().submitter
 
     def get_scores(self):
-        """ 
+        """
         Return a list of lists of the format [[student, score, message, grader, tag]]
-        if the submission has been scored. Otherwise an empty list. 
-        If the submission is a group submission, there will be an element 
+        if the submission has been scored. Otherwise an empty list.
+        If the submission is a group submission, there will be an element
         for each combination of student and score.
         """
-        # TODO: get the most recent score for each tag. 
-        # Question: will all scores have a grader? In particular the scores from the autograder. 
+        # TODO: get the most recent score for each tag.
+        # Question: will all scores have a grader? In particular the scores from the autograder.
         all_scores = []
         if self.group:
             members = [member for member in self.group.get().member]
-        else: 
+        else:
             members = [self.submitter]
         for member in members:
             mem_email = member.get().email[0]
