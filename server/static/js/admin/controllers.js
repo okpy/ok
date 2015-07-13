@@ -627,13 +627,22 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
        }
 
       $scope.downloadScores = function(assign) {
-        var filename = 'scores-' + assign.course.offering.replace(/\//g, '_').replace(/ /g, '_') + '.csv'
+        var tmp_name = 'scores_' + assign.course.offering + '_' + assign.display_name + '.csv'
+        var filename = tmp_name.replace(/\//g, '_').replace(/ /g, '_')
         Assignment.download_scores({
           id: assign.id
         }, function() {
-          $window.swal('Success', 'Wrote scores to file ' + filename +
-            '\n View here: \n https://console.developers.google.com/storage/browser/ok_grade_bucket/', 
-            'success');
+          $window.swal({
+            title: 'Success', 
+            text:'Writing scores to ' + filename +
+            '\n Scores will be ready in Google Cloud Storage ok_grades_bucket in a few minutes', 
+            type: 'success',
+            confirmButtonText: 'View scores',
+            cancelButtonText: 'Not now',
+            showCancelButton: true},
+            function() {
+              $window.location = 'https://console.developers.google.com/storage/browser/ok_grades_bucket/';
+            });
         }, function(err) {
           report_error($window, err);
         });
