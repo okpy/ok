@@ -391,8 +391,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
 
       $scope.changeSubmission = function (backup) {
-        FinalSubmission.mark_backup({
-          backup: backup.id
+        FinalSubmission.post({
+          submission: backup.id
         }, function (response) {
             $scope.closeDetails();
           $scope.reloadView();
