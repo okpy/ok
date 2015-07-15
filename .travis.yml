@@ -23,6 +23,7 @@ before_script:
 
 after_success:
   - coveralls
+  - pwd
   - coverage debug data
   - coverage debug sys
   
