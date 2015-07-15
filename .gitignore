@@ -26,4 +26,4 @@ dist
 *.coverage
 server/coverage_report/*
 
-.coverage.yml
+*.coveralls.yml
