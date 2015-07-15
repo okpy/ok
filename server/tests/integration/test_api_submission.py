@@ -20,12 +20,12 @@ from app.exceptions import *
 from integration.test_api_base import APITest
 
 
-class FinalSubmissionAPITest(APIBaseTestCase):
+class SubmissionAPITest(APIBaseTestCase):
 
 	API = api.FinalSubmissionAPI
 
 	def setUp(self):
-		super(FinalSubmissionAPITest, self).setUp()
+		super(SubmissionAPITest, self).setUp()
 		self.user = self.accounts['dummy_admin']
 		self.user1 = self.accounts['dummy_student']
 		self.user2 = self.accounts['dummy_student2']
@@ -41,3 +41,30 @@ class FinalSubmissionAPITest(APIBaseTestCase):
 
 	def get_accounts(self):
 		return APITest().get_accounts()
+
+	# tests for mark as final
+
+	def test_mark_as_final(self):
+		""" Tests that marking works, at the basic level """
+		self.API().mark_as_final(self._submission, self.user, {})
+	
+		assert models.FinalSubmission.query(
+			models.FinalSubmission.submission==self._submission.key
+		).get() is not None
+
+	def test_ERROR_mark_as_final_backup(self):
+		""" Tests that a missing backup raises the correct error. """
+		try:
+			key = self._backup.key
+			key.delete()
+			self.API().mark_as_final(self._submission, self.user, {})
+		except BadValueError as e:
+			self.assertEqual(str(e), 'No such backup exists.')
+	
+	def test_ERROR_mark_as_final_subm(self):
+		""" Tests that a missing submission raises the correct error. """
+		try:
+			self._submission.key.delete()
+			self.API().mark_as_final(self._submission, self.user, {})
+		except BadValueError as e:
+			self.assertEqual(str(e), 'No such submission exists.')
