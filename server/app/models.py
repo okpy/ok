@@ -461,7 +461,6 @@ class Course(Base):
     display_name = ndb.StringProperty()
     instructor = ndb.KeyProperty(User, repeated=True)
     active = ndb.BooleanProperty(default=True)
-    server_time = ndb.DateTimeProperty(auto_now_add=True)
 
     @property
     def staff(self):
@@ -750,6 +749,7 @@ class Score(Base):
     score = ndb.IntegerProperty()
     message = ndb.TextProperty() # Plain text
     grader = ndb.KeyProperty(User) # For autograders, the user who authenticated
+    server_time = ndb.DateTimeProperty(auto_now_add=True)
 
 
 class Submission(Base):
