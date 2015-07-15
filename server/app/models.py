@@ -461,6 +461,7 @@ class Course(Base):
     display_name = ndb.StringProperty()
     instructor = ndb.KeyProperty(User, repeated=True)
     active = ndb.BooleanProperty(default=True)
+    server_time = ndb.DateTimeProperty(auto_now_add=True)
 
     @property
     def staff(self):
@@ -1279,13 +1280,11 @@ class FinalSubmission(Base):
         else:
             members = [self.submitter]
         for member in members:
-            mem_email = member.get().email[0]
-            grader_email = None
-            
+            email = member.get().email[0]
             for score in self.submission.get().score:
                 all_scores.append([email,
                         score.score,
                         score.message,
-                        grader_email,
+                        score.grader.get().email[0],
                         score.tag])
         return all_scores
