@@ -403,13 +403,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
               type: "success"
             });
         }, function (error) {
-           $window.swal({
-             title: "Sorry",
-             text: "Feature temporarily disabled.",
-             timer: 3500,
-             type: "error"
-           });
-//            report_error($window, error);
+            report_error($window, error);
         })
       }
 
