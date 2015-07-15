@@ -7,7 +7,6 @@ python:
   - "2.7"
 
 install:
-  - pip uninstall python-coveralls
   - pip install pip --upgrade
   - pip install -r server_requirements.txt
 
@@ -28,7 +27,3 @@ after_success:
   - coveralls debug
   
 sudo: false
-
-cache:
-  directories:
-  - /home/travis/virtualenv/python2.7.9/
