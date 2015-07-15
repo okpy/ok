@@ -23,6 +23,7 @@ before_script:
 
 after_success:
   - coveralls
+  - coverage debug
   
 sudo: false
 

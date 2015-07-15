@@ -1,7 +1,7 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-include = app/*
+include = server/app/*
 omit = *__init__.py
 
 [report]
