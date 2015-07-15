@@ -24,6 +24,7 @@ before_script:
 after_success:
   - cd server/app
   - coveralls
+  - coveralls debug
   
 sudo: false
 

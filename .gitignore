@@ -23,5 +23,7 @@ dist
 *.ok_refresh
 *.ok_messages
 
-server/.coverage
+*.coverage
 server/coverage_report/*
+
+.coverage.yml
