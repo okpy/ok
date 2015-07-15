@@ -22,7 +22,7 @@ before_script:
   - python server/app/generate_keys.py
 
 after_success:
-  - coveralls
+  - coveralls --data_file=$PWD/.coverage
   - echo $PWD
   
 sudo: false
