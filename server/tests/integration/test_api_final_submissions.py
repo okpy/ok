@@ -46,7 +46,7 @@ class FinalSubmissionAPITest(APIBaseTestCase):
 
 	def test_mark_as_final(self):
 		""" Tests that marking works, at the basic level """
-		self.API().post(self.user, dict(submission=self._submission.key))
+		self.API().post(self.user2, dict(submission=self._submission.key))
 
 		assert models.FinalSubmission.query(
 			models.FinalSubmission.submission==self._submission.key
