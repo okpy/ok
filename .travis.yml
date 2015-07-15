@@ -27,3 +27,7 @@ after_success:
   - coveralls debug
   
 sudo: false
+
+cache:
+  directories:
+  - /home/travis/virtualenv/python2.7.9/
