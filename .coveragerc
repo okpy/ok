@@ -1,7 +1,6 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-include = server/app/*
 omit = *__init__.py
 
 [report]
@@ -22,6 +21,3 @@ exclude_lines =
     if __name__ == .__main__.:
 
 ignore_errors = True
-
-[html]
-directory = coverage_report

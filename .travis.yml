@@ -10,7 +10,7 @@ install:
   - pip install -r server_requirements.txt
 
 script:
-  - FLASK_CONF=TEST coverage run $CMD --sdk_location $GAE_SDK --quiet
+  - FLASK_CONF=TEST coverage run --source=$PWD/server/app $CMD --sdk_location $GAE_SDK --quiet
 
 before_script:
   - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_$GAE_VERSION.zip -o gae_sdk.zip
@@ -23,9 +23,9 @@ before_script:
 
 after_success:
   - coveralls
-  - pwd
-  - coverage debug data
-  - coverage debug sys
+  - ls
+  - cd server
+  - ls
   
 sudo: false
 
