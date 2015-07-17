@@ -2066,6 +2066,9 @@ class FinalSubmissionAPI(APIResource):
         if not subm:
             raise BadValueError('No such submission exists.')
 
+        if not subm.backup.get():
+            raise BadValueError('Submission backup is missing.')
+
         subm.mark_as_final()
         return subm.get_final()
 
