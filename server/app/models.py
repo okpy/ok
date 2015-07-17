@@ -438,6 +438,22 @@ class User(Base):
             raise BadValueError("No email associated with " + str(self))
         #utils.check_user(self.key.id())
 
+    def scores_for_assignment(self, assignment):
+        """ Returns a tuple of two elements: 
+                1) Score data (list of lists) for STUDENT's final submission for ASSIGNMENT.
+                    There is an element for each score. 
+                    * OBS * If the student is in a group, the list will contain an
+                    element for each combination of group member and score.
+                2) A boolean indicating whether the student had a
+                    scored final submission for ASSIGNMENT. 
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+        """
+        fs = self.get_final_submission(assignment.key)
+        scores = []
+        if fs:
+            scores = fs.get_scores()
+        return (scores, True) if scores else ([[self.email[0], 0, None, None, None]], False)
+
 class Course(Base):
     """Courses are expected to have a unique offering."""
     offering = ndb.StringProperty() # E.g., 'cal/cs61a/fa14'
@@ -1087,6 +1103,24 @@ class Group(Base):
         if error:
             raise BadValueError(error)
 
+    def scores_for_assignment(self, assignment):
+        """ Returns a list of lists containing score data
+            for the groups's final submission for ASSIGNMENT. 
+            There is one element for each combination of 
+            group member and score.
+            Ensures that each student only appears once in the list. 
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+        """
+        content = []
+        for m in self.member:
+            member = m.get()
+            data, success = member.scores_for_assignment(assignment)
+            content.extend(data)
+            if success:
+                # get_scores_for_student_or_group will return scores for all group members. 
+                return content
+        return [[member.email[0], 0, None, None, None]]
+
 
 
 class AuditLog(Base):
@@ -1246,11 +1280,15 @@ class FinalSubmission(Base):
         else:
             members = [self.submitter]
         for member in members:
-            email = member.get().email[0]
+            mem_email = member.get().email[0]
+            grader_email = None
+            
             for score in self.submission.get().score:
-                all_scores.append([email,
-                        score.score,
+                if score.grader:
+                    grader_email = score.grader.get().email[0]
+                all_scores.append([mem_email,
+                        score.score, 
                         score.message,
-                        score.grader.get().email[0],
+                        grader_email,
                         score.tag])
         return all_scores

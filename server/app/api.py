@@ -861,48 +861,14 @@ class AssignmentAPI(APIResource):
         for group in groups:
             members = group.member
             seen_members |= set(members)
-            content.extend(self.scores_for_group_members(group, obj))
+            content.extend(group.scores_for_assignment(obj))
 
         students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
         for student in students:
-            content.extend(self.scores_for_student_or_group(student, obj)[0])
+            content.extend(student.scores_for_assignment(obj)[0])
 
         course_name = course.offering.replace('/', '_')
         return course_name, content
-
-    def scores_for_student_or_group(self, student, assignment):
-        """ Returns a tuple of two elements:
-                1) Score data (list of lists) for STUDENT's final submission for ASSIGNMENT.
-                    There is an element for each score.
-                    * OBS * If the student is in a group, the list will contain an
-                    element for each combination of group member and score.
-                2) A boolean indicating whether the student had a
-                    scored final submission for ASSIGNMENT.
-            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
-        """
-        fs = models.User.get_final_submission(student, assignment.key)
-        scores = []
-        if fs:
-            scores = fs.get_scores()
-        return (scores, True) if scores else ([[student.email[0], 0, None, None, None]], False)
-
-    def scores_for_group_members(self, group, assignment):
-        """ Returns a list of lists containing score data
-            for the groups's final submission for ASSIGNMENT.
-            There is one element for each combination of
-            group member and score.
-            Ensures that each student only appears once in the list.
-            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
-        """
-        content = []
-        for m in group.member:
-            member = m.get()
-            data, success = self.scores_for_student_or_group(member, assignment)
-            content.extend(data)
-            if success:
-                # get_scores_for_student_or_group will return scores for all group members.
-                return content
-        return [[member.email[0], 0, None, None, None]]
 
     def make_csv_response(self, course_name, csv_file):
         response = make_response(csv_file)
