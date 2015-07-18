@@ -154,13 +154,12 @@ def data_for_scores(assignment, user):
 
     return content
 
-def create_gcs_file(assignment, contents, info_type):
+def create_gcs_file(gcs_filename, contents, content_type):
     """ 
     Creates a GCS csv file with contents CONTENTS. 
     """
     try:
-        gcs_filename = '/{}/{}'.format(GRADES_BUCKET, make_filename(assignment, info_type))
-        gcs_file = gcs.open(gcs_filename, 'w', content_type='text/csv', options={'x-goog-acl':'project-private'})
+        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'project-private'})
         gcs_file.write(contents)
         gcs_file.close()
     except Exception as e:
@@ -171,7 +170,8 @@ def create_gcs_file(assignment, contents, info_type):
             logging.info("Could not delete file " + gcs_filename)
     logging.info("Created file " + gcs_filename)
 
-def make_filename(assignment, infotype):
+
+def make_csv_filename(assignment, infotype):
     """ Returns filename of format INFOTYPE_COURSE_ASSIGNMENT.csv """
     course_name = assignment.course.get().offering
     assign_name = assignment.display_name
@@ -496,9 +496,36 @@ def check_user(user_key):
 
     deferred.defer(deferred_check_user, user_key)
 
+
 def scores_to_gcs(assignment, user):
     """ Writes all final submission scores 
     for the given assignment to GCS csv file. """
     content = data_for_scores(assignment, user)
     csv_contents = create_csv_content(content)
-    create_gcs_file(assignment, csv_contents, 'scores')
+    csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
+    create_gcs_file(csv_filename, csv_contents, 'text/csv')
+
+
+def subms_to_gcs(user, data):
+    """
+    Writes all submissions for a given search query
+    to a GCS zip file.
+    """
+    results = app.api.SearchAPI.querify(data['query']).fetch()
+    if data.get('all', 'true').lower() != 'true':
+        start, end = app.api.SearchAPI.limits(data['page'], data['num_per_page'])
+        results = results[start:end]
+    zipfile_str, zipfile = start_zip()
+    subm = app.api.SubmissionAPI()
+    for result in results:
+        try:
+            if isinstance(result, app.models.Submission):
+                result = result.backup.get()
+            name, file_contents = subm.data_for_zip(result)
+            zipfile = add_to_zip(zipfile, file_contents, name)
+        except app.exceptions.BadValueError as e:
+            if str(e) != 'Submission has no contents to download':
+                raise e
+    zip_contents = finish_zip(zipfile_str, zipfile)
+    zip_filename = '/{}/{}'.format(GRADES_BUCKET, '%s-%s' % (user.email[0], datetime.datetime.now()))
+    create_gcs_file(zip_filename, zip_contents, 'application/zip')
