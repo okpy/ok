@@ -1398,13 +1398,21 @@ class SearchAPI(APIResource):
 
         if user.key not in course.staff and not user.is_admin:
             raise Need('get').exception()
+    
+    @staticmethod
+    def results(data):
+        """ Returns results of query, limiting results accordingly """
+        results = SearchAPI.querify(data['query']).fetch()
+        if data.get('all', 'true').lower() != 'true':
+            start, end = SearchAPI.limits(data['page'], data['num_per_page'])
+            results = results[start:end]
+        return results
 
     def index(self, user, data):
+        """ Performs search query, with some extra information """
         self.check_permissions(user, data)
 
-        query = SearchAPI.querify(data['query'])
-        start, end = SearchAPI.limits(data['page'], data['num_per_page'])
-        results = query.fetch()[start:end]
+        results = self.results(data)
         return dict(data={
             'results': results,
             'more': len(results) >= data['num_per_page'],
@@ -1412,9 +1420,10 @@ class SearchAPI(APIResource):
         })
 
     def download(self, user, data):
+        """ Sets up zip write to GCS """
         self.check_permissions(user, data)
 
-        deferred.defer(subms_to_gcs, user, data)
+        deferred.defer(subms_to_gcs, SubmissionAPI, models.Submission, user, data)
 
 
     @staticmethod

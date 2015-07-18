@@ -25,6 +25,7 @@ import cloudstorage as gcs
 
 from app import app
 from app.constants import GRADES_BUCKET
+from app.exceptions import BadValueError
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
@@ -506,33 +507,42 @@ def scores_to_gcs(assignment, user):
     create_gcs_file(csv_filename, csv_contents, 'text/csv')
 
 
-def subms_to_gcs(user, data):
+def add_subm_to_zip(subm, Submission, zipfile, result):
+    """ Adds submission contents to a zipfile in-place, returns zipfile """
+    try:
+        if isinstance(result, Submission):
+            result = result.backup.get()
+        name, file_contents = subm.data_for_zip(result)
+        return add_to_zip(zipfile, file_contents, name)
+    except BadValueError as e:
+        if str(e) != 'Submission has no contents to download':
+            raise e
+
+
+def make_zip_filename(user):
+    """ Makes zip filename: query_USER EMAIL_DATETIME.zip """
+    outlawed = [' ', '.', ':', '@']
+    filename = '/{}/{}'.format(
+        GRADES_BUCKET, 
+        '%s_%s_%s' % (
+            'query', 
+            user.email[0], 
+            str(datetime.datetime.now())))
+    for outlaw in outlawed:
+        filename = filename.replace(outlaw, '-')
+    return filename+'.zip'
+
+
+def subms_to_gcs(SubmissionAPI, Submission, user, data):
     """
     Writes all submissions for a given search query
     to a GCS zip file.
     """
-    from app import api, models  # this needs to be removed, utils should not depend on these
-    from app.exceptions import BadValueError
-    
-    results = api.SearchAPI.querify(data['query']).fetch()
-    if data.get('all', 'true').lower() != 'true':
-        start, end = api.SearchAPI.limits(data['page'], data['num_per_page'])
-        results = results[start:end]
+    results = SubmissionAPI.results(data)
     zipfile_str, zipfile = start_zip()
-    subm = api.SubmissionAPI()
+    subm = SubmissionAPI()
     for result in results:
-        try:
-            if isinstance(result, models.Submission):
-                result = result.backup.get()
-            name, file_contents = subm.data_for_zip(result)
-            zipfile = add_to_zip(zipfile, file_contents, name)
-        except BadValueError as e:
-            if str(e) != 'Submission has no contents to download':
-                raise e
+        zipfile = add_subm_to_zip(subm, Submission, zipfile, result)
     zip_contents = finish_zip(zipfile_str, zipfile)
-    zip_filename = '/{}/{}'.format(
-        GRADES_BUCKET, '%s_%s_%s' %
-        ('query', user.email[0], str(datetime.datetime.now())))
-    create_gcs_file(
-        zip_filename.replace(' ', '-').replace('.', '-').replace(':', '-').replace('@', '-')+'.zip',
-        zip_contents, 'application/zip')
+    zip_filename = make_zip_filename(user)
+    create_gcs_file(zip_filename, zip_contents, 'application/zip')
