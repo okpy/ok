@@ -544,7 +544,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
         $window.swal({
           title: 'Success',
           text:'Saving submissions to ' + filename +
-          '\n Scores will be ready in Google Cloud Storage ok_grades_bucket in a few minutes',
+          '\n Zip of submissions will be ready in Google Cloud Storage ok_grades_bucket in a few minutes',
           type: 'success',
           confirmButtonText: 'View zip',
           cancelButtonText: 'Not now',

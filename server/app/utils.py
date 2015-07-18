@@ -319,7 +319,7 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     seen = set()
     for queue in queues:
         for subm in queue.submissions:
-            seen.add(subm.get().submitter.id())
+            seen.add(subm.submitter.id())
 
     for user in results:
         if not user.logged_in or user.key.id() in seen:
@@ -511,21 +511,28 @@ def subms_to_gcs(user, data):
     Writes all submissions for a given search query
     to a GCS zip file.
     """
-    results = app.api.SearchAPI.querify(data['query']).fetch()
+    from app import api, models  # this needs to be removed, utils should not depend on these
+    from app.exceptions import BadValueError
+    
+    results = api.SearchAPI.querify(data['query']).fetch()
     if data.get('all', 'true').lower() != 'true':
-        start, end = app.api.SearchAPI.limits(data['page'], data['num_per_page'])
+        start, end = api.SearchAPI.limits(data['page'], data['num_per_page'])
         results = results[start:end]
     zipfile_str, zipfile = start_zip()
-    subm = app.api.SubmissionAPI()
+    subm = api.SubmissionAPI()
     for result in results:
         try:
-            if isinstance(result, app.models.Submission):
+            if isinstance(result, models.Submission):
                 result = result.backup.get()
             name, file_contents = subm.data_for_zip(result)
             zipfile = add_to_zip(zipfile, file_contents, name)
-        except app.exceptions.BadValueError as e:
+        except BadValueError as e:
             if str(e) != 'Submission has no contents to download':
                 raise e
     zip_contents = finish_zip(zipfile_str, zipfile)
-    zip_filename = '/{}/{}'.format(GRADES_BUCKET, '%s_%s_%s' % ('query', user.email[0], datetime.datetime.now()))
-    create_gcs_file(zip_filename, zip_contents, 'application/zip')
+    zip_filename = '/{}/{}'.format(
+        GRADES_BUCKET, '%s_%s_%s' %
+        ('query', user.email[0], str(datetime.datetime.now())))
+    create_gcs_file(
+        zip_filename.replace(' ', '-').replace('.', '-').replace(':', '-').replace('@', '-')+'.zip',
+        zip_contents, 'application/zip')
