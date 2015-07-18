@@ -527,5 +527,5 @@ def subms_to_gcs(user, data):
             if str(e) != 'Submission has no contents to download':
                 raise e
     zip_contents = finish_zip(zipfile_str, zipfile)
-    zip_filename = '/{}/{}'.format(GRADES_BUCKET, '%s-%s' % (user.email[0], datetime.datetime.now()))
+    zip_filename = '/{}/{}'.format(GRADES_BUCKET, '%s_%s_%s' % ('query', user.email[0], datetime.datetime.now()))
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
