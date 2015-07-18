@@ -159,6 +159,11 @@ app.factory('Assignment', ['$resource',
           url: '/api/v1/assignment/:id/invite',
           transformResponse: defaultTransformer
         },
+        download_scores: {
+          method: "GET",
+          url: '/api/v1/assignment/:id/download_scores',
+          transformResponse: defaultTransformer
+        },
         queues: {
           isArray:true,
           url: '/api/v1/assignment/:id/queues',
