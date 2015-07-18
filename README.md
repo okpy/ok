@@ -35,6 +35,7 @@ To install:
 Testing the Installation
 ------------------------
 * Run `./run_tests`. For a successful installation, all tests should pass.
+* To test *and* see coverage, run `./run_coverage`.
 
 Local Server
 ------------
