@@ -46,6 +46,10 @@ class APITestCase(BaseTestCase):
 		assert len(api.parse_json_field('[1,2,3,4,5]')) == 5
 		self.assertEqual(api.parse_json_list_field('{"hi":"yo"}')['hi'], 'yo')
 		
+	def test_parse_json_field(self):
+		""" Tests that neither lists nor dictionaries are left alone """
+		self.assertEqual(api.parse_json_field('hello'), 'hello')
+		
 	def test_try_int(self):
 		""" Tests that try_int doesn't die """
 		assert api.try_int('5') == 5
