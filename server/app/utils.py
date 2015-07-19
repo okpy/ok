@@ -502,3 +502,13 @@ def scores_to_gcs(assignment, user):
     content = data_for_scores(assignment, user)
     csv_contents = create_csv_content(content)
     create_gcs_file(assignment, csv_contents, 'scores')
+
+import difflib
+
+differ = difflib.Differ()
+
+
+def diff(s1, s2):
+    lines1 = s1.split('\n')
+    lines2 = s2.split('\n')
+    return list(differ.compare(lines1, lines2))
