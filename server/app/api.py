@@ -58,12 +58,12 @@ parser = FlaskParser()
 
 def parse_json_field(field):
     """
-    Parses field or returns appropriate boolean value.
+    Parses field or list, or returns appropriate boolean value.
 
     :param field: (string)
     :return: (string) parsed JSON
     """
-    if not field[0] == '{':
+    if not field[0] in ['{', '[']:
         if field == 'false':
             return False
         elif field == 'true':
@@ -71,20 +71,9 @@ def parse_json_field(field):
         return field
     return json.loads(field)
 
-def parse_json_list_field(field):
-    """
-    Parses field or returns appropriate boolean value.
 
-    :param field: (string)
-    :return: (string) parsed JSON
-    """
-    if not field[0] == '[':
-        if field == 'false':
-            return False
-        elif field == 'true':
-            return True
-        return field
-    return json.loads(field)
+parse_json_list_field = parse_json_field
+
 # Arguments to convert query strings to a python type
 
 def DateTimeArg(**kwds):
