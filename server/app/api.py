@@ -1423,7 +1423,7 @@ class SearchAPI(APIResource):
         """ Sets up zip write to GCS """
         self.check_permissions(user, data)
 
-        deferred.defer(subms_to_gcs, SubmissionAPI, models.Submission, user, data)
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, models.Submission, user, data)
 
 
     @staticmethod
