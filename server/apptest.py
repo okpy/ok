@@ -49,7 +49,7 @@ if __name__ == '__main__':
         '--quiet', action='store_true',
         help="Disables logging output from the tests.")
     parser.add_argument(
-        '-d', '--dir', default='*',
+        '-d', '--dir', default='all',
         help="Specifies the directory of tests to run."
     )
     args = parser.parse_args()
