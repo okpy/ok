@@ -158,7 +158,9 @@ class APIBaseTestCase(BaseTestCase):
         class FakeUser:
             def email(_):
                 return self.user.email[0]
-
+            def user_id(_):
+                return self.user.key.id()
+                
         return FakeUser() if self.user else None
 
     def login(self, user):
