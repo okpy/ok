@@ -14,6 +14,7 @@ from test_base import APIBaseTestCase
 from test_base import utils, api
 from integration.test_api_base import APITest
 from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
+import datetime
 
 try:
 	from cStringIO import StringIO
@@ -48,7 +49,7 @@ class UtilsTestCase(APIBaseTestCase):
 		""" Test that filename doesn't contain weird chars """
 		user = lambda: '_'
 		user.email = ['test@example.com']
-		fn = utils.make_zip_filename(user)
+		fn = utils.make_zip_filename(user, datetime.datetime.now())
 		
 		assert fn.split('.')[1] == 'zip'
 		assert '@' not in fn
