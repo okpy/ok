@@ -27,6 +27,11 @@ class APITestCase(BaseTestCase):
 	
 	def raise_error(self):
 		raise TestingError()
+	
+	def app(self):
+		from flask import Flask
+		return Flask(__name__).test_client()
+		
 
 	##################
 	# JSON ET. MISC. #
@@ -173,11 +178,12 @@ class APITestCase(BaseTestCase):
 	
 	# def test_dispatch_request_bad_http(self):
 	# 	""" Tests that only 'get' and 'post' are allowed for index """
-	# 	from flask import app
+	# 	app = self.app()
+	# 	app.test_request_context().push()
+	#
 	# 	apre = api.APIResource()
-	# 	app.request = self.obj().set(method='put')
-	# 	with self.assertRaises(IncorrectHTTPMethodError):
-	# 		apre.dispatch_request(None)
+	# 	# with self.assertRaises(IncorrectHTTPMethodError):
+	# 	# 	apre.dispatch_request(None)
 	
 	def test_apiresource_http_required(self):
 		""" Tests that constraints function """

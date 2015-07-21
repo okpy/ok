@@ -80,6 +80,10 @@ def make_fake_finalsubmission(submission, assignment, user):
     return rval
 
 
+class TestingError(Exception):
+    pass
+
+
 class BaseTestCase(unittest.TestCase):
     """
     Base test case.
@@ -120,10 +124,21 @@ class APIBaseTestCase(BaseTestCase):
     api_version = 'v1'
     url_prefix = API_PREFIX + '/{}'
 
+    # duplicate utilities TODO: figure out how to reuse
+    def obj(self):
+        """ Utility - object with set(k=v, k2=v2) method """
+        class Obj:
+            def set(self, **kwargs):
+                [setattr(self, k, v) for k, v in kwargs.items()]
+                return self
+        return Obj()
+    
+    def raise_error(self, *args, **kwargs):
+        """ Raise an error for testing purposes """
+        raise TestingError()
+
     def get_accounts(self):
-        """
-        Returns the accounts you want to exist in your system.
-        """
+        """ Returns the accounts you want to exist in your system. """
         raise NotImplementedError
 
     def setUp(self):

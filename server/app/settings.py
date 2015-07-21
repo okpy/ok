@@ -12,6 +12,7 @@ from app.authenticator import GoogleAuthenticator, TestingAuthenticator
 GOOGLE_AUTHENTICATOR = GoogleAuthenticator()
 TESTING_AUTHENTICATOR = TestingAuthenticator()
 
+
 class Config(object): #pylint: disable=R0903
     """
     Base config
@@ -25,13 +26,16 @@ class Config(object): #pylint: disable=R0903
     GAE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
     CLIENT_VERSION = '1.0.6'
 
+
 class Debug(Config): #pylint: disable=R0903
     """
     Development config
     """
     DEBUG = True
+    TESTING = True
     CSRF_ENABLED = True
     AUTHENTICATOR = TESTING_AUTHENTICATOR
+
 
 class Production(Config): #pylint: disable=R0903
     """
