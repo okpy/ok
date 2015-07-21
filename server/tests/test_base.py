@@ -113,6 +113,17 @@ class BaseTestCase(unittest.TestCase):
         self._mocks.append((obj, name, getattr(obj, name)))
         setattr(obj, name, val)
 
+    def obj(self):
+        """ Utility - object with set(k=v, k2=v2) method """
+        class Obj:
+            def set(self, **kwargs):
+                [setattr(self, k, v) for k, v in kwargs.items()]
+                return self
+        return Obj()
+
+    def raise_error(self, *args, **kwargs):
+        """ Raise an error for testing purposes """
+        raise TestingError()
 
 class APIBaseTestCase(BaseTestCase):
     """

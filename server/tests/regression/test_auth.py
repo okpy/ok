@@ -2,10 +2,11 @@ from test_base import auth, BaseTestCase, models
 
 from google.appengine.api import users, memcache as mc
 from app import app, auth
-from app.auth import MC_NAMESPACE
 import flask
 from app.authenticator import AuthenticationException
 
+
+MC_NAMESPACE = 'test-access-token'
 
 class AuthTestCase(BaseTestCase):
 	"""
@@ -28,7 +29,7 @@ class AuthTestCase(BaseTestCase):
 		self.real_auth, self.real_user_getorinsert = app.config['AUTHENTICATOR'].authenticate, models.User.get_or_insert
 		flask.request = self.flask_request({})
 		users.get_current_user = self.get_current_user
-		app.config['AUTHENTICATOR'].authenticate, auth.MC_NAMESPACE = self.authenticate, 'test-access-token'
+		app.config['AUTHENTICATOR'].authenticate, auth.MC_NAMESPACE = self.authenticate, MC_NAMESPACE
 		self.user_email = 'new@special.com'
 		
 		@staticmethod
@@ -45,9 +46,6 @@ class AuthTestCase(BaseTestCase):
 
 	def get_current_user(self):
 		return self.user
-
-	def obj(self):
-		return lambda: '_'
 
 	def create_user(self, email):
 		user = self.obj()
@@ -87,7 +85,8 @@ class AuthTestCase(BaseTestCase):
 		self.request.args = {'access_token': self.access_token}
 		assert users.get_current_user() is None
 		assert 'access_token' in flask.request.args
-		self.assertEqual(auth.authenticate()['email'], self.user_email)
+		assert mc.get('%s-%s' % (MC_NAMESPACE, self.access_token))
+		self.assertEqual(auth.authenticate()['email'][0], self.user_email)
 
 	def test_non_cached_non_authenticated_user(self):
 		""" Tests that non-cached, non-authenticated user returns _anon """

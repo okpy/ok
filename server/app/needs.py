@@ -10,6 +10,7 @@ class Need(object):
 
     def set_object(self, obj):
         self.obj = obj
+        return self
 
     def exception(self):
         return PermissionError(self)
@@ -20,5 +21,7 @@ class Need(object):
             class_name = self.obj.__name__
         elif self.obj:
             class_name = type(self.obj).__name__
+        else:
+            class_name = 'unknown object'
         return "Don't have permission to {} {}".format(
             self.action, class_name)
