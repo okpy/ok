@@ -26,7 +26,7 @@
                ng-if="assign.final.submission && assign.final.submission.score.length > 0">
                 Composition Score: {{ assign.final.submission.score[0].score}}/2</p>
         </div>
-        <div ng-if="assign.group.group_info.member.length > 1">
+        <div ng-if="assign.group.group_info.member.length > 1" ng-click="canReorder(assign)">
             <h3 class="sidebar-subtitle">Group <span ng-hide="assign.assignment.active">(member order locked)</span></h3>
             <ul class="sidebar-list {{ assign.assignment.active ? 'sortable' : '' }}">
                 <li ng-repeat="member in assign.group.group_info.member"  data-i="{{ member.i }}">
