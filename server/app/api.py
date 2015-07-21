@@ -684,9 +684,6 @@ class UserAPI(APIResource):
     def get_submissions(self, obj, user, data):
         return [subm.submission for subm in obj.get_submissions(data['assignment'], data['quantity'])]
 
-    def timed_submission(self, obj, user, data):
-        return obj.get_submission_before(data['assignment'], data['before'])
-
     def merge_user(self, obj, user, data):
         """
         Merges this user with another user.

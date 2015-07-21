@@ -38,6 +38,7 @@ class UserAPITest(APIBaseTestCase):
 		self._assign.put()
 		self._backup = make_fake_backup(self._assign, self.user2)
 		self._submission = make_fake_submission(self._backup)
+		self._finalsubmission = make_fake_finalsubmission(self._submission, self._assign, self.user2)
 
 	def get_accounts(self):
 		return APITest().get_accounts()
@@ -119,3 +120,83 @@ class UserAPITest(APIBaseTestCase):
 			{'email': 'hoho@admin.com'})
 		obj = self.API().get_instance('dummy3@student.com', self.accounts['dummy_admin'])
 		self.assertNotIn('hoho@admin.com', obj.email)
+		
+	def test_invitations_without_assignment(self):
+		""" Verifies results of invitations, w/o assignment """
+		user = self.accounts['dummy_student3']
+		query = models.Group.query(models.Group.invited == user.key)
+		self.assertEqual(self.API().invitations(user, user, {}), list(query))
+
+	def test_invitations_with_assignment(self):
+		""" Verifies results of invitations, w/o assignment """
+		user = self.accounts['dummy_student3']
+		query = models.Group.query(models.Group.invited == user.key).filter(models.Group.assignment==self._assign.key)
+		self.assertEqual(self.API().invitations(user, user, {'assignment': self._assign.key}), list(query))
+		
+	def test_queues_basic(self):
+		""" Test that fetching all queues works """
+		queues = self.API().queues(None, self.accounts['dummy_admin'], None)
+		self.assertTrue(isinstance(queues, list))
+		
+		for queue in queues:
+			self.assertEqual(queue.assigned_staff, self.accounts['dummy_admin'].key)
+			
+	def test_create_staff_permissions(self):
+		""" Tests that create_Staff checks for permissions """
+		admin, user = self.accounts['dummy_admin'], self.accounts['dummy_student3']
+		with self.assertRaises(PermissionError):
+			self.API().create_staff(user, user, {})
+		
+	def test_create_staff_function(self):
+		""" Tests that staff is actually added """
+		admin, user = self.accounts['dummy_admin'], self.accounts['dummy_student3']
+		models.Participant.add_role(admin, self._course, constants.STAFF_ROLE)
+		self.API().create_staff(user, admin, {
+			'role': constants.STAFF_ROLE,
+			'email': self.obj().set(id=lambda: 'dummy3@student.com')
+		})
+		self.assertEqual(1, len(models.Participant.query(models.Participant.course == self._course.key).fetch()))
+		self.assertEqual(models.User.query(models.User.email==self.user3.email[0]).get().role, constants.STAFF_ROLE)
+		
+	def test_get_fsubm(self):
+		""" Tests vaildity of fetched final submission """
+		user = self.user2
+		fsubm = self.API().final_submission(user, user, {'assignment': self._assign.key})
+		self.assertEqual(fsubm.submitter, user.key)
+		self.assertEqual(fsubm.assignment, self._assign.key)
+		self.assertTrue(isinstance(fsubm, models.FinalSubmission))
+		
+	def test_get_backups(self):
+		""" Tests validity of fetched backups """
+		backups = self.API().get_backups(self.user2, None, {
+			'assignment': self._assign.key,
+			'quantity': 5
+		})
+		self.assertEqual(len(backups), 1)
+		
+	def test_get_submissions(self):
+		""" Test get submissions """
+		subms = self.API().get_submissions(self.user2, None, {
+			'assignment': self._assign.key,
+			'quantity': 5
+		})
+		self.assertEqual(len(subms), 0)  # because the 1 submission in the DB doesn't have files
+		
+		for subm in subms:
+			self.assertTrue(isinstance(subm, models.Submission))
+
+	def test_merge_user_permissions(self):
+		""" Tests that merge user checks permissions """
+		with self.assertRaises(PermissionError):
+			self.API().merge_user(self.user1, self.user2, {})
+			
+	def test_merge_user_nonexistent_user(self):
+		""" Tests that merge user throws error with invalid user """
+		with self.assertRaises(BadValueError):
+			self.API().merge_user(self.user2, self.user, {
+				'other_email': 'invalid@dummy.com'
+			})
+	
+	def test_merge_user_ok(self):
+		""" Tests that merge user does not die """
+		self.API().merge_user(self.user2, self.user, dict(other_email='dummy3@student.com'))
