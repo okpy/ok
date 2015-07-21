@@ -11,13 +11,22 @@ tests.py
 """
 
 from app import api
+from app.exceptions import *
 from test_base import BaseTestCase
+from google.appengine.ext import ndb
+
+
+class TestingError(Exception):
+	pass
 
 
 class APITestCase(BaseTestCase):
 	"""
 	Testing API utilities
 	"""
+	
+	def raise_error(self):
+		raise TestingError()
 
 	##################
 	# JSON ET. MISC. #
@@ -60,6 +69,170 @@ class APITestCase(BaseTestCase):
 	# ARGS #
 	########
 	
-	def test_key_repeated_arg(self):
-		""" Tests that key_repeated_arg gives list"""
-		pass
+	def test_key_repeated_arg_list(self):
+		""" Tests that key_repeated_arg accepts list"""
+		cls, ids = 'Submission', [1, 2, 3]
+		arg = api.KeyRepeatedArg(cls)
+		lst = arg.use(ids)
+		assert isinstance(lst, list)
+
+		for i, item in enumerate(lst):
+			assert isinstance(item, ndb.Key)
+			assert item.id() == ids[i]
+
+	def test_key_repeated_arg_string(self):
+		""" Tests that key_repeated_arg accepts string"""
+		cls, ids_str, ids = 'Submission', '1, 2, 3', [1, 2, 3]
+		arg = api.KeyRepeatedArg(cls)
+		lst = arg.use(ids_str)
+		assert isinstance(lst, list)
+
+		for i, item in enumerate(lst):
+			assert isinstance(item, ndb.Key)
+			assert item.id() == ids[i]
+
+	def test_key_repeated_arg_string_string(self):
+		""" Tests that key_repeated_arg accepts string"""
+		cls, ids_str, ids = 'Submission', 'hello,world,hi', ['hello', 'world', 'hi']
+		arg = api.KeyRepeatedArg(cls)
+		lst = arg.use(ids_str)
+		assert isinstance(lst, list)
+
+		for i, item in enumerate(lst):
+			assert isinstance(item, ndb.Key)
+			assert item.id() == ids[i]
+			
+	def test_boolean_arg(self):
+		""" Tests that boolean arg converts correctly """
+		arg = api.BooleanArg()
+		assert arg.use('false') is False
+		assert arg.use('true') is True
+		with self.assertRaises(BadValueError):
+			arg.use('True')
+			
+	################
+	# API RESOURCE #
+	################
+	
+	def obj(self):
+		""" Utility - object with set(k=v, k2=v2) method """
+		class Obj:
+			def set(self, **kwargs):
+				[setattr(self, k, v) for k, v in kwargs.items()]
+				return self
+		return Obj()
+	
+	def always_can(self):
+		""" Utility - object that always allows user """
+		return self.obj().set(can=lambda *args, **kwargs: True)
+		
+	def never_can(self):
+		""" Utility - object that never allows user """
+		return self.obj().set(can=lambda *args, **kwargs: False)
+		
+	def test_apiresource_name(self):
+		""" Tests that model name is returned """
+		subm = api.FinalSubmissionAPI()
+		self.assertEqual(subm.name, 'FinalSubmission')
+		
+	def test_apiresource_call_method_invalid_method(self):
+		""" Tests that invalid method is intercepted """
+		with self.assertRaises(BadMethodError):
+			apre = api.APIResource()
+			apre.call_method('dne', None, None)
+	
+	def test_apiresource_http_required(self):
+		""" Tests that constraints function """
+		with self.assertRaises(IncorrectHTTPMethodError):
+			apre = api.APIResource()
+			apre.methods = {
+				'multiply': {
+					'methods': set(['PUT', 'GET'])
+				}
+			}
+			apre.call_method('multiply', None, 'POST')
+		
+	def test_apiresource_http_not_specified(self):
+		""" Tests that http method is checked for existence """
+		with self.assertRaises(IncorrectHTTPMethodError):
+			apre = api.APIResource()
+			apre.methods = {
+				'multiply': {
+					'methods': set(['PUT', 'GET'])
+				}
+			}
+			apre.call_method('multiply', None, None)
+			
+	def test_put_checks(self):
+		""" Tests that put checks for permissions """
+		with self.assertRaises(PermissionError):
+			apre = api.APIResource()
+			apre.put(self.never_can(), None, {})
+			
+	def test_put_check_blank_val(self):
+		""" Tests that put does not set invalid fields """
+		apre = api.APIResource()
+		status, message = apre.put(self.always_can(), None, {'funny': 'beans'})
+		self.assertEqual(400, status)
+		
+	def test_put_with_change(self):
+		""" Tests that if there is change, there is put"""
+		obj = self.always_can()
+		obj.put = self.raise_error
+		obj.var = 'a'
+		data = {'var': 'b'}
+		apre = api.APIResource()
+		with self.assertRaises(TestingError):
+			apre.put(obj, None, data)
+
+	def test_put_without_change(self):
+		""" Tests that if there is no change, there is no put"""
+		obj = self.always_can()
+		obj.put = self.raise_error
+		obj.var = 'a'
+		apre = api.APIResource()
+		apre.put(obj, None, {})
+		assert True  # put was not invoked
+		self.assertEqual(obj.var, 'a')
+
+	def test_put_effects_change(self):
+		""" Tests that put updates the obj"""
+		obj = self.always_can()
+		obj.put = lambda: '_'
+		obj.var = 'a'
+		data = {'var': 'b'}
+		apre = api.APIResource()
+		apre.put(obj, None, data)
+		self.assertEqual(obj.var, 'b')
+		
+	def test_post_checks(self):
+		""" Tests that post checks for permissions """
+		apre = api.APIResource()
+		apre.model = self.never_can()
+		apre.new_entity = lambda *args, **kwargs: '_'
+		with self.assertRaises(PermissionError):
+			apre.post(None, {})
+
+	def test_delete_checks(self):
+		""" Tests that post checks for permissions """
+		apre = api.APIResource()
+		apre.model = self.never_can()
+		with self.assertRaises(PermissionError):
+			apre.delete(None, None, {})
+			
+	def test_delete_invoked(self):
+		""" Tests that delete is invoked """
+		apre = api.APIResource()
+		apre.model = self.always_can()
+		apre.model.key = self.obj().set(delete=self.raise_error)
+		with self.assertRaises(TestingError):
+			apre.delete(apre.model, None, {})
+			
+	def test_index(self):
+		""" Tests that index checks for result """
+		apre = api.APIResource()
+		apre.model = self.obj().set(
+			can=lambda *args, **kwargs: None,
+			query=lambda: None)
+		with self.assertRaises(PermissionError):
+			apre.index(None, {})
