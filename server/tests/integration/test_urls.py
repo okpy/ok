@@ -11,6 +11,10 @@ import datetime
 import urllib
 import flask
 
+from flask import request
+
+from werkzeug.wrappers import Response
+
 from test_base import APIBaseTestCase, unittest, make_fake_course #pylint: disable=relative-import
 
 from app import app
@@ -213,18 +217,27 @@ class URLsUnitTest(APIBaseTestCase):
 		return urls.register_api(api.APIResource, 'fake_api', 'fake')
 	
 	@register_api_test
-	def test_api_checks_version(self):
-		""" Tests that version is checked """
-		models.Version(
-			name='YO',
-			base_url='HAH',
-			current_version='0.9').put()
-		flask.request = self.obj().set(args={'client_version': '0.8'})
-		response = self.api_wrapper()()
-		self.assertEqual(response.status_code, 404)
-		
+	def test_api_incorrect_version_error(self):
+		""" Tests that IVE is caught """
+		with self.app.test_request_context('/api/v1/'):
+			models.Version(
+				name='ok',
+				base_url='HAH',
+				current_version='0.9').put()
+			request.args = {'client_version': '0.8'}
+			response = self.api_wrapper()()
+			self.assertEqual(response.status_code, 403)
+			
 	@register_api_test
 	def test_api_checks_version(self):
+		""" Tests that version is checked """
+		with self.app.test_request_context('/api/v1/'):
+			request.args = {'client_version': '0.8'}
+			response = self.api_wrapper()()
+			self.assertEqual(response.status_code, 400)
+
+	@register_api_test
+	def test_api_user_returned(self):
 		""" Tests that user is returned """
 		with self.app.test_request_context('/api/v1/'):
 			real_auth = auth.authenticate
@@ -244,19 +257,24 @@ class URLsUnitTest(APIBaseTestCase):
 	@register_api_test
 	def test_api_rval_response(self):
 		""" Tests that werkzeug rvals are not changed """
-		resp, real_auth = flask.Response(), auth.authenticate
+		rval, real_auth = Response(), auth.authenticate
 		
 		@staticmethod
 		def as_view(endpoint):
-			return lambda *args, **kwargs: resp
+			return lambda *args, **kwargs: rval
 		
 		auth.authenticate = lambda: models.User()
 		
 		with self.app.test_request_context('/api/v1/'):
 			custom = api.APIResource
 			custom.as_view = as_view
+			self.assertTrue(isinstance(rval, Response))
+			self.assertFalse(isinstance(rval, flask.Response))
 			api_wrapper = urls.register_api(api.APIResource, 'fake_api', 'fake')
-			self.assertEqual(api_wrapper(), resp)
+			response = api_wrapper()
+			self.assertTrue(isinstance(rval, Response))
+			self.assertFalse(isinstance(rval, flask.Response))
+			self.assertEqual(response, rval)
 		
 		auth.authenticate = real_auth
 
