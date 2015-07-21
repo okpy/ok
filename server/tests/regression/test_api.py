@@ -278,11 +278,13 @@ class APITestCase(BaseTestCase):
 	def test_parse_args_limit_types(self):
 		""" Tests that parse_args only accepts dictionaries and booleans """
 		apre = api.APIResource()
+		parser = api.parser
 		api.parser = self.obj().set(
 			parse=lambda *args: {'fields': 'invalid type'}
 		)
 		with self.assertRaises(BadValueError):
 			apre.parse_args(None, None)
+		api.parser = parser
 			
 	def test_statistics_blank(self):
 		""" Tests that empty dictionary returned if stat is none """
