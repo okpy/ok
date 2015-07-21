@@ -27,12 +27,12 @@
                 Composition Score: {{ assign.final.submission.score[0].score}}/2</p>
         </div>
         <div ng-if="assign.group.group_info.member.length > 1">
-            <h2 class="sidebar-subtitle">Group</h2>
+            <h3 class="sidebar-subtitle">Group <span ng-hide="assign.assignment.active">(member order locked)</span></h3>
             <ul class="sidebar-list {{ assign.assignment.active ? 'sortable' : '' }}">
                 <li ng-repeat="member in assign.group.group_info.member"  data-i="{{ member.i }}">
                     <span class="sidebar-member_label"><span class="member-letter">{{ member.letter }}</span>
                         <span ng-if="assign.assignment.active" class="label right"><p>Drag to Reorder</p></span>
-                        <span ng-if="!assign.assignment.active" class="label right"><p>Partner order locked</p></span>
+                        <span ng-if="!assign.assignment.active" class="label right"><p>Member order locked</p></span>
                     </span>
                     {{ member.email[0] }}
                     <i class="fa fa-close" ng-if="assign.assignment.active" ng-click="removeMember(assign.group.group_info, member)"></i></span>
