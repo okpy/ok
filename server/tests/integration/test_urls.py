@@ -13,7 +13,8 @@ import flask
 
 from test_base import APIBaseTestCase, unittest, make_fake_course #pylint: disable=relative-import
 
-from app import models, utils, urls, constants
+from app import app
+from app import models, utils, urls, constants, auth, api
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
@@ -21,6 +22,18 @@ from google.appengine.ext import ndb
 from app import auth
 from app.exceptions import *
 from app.authenticator import Authenticator, AuthenticationException
+
+
+def register_api_test(f):
+	""" Swaps out add_url_rule so flask doesn't complain """
+	def helper(*args, **kwargs):
+		real_addurlrule = app.add_url_rule
+		app.add_url_rule = lambda *args, **kwargs: None
+		response = f(*args, **kwargs)
+		app.add_url_rule = real_addurlrule
+		return response
+	helper.__name__ = f.__name__
+	return helper
 
 
 class URLsUnitTest(APIBaseTestCase):
@@ -194,6 +207,78 @@ class URLsUnitTest(APIBaseTestCase):
 			urls.check_version('1.0')
 	
 	# register_api
+	
+	def api_wrapper(self):
+		""" Returns nested function, api_wrapper in register_api """
+		return urls.register_api(api.APIResource, 'fake_api', 'fake')
+	
+	@register_api_test
+	def test_api_checks_version(self):
+		""" Tests that version is checked """
+		models.Version(
+			name='YO',
+			base_url='HAH',
+			current_version='0.9').put()
+		flask.request = self.obj().set(args={'client_version': '0.8'})
+		response = self.api_wrapper()()
+		self.assertEqual(response.status_code, 404)
+		
+	@register_api_test
+	def test_api_checks_version(self):
+		""" Tests that user is returned """
+		with self.app.test_request_context('/api/v1/'):
+			real_auth = auth.authenticate
+			auth.authenticate = lambda: 1
+			self.assertEqual(1, self.api_wrapper()())
+			auth.authenticate = real_auth
+
+	@register_api_test
+	def test_api_500_exception(self):
+		""" Induce a 500 error """
+		with self.app.test_request_context('/api/v1/'):
+			real_auth = auth.authenticate
+			auth.authenticate = self.raise_error
+			self.assertEqual(500, self.api_wrapper()().status_code)
+			auth.authenticate = real_auth
+			
+	@register_api_test
+	def test_api_rval_response(self):
+		""" Tests that werkzeug rvals are not changed """
+		resp, real_auth = flask.Response(), auth.authenticate
+		
+		@staticmethod
+		def as_view(endpoint):
+			return lambda *args, **kwargs: resp
+		
+		auth.authenticate = lambda: models.User()
+		
+		with self.app.test_request_context('/api/v1/'):
+			custom = api.APIResource
+			custom.as_view = as_view
+			api_wrapper = urls.register_api(api.APIResource, 'fake_api', 'fake')
+			self.assertEqual(api_wrapper(), resp)
+		
+		auth.authenticate = real_auth
+
+	@register_api_test
+	def test_api_rval_response_list(self):
+		""" Tests that werkzeug rvals are not changed """
+		real_auth = auth.authenticate
+
+		@staticmethod
+		def as_view(endpoint):
+			return lambda *args, **kwargs: [1, 2, 3]
+
+		auth.authenticate = lambda: models.User()
+
+		with self.app.test_request_context('/api/v1/'):
+			custom = api.APIResource
+			custom.as_view = as_view
+			api_wrapper = urls.register_api(api.APIResource, 'fake_api', 'fake')
+			response = api_wrapper()
+			self.assertEqual(response.status_code, 200)
+
+		auth.authenticate = real_auth
 	
 if __name__ == "__main__":
 	unittest.main()

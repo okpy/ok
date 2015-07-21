@@ -162,10 +162,9 @@ def register_api(view, endpoint, url):
     url = '/'.join((API_PREFIX, view.api_version, url))
     view = view.as_view(endpoint)
 
-    @wraps(view)
     def api_wrapper(*args, **kwds):
-        #TODO(martinis) add tests
         # Any client can check for the latest version
+        
         try:
             request.fields = {}
             message = "success"
@@ -204,14 +203,20 @@ def register_api(view, endpoint, url):
 
         except Exception as e: #pylint: disable=broad-except
             logging.exception(e.message)
-            return utils.create_api_response(500, 'internal server error :(')
+            return utils.create_api_response(500, e.message, getattr(e, 'data', None))
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        return api_wrapper(*args, **kwargs)
 
     app.add_url_rule(
-        '%s' % url, view_func=api_wrapper, defaults={'path': None},
+        '%s' % url, view_func=wrapper, defaults={'path': None},
         methods=['GET', 'POST'])
     app.add_url_rule(
-        '%s/<path:path>' % url, view_func=api_wrapper,
+        '%s/<path:path>' % url, view_func=wrapper,
         methods=['GET', 'POST', 'DELETE', 'PUT'])
+    
+    return api_wrapper  # adding for testing purposes
     
 
 def register_root_api(api):
