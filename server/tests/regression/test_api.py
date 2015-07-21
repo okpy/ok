@@ -90,6 +90,28 @@ class APITestCase(BaseTestCase):
 		for i, item in enumerate(lst):
 			assert isinstance(item, ndb.Key)
 			assert item.id() == ids[i]
+			
+	def test_key_repeated_arg_string_single(self):
+		""" Tests that key_repeated_arg accepts non-CSV """
+		cls, ids_str, ids = 'Submission', '1', [1]
+		arg = api.KeyRepeatedArg(cls)
+		lst = arg.use(ids_str)
+		assert isinstance(lst, list)
+		
+		for i, item in enumerate(lst):
+			assert isinstance(item, ndb.Key)
+			assert item.id() == ids[i]
+
+	def test_key_repeated_arg_string_single_string(self):
+		""" Tests that key_repeated_arg accepts non-CSV """
+		cls, ids_str, ids = 'Submission', 'hello', ['hello']
+		arg = api.KeyRepeatedArg(cls)
+		lst = arg.use(ids_str)
+		assert isinstance(lst, list)
+
+		for i, item in enumerate(lst):
+			assert isinstance(item, ndb.Key)
+			assert item.id() == ids[i]
 
 	def test_key_repeated_arg_string_string(self):
 		""" Tests that key_repeated_arg accepts string"""
@@ -135,11 +157,27 @@ class APITestCase(BaseTestCase):
 		subm = api.FinalSubmissionAPI()
 		self.assertEqual(subm.name, 'FinalSubmission')
 		
+	def test_apiresource_get_instance(self):
+		""" Tests that get_instance checks permissions """
+		apre = api.APIResource()
+		with self.assertRaises(PermissionError):
+			apre.model = self.obj().set(
+				get_by_id=lambda *args: self.never_can())
+			apre.get_instance('some_key', None)
+		
 	def test_apiresource_call_method_invalid_method(self):
 		""" Tests that invalid method is intercepted """
 		with self.assertRaises(BadMethodError):
 			apre = api.APIResource()
 			apre.call_method('dne', None, None)
+	
+	# def test_dispatch_request_bad_http(self):
+	# 	""" Tests that only 'get' and 'post' are allowed for index """
+	# 	from flask import app
+	# 	apre = api.APIResource()
+	# 	app.request = self.obj().set(method='put')
+	# 	with self.assertRaises(IncorrectHTTPMethodError):
+	# 		apre.dispatch_request(None)
 	
 	def test_apiresource_http_required(self):
 		""" Tests that constraints function """
@@ -236,3 +274,26 @@ class APITestCase(BaseTestCase):
 			query=lambda: None)
 		with self.assertRaises(PermissionError):
 			apre.index(None, {})
+			
+	def test_parse_args_limit_types(self):
+		""" Tests that parse_args only accepts dictionaries and booleans """
+		apre = api.APIResource()
+		api.parser = self.obj().set(
+			parse=lambda *args: {'fields': 'invalid type'}
+		)
+		with self.assertRaises(BadValueError):
+			apre.parse_args(None, None)
+			
+	def test_statistics_blank(self):
+		""" Tests that empty dictionary returned if stat is none """
+		apre = api.APIResource()
+		apre.model = lambda: '_'
+		self.assertNotIn('total', apre.statistics())
+		
+	def test_statistics_with_total(self):
+		""" Tests that dictionary with data returned if otherwise """
+		model_name = 'User'
+		apre = api.APIResource()
+		apre.model = self.obj().set(__name__=model_name)
+		api.stats.KindStat(kind_name=model_name).put()
+		self.assertIn('total', apre.statistics())
