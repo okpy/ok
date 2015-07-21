@@ -519,7 +519,7 @@ def add_subm_to_zip(subm, Submission, zipfile, result):
             raise e
 
 
-def make_zip_filename(user):
+def make_zip_filename(user, now):
     """ Makes zip filename: query_USER EMAIL_DATETIME.zip """
     outlawed = [' ', '.', ':', '@']
     filename = '/{}/{}'.format(
@@ -527,13 +527,13 @@ def make_zip_filename(user):
         '%s_%s_%s' % (
             'query', 
             user.email[0], 
-            str(datetime.datetime.now())))
+            str(now)))
     for outlaw in outlawed:
         filename = filename.replace(outlaw, '-')
     return filename+'.zip'
 
 
-def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data):
+def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data, datetime):
     """
     Writes all submissions for a given search query
     to a GCS zip file.
@@ -544,5 +544,5 @@ def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data):
     for result in results:
         zipfile = add_subm_to_zip(subm, Submission, zipfile, result)
     zip_contents = finish_zip(zipfile_str, zipfile)
-    zip_filename = make_zip_filename(user)
+    zip_filename = make_zip_filename(user, datetime)
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
