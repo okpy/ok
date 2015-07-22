@@ -1465,8 +1465,13 @@ class SearchAPI(APIResource):
         """ Creates all Filter Nodes """
         args, keys = [], prime.keys()
         if 'assignment' in keys:
+            if not prime['assignment'][1]:
+                raise BadValueError('Said assignment does not exist. Remember, \
+                if the assignment name has spaces, wrap it in double quotations.')
             args.append(model.assignment == prime['assignment'][1].key)
         if 'user' in keys:
+            if not prime['user'][1]:
+                raise BadValueError('Said user does not exist.')
             args.append(model.submitter == prime['user'][1].key)
         if 'date' in keys:
             opr, arg = prime['date']
@@ -1566,7 +1571,7 @@ class VersionAPI(APIResource):
             download_link = obj.download_link()
         else:
             download_link = obj.download_link(data['version'])
-        return redirect(download_link)
+        return flask.redirect(download_link)
 
     def set_current(self, obj, user, data):
         need = Need('update')

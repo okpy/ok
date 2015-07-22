@@ -6,6 +6,7 @@
 """
 Server test case scaffolding
 """
+import inspect
 
 import os
 import sys
@@ -112,15 +113,23 @@ class Mock(object):
         setattr(self.obj, self.attr, self.old)
         
 
-def mock(obj, attr, new):
+def mock(obj, attr, new, typecast=None):
     """ To temporarily replace variables - as a decorator """
     old = getattr(obj, attr)
-    setattr(obj, attr, new)
+    if callable(typecast):
+        setattr(obj, attr, typecast(new))
+    else:
+        setattr(obj, attr, new)
 
     def decorator(f):
         def helper(*args, **kwargs):
-            response = f(*args, **kwargs)
-            setattr(obj, attr, old)
+            try:
+                response = f(*args, **kwargs)
+            finally:
+                if callable(typecast):
+                    setattr(obj, attr, typecast(old))
+                else:
+                    setattr(obj, attr, old)
             return response
         helper.__name__ = f.__name__
         return helper
@@ -149,17 +158,28 @@ class BaseTestCase(unittest.TestCase):
         self.testbed.init_memcache_stub()
         self.testbed.init_taskqueue_stub()
         self.taskqueue_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
+        self._typecast = None
         self._mocks = []
 
     def tearDown(self): #pylint: disable=invalid-name, missing-docstring
         self.testbed.deactivate()
         for obj, attr, val in self._mocks:
-            setattr(obj, attr, val)
+            if callable(self._typecast):
+                setattr(obj, attr, self._typecast(val))
+            else:
+                setattr(obj, attr, val)
         
     def mock(self, obj, attr):
         """ Utility - mock an attr for the duration of the test method """
         self._mocks.append((obj, attr, getattr(obj, attr)))
-        return self.obj().set(using=lambda val: setattr(obj, attr, val))
+        
+        def using(val, typecast=None):
+            if callable(typecast):
+                self._typecast = typecast
+                setattr(obj, attr, typecast(val))
+            else:
+                setattr(obj, attr, val)
+        return self.obj().set(using=using)
 
     @staticmethod
     def obj():
@@ -171,18 +191,22 @@ class BaseTestCase(unittest.TestCase):
         return Obj()
 
     @staticmethod
-    def always_can(self):
+    def always_can():
         """ Utility - object that always allows user """
         return BaseTestCase.obj().set(can=lambda *args, **kwargs: True)
 
     @staticmethod
-    def never_can(self):
+    def never_can():
         """ Utility - object that never allows user """
         return BaseTestCase.obj().set(can=lambda *args, **kwargs: False)
 
     @staticmethod
-    def raise_error(*args, **kwargs):
+    def raise_error(error=None, *args, **kwargs):
         """ Raise an error for testing purposes """
+        if inspect.isclass(error) and issubclass(error, Exception):
+            def raise_error_helper(*args, **kwargs):
+                raise error()
+            return raise_error_helper
         raise TestingError()
 
 
