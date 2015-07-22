@@ -38,6 +38,10 @@ class SubmissionAPITest(APIBaseTestCase):
 		self._assign.put()
 		self._backup = make_fake_backup(self._assign, self.user2)
 		self._submission = make_fake_submission(self._backup)
+		self._finalsubmission = make_fake_finalsubmission(self._submission, self._assign, self.user2)
+		self._score = models.Score(score=2).put()
+		self._submission.score = [self._score.get()]
+		self._submission.put()
 
 	def get_accounts(self):
 		return APITest().get_accounts()
@@ -301,6 +305,82 @@ class SubmissionAPITest(APIBaseTestCase):
 	# 		    models.Submission.tags == 'submitted'
 	# 		).put()
 	# 		self.API().add_tag(obj, user, data)
+	
+	def test_score_check(self):
+		""" Tests that permissinos are chcekd """
+		with self.assertRaises(PermissionError):
+			self.API().score(self._submission, self.accounts['dummy_student'], {'submission': self._submission.key})
+
+	def test_score_no_subm_backup_match(self):
+		""" Tests that ubmission and backup are matched """
+		with self.assertRaises(ValueError):
+			self.API().score(self._submission, self.accounts['dummy_admin'], {'submission': self._submission.key})
+		
+	def test_score_nrmally(self):
+		""" Test score normal """
+		self.API().score(self._backup, self.accounts['dummy_admin'], {
+			'submission': self._submission.key,
+			'key': 'tag',
+		    'score': 10,
+		    'message': 'YO'
+		})
+	
+	def test_get_assignment(self):
+		""" Tests the get_assignment will whine on multiple assignments """
+		models.Assignment(name=self.assignment_name).put()
+		with self.assertRaises(BadValueError):
+			self.API().get_assignment(self.assignment_name)
+
+	def test_submit_late_revision(self):
+		""" Tests that late assignment, revision allowed """
+		user = submitter = self.accounts['dummy_student2']
+		assignment = self.assignment_name
+		self._assign.lock_date = datetime.datetime.now() - datetime.timedelta(hours=9)
+		self._assign.revision = True
+		self._assign.put()
+		messages, submit = {'analytics': False}, True
+		status_code, message, data = self.API().submit(user, assignment, messages, submit, submitter)
+		vassign = self.API().get_assignment(assignment)
+		fs = user.get_final_submission(vassign)
+		late_flag = vassign.lock_date and datetime.datetime.now() >= vassign.lock_date
+		revision = vassign.revision
+		self.assertTrue(submit and late_flag)
+		self.assertTrue(revision)
+		self.assertFalse(fs is None or fs.submission.get().score == [])
+		self.assertEqual(status_code, 201)
+
+	def test_submit_late_revision_notallowed(self):
+		""" Tests that late assignment without finalsubm not allowed """
+		user = submitter = self.accounts['dummy_student3']
+		assignment = self.assignment_name
+		self._assign.lock_date = datetime.datetime.now() - datetime.timedelta(hours=9)
+		self._assign.put()
+		messages, submit = None, True
+		status_code, message, data = self.API().submit(user, assignment, messages, submit, submitter)
+		self.assertEqual(status_code, 403)
+		self.assertEqual(message, 'late')
+	
+	def test_submit_late_period(self):
+		""" Tests that late submissions are not allowed """
+		user = submitter = self.accounts['dummy_student3']
+		assignment = self.assignment_name
+		self._assign.lock_date = datetime.datetime.now() - datetime.timedelta(hours=9)
+		self._assign.revision = True
+		self._assign.put()
+		messages, submit = None, True
+		status_code, message, data = self.API().submit(user, assignment, messages, submit, submitter)
+		self.assertEqual(status_code, 403)
+		self.assertNotEqual(message, 'late')
+
+	def test_backup_late_period(self):
+		""" Tests that late backups are allowed """
+		user = submitter = self.accounts['dummy_student3']
+		assignment = self.assignment_name
+		messages, submit = {'analytics': False}, False
+		status_code, message, data = self.API().submit(user, assignment, messages, submit, submitter)
+		self.assertEqual(status_code, 201)
+		self.assertNotEqual(message, 'late')
+		
 
 	def test_mark_as_final(self):
 		""" Tests that marking works, at the basic level """
