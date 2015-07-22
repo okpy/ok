@@ -42,7 +42,160 @@ class SubmissionAPITest(APIBaseTestCase):
 	def get_accounts(self):
 		return APITest().get_accounts()
 
-	# tests for mark as final
+	def test_data_for_zip_no_contents(self):
+		""" Tests that no file_contents raises BadValueError """
+		with self.assertRaises(BadValueError):
+			self.API().data_for_zip(self.obj().set(
+				submitter=self.obj().set(get=lambda: self.obj().set(email=['dummy@admin.com'])),
+				created='created',
+				get_messages=lambda: {}))
+			
+	def test_data_for_zip_del_submit(self):
+		""" Tests that submit entry is deleted """
+		name, file_contents = self.API().data_for_zip(self.obj().set(
+			submitter=self.obj().set(get=lambda: self.obj().set(email=['dummy@admin.com'])),
+			created='created',
+			get_messages=lambda: {'file_contents': {'submit': 'hello'}}))
+		self.assertNotIn('submit', file_contents)
+		
+	def test_data_for_zip_without_email(self):
+		""" Tests that user without email is okay """
+		self.API().data_for_zip(self.obj().set(
+			submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+			created='created',
+			get_messages=lambda: {'file_contents': {'gup.py': 'import yo'}}))
+		
+	def test_data_for_zip_name(self):
+		""" Test that the filename is valid """
+		info = {'gup.py': 'import yo'}
+		name, file_contents = self.API().data_for_zip(self.obj().set(
+			submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+			created='created',
+			get_messages=lambda: {'file_contents': info}))
+		self.assertEqual(info, file_contents)
+		self.assertNotIn('.', name)
+		self.assertNotIn(' ', name)
+		
+	def test_data_for_zip_unencodable(self):
+		""" Tests that non-encodable keys are okay """
+		info = {'gup.py': 1}
+		self.API().data_for_zip(self.obj().set(
+			submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+			created='created',
+			get_messages=lambda: {'file_contents': info}))
+		self.assertEqual(info['gup.py'], '1')
+		
+	def test_zip(self):
+		""" Tests that zip does not crash """
+		obj = self.obj().set(
+			submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+			created='created',
+			get_messages=lambda: {'file_contents': {'gup.py': 1}})
+		self.API().zip(obj, self.accounts['dummy_admin'], {})
+		
+	def test_zip_files(self):
+		""" Tests that zip_files does not crash """
+		name, file_contents = 'yolo', {'gup.py': 'import fish'}
+		name2, zipfile = self.API().zip_files(name, file_contents)
+		self.assertEqual(name, name2)
+		return name, zipfile
+		
+	def test_make_zip_response(self):
+		""" Check zipfile response headers """
+		with self.app.test_request_context('/api/v2'):
+			response = self.API().make_zip_response(*self.test_zip_files())
+			self.assertIn('attachment;', response.headers['Content-Disposition'])
+			self.assertEqual('application/zip', response.headers['Content-Type'])
+		
+	def test_download(self):
+		""" Check that download completes successfully """
+		with self.app.test_request_context('/api/v2'):
+			user, obj = self.accounts['dummy_admin'], self.obj().set(
+				submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+				created='created',
+				get_messages=lambda: {'file_contents': {'gup.py': 1}})
+			self.API().download(obj, user, {})
+		
+	def test_diff_empty(self):
+		""" Tests that diff does not accept empty file_Contents """
+		with self.assertRaises(BadValueError):
+			obj = self.obj().set(get_messages=lambda: {})
+			self.API().diff(obj, self.accounts['dummy_admin'], {})
+			
+	def test_diff_remove_submit(self):
+		""" Tests that diff removes submit key """
+		with self.assertRaises(AttributeError):  # AttributeError because fake obj has no assignment... means it passed
+			file_contents = {'submit': 'yo'}
+			key = ndb.Key(models.User, 1)
+			obj = self.obj().set(
+				get_messages=lambda: {'file_contents': file_contents},
+				key=key)
+			self.API().diff(obj, self.accounts['dummy_admin'], {})
+			self.assertNotIn('submit', file_contents)
+		
+	def test_diff_non_encodable(self):
+		""" Tests against keys that are nonencodable """
+		with self.assertRaises(AttributeError):
+			file_contents = {'gup.py': True}
+			obj = self.obj().set(get_messages=lambda: {'file_contents': file_contents})
+			self.API().diff(obj, self.accounts['dummy_admin'], {})
+			self.assertEqual(file_contents['gup.py'], 'True')
+		
+	def test_diff_obj(self):
+		""" Tests that existing diff is just returned """
+		api, fake = self.API(), True
+		file_contents = {'gup.py': True}
+		self.mock(api.diff_model, 'get_by_id').using(staticmethod(lambda keyId: fake))
+		key = ndb.Key(models.User, 1)
+		obj = self.obj().set(
+			get_messages=lambda: {'file_contents': file_contents},
+			key=key,
+			file_contents=file_contents)
+		diff = api.diff(obj, self.accounts['dummy_admin'], {})
+		self.assertEqual(fake, diff)
+		return obj
+	
+	def test_diff_no_templates(self):
+		""" Test diff with no template """
+		api = self.API()
+		file_contents = {'gup.py': True}
+		self.mock(api.diff_model, 'get_by_id').using(staticmethod(lambda keyId: False))
+		key = ndb.Key(models.User, 1)
+		obj = self.obj().set(
+			get_messages=lambda: {'file_contents': file_contents},
+			key=key)
+		obj.assignment = self._assign
+		obj.assignment.get = lambda: self.obj().set(templates=None)
+		templates = obj.assignment.get().templates
+		self.assertFalse(api.diff_model.get_by_id(obj.key.id()))
+		self.assertTrue(not templates or templates == {})
+		with self.assertRaises(BadValueError):
+			api.diff(obj, self.accounts['dummy_admin'], {})
+
+	def test_diff_fn_in_templates(self):
+		""" Tests filename not in templates """
+		obj = self.test_diff_obj()
+		obj.assignment = self._assign
+		obj.templates = {}
+		self._assign.get = lambda: self.obj().set(templates='{"a":1}')
+		obj.file_contents = {'a': 1, 'b': 2}
+		self.API().diff(obj, self.accounts['dummy_admin'], {})
+		return obj
+		
+	def test_diff_template_as_list(self):
+		""" Test that a template list is okay """
+		obj = self.test_diff_fn_in_templates()
+		obj.assignment.get().templates = '{"a":[1]}'
+		self.API().diff(obj, self.accounts['dummy_admin'], {})
+		return obj
+	
+	def test_diff_returned(self):
+		""" Test that a diff object is returned """
+		obj = self.test_diff_template_as_list()
+		obj.assignment.get().templates = '["a"]'
+		self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
+		diff = self.API().diff(obj, self.accounts['dummy_admin'], {})
+		self.assertEqual(diff.key.id(), obj.key.id())
 
 	def test_mark_as_final(self):
 		""" Tests that marking works, at the basic level """

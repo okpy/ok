@@ -12,12 +12,12 @@ tests.py
 
 from app import api
 from app.exceptions import *
-from test_base import BaseTestCase
+from test_base import BaseTestCase, TestingError
 from google.appengine.ext import ndb
 
 
-class TestingError(Exception):
-	pass
+import flask
+app = flask.Flask(__name__).test_client()
 
 
 class APITestCase(BaseTestCase):
@@ -25,13 +25,7 @@ class APITestCase(BaseTestCase):
 	Testing API utilities
 	"""
 	
-	def raise_error(self):
-		raise TestingError()
-	
-	def app(self):
-		from flask import Flask
-		return Flask(__name__).test_client()
-		
+	app = app
 
 	##################
 	# JSON ET. MISC. #
@@ -176,14 +170,46 @@ class APITestCase(BaseTestCase):
 			apre = api.APIResource()
 			apre.call_method('dne', None, None)
 	
-	# def test_dispatch_request_bad_http(self):
-	# 	""" Tests that only 'get' and 'post' are allowed for index """
-	# 	app = self.app()
-	# 	app.test_request_context().push()
-	#
-	# 	apre = api.APIResource()
-	# 	# with self.assertRaises(IncorrectHTTPMethodError):
-	# 	# 	apre.dispatch_request(None)
+	def test_dispatch_request_bad_http(self):
+		""" Tests that only 'get' and 'post' are allowed for index """
+		with self.app.test_request_context('/landing'):
+			apre = api.APIResource()
+			self.mock(flask, 'session').using({'user': None})
+			self.mock(flask, 'request').using(self.obj().set(method='put'))
+			with self.assertRaises(IncorrectHTTPMethodError):
+				apre.dispatch_request(None)
+
+	def test_dispatch_request_not_contains_entities(self):
+		""" Tests contains_entities=False bypasses instnatiation """
+		with self.app.test_request_context('/landing'):
+			apre = api.APIResource()
+			apre.contains_entities = False
+			self.mock(flask, 'session').using({'user': None})
+			with self.assertRaises(TestingError):
+				self.mock(apre, 'call_method').using(self.raise_error)
+				apre.dispatch_request('yo')
+
+	def test_dispatch_request_invalid_type(self):
+		""" Tests invalid type casting for instantiation """
+		with self.app.test_request_context('/landing'):
+			apre = api.APIResource()
+			apre.key_type = int
+			self.mock(flask, 'session').using({'user': None})
+			with self.assertRaises(BadValueError):
+				self.mock(apre, 'call_method').using(self.raise_error)
+				apre.dispatch_request('yo')
+
+	def test_dispatch_request_invalid_type_second(self):
+		""" Tests invalid type casting for instantiation """
+		with self.app.test_request_context('/landing'):
+			path = 'yo/method'
+			apre = api.APIResource()
+			apre.key_type = int
+			self.mock(flask, 'session').using({'user': None})
+			self.assertEqual(2, len(path.split('/')))
+			with self.assertRaises(BadValueError):
+				self.mock(apre, 'call_method').using(self.raise_error)
+				apre.dispatch_request(path)
 	
 	def test_apiresource_http_required(self):
 		""" Tests that constraints function """

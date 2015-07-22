@@ -181,7 +181,7 @@ class BaseTestCase(unittest.TestCase):
         return BaseTestCase.obj().set(can=lambda *args, **kwargs: False)
 
     @staticmethod
-    def raise_error(self, *args, **kwargs):
+    def raise_error(*args, **kwargs):
         """ Raise an error for testing purposes """
         raise TestingError()
 
