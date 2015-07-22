@@ -11,10 +11,10 @@ tests.py
 """
 
 import datetime
-from test_base import APIBaseTestCase, unittest, api #pylint: disable=relative-import
+from test_base import APIBaseTestCase, unittest, api, mock, BaseTestCase, TestingError #pylint: disable=relative-import
 from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
 from google.appengine.ext import ndb
-from app import models, constants, utils
+from app import models, constants, utils, api
 from ddt import ddt, data, unpack
 from app.exceptions import *
 from integration.test_api_base import APITest
@@ -22,6 +22,7 @@ from integration.test_api_base import APITest
 
 class GroupAPITest(APITest, APIBaseTestCase):
 	model = models.Group
+	API = api.GroupAPI
 	name = 'group'
 	num = 1
 	access_token = 'dummy_admin'
@@ -35,6 +36,7 @@ class GroupAPITest(APITest, APIBaseTestCase):
 		for student_name in [a for a in self.accounts if 'student' in a]:
 			s = self.accounts[student_name]
 			models.Participant.add_role(s, self.course, constants.STUDENT_ROLE)
+		self.group = self.get_basic_instance()
 
 	def get_basic_instance(self, mutate=True):
 		return self.model(
@@ -171,3 +173,138 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
 	def test_entity_create_basic(self):
 		pass # No creation
+	
+	def test_add_member_permission(self):
+		""" Tests that add_member checks for permissions """
+		self.group = self.group.put().get()
+		with self.assertRaises(PermissionError):
+			self.API().add_member(self.group, self.accounts['dummy_student'], {})
+	
+	def test_add_member_already_invited(self):
+		""" Tests that repeating invite not allowed """
+		self.group = self.group.put().get()
+		with self.assertRaises(BadValueError):
+			email = self.accounts['dummy_student'].key
+			self.API().invite(self.group, self.accounts['dummy_admin'], {
+				'email': email
+			})
+			self.group = self.group.put().get()
+			self.assertIn(email, self.group.invited)
+			self.API().add_member(self.group, self.accounts['dummy_admin'], {
+				'email': email
+			})
+
+	def test_add_member_already_in_group(self):
+		""" Tests that cannot invite existing member """
+		self.group = self.group.put().get()
+		with self.assertRaises(BadValueError):
+			email = self.accounts['dummy_student3'].key
+			self.assertIn(email, self.group.member)
+			self.API().add_member(self.group, self.accounts['dummy_admin'], {
+				'email': email
+			})
+
+	def test_remove_member_permissions(self):
+		""" TEsts that remove_member checks for permissions """
+		self.group = self.group.put().get()
+		with self.assertRaises(PermissionError):
+			self.API().remove_member(self.group, self.accounts['dummy_student'], {})
+
+	# def test_invite_permissions(self):
+	# 	""" Tests that invtie checks for permissions """
+	# 	self.group = self.group.put().get()
+	# 	self.assertNotIn(self.accounts['dummy_student'].key, self.group.member)
+	# 	with self.assertRaises(PermissionError):  # test doesn't pass but it should
+	# 		self.API().invite(self.group, self.accounts['dummy_student'], {})
+
+	def test_invite_error_propogation(self):
+		""" Tests that errors are passed on """
+		self.group.put()
+		self.mock(models.Group, 'invite').using(BaseTestCase.raise_error)
+		with self.assertRaises(TestingError):
+			self.API().invite(self.group, self.accounts['dummy_admin'], {
+				'email': 'wh@tever.com'
+			})
+
+	def test_invite_badvalueerror_propoagation(self):
+		""" Tests that errors are passed on """
+		self.group.put()
+		self.mock(models.Group, 'invite').using(lambda self, *args: '_')
+		with self.assertRaises(BadValueError):
+			self.API().invite(self.group, self.accounts['dummy_admin'], {
+				'email': 'wh@tever.com'
+			})
+
+	def test_accept_permission(self):
+		""" Tests that accept checks for permissions """
+		self.group.put()
+		with self.assertRaises(PermissionError):
+			self.API().accept(self.group, self.accounts['dummy_student'], {})
+			
+	def test_accept_error(self):
+		""" TEsts that accept properly propogates errors """
+		self.group.put()
+		with self.assertRaises(PermissionError):
+			self.API().accept(self.group, self.accounts['dummy_student3'], {})
+
+	def test_accept_existing_member(self):
+		""" Tests that exit checks for existing member """
+		self.group.put()
+		with self.assertRaises(PermissionError):
+			self.API().accept(self.group, self.accounts['dummy_student2'], {})
+			
+	def test_exit_permission(self):
+		""" Tests that exit checks for permission """
+		self.group.put()
+		with self.assertRaises(PermissionError):
+			self.API().exit(self.group, self.accounts['dummy_student'], {})
+			
+	def test_exit_nonmember(self):
+		""" Tests that exit checks for existing member """
+		self.group.put()
+		with self.assertRaises(BadValueError):
+			self.API().exit(self.group, self.accounts['dummy_admin'], {})
+			
+	def test_reorder_permissions(self):
+		""" Tests that reorder checks for permissions """
+		self.group.put()
+		with self.assertRaises(PermissionError):
+			self.API().reorder(self.group, self.accounts['dummy_student'], {})
+			
+	def test_reorder_incorrect_number_of_members(self):
+		""" Tests that reorder does not inadvertently lose members """
+		self.group.put()
+		with self.assertRaises(BadValueError):
+			self.API().reorder(self.group, self.accounts['dummy_student2'], {
+				'order': [
+					self.accounts['dummy_student2'].email[0],
+				]})
+
+	def test_reorder_aliens(self):
+		""" Tests that reorder does not introduce aliens """
+		self.group.put()
+		with self.assertRaises(BadValueError):
+			self.API().reorder(self.group, self.accounts['dummy_student2'], {
+				'order': [
+					self.accounts['dummy_student2'].email[0],
+					self.accounts['dummy_admin'].email[0],
+				]})
+
+	def test_reorder_normal(self):
+		""" Tests that reorder works """
+		self.group.put()
+		self.API().reorder(self.group, self.accounts['dummy_student2'], {
+			'order': [
+				self.accounts['dummy_student2'].email[0],
+				self.accounts['dummy_student3'].email[0],
+			]
+		})
+		group = self.group.key.get()
+		self.assertEqual(group.member[0].get().email[0], self.accounts['dummy_student2'].email[0])
+		self.API().reorder(self.group, self.accounts['dummy_student2'], {
+			'order': [
+				self.accounts['dummy_student3'].email[0],
+				self.accounts['dummy_student2'].email[0],
+			]
+		})
+		self.assertEqual(group.member[0].get().email[0], self.accounts['dummy_student3'].email[0])

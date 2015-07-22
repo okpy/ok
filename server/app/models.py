@@ -1000,7 +1000,11 @@ class Group(Base):
     #@ndb.transactional
     def invite(self, email):
         """Invites a user to the group. Returns an error message or None."""
-        user = User.lookup(email)
+        if isinstance(email, ndb.Key):
+            user = email.get()
+            email = user.email[0]
+        else:
+            user = User.lookup(email)
         if not user:
             return "{} is not a valid user".format(email)
         course = self.assignment.get().course
@@ -1045,7 +1049,7 @@ class Group(Base):
         """User accepts an invitation to join. Returns error or None."""
         if isinstance(user_key, User):
             user_key = user_key.key
-        if user_key not in self.invited:
+        if user_key not in self.invited:  # Note: these will never happen, according to _can
             return "That user is not invited to the group"
         if user_key in self.member:
             return "That user has already accepted."
@@ -1060,6 +1064,8 @@ class Group(Base):
         """User leaves the group. Empty/singleton groups are deleted."""
         if isinstance(user_key, User):
             user_key = user_key.key
+        if user_key not in self.member and user_key not in self.invited:
+            return 'That user is not in this group and has not been invited.'
         for users in [self.member, self.invited]:
             if user_key in users:
                 users.remove(user_key)

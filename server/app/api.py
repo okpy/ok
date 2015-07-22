@@ -1854,7 +1854,9 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        group.exit(user)
+        error = group.exit(user)
+        if error:
+            raise BadValueError(error)
 
     def reorder(self, group, user, data):
         """ Saves order of partners """
@@ -1918,8 +1920,7 @@ class QueueAPI(APIResource):
         if 'owner' not in attributes:
             attributes['owner'] = attributes['assigned_staff'][0]
         ent = super(QueueAPI, self).new_entity(attributes)
-        ent.assigned_staff = [models.User.get_or_insert(
-            user.id()).key for user in ent.assigned_staff]
+        ent.assigned_staff = [user.get().key for user in ent.assigned_staff]
         return ent
 
 
@@ -1953,6 +1954,10 @@ class QueuesAPI(APIResource):
             models.Participant.role == STAFF_ROLE,
             models.Participant.course == course_key).fetch())
             if staff_list[0] == '*' or staff.email[0] in staff_list]
+        
+        if len(staff) == 0:
+            raise BadValueError('Course has no registered staff members.')
+        
         ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
 
         subms = models.FinalSubmission.query(

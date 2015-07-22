@@ -10,9 +10,9 @@ tests.py
 
 """
 
-from app import api
+from app import api, models
 from app.exceptions import *
-from test_base import BaseTestCase, TestingError
+from test_base import BaseTestCase, TestingError, mock
 from google.appengine.ext import ndb
 
 
@@ -26,6 +26,7 @@ class APITestCase(BaseTestCase):
 	"""
 	
 	app = app
+	API = api.APIResource
 
 	##################
 	# JSON ET. MISC. #
@@ -331,3 +332,14 @@ class APITestCase(BaseTestCase):
 		apre.model = self.obj().set(__name__=model_name)
 		api.stats.KindStat(kind_name=model_name).put()
 		self.assertIn('total', apre.statistics())
+	
+	@mock(api.APIResource, 'statistics', BaseTestCase.raise_error)
+	@mock(api.APIResource, 'model', models.Submission)
+	def test_index_statistics(self):
+		""" Test that index will call statistics """
+		user = models.User(
+			is_admin=True,
+			email=['test@example.com']).put().get()
+		with self.assertRaises(TestingError):
+			with self.app.test_request_context('/api/v2/?stats=True'):
+				self.API().index(user, {})
