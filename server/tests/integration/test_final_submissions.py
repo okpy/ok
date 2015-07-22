@@ -352,6 +352,22 @@ class FinalSubmissionTest(APIBaseTestCase):
         self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
         self.assertIsNone(inviter.get_final_submission(self.assign).group)
         self.assertIsNone(invited.get_final_submission(self.assign).group)
+        
+    ##############
+    # SUBMIT NDB #
+    ##############
+        
+    def test_ndb_submit(self):
+        """ test backup modifications by ndb submit """
+        datestr = '2015-04-20 00:00:00'
+        datestr_converted = '2015-04-20 07:00:00'  # because GAE is stubborn
+        backup = api.SubmitNDBImplementation().create_submission(
+            self.accounts['student0'], 
+            self.assignments['first'], 
+            {'analytics': {'time': datestr}},
+            True,
+            self.accounts['student0'])
+        self.assertEqual(backup.created, datetime.datetime.strptime(datestr_converted, '%Y-%m-%d %H:%M:%S'))
 
 if __name__ == "__main__":
     unittest.main()
