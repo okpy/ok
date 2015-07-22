@@ -15,7 +15,7 @@ from flask import request
 
 from werkzeug.wrappers import Response
 
-from test_base import APIBaseTestCase, unittest, make_fake_course #pylint: disable=relative-import
+from test_base import APIBaseTestCase, unittest, make_fake_course, Mock, mock #pylint: disable=relative-import
 
 from app import app
 from app import models, utils, urls, constants, auth, api
@@ -257,17 +257,11 @@ class URLsUnitTest(APIBaseTestCase):
 	@register_api_test
 	def test_api_rval_response(self):
 		""" Tests that werkzeug rvals are not changed """
-		rval, real_auth = Response(), auth.authenticate
-		
-		@staticmethod
-		def as_view(endpoint):
-			return lambda *args, **kwargs: rval
-		
-		auth.authenticate = lambda: models.User()
-		
+		rval = Response()
+		self.mock(auth, 'authenticate').using(lambda: models.User())
+		self.mock(api.APIResource, 'as_view').using(staticmethod(
+			lambda _: lambda *args, **kwargs: rval))
 		with self.app.test_request_context('/api/v1/'):
-			custom = api.APIResource
-			custom.as_view = as_view
 			self.assertTrue(isinstance(rval, Response))
 			self.assertFalse(isinstance(rval, flask.Response))
 			api_wrapper = urls.register_api(api.APIResource, 'fake_api', 'fake')
@@ -275,28 +269,17 @@ class URLsUnitTest(APIBaseTestCase):
 			self.assertTrue(isinstance(rval, Response))
 			self.assertFalse(isinstance(rval, flask.Response))
 			self.assertEqual(response, rval)
-		
-		auth.authenticate = real_auth
 
 	@register_api_test
 	def test_api_rval_response_list(self):
 		""" Tests that werkzeug rvals are not changed """
-		real_auth = auth.authenticate
-
-		@staticmethod
-		def as_view(endpoint):
-			return lambda *args, **kwargs: [1, 2, 3]
-
-		auth.authenticate = lambda: models.User()
-
+		self.mock(auth, 'authenticate').using(lambda: models.User())
+		self.mock(api.APIResource, 'as_view').using(staticmethod(
+			lambda _: lambda *args, **kwargs: [1, 2, 3]))
 		with self.app.test_request_context('/api/v1/'):
-			custom = api.APIResource
-			custom.as_view = as_view
 			api_wrapper = urls.register_api(api.APIResource, 'fake_api', 'fake')
-			response = api_wrapper()
+			response = api_wrapper(test=True)
 			self.assertEqual(response.status_code, 200)
 
-		auth.authenticate = real_auth
-	
 if __name__ == "__main__":
 	unittest.main()

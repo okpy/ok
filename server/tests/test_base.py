@@ -37,6 +37,7 @@ from app.constants import API_PREFIX
 from app import api
 from app.authenticator import Authenticator, AuthenticationException
 
+
 def make_fake_course(creator):
     return models.Course(
         institution="UC Soumya",
@@ -80,6 +81,43 @@ def make_fake_finalsubmission(submission, assignment, user):
     return rval
 
 
+class Mock(object):
+    """ To temporarily replace variables - as a with block """
+    
+    old = None
+    
+    def __init__(self, obj, attr):
+        super(Mock, self).__init__()
+        self.obj = obj
+        self.attr = attr
+        self.old = getattr(obj, attr)
+    
+    def __enter__(self):
+        return self.obj
+    
+    def using(self, val):
+        setattr(self.obj, self.attr, val)
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        setattr(self.obj, self.attr, self.old)
+        
+
+def mock(obj, attr, new):
+    """ To temporarily replace variables - as a decorator """
+    old = getattr(obj, attr)
+    setattr(obj, attr, new)
+
+    def decorator(f):
+        def helper(*args, **kwargs):
+            response = f(*args, **kwargs)
+            setattr(obj, attr, old)
+            return response
+        helper.__name__ = f.__name__
+        return helper
+    return decorator
+
+
 class TestingError(Exception):
     pass
 
@@ -106,14 +144,16 @@ class BaseTestCase(unittest.TestCase):
 
     def tearDown(self): #pylint: disable=invalid-name, missing-docstring
         self.testbed.deactivate()
-        for obj, name, val in self._mocks:
-            setattr(obj, name, val)
+        for obj, attr, val in self._mocks:
+            setattr(obj, attr, val)
+        
+    def mock(self, obj, attr):
+        """ Utility - mock an attr for the duration of the test method """
+        self._mocks.append((obj, attr, getattr(obj, attr)))
+        return self.obj().set(using=lambda val: setattr(obj, attr, val))
 
-    def mock(self, obj, name, val):
-        self._mocks.append((obj, name, getattr(obj, name)))
-        setattr(obj, name, val)
-
-    def obj(self):
+    @staticmethod
+    def obj():
         """ Utility - object with set(k=v, k2=v2) method """
         class Obj:
             def set(self, **kwargs):
@@ -121,9 +161,21 @@ class BaseTestCase(unittest.TestCase):
                 return self
         return Obj()
 
+    @staticmethod
+    def always_can(self):
+        """ Utility - object that always allows user """
+        return BaseTestCase.obj().set(can=lambda *args, **kwargs: True)
+
+    @staticmethod
+    def never_can(self):
+        """ Utility - object that never allows user """
+        return BaseTestCase.obj().set(can=lambda *args, **kwargs: False)
+
+    @staticmethod
     def raise_error(self, *args, **kwargs):
         """ Raise an error for testing purposes """
         raise TestingError()
+
 
 class APIBaseTestCase(BaseTestCase):
     """
@@ -134,19 +186,6 @@ class APIBaseTestCase(BaseTestCase):
     num = 1
     api_version = 'v1'
     url_prefix = API_PREFIX + '/{}'
-
-    # duplicate utilities TODO: figure out how to reuse
-    def obj(self):
-        """ Utility - object with set(k=v, k2=v2) method """
-        class Obj:
-            def set(self, **kwargs):
-                [setattr(self, k, v) for k, v in kwargs.items()]
-                return self
-        return Obj()
-    
-    def raise_error(self, *args, **kwargs):
-        """ Raise an error for testing purposes """
-        raise TestingError()
 
     def get_accounts(self):
         """ Returns the accounts you want to exist in your system. """
@@ -166,13 +205,10 @@ class APIBaseTestCase(BaseTestCase):
         return self.user
 
     def authenticate_GAE_service(self):
-        class FakeUser:
-            def email(_):
-                return self.user.email[0]
-            def user_id(_):
-                return self.user.key.id()
-                
-        return FakeUser() if self.user else None
+        return self.obj().set(
+            email=lambda *args: self.user.email[0],
+            user_id=lambda *args: self.user.key.id()
+        ) if self.user else None
 
     def login(self, user):
         """ Logs in the user. """
