@@ -1000,18 +1000,6 @@ class SubmissionAPI(APIResource):
                 'comment': KeyArg('Comment', required=True)
             }
         },
-        'add_tag': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'tag': Arg(str, required=True)
-            }
-        },
-        'remove_tag': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'tag': Arg(str, required=True)
-            }
-        },
         'score': {
             'methods': set(['POST']),
             'web_args': {
@@ -1133,7 +1121,7 @@ class SubmissionAPI(APIResource):
                                 please contact course staff')
 
         templates = json.loads(templates)
-        if type(templates) == unicode:
+        if type(templates) == unicode:  # pragma: no cover
             templates = ast.literal_eval(templates)
 
         for filename, contents in file_contents.items():
@@ -1200,51 +1188,6 @@ class SubmissionAPI(APIResource):
         if not comment.can(user, need, comment):
             raise need.exception()
         comment.key.delete()
-
-    def add_tag(self, obj, user, data):
-        """
-        Adds a tag to the submission.
-        Validates existence.
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: (dictionary) data
-        :return: result of adding tag
-        """
-        tag = data['tag']
-        if tag in obj.tags:
-            raise BadValueError('Tag already exists')
-
-        submit_tag = subm_model.SUBMITTED_TAG
-        if tag == submit_tag:
-            previous = subm_model.query().filter(
-                subm_model.assignment == obj.assignment).filter(
-                    subm_model.submitter == obj.submitter).filter(
-                        subm_model.tags == submit_tag)
-
-            previous = previous.get(keys_only=True)
-            if previous:
-                raise BadValueError('Only one final submission allowed')
-
-        obj.tags.append(tag)
-        obj.put()
-
-    def remove_tag(self, obj, user, data):
-        """
-        Removes a tag from this submission.
-        Validates uniqueness.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: result of removing tag
-        """
-        tag = data['tag']
-        if tag not in obj.tags:
-            raise BadValueError('Tag does not exist.')
-
-        obj.tags.remove(tag)
-        obj.put()
 
     def score(self, obj, user, data):
         """
