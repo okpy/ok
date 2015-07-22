@@ -81,6 +81,15 @@ def make_fake_finalsubmission(submission, assignment, user):
     return rval
 
 
+def make_fake_group(assignment, *args):
+    rval = models.Group(
+        member=[u.key for u in args],
+        assignment=assignment.key
+    )
+    rval.put()
+    return rval
+
+
 class Mock(object):
     """ To temporarily replace variables - as a with block """
     
