@@ -1699,8 +1699,9 @@ class CourseAPI(APIResource):
             raise need.exception()
 
         removed_user = models.User.lookup(data['email'])
-        if removed_user:
-          models.Participant.remove_role(removed_user, course, STAFF_ROLE)
+        if not removed_user:
+            raise BadValueError('No such user with email "%s" exists' % data['email'])
+        models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
         query = models.Participant.query(
@@ -1741,15 +1742,13 @@ class CourseAPI(APIResource):
             raise need.exception()
 
         removed_user = models.User.lookup(data['email'])
-        if removed_user:
-            models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
+        if not removed_user:
+            raise BadValueError('No such user with email "%s" exists' % data['email'])
+        models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
     def assignments(self, course, user, data):
         return course.assignments.fetch()
-
-    def get_my_courses(self, course, user, data):
-        return self.get_courses(course, user, dict(user=user))
-
+    
 
 class GroupAPI(APIResource):
     model = models.Group

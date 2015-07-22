@@ -605,7 +605,6 @@ class Participant(Base):
             user_key = user_key.key
         if isinstance(course_key, Course):
             course_key = course_key.key
-        print(user_key, course_key, role)
         query = cls.query(cls.user == user_key,
                           cls.course == course_key,
                           cls.role == role)

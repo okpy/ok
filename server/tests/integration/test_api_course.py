@@ -54,13 +54,131 @@ class CourseAPITest(APITest, APIBaseTestCase):
 	def get_accounts(self):
 		return APITest().get_accounts()
 	
-	# def test_course_index(self):
-	# 	""" Test that onlyenrolled takes effect """
-	# 	results = self.API().index(self.accounts['dummy_admin'], {
-	# 		'onlyenrolled': True
-	# 	})['results']
-	# 	self.assertEqual(0, len(results))
-	#
-	# def test_add_staff_permission(self):
-	# 	""" Tests that add_staff checks for permissions """
-	#
+	def test_course_index(self):
+		""" Test that onlyenrolled takes effect """
+		results = self.API().index(self.accounts['dummy_admin'], {
+			'onlyenrolled': True
+		})['results']
+		self.assertEqual(0, len(results))
+
+	def test_add_staff_permission(self):
+		""" Tests that add_staff checks for permissions """
+		with self.assertRaises(PermissionError):
+			self.API().add_staff(self._course, self.accounts['dummy_student3'], {})
+			
+	def test_add_staff_normal(self):
+		""" Tests that user is added as staff """
+		self.API().add_staff(self._course, self.accounts['dummy_admin'], {
+			'email': self.accounts['dummy_student3'].email[0]
+		})
+		part = models.Participant.query(models.Participant.user == self.accounts['dummy_student3'].key).get()
+		self.assertNotEqual(None, part)
+		
+	def test_get_staff_permissions(self):
+		""" Tests that get_staff checks for permissions """
+		with self.assertRaises(PermissionError):
+			self.API().get_staff(self._course, self.accounts['dummy_student3'], {})
+			
+	def test_get_staff_works(self):
+		""" Tests that get_staff returns some kind of list, filled only with staff members """
+		staff = self.API().get_staff(self._course, self.accounts['dummy_admin'], {})
+		self.assertTrue(isinstance(staff, list))
+		for member in staff:
+			self.assertTrue(isinstance(member, models.Participant))
+			self.assertEqual(member.role, constants.STAFF_ROLE)
+			
+	def test_remove_staff_permissions(self):
+		""" Tests that remove_staff checks for permissions """
+		with self.assertRaises(PermissionError):
+			self.API().remove_staff(self._course, self.accounts['dummy_student3'], {})
+	
+	def test_remove_staff_existent(self):
+		""" Tests that existent member is removed """
+		self.API().remove_staff(self._course, self.accounts['dummy_admin'], {
+			'email': self.accounts['dummy_student3'].email[0]
+		})
+	
+	def test_remove_staff_nonexistent(self):
+		""" Tests that nonexistent member reports error """
+		with self.assertRaises(BadValueError):
+			self.API().remove_staff(self._course, self.accounts['dummy_admin'], {
+				'email': 'wh@tever.com'
+			})
+			
+	def test_get_students_permissions(self):
+		""" Tests that get_students checks for permissions """
+		with self.assertRaises(PermissionError):
+			self.API().get_students(self._course, self.accounts['dummy_student3'], {})
+
+	def test_get_students_works(self):
+		""" Tests that get_students returns some kind of list, filled only with students """
+		staff = self.API().get_students(self._course, self.accounts['dummy_admin'], {})
+		self.assertTrue(isinstance(staff, list))
+		for member in staff:
+			self.assertTrue(isinstance(member, models.Participant))
+			self.assertEqual(member.role, constants.STUDENT_ROLE)
+			
+	def test_add_students_permissions(self):
+		""" Tests that add_students checks for permissions """
+		with self.assertRaises(PermissionError):
+			self.API().add_students(self._course, self.accounts['dummy_student3'], {})
+	
+	def test_add_students_results(self):
+		""" Tests that add_students functions """
+		roster_old = self.API().get_students(self._course, self.accounts['dummy_admin'], {})
+		self.API().add_students(self._course, self.accounts['dummy_admin'], {
+			'emails': [
+				self.accounts['dummy_student3'].email[0],
+				self.accounts['dummy_student2'].email[0]
+			]
+		})
+		roster_new = self.API().get_students(self._course, self.accounts['dummy_admin'], {})
+		self.assertTrue(len(roster_new) > len(roster_old))
+		
+	def test_add_student_permission(self):
+		""" Tests that add_student checks permissions """
+		with self.assertRaises(PermissionError):
+			self.API().add_student(self._course, self.accounts['dummy_student3'], {})
+
+	def test_add_student_results(self):
+		""" Tests that add_students functions """
+		roster_old = self.API().get_students(self._course, self.accounts['dummy_admin'], {})
+		self.API().add_student(self._course, self.accounts['dummy_admin'], {
+			'email': self.accounts['dummy_student3'].email[0]
+		})
+		roster_new = self.API().get_students(self._course, self.accounts['dummy_admin'], {})
+		self.assertEqual(len(roster_new) - 1, len(roster_old))
+
+	def test_remove_student_permission(self):
+		""" Tests that remove_student checks permissions """
+		with self.assertRaises(PermissionError):
+			self.API().remove_student(self._course, self.accounts['dummy_student3'], {})
+			
+	def test_remove_student_results(self):
+		""" Tests taht tudents are actually removed """
+		self.API().add_students(self._course, self.accounts['dummy_admin'], {
+			'emails': [
+				self.accounts['dummy_student3'].email[0],
+				self.accounts['dummy_student2'].email[0]
+			]
+		})
+		roster_old = self.API().get_students(self._course, self.accounts['dummy_admin'], {})
+		self.API().remove_student(self._course, self.accounts['dummy_admin'], {
+			'email': self.accounts['dummy_student3'].email[0]
+		})
+		roster_new = self.API().get_students(self._course, self.accounts['dummy_admin'], {})
+		self.assertEqual(len(roster_new) + 1, len(roster_old))
+		
+	def test_remove_student_nonexistnet(self):
+		""" Tests that a nonexistent student is checked """
+		with self.assertRaises(BadValueError):
+			self.API().remove_student(self._course, self.accounts['dummy_admin'], {
+				'email': 'wh@tever.com'
+			})
+			
+	def test_assignments(self):
+		""" Tests that get_assignments fetches assignments """
+		assignments = self.API().assignments(self._course, None, {})
+		self.assertTrue(isinstance(assignments, list))
+		for assignment in assignments:
+			self.assertTrue(isinstance(assignment, models.Assignment))
