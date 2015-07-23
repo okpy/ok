@@ -23,5 +23,5 @@ dist
 *.ok_refresh
 *.ok_messages
 
-server/.coverage
-server/coverage_report/*
+*.coverage
+*coverage_report/*
