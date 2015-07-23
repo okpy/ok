@@ -13,7 +13,7 @@ tests.py
 import datetime
 import json
 from test_api_base import APITest
-from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
+from test_base import APIBaseTestCase, unittest, BaseTestCase, mock #pylint: disable=relative-import
 from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
 from google.appengine.ext import ndb
 from app import models, constants, utils, api
@@ -44,10 +44,11 @@ class AnalyticsAPITest(APIBaseTestCase):
 
 	def get_accounts(self):
 		return APITest().get_accounts()
-		
+
 	def test_post_permissions(self):
 		""" Test that post cehcks for permissions """
 		with self.assertRaises(PermissionError):
+			self.mock(api.AnalyticsAPI, 'model').using(BaseTestCase.never_can())
 			self.API().post(self.accounts['dummy_student3'], None)
 			
 	def test_post_bad_filters(self):

@@ -139,8 +139,7 @@ class AnalyticsDump(Base):
                 return query
             return query.filter(AnalyticsDump.owner == user.key)
         if need.action == "create":
-            if user.is_admin:
-                return True
+            return True
         if need.action == "get":
             if user.is_admin:
                 return True
