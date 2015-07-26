@@ -517,10 +517,29 @@ def add_subm_to_zip(subm, Submission, zipfile, result):
         if isinstance(result, Submission):
             result = result.backup.get()
         name, file_contents = subm.data_for_zip(result)
+        group_file = backup_group_file(result)
+        if group_file:
+            add_to_file_contents(file_contents, *group_file)
         return add_to_zip(zipfile, file_contents, name)
     except BadValueError as e:
         if str(e) != 'Submission has no contents to download':
             raise e
+
+
+def add_to_file_contents(file_contents, file_name, file_content):
+    """ add a file to file_contents """
+    file_contents[file_name] = file_content
+
+# TODO(Alvin): generalize, cleanup everything about zip
+def backup_group_file(backup):
+    """ Returns group information: group_[group ID], group JSON """
+    G = ModelProxy.Group
+    group = G.lookup(backup.submitter, backup.assignment)
+    if group:
+        json_data = group.to_json()
+        order = {chr(97+i): u['email'][0]
+                 for i, u in enumerate(json_data['member'])}
+        return 'group_members_%s.json' % group.key.id(), str(json.dumps(order))
 
 
 def make_zip_filename(user, now):
