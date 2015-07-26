@@ -21,8 +21,10 @@ from flask import jsonify, request, Response, json
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
+import cloudstorage as gcs
 
 from app import app
+from app.constants import GRADES_BUCKET
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
@@ -116,9 +118,9 @@ def add_to_zip(zipfile, file_contents, dir=''):
         zipfile.writestr(join(dir, filename), contents)
     return zipfile
 
-def create_csv(content):
+def create_csv_content(content):
     """ 
-    Creates csv file from content. content must be a list of lists.
+    Return all contents in CSV file format. Content must be a list of lists.
     """
     scsv = StringIO()
     writer = csv.writer(scsv)
@@ -130,6 +132,51 @@ def create_csv(content):
     contents = scsv.getvalue()
     scsv.close()
     return contents
+
+def data_for_scores(assignment, user):
+    """ 
+    Returns a tuple of two values a list of lists of score info for assignment.
+    Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']] 
+    """
+    content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+    course = assignment.course.get()
+    groups = ModelProxy.Group.lookup_by_assignment(assignment)
+    seen_members = set()
+
+    for group in groups:
+        members = group.member
+        seen_members |= set(members)
+        content.extend(group.scores_for_assignment(assignment))
+
+    students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
+    for student in students:
+        content.extend(student.scores_for_assignment(assignment)[0])
+
+    return content
+
+def create_gcs_file(assignment, contents, info_type):
+    """ 
+    Creates a GCS csv file with contents CONTENTS. 
+    """
+    try:
+        gcs_filename = '/{}/{}'.format(GRADES_BUCKET, make_filename(assignment, info_type))
+        gcs_file = gcs.open(gcs_filename, 'w', content_type='text/csv', options={'x-goog-acl':'project-private'})
+        gcs_file.write(contents)
+        gcs_file.close()
+    except Exception as e:
+        logging.exception("ERROR: {}".format(e))
+        try:
+            gcs.delete(gcs_filename)
+        except gcs.NotFoundError:
+            logging.info("Could not delete file " + gcs_filename)
+    logging.info("Created file " + gcs_filename)
+
+def make_filename(assignment, infotype):
+    """ Returns filename of format INFOTYPE_COURSE_ASSIGNMENT.csv """
+    course_name = assignment.course.get().offering
+    assign_name = assignment.display_name
+    filename = '{}_{}_{}.csv'.format(infotype, course_name, assign_name)
+    return filename.replace('/', '_').replace(' ', '_')
 
 def paginate(entries, page, num_per_page):
     """
@@ -272,9 +319,13 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     seen = set()
     for queue in queues:
         for subm in queue.submissions:
-            seen.add(subm.get().submitter.id())
+            if isinstance(subm, ndb.Key):
+                seen.add(subm.get().submitter.id())
+            else:
+                seen.add(subm.submitter.id())
 
-    for user in results:
+    for subm in results:
+        user = subm.submitter.get()
         if not user.logged_in or user.key.id() in seen:
             continue
         queues.sort(key=lambda x: len(x.submissions))
@@ -360,7 +411,7 @@ def merge_user(user_key, dup_user_key):
     E = ModelProxy.Participant
     enrolls = E.query(E.user == dup_user_key).fetch()
     for enroll in enrolls:
-        enroll.status = 'inactive'
+        # enroll.status = 'inactive'
         enroll.put_async()
 
     # Re-submit submissions
@@ -380,7 +431,7 @@ def merge_user(user_key, dup_user_key):
 
     # Invalidate emails
     dup_user.email = ['#'+email for email in dup_user.email]
-    dup_user.status = 'inactive'
+    # dup_user.status = 'inactive'
     dup_user.put_async()
     user.put_async()
 
@@ -448,3 +499,10 @@ def check_user(user_key):
         user_key = user_key.id()
 
     deferred.defer(deferred_check_user, user_key)
+
+def scores_to_gcs(assignment, user):
+    """ Writes all final submission scores 
+    for the given assignment to GCS csv file. """
+    content = data_for_scores(assignment, user)
+    csv_contents = create_csv_content(content)
+    create_gcs_file(assignment, csv_contents, 'scores')

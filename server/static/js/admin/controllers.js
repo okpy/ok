@@ -416,6 +416,7 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       $scope.submission = response.submission;
       $scope.backupId = response.submission.backup.id;
       $scope.diff = Submission.diff({id: $scope.backupId});
+
       if (response.submission.score.length > 0) {
         $scope.compScore = response.submission.score[0].score
         $scope.compMessage = response.submission.score[0].message
@@ -626,7 +627,27 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
          });
        }
 
-
+      $scope.downloadScores = function(assign) {
+        var tmp_name = 'scores_' + assign.course.offering + '_' + assign.display_name + '.csv'
+        var filename = tmp_name.replace(/\//g, '_').replace(/ /g, '_')
+        Assignment.download_scores({
+          id: assign.id
+        }, function() {
+          $window.swal({
+            title: 'Success', 
+            text:'Writing scores to ' + filename +
+            '\n Scores will be ready in Google Cloud Storage ok_grades_bucket in a few minutes', 
+            type: 'success',
+            confirmButtonText: 'View scores',
+            cancelButtonText: 'Not now',
+            showCancelButton: true},
+            function() {
+              $window.location = 'https://console.developers.google.com/storage/browser/ok_grades_bucket/';
+            });
+        }, function(err) {
+          report_error($window, err);
+        });
+      }
 
      $scope.delete = function(assign) {
       $window.swal({
@@ -1022,7 +1043,7 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
       });
       modal.result.then(function() {
         Submission.deleteComment({
-          id: $stateParams.submissionId,
+          id: $scope.backupId,
           comment: $scope.comment.id
         }, function (result){
           $scope.toggleBox();
@@ -1051,7 +1072,7 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
       text = $scope.commentText.text;
       if (text !== undefined && text.trim() != "") {
         Submission.addComment({
-          id: $stateParams.submissionId,
+          id: $scope.backupId,
           file: $scope.file_name,
           index: $scope.codeline.rightNum - 1,
           message: text,

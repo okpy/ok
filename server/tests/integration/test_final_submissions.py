@@ -264,9 +264,11 @@ class FinalSubmissionTest(APIBaseTestCase):
         self.run_deferred()
 
         self.assertNumFinalSubmissions(1)
+        
+        subm = models.Submission(backup=self.backups['second'].key)
+        subm.put()
 
-        api.FinalSubmissionAPI().mark_backup(
-            self.user, dict(backup=self.backups['second'].key))
+        api.FinalSubmissionAPI().post(self.user, dict(submission=subm.key))
         self.assertFinalSubmission(self.user, self.backups['second'])
 
     def test_create_group(self):

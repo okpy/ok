@@ -112,9 +112,8 @@ app.factory('FinalSubmission', ['$resource',
         get: {
           transformResponse: defaultTransformer
         },
-        mark_backup: {
-          method: "POST",
-          url: "/api/v1/final_submission/mark_backup",
+        post: {
+          method: 'POST',
           transformResponse: defaultTransformer
         }
       })
@@ -158,6 +157,11 @@ app.factory('Assignment', ['$resource',
         invite: {
           method: "POST",
           url: '/api/v1/assignment/:id/invite',
+          transformResponse: defaultTransformer
+        },
+        download_scores: {
+          method: "GET",
+          url: '/api/v1/assignment/:id/download_scores',
           transformResponse: defaultTransformer
         },
         queues: {

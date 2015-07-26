@@ -391,8 +391,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
 
       $scope.changeSubmission = function (backup) {
-        FinalSubmission.mark_backup({
-          backup: backup.id
+        FinalSubmission.post({
+          submission: backup.id
         }, function (response) {
             $scope.closeDetails();
           $scope.reloadView();
@@ -428,6 +428,12 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
            });
         }
       };
+      
+      $scope.canReorder = function(assign) {
+        if (!assign.assignment.active) {
+            $window.swal('Error', 'Cannot reorder group members after the assignment lock date.', 'error');
+        }
+      }
 
       $scope.randomColor = function randomColor(assignment) {
         themes = ['blue','gold','purple']
