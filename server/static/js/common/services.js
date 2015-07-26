@@ -332,6 +332,11 @@ app.factory('Search', ['$resource',
           query: {
             url: '/api/v1/search',
             transformResponse: defaultTransformer
+          },
+          download_zip: {
+            isArray:true,
+            url: '/api/v1/search/download',
+            transformResponse: defaultTransformer
           }
         }
       )

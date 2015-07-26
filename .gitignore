@@ -24,6 +24,5 @@ dist
 *.ok_messages
 
 *.coverage
-coverage_report/*
-
 *.coveralls.yml
+*coverage_report/*

@@ -533,6 +533,29 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     $scope.search = function() {
       $scope.getPage($scope.currentPage)
     }
+    
+    $scope.download_zip = function(query, all, courseId) {
+      filename = 'query_(your email)_(current time).zip'
+      Search.download_zip({
+        query: query,
+        all: all,
+        courseId: courseId
+      }, function(response) {
+        $window.swal({
+          title: 'Success',
+          text:'Saving submissions to ' + response[0] +
+          '\n Zip of submissions will be ready in Google Cloud Storage ok_grades_bucket in a few minutes',
+          type: 'success',
+          confirmButtonText: 'View zip',
+          cancelButtonText: 'Not now',
+          showCancelButton: true},
+          function() {
+            $window.location = 'https://console.developers.google.com/storage/browser'+response[0];
+          });
+      }, function(err) {
+        report_error($window, err);
+      });
+    }
   }]);
 
 
