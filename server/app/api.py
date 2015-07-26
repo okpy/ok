@@ -18,7 +18,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 from app import models, app, analytics
 from app.codereview import compare
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user
 
@@ -1398,13 +1398,21 @@ class SearchAPI(APIResource):
 
         if user.key not in course.staff and not user.is_admin:
             raise Need('get').exception()
+    
+    @staticmethod
+    def results(data):
+        """ Returns results of query, limiting results accordingly """
+        results = SearchAPI.querify(data['query']).fetch()
+        if data.get('all', 'true').lower() != 'true':
+            start, end = SearchAPI.limits(data['page'], data['num_per_page'])
+            results = results[start:end]
+        return results
 
     def index(self, user, data):
+        """ Performs search query, with some extra information """
         self.check_permissions(user, data)
 
-        query = SearchAPI.querify(data['query'])
-        start, end = SearchAPI.limits(data['page'], data['num_per_page'])
-        results = query.fetch()[start:end]
+        results = self.results(data)
         return dict(data={
             'results': results,
             'more': len(results) >= data['num_per_page'],
@@ -1412,24 +1420,13 @@ class SearchAPI(APIResource):
         })
 
     def download(self, user, data):
+        """ Sets up zip write to GCS """
         self.check_permissions(user, data)
 
-        results = SearchAPI.querify(data['query']).fetch()
-        if data.get('all', 'true').lower() != 'true':
-            start, end = SearchAPI.limits(data['page'], data['num_per_page'])
-            results = results[start:end]
-        zipfile_str, zipfile = start_zip()
-        subm = SubmissionAPI()
-        for result in results:
-            try:
-                if isinstance(result, models.Submission):
-                    result = result.backup.get()
-                name, file_contents = subm.data_for_zip(result)
-                zipfile = add_to_zip(zipfile, file_contents, name)
-            except BadValueError as e:
-                if str(e) != 'Submission has no contents to download':
-                    raise e
-        return subm.make_zip_response('query', finish_zip(zipfile_str, zipfile))
+        now = datetime.datetime.now()
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, models.Submission, user, data, now)
+        
+        return [make_zip_filename(user, now)]
 
 
     @staticmethod

@@ -34,7 +34,7 @@ import app
 from app import models
 from app import auth
 from app.constants import API_PREFIX
-from app import api
+from app import api, utils
 from app.authenticator import Authenticator, AuthenticationException
 
 def make_fake_course(creator):
