@@ -542,9 +542,10 @@ def backup_group_file(backup, json_pretty={}):
     group = G.lookup(backup.submitter, backup.assignment)
     if group:
         json_data = group.to_json()
+        # use chr(97+i) to convert numbers to letters
         # 97+i converts 0, 1, 2, 3 to ascii codes corresponding to a, b, c...
         # chr converts ascii code to an ascii char
-        order = {chr(97+i): u['email'][0]
+        order = {i: u['email'][0]
                  for i, u in enumerate(json_data['member'])}
         return (
             ('group_members_%s.json' % group.key.id(), 
