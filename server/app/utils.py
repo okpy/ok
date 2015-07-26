@@ -320,9 +320,13 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     seen = set()
     for queue in queues:
         for subm in queue.submissions:
-            seen.add(subm.submitter.id())
+            if isinstance(subm, ndb.Key):
+                seen.add(subm.get().submitter.id())
+            else:
+                seen.add(subm.submitter.id())
 
-    for user in results:
+    for subm in results:
+        user = subm.submitter.get()
         if not user.logged_in or user.key.id() in seen:
             continue
         queues.sort(key=lambda x: len(x.submissions))
