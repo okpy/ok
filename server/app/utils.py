@@ -557,7 +557,7 @@ def backup_group_file(backup, json_pretty={}):
 
 def make_zip_filename(user, now):
     """ Makes zip filename: query_USER EMAIL_DATETIME.zip """
-    outlawed = [' ', '.', ':', '@']
+    outlawed = [' ', '.', ':', '/', '@']
     filename = '/{}/{}'.format(
         GRADES_BUCKET, 
         '%s_%s_%s' % (
