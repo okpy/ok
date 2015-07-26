@@ -513,13 +513,18 @@ def scores_to_gcs(assignment, user):
 
 def add_subm_to_zip(subm, Submission, zipfile, result):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
+    json_pretty = dict(sort_keys=True, indent=4, separators=(',', ': '))
     try:
         if isinstance(result, Submission):
             result = result.backup.get()
         name, file_contents = subm.data_for_zip(result)
-        group_file = backup_group_file(result)
-        if group_file:
-            add_to_file_contents(file_contents, *group_file)
+        group_files = backup_group_file(result, json_pretty)
+        if group_files:
+            for file in group_files:
+                add_to_file_contents(file_contents, *file)
+        add_to_file_contents(file_contents,
+                   'submission_meta.json',
+                   str(json.dumps(result.to_json(), **json_pretty)))
         return add_to_zip(zipfile, file_contents, name)
     except BadValueError as e:
         if str(e) != 'Submission has no contents to download':
@@ -531,7 +536,7 @@ def add_to_file_contents(file_contents, file_name, file_content):
     file_contents[file_name] = file_content
 
 # TODO(Alvin): generalize, cleanup everything about zip
-def backup_group_file(backup):
+def backup_group_file(backup, json_pretty={}):
     """ Returns group information: group_[group ID], group JSON """
     G = ModelProxy.Group
     group = G.lookup(backup.submitter, backup.assignment)
@@ -541,7 +546,12 @@ def backup_group_file(backup):
         # chr converts ascii code to an ascii char
         order = {chr(97+i): u['email'][0]
                  for i, u in enumerate(json_data['member'])}
-        return 'group_members_%s.json' % group.key.id(), str(json.dumps(order))
+        return (
+            ('group_members_%s.json' % group.key.id(), 
+             str(json.dumps(order, **json_pretty))),
+            ('group_meta_%s.json' % group.key.id(), 
+             str(json.dumps(json_data, **json_pretty)))
+        )
 
 
 def make_zip_filename(user, now):
