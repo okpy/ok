@@ -108,6 +108,7 @@ def start_zip(file_contents={}, dir=''):
 
 
 def finish_zip(zipfile_str, zipfile):
+    zipfile.close()
     return zipfile_str.getvalue()
 
 
