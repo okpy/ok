@@ -513,18 +513,10 @@ def scores_to_gcs(assignment, user):
 
 def add_subm_to_zip(subm, Submission, zipfile, result):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
-    json_pretty = dict(sort_keys=True, indent=4, separators=(',', ': '))
     try:
         if isinstance(result, Submission):
             result = result.backup.get()
         name, file_contents = subm.data_for_zip(result)
-        group_files = backup_group_file(result, json_pretty)
-        if group_files:
-            for file in group_files:
-                add_to_file_contents(file_contents, *file)
-        add_to_file_contents(file_contents,
-                   'submission_meta.json',
-                   str(json.dumps(result.to_json(), **json_pretty)))
         return add_to_zip(zipfile, file_contents, name)
     except BadValueError as e:
         if str(e) != 'Submission has no contents to download':
