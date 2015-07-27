@@ -524,17 +524,42 @@ def add_subm_to_zip(subm, Submission, zipfile, result):
             raise e
 
 
+def add_to_file_contents(file_contents, file_name, file_content):
+    """ add a file to file_contents """
+    file_contents[file_name] = file_content
+
+# TODO(Alvin): generalize, cleanup everything about zip
+def backup_group_file(backup, json_pretty={}):
+    """ Returns group information: group_[group ID], group JSON """
+    G = ModelProxy.Group
+    group = G.lookup(backup.submitter, backup.assignment)
+    if group:
+        json_data = group.to_json()
+        # use chr(97+i) to convert numbers to letters
+        # 97+i converts 0, 1, 2, 3 to ascii codes corresponding to a, b, c...
+        # chr converts ascii code to an ascii char
+        order = {i: u['email'][0]
+                 for i, u in enumerate(json_data['member'])}
+        return (
+            ('group_members_%s.json' % group.key.id(), 
+             str(json.dumps(order, **json_pretty))),
+            ('group_meta_%s.json' % group.key.id(), 
+             str(json.dumps(json_data, **json_pretty)))
+        )
+
+
 def make_zip_filename(user, now):
     """ Makes zip filename: query_USER EMAIL_DATETIME.zip """
-    outlawed = [' ', '.', ':', '@']
-    filename = '/{}/{}'.format(
-        GRADES_BUCKET, 
-        '%s_%s_%s' % (
-            'query', 
-            user.email[0], 
-            str(now)))
+    outlawed = [' ', '.', ':', '/', '@']
+    filename = '%s_%s_%s' % (
+        'query',
+        user.email[0],
+        str(now))
     for outlaw in outlawed:
         filename = filename.replace(outlaw, '-')
+    filename = '/{}/{}'.format(
+        GRADES_BUCKET,
+        filename)
     return filename+'.zip'
 
 
