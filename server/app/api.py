@@ -41,7 +41,7 @@ from app import models, app, analytics, utils
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename
 from app.utils import add_to_grading_queues, parse_date, assign_submission
-from app.utils import merge_user
+from app.utils import merge_user, backup_group_file, add_to_file_contents
 
 from app.exceptions import *
 
@@ -1042,6 +1042,15 @@ class SubmissionAPI(APIResource):
                 file_contents[key] = str(file_contents[key]).encode('utf-8')
             except:  # pragma: no cover
                 pass
+
+        json_pretty = dict(sort_keys=True, indent=4, separators=(',', ': '))
+        group_files = backup_group_file(obj, json_pretty)
+        if group_files:
+            for file in group_files:
+                add_to_file_contents(file_contents, *file)
+        add_to_file_contents(file_contents,
+                             'submission_meta.json',
+                             str(json.dumps(obj.to_json(), **json_pretty)))
 
         return name, file_contents
 
