@@ -50,32 +50,40 @@ class SubmissionAPITest(APIBaseTestCase):
 		""" Tests that no file_contents raises BadValueError """
 		with self.assertRaises(BadValueError):
 			self.API().data_for_zip(self.obj().set(
-				submitter=self.obj().set(get=lambda: self.obj().set(email=['dummy@admin.com'])),
+				submitter=self.accounts['dummy_admin'].key,
 				created='created',
 				get_messages=lambda: {}))
 			
 	def test_data_for_zip_del_submit(self):
 		""" Tests that submit entry is deleted """
 		name, file_contents = self.API().data_for_zip(self.obj().set(
-			submitter=self.obj().set(get=lambda: self.obj().set(email=['dummy@admin.com'])),
+			submitter=self.accounts['dummy_admin'].key,
 			created='created',
-			get_messages=lambda: {'file_contents': {'submit': 'hello'}}))
+			get_messages=lambda: {'file_contents': {'submit': 'hello'}},
+			assignment=self._assign.key, 			
+			to_json=lambda: {}))
 		self.assertNotIn('submit', file_contents)
 		
 	def test_data_for_zip_without_email(self):
 		""" Tests that user without email is okay """
+		user = self.accounts['dummy_student']
+		user.email = []
 		self.API().data_for_zip(self.obj().set(
-			submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+			submitter=user.key,
 			created='created',
-			get_messages=lambda: {'file_contents': {'gup.py': 'import yo'}}))
+			get_messages=lambda: {'file_contents': {'gup.py': 'import yo'}},
+			assignment=self._assign.key, 			
+			to_json=lambda: {}))
 		
 	def test_data_for_zip_name(self):
 		""" Test that the filename is valid """
 		info = {'gup.py': 'import yo'}
 		name, file_contents = self.API().data_for_zip(self.obj().set(
-			submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+			submitter=self.accounts['dummy_admin'].key,
 			created='created',
-			get_messages=lambda: {'file_contents': info}))
+			get_messages=lambda: {'file_contents': info},
+			assignment=self._assign.key, 			
+			to_json=lambda: {}))
 		self.assertEqual(info, file_contents)
 		self.assertNotIn('.', name)
 		self.assertNotIn(' ', name)
@@ -84,17 +92,21 @@ class SubmissionAPITest(APIBaseTestCase):
 		""" Tests that non-encodable keys are okay """
 		info = {'gup.py': 1}
 		self.API().data_for_zip(self.obj().set(
-			submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+			submitter=self.accounts['dummy_admin'].key,
 			created='created',
-			get_messages=lambda: {'file_contents': info}))
+			get_messages=lambda: {'file_contents': info},
+			assignment=self._assign.key, 			
+			to_json=lambda: {}))
 		self.assertEqual(info['gup.py'], '1')
 		
 	def test_zip(self):
 		""" Tests that zip does not crash """
 		obj = self.obj().set(
-			submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+			submitter=self.accounts['dummy_admin'].key,
 			created='created',
-			get_messages=lambda: {'file_contents': {'gup.py': 1}})
+			get_messages=lambda: {'file_contents': {'gup.py': 1}},
+			assignment=self._assign.key,
+			to_json=lambda: {})
 		self.API().zip(obj, self.accounts['dummy_admin'], {})
 		
 	def test_zip_files(self):
@@ -115,9 +127,11 @@ class SubmissionAPITest(APIBaseTestCase):
 		""" Check that download completes successfully """
 		with self.app.test_request_context('/api/v2'):
 			user, obj = self.accounts['dummy_admin'], self.obj().set(
-				submitter=self.obj().set(get=lambda: self.obj().set(email=[])),
+				submitter=self.accounts['dummy_admin'].key,
 				created='created',
-				get_messages=lambda: {'file_contents': {'gup.py': 1}})
+				get_messages=lambda: {'file_contents': {'gup.py': 1}},
+				assignment=self._assign.key, 			
+				to_json=lambda: {})
 			self.API().download(obj, user, {})
 		
 	def test_diff_empty(self):
