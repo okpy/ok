@@ -285,22 +285,23 @@ class SearchAPITest(APIBaseTestCase):
 		}
 		with self.app.test_request_context('/api/v2/'):
 			self.API().download(self.accounts['dummy_admin'], data)
+			self.API().results(data)
 			self.mock(self.API, 'limits').using(BaseTestCase.raise_error, staticmethod)
 			with self.assertRaises(TestingError):
-				self.API().download(self.accounts['dummy_admin'], data)
+				self.API().results(data)
 
-	def test_download_error_propogation(self):
-		""" Tests that errors that are not 'Submission has no contents...' propogate """
-		data = {
-			'query': '-assignment "%s"' % self.assignment_name,
-			'all': 'false',
-			'page': 1,
-			'num_per_page': 10,
-			'courseId': self._course.key.id()
-		}
-		self.mock(api.SubmissionAPI, 'data_for_zip').using(BaseTestCase.raise_error(BadValueError))
-		with self.assertRaises(BadValueError):
-			self.API().download(self.accounts['dummy_admin'], data)
+	# def test_download_error_propogation(self):  # moved relevant code to utils.py
+	# 	""" Tests that errors that are not 'Submission has no contents...' propogate """
+	# 	data = {
+	# 		'query': '-assignment "%s"' % self.assignment_name,
+	# 		'all': 'false',
+	# 		'page': 1,
+	# 		'num_per_page': 10,
+	# 		'courseId': self._course.key.id()
+	# 	}
+	# 	self.mock(api.SubmissionAPI, 'data_for_zip').using(BaseTestCase.raise_error(BadValueError))
+	# 	with self.assertRaises(BadValueError):
+	# 		self.API().download(self.accounts['dummy_admin'], data)
 			
 	def test_download_normal(self):
 		""" Tests a normal download """
