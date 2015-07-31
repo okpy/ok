@@ -14,7 +14,7 @@ here, all methods should handle:
     - queries
       Search queries all go in here.
 
-Methods in here should try to throw information BadValueErrors
+Methods in here should try to throw informational BadValueErrors
 upon failure.
 
 Parsing web arguments and error handling go in api.py.
@@ -35,6 +35,7 @@ from flask import json
 from flask.json import JSONEncoder as old_json
 
 from google.appengine.ext import ndb
+
 
 class JSONEncoder(old_json):
     """
