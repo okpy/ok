@@ -26,6 +26,7 @@ import cloudstorage as gcs
 from app import app
 from app.constants import GRADES_BUCKET
 from app.exceptions import BadValueError
+from google.appengine.runtime import DeadlineExceededError
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
@@ -563,16 +564,29 @@ def make_zip_filename(user, now):
     return filename+'.zip'
 
 
-def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data, datetime):
+# TODO(Alvin) adapt to Mapper
+def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data, datetime,
+                 zip_filename=None, start_key=0):
+    """Writes all submissions for a given search query to a GCS zip file. Adds
+    to zip until timeout error, then writes remaining file(s) to the zip and
+    immediately queues another task to continue where this task left off.
     """
-    Writes all submissions for a given search query
-    to a GCS zip file.
-    """
-    results = SearchAPI.results(data)
+    results, subm = SearchAPI.results(data), SubmissionAPI()
+    zip_filename = zip_filename or make_zip_filename(user, datetime)
     zipfile_str, zipfile = start_zip()
-    subm = SubmissionAPI()
-    for result in results:
-        zipfile = add_subm_to_zip(subm, Submission, zipfile, result)
+    for i, result in enumerate(results[start_key:]):
+        try:
+            zipfile = subms_to_gcs_iter(
+                subm, Submission, result, zipfile, zip_filename)
+        except DeadlineExceededError:
+            start_key += i
+            deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, Submission, 
+                           user, data, datetime, zip_filename, start_key)
     zip_contents = finish_zip(zipfile_str, zipfile)
-    zip_filename = make_zip_filename(user, datetime)
+    # timeout might actually occur in the following line...
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
+    
+    
+def subms_to_gcs_iter(subm, Submission, result, zipfile, zip_filename):
+    """Attempts to read zip from GCS and add to it. May result in a timeout"""
+    return add_subm_to_zip(subm, Submission, zipfile, result)
