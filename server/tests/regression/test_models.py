@@ -10,11 +10,12 @@ tests.py
 
 """
 
-from app import models
+from app import models, constants
 from app.needs import Need
 from app.exceptions import *
 import json
-from test_base import BaseTestCase
+from test_base import BaseTestCase, make_fake_course, make_fake_assignment
+import datetime
 from mock import MagicMock
 from google.appengine.ext import ndb
 
@@ -147,3 +148,123 @@ class ModelsTestCase(BaseTestCase):
 		user = user.get()
 		self.assertNotEqual(user.get_final_submission(assign), None)
 		self.assertTrue(user.scores_for_assignment(assign.get())[1])
+		
+	##########
+	# Course #
+	##########
+	
+	def test_course_get_students_basic(self):
+		"""Tests that get_students functions"""
+		student_key = models.User(email=['yo@yo.com']).put()
+		course = make_fake_course(student_key.get())
+		students = course.get_students(student_key)
+		self.assertTrue(isinstance(students, list))
+
+	def test_course_get_students_function(self):
+		"""Tests that get_students works"""
+		student_key = models.User(email=['yo@yo.com']).put()
+		course = make_fake_course(student_key.get())
+		models.Participant.add_role(
+			student_key, course.key, constants.STUDENT_ROLE)
+		enrollment = course.get_students(student_key)
+		self.assertTrue(isinstance(enrollment, list))
+		students = [student.user for student in enrollment]
+		self.assertIn(student_key, students)
+		
+	##############
+	# Assignment #
+	##############
+	
+	def test_assignment_can(self):
+		"""Tests that index always returns"""
+		index = Need('index')
+		self.assertTrue(models.Assignment._can(None, index, None, True))
+
+	def test_assignment_comparator(self):
+		"""Tests that assignments can be compared like numbers... by due date"""
+		creator_key = models.User(email=['yo@yo.com']).put()
+		course = make_fake_course(creator_key.get())
+		assignment1 = make_fake_assignment(course, creator_key.get())
+		assignment2 = models.Assignment(
+			name='hw1',
+			points=3,
+			display_name="CS 61A",
+			templates="[]",
+			course=course.key,
+			creator=creator_key,
+			max_group_size=4,
+			due_date=datetime.datetime.now() + datetime.timedelta(days=3))
+		self.assertTrue(assignment2 < assignment1)
+		self.assertFalse(assignment1 < assignment2)
+		
+		lst = [assignment1, assignment2]
+		lst = sorted(lst)
+		self.assertEqual(lst, [assignment2, assignment1])
+		
+	###############
+	# Participant #
+	###############
+	
+	def test_participant_can(self):
+		"""Tests that all users can get, and that only staff can index"""
+		get = Need('get')
+		self.assertTrue(models.Participant._can(None, get, None, None))
+		
+		need = Need('index')
+		student = models.User(email=['yo@yo.com']).put().get()
+		admin = models.User(email=['do@do.com']).put().get()
+		
+		course = make_fake_course(student)
+		
+		models.Participant.add_role(
+			student.key, course.key, constants.STUDENT_ROLE)
+		models.Participant.add_role(
+			admin.key, course.key, constants.STAFF_ROLE)
+		
+		query = models.Participant.query()
+		
+		results = models.Participant._can(student, need, course, query).fetch()
+		self.assertNotEqual(None, results)
+		self.assertEqual(1, len(results))
+
+		results = models.Participant._can(admin, need, course, query).fetch()
+		self.assertNotEqual(None, results)
+		self.assertEqual(2, len(results))
+		
+	def test_invalid_role_add(self):
+		"""Test adding invalid role"""
+		with self.assertRaises(BadValueError):
+			models.Participant.add_role(None, None, 'yolo')
+
+	def test_invalid_role_remove(self):
+		"""Test adding invalid role"""
+		with self.assertRaises(BadValueError):
+			models.Participant.remove_role(None, None, 'yolo')
+			
+	def test_validate_message_empty_message(self):
+		"""Tests that validate_msessages does not accept empty messages"""
+		with self.assertRaises(BadValueError):
+			models.validate_messages(None, None)
+			
+	def test_validate_invalid_messages_str(self):
+		"""Tests that validate only accepts JSON dicts"""
+		with self.assertRaises(BadValueError):
+			models.validate_messages(None, '[]')
+
+	def test_validate_invalid_json(self):
+		"""Tests that validate raises BadValueError with invalid JSON"""
+		with self.assertRaises(BadValueError):
+			models.validate_messages(None, '#$@%P(@U#RP(QU@#P(UQ@# CP(U#P((____)')
+			
+	###########
+	# Message #
+	###########
+		
+	def test_message_can(self):
+		"""Tests that messgea can always false"""
+		index = Need('index')
+		self.assertFalse(models.Message._can(None, index, None, None))
+		
+	##########
+	# Backup #
+	##########
