@@ -14,7 +14,7 @@ from app import models, constants
 from app.needs import Need
 from app.exceptions import *
 import json
-from test_base import BaseTestCase, make_fake_course, make_fake_assignment
+from test_base import BaseTestCase, make_fake_course, make_fake_assignment, make_fake_group, make_fake_finalsubmission
 import datetime
 from mock import MagicMock
 from google.appengine.ext import ndb
@@ -268,3 +268,51 @@ class ModelsTestCase(BaseTestCase):
 	##########
 	# Backup #
 	##########
+	
+	def test_backup_can_get(self):
+		"""Tests that backup required"""
+		with self.assertRaises(ValueError):
+			get = Need('get')
+			models.Backup._can(None, get, None, None)
+	
+	def test_backup_index(self):
+		"""Tests permissions for backup"""
+		admin = models.User(email=['do@do.com']).put().get()
+		course = make_fake_course(admin)
+		models.Participant.add_role(
+			admin.key, course.key, constants.STAFF_ROLE)
+		
+		index = Need('index')
+		assignment = make_fake_assignment(course, admin)
+		backup = models.Backup(
+			submitter=admin.key, assignment=assignment.key).put().get()
+		query = models.Backup.query()
+		self.assertNotEqual(
+			False, models.Backup._can(admin, index, backup, query))
+		
+	##############
+	# Submission #
+	##############
+	
+	def test_get_final(self):
+		"""Test get_final"""
+		admin = models.User(email=['do@do.com']).put().get()
+		student = models.User(email=['y@da.com']).put().get()
+		course = make_fake_course(admin)
+		assignment = make_fake_assignment(course, admin).put().get()
+
+		backup = models.Backup(
+			submitter=student.key, assignment=assignment.key).put()
+		submission = models.Submission(backup=backup).put()
+		fsubm = models.FinalSubmission(
+			submitter=student.key,
+			assignment=assignment.key,
+		    group=make_fake_group(assignment, admin, student).key,
+			submission=submission).put().get()
+		self.assertEqual(fsubm, submission.get().get_final())
+		
+	def test_submission_can(self):
+		"""Tests that mission submission raises valueerror"""
+		grade = Need('grade')
+		with self.assertRaises(ValueError):
+			models.Submission._can(None, grade, None, None)
