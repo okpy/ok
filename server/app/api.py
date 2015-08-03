@@ -1433,7 +1433,8 @@ class SearchAPI(APIResource):
         self.check_permissions(user, data)
 
         now = datetime.datetime.now()
-        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, models.Submission, user, data, now)
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, 
+                       models.Submission, user, data, now)
         
         return [make_zip_filename(user, now)]
 
