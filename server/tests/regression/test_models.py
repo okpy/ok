@@ -414,3 +414,51 @@ class ModelsTestCase(BaseTestCase):
 		"""Tests that ValueError raised without value"""
 		with self.assertRaises(ValueError):
 			models.Version.from_dict({})
+			
+	#########
+	# Group #
+	#########
+		
+	def test_group_lookup_or_create(self):
+		"""TEsts that group lookup_or_create works"""
+		admin = models.User(email=['do@do.com']).put().get()
+		student = models.User(email=['y@da.com']).put().get()
+		course = make_fake_course(admin)
+		assignment = make_fake_assignment(course, admin).put().get()
+		models.Group._lookup_or_create(student.key, assignment.key)
+		
+	def test_group_lookup_by_assignment(self):
+		"""Test lookup by assignment"""
+		admin = models.User(email=['do@do.com']).put().get()
+		student = models.User(email=['y@da.com']).put().get()
+		course = make_fake_course(admin)
+		assignment = make_fake_assignment(course, admin).put().get()
+		group = make_fake_group(assignment, admin, student).put()
+		groups = models.Group.lookup_by_assignment(assignment)
+		self.assertIn(group, [g.key for g in groups])
+		
+	def test_group_invite(self):
+		"""Tests group nitpicky invitation behavior"""
+		admin = models.User(email=['do@do.com']).put().get()
+		student = models.User(email=['y@da.com']).put().get()
+		course = make_fake_course(admin).put().get()
+		assignment = make_fake_assignment(course, admin).put().get()
+		group = make_fake_group(assignment, admin, student).put().get()
+		
+		self.assertIn('is not a valid user', group.invite('asdf@asdf.com'))
+		self.assertIn('is not enrolled in', group.invite(student.email[0]))
+		
+		group.invited = [student.key]
+		models.Participant.add_role(student.key, course.key, constants.STUDENT_ROLE)
+		self.assertIn('has already been invited', group.invite(student.email[0]))
+		
+		group.invited = []
+		self.assertIn('is already in the group', group.invite(student.email[0]))
+		
+		assignment.max_group_size = 2
+		assignment.put()
+		student2 = models.User(email=['y@da2.com']).put().get()
+		models.Participant.add_role(student2.key, course.key, constants.STUDENT_ROLE)
+		self.assertEqual(2, group.assignment.get().max_group_size)
+		self.assertEqual(2, len(group.member))
+		self.assertEqual('The group is full', group.invite(student2.email[0]))
