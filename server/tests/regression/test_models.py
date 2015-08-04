@@ -316,3 +316,101 @@ class ModelsTestCase(BaseTestCase):
 		grade = Need('grade')
 		with self.assertRaises(ValueError):
 			models.Submission._can(None, grade, None, None)
+
+	def test_get_final_w_revision(self):
+		""""""
+		admin = models.User(email=['do@do.com']).put().get()
+		student = models.User(email=['y@da.com']).put().get()
+		course = make_fake_course(admin)
+		assignment = make_fake_assignment(course, admin)
+		assignment.revision = True
+		assignment.put().get()
+
+		backup = models.Backup(
+			submitter=student.key, assignment=assignment.key).put()
+		submission = models.Submission(backup=backup).put()
+		models.FinalSubmission(
+			submitter=student.key,
+			assignment=assignment.key,
+			group=make_fake_group(assignment, admin, student).key,
+			submission=submission).put().get()
+		
+		self.assertEqual(submission.get().mark_as_final().get().revision,
+		                 submission)
+
+	def test_get_final_wo_final(self):
+		""""""
+		admin = models.User(email=['do@do.com']).put().get()
+		student = models.User(email=['y@da.com']).put().get()
+		course = make_fake_course(admin)
+		assignment = make_fake_assignment(course, admin)
+		assignment.revision = True
+		assignment.put().get()
+		
+		group = make_fake_group(assignment, admin, student).put()
+
+		backup = models.Backup(
+			submitter=student.key, assignment=assignment.key).put()
+		submission = models.Submission(backup=backup).put()
+		
+		self.assertEqual(submission.get().mark_as_final().get().group,
+		                 group)
+
+
+	########
+	# Diff #
+	########
+
+	def test_diff_comments(self):
+		"""Tests that comments returned successfully"""
+		diff = models.Diff().put().get()
+		self.assertIn('comments', diff.to_json().keys())
+
+	###########
+	# Comment #
+	###########
+
+	def test_comment_can(self):
+		"""test commentp ermissions"""
+		admin = models.User(email=['yo@yo.com'], is_admin=True).put().get()
+		self.assertTrue(models.Comment._can(admin, None))
+		weird = Need('weird')
+		self.assertFalse(models.Comment._can(MagicMock(is_admin=False), weird))
+
+	###########
+	# Version #
+	###########
+
+	def test_version_download_link(self):
+		"""Version download link"""
+		version = models.Version()
+		with self.assertRaises(BadValueError):
+			version.download_link()
+			
+	def test_version_download_link_success(self):
+		"""Tests that function works properly"""
+		version = models.Version(
+			versions=['1.1'],
+			base_url='okpy',
+			name='update')
+		self.assertEqual(version.download_link('1.1'),
+		                 'okpy/1.1/update')
+		
+	def test_version_to_json(self):
+		"""Tests that to_json includes current version if applicable"""
+		version = models.Version(
+			versions=['1.1'],
+			base_url='okpy',
+		    current_version='1.1',
+			name='update')
+		self.assertIn('current_download_link', version.to_json().keys())
+		
+	def test_version_can(self):
+		"""Tests that delete always forbidden"""
+		need = Need('delete')
+		self.assertFalse(models.Version._can(None, need))
+		
+	def test_from_dict(self):
+		"""Tests that ValueError raised without value"""
+		with self.assertRaises(ValueError):
+			models.Version.from_dict({})

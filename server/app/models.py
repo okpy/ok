@@ -784,7 +784,7 @@ class Submission(Base):
                 assignment=self.assignment, submission=self.key)
             if group:
                 final.group = group.key
-        final.put()
+        return final.put()
 
     def resubmit(self, user_key):
         """
