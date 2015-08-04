@@ -1784,7 +1784,7 @@ class CourseAPI(APIResource):
             raise need.exception()
 
         user = models.User.get_or_insert(data['email'])
-        models.Partficipant.add_role(user, course, STUDENT_ROLE)
+        models.Participant.add_role(user, course, STUDENT_ROLE)
 
     def remove_student(self, course, user, data):
         need = Need('staff')
