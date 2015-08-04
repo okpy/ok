@@ -21,153 +21,166 @@ from integration.test_api_base import APITest
 
 
 class GroupAPITest(APITest, APIBaseTestCase):
-	model = models.Group
-	name = 'group'
-	num = 1
-	access_token = 'dummy_admin'
+  model = models.Group
+  name = 'group'
+  num = 1
+  access_token = 'dummy_admin'
 
-	def setUp(self):
-		super(GroupAPITest, self).setUp()
-		self.course = make_fake_course(self.user)
-		self.course.put()
-		self.assignment = make_fake_assignment(self.course, self.user)
-		self.assignment.put()
-		for student_name in [a for a in self.accounts if 'student' in a]:
-			s = self.accounts[student_name]
-			models.Participant.add_role(s, self.course, constants.STUDENT_ROLE)
+  def setUp(self):
+    super(GroupAPITest, self).setUp()
+    self.course = make_fake_course(self.user)
+    self.course.put()
+    self.assignment = make_fake_assignment(self.course, self.user)
+    self.assignment.put()
+    for student_name in [a for a in self.accounts if 'student' in a]:
+      s = self.accounts[student_name]
+      models.Participant.add_role(s, self.course, constants.STUDENT_ROLE)
 
-	def get_basic_instance(self, mutate=True):
-		return self.model(
-			assignment=self.assignment.key,
-			member=[
-				self.accounts['dummy_student2'].key,
-				self.accounts['dummy_student3'].key])
+  def get_basic_instance(self, mutate=True):
+    return self.model(
+      assignment=self.assignment.key,
+      member=[
+        self.accounts['dummy_student2'].key,
+        self.accounts['dummy_student3'].key])
 
-	def test_assignment_group(self):
-		self.user = self.accounts['dummy_student2']
-		inst = self.get_basic_instance()
-		inst.put()
+  def test_assignment_group(self):
+    self.user = self.accounts['dummy_student2']
+    inst = self.get_basic_instance()
+    inst.put()
 
-		self.get('/assignment/{}/group'.format(self.assignment.key.id()))
-		self.assertEqual(self.response_json['id'], inst.key.id())
+    self.get('/assignment/{}/group'.format(self.assignment.key.id()))
+    self.assertEqual(self.response_json['id'], inst.key.id())
 
-	def test_assignment_invite(self):
-		self.user = self.accounts['dummy_student2']
-		inst = self.get_basic_instance()
-		inst.put()
+  def test_index_arguments(self):
+    self.user = self.accounts['dummy_student2']
+    self.partner = self.accounts['dummy_student3']
+    inst = self.get_basic_instance()
+    inst.put()
 
-		invited = self.accounts['dummy_student']
-		invited.put()
+    self.get_index(assignment=self.assignment.key.id(), member=self.user.key.id())
+    self.assertEqual(self.response_json[0]['id'], inst.key.id())
 
-		self.post_json(
-			'/assignment/{}/invite'.format(self.assignment.key.id()),
-			data={'email': invited.email[0]})
+    self.get_index(member=self.partner.key.id())
+    self.assertEqual(self.response_json[0]['id'], inst.key.id())
 
-		self.assertEqual(inst.invited, [invited.key])
 
-		# Check audit log
-		audit_logs = models.AuditLog.query().fetch()
-		self.assertEqual(len(audit_logs), 1)
-		log = audit_logs[0]
-		self.assertEqual(log.user, self.user.key)
-		self.assertEqual('Group.invite', log.event_type)
-		self.assertIn(invited.email[0], log.description)
+  def test_assignment_invite(self):
+    self.user = self.accounts['dummy_student2']
+    inst = self.get_basic_instance()
+    inst.put()
 
-	def test_invite(self):
-		self.user = self.accounts['dummy_student2']
-		inst = self.get_basic_instance()
-		inst.put()
-		invited = self.accounts['dummy_student']
+    invited = self.accounts['dummy_student']
+    invited.put()
 
-		self.post_json(
-			'/{}/{}/add_member'.format(self.name, inst.key.id()),
-			data={'email': invited.email[0]})
+    self.post_json(
+      '/assignment/{}/invite'.format(self.assignment.key.id()),
+      data={'email': invited.email[0]})
 
-		self.assertEqual(inst.invited, [invited.key])
+    self.assertEqual(inst.invited, [invited.key])
 
-	def test_accept(self):
-		self.user = self.accounts['dummy_student']
-		inst = self.get_basic_instance()
-		inst.invited.append(self.user.key)
-		inst.put()
+    # Check audit log
+    audit_logs = models.AuditLog.query().fetch()
+    self.assertEqual(len(audit_logs), 1)
+    log = audit_logs[0]
+    self.assertEqual(log.user, self.user.key)
+    self.assertEqual('Group.invite', log.event_type)
+    self.assertIn(invited.email[0], log.description)
 
-		self.post_json('/{}/{}/accept'.format(self.name, inst.key.id()))
+  def test_invite(self):
+    self.user = self.accounts['dummy_student2']
+    inst = self.get_basic_instance()
+    inst.put()
+    invited = self.accounts['dummy_student']
 
-		self.assertEqual(inst.invited, [])
-		self.assertIn(self.user.key, inst.member)
+    self.post_json(
+      '/{}/{}/add_member'.format(self.name, inst.key.id()),
+      data={'email': invited.email[0]})
 
-	def test_exit_invited(self):
-		self.user = self.accounts['dummy_student']
-		inst = self.get_basic_instance()
-		inst.invited.append(self.user.key)
-		inst.put()
+    self.assertEqual(inst.invited, [invited.key])
 
-		self.post_json('/{}/{}/decline'.format(self.name, inst.key.id()))
+  def test_accept(self):
+    self.user = self.accounts['dummy_student']
+    inst = self.get_basic_instance()
+    inst.invited.append(self.user.key)
+    inst.put()
 
-		self.assertEqual(inst.invited, [])
-		self.assertNotIn(self.user.key, inst.member)
+    self.post_json('/{}/{}/accept'.format(self.name, inst.key.id()))
 
-	def test_exit_member(self):
-		self.user = self.accounts['dummy_student']
-		inst = self.get_basic_instance()
-		inst.member.append(self.user.key)
-		inst.put()
+    self.assertEqual(inst.invited, [])
+    self.assertIn(self.user.key, inst.member)
 
-		self.post_json(
-			'/{}/{}/remove_member'.format(self.name, inst.key.id()),
-			data={'email': self.user.email[0]})
+  def test_exit_invited(self):
+    self.user = self.accounts['dummy_student']
+    inst = self.get_basic_instance()
+    inst.invited.append(self.user.key)
+    inst.put()
 
-		self.assertNotIn(self.user.key, inst.member)
+    self.post_json('/{}/{}/decline'.format(self.name, inst.key.id()))
 
-	def test_invite_someone_in_a_group(self):
-		self.user = self.accounts['dummy_student2']
-		inst = self.get_basic_instance()
-		inst.put()
+    self.assertEqual(inst.invited, [])
+    self.assertNotIn(self.user.key, inst.member)
 
-		# Place dummy_student in another group
-		invited = self.accounts['dummy_student']
-		self.model(
-			assignment=self.assignment.key,
-			member=[invited.key, self.accounts['dummy_staff'].key]
-		).put()
+  def test_exit_member(self):
+    self.user = self.accounts['dummy_student']
+    inst = self.get_basic_instance()
+    inst.member.append(self.user.key)
+    inst.put()
 
-		self.post_json(
-			'/{}/{}/add_member'.format(self.name, inst.key.id()),
-			data={'email': invited.email[0]})
+    self.post_json(
+      '/{}/{}/remove_member'.format(self.name, inst.key.id()),
+      data={'email': self.user.email[0]})
 
-		self.assertStatusCode(400)
-		self.assertEqual(inst.invited, [])
+    self.assertNotIn(self.user.key, inst.member)
 
-	def test_remove_from_two_member_group(self):
-		self.user = self.accounts['dummy_student']
-		inst = self.model(assignment=self.assignment.key,
-		                  member=[self.user.key, self.accounts['dummy_student2'].key])
-		inst.put()
+  def test_invite_someone_in_a_group(self):
+    self.user = self.accounts['dummy_student2']
+    inst = self.get_basic_instance()
+    inst.put()
 
-		self.post_json(
-			'/{}/{}/remove_member'.format(self.name, inst.key.id()),
-			data={'email': self.user.email[0]})
+    # Place dummy_student in another group
+    invited = self.accounts['dummy_student']
+    self.model(
+      assignment=self.assignment.key,
+      member=[invited.key, self.accounts['dummy_staff'].key]
+    ).put()
 
-		self.assertStatusCode(200)
-		self.assertEqual(inst.key.get(), None)
+    self.post_json(
+      '/{}/{}/add_member'.format(self.name, inst.key.id()),
+      data={'email': invited.email[0]})
 
-	def test_decline_invite_from_two_member_group(self):
-		self.user = self.accounts['dummy_student']
+    self.assertStatusCode(400)
+    self.assertEqual(inst.invited, [])
 
-		members = [self.accounts['dummy_student2'].key]
-		inst = self.model(assignment=self.assignment.key, member=members,
-		                  invited=[self.user.key])
-		inst.put()
+  def test_remove_from_two_member_group(self):
+    self.user = self.accounts['dummy_student']
+    inst = self.model(assignment=self.assignment.key,
+                      member=[self.user.key, self.accounts['dummy_student2'].key])
+    inst.put()
 
-		self.post_json(
-			'/{}/{}/decline'.format(self.name, inst.key.id()),
-			data={'email': self.user.email[0]})
+    self.post_json(
+      '/{}/{}/remove_member'.format(self.name, inst.key.id()),
+      data={'email': self.user.email[0]})
 
-		self.assertStatusCode(200)
-		self.assertEqual(inst.key.get(), None)
+    self.assertStatusCode(200)
+    self.assertEqual(inst.key.get(), None)
 
-	def test_create_two_entities(self):
-		pass # No creation
+  def test_decline_invite_from_two_member_group(self):
+    self.user = self.accounts['dummy_student']
 
-	def test_entity_create_basic(self):
-		pass # No creation
+    members = [self.accounts['dummy_student2'].key]
+    inst = self.model(assignment=self.assignment.key, member=members,
+                      invited=[self.user.key])
+    inst.put()
+
+    self.post_json(
+      '/{}/{}/decline'.format(self.name, inst.key.id()),
+      data={'email': self.user.email[0]})
+
+    self.assertStatusCode(200)
+    self.assertEqual(inst.key.get(), None)
+
+  def test_create_two_entities(self):
+    pass # No creation
+
+  def test_entity_create_basic(self):
+    pass # No creation

@@ -839,15 +839,15 @@ class AssignmentAPI(APIResource):
 
     def download_scores(self, obj, user, data):
         """
-        Write all composition scores for this assignment as a GCS file. 
+        Write all composition scores for this assignment as a GCS file.
         Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
         """
         need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
-        
+
         deferred.defer(scores_to_gcs, obj, user)
-        
+
     def autograde(self, obj, user, data):
       need = Need('grade')
       if not obj.can(user, need, obj):
@@ -1407,7 +1407,7 @@ class SearchAPI(APIResource):
 
         if user.key not in course.staff and not user.is_admin:
             raise Need('get').exception()
-    
+
     @staticmethod
     def results(data):
         """ Returns results of query, limiting results accordingly """
@@ -1434,7 +1434,7 @@ class SearchAPI(APIResource):
 
         now = datetime.datetime.now()
         deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, models.Submission, user, data, now)
-        
+
         return [make_zip_filename(user, now)]
 
 
@@ -1811,7 +1811,7 @@ class GroupAPI(APIResource):
         'index': {
             'web_args': {
                 'assignment': KeyArg('Assignment'),
-                'members': KeyArg('User')
+                'member': KeyArg('User')
             }
         },
         'add_member': {
