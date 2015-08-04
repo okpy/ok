@@ -51,6 +51,19 @@ class GroupAPITest(APITest, APIBaseTestCase):
 		self.get('/assignment/{}/group'.format(self.assignment.key.id()))
 		self.assertEqual(self.response_json['id'], inst.key.id())
 
+  def test_index_arguments(self):
+    self.user = self.accounts['dummy_student2']
+    self.partner = self.accounts['dummy_student3']
+    inst = self.get_basic_instance()
+    inst.put()
+
+    self.get_index(assignment=self.assignment.key.id(), member=self.user.key.id())
+    self.assertEqual(self.response_json[0]['id'], inst.key.id())
+
+    self.get_index(member=self.partner.key.id())
+    self.assertEqual(self.response_json[0]['id'], inst.key.id())
+
+
 	def test_assignment_invite(self):
 		self.user = self.accounts['dummy_student2']
 		inst = self.get_basic_instance()
