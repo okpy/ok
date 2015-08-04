@@ -310,7 +310,7 @@ class ModelsTestCase(BaseTestCase):
 		    group=make_fake_group(assignment, admin, student).key,
 			submission=submission).put().get()
 		self.assertEqual(fsubm, submission.get().get_final())
-		
+
 	def test_submission_can(self):
 		"""Tests that mission submission raises valueerror"""
 		grade = Need('grade')

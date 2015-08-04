@@ -16,8 +16,12 @@ PTest = PermissionsUnitTest.PTest
 COURSE_TESTS = [
     PTest("anon_get_group",
           "anon", "Group", "group1", "get", False),
+    PTest("anon_index_group",
+        "anon", "Group", "group1", "index", False),
     PTest("admin_get_group",
           "admin", "Group", "group1", "get", True),
+    PTest("admin_index_group",
+          "admin", "Group", "group1", "index", True),
 ]
 
 #pylint: disable=no-init, missing-docstring

@@ -71,6 +71,12 @@ indexes:
   - name: created
     direction: desc
 
+- kind: Groupv2
+  properties:
+  - name: member
+  - name: created
+    direction: desc
+
 - kind: Participantv2
   properties:
   - name: course

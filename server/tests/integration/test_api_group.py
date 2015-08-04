@@ -140,10 +140,29 @@ class GroupAPITest(APITest, APIBaseTestCase):
 		self.assertStatusCode(400)
 		self.assertEqual(inst.invited, [])
 
+		self.post_json(
+			'/{}/{}/add_member'.format(self.name, inst.key.id()),
+			data={'email': invited.email[0]})
+
+		self.assertStatusCode(400)
+		self.assertEqual(inst.invited, [])
+
+	def test_index_arguments(self):
+		self.user = self.accounts['dummy_student2']
+		self.partner = self.accounts['dummy_student3']
+		inst = self.get_basic_instance()
+		inst.put()
+
+		self.get_index(assignment=self.assignment.key.id(), member=self.user.key.id())
+		self.assertEqual(self.response_json[0]['id'], inst.key.id())
+
+		self.get_index(member=self.partner.key.id())
+		self.assertEqual(self.response_json[0]['id'], inst.key.id())
+
 	def test_remove_from_two_member_group(self):
 		self.user = self.accounts['dummy_student']
 		inst = self.model(assignment=self.assignment.key,
-		                  member=[self.user.key, self.accounts['dummy_student2'].key])
+											member=[self.user.key, self.accounts['dummy_student2'].key])
 		inst.put()
 
 		self.post_json(
@@ -152,27 +171,6 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
 		self.assertStatusCode(200)
 		self.assertEqual(inst.key.get(), None)
-
-	def test_decline_invite_from_two_member_group(self):
-		self.user = self.accounts['dummy_student']
-
-		members = [self.accounts['dummy_student2'].key]
-		inst = self.model(assignment=self.assignment.key, member=members,
-		                  invited=[self.user.key])
-		inst.put()
-
-		self.post_json(
-			'/{}/{}/decline'.format(self.name, inst.key.id()),
-			data={'email': self.user.email[0]})
-
-		self.assertStatusCode(200)
-		self.assertEqual(inst.key.get(), None)
-
-	def test_create_two_entities(self):
-		pass # No creation
-
-	def test_entity_create_basic(self):
-		pass # No creation
 	
 	def test_add_member_permission(self):
 		""" Tests that add_member checks for permissions """
@@ -214,7 +212,7 @@ class GroupAPITest(APITest, APIBaseTestCase):
 	# 	""" Tests that invtie checks for permissions """
 	# 	self.group = self.group.put().get()
 	# 	self.assertNotIn(self.accounts['dummy_student'].key, self.group.member)
-	# 	with self.assertRaises(PermissionError):  # test doesn't pass but it should
+	# 	with self.assertRaises(PermissionError):	# test doesn't pass but it should
 	# 		self.API().invite(self.group, self.accounts['dummy_student'], {})
 
 	def test_invite_error_propogation(self):
@@ -308,3 +306,24 @@ class GroupAPITest(APITest, APIBaseTestCase):
 			]
 		})
 		self.assertEqual(group.member[0].get().email[0], self.accounts['dummy_student3'].email[0])
+
+	def test_decline_invite_from_two_member_group(self):
+		self.user = self.accounts['dummy_student']
+
+		members = [self.accounts['dummy_student2'].key]
+		inst = self.model(assignment=self.assignment.key, member=members,
+											invited=[self.user.key])
+		inst.put()
+
+		self.post_json(
+			'/{}/{}/decline'.format(self.name, inst.key.id()),
+			data={'email': self.user.email[0]})
+
+		self.assertStatusCode(200)
+		self.assertEqual(inst.key.get(), None)
+
+	def test_create_two_entities(self):
+		pass # No creation
+
+	def test_entity_create_basic(self):
+		pass # No creation
