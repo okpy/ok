@@ -56,6 +56,18 @@ import operator as op
 parser = FlaskParser()
 
 
+def need(permission):
+    """Decorator for permissions check"""
+    def wrap(f):
+        def helper(self, obj, user, data=None):
+            need = Need(permission)
+            if not obj.can(user, need, obj):
+                raise need.exception()
+            return f(self, obj, user, data or {})
+        return helper
+    return wrap
+
+
 def parse_json_field(field):
     """
     Parses field or list, or returns appropriate boolean value.
@@ -277,13 +289,11 @@ class APIResource(View):
         """
         return obj
 
+    @need('put')
     def put(self, obj, user, data):
         """
         The PUT HTTP method
         """
-        need = Need('put')
-        if not obj.can(user, need, obj):
-            raise need.exception()
 
         blank_val = object()
         changed = False
@@ -546,23 +556,10 @@ class UserAPI(APIResource):
         },
     }
 
-    def get(self, obj, user, data):
-        """
-        Overwrite GET request for user class in order to send more data.
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: target object
-        """
-        if 'course' in data:
-            return obj.get_course_info(data['course'].get())
-        return obj
+    # Utilities
 
     def get_instance(self, key, user):
-        """
-        Convert key from email to UserKey
-        """
+        """Convert key from email to UserKey"""
         obj = self.model.lookup(key)
         if not obj:
             raise BadKeyError(key)
@@ -574,13 +571,7 @@ class UserAPI(APIResource):
         return obj
 
     def new_entity(self, attributes):
-        """
-        Creates a new entity with given attributes.
-
-        :param attributes: (dictionary) default values
-            loaded on object instantiation
-        :return: entity with loaded attributes
-        """
+        """Creates a new entity with given attributes."""
         entity = self.model.lookup(attributes['email'])
         if entity:
             raise BadValueError('user already exists')
@@ -588,111 +579,67 @@ class UserAPI(APIResource):
         entity = self.model.from_dict(attributes)
         return entity
 
-    def add_email(self, obj, user, data):
-        """
-        Adds an email for the user - modified in place.
+    # Endpoints
 
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: -- unused --
-        :return: None
-        """
-        need = Need('get') # Anyone who can get the User object can add an email
-        if not obj.can(user, need, obj):
-            raise need.exception()
+    @need('get')
+    def get(self, obj, user, data):
+        """Overwrite GET request for user class in order to send more data."""
+        if 'course' in data:
+            return obj.get_course_info(data['course'].get())
+        return obj
+
+    @need('get')
+    def add_email(self, obj, user, data):
+        """Adds an email for the user - modified in place."""
         obj.append_email(data['email'])
 
+    @need('get')
     def delete_email(self, obj, user, data):
-        """
-        Deletes an email for the user - modified in place.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) key "email" deleted
-        :return: None
-        """
-        need = Need('get')
-        if not obj.can(user, need, obj):
-            raise need.exception()
+        """Deletes an email for the user - modified in place."""
         obj.delete_email(data['email'])
 
+    @need('get')
     def invitations(self, obj, user, data):
-        """
-        Fetches list of all invitations for the caller.
-
-        :param obj: -- unused --
-        :param user: (object) caller
-        :param data: (dictionary) key assignment called
-        :return: None
-        """
+        """Fetches list of all invitations for the caller."""
         query = models.Group.query(models.Group.invited == user.key)
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
         return list(query)
 
+    @need('staff')
     def queues(self, obj, user, data):
-        """
-        Retrieve all assignments given to the caller on staff
-
-        :param obj: -- unused --
-        :param user: (object) caller
-        :param data: -- unused --
-        :return: None
-        """
+        """Retrieve all assignments given to the caller on staff"""
         return list(models.Queue.query().filter(
             models.Queue.assigned_staff == user.key))
 
+    @need('staff')
     def create_staff(self, obj, user, data):
-        """
-        Checks the caller is on staff, to then create staff.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) key email called
-        :return: None
-        """
-        need = Need('staff')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
+        """Checks the caller is on staff, to then create staff."""
         user = models.User.get_or_insert(data['email'].id())
         user.role = data['role']
         user.put()
 
+    @need('get')
     def final_submission(self, obj, user, data):
-        """
-        Get the final submission for grading.
-
-        :param obj: -- unused --
-        :param user: (object) caller
-        :param data: (dictionary) key assignment called
-        :return: None
-        """
+        """Get the final submission for grading."""
         return obj.get_final_submission(data['assignment'])
 
+    @need('get')
     def get_backups(self, obj, user, data):
-        """
-        Get all backups for a user, based on group.
-
-        :param obj: -- unused --
-        :param user: (object) caller
-        :param data: (dictionary) key assignment called
-        :return: None
-        """
+        """Get all backups for a user, based on group."""
         return obj.get_backups(data['assignment'], data['quantity'])
 
+    @need('get')
     def get_submissions(self, obj, user, data):
+        """Get all submissions for an assignment"""
         return [subm.submission for subm in obj.get_submissions(data['assignment'], data['quantity'])]
 
+    @need('merge')
     def merge_user(self, obj, user, data):
         """
         Merges this user with another user.
         This user is the user that is "merged" -- no longer can login.
         """
-        need = Need('merge')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
         other_user = models.User.lookup(data['other_email'])
         if not other_user:
             raise BadValueError("Invalid user to merge to")
