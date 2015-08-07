@@ -954,16 +954,6 @@ class SubmissionAPI(APIResource):
         }
     }
 
-    def graded(self, obj, user, data):
-        """
-        Gets the user's graded submissions
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return:
-        """
-
     def data_for_zip(self, obj):
         try:
             user = obj.submitter.get()
@@ -1782,7 +1772,7 @@ class GroupAPI(APIResource):
     def invite(self, group, user, data):
         need = Need('invite')
         if not group.can(user, need, group):
-            return need.exception()
+            raise need.exception()
 
         error = group.invite(data['email'])
         if error:
