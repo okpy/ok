@@ -1,7 +1,16 @@
 #!/bin/bash
 
+if env | grep -q '^VIRTUAL_ENV='
+then
+    source deactivate
+fi
+
+source env/server/bin/activate
+
 FLASK_CONF=TEST coverage run server/apptest.py --quiet
 coverage html
 if hash open 2>/dev/null; then
   open coverage_report/index.html
 fi
+
+deactivate

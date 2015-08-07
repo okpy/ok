@@ -55,15 +55,21 @@ import operator as op
 
 parser = FlaskParser()
 
+identity = lambda *args: args
 
-def need(permission):
+
+def need(permission, can=identity, args=identity):
     """Decorator for permissions check"""
     def wrap(f):
         def helper(self, obj, user, data=None):
-            need = Need(permission)
-            if not obj.can(user, need, obj):
+            # avoiding nonlocal because tests run in Python2
+            need, _can, _args = Need(permission), can, args
+            if data is None:
+                _can = lambda data, need, user: (user, need, None)
+                _args = lambda user, data, _: (user, data)
+            if not obj.can(*_can(user, need, obj)):
                 raise need.exception()
-            return f(self, obj, user, data or {})
+            return f(self, *_args(obj, user, data or {}))
         return helper
     return wrap
 
@@ -473,11 +479,10 @@ class ParticipantAPI(APIResource):
 
 
 class UserAPI(APIResource):
-    """
-    The API resource for the User Object
-    """
+    """The API resource for the User Object"""
+
     model = models.User
-    key_type = str # get_instance will convert this to an int
+    key_type = str  # get_instance will convert this to an int
 
     methods = {
         'post': {
@@ -648,9 +653,8 @@ class UserAPI(APIResource):
 
 
 class AssignmentAPI(APIResource):
-    """
-    The API resource for the Assignment Object
-    """
+    """The API resource for the Assignment Object"""
+
     model = models.Assignment
 
     methods = {
@@ -750,12 +754,10 @@ class AssignmentAPI(APIResource):
         }
     }
 
+    # Endpoints
+
+    @need('put')
     def post(self, user, data):
-        """
-        :param user:
-        :param data:
-        :return:
-        """
         data['creator'] = user.key
         # check if the course actually exists
         course = data['course'].get()
@@ -771,41 +773,38 @@ class AssignmentAPI(APIResource):
                 'assignment with name %s exists already' % data['name'])
         return super(AssignmentAPI, self).post(user, data)
 
+    @need('put')
     def edit(self, obj, user, data):
         """ Save the assignment. """
         return super(AssignmentAPI, self).put(obj, user, data)
 
+    @need('put')
     def assign(self, obj, user, data):
-        need = Need('put')
-        if not obj.can(user, need, obj):
-            raise need.exception()
         deferred.defer(add_to_grading_queues, obj.key)
 
+    @need('get')
     def group(self, obj, user, data):
         """User's current group for assignment."""
         return models.Group.lookup(user, obj)
 
+    @need('get')
     def invite(self, obj, user, data):
         """User ask invited to join his/her current group for assignment."""
         err = models.Group.invite_to_group(user.key, data['email'], obj.key)
+        # Convert this to raise Error, instead of returning-raising error
         if err:
             raise BadValueError(err)
 
+    @need('staff')
     def download_scores(self, obj, user, data):
         """
         Write all composition scores for this assignment as a GCS file.
         Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
         """
-        need = Need('staff')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
         deferred.defer(scores_to_gcs, obj, user)
 
+    @need('grade')
     def autograde(self, obj, user, data):
-      need = Need('grade')
-      if not obj.can(user, need, obj):
-          raise need.exception()
       subm_ids = {}
       if not obj.autograding_enabled:
         raise BadValueError('Autograding is not enabled for this assignment.')
@@ -835,12 +834,9 @@ class AssignmentAPI(APIResource):
         # TODO
         raise BadValueError('Only supports batch uploading.')
 
+    @need('staff')
     def queues(self, obj, user, data):
         """ Return all composition queues for this assignment """
-        need = Need('staff')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
         return models.Queue.query(models.Queue.assignment == obj.key).fetch()
 
 

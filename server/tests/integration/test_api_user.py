@@ -62,7 +62,7 @@ class UserAPITest(APIBaseTestCase):
 	def test_get_instance(self):
 		""" Tests for error if user does not exist """
 		with self.assertRaises(BadKeyError):
-			self.API().get_instance('gibberish@student.com', None)
+			self.API().get_instance('gibberish@student.com', {})
 
 	def test_get_instance_valid(self):
 		""" Tests object if returned for valid instance """
@@ -93,7 +93,7 @@ class UserAPITest(APIBaseTestCase):
 			self.API().add_email(
 				self.accounts['dummy_admin'],
 				self.accounts['dummy_student3'],
-				None)
+				{})
 		
 	def test_add_email_function(self):
 		""" Tests that add_email actually adds the email """
@@ -110,7 +110,7 @@ class UserAPITest(APIBaseTestCase):
 			self.API().delete_email(
 				self.accounts['dummy_admin'],
 				self.accounts['dummy_student3'],
-				None)
+				{})
 			
 	def test_delete_email_function(self):
 		""" Tests that delete email actually deletes the email """
@@ -140,7 +140,7 @@ class UserAPITest(APIBaseTestCase):
 	def test_queues_basic(self):
 		""" Test that fetching all queues works """
 		obj = self.API().get_instance('dummy@admin.com', self.accounts['dummy_admin'])
-		queues = self.API().queues(obj, self.accounts['dummy_admin'], None)
+		queues = self.API().queues(obj, self.accounts['dummy_admin'], {})
 		self.assertTrue(isinstance(queues, list))
 		
 		for queue in queues:
