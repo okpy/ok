@@ -7,6 +7,7 @@ Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 
 import datetime
 import itertools
+import logging
 
 from app import app
 from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
@@ -1298,6 +1299,5 @@ class FinalSubmission(Base):
                           score.grader.get().email[0],
                           score.tag])
             else:
-              # temporary debug tool. TODO: REMOVE
-              print member
+              logging.warning("User key not found - " + str(member))
         return all_scores
