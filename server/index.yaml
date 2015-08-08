@@ -259,3 +259,9 @@ indexes:
   properties:
   - name: email
   - name: status
+
+- kind: Backupv2
+  properties:
+  - name: assignment
+  - name: created
+    direction: desc
