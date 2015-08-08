@@ -885,7 +885,7 @@ class Comment(Base):
         return False
 
     @classmethod
-    def _can(cls, user, need, comment, query):
+    def _can(cls, user, need, comment=None, query=None):
         return Diff._can(
             user, 
             need, 

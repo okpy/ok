@@ -373,7 +373,11 @@ class ModelsTestCase(BaseTestCase):
 	def test_comment_can(self):
 		"""test commentp ermissions"""
 		admin = models.User(email=['yo@yo.com'], is_admin=True).put().get()
-		self.assertTrue(models.Comment._can(admin, None))
+		need = Need('get')
+		backup = models.Backup(submitter=admin.key).put().get()
+		diff = models.Diff(after=backup.key).put().get()
+		comment = models.Comment(diff=diff.key).put().get()
+		self.assertTrue(models.Comment._can(admin, need, comment))
 		weird = Need('weird')
 		self.assertFalse(models.Comment._can(MagicMock(is_admin=False), weird))
 
