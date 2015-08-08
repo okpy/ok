@@ -954,6 +954,8 @@ class SubmissionAPI(APIResource):
         }
     }
 
+    # Utilities
+
     def data_for_zip(self, obj):
         try:
             user = obj.submitter.get()
@@ -987,56 +989,93 @@ class SubmissionAPI(APIResource):
 
         return name, file_contents
 
-    def zip(self, obj, user, data):
-        """ Grab all files in submission
-        :param obj:
-        :param user:
-        :param data:
-        :return:
-        """
-        return self.zip_files(*self.data_for_zip(obj))
-
     def zip_files(self, name, file_contents):
-        """ Zip files
-        :param file_contents:
-        :return:
-        """
+        """Zip files"""
         zipfile = create_zip(file_contents)
         return name, zipfile
 
     def make_zip_response(self, name, zipfile):
-        """
-        Makes a zip response using a zip object.
-
-        :param zip:
-        :return:
-        """
+        """Makes a zip response using a zip object."""
         response = make_response(zipfile)
         response.headers['Content-Disposition'] = (
             'attachment; filename=submission-%s.zip' % name)
         response.headers['Content-Type'] = 'application/zip'
         return response
 
+    def get_assignment(self, name):
+        """Look up an assignment by name"""
+        assignments = self.db.lookup_assignments_by_name(name)
+        if not assignments:
+            raise BadValueError('Assignment \'%s\' not found' % name)
+        if len(assignments) > 1:
+            raise BadValueError('Multiple assignments named \'%s\'' % name)
+        return assignments[0]
+
+    def submit(self, user, assignment, messages, submit, submitter=None):
+        """Process submission messages for an assignment from a user."""
+        valid_assignment = self.get_assignment(assignment)
+
+        if submitter is None:
+            submitter = user.key
+
+        due = valid_assignment.due_date
+        late_flag = valid_assignment.lock_date and \
+                    datetime.datetime.now() >= valid_assignment.lock_date
+        revision = valid_assignment.revision
+
+        if submit and late_flag:
+            if revision:
+                # In the revision period. Ensure that user has a previously graded submission.
+                fs = user.get_final_submission(valid_assignment)
+                if fs is None or fs.submission.get().score == []:
+                    logging.info('Rejecting Revision without graded FS', submitter)
+                    return (403, 'Previous submission was not graded', {
+                        'late': True,
+                        })
+            else:
+                # Late submission. Do not allow them to submit
+                logging.info('Rejecting Late Submission', submitter)
+                return (403, 'late', {
+                    'late': True,
+                    })
+
+        submission = self.db.create_submission(user, valid_assignment,
+                                               messages, submit, submitter)
+        return (201, 'success', {
+            'key': submission.key.id(),
+            'course': valid_assignment.course.id(),
+            'email': user.email[0]
+        })
+
+    # Endpoints
+    
+    # no permissions, so that anyone can submit
+    def post(self, user, data):
+        submit_flag = False
+        if data['messages'].get('file_contents'):
+            if 'submit' in data['messages']['file_contents']:
+                submit_flag = data['messages']['file_contents']['submit']
+
+        return self.submit(user, data['assignment'],
+                           data['messages'], submit_flag,
+                           data.get('submitter'))
+    
+    @need('get')
+    def zip(self, obj, user, data):
+        """Grab all files in submission"""
+        return self.zip_files(*self.data_for_zip(obj))
+
+    @need('get')
     def download(self, obj, user, data):
         """
         Download submission, but check if it has content and encode all files.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
         :return: file contents in utf-8
         """
         return self.make_zip_response(*self.zip(obj, user, data))
 
+    @need('get')
     def diff(self, obj, user, data):
-        """
-        Gets the associated diff for a submission
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: (Diff) object with differences
-        """
+        """Gets the associated diff for a submission"""
         messages = obj.get_messages()
         if 'file_contents' not in obj.get_messages():
             raise BadValueError('Submission has no contents to diff')
@@ -1080,15 +1119,9 @@ class SubmissionAPI(APIResource):
         diff.put()
         return diff
 
+    @need('get')
     def add_comment(self, obj, user, data):
-        """
-        Adds a comment to this diff.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: result of putting comment
-        """
+        """Adds a comment to this diff."""
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if not diff_obj:
             raise BadValueError("Diff doesn't exist yet")
@@ -1109,15 +1142,9 @@ class SubmissionAPI(APIResource):
         comment.put()
         return comment
 
+    @need('delete')
     def delete_comment(self, obj, user, data):
-        """
-        Deletes a comment on this diff.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: result of deleting comment
-        """
+        """Deletes a comment on this diff."""
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if not diff_obj:
             raise BadValueError("Diff doesn't exist yet")
@@ -1131,15 +1158,9 @@ class SubmissionAPI(APIResource):
             raise need.exception()
         comment.key.delete()
 
+    @need('staff')
     def score(self, obj, user, data):
-        """
-        Sets a score.
-
-        :param obj: (object) backup - ignored.
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: (int) score
-        """
+        """Sets a score."""
 
         need = Need('grade')
         subm_q = self.subm_model.query(self.subm_model.key == data['submission'])
@@ -1165,69 +1186,6 @@ class SubmissionAPI(APIResource):
 
         subm.put()
         return score
-
-    def get_assignment(self, name):
-        """
-        Look up an assignment by name
-
-        :param name: (string) name of assignment
-        :return: (object, Error) the assignment object or
-            raise a validation error
-        """
-        assignments = self.db.lookup_assignments_by_name(name)
-        if not assignments:
-            raise BadValueError('Assignment \'%s\' not found' % name)
-        if len(assignments) > 1:
-            raise BadValueError('Multiple assignments named \'%s\'' % name)
-        return assignments[0]
-
-    def submit(self, user, assignment, messages, submit, submitter=None):
-        """
-        Process submission messages for an assignment from a user.
-        """
-        valid_assignment = self.get_assignment(assignment)
-
-        if submitter is None:
-            submitter = user.key
-
-        due = valid_assignment.due_date
-        late_flag = valid_assignment.lock_date and \
-                    datetime.datetime.now() >= valid_assignment.lock_date
-        revision = valid_assignment.revision
-
-        if submit and late_flag:
-            if revision:
-                # In the revision period. Ensure that user has a previously graded submission.
-                fs = user.get_final_submission(valid_assignment)
-                if fs is None or fs.submission.get().score == []:
-                    logging.info('Rejecting Revision without graded FS', submitter)
-                    return (403, 'Previous submission was not graded', {
-                      'late': True,
-                      })
-            else:
-                # Late submission. Do not allow them to submit
-                logging.info('Rejecting Late Submission', submitter)
-                return (403, 'late', {
-                    'late': True,
-                    })
-
-        submission = self.db.create_submission(user, valid_assignment,
-                                               messages, submit, submitter)
-        return (201, 'success', {
-            'key': submission.key.id(),
-            'course': valid_assignment.course.id(),
-            'email': user.email[0]
-        })
-
-    def post(self, user, data):
-        submit_flag = False
-        if data['messages'].get('file_contents'):
-            if 'submit' in data['messages']['file_contents']:
-                submit_flag = data['messages']['file_contents']['submit']
-
-        return self.submit(user, data['assignment'],
-                           data['messages'], submit_flag,
-                           data.get('submitter'))
 
 
 class SearchAPI(APIResource):

@@ -106,7 +106,8 @@ class SubmissionAPITest(APIBaseTestCase):
 			created='created',
 			get_messages=lambda: {'file_contents': {'gup.py': 1}},
 			assignment=self._assign.key,
-			to_json=lambda: {})
+			to_json=lambda: {},
+			can=lambda *args: True)
 		self.API().zip(obj, self.accounts['dummy_admin'], {})
 		
 	def test_zip_files(self):
@@ -131,13 +132,16 @@ class SubmissionAPITest(APIBaseTestCase):
 				created='created',
 				get_messages=lambda: {'file_contents': {'gup.py': 1}},
 				assignment=self._assign.key, 			
-				to_json=lambda: {})
+				to_json=lambda: {},
+				can=lambda *args: True)
 			self.API().download(obj, user, {})
 		
 	def test_diff_empty(self):
 		""" Tests that diff does not accept empty file_Contents """
 		with self.assertRaises(BadValueError):
-			obj = self.obj().set(get_messages=lambda: {})
+			obj = self.obj().set(
+				get_messages=lambda: {}, 
+				can=lambda *args: True)
 			self.API().diff(obj, self.accounts['dummy_admin'], {})
 			
 	def test_diff_remove_submit(self):
@@ -168,7 +172,8 @@ class SubmissionAPITest(APIBaseTestCase):
 		obj = self.obj().set(
 			get_messages=lambda: {'file_contents': file_contents},
 			key=key,
-			file_contents=file_contents)
+			file_contents=file_contents,
+			can=lambda *args: True)
 		diff = api.diff(obj, self.accounts['dummy_admin'], {})
 		self.assertEqual(fake, diff)
 		return obj
@@ -181,7 +186,8 @@ class SubmissionAPITest(APIBaseTestCase):
 		key = ndb.Key(models.User, 1)
 		obj = self.obj().set(
 			get_messages=lambda: {'file_contents': file_contents},
-			key=key)
+			key=key,
+			can=lambda *args: True)
 		obj.assignment = self._assign
 		obj.assignment.get = lambda: self.obj().set(templates=None)
 		templates = obj.assignment.get().templates
@@ -194,6 +200,7 @@ class SubmissionAPITest(APIBaseTestCase):
 		""" Tests filename not in templates """
 		obj = self.test_diff_obj()
 		obj.assignment = self._assign
+		obj.can = lambda *args: True
 		obj.templates = {}
 		self._assign.get = lambda: self.obj().set(templates='{"a":"adsf"}')
 		obj.get_messages = lambda: {'file_contents': {'b': "adsf"}}
@@ -204,6 +211,7 @@ class SubmissionAPITest(APIBaseTestCase):
 		""" Tests filename not in templates """
 		obj = self.test_diff_obj()
 		obj.assignment = self._assign
+		obj.can = lambda *args: True
 		obj.templates = {}
 		self._assign.get = lambda: self.obj().set(templates='{"a":"adsf"}')
 		obj.get_messages = lambda: {'file_contents': {'a': "asdf", 'b': "asdf"}}
@@ -213,7 +221,9 @@ class SubmissionAPITest(APIBaseTestCase):
 	def test_diff_template_as_list(self):
 		""" Test that a template list is okay """
 		obj = self.test_diff_fn_in_templates()
-		obj.assignment.get = lambda: self.obj().set(templates='{"a":["asdf"]}')
+		obj.assignment.get = lambda: self.obj().set(
+			templates='{"a":["asdf"]}',
+			can=lambda *args: True)
 		self.API().diff(obj, self.accounts['dummy_admin'], {})
 		return obj
 	
@@ -221,6 +231,7 @@ class SubmissionAPITest(APIBaseTestCase):
 		""" Test that a diff object is returned """
 		obj = self.test_diff_template_as_list()
 		obj.assignment.get().templates = '["a"]'
+		obj.can=lambda *args: True
 		self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
 		diff = self.API().diff(obj, self.accounts['dummy_admin'], {})
 		self.assertEqual(diff.key.id(), obj.key.id())
@@ -229,7 +240,10 @@ class SubmissionAPITest(APIBaseTestCase):
 		""" Tests that comment cannot be added to nonexistent diff """
 		self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
 		with self.assertRaises(BadValueError):
-			self.API().add_comment(self.accounts['dummy_admin'], None, None)
+			self.API().add_comment(
+				self.accounts['dummy_admin'], 
+				self.accounts['dummy_admin'], 
+				{})
 			
 	def test_add_empty_comment(self):
 		""" Test that empty comment not allowed """
@@ -240,7 +254,10 @@ class SubmissionAPITest(APIBaseTestCase):
 		}
 		self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: True))
 		with self.assertRaises(BadValueError):
-			self.API().add_comment(self.accounts['dummy_admin'], None, data)
+			self.API().add_comment(
+				self.accounts['dummy_admin'], 
+				self.accounts['dummy_admin'], 
+				data)
 			
 	def test_add_comment_normal(self):
 		""" Tests that coment can be added normally """
@@ -249,24 +266,33 @@ class SubmissionAPITest(APIBaseTestCase):
 			'message': 'Some unhelpful message',
 			'file': ''
 		}
-		diff_obj = models.Diff(id=1).put().get()
-		comment = self.API().add_comment(diff_obj, self.accounts['dummy_admin'], data)
+		diff_obj = models.Diff(
+			id=1,
+			after=self._backup.key).put().get()
+		comment = self.API().add_comment(
+			diff_obj, self.accounts['dummy_admin'], data)
 		self.assertNotEqual(None, comment)
 		
 	def test_delete_comment_diff_dne(self):
 		""" Tests comment cant be added to nonexsitent diff """
 		self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
 		with self.assertRaises(BadValueError):
-			self.API().delete_comment(self.accounts['dummy_admin'], None, None)
+			self.API().delete_comment(
+				self.accounts['dummy_admin'],
+				self.accounts['dummy_admin'],
+				{})
 			
 	def test_delete_comment_dne(self):
 		""" Tests that nonexistent comment cant be removed """
 		self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: self.accounts['dummy_admin']))
 		self.mock(models.Comment, 'get_by_id').using(staticmethod(lambda *args, **kwargs: None))
 		with self.assertRaises(BadKeyError):
-			self.API().delete_comment(self.accounts['dummy_admin'], None, {
-				'comment': self.accounts['dummy_admin'].key
-			})
+			self.API().delete_comment(
+				self.accounts['dummy_admin'], 
+				self.accounts['dummy_admin'], 
+				{
+					'comment': self.accounts['dummy_admin'].key
+				})
 
 	def test_delete_comment_check(self):
 		""" Tests that permissions are checked """
