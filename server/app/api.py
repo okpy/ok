@@ -1030,8 +1030,9 @@ class SubmissionAPI(APIResource):
         try:
             user = obj.submitter.get()
             name = user.email[0]+'-'+str(obj.created)
-        except IndexError:
+        except IndexError, AttributeError:
             name = str(obj.created)
+
         name = name.replace('.', '-').replace(' ', '_')
         messages = obj.get_messages()
         if 'file_contents' not in messages:
