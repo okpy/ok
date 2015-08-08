@@ -1112,6 +1112,8 @@ class Group(Base):
             Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
         """
         content = []
+        member = self.member[0].get()
+
         for m in self.member:
             member = m.get()
             if member:
@@ -1120,6 +1122,11 @@ class Group(Base):
               if success:
                   # get_scores_for_student_or_group will return scores for all group members.
                   return content
+
+        # Handle the case where the member key no longer exists.
+        if not member:
+          return [["Unknown-"+str(self.member[0]), 0, None, None, None]]
+
         return [[member.email[0], 0, None, None, None]]
 
 
