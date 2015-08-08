@@ -1281,11 +1281,16 @@ class FinalSubmission(Base):
         else:
             members = [self.submitter]
         for member in members:
-            email = member.get().email[0]
-            for score in self.submission.get().score:
-                all_scores.append([email,
-                        score.score,
-                        score.message,
-                        score.grader.get().email[0],
-                        score.tag])
+            member_row = member.get()
+            if member_row:
+              email = member_row.email[0]
+              for score in self.submission.get().score:
+                  all_scores.append([email,
+                          score.score,
+                          score.message,
+                          score.grader.get().email[0],
+                          score.tag])
+            else:
+              # temporary debug tool. TODO: REMOVE
+              print member
         return all_scores
