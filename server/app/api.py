@@ -845,18 +845,12 @@ class AssignmentAPI(APIResource):
         return models.Queue.query(models.Queue.assignment == obj.key).fetch()
 
 
+# TODO: can this be replaced/removed?
 class SubmitNDBImplementation(object):
-    """
-    Implementation of DB calls required by submission using Google NDB
-    """
+    """Implementation of DB calls required by submission using Google NDB"""
 
     def lookup_assignments_by_name(self, name):
-        """
-        Look up all assignments of a given name.
-
-        :param name: (string) name to search for
-        :return: (list) assignments
-        """
+        """Look up all assignments of a given name."""
         mc_key = 'assignments_{}'.format(name)
         assignments = memcache.get(mc_key)
         if not assignments:
@@ -866,16 +860,7 @@ class SubmitNDBImplementation(object):
         return assignments
 
     def create_submission(self, user, assignment, messages, submit, submitter):
-        """
-        Create submission using user as parent to ensure ordering.
-
-        :param user: (object) caller
-        :param assignment: (Assignment)
-        :param messages: Data content of backup/submission
-        :param submit: Whether this backup is a submission to be graded
-        :param submitter: (object) caller or submitter
-        :return: (Backup) submission
-        """
+        """Create submission using user as parent to ensure ordering."""
         if not user.is_admin or not submitter:
             submitter = user.key
 
@@ -1245,7 +1230,10 @@ class SearchAPI(APIResource):
             AssignmentAPI.model.query(
                 op(AssignmentAPI.model.display_name, name)).get(),
     }
+    
+    # Utilities
 
+    # TODO: replace this with existing permissions implementation
     def check_permissions(self, user, data):
         course = CourseAPI()
         key = course.key_type(data['courseId'])
@@ -1253,6 +1241,8 @@ class SearchAPI(APIResource):
 
         if user.key not in course.staff and not user.is_admin:
             raise Need('get').exception()
+        
+    # Search Functionality
 
     @staticmethod
     def results(data):
@@ -1262,27 +1252,6 @@ class SearchAPI(APIResource):
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
         return results
-
-    def index(self, user, data):
-        """ Performs search query, with some extra information """
-        self.check_permissions(user, data)
-
-        results = self.results(data)
-        return dict(data={
-            'results': results,
-            'more': len(results) >= data['num_per_page'],
-            'query': data['query']
-        })
-
-    def download(self, user, data):
-        """ Sets up zip write to GCS """
-        self.check_permissions(user, data)
-
-        now = datetime.datetime.now()
-        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, models.Submission, user, data, now)
-
-        return [make_zip_filename(user, now)]
-
 
     @staticmethod
     def tokenize(query):
@@ -1355,6 +1324,7 @@ class SearchAPI(APIResource):
 
     @classmethod
     def order(cls, model, query):
+        """Preset ordering"""
         try:
             if hasattr(model, 'server_time'):
                 return query.order(-model.server_time)
@@ -1379,6 +1349,7 @@ class SearchAPI(APIResource):
             opr, arg = prime['date']
             args.append(opr(model.server_time, arg))
         if 'onlywcode' in keys:
+            # TODO: just check if backup has (valid) content
             raise BadValueError('-onlywcode is not yet implemented, sorry.')
         return args
 
@@ -1386,6 +1357,28 @@ class SearchAPI(APIResource):
     def limits(page, num_per_page):
         """ returns start and ends number based on page and num_per_page """
         return (page-1)*num_per_page, page*num_per_page
+    
+    # Endpoints
+    
+    def index(self, user, data):
+        """ Performs search query, with some extra information """
+        self.check_permissions(user, data)
+
+        results = self.results(data)
+        return dict(data={
+            'results': results,
+            'more': len(results) >= data['num_per_page'],
+            'query': data['query']
+        })
+
+    def download(self, user, data):
+        """ Sets up zip write to GCS """
+        self.check_permissions(user, data)
+
+        now = datetime.datetime.now()
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, models.Submission, user, data, now)
+
+        return [make_zip_filename(user, now)]
 
 
 class VersionAPI(APIResource):
@@ -1440,10 +1433,8 @@ class VersionAPI(APIResource):
         },
         }
 
+    @need('update')
     def new(self, obj, user, data):
-        need = Need('update')
-        if not obj.can(user, need, obj):
-            raise need.exception()
 
         new_version = data['version']
 
@@ -1455,30 +1446,25 @@ class VersionAPI(APIResource):
             obj.current_version = data['version']
         obj.put()
         return obj
-
+    
+    
+    @need('get')
     def current(self, obj, user, data):
-        need = Need('get')
-        if not obj.can(user, need, obj):
-            raise need.exception()
         if not obj.current_version:
             raise BadValueError(
                 'Invalid version resource. Contact an administrator.')
         return obj.current_version
 
+    @need('get')
     def download(self, obj, user, data):
-        need = Need('get')
-        if not obj.can(user, need, obj):
-            raise need.exception()
         if 'version' not in data:
             download_link = obj.download_link()
         else:
             download_link = obj.download_link(data['version'])
         return flask.redirect(download_link)
 
+    @need('update')
     def set_current(self, obj, user, data):
-        need = Need('update')
-        if not obj.can(user, need, obj):
-            raise need.exception()
         current_version = data['version']
         if current_version not in obj.versions:
             raise BadValueError(
