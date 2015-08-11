@@ -441,7 +441,24 @@ class ParticipantAPI(APIResource):
         'enrollment': {
         }
     }
+    
+    # Utility - TODO: remove it in favor of existing permissions implementation
 
+    def check(self, emails, course, role):
+        parts = []
+        for email in emails:
+            part = models.Participant.has_role(
+                models.User.lookup(email).key,
+                course,
+                role)
+            if not part:
+                raise BadValueError('Check failed.')
+            parts.append(part)
+        return parts
+    
+    # Endpoint
+    
+    @need('get')
     def enrollment(self):
         user = models.User.lookup(request.args.get('email'))
         data = []
@@ -464,18 +481,6 @@ class ParticipantAPI(APIResource):
                     'offering': course.offering
                 })
         return json.dumps(data)
-
-    def check(self, emails, course, role):
-        parts = []
-        for email in emails:
-            part = models.Participant.has_role(
-                models.User.lookup(email).key,
-                course,
-                role)
-            if not part:
-                raise BadValueError('Check failed.')
-            parts.append(part)
-        return parts
 
 
 class UserAPI(APIResource):
