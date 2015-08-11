@@ -25,6 +25,7 @@ models.py. See that file for more information
 #pylint: disable=no-member,unused-argument
 
 import datetime
+import functools
 import logging
 import ast
 import requests
@@ -61,6 +62,7 @@ identity = lambda *args: args
 def need(permission, can=identity, args=identity):
     """Decorator for permissions check"""
     def wrap(f):
+        @functools.wraps(f)
         def helper(self, obj, user, data=None):
             # avoiding nonlocal because tests run in Python2
             need, _can, _args = Need(permission), can, args
@@ -458,12 +460,12 @@ class ParticipantAPI(APIResource):
     
     # Endpoint
     
-    @need('get')
+    # @need('get')
     def enrollment(self):
         user = models.User.lookup(request.args.get('email'))
         data = []
         if user is not None:
-            parts = CourseAPI().get_courses(None, user, {'user': user.key})
+            parts = CourseAPI().get_courses(models.Course(), user, {'user': user.key})
             for part in parts:
                 course = part.course.get()
                 offering = course.offering.split('/')
@@ -1550,12 +1552,12 @@ class CourseAPI(APIResource):
         }
     }
 
+    @need('admin')
     def post(self, user, data):
-        """
-        The POST HTTP method
-        """
+        """Create a course"""
         return super(CourseAPI, self).post(user, data)
 
+    @need('get')
     def index(self, user, data):
         if data['onlyenrolled']:
             return dict(results=[result.course for result in models.Participant.query(
@@ -1563,34 +1565,27 @@ class CourseAPI(APIResource):
         else:
             return super(CourseAPI, self).index(user, data)
 
+    @need('staff')
     def add_staff(self, course, user, data):
-        need = Need('staff')
-        if not course.can(user, need, course):
-            raise need.exception()
-
         user = models.User.get_or_insert(data['email'])
         if user not in course.staff:
           models.Participant.add_role(user, course, STAFF_ROLE)
 
+    @need('staff')
     def get_staff(self, course, user, data):
-        need = Need('staff')
-        if not course.can(user, need, course):
-            raise need.exception()
         query = models.Participant.query(
           models.Participant.course == course.key,
           models.Participant.role == 'staff')
         return list(query.fetch())
 
+    @need('staff')
     def remove_staff(self, course, user, data):
-        need = Need('staff')
-        if not course.can(user, need, course):
-            raise need.exception()
-
         removed_user = models.User.lookup(data['email'])
         if not removed_user:
             raise BadValueError('No such user with email "%s" exists' % data['email'])
         models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
+    @need('get')
     def get_courses(self, course, user, data):
         query = models.Participant.query(
             models.Participant.user == data['user'])
@@ -1598,6 +1593,7 @@ class CourseAPI(APIResource):
         query = models.Participant.can(user, need, course, query)
         return list(query)
 
+    @need('get')
     def get_students(self, course, user, data):
         query = models.Participant.query(
             models.Participant.course == course.key,
@@ -1607,33 +1603,25 @@ class CourseAPI(APIResource):
             raise need.exception()
         return list(query.fetch())
 
+    @need('staff')
     def add_students(self, course, user, data):
-        need = Need('staff') # Only staff can call this API
-        if not course.can(user, need, course):
-            raise need.exception()
-
         for email in set(data['emails']):  # to remove potential duplicates
             user = models.User.get_or_insert(email)
             models.Participant.add_role(user, course, STUDENT_ROLE)
 
+    @need('staff')
     def add_student(self, course, user, data):
-        need = Need('staff') # Only staff can call this API
-        if not course.can(user, need, course):
-            raise need.exception()
-
         user = models.User.get_or_insert(data['email'])
         models.Participant.add_role(user, course, STUDENT_ROLE)
 
+    @need('staff')
     def remove_student(self, course, user, data):
-        need = Need('staff')
-        if not course.can(user, need, course):
-            raise need.exception()
-
         removed_user = models.User.lookup(data['email'])
         if not removed_user:
             raise BadValueError('No such user with email "%s" exists' % data['email'])
         models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
+    @need('get')
     def assignments(self, course, user, data):
         return course.assignments.fetch()
     
