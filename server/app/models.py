@@ -1100,7 +1100,7 @@ class Group(Base):
             return user.key in group.member or user.key in group.invited
         elif action in ("invite", "remove", "reorder"):
             return user.key in group.member
-        elif action in "accept":
+        elif action in ("accept", "decline"):
             return user.key in group.invited
         return False
 

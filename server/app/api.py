@@ -1667,11 +1667,8 @@ class GroupAPI(APIResource):
         }
     }
 
+    @need('invite')
     def add_member(self, group, user, data):
-        need = Need('invite')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         if data['email'] in group.invited:
             raise BadValueError('user has already been invited')
         if data['email'] in group.member:
@@ -1689,11 +1686,8 @@ class GroupAPI(APIResource):
         )
         audit_log_message.put()
 
+    @need('remove')
     def remove_member(self, group, user, data):
-        need = Need('remove')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         to_remove = models.User.lookup(data['email'])
         if to_remove:
             group.exit(to_remove)
@@ -1706,40 +1700,31 @@ class GroupAPI(APIResource):
             )
             audit_log_message.put()
 
+    @need('invite')
     def invite(self, group, user, data):
-        need = Need('invite')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         error = group.invite(data['email'])
+        # TODO: convert
         if error:
             raise BadValueError(error)
 
+    @need('accept')
     def accept(self, group, user, data):
-        need = Need('accept')
-        if not group.can(user, need, group):
-            raise need.exception()
+        group.accept(user)  # TODO: may need converting
 
-        group.accept(user)
-
+    @need('decline')
     def decline(self, group, user, data):
         self.exit(group, user, data)
 
+    @need('exit')
     def exit(self, group, user, data):
-        need = Need('exit')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         error = group.exit(user)
+        # TODO: convert
         if error:
             raise BadValueError(error)
 
+    @need('reorder')
     def reorder(self, group, user, data):
         """ Saves order of partners """
-        need = Need('reorder')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         new_order = [models.User.lookup(email).key
                      for email in data['order']]
 
