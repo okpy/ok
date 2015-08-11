@@ -1770,14 +1770,10 @@ class QueueAPI(APIResource):
         },
         }
 
+    # Utility
+    
     def new_entity(self, attributes):
-        """
-        Request to define a new entity
-
-        :param attributes: entity attributes,
-            to be loaded on entity instantiation
-        :return: entity
-        """
+        """create new queue"""
         if 'owner' not in attributes:
             attributes['owner'] = attributes['assigned_staff'][0]
         ent = super(QueueAPI, self).new_entity(attributes)
@@ -1848,6 +1844,7 @@ class QueuesAPI(APIResource):
 
         return queues
 
+    # TODO: migrate to QueueAPI and use existing permissions implementation
     def check_permissions(self, user, data):
         course = data['course'].get()
         return user.key not in course.staff and not user.is_admin
@@ -1870,17 +1867,13 @@ class FinalSubmissionAPI(APIResource):
             }
         }
     }
+    
+    # Utility
 
     def new_entity(self, attributes):
-        """
-        Creates a new entity with given attributes.
+        """Creates a new entity with given attributes.
         - when POSTing directly, new_entity has its own
-        permissions checks
-
-        :param attributes: (dictionary)
-        :return: (entity, error_response) should be ignored if error_response
-        is a True value
-        """
+        permissions checks"""
         subm = attributes['submission'].get()
 
         if not subm:
@@ -1912,12 +1905,8 @@ class AnalyticsAPI(APIResource):
         },
     }
 
+    @need('create')
     def post(self, user, data):
-
-        need = Need('create')
-
-        if not self.model.can(user, need, None):
-            raise need.exception()
 
         job_type, filters = data['job_type'], data['filters']
 
