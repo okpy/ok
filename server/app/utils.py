@@ -9,6 +9,7 @@ import logging
 import datetime
 import itertools
 from os.path import join
+from app import constants
 
 try:
     from cStringIO import StringIO
@@ -563,16 +564,29 @@ def make_zip_filename(user, now):
     return filename+'.zip'
 
 
-def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data, datetime):
-    """
-    Writes all submissions for a given search query
-    to a GCS zip file.
-    """
-    results = SearchAPI.results(data)
+def make_query(SearchAPI, data, start_cursor):
+    """Creates query at cursor if specified"""
+    query = SearchAPI.querify(data['query'])
+    
+    if start_cursor:
+        query.with_cursor(start_cursor)
+        
+    return query
+
+
+def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data, datetime,
+                start_cursor=None):
+    """Writes all submissions for a given search query to a GCS zip file."""
+    query = make_query(SearchAPI, data, start_cursor)
     zipfile_str, zipfile = start_zip()
-    subm = SubmissionAPI()
-    for result in results:
-        zipfile = add_subm_to_zip(subm, Submission, zipfile, result)
+    subm, i = SubmissionAPI(), 0
+    for result in query:
+        zipfile, i = add_subm_to_zip(subm, Submission, zipfile, result), i + 1
+        if i == constants.BATCH_SIZE:
+            start_cursor = query.cursor()
+            deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, Submission,
+                           user, data, datetime, start_cursor)
+            return
     zip_contents = finish_zip(zipfile_str, zipfile)
     zip_filename = make_zip_filename(user, datetime)
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
