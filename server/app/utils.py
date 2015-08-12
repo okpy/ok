@@ -564,11 +564,11 @@ def make_zip_filename(user, now):
     return filename+'.zip'
 
 
-def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data, datetime,
+def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
                 start_cursor=None):
     """Writes all submissions for a given search query to a GCS zip file."""
     zipfile_str, zipfile = start_zip()
-    subm, has_more, next_cursor = SubmissionAPI(), True, None
+    next_cursor, has_more = None, True
     while has_more:
         query = SearchAPI.querify(data['query'])
         results, next_cursor, has_more = query.fetch_page(
