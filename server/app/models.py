@@ -538,7 +538,7 @@ class Assignment(Base):
             return True
         if need.action == "get":
             return True
-        elif need.action in ["grade", 'delete', 'create', 'put']:
+        elif need.action in ["grade", 'delete', 'create', 'put', 'staff']:
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
