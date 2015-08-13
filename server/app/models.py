@@ -80,6 +80,12 @@ class Base(ndb.Model):
         if self.key and (not fields or 'id' in fields):
             result['id'] = self.key.id()
 
+        # Protect sensitive fields
+        sensitive_fields = ['zip_file_url', 'grading_script_file']
+        for sensitive in sensitive_fields:
+            if sensitive in result:
+                result[sensitive] = ''
+
         for key, value in result.items():
             if isinstance(value, ndb.Key):
                 value = value.get()
