@@ -26,6 +26,7 @@ Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 
 import datetime
 import itertools
+import logging
 
 from app import app
 from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
@@ -98,6 +99,12 @@ class Base(ndb.Model):
 
         if self.key and (not fields or 'id' in fields):
             result['id'] = self.key.id()
+
+        # Protect sensitive fields
+        sensitive_fields = ['zip_file_url', 'grading_script_file']
+        for sensitive in sensitive_fields:
+            if sensitive in result:
+                result[sensitive] = ''
 
         for key, value in result.items():
             if isinstance(value, ndb.Key):
@@ -260,13 +267,13 @@ class User(Base):
             b = x.backup.get()
             b.submission = x
             return b
-        
+
         all_subms = [update(x) for x in all_subms]
         all_subms = [x for x in all_subms if x.assignment == assignment \
                 and self._contains_files(x)]
 
         all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
-        
+
         return all_subms[:num_submissions]
 
     get_num_submissions = make_num_counter(_get_submissions_helper)
@@ -431,13 +438,13 @@ class User(Base):
         #utils.check_user(self.key.id())
 
     def scores_for_assignment(self, assignment):
-        """ Returns a tuple of two elements: 
+        """ Returns a tuple of two elements:
                 1) Score data (list of lists) for STUDENT's final submission for ASSIGNMENT.
-                    There is an element for each score. 
+                    There is an element for each score.
                     * OBS * If the student is in a group, the list will contain an
                     element for each combination of group member and score.
                 2) A boolean indicating whether the student had a
-                    scored final submission for ASSIGNMENT. 
+                    scored final submission for ASSIGNMENT.
             Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
         """
         fs = self.get_final_submission(assignment.key)
@@ -523,7 +530,7 @@ class Assignment(Base):
             return True
         if need.action == "get":
             return True
-        elif need.action in ["grade", 'delete', 'create', 'put']:
+        elif need.action in ["grade", 'delete', 'create', 'put', 'staff']:
             if obj and isinstance(obj, Assignment):
                 return Participant.has_role(user, obj.course, STAFF_ROLE)
         return False
@@ -1102,20 +1109,28 @@ class Group(Base):
 
     def scores_for_assignment(self, assignment):
         """ Returns a list of lists containing score data
-            for the groups's final submission for ASSIGNMENT. 
-            There is one element for each combination of 
+            for the groups's final submission for ASSIGNMENT.
+            There is one element for each combination of
             group member and score.
-            Ensures that each student only appears once in the list. 
+            Ensures that each student only appears once in the list.
             Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
         """
         content = []
+        member = self.member[0].get()
+
         for m in self.member:
             member = m.get()
-            data, success = member.scores_for_assignment(assignment)
-            content.extend(data)
-            if success:
-                # get_scores_for_student_or_group will return scores for all group members. 
-                return content
+            if member:
+              data, success = member.scores_for_assignment(assignment)
+              content.extend(data)
+              if success:
+                  # get_scores_for_student_or_group will return scores for all group members.
+                  return content
+
+        # Handle the case where the member key no longer exists.
+        if not member:
+          return [["Unknown-"+str(self.member[0]), 0, None, None, None]]
+
         return [[member.email[0], 0, None, None, None]]
 
 
@@ -1277,11 +1292,15 @@ class FinalSubmission(Base):
         else:
             members = [self.submitter]
         for member in members:
-            email = member.get().email[0]
-            for score in self.submission.get().score:
-                all_scores.append([email,
-                        score.score,
-                        score.message,
-                        score.grader.get().email[0],
-                        score.tag])
+            member_row = member.get()
+            if member_row:
+              email = member_row.email[0]
+              for score in self.submission.get().score:
+                  all_scores.append([email,
+                          score.score,
+                          score.message,
+                          score.grader.get().email[0],
+                          score.tag])
+            else:
+              logging.warning("User key not found - " + str(member))
         return all_scores

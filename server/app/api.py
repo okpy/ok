@@ -1025,8 +1025,9 @@ class SubmissionAPI(APIResource):
         try:
             user = obj.submitter.get()
             name = user.email[0]+'-'+str(obj.created)
-        except IndexError:
+        except IndexError, AttributeError:
             name = str(obj.created)
+
         name = name.replace('.', '-').replace(' ', '_')
         messages = obj.get_messages()
         if 'file_contents' not in messages:
@@ -1383,7 +1384,8 @@ class SearchAPI(APIResource):
         self.check_permissions(user, data)
 
         now = datetime.datetime.now()
-        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, models.Submission, user, data, now)
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI(), 
+                       models.Submission, user, data, now)
 
         return [make_zip_filename(user, now)]
 
@@ -2082,4 +2084,3 @@ class AnalyticsAPI(APIResource):
         return (201, 'success', {
             'key': job.job_dump.key.id()
         })
-

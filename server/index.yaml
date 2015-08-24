@@ -30,6 +30,12 @@ indexes:
 - kind: Backupv2
   properties:
   - name: assignment
+  - name: created
+    direction: desc
+
+- kind: Backupv2
+  properties:
+  - name: assignment
   - name: submitter
   - name: created
     direction: desc
