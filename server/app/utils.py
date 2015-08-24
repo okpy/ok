@@ -509,6 +509,7 @@ def scores_to_gcs(assignment, user):
     for the given assignment to GCS csv file. """
     content = data_for_scores(assignment, user)
     csv_contents = create_csv_content(content)
+    create_gcs_file(assignment, csv_contents, 'scores')
     csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
     create_gcs_file(csv_filename, csv_contents, 'text/csv')
 
@@ -578,3 +579,14 @@ def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
     zip_contents = finish_zip(zipfile_str, zipfile)
     zip_filename = make_zip_filename(user, datetime)
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
+
+
+import difflib
+
+differ = difflib.Differ()
+
+
+def diff(s1, s2):
+    lines1 = s1.split('\n')
+    lines2 = s2.split('\n')
+    return list(differ.compare(lines1, lines2))

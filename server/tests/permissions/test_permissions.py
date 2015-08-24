@@ -116,20 +116,39 @@ class BaseUnitTest(BaseTestCase):
         for assign in self.assignments.values():
             assign.put()
 
+        self.messages = {
+            "first": models.Message(
+                kind="check1"
+            ),
+            "second": models.Message(
+                kind="check2"
+            ),
+            "third": models.Message(
+                kind="check3"
+            )
+        }
+
+        for message in self.messages.values():
+            message.put()
+
         self.backups = {
             "first": models.Backup(
                 submitter=self.accounts["student0"].key,
                 assignment=self.assignments["first"].key,
+                messages=[self.messages['first']]
                 ),
             "second": models.Backup(
                 submitter=self.accounts["student1"].key,
                 assignment=self.assignments["first"].key,
+                messages=[self.messages['second']]
                 ),
             "third": models.Backup(
                 submitter=self.accounts["student2"].key,
                 assignment=self.assignments["second"].key,
+                messages=[self.messages['third']]
                 ),
             }
+        
         for backup in self.backups.values():
             backup.put()
 
@@ -144,9 +163,25 @@ class BaseUnitTest(BaseTestCase):
                 backup=self.backups["third"].key
                 ),
             }
+        
         for submission in self.submissions.values():
             submission.put()
 
+        self.finalsubmissions = {
+            "first": models.FinalSubmission(
+                submission=self.submissions["first"].key
+            ),
+            "second": models.FinalSubmission(
+                submission=self.submissions["second"].key
+            ),
+            "third": models.FinalSubmission(
+                submission=self.submissions["third"].key
+            ),
+        }
+
+        for finalsubmission in self.finalsubmissions.values():
+            finalsubmission.put()
+        
         self.groups = {
             'group1': models.Group(
                 member=[self.accounts['student0'].key,
@@ -155,10 +190,19 @@ class BaseUnitTest(BaseTestCase):
             )}
 
         self.groups['group1'].put()
+        
+        group_message = models.Message(
+            kind="group"
+        )
+        
+        group_message.put()
+        
+        self.messages['group'] = group_message
 
         group_backup = models.Backup(
             submitter=self.accounts['student0'].key,
             assignment=self.assignments['first'].key,
+            messages=[group_message]
         )
 
         group_backup.put()
@@ -170,6 +214,13 @@ class BaseUnitTest(BaseTestCase):
 
         group_submission.put()
         self.submissions['group'] = group_submission
+        
+        group_finalsubmission = models.FinalSubmission(
+            submission=group_submission.key
+        )
+        
+        group_finalsubmission.put()
+        self.finalsubmissions['group'] = group_finalsubmission
 
         self.queues = {
             "first": models.Queue(
@@ -221,9 +272,12 @@ class PermissionsUnitTest(BaseUnitTest):
 
         obj = None
         if model == "User":
-            obj = self.accounts[obj_name]
+            subj = obj = self.accounts[obj_name]
+        elif model == "Message":
+            obj = self.backups[obj_name]
+            subj = obj.messages[0]
         else:
-            obj = getattr(self, model.lower()+'s')[obj_name]
+            subj = obj = getattr(self, model.lower()+'s')[obj_name]
 
         if not obj:
             self.assertTrue(False, "Invalid test arguments %s" % model)
@@ -243,7 +297,7 @@ class PermissionsUnitTest(BaseUnitTest):
             else:
                 self.assertNotIn(obj, queried_data)
         else:
-            self.assertEqual(value.output, obj.can(self.user, Need(need), obj))
+            self.assertEqual(value.output, subj.can(self.user, Need(need), obj))
 
 if __name__ == "__main__":
     unittest.main()

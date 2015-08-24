@@ -48,6 +48,10 @@ if __name__ == '__main__':
     parser.add_argument(
         '--quiet', action='store_true',
         help="Disables logging output from the tests.")
+    parser.add_argument(
+        '-d', '--dir', default='all',
+        help="Specifies the directory of tests to run."
+    )
     args = parser.parse_args()
 
     if args.quiet:
@@ -63,16 +67,19 @@ if __name__ == '__main__':
     dir_of_file = os.path.dirname(os.path.abspath(__file__))
     TEST_PATH = os.path.join(dir_of_file, 'tests')
     test_types = os.listdir(TEST_PATH)
+    test_types.sort(reverse=True)
     failed = False
 
     for typ in test_types:
-        test_dir = os.path.join(TEST_PATH, typ)
-        if not os.path.isdir(test_dir):
-            continue
-        print '='*60
-        print "Doing {} testing".format(typ)
-        print '='*60
-        failed = main(SDK_PATH, TEST_PATH, test_dir) or failed
+        if args.dir == 'all' or typ == args.dir:
+            test_dir = os.path.join(TEST_PATH, typ)
+            if not os.path.isdir(test_dir):
+                continue
+            print '='*60
+            print "Doing {} testing".format(typ)
+            print '='*60
+            failed = main(SDK_PATH, TEST_PATH, test_dir) or failed
+            
     if not failed:
         print "ALL TESTS PASSED"
     else:

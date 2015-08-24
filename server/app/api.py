@@ -1,4 +1,26 @@
-"""The public API."""
+"""
+
+THE PUBLIC API
+
+This file is responsible for API endpoints. In here, all
+methods should handle:
+
+    - web arguments
+      Parse and "translate" web arguments where need be,
+      so that models.py can easily generate queries or
+      perform business logic.
+
+    - file formats
+      Prepare .zip, .csv etc. files.
+      
+    - errors
+      Catch and return errors, so that the front-end can
+      feed that information back to the user.
+
+Other data-related and logic functionality should go in
+models.py. See that file for more information
+
+"""
 
 #pylint: disable=no-member,unused-argument
 
@@ -6,7 +28,7 @@ import datetime
 import logging
 import ast
 import requests
-from zipfile import ZipFile
+import flask
 
 from flask.views import View
 from flask.app import request, json
@@ -15,8 +37,7 @@ from webargs import Arg
 from webargs.flaskparser import FlaskParser
 from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
 
-from app import models, app, analytics
-from app.codereview import compare
+from app import models, app, analytics, utils
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename
 from app.utils import add_to_grading_queues, parse_date, assign_submission
@@ -37,12 +58,12 @@ parser = FlaskParser()
 
 def parse_json_field(field):
     """
-    Parses field or returns appropriate boolean value.
+    Parses field or list, or returns appropriate boolean value.
 
     :param field: (string)
     :return: (string) parsed JSON
     """
-    if not field[0] == '{':
+    if not field[0] in ['{', '[']:
         if field == 'false':
             return False
         elif field == 'true':
@@ -50,20 +71,9 @@ def parse_json_field(field):
         return field
     return json.loads(field)
 
-def parse_json_list_field(field):
-    """
-    Parses field or returns appropriate boolean value.
 
-    :param field: (string)
-    :return: (string) parsed JSON
-    """
-    if not field[0] == '[':
-        if field == 'false':
-            return False
-        elif field == 'true':
-            return True
-        return field
-    return json.loads(field)
+parse_json_list_field = parse_json_field
+
 # Arguments to convert query strings to a python type
 
 def DateTimeArg(**kwds):
@@ -218,8 +228,8 @@ class APIResource(View):
         :param kwargs: (dictionary)
         :return: result of an attempt to call method
         """
-        http_method = request.method.upper()
-        user = session['user']
+        http_method = flask.request.method.upper()
+        user = flask.session['user']
 
         if path is None:  # Index
             if http_method not in ('GET', 'POST'):
@@ -674,9 +684,6 @@ class UserAPI(APIResource):
     def get_submissions(self, obj, user, data):
         return [subm.submission for subm in obj.get_submissions(data['assignment'], data['quantity'])]
 
-    def timed_submission(self, obj, user, data):
-        return obj.get_submission_before(data['assignment'], data['before'])
-
     def merge_user(self, obj, user, data):
         """
         Merges this user with another user.
@@ -993,18 +1000,6 @@ class SubmissionAPI(APIResource):
                 'comment': KeyArg('Comment', required=True)
             }
         },
-        'add_tag': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'tag': Arg(str, required=True)
-            }
-        },
-        'remove_tag': {
-            'methods': set(['PUT']),
-            'web_args': {
-                'tag': Arg(str, required=True)
-            }
-        },
         'score': {
             'methods': set(['POST']),
             'web_args': {
@@ -1045,8 +1040,8 @@ class SubmissionAPI(APIResource):
         # Need to encode every file before it is.
         for key in file_contents.keys():
             try:
-                file_contents[key] = file_contents[key].encode('utf-8')
-            except:
+                file_contents[key] = str(file_contents[key]).encode('utf-8')
+            except:  # pragma: no cover
                 pass
 
         json_pretty = dict(sort_keys=True, indent=4, separators=(',', ': '))
@@ -1121,8 +1116,8 @@ class SubmissionAPI(APIResource):
 
         for key in file_contents.keys():
             try:
-                file_contents[key] = file_contents[key].encode('utf-8')
-            except:
+                file_contents[key] = str(file_contents[key]).encode('utf-8')
+            except:  # pragma: no cover
                 pass
 
         diff_obj = self.diff_model.get_by_id(obj.key.id())
@@ -1136,7 +1131,7 @@ class SubmissionAPI(APIResource):
                                 please contact course staff')
 
         templates = json.loads(templates)
-        if type(templates) == unicode:
+        if type(templates) == unicode:  # pragma: no cover
             templates = ast.literal_eval(templates)
 
         for filename, contents in file_contents.items():
@@ -1146,7 +1141,7 @@ class SubmissionAPI(APIResource):
                     temp = templates[filename][0]
             else:
                 temp = ""
-            diff[filename] = compare.diff(temp, contents)
+            diff[filename] = utils.diff(temp, contents)
 
         diff = self.diff_model(id=obj.key.id(),
                                diff=diff)
@@ -1203,51 +1198,6 @@ class SubmissionAPI(APIResource):
         if not comment.can(user, need, comment):
             raise need.exception()
         comment.key.delete()
-
-    def add_tag(self, obj, user, data):
-        """
-        Adds a tag to the submission.
-        Validates existence.
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: (dictionary) data
-        :return: result of adding tag
-        """
-        tag = data['tag']
-        if tag in obj.tags:
-            raise BadValueError('Tag already exists')
-
-        submit_tag = subm_model.SUBMITTED_TAG
-        if tag == submit_tag:
-            previous = subm_model.query().filter(
-                subm_model.assignment == obj.assignment).filter(
-                    subm_model.submitter == obj.submitter).filter(
-                        subm_model.tags == submit_tag)
-
-            previous = previous.get(keys_only=True)
-            if previous:
-                raise BadValueError('Only one final submission allowed')
-
-        obj.tags.append(tag)
-        obj.put()
-
-    def remove_tag(self, obj, user, data):
-        """
-        Removes a tag from this submission.
-        Validates uniqueness.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: result of removing tag
-        """
-        tag = data['tag']
-        if tag not in obj.tags:
-            raise BadValueError('Tag does not exist.')
-
-        obj.tags.remove(tag)
-        obj.put()
 
     def score(self, obj, user, data):
         """
@@ -1523,8 +1473,13 @@ class SearchAPI(APIResource):
         """ Creates all Filter Nodes """
         args, keys = [], prime.keys()
         if 'assignment' in keys:
+            if not prime['assignment'][1]:
+                raise BadValueError('Said assignment does not exist. Remember, \
+                if the assignment name has spaces, wrap it in double quotations.')
             args.append(model.assignment == prime['assignment'][1].key)
         if 'user' in keys:
+            if not prime['user'][1]:
+                raise BadValueError('Said user does not exist.')
             args.append(model.submitter == prime['user'][1].key)
         if 'date' in keys:
             opr, arg = prime['date']
@@ -1624,7 +1579,7 @@ class VersionAPI(APIResource):
             download_link = obj.download_link()
         else:
             download_link = obj.download_link(data['version'])
-        return redirect(download_link)
+        return flask.redirect(download_link)
 
     def set_current(self, obj, user, data):
         need = Need('update')
@@ -1752,8 +1707,9 @@ class CourseAPI(APIResource):
             raise need.exception()
 
         removed_user = models.User.lookup(data['email'])
-        if removed_user:
-          models.Participant.remove_role(removed_user, course, STAFF_ROLE)
+        if not removed_user:
+            raise BadValueError('No such user with email "%s" exists' % data['email'])
+        models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
         query = models.Participant.query(
@@ -1794,15 +1750,13 @@ class CourseAPI(APIResource):
             raise need.exception()
 
         removed_user = models.User.lookup(data['email'])
-        if removed_user:
-            models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
+        if not removed_user:
+            raise BadValueError('No such user with email "%s" exists' % data['email'])
+        models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
     def assignments(self, course, user, data):
         return course.assignments.fetch()
-
-    def get_my_courses(self, course, user, data):
-        return self.get_courses(course, user, dict(user=user))
-
+    
 
 class GroupAPI(APIResource):
     model = models.Group
@@ -1908,7 +1862,9 @@ class GroupAPI(APIResource):
         if not group.can(user, need, group):
             raise need.exception()
 
-        group.exit(user)
+        error = group.exit(user)
+        if error:
+            raise BadValueError(error)
 
     def reorder(self, group, user, data):
         """ Saves order of partners """
@@ -1972,8 +1928,7 @@ class QueueAPI(APIResource):
         if 'owner' not in attributes:
             attributes['owner'] = attributes['assigned_staff'][0]
         ent = super(QueueAPI, self).new_entity(attributes)
-        ent.assigned_staff = [models.User.get_or_insert(
-            user.id()).key for user in ent.assigned_staff]
+        ent.assigned_staff = [user.get().key for user in ent.assigned_staff]
         return ent
 
 
@@ -2007,6 +1962,10 @@ class QueuesAPI(APIResource):
             models.Participant.role == STAFF_ROLE,
             models.Participant.course == course_key).fetch())
             if staff_list[0] == '*' or staff.email[0] in staff_list]
+        
+        if len(staff) == 0:
+            raise BadValueError('Course has no registered staff members.')
+        
         ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
 
         subms = models.FinalSubmission.query(

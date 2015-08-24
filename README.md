@@ -35,6 +35,8 @@ To install:
 Testing the Installation
 ------------------------
 * Run `./run_tests`. For a successful installation, all tests should pass.
+* To test *and* see coverage, run `./run_coverage`.
+* To test only a subset of tests, run `FLASK_CONF=TEST python server/apptest.py --quiet --dir [DIRECTORY HERE]`.
 
 Local Server
 ------------

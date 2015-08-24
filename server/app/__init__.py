@@ -43,3 +43,6 @@ import urls
 
 # Import the authenticator. Central usage place.
 import authenticator
+
+# Set timezone
+os.environ['TZ'] = constants.TIMEZONE

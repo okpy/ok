@@ -1,5 +1,24 @@
-"""Data Models.
+"""
 
+DATA MODELS
+
+This file is responsible for models and business logic. In 
+here, all methods should handle:
+
+    - permission checks
+      Check user for each operation.
+      
+    - basic operations
+      Get, put, delete. All of those go in here.
+      
+    - queries
+      Search queries all go in here.
+
+Methods in here should try to throw informational BadValueErrors
+upon failure.
+
+Parsing web arguments and error handling go in api.py.
+      
 Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 """
 
@@ -17,6 +36,7 @@ from flask import json
 from flask.json import JSONEncoder as old_json
 
 from google.appengine.ext import ndb
+
 
 class JSONEncoder(old_json):
     """
@@ -186,34 +206,6 @@ class User(Base):
             return FinalSubmission.query(
                 FinalSubmission.assignment==assignment_key,
                 FinalSubmission.submitter==self.key).get()
-
-    def get_submission_before(self, assignment_key, before_time):
-        """Get this users last submission before some server time"""
-        if isinstance(assignment_key, Assignment):
-            assignment_key = assignment_key.key
-        group = self.get_group(assignment_key)
-        if group and self.key in group.member:
-            subms = Submission.query(
-                Submission.submitter.IN(group.member),
-                Submission.assignment == assignment_key,
-                Submission.server_time < before_time).order(
-                  -Submission.server_time
-                ).fetch(100)
-        else:
-            subms = Submission.query(
-                Submission.submitter ==self.key,
-                Submission.assignment == assignment_key,
-                Submission.server_time < before_time,
-                ).order(
-                  -Submission.server_time
-                ).fetch(100)
-
-        has_files = lambda sb: 'file_contents' in sb.backup.get().get_messages()
-        subms_with_code = filter(has_files, subms)
-        subms_with_code.sort(key= lambda s: s.server_time)
-        if len(subms_with_code) > 0:
-          return subms_with_code[-1]
-        return []
 
     def _contains_files(self, backup):
         messages = backup.get_messages()
@@ -593,7 +585,6 @@ class Participant(Base):
             user_key = user_key.key
         if isinstance(course_key, Course):
             course_key = course_key.key
-        print(user_key, course_key, role)
         query = cls.query(cls.user == user_key,
                           cls.course == course_key,
                           cls.role == role)
@@ -800,7 +791,7 @@ class Submission(Base):
                 assignment=self.assignment, submission=self.key)
             if group:
                 final.group = group.key
-        final.put()
+        return final.put()
 
     def resubmit(self, user_key):
         """
@@ -989,7 +980,11 @@ class Group(Base):
     #@ndb.transactional
     def invite(self, email):
         """Invites a user to the group. Returns an error message or None."""
-        user = User.lookup(email)
+        if isinstance(email, ndb.Key):
+            user = email.get()
+            email = user.email[0]
+        else:
+            user = User.lookup(email)
         if not user:
             return "{} is not a valid user".format(email)
         course = self.assignment.get().course
@@ -1034,7 +1029,7 @@ class Group(Base):
         """User accepts an invitation to join. Returns error or None."""
         if isinstance(user_key, User):
             user_key = user_key.key
-        if user_key not in self.invited:
+        if user_key not in self.invited:  # Note: these will never happen, according to _can
             return "That user is not invited to the group"
         if user_key in self.member:
             return "That user has already accepted."
@@ -1049,6 +1044,8 @@ class Group(Base):
         """User leaves the group. Empty/singleton groups are deleted."""
         if isinstance(user_key, User):
             user_key = user_key.key
+        if user_key not in self.member and user_key not in self.invited:
+            return 'That user is not in this group and has not been invited.'
         for users in [self.member, self.invited]:
             if user_key in users:
                 users.remove(user_key)

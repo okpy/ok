@@ -11,7 +11,7 @@ tests.py
 """
 
 import datetime
-from test_base import APIBaseTestCase, unittest, api #pylint: disable=relative-import
+from test_base import APIBaseTestCase, unittest, api, TestingError, BaseTestCase, mock #pylint: disable=relative-import
 from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
 from google.appengine.ext import ndb
 from app import models, constants, utils
@@ -142,6 +142,29 @@ class SearchAPITest(APIBaseTestCase):
 		operator, arg = scope['assignment']
 		self.assertEqual(operator, op.__eq__)
 		self.assertEqual(arg, 'Scheme')
+		
+	def test_nonexistent_operator(self):
+		""" Test that invalid operator raises BadValueError """
+		with self.assertRaises(BadValueError):
+			query = '-assignment --yolo Scheme'
+			self.API.translate(query)
+	
+	##################
+	# OBJECTIFY KEYS #
+	##################
+	
+	def test_bad_flag(self):
+		""" Test that invalid flag is caught, raises BadValueError instead """
+		with self.assertRaises(BadValueError):
+			query = '-yolo Scheme'
+			self.API.objectify(query)
+			
+	def test_bad_arg(self):
+		""" Test that invalid arg is caught, raises BadValueError instead """
+		with self.assertRaises(BadValueError):
+			query = '-assignment Scheme -date yolo'
+			self.API.objectify(query)
+
 
 	#################
 	# QUERY RESULTS #
@@ -164,6 +187,12 @@ class SearchAPITest(APIBaseTestCase):
 		query = '-assignment "%s" -onlybackup %s'
 		self.API.querify(query % (self.assignment_name, 'true'))
 		self.API.querify(query % (self.assignment_name, 'false'))
+
+	def test_flag_with_user(self):
+		""" Testing if user flag operates without error """
+		query = '-assignment "%s" -user %s'
+		self.API.querify(query % (self.assignment_name, 'dummy2@student.com'))
+		self.API.querify(query % (self.assignment_name, 'dummy@admin.com'))
 
 	def test_flag_onlybackup_results(self):
 		""" Testing if onlybackup actually returns ONLY backups. """
@@ -200,3 +229,131 @@ class SearchAPITest(APIBaseTestCase):
 
 		finals = [result for result in results if isinstance(result, models.FinalSubmission)]
 		self.assertNotEqual(finals, results)
+		
+	def test_onlywcode(self):
+		""" Tests that onlywcode flag is disabled for now """
+		with self.assertRaises(BadValueError):
+			self.API.querify('-onlywcode true')
+			
+	###############
+	# PERMISSIONS #
+	###############
+
+	def test_check_permissions(self):
+		""" Test that permissions are checked """
+		data = dict(courseId=self._course.key.id())
+		self.API().check_permissions(self.accounts['dummy_admin'], data)  # tests that admin is OK
+		with self.assertRaises(PermissionError):
+			self.API().check_permissions(
+				self.accounts['dummy_student2'], data)
+			
+	def test_index_check_permissions(self):
+		""" Tests that index checks permissions """
+		data = dict(courseId=self._course.key.id())
+		with self.assertRaises(PermissionError):
+			self.API().index(
+				self.accounts['dummy_student2'], data)
+			
+	def test_index_functionality(self):
+		""" Tests that index works """
+		data = {
+			'query': '-assignment "%s"' % self.assignment_name,
+		    'page': 1,
+		    'num_per_page': 10,
+			'courseId': self._course.key.id()
+		}
+		rval = self.API().index(self.accounts['dummy_admin'], data)['data']
+		self.assertIn('results', rval)
+		self.assertIn('more', rval)
+		self.assertIn('query', rval)
+		
+	def test_download_check_permissions(self):
+		""" Tests that download will check permissions """
+		with self.assertRaises(PermissionError):
+			data = dict(courseId=self._course.key.id())
+			self.API().index(
+				self.accounts['dummy_student2'], data)
+
+	def test_download_dont_get_all(self):
+		""" Test that download will limit results """
+		data = {
+			'query': '-assignment "%s"' % self.assignment_name,
+			'all': 'false',
+			'page': 1,
+		    'num_per_page': 10,
+		    'courseId': self._course.key.id()
+		}
+		with self.app.test_request_context('/api/v2/'):
+			self.API().download(self.accounts['dummy_admin'], data)
+			self.API().results(data)
+			self.mock(self.API, 'limits').using(BaseTestCase.raise_error, staticmethod)
+			with self.assertRaises(TestingError):
+				self.API().results(data)
+
+	# def test_download_error_propogation(self):  # moved relevant code to utils.py
+	# 	""" Tests that errors that are not 'Submission has no contents...' propogate """
+	# 	data = {
+	# 		'query': '-assignment "%s"' % self.assignment_name,
+	# 		'all': 'false',
+	# 		'page': 1,
+	# 		'num_per_page': 10,
+	# 		'courseId': self._course.key.id()
+	# 	}
+	# 	self.mock(api.SubmissionAPI, 'data_for_zip').using(BaseTestCase.raise_error(BadValueError))
+	# 	with self.assertRaises(BadValueError):
+	# 		self.API().download(self.accounts['dummy_admin'], data)
+			
+	def test_download_normal(self):
+		""" Tests a normal download """
+		data = {
+			'query': '-assignment "%s"' % self.assignment_name,
+			'all': 'false',
+			'page': 1,
+			'num_per_page': 10,
+			'courseId': self._course.key.id()
+		}
+		with self.app.test_request_context('/api/v2'):
+			self.API().download(self.accounts['dummy_admin'], data)
+
+	#######################
+	# ADDITIONAL FEATURES #
+	#######################
+	
+	def test_order_with_invalid_model(self):
+		""" Test order with an invalid/incompatible model """
+		value = 'blapples'
+		rval = self.API.order(None, value)  # test nothing dies
+		self.assertEqual(rval, value)
+		
+		model = self.obj().set(server_time=None)
+		query = self.obj().set(order=lambda i: int(i))
+		self.API.order(model, query)  # test nothing dies
+		
+	def test_order_functionality(self):
+		""" Tests that order actually works """
+		model = models.Submission
+		query = self.API.querify('-assignment "%s"' % self.assignment_name)
+		results = self.API.order(model, query)
+		
+		time = None
+		for result in results:
+			self.assertTrue(not time or result.server_time < time)
+			time = result.server_time
+			
+	def test_get_args_with_invalid_assignment(self):
+		""" Tests that get_args catches invalid/nonexistent assignment """
+		with self.assertRaises(BadValueError):
+			self.API.querify('-assignment Nonexistent')
+
+	def test_get_args_with_invalid_user(self):
+		""" Tests that get_args catches invalid/nonexistent user """
+		with self.assertRaises(BadValueError):
+			self.API.querify('-user wh@tever.com')
+			
+	def test_limits_validity(self):
+		""" Tests that limits are properly computer """
+		start, end = self.API.limits(3, 10)
+		self.assertEqual((start, end), (20, 30))
+		
+		start, end = self.API.limits(1, 100)
+		self.assertEqual((start, end), (0, 100))

@@ -8,7 +8,7 @@ from app.authenticator import AuthenticationException
 
 from google.appengine.api import memcache as mc
 
-from flask import request
+import flask
 
 from google.appengine.api import users
 
@@ -21,11 +21,10 @@ def authenticate():
     if user:
         return models.User.get_or_insert(user.email().lower())
 
-    if 'access_token' not in request.args:
+    if 'access_token' not in flask.request.args:
         return models.User.get_or_insert("<anon>")
     else:
-        access_token = request.args['access_token']
-        # print 'USING ACCESS TOKEN', access_token
+        access_token = flask.request.args['access_token']
         user = mc.get("%s-%s" % (MC_NAMESPACE, access_token))
         if user:
             return user

@@ -98,24 +98,6 @@ def login():
       return redirect(url_for('home'))
 
 
-@app.route("/old")
-def dashboard():
-    user = users.get_current_user()
-    params = {}
-    if user is None:
-        params['users_link'] = force_account_chooser(
-            users.create_login_url('/#/loginLanding'))
-        params['users_title'] = "Sign In"
-    else:
-        logging.info("User is %s", user.email())
-        params["user"] = {'email': user.email()}
-        params['users_link'] = users.create_logout_url('/')
-        params['users_title'] = "Log Out"
-        params['relogin_link'] = users.create_logout_url(
-            force_account_chooser(users.create_login_url('/#/loginLanding')))
-    params['DEBUG'] = app.config['DEBUG']
-    return render_template("base.html", **params)
-
 @app.route("/manage")
 def admin():
     user = users.get_current_user()
@@ -180,10 +162,9 @@ def register_api(view, endpoint, url):
     url = '/'.join((API_PREFIX, view.api_version, url))
     view = view.as_view(endpoint)
 
-    @wraps(view)
     def api_wrapper(*args, **kwds):
-        #TODO(martinis) add tests
         # Any client can check for the latest version
+        
         try:
             request.fields = {}
             message = "success"
@@ -222,14 +203,20 @@ def register_api(view, endpoint, url):
 
         except Exception as e: #pylint: disable=broad-except
             logging.exception(e.message)
-            return utils.create_api_response(500, 'internal server error :(')
+            return utils.create_api_response(500, e.message, getattr(e, 'data', None))
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        return api_wrapper(*args, **kwargs)
 
     app.add_url_rule(
-        '%s' % url, view_func=api_wrapper, defaults={'path': None},
+        '%s' % url, view_func=wrapper, defaults={'path': None},
         methods=['GET', 'POST'])
     app.add_url_rule(
-        '%s/<path:path>' % url, view_func=api_wrapper,
+        '%s/<path:path>' % url, view_func=wrapper,
         methods=['GET', 'POST', 'DELETE', 'PUT'])
+    
+    return api_wrapper  # adding for testing purposes
     
 
 def register_root_api(api):

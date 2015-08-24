@@ -6,6 +6,7 @@
 """
 Server test case scaffolding
 """
+import inspect
 
 import os
 import sys
@@ -36,6 +37,7 @@ from app import auth
 from app.constants import API_PREFIX
 from app import api, utils
 from app.authenticator import Authenticator, AuthenticationException
+
 
 def make_fake_course(creator):
     return models.Course(
@@ -80,6 +82,64 @@ def make_fake_finalsubmission(submission, assignment, user):
     return rval
 
 
+def make_fake_group(assignment, *args):
+    rval = models.Group(
+        member=[u.key for u in args],
+        assignment=assignment.key
+    )
+    rval.put()
+    return rval
+
+
+class Mock(object):
+    """ To temporarily replace variables - as a with block """
+    
+    old = None
+    
+    def __init__(self, obj, attr):
+        super(Mock, self).__init__()
+        self.obj = obj
+        self.attr = attr
+        self.old = getattr(obj, attr)
+    
+    def __enter__(self):
+        return self.obj
+    
+    def using(self, val):
+        setattr(self.obj, self.attr, val)
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        setattr(self.obj, self.attr, self.old)
+        
+
+def mock(obj, attr, new, typecast=None):
+    """ To temporarily replace variables - as a decorator """
+    old = getattr(obj, attr)
+    if callable(typecast):
+        setattr(obj, attr, typecast(new))
+    else:
+        setattr(obj, attr, new)
+
+    def decorator(f):
+        def helper(*args, **kwargs):
+            try:
+                response = f(*args, **kwargs)
+            finally:
+                if callable(typecast):
+                    setattr(obj, attr, typecast(old))
+                else:
+                    setattr(obj, attr, old)
+            return response
+        helper.__name__ = f.__name__
+        return helper
+    return decorator
+
+
+class TestingError(Exception):
+    pass
+
+
 class BaseTestCase(unittest.TestCase):
     """
     Base test case.
@@ -98,16 +158,56 @@ class BaseTestCase(unittest.TestCase):
         self.testbed.init_memcache_stub()
         self.testbed.init_taskqueue_stub()
         self.taskqueue_stub = self.testbed.get_stub(testbed.TASKQUEUE_SERVICE_NAME)
+        self._typecast = None
         self._mocks = []
 
     def tearDown(self): #pylint: disable=invalid-name, missing-docstring
         self.testbed.deactivate()
-        for obj, name, val in self._mocks:
-            setattr(obj, name, val)
+        for obj, attr, val in self._mocks:
+            if callable(self._typecast):
+                setattr(obj, attr, self._typecast(val))
+            else:
+                setattr(obj, attr, val)
+        
+    def mock(self, obj, attr):
+        """ Utility - mock an attr for the duration of the test method """
+        self._mocks.append((obj, attr, getattr(obj, attr)))
+        
+        def using(val, typecast=None):
+            if callable(typecast):
+                self._typecast = typecast
+                setattr(obj, attr, typecast(val))
+            else:
+                setattr(obj, attr, val)
+        return self.obj().set(using=using)
 
-    def mock(self, obj, name, val):
-        self._mocks.append((obj, name, getattr(obj, name)))
-        setattr(obj, name, val)
+    @staticmethod
+    def obj():
+        """ Utility - object with set(k=v, k2=v2) method """
+        class Obj:
+            def set(self, **kwargs):
+                [setattr(self, k, v) for k, v in kwargs.items()]
+                return self
+        return Obj()
+
+    @staticmethod
+    def always_can():
+        """ Utility - object that always allows user """
+        return BaseTestCase.obj().set(can=lambda *args, **kwargs: True)
+
+    @staticmethod
+    def never_can():
+        """ Utility - object that never allows user """
+        return BaseTestCase.obj().set(can=lambda *args, **kwargs: False)
+
+    @staticmethod
+    def raise_error(error=None, *args, **kwargs):
+        """ Raise an error for testing purposes """
+        if inspect.isclass(error) and issubclass(error, Exception):
+            def raise_error_helper(*args, **kwargs):
+                raise error()
+            return raise_error_helper
+        raise TestingError()
 
 
 class APIBaseTestCase(BaseTestCase):
@@ -121,9 +221,7 @@ class APIBaseTestCase(BaseTestCase):
     url_prefix = API_PREFIX + '/{}'
 
     def get_accounts(self):
-        """
-        Returns the accounts you want to exist in your system.
-        """
+        """ Returns the accounts you want to exist in your system. """
         raise NotImplementedError
 
     def setUp(self):
@@ -140,11 +238,10 @@ class APIBaseTestCase(BaseTestCase):
         return self.user
 
     def authenticate_GAE_service(self):
-        class FakeUser:
-            def email(_):
-                return self.user.email[0]
-
-        return FakeUser() if self.user else None
+        return self.obj().set(
+            email=lambda *args: self.user.email[0],
+            user_id=lambda *args: self.user.key.id()
+        ) if self.user else None
 
     def login(self, user):
         """ Logs in the user. """

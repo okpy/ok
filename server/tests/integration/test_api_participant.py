@@ -11,10 +11,12 @@ tests.py
 """
 
 import datetime
-from test_base import APIBaseTestCase, unittest, api #pylint: disable=relative-import
+import json
+from test_api_base import APITest
+from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
 from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
 from google.appengine.ext import ndb
-from app import models, constants, utils
+from app import models, constants, utils, api
 from ddt import ddt, data, unpack
 from app.exceptions import *
 from integration.test_api_base import APITest
@@ -98,3 +100,49 @@ class ParticipantAPITest(APIBaseTestCase):
 	# 	self.merge_users()
 	# 	self.assertEqual('inactive', self.user2.key.get().status)
 	# 	self.assertEqual('active', self.user1.key.get().status)
+
+	def test_enrollment_empty(self):
+		""" Tests that enrollment data is empty for unenrolled student """
+		with self.app.test_request_context('/enrollment?email=gibberish@admin.com'):
+			self.assertEqual(self.API().enrollment(), '[]')
+
+	def test_enrollment_json(self):
+		""" Tests that response is valid JSON """
+		with self.app.test_request_context('/enrollment?email=dummy3@student.com'):
+			models.Participant.add_role(self.accounts['dummy_student3'], self._course, constants.STUDENT_ROLE)
+			data = json.loads(self.API().enrollment())
+			self.assertEqual(1, len(data))
+	
+	def test_enrollment_validity(self):
+		""" Tests enrollment data is accurate """
+		
+		with self.app.test_request_context('/enrollment?email=dummy3@student.com'):
+			models.Participant.add_role(self.accounts['dummy_student3'], self._course, constants.STUDENT_ROLE)
+			data = json.loads(self.API().enrollment())
+			self.assertEqual(1, len(data))
+			
+			datum = data[0]
+			self.assertEqual(datum['display_name'], self._course.display_name)
+			self.assertEqual(datum['institution'], self._course.institution)
+			self.assertEqual(datum['offering'], self._course.offering)
+			self.assertEqual(datum['url'], '/#/course/'+str(self._course.key.id()))
+
+			self.assertEqual(datum['term'], 'fall')
+			self.assertEqual(datum['year'], '2014')
+			
+			self._course.offering = 'summer/2015'
+			self._course.put()
+
+			datum = json.loads(self.API().enrollment())[0]
+
+			self.assertEqual(datum['term'], None)
+			self.assertEqual(datum['year'], None)
+			
+	def test_check(self):
+		""" Test check functionality """
+		models.Participant.add_role(self.accounts['dummy_student3'], self._course, constants.STUDENT_ROLE)
+		models.Participant.add_role(self.accounts['dummy_student2'], self._course, constants.STUDENT_ROLE)
+		self.API().check(['dummy2@student.com', 'dummy3@student.com'], self._course, constants.STUDENT_ROLE)
+		
+		with self.assertRaises(BadValueError):
+			self.API().check(['dummy2@student.com', 'dummy3@student.com'], self._course, constants.STAFF_ROLE)

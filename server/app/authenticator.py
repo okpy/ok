@@ -40,6 +40,7 @@ class GoogleAuthenticator(Authenticator):
             raise AuthenticationException("email doesn't exist")
         return response['email'].lower()
 
+
 class TestingAuthenticator(Authenticator):
     """
     Authenticates a user with an access token.

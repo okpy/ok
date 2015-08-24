@@ -7,7 +7,12 @@ fi
 
 source env/server/bin/activate
 
-FLASK_CONF=TEST python server/apptest.py --quiet $@
+if [[ -n "$OK_TEST_DIR" ]];
+    then echo $OK_TEST_DIR; 
+    else OK_TEST_DIR='all';
+fi
+
+FLASK_CONF=TEST python server/apptest.py --quiet --dir $OK_TEST_DIR $@
 RESULT=$?
 
 deactivate

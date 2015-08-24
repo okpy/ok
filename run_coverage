@@ -1,6 +1,6 @@
 #!/bin/bash
 
-coverage run apptest.py
+FLASK_CONF=TEST coverage run server/apptest.py --quiet
 coverage html
 if hash open 2>/dev/null; then
   open coverage_report/index.html

@@ -137,7 +137,7 @@ class UserMergeTest(BaseUnitTest):
         def resubmit(*args):
             calls[0] += 1
 
-        self.mock(models.Submission, 'resubmit', resubmit)
+        self.mock(models.Submission, 'resubmit').using(resubmit)
 
         backup = models.Backup()
         backup.submitter = user_obj2.key
@@ -164,7 +164,7 @@ class UserMergeTest(BaseUnitTest):
         def resubmit(*args):
             calls[0] += 1
 
-        self.mock(models.Submission, 'resubmit', resubmit)
+        self.mock(models.Submission, 'resubmit').using(resubmit)
 
         backup = models.Backup()
         backup.submitter = user_obj.key
@@ -283,19 +283,18 @@ class UserUniquenessTest(BaseUnitTest):
         def unique_email_address_mock(user):
             self.assertEqual(user, user_obj)
             calls[0] += 1
-        self.mock(utils, 'unique_email_address', unique_email_address_mock)
+        self.mock(utils, 'unique_email_address').using(unique_email_address_mock)
 
         def unique_final_submission_mock(user):
             self.assertEqual(user, user_obj)
             calls[1] += 1
-        self.mock(
-            utils, 'unique_final_submission', unique_final_submission_mock)
+        self.mock(utils, 'unique_final_submission').using(unique_final_submission_mock)
 
         def unique_group_mock(user):
             self.assertEqual(user, user_obj)
             calls[2] += 1
 
-        self.mock(utils, 'unique_group', unique_group_mock)
+        self.mock(utils, 'unique_group').using(unique_group_mock)
 
         utils.deferred_check_user(user_obj.key.id())
         self.assertNotEqual(calls[0], 0)
