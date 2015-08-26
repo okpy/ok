@@ -12,7 +12,7 @@ methods should handle:
 
     - file formats
       Prepare .zip, .csv etc. files.
-      
+
     - errors
       Catch and return errors, so that the front-end can
       feed that information back to the user.
@@ -1268,13 +1268,11 @@ class SubmissionAPI(APIResource):
                 # In the revision period. Ensure that user has a previously graded submission.
                 fs = user.get_final_submission(valid_assignment)
                 if fs is None or fs.submission.get().score == []:
-                    logging.info('Rejecting Revision without graded FS', submitter)
                     return (403, 'Previous submission was not graded', {
                       'late': True,
                       })
             else:
                 # Late submission. Do not allow them to submit
-                logging.info('Rejecting Late Submission', submitter)
                 return (403, 'late', {
                     'late': True,
                     })
@@ -1384,7 +1382,7 @@ class SearchAPI(APIResource):
         self.check_permissions(user, data)
 
         now = datetime.datetime.now()
-        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI(), 
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI(),
                        models.Submission, user, data, now)
 
         return [make_zip_filename(user, now)]
@@ -1756,7 +1754,7 @@ class CourseAPI(APIResource):
 
     def assignments(self, course, user, data):
         return course.assignments.fetch()
-    
+
 
 class GroupAPI(APIResource):
     model = models.Group
@@ -1962,10 +1960,10 @@ class QueuesAPI(APIResource):
             models.Participant.role == STAFF_ROLE,
             models.Participant.course == course_key).fetch())
             if staff_list[0] == '*' or staff.email[0] in staff_list]
-        
+
         if len(staff) == 0:
             raise BadValueError('Course has no registered staff members.')
-        
+
         ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
 
         subms = models.FinalSubmission.query(
