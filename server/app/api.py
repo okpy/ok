@@ -943,7 +943,7 @@ class SubmitNDBImplementation(object):
         backup.put()
         deferred.defer(assign_submission, backup.key.id(), submit)
         if assignment.autograding_enabled:
-            deferred.defer(submit_to_ag, assignment.autograder_key,
+            deferred.defer(submit_to_ag, assignment.autograding_key,
                 db_messages, submitter)
         return backup
 
