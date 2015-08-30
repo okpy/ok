@@ -35,11 +35,11 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL
 
 from app import models, app, analytics, utils
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user, backup_group_file, add_to_file_contents
 
@@ -864,7 +864,6 @@ class AssignmentAPI(APIResource):
         for fsub in fsubs:
           subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
 
-        ag_url = "http://autograder.cs61a.org:5000"
         data = {
             'subm_ids': subm_ids,
             'assignment': obj.autograding_key,
@@ -872,9 +871,10 @@ class AssignmentAPI(APIResource):
         }
 
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        r = requests.post(ag_url+'/api/ok/grade/batch', data=json.dumps(data), headers=headers)
+        r = requests.post(AUTOGRADER_URL+'/api/ok/grade/batch',
+            data=json.dumps(data), headers=headers)
         if r.status_code == requests.codes.ok:
-          return {'status_url': ag_url+'/rq', 'length': str(len(subm_ids))}
+          return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
         else:
           raise BadValueError('The autograder the rejected your request')
       else:
@@ -942,6 +942,9 @@ class SubmitNDBImplementation(object):
                                created=created)
         backup.put()
         deferred.defer(assign_submission, backup.key.id(), submit)
+        if assignment.autograding_enabled:
+            deferred.defer(submit_to_ag, assignment.autograder_key,
+                db_messages, submitter)
         return backup
 
 
