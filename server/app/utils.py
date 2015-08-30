@@ -10,6 +10,7 @@ import datetime
 import itertools
 from os.path import join
 from app import constants
+import requests
 
 try:
     from cStringIO import StringIO
@@ -580,22 +581,31 @@ def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
     zip_filename = make_zip_filename(user, datetime)
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
 
-def submit_to_ag(ag_key, messages, submitter):
+def submit_to_ag(ag_key, assignment, messages, submitter):
     if 'file_contents' not in messages:
         return
+    email = submitter.email[0]
     data = {
-        'assignment': ag_key,
+        'assignment': assignment.autograding_key,
         'file_contents': messages['file_contents'],
-        'submitter': submitter
+        'submitter': email
     }
+    # Ensure user is enrolled.
+    enrollment = ModelProxy.Participant.query(
+        Participant.course == assignment.course,
+        Participant.user == submitter.key).get()
 
+    if not enrollment:
+        raise BadValueError('User is not enrolled and cannot be autograded.')
+    logging.info("Starting send to AG")
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     r = requests.post(AUTOGRADER_URL+'/api/file/grade/continous',
         data=json.dumps(data), headers=headers)
     if r.status_code == requests.codes.ok:
-      return {'status': "pending"}
+        logging.info("Sent to Autograder")
+        return {'status': "pending"}
     else:
-      raise BadValueError('The autograder the rejected your request')
+        raise BadValueError('The autograder the rejected your request')
 
 
 import difflib

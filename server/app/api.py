@@ -942,9 +942,6 @@ class SubmitNDBImplementation(object):
                                created=created)
         backup.put()
         deferred.defer(assign_submission, backup.key.id(), submit)
-        if assignment.autograding_enabled:
-            deferred.defer(submit_to_ag, assignment.autograding_key,
-                db_messages, submitter)
         return backup
 
 
@@ -1275,6 +1272,11 @@ class SubmissionAPI(APIResource):
 
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
+
+        if valid_assignment.autograding_enabled:
+            logging.info("Queing submission to AG")
+            deferred.defer(submit_to_ag, valid_assignment, messages, user)
+
         return (201, 'success', {
             'key': submission.key.id(),
             'course': valid_assignment.course.id(),
