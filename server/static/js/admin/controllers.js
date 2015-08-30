@@ -104,7 +104,7 @@ app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$statePa
           'revision': $scope.newAssign.revisions,
           'lock_date': lock_date_time,
           'autograding_enabled': $scope.newAssign.autograding_enabled,
-          'autograding_key': $scope.newAssign.autograder_key,
+          'autograding_key': $scope.newAssign.autograding_key,
           'url': $scope.newAssign.url
         },
           function (response) {
@@ -191,7 +191,6 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'name': $scope.assign.endpoint,
             'points': $scope.assign.points,
             'max_group_size': $scope.assign.max_group_size,
-            'templates': {},
             'due_date': due_date_time,
             'course': $scope.assign.course.id,
             'revision': $scope.assign.revisions,
@@ -205,7 +204,6 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'name': $scope.assign.endpoint,
             'points': $scope.assign.points,
             'max_group_size': $scope.assign.max_group_size,
-            'templates': {},
             'due_date': due_date_time,
             'course': $scope.assign.course.id,
             'revision': $scope.assign.revisions,
@@ -215,6 +213,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'url': $scope.assign.url
           }
         }
+        
         Assignment.edit(updatedAssign,
           function (response) {
             $scope.assignments = Assignment.query({},
