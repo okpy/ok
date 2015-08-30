@@ -2,15 +2,15 @@
 
 DATA MODELS
 
-This file is responsible for models and business logic. In 
+This file is responsible for models and business logic. In
 here, all methods should handle:
 
     - permission checks
       Check user for each operation.
-      
+
     - basic operations
       Get, put, delete. All of those go in here.
-      
+
     - queries
       Search queries all go in here.
 
@@ -18,7 +18,7 @@ Methods in here should try to throw informational BadValueErrors
 upon failure.
 
 Parsing web arguments and error handling go in api.py.
-      
+
 Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 """
 
@@ -100,8 +100,10 @@ class Base(ndb.Model):
         if self.key and (not fields or 'id' in fields):
             result['id'] = self.key.id()
 
-        # Protect sensitive fields
-        sensitive_fields = ['zip_file_url', 'grading_script_file']
+        # Protect sensitive fields: autograding_key
+        # Previous sensitive fields: zip_file_url and script
+        sensitive_fields = ['autograding_key',
+            'zip_file_url', 'grading_script_file']
         for sensitive in sensitive_fields:
             if sensitive in result:
                 result[sensitive] = ''
@@ -516,9 +518,8 @@ class Assignment(Base):
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
     revision = ndb.BooleanProperty(default=False)
+    autograding_key = ndb.StringProperty()
     autograding_enabled = ndb.BooleanProperty(default=False)
-    grading_script_file = ndb.TextProperty()
-    zip_file_url = ndb.StringProperty()
 
     # TODO Add services requested
 

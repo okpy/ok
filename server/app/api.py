@@ -720,9 +720,7 @@ class AssignmentAPI(APIResource):
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
                 'autograding_enabled': Arg(bool),
-                'grading_script_file': Arg(str),
-                'zip_file_url': Arg(str),
-                'access_token': Arg(str),
+                'autograding_key': Arg(str),
                 'url': Arg(str)
             }
         },
@@ -738,9 +736,7 @@ class AssignmentAPI(APIResource):
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
                 'autograding_enabled': Arg(bool),
-                'grading_script_file': Arg(str),
-                'zip_file_url': Arg(str),
-                'access_token': Arg(str),
+                'autograding_key': Arg(str),
                 'url': Arg(str)
             }
         },
@@ -759,9 +755,7 @@ class AssignmentAPI(APIResource):
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
                 'autograding_enabled': Arg(bool),
-                'grading_script_file': Arg(str),
-                'zip_file_url': Arg(str),
-                'access_token': Arg(str),
+                'autograding_key': Arg(str),
                 'url': Arg(str)
             }
         },
@@ -870,16 +864,15 @@ class AssignmentAPI(APIResource):
         for fsub in fsubs:
           subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
 
-        ag_url = "http://104.154.46.183:5000"
-        data = {'subm_ids': subm_ids,
-        'assign_name': obj.display_name,
-        'starter_zip_url': obj.zip_file_url,
-        'access_token': data['token'],
-        'grade_script': obj.grading_script_file,
-        'testing': True}
+        ag_url = "http://autograder.cs61a.org:5000"
+        data = {
+            'subm_ids': subm_ids,
+            'assignment': obj.autograding_key,
+            'access_token': data['token']
+        }
 
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        r = requests.post(ag_url+'/grade/batch', data=json.dumps(data), headers=headers)
+        r = requests.post(ag_url+'/api/ok/grade/batch', data=json.dumps(data), headers=headers)
         if r.status_code == requests.codes.ok:
           return {'status_url': ag_url+'/rq', 'length': str(len(subm_ids))}
         else:
