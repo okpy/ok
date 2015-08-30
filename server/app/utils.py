@@ -581,7 +581,7 @@ def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
     zip_filename = make_zip_filename(user, datetime)
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
 
-def submit_to_ag(ag_key, assignment, messages, submitter):
+def submit_to_ag(assignment, messages, submitter):
     if 'file_contents' not in messages:
         return
     email = submitter.email[0]
