@@ -592,8 +592,8 @@ def submit_to_ag(assignment, messages, submitter):
     }
     # Ensure user is enrolled.
     enrollment = ModelProxy.Participant.query(
-        Participant.course == assignment.course,
-        Participant.user == submitter.key).get()
+        ModelProxy.Participant.course == assignment.course,
+        ModelProxy.Participant.user == submitter.key).get()
 
     if not enrollment:
         raise BadValueError('User is not enrolled and cannot be autograded.')
