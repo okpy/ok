@@ -794,6 +794,8 @@ class AssignmentAPI(APIResource):
         },
         'queues': {
             'methods': set(['GET']),
+        },
+        'statistics': {
         }
     }
 
@@ -888,6 +890,18 @@ class AssignmentAPI(APIResource):
             raise need.exception()
 
         return models.Queue.query(models.Queue.assignment == obj.key).fetch()
+
+    def statistics(self, assignment, user, data):
+        """Returns assignment statistics"""
+        need = Need('staff')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+        FSub, Sub = models.FinalSubmission, models.Submission
+        return {
+            'finalsubmissions': FSub.query(FSub.assignment==assignment.key).count(),
+            'submissions': Sub.query(Sub.assignment==assignment.key).count()
+        }
 
 
 class SubmitNDBImplementation(object):
