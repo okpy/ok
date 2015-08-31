@@ -44,9 +44,12 @@ To run the server locally:
 
 ```bash
 $ source activate_server.sh 
+$ cd server
 $ bower install  # to install frontend CSS/JS libraries
 $ ./start_server
 ```
+
+The server will listen on http://localhost:8080.
 
 Deploying
 ---------
