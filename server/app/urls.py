@@ -203,7 +203,13 @@ def register_api(view, endpoint, url):
 
         except Exception as e: #pylint: disable=broad-except
             logging.exception(e.message)
-            return utils.create_api_response(500, e.message, getattr(e, 'data', None))
+            return utils.create_api_response(
+                500, e.message, getattr(e, 'data', None))
+
+        except:
+            logging.exception('Unknown error occurred')
+            return utils.create_api_response(
+                520, 'Unknown error occurred')
 
     @wraps(view)
     def wrapper(*args, **kwargs):

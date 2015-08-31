@@ -719,6 +719,12 @@ class Backup(Base):
                 return True
             group = backup.group
             return bool(group and user.key in group.member)
+        if action == "staff":
+            if user.is_admin:
+                return True
+            course_key = backup.assignment.get().course
+            course = course_key.get()
+            return user.key in course.staff
         if action in ("create", "put"):
             return user.logged_in and user.key == backup.submitter
         if action == "index":
@@ -857,6 +863,14 @@ class Diff(Base):
 
         data['comments'] = all_comments
         return data
+    
+    @classmethod
+    def _can(cls, user, need, diff, query):
+        return Backup._can(
+            user, 
+            need, 
+            diff.after.get() if diff else None, 
+            None)
 
 
 class Comment(Base):
@@ -877,6 +891,14 @@ class Comment(Base):
         if need.action in ["get", "modify", "delete"]:
             return comment.author == user.key
         return False
+
+    @classmethod
+    def _can(cls, user, need, comment=None, query=None):
+        return Diff._can(
+            user, 
+            need, 
+            comment.diff.get() if comment else None,
+            None)
 
 
 class Version(Base):
@@ -1086,7 +1108,7 @@ class Group(Base):
             return user.key in group.member or user.key in group.invited
         elif action in ("invite", "remove", "reorder"):
             return user.key in group.member
-        elif action in "accept":
+        elif action in ("accept", "decline"):
             return user.key in group.invited
         return False
 

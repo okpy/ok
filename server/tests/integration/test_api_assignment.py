@@ -121,12 +121,14 @@ class AssignmentAPITest(APIBaseTestCase):
 
 	def test_invite_err(self):
 		""" Test that error is thrown if need be"""
-		self.mock(models.Group, 'invite_to_group').using(lambda *args: True)
+		self.mock(models.Group, 'invite_to_group').using(staticmethod(lambda *args: True))
 		with self.assertRaises(BadValueError):
-			group_wrapper = self.obj().set(key=self._group)
-			self.API().invite(self.accounts['dummy_admin'], group_wrapper, {
-				'email': 'dummy@admin.com'
-			})
+			self.API().invite(
+				self._group,
+				self.accounts['dummy_admin'], 
+				{
+					'email': 'dummy@admin.com'
+				})
 	
 	def test_download_scores_check(self):
 		""" Tests that download_scores checks for permissions """

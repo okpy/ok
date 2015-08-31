@@ -25,6 +25,7 @@ models.py. See that file for more information
 #pylint: disable=no-member,unused-argument
 
 import datetime
+import functools
 import logging
 import ast
 import requests
@@ -54,6 +55,25 @@ import re
 import operator as op
 
 parser = FlaskParser()
+
+identity = lambda *args: args
+
+
+def need(permission, can=identity, args=identity):
+    """Decorator for permissions check"""
+    def wrap(f):
+        @functools.wraps(f)
+        def helper(self, obj, user, data=None):
+            # avoiding nonlocal because tests run in Python2
+            need, _can, _args = Need(permission), can, args
+            if data is None:
+                _can = lambda data, need, user: (user, need, None)
+                _args = lambda user, data, _: (user, data)
+            if not obj.can(*_can(user, need, obj)):
+                raise need.exception()
+            return f(self, *_args(obj, user, data or {}))
+        return helper
+    return wrap
 
 
 def parse_json_field(field):
@@ -277,13 +297,11 @@ class APIResource(View):
         """
         return obj
 
+    @need('put')
     def put(self, obj, user, data):
         """
         The PUT HTTP method
         """
-        need = Need('put')
-        if not obj.can(user, need, obj):
-            raise need.exception()
 
         blank_val = object()
         changed = False
@@ -426,11 +444,28 @@ class ParticipantAPI(APIResource):
         }
     }
 
+    # Utility - TODO: remove it in favor of existing permissions implementation
+
+    def check(self, emails, course, role):
+        parts = []
+        for email in emails:
+            part = models.Participant.has_role(
+                models.User.lookup(email).key,
+                course,
+                role)
+            if not part:
+                raise BadValueError('Check failed.')
+            parts.append(part)
+        return parts
+
+    # Endpoint
+
+    # @need('get')
     def enrollment(self):
         user = models.User.lookup(request.args.get('email'))
         data = []
         if user is not None:
-            parts = CourseAPI().get_courses(None, user, {'user': user.key})
+            parts = CourseAPI().get_courses(models.Course(), user, {'user': user.key})
             for part in parts:
                 course = part.course.get()
                 offering = course.offering.split('/')
@@ -449,25 +484,12 @@ class ParticipantAPI(APIResource):
                 })
         return json.dumps(data)
 
-    def check(self, emails, course, role):
-        parts = []
-        for email in emails:
-            part = models.Participant.has_role(
-                models.User.lookup(email).key,
-                course,
-                role)
-            if not part:
-                raise BadValueError('Check failed.')
-            parts.append(part)
-        return parts
-
 
 class UserAPI(APIResource):
-    """
-    The API resource for the User Object
-    """
+    """The API resource for the User Object"""
+
     model = models.User
-    key_type = str # get_instance will convert this to an int
+    key_type = str  # get_instance will convert this to an int
 
     methods = {
         'post': {
@@ -546,23 +568,10 @@ class UserAPI(APIResource):
         },
     }
 
-    def get(self, obj, user, data):
-        """
-        Overwrite GET request for user class in order to send more data.
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: target object
-        """
-        if 'course' in data:
-            return obj.get_course_info(data['course'].get())
-        return obj
+    # Utilities
 
     def get_instance(self, key, user):
-        """
-        Convert key from email to UserKey
-        """
+        """Convert key from email to UserKey"""
         obj = self.model.lookup(key)
         if not obj:
             raise BadKeyError(key)
@@ -574,13 +583,7 @@ class UserAPI(APIResource):
         return obj
 
     def new_entity(self, attributes):
-        """
-        Creates a new entity with given attributes.
-
-        :param attributes: (dictionary) default values
-            loaded on object instantiation
-        :return: entity with loaded attributes
-        """
+        """Creates a new entity with given attributes."""
         entity = self.model.lookup(attributes['email'])
         if entity:
             raise BadValueError('user already exists')
@@ -588,111 +591,67 @@ class UserAPI(APIResource):
         entity = self.model.from_dict(attributes)
         return entity
 
-    def add_email(self, obj, user, data):
-        """
-        Adds an email for the user - modified in place.
+    # Endpoints
 
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: -- unused --
-        :return: None
-        """
-        need = Need('get') # Anyone who can get the User object can add an email
-        if not obj.can(user, need, obj):
-            raise need.exception()
+    @need('get')
+    def get(self, obj, user, data):
+        """Overwrite GET request for user class in order to send more data."""
+        if 'course' in data:
+            return obj.get_course_info(data['course'].get())
+        return obj
+
+    @need('get')
+    def add_email(self, obj, user, data):
+        """Adds an email for the user - modified in place."""
         obj.append_email(data['email'])
 
+    @need('get')
     def delete_email(self, obj, user, data):
-        """
-        Deletes an email for the user - modified in place.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) key "email" deleted
-        :return: None
-        """
-        need = Need('get')
-        if not obj.can(user, need, obj):
-            raise need.exception()
+        """Deletes an email for the user - modified in place."""
         obj.delete_email(data['email'])
 
+    @need('get')
     def invitations(self, obj, user, data):
-        """
-        Fetches list of all invitations for the caller.
-
-        :param obj: -- unused --
-        :param user: (object) caller
-        :param data: (dictionary) key assignment called
-        :return: None
-        """
+        """Fetches list of all invitations for the caller."""
         query = models.Group.query(models.Group.invited == user.key)
         if 'assignment' in data:
             query = query.filter(models.Group.assignment == data['assignment'])
         return list(query)
 
+    @need('staff')
     def queues(self, obj, user, data):
-        """
-        Retrieve all assignments given to the caller on staff
-
-        :param obj: -- unused --
-        :param user: (object) caller
-        :param data: -- unused --
-        :return: None
-        """
+        """Retrieve all assignments given to the caller on staff"""
         return list(models.Queue.query().filter(
             models.Queue.assigned_staff == user.key))
 
+    @need('staff')
     def create_staff(self, obj, user, data):
-        """
-        Checks the caller is on staff, to then create staff.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) key email called
-        :return: None
-        """
-        need = Need('staff')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
+        """Checks the caller is on staff, to then create staff."""
         user = models.User.get_or_insert(data['email'].id())
         user.role = data['role']
         user.put()
 
+    @need('get')
     def final_submission(self, obj, user, data):
-        """
-        Get the final submission for grading.
-
-        :param obj: -- unused --
-        :param user: (object) caller
-        :param data: (dictionary) key assignment called
-        :return: None
-        """
+        """Get the final submission for grading."""
         return obj.get_final_submission(data['assignment'])
 
+    @need('get')
     def get_backups(self, obj, user, data):
-        """
-        Get all backups for a user, based on group.
-
-        :param obj: -- unused --
-        :param user: (object) caller
-        :param data: (dictionary) key assignment called
-        :return: None
-        """
+        """Get all backups for a user, based on group."""
         return obj.get_backups(data['assignment'], data['quantity'])
 
+    @need('get')
     def get_submissions(self, obj, user, data):
+        """Get all submissions for an assignment"""
         return [subm.submission for subm in obj.get_submissions(data['assignment'], data['quantity'])]
 
+    @need('merge')
     def merge_user(self, obj, user, data):
         """
         Merges this user with another user.
         This user is the user that is "merged" -- no longer can login.
         """
-        need = Need('merge')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
         other_user = models.User.lookup(data['other_email'])
         if not other_user:
             raise BadValueError("Invalid user to merge to")
@@ -701,9 +660,8 @@ class UserAPI(APIResource):
 
 
 class AssignmentAPI(APIResource):
-    """
-    The API resource for the Assignment Object
-    """
+    """The API resource for the Assignment Object"""
+
     model = models.Assignment
 
     methods = {
@@ -799,12 +757,10 @@ class AssignmentAPI(APIResource):
         }
     }
 
+    # Endpoints
+
+    @need('put')
     def post(self, user, data):
-        """
-        :param user:
-        :param data:
-        :return:
-        """
         data['creator'] = user.key
         # check if the course actually exists
         course = data['course'].get()
@@ -820,41 +776,38 @@ class AssignmentAPI(APIResource):
                 'assignment with name %s exists already' % data['name'])
         return super(AssignmentAPI, self).post(user, data)
 
+    @need('put')
     def edit(self, obj, user, data):
         """ Save the assignment. """
         return super(AssignmentAPI, self).put(obj, user, data)
 
+    @need('put')
     def assign(self, obj, user, data):
-        need = Need('put')
-        if not obj.can(user, need, obj):
-            raise need.exception()
         deferred.defer(add_to_grading_queues, obj.key)
 
+    @need('get')
     def group(self, obj, user, data):
         """User's current group for assignment."""
         return models.Group.lookup(user, obj)
 
+    @need('get')
     def invite(self, obj, user, data):
         """User ask invited to join his/her current group for assignment."""
         err = models.Group.invite_to_group(user.key, data['email'], obj.key)
+        # Convert this to raise Error, instead of returning-raising error
         if err:
             raise BadValueError(err)
 
+    @need('staff')
     def download_scores(self, obj, user, data):
         """
         Write all composition scores for this assignment as a GCS file.
         Format is 'STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG'.
         """
-        need = Need('staff')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
         deferred.defer(scores_to_gcs, obj, user)
 
+    @need('grade')
     def autograde(self, obj, user, data):
-      need = Need('grade')
-      if not obj.can(user, need, obj):
-          raise need.exception()
       subm_ids = {}
       if not obj.autograding_enabled:
         raise BadValueError('Autograding is not enabled for this assignment.')
@@ -883,12 +836,9 @@ class AssignmentAPI(APIResource):
         # TODO
         raise BadValueError('Only supports batch uploading.')
 
+    @need('staff')
     def queues(self, obj, user, data):
         """ Return all composition queues for this assignment """
-        need = Need('staff')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-
         return models.Queue.query(models.Queue.assignment == obj.key).fetch()
 
     def statistics(self, assignment, user, data):
@@ -904,18 +854,12 @@ class AssignmentAPI(APIResource):
         }
 
 
+# TODO: can this be replaced/removed?
 class SubmitNDBImplementation(object):
-    """
-    Implementation of DB calls required by submission using Google NDB
-    """
+    """Implementation of DB calls required by submission using Google NDB"""
 
     def lookup_assignments_by_name(self, name):
-        """
-        Look up all assignments of a given name.
-
-        :param name: (string) name to search for
-        :return: (list) assignments
-        """
+        """Look up all assignments of a given name."""
         mc_key = 'assignments_{}'.format(name)
         assignments = memcache.get(mc_key)
         if not assignments:
@@ -925,16 +869,7 @@ class SubmitNDBImplementation(object):
         return assignments
 
     def create_submission(self, user, assignment, messages, submit, submitter):
-        """
-        Create submission using user as parent to ensure ordering.
-
-        :param user: (object) caller
-        :param assignment: (Assignment)
-        :param messages: Data content of backup/submission
-        :param submit: Whether this backup is a submission to be graded
-        :param submitter: (object) caller or submitter
-        :return: (Backup) submission
-        """
+        """Create submission using user as parent to ensure ordering."""
         if not user.is_admin or not submitter:
             submitter = user.key
 
@@ -1018,15 +953,7 @@ class SubmissionAPI(APIResource):
         }
     }
 
-    def graded(self, obj, user, data):
-        """
-        Gets the user's graded submissions
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return:
-        """
+    # Utilities
 
     def data_for_zip(self, obj):
         try:
@@ -1062,184 +989,18 @@ class SubmissionAPI(APIResource):
 
         return name, file_contents
 
-    def zip(self, obj, user, data):
-        """ Grab all files in submission
-        :param obj:
-        :param user:
-        :param data:
-        :return:
-        """
-        return self.zip_files(*self.data_for_zip(obj))
-
     def zip_files(self, name, file_contents):
-        """ Zip files
-        :param file_contents:
-        :return:
-        """
+        """Zip files"""
         zipfile = create_zip(file_contents)
         return name, zipfile
 
     def make_zip_response(self, name, zipfile):
-        """
-        Makes a zip response using a zip object.
-
-        :param zip:
-        :return:
-        """
+        """Makes a zip response using a zip object."""
         response = make_response(zipfile)
         response.headers['Content-Disposition'] = (
             'attachment; filename=submission-%s.zip' % name)
         response.headers['Content-Type'] = 'application/zip'
         return response
-
-    def download(self, obj, user, data):
-        """
-        Download submission, but check if it has content and encode all files.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: file contents in utf-8
-        """
-        return self.make_zip_response(*self.zip(obj, user, data))
-
-    def diff(self, obj, user, data):
-        """
-        Gets the associated diff for a submission
-
-        :param obj: (object) target
-        :param user: -- unused --
-        :param data: -- unused --
-        :return: (Diff) object with differences
-        """
-        messages = obj.get_messages()
-        if 'file_contents' not in obj.get_messages():
-            raise BadValueError('Submission has no contents to diff')
-
-        file_contents = messages['file_contents']
-
-        if 'submit' in file_contents:
-            del file_contents['submit']
-
-        for key in file_contents.keys():
-            try:
-                file_contents[key] = str(file_contents[key]).encode('utf-8')
-            except:  # pragma: no cover
-                pass
-
-        diff_obj = self.diff_model.get_by_id(obj.key.id())
-        if diff_obj:
-            return diff_obj
-
-        diff = {}
-        templates = obj.assignment.get().templates
-        if not templates or templates == {}:
-            raise BadValueError('no templates for assignment, \
-                                please contact course staff')
-
-        templates = json.loads(templates)
-        if type(templates) == unicode:  # pragma: no cover
-            templates = ast.literal_eval(templates)
-
-        for filename, contents in file_contents.items():
-            if filename in templates:
-                temp = templates[filename]
-                if type(templates[filename]) == list:
-                    temp = templates[filename][0]
-            else:
-                temp = ""
-            diff[filename] = utils.diff(temp, contents)
-
-        diff = self.diff_model(id=obj.key.id(),
-                               diff=diff)
-        diff.put()
-        return diff
-
-    def add_comment(self, obj, user, data):
-        """
-        Adds a comment to this diff.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: result of putting comment
-        """
-        diff_obj = self.diff_model.get_by_id(obj.key.id())
-        if not diff_obj:
-            raise BadValueError("Diff doesn't exist yet")
-
-        index = data['index']
-        message = data['message']
-        filename = data['file']
-
-        if message.strip() == '':
-            raise BadValueError('Cannot make empty comment')
-
-        comment = models.Comment(
-            filename=filename,
-            message=message,
-            line=index,
-            author=user.key,
-            parent=diff_obj.key)
-        comment.put()
-        return comment
-
-    def delete_comment(self, obj, user, data):
-        """
-        Deletes a comment on this diff.
-
-        :param obj: (object) target
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: result of deleting comment
-        """
-        diff_obj = self.diff_model.get_by_id(obj.key.id())
-        if not diff_obj:
-            raise BadValueError("Diff doesn't exist yet")
-
-        comment = models.Comment.get_by_id(
-            data['comment'].id(), parent=diff_obj.key)
-        if not comment:
-            raise BadKeyError(data['comment'])
-        need = Need('delete')
-        if not comment.can(user, need, comment):
-            raise need.exception()
-        comment.key.delete()
-
-    def score(self, obj, user, data):
-        """
-        Sets a score.
-
-        :param obj: (object) backup - ignored.
-        :param user: (object) caller
-        :param data: (dictionary) data
-        :return: (int) score
-        """
-
-        need = Need('grade')
-        subm_q = self.subm_model.query(self.subm_model.key == data['submission'])
-        subm = subm_q.get()
-
-        # Perform check on the submission because obj is a backup
-        if not self.subm_model.can(user, need, subm, subm_q):
-            raise need.exception()
-
-        if not subm.backup == obj.key:
-          raise ValueError('Submission does not match backup')
-
-        score = models.Score(
-            tag=data['key'],
-            score=data['score'],
-            message=data['message'],
-            grader=user.key)
-        score.put()
-
-        subm.score = [autograde for autograde in subm.score \
-            if autograde.tag != data['key']]
-        subm.score.append(score)
-
-        subm.put()
-        return score
 
     def get_assignment(self, name):
         """
@@ -1307,6 +1068,146 @@ class SubmissionAPI(APIResource):
                            data['messages'], submit_flag,
                            data.get('submitter'))
 
+    # Endpoints
+
+    # no permissions, so that anyone can submit
+    def post(self, user, data):
+        submit_flag = False
+        if data['messages'].get('file_contents'):
+            if 'submit' in data['messages']['file_contents']:
+                submit_flag = data['messages']['file_contents']['submit']
+
+        return self.submit(user, data['assignment'],
+                           data['messages'], submit_flag,
+                           data.get('submitter'))
+
+    @need('get')
+    def zip(self, obj, user, data):
+        """Grab all files in submission"""
+        return self.zip_files(*self.data_for_zip(obj))
+
+    @need('get')
+    def download(self, obj, user, data):
+        """
+        Download submission, but check if it has content and encode all files.
+        :return: file contents in utf-8
+        """
+        return self.make_zip_response(*self.zip(obj, user, data))
+
+    @need('get')
+    def diff(self, obj, user, data):
+        """Gets the associated diff for a submission"""
+        messages = obj.get_messages()
+        if 'file_contents' not in obj.get_messages():
+            raise BadValueError('Submission has no contents to diff')
+
+        file_contents = messages['file_contents']
+
+        if 'submit' in file_contents:
+            del file_contents['submit']
+
+        for key in file_contents.keys():
+            try:
+                file_contents[key] = str(file_contents[key]).encode('utf-8')
+            except:  # pragma: no cover
+                pass
+
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if diff_obj:
+            return diff_obj
+
+        diff = {}
+        templates = obj.assignment.get().templates
+        if not templates or templates == {}:
+            raise BadValueError('no templates for assignment, \
+                                please contact course staff')
+
+        templates = json.loads(templates)
+        if type(templates) == unicode:  # pragma: no cover
+            templates = ast.literal_eval(templates)
+
+        for filename, contents in file_contents.items():
+            if filename in templates:
+                temp = templates[filename]
+                if type(templates[filename]) == list:
+                    temp = templates[filename][0]
+            else:
+                temp = ""
+            diff[filename] = utils.diff(temp, contents)
+
+        diff = self.diff_model(id=obj.key.id(),
+                               diff=diff)
+        diff.put()
+        return diff
+
+    @need('get')
+    def add_comment(self, obj, user, data):
+        """Adds a comment to this diff."""
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+
+        index = data['index']
+        message = data['message']
+        filename = data['file']
+
+        if message.strip() == '':
+            raise BadValueError('Cannot make empty comment')
+
+        comment = models.Comment(
+            filename=filename,
+            message=message,
+            line=index,
+            author=user.key,
+            parent=diff_obj.key)
+        comment.put()
+        return comment
+
+    @need('delete')
+    def delete_comment(self, obj, user, data):
+        """Deletes a comment on this diff."""
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+
+        comment = models.Comment.get_by_id(
+            data['comment'].id(), parent=diff_obj.key)
+        if not comment:
+            raise BadKeyError(data['comment'])
+        need = Need('delete')
+        if not comment.can(user, need, comment):
+            raise need.exception()
+        comment.key.delete()
+
+    @need('staff')
+    def score(self, obj, user, data):
+        """Sets a score."""
+
+        need = Need('grade')
+        subm_q = self.subm_model.query(self.subm_model.key == data['submission'])
+        subm = subm_q.get()
+
+        # Perform check on the submission because obj is a backup
+        if not self.subm_model.can(user, need, subm, subm_q):
+            raise need.exception()
+
+        if not subm.backup == obj.key:
+          raise ValueError('Submission does not match backup')
+
+        score = models.Score(
+            tag=data['key'],
+            score=data['score'],
+            message=data['message'],
+            grader=user.key)
+        score.put()
+
+        subm.score = [autograde for autograde in subm.score \
+            if autograde.tag != data['key']]
+        subm.score.append(score)
+
+        subm.put()
+        return score
+
 
 class SearchAPI(APIResource):
 
@@ -1361,6 +1262,9 @@ class SearchAPI(APIResource):
                 op(AssignmentAPI.model.display_name, name)).get(),
     }
 
+    # Utilities
+
+    # TODO: replace this with existing permissions implementation
     def check_permissions(self, user, data):
         course = CourseAPI()
         key = course.key_type(data['courseId'])
@@ -1368,6 +1272,8 @@ class SearchAPI(APIResource):
 
         if user.key not in course.staff and not user.is_admin:
             raise Need('get').exception()
+
+    # Search Functionality
 
     @staticmethod
     def results(data):
@@ -1377,28 +1283,6 @@ class SearchAPI(APIResource):
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
         return results
-
-    def index(self, user, data):
-        """ Performs search query, with some extra information """
-        self.check_permissions(user, data)
-
-        results = self.results(data)
-        return dict(data={
-            'results': results,
-            'more': len(results) >= data['num_per_page'],
-            'query': data['query']
-        })
-
-    def download(self, user, data):
-        """ Sets up zip write to GCS """
-        self.check_permissions(user, data)
-
-        now = datetime.datetime.now()
-        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI(),
-                       models.Submission, user, data, now)
-
-        return [make_zip_filename(user, now)]
-
 
     @staticmethod
     def tokenize(query):
@@ -1471,6 +1355,7 @@ class SearchAPI(APIResource):
 
     @classmethod
     def order(cls, model, query):
+        """Preset ordering"""
         try:
             if hasattr(model, 'server_time'):
                 return query.order(-model.server_time)
@@ -1495,6 +1380,7 @@ class SearchAPI(APIResource):
             opr, arg = prime['date']
             args.append(opr(model.server_time, arg))
         if 'onlywcode' in keys:
+            # TODO: just check if backup has (valid) content
             raise BadValueError('-onlywcode is not yet implemented, sorry.')
         return args
 
@@ -1502,6 +1388,29 @@ class SearchAPI(APIResource):
     def limits(page, num_per_page):
         """ returns start and ends number based on page and num_per_page """
         return (page-1)*num_per_page, page*num_per_page
+
+    # Endpoints
+
+    def index(self, user, data):
+        """ Performs search query, with some extra information """
+        self.check_permissions(user, data)
+
+        results = self.results(data)
+        return dict(data={
+            'results': results,
+            'more': len(results) >= data['num_per_page'],
+            'query': data['query']
+        })
+
+    def download(self, user, data):
+        """ Sets up zip write to GCS """
+        self.check_permissions(user, data)
+
+        now = datetime.datetime.now()
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI(),
+                       models.Submission, user, data, now)
+
+        return [make_zip_filename(user, now)]
 
 
 class VersionAPI(APIResource):
@@ -1556,10 +1465,8 @@ class VersionAPI(APIResource):
         },
         }
 
+    @need('update')
     def new(self, obj, user, data):
-        need = Need('update')
-        if not obj.can(user, need, obj):
-            raise need.exception()
 
         new_version = data['version']
 
@@ -1572,29 +1479,24 @@ class VersionAPI(APIResource):
         obj.put()
         return obj
 
+
+    @need('get')
     def current(self, obj, user, data):
-        need = Need('get')
-        if not obj.can(user, need, obj):
-            raise need.exception()
         if not obj.current_version:
             raise BadValueError(
                 'Invalid version resource. Contact an administrator.')
         return obj.current_version
 
+    @need('get')
     def download(self, obj, user, data):
-        need = Need('get')
-        if not obj.can(user, need, obj):
-            raise need.exception()
         if 'version' not in data:
             download_link = obj.download_link()
         else:
             download_link = obj.download_link(data['version'])
         return flask.redirect(download_link)
 
+    @need('update')
     def set_current(self, obj, user, data):
-        need = Need('update')
-        if not obj.can(user, need, obj):
-            raise need.exception()
         current_version = data['version']
         if current_version not in obj.versions:
             raise BadValueError(
@@ -1680,12 +1582,12 @@ class CourseAPI(APIResource):
         }
     }
 
+    @need('admin')
     def post(self, user, data):
-        """
-        The POST HTTP method
-        """
+        """Create a course"""
         return super(CourseAPI, self).post(user, data)
 
+    @need('get')
     def index(self, user, data):
         if data['onlyenrolled']:
             return dict(results=[result.course for result in models.Participant.query(
@@ -1693,34 +1595,27 @@ class CourseAPI(APIResource):
         else:
             return super(CourseAPI, self).index(user, data)
 
+    @need('staff')
     def add_staff(self, course, user, data):
-        need = Need('staff')
-        if not course.can(user, need, course):
-            raise need.exception()
-
         user = models.User.get_or_insert(data['email'])
         if user not in course.staff:
           models.Participant.add_role(user, course, STAFF_ROLE)
 
+    @need('staff')
     def get_staff(self, course, user, data):
-        need = Need('staff')
-        if not course.can(user, need, course):
-            raise need.exception()
         query = models.Participant.query(
           models.Participant.course == course.key,
           models.Participant.role == 'staff')
         return list(query.fetch())
 
+    @need('staff')
     def remove_staff(self, course, user, data):
-        need = Need('staff')
-        if not course.can(user, need, course):
-            raise need.exception()
-
         removed_user = models.User.lookup(data['email'])
         if not removed_user:
             raise BadValueError('No such user with email "%s" exists' % data['email'])
         models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
+    @need('get')
     def get_courses(self, course, user, data):
         query = models.Participant.query(
             models.Participant.user == data['user'])
@@ -1728,6 +1623,7 @@ class CourseAPI(APIResource):
         query = models.Participant.can(user, need, course, query)
         return list(query)
 
+    @need('get')
     def get_students(self, course, user, data):
         query = models.Participant.query(
             models.Participant.course == course.key,
@@ -1737,33 +1633,25 @@ class CourseAPI(APIResource):
             raise need.exception()
         return list(query.fetch())
 
+    @need('staff')
     def add_students(self, course, user, data):
-        need = Need('staff') # Only staff can call this API
-        if not course.can(user, need, course):
-            raise need.exception()
-
         for email in set(data['emails']):  # to remove potential duplicates
             user = models.User.get_or_insert(email)
             models.Participant.add_role(user, course, STUDENT_ROLE)
 
+    @need('staff')
     def add_student(self, course, user, data):
-        need = Need('staff') # Only staff can call this API
-        if not course.can(user, need, course):
-            raise need.exception()
-
         user = models.User.get_or_insert(data['email'])
         models.Participant.add_role(user, course, STUDENT_ROLE)
 
+    @need('staff')
     def remove_student(self, course, user, data):
-        need = Need('staff')
-        if not course.can(user, need, course):
-            raise need.exception()
-
         removed_user = models.User.lookup(data['email'])
         if not removed_user:
             raise BadValueError('No such user with email "%s" exists' % data['email'])
         models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
+    @need('get')
     def assignments(self, course, user, data):
         return course.assignments.fetch()
 
@@ -1809,11 +1697,8 @@ class GroupAPI(APIResource):
         }
     }
 
+    @need('invite')
     def add_member(self, group, user, data):
-        need = Need('invite')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         if data['email'] in group.invited:
             raise BadValueError('user has already been invited')
         if data['email'] in group.member:
@@ -1831,11 +1716,8 @@ class GroupAPI(APIResource):
         )
         audit_log_message.put()
 
+    @need('remove')
     def remove_member(self, group, user, data):
-        need = Need('remove')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         to_remove = models.User.lookup(data['email'])
         if to_remove:
             group.exit(to_remove)
@@ -1848,40 +1730,31 @@ class GroupAPI(APIResource):
             )
             audit_log_message.put()
 
+    @need('invite')
     def invite(self, group, user, data):
-        need = Need('invite')
-        if not group.can(user, need, group):
-            return need.exception()
-
         error = group.invite(data['email'])
+        # TODO: convert
         if error:
             raise BadValueError(error)
 
+    @need('accept')
     def accept(self, group, user, data):
-        need = Need('accept')
-        if not group.can(user, need, group):
-            raise need.exception()
+        group.accept(user)  # TODO: may need converting
 
-        group.accept(user)
-
+    @need('decline')
     def decline(self, group, user, data):
         self.exit(group, user, data)
 
+    @need('exit')
     def exit(self, group, user, data):
-        need = Need('exit')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         error = group.exit(user)
+        # TODO: convert
         if error:
             raise BadValueError(error)
 
+    @need('reorder')
     def reorder(self, group, user, data):
         """ Saves order of partners """
-        need = Need('reorder')
-        if not group.can(user, need, group):
-            raise need.exception()
-
         new_order = [models.User.lookup(email).key
                      for email in data['order']]
 
@@ -1927,14 +1800,10 @@ class QueueAPI(APIResource):
         },
         }
 
-    def new_entity(self, attributes):
-        """
-        Request to define a new entity
+    # Utility
 
-        :param attributes: entity attributes,
-            to be loaded on entity instantiation
-        :return: entity
-        """
+    def new_entity(self, attributes):
+        """create new queue"""
         if 'owner' not in attributes:
             attributes['owner'] = attributes['assigned_staff'][0]
         ent = super(QueueAPI, self).new_entity(attributes)
@@ -2005,6 +1874,7 @@ class QueuesAPI(APIResource):
 
         return queues
 
+    # TODO: migrate to QueueAPI and use existing permissions implementation
     def check_permissions(self, user, data):
         course = data['course'].get()
         return user.key not in course.staff and not user.is_admin
@@ -2028,16 +1898,12 @@ class FinalSubmissionAPI(APIResource):
         }
     }
 
-    def new_entity(self, attributes):
-        """
-        Creates a new entity with given attributes.
-        - when POSTing directly, new_entity has its own
-        permissions checks
+    # Utility
 
-        :param attributes: (dictionary)
-        :return: (entity, error_response) should be ignored if error_response
-        is a True value
-        """
+    def new_entity(self, attributes):
+        """Creates a new entity with given attributes.
+        - when POSTing directly, new_entity has its own
+        permissions checks"""
         subm = attributes['submission'].get()
 
         if not subm:
@@ -2069,12 +1935,8 @@ class AnalyticsAPI(APIResource):
         },
     }
 
+    @need('create')
     def post(self, user, data):
-
-        need = Need('create')
-
-        if not self.model.can(user, need, None):
-            raise need.exception()
 
         job_type, filters = data['job_type'], data['filters']
 

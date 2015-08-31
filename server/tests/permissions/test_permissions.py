@@ -232,7 +232,7 @@ class BaseUnitTest(BaseTestCase):
             queue.put()
 
         self.diffs = {
-            "first": models.Diff()
+            "first": models.Diff(after=self.backups['first'].key)
         }
         for diff in self.diffs.values():
             diff.put()

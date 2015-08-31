@@ -80,7 +80,8 @@ def create_api_response(status, message, data=None):
         data['results'] = (
             coerce_to_json(data['results'], request.fields.get('fields', {})))
     else:
-        data = coerce_to_json(data, request.fields.get('fields', {}))
+        fields = getattr(request, 'fields', {})
+        data = coerce_to_json(data, fields.get('fields', {}))
 
     if request.args.get('format', 'default') == 'raw':
         response = Response(json.dumps(data))

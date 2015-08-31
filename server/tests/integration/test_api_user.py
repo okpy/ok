@@ -45,20 +45,24 @@ class UserAPITest(APIBaseTestCase):
 
 	def test_get(self):
 		""" Tests that without 'course', user does not get_course_info """
-		obj = self.obj().set(get_course_info=self.raise_error)
-		self.API().get(obj, None, {})
+		obj = self.API().get_instance('dummy@admin.com', self.accounts['dummy_admin'])
+		obj.get_course_info = self.raise_error
+		user = self.accounts['dummy_admin']
+		self.API().get(obj, user, {})
 		assert True  # no error triggered
 
 	def test_get_with_course(self):
 		""" Tests that with 'course', user triggers get_course_info """
-		obj = self.obj().set(get_course_info=self.raise_error)
+		obj = self.API().get_instance('dummy@admin.com', self.accounts['dummy_admin'])
+		obj.get_course_info = self.raise_error
+		user = self.accounts['dummy_admin']
 		with self.assertRaises(TestingError):
-			self.API().get(obj, None, {'course': self._course.key})
+			self.API().get(obj, user, {'course': self._course.key})
 			
 	def test_get_instance(self):
 		""" Tests for error if user does not exist """
 		with self.assertRaises(BadKeyError):
-			self.API().get_instance('gibberish@student.com', None)
+			self.API().get_instance('gibberish@student.com', {})
 
 	def test_get_instance_valid(self):
 		""" Tests object if returned for valid instance """
@@ -89,7 +93,7 @@ class UserAPITest(APIBaseTestCase):
 			self.API().add_email(
 				self.accounts['dummy_admin'],
 				self.accounts['dummy_student3'],
-				None)
+				{})
 		
 	def test_add_email_function(self):
 		""" Tests that add_email actually adds the email """
@@ -106,7 +110,7 @@ class UserAPITest(APIBaseTestCase):
 			self.API().delete_email(
 				self.accounts['dummy_admin'],
 				self.accounts['dummy_student3'],
-				None)
+				{})
 			
 	def test_delete_email_function(self):
 		""" Tests that delete email actually deletes the email """
@@ -135,7 +139,8 @@ class UserAPITest(APIBaseTestCase):
 		
 	def test_queues_basic(self):
 		""" Test that fetching all queues works """
-		queues = self.API().queues(None, self.accounts['dummy_admin'], None)
+		obj = self.API().get_instance('dummy@admin.com', self.accounts['dummy_admin'])
+		queues = self.API().queues(obj, self.accounts['dummy_admin'], {})
 		self.assertTrue(isinstance(queues, list))
 		
 		for queue in queues:
@@ -168,7 +173,8 @@ class UserAPITest(APIBaseTestCase):
 		
 	def test_get_backups(self):
 		""" Tests validity of fetched backups """
-		backups = self.API().get_backups(self.user2, None, {
+		obj = self.API().get_instance('dummy@admin.com', self.accounts['dummy_admin'])
+		backups = self.API().get_backups(self.user2, obj, {
 			'assignment': self._assign.key,
 			'quantity': 5
 		})
@@ -176,7 +182,8 @@ class UserAPITest(APIBaseTestCase):
 		
 	def test_get_submissions(self):
 		""" Test get submissions """
-		subms = self.API().get_submissions(self.user2, None, {
+		obj = self.API().get_instance('dummy@admin.com', self.accounts['dummy_admin'])
+		subms = self.API().get_submissions(self.user2, obj, {
 			'assignment': self._assign.key,
 			'quantity': 5
 		})

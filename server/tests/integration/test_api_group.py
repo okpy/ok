@@ -18,6 +18,7 @@ from app import models, constants, utils, api
 from ddt import ddt, data, unpack
 from app.exceptions import *
 from integration.test_api_base import APITest
+from mock import MagicMock
 
 
 class GroupAPITest(APITest, APIBaseTestCase):
@@ -208,12 +209,13 @@ class GroupAPITest(APITest, APIBaseTestCase):
 		with self.assertRaises(PermissionError):
 			self.API().remove_member(self.group, self.accounts['dummy_student'], {})
 
-	# def test_invite_permissions(self):
-	# 	""" Tests that invtie checks for permissions """
-	# 	self.group = self.group.put().get()
-	# 	self.assertNotIn(self.accounts['dummy_student'].key, self.group.member)
-	# 	with self.assertRaises(PermissionError):	# test doesn't pass but it should
-	# 		self.API().invite(self.group, self.accounts['dummy_student'], {})
+	def test_invite_permissions(self):
+		""" Tests that invtie checks for permissions """
+		self.group = self.group.put().get()
+		self.assertNotIn(self.accounts['dummy_student'].key, self.group.member)
+		self.assertNotIn(self.accounts['dummy_student'].key, self.group.invited)
+		with self.assertRaises(PermissionError):
+			self.API().invite(self.group, self.accounts['dummy_student'], {})
 
 	def test_invite_error_propogation(self):
 		""" Tests that errors are passed on """
