@@ -77,13 +77,13 @@ class BasicJobTest(BaseUnitTest):
         j.wait()
         dump = j.get_dump()
         self.assertEqual(j.FAILURE, dump.status)
-    
+
     @mock(time, 'sleep', lambda s: '')
     def test_wait(self):
         """ Tests that wait works """
         self.mock(Job, '__init__').using(object.__init__)
         data, job = dict(i=0), Job()
-        
+
         def get_status():
             data['i'] += 1  # hack for nonlocal, tests run in Python2
             if data['i'] >= 10:
@@ -91,30 +91,30 @@ class BasicJobTest(BaseUnitTest):
             return 'yolo'
         job.get_status = get_status
         job.wait()
-        
+
     def test_permissions_index(self):
         """ Tests that only admin can index"""
         need = self.obj().set(action='index')
         student, admin = self.get_accounts()['student0'], self.get_accounts()['admin']
         self.assertTrue(AnalyticsDump._can(student, need, None, self.obj().set(filter=lambda *args: True)))
         self.assertTrue(AnalyticsDump._can(admin, need, None, True))
-        
+
     def test_permission_get(self):
         """ Tests that only object owners and admin can get """
         need = self.obj().set(action='get')
         student, admin = self.get_accounts()['student0'], self.get_accounts()['admin']
         self.assertTrue(AnalyticsDump._can(student, need, self.obj().set(owner=student.key), None))
         self.assertTrue(AnalyticsDump._can(admin, need, None, None))
-    
+
     def test_permission_rogue_method(self):
         """ Tests that rogue method gives false """
         need = self.obj().set(action='put')
         admin = self.get_accounts()['admin']
         self.assertFalse(AnalyticsDump._can(admin, need, None, None))
-        
+
     def test_job_email(self):
         user = self.get_accounts()['student0']
         self.assertEqual(user.email, sample_job.mapper(user))
-        
+
     def test_job_reducer(self):
         self.assertEqual(2, sample_job.reducer([1, 2]))

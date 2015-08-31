@@ -50,7 +50,7 @@ class AnalyticsAPITest(APIBaseTestCase):
 		with self.assertRaises(PermissionError):
 			self.mock(api.AnalyticsAPI, 'model').using(BaseTestCase.never_can())
 			self.API().post(self.accounts['dummy_student3'], None)
-			
+
 	def test_post_bad_filters(self):
 		""" Test bad filters """
 		with self.assertRaises(BadValueError):
@@ -66,7 +66,7 @@ class AnalyticsAPITest(APIBaseTestCase):
 				'job_type': 'toilet-cleaning',
 				'filters': ['uh', 'oh']
 			})
-	
+
 	def test_post_not_available_job(self):
 		""" Tests that invalid job raises error """
 		with self.assertRaises(BadValueError):
@@ -74,7 +74,7 @@ class AnalyticsAPITest(APIBaseTestCase):
 				'job_type': 'toilet-cleaning',
 				'filters': [('uh', 'oh', 'yikes')]
 			})
-			
+
 	def test_post_normal(self):
 		""" Test that an analytics job can be passed normally """
 		status_code, message, data = self.API().post(self.accounts['dummy_admin'], {

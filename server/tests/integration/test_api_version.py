@@ -54,19 +54,19 @@ class VersionAPITest(APITest, APIBaseTestCase):
 
 	def get_accounts(self):
 		return APITest().get_accounts()
-	
+
 	def test_new_permission(self):
 		""" Test that new checks for permisions """
 		with self.assertRaises(PermissionError):
 			self.API().new(self._version, self.accounts['dummy_student3'], {})
-	
+
 	def test_new_duplicate(self):
 		""" Test that duplicate versions not allowed """
 		with self.assertRaises(BadValueError):
 			self.API().new(self._version, self.accounts['dummy_admin'], {
 				'version': '1.0.0'
 			})
-			
+
 	def test_new_current(self):
 		""" Test that the current_Version can be/is set """
 		obj = self.API().new(self._version, self.accounts['dummy_admin'], {
@@ -74,29 +74,29 @@ class VersionAPITest(APITest, APIBaseTestCase):
 		    'current': '1.1.1'
 		})
 		self.assertEqual(obj.current_version, '1.1.1')
-		
+
 	def test_current_permission(self):
 		""" Tests that current checks for permissions """
 		with self.assertRaises(PermissionError):
 			self.API().current(self.never_can(), self.accounts['dummy_student3'], {})
-			
+
 	def test_current_invalid_version(self):
 		""" Tests that lack of current_version is caught """
 		with self.assertRaises(BadValueError):
 			self.API().current(self._version, self.accounts['dummy_admin'], {})
-			
+
 	def test_current_normal(self):
 		""" Tests that current_Version is returned """
 		self._version.current_version = '9.0'
 		cv = self.API().current(self._version, self.accounts['dummy_admin'], {})
 		self.assertEqual(cv, '9.0')
-		
+
 	def test_download_permissions(self):
 		""" Tests that download checks for permissions """
 		with self.assertRaises(PermissionError):
 			self.API().download(self.never_can(), self.accounts['dummy_student3'], {})
-		
-	@mock(flask, 'redirect', lambda x: x)	
+
+	@mock(flask, 'redirect', lambda x: x)
 	def test_download_link_without_version(self):
 		""" Tests that download link without version is acceptable """
 		self._version.current_version = '1.0.0'
@@ -115,19 +115,19 @@ class VersionAPITest(APITest, APIBaseTestCase):
 		with self.assertRaises(BadValueError):
 			dl = self.API().download(self._version, self.accounts['dummy_admin'], {'version': '8.9.0'})
 			self.assertIn('8.9.0', dl)
-		
+
 	def test_set_current_permission(self):
 		""" Tests that set_current checks permissions """
 		with self.assertRaises(PermissionError):
 			self.API().set_current(self.never_can(), self.accounts['dummy_student3'], {})
-			
+
 	def test_set_current_invalid_Version(self):
 		""" Tests that nonexistent version is caught """
 		with self.assertRaises(BadValueError):
 			self.API().set_current(self._version, self.accounts['dummy_admin'], {
 				'version': '9.0.0'
 			})
-	
+
 	def test_set_current_normal(self):
 		""" Tests that set_current functions properly, verifies behavior """
 		self._version.current_version = '1.1.0'

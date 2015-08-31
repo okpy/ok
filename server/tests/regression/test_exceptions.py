@@ -7,11 +7,11 @@ class ExceptionsTestCase(BaseTestCase):
 	"""
 	Testing exceptions
 	"""
-	
+
 	sv = '1.0'
 	cv = '1.1'
 	dl = 'http://ok.py'
-	
+
 	def test_permissions_error(self):
 		""" Test PermissionsError """
 		need = lambda: 'get'
@@ -20,7 +20,7 @@ class ExceptionsTestCase(BaseTestCase):
 		perm = PermissionError(need)
 		assert perm.need is need
 		assert perm.message == message
-		
+
 	def test_incorrect_version_error_basic(self):
 		self.supplied_version = self.sv
 		self.correct_version = cv = lambda: '_'
@@ -30,7 +30,7 @@ class ExceptionsTestCase(BaseTestCase):
 		assert ive.supplied_version == self.sv
 		assert ive.correct_version.current_version == self.cv
 		return ive
-		
+
 	def test_incorrect_version_error(self):
 		""" Test IncorrectVersionError """
 		ive = self.test_incorrect_version_error_basic()

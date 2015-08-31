@@ -31,7 +31,7 @@ class QueueAPITest(APIBaseTestCase):
 
 	def get_accounts(self):
 		return APITest().get_accounts()
-	
+
 	def test_new_entity_basic(self):
 		""" Tests that new_entity works """
 		self.API().new_entity({'assigned_staff': [self.accounts['dummy_admin'].key]})

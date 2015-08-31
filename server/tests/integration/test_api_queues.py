@@ -50,13 +50,13 @@ class QueuesAPITest(APIBaseTestCase):
 		self.assertTrue(
 			self.API().check_permissions(
 				self.accounts['dummy_student3'], {'course': self._course.key}))
-		
+
 	def test_generate_permissions(self):
 		""" TEsts that generate checks for permissions """
 		with self.assertRaises(PermissionError):
 			self.API().generate(
 				self.accounts['dummy_student'], {'course': self._course.key})
-	
+
 	def test_generate_no_staff(self):
 		""" Tests that generate errors without staff """
 		with self.assertRaises(BadValueError):
@@ -65,7 +65,7 @@ class QueuesAPITest(APIBaseTestCase):
 			    'assignment': self._assign.key,
 			    'staff': [self.accounts['dummy_admin'].email[0]]
 			})
-		
+
 	def test_generate_normal(self):
 		""" Tests that generate functions normally """
 		models.Participant.add_role(self.accounts['dummy_admin'], self._course.key, constants.STAFF_ROLE)

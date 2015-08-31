@@ -36,7 +36,7 @@ angular.module('student').value("RavenConfig", {
   //Additional config options here
   }
 });
-    
+
 app.directive('assignmentDetails', function() {
     return {
         restrict: 'E',

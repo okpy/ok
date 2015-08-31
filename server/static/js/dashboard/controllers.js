@@ -54,7 +54,7 @@ app.controller("SubmissionDashboardController", ["$scope", "$state", "$window", 
           tag: "Submit"
         }, function () {
           $window.swal("Submission Tag Removed", "The submission tag has been removed", "info");
-          $scope.refreshDash() 
+          $scope.refreshDash()
         });
       }
 
