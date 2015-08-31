@@ -863,13 +863,13 @@ class Diff(Base):
 
         data['comments'] = all_comments
         return data
-    
+
     @classmethod
     def _can(cls, user, need, diff, query):
         return Backup._can(
-            user, 
-            need, 
-            diff.after.get() if diff else None, 
+            user,
+            need,
+            diff.after.get() if diff else None,
             None)
 
 
@@ -895,8 +895,8 @@ class Comment(Base):
     @classmethod
     def _can(cls, user, need, comment=None, query=None):
         return Diff._can(
-            user, 
-            need, 
+            user,
+            need,
             comment.diff.get() if comment else None,
             None)
 

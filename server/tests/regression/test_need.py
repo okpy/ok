@@ -16,20 +16,20 @@ from test_base import BaseTestCase
 
 
 class NeedTestCase(BaseTestCase):
-	
+
 	def test_get_message_type(self):
 		""" Tests that for type """
 		need = Need('get').set_object(str).get_exception_message()
 		self.assertIn('get', need)
 		self.assertIn('str', need)
-		
+
 	def test_get_message_object(self):
 		""" Tests for objects """
 		obj = self.obj()
 		need = Need('get').set_object(obj).get_exception_message()
 		self.assertIn('get', need)
 		self.assertIn('instance', need)
-		
+
 	def test_get_message_falsey(self):
 		""" Tests for falsey objects """
 		need = Need('get')

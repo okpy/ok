@@ -112,15 +112,15 @@ class ParticipantAPITest(APIBaseTestCase):
 			models.Participant.add_role(self.accounts['dummy_student3'], self._course, constants.STUDENT_ROLE)
 			data = json.loads(self.API().enrollment())
 			self.assertEqual(1, len(data))
-	
+
 	def test_enrollment_validity(self):
 		""" Tests enrollment data is accurate """
-		
+
 		with self.app.test_request_context('/enrollment?email=dummy3@student.com'):
 			models.Participant.add_role(self.accounts['dummy_student3'], self._course, constants.STUDENT_ROLE)
 			data = json.loads(self.API().enrollment())
 			self.assertEqual(1, len(data))
-			
+
 			datum = data[0]
 			self.assertEqual(datum['display_name'], self._course.display_name)
 			self.assertEqual(datum['institution'], self._course.institution)
@@ -129,7 +129,7 @@ class ParticipantAPITest(APIBaseTestCase):
 
 			self.assertEqual(datum['term'], 'fall')
 			self.assertEqual(datum['year'], '2014')
-			
+
 			self._course.offering = 'summer/2015'
 			self._course.put()
 
@@ -137,12 +137,12 @@ class ParticipantAPITest(APIBaseTestCase):
 
 			self.assertEqual(datum['term'], None)
 			self.assertEqual(datum['year'], None)
-			
+
 	def test_check(self):
 		""" Test check functionality """
 		models.Participant.add_role(self.accounts['dummy_student3'], self._course, constants.STUDENT_ROLE)
 		models.Participant.add_role(self.accounts['dummy_student2'], self._course, constants.STUDENT_ROLE)
 		self.API().check(['dummy2@student.com', 'dummy3@student.com'], self._course, constants.STUDENT_ROLE)
-		
+
 		with self.assertRaises(BadValueError):
 			self.API().check(['dummy2@student.com', 'dummy3@student.com'], self._course, constants.STAFF_ROLE)

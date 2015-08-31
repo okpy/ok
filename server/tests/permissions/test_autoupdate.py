@@ -5,7 +5,7 @@ Tests api auto updating
 """
 import os
 os.environ['FLASK_CONF'] = 'TEST'
-import datetime 
+import datetime
 
 from test_base import APIBaseTestCase, unittest
 from test_base import make_fake_assignment, make_fake_course

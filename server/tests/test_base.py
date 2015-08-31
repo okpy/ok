@@ -93,25 +93,25 @@ def make_fake_group(assignment, *args):
 
 class Mock(object):
     """ To temporarily replace variables - as a with block """
-    
+
     old = None
-    
+
     def __init__(self, obj, attr):
         super(Mock, self).__init__()
         self.obj = obj
         self.attr = attr
         self.old = getattr(obj, attr)
-    
+
     def __enter__(self):
         return self.obj
-    
+
     def using(self, val):
         setattr(self.obj, self.attr, val)
         return self
-    
+
     def __exit__(self, type, value, traceback):
         setattr(self.obj, self.attr, self.old)
-        
+
 
 def mock(obj, attr, new, typecast=None):
     """ To temporarily replace variables - as a decorator """
@@ -168,11 +168,11 @@ class BaseTestCase(unittest.TestCase):
                 setattr(obj, attr, self._typecast(val))
             else:
                 setattr(obj, attr, val)
-        
+
     def mock(self, obj, attr):
         """ Utility - mock an attr for the duration of the test method """
         self._mocks.append((obj, attr, getattr(obj, attr)))
-        
+
         def using(val, typecast=None):
             if callable(typecast):
                 self._typecast = typecast

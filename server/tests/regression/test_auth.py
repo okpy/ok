@@ -10,11 +10,11 @@ class AuthTestCase(BaseTestCase):
 	"""
 	Testing authentication
 	"""
-	
+
 	#########
 	# SETUP #
 	#########
-	
+
 	access_token = 'gibberish'
 	user_email = 'new@special.com'
 	MC_NAMESPACE = 'test-access-token'
@@ -76,7 +76,7 @@ class AuthTestCase(BaseTestCase):
 		assert 'access_token' in flask.request.args
 		assert mc.get("%s-%s" % (AuthTestCase.MC_NAMESPACE, self.access_token)) is None
 		self.assertEqual(auth.authenticate()['email'], '_anon')
-	
+
 	def test_non_cached_authenticated_user(self):
 		""" Tests that non-cached but authenticated user returns the user """
 		self.request.args = {'access_token': self.access_token}

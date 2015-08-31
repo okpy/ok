@@ -92,7 +92,7 @@ class AssignmentAPITest(APIBaseTestCase):
 				'name': self.assignment_name,
 				'course': self._course.key
 			})
-			
+
 	def test_post_nondupliacte(self):
 		""" Tests successful post """
 		self.API().post(self.accounts['dummy_admin'], {
@@ -125,36 +125,36 @@ class AssignmentAPITest(APIBaseTestCase):
 		with self.assertRaises(BadValueError):
 			self.API().invite(
 				self._group,
-				self.accounts['dummy_admin'], 
+				self.accounts['dummy_admin'],
 				{
 					'email': 'dummy@admin.com'
 				})
-	
+
 	def test_download_scores_check(self):
 		""" Tests that download_scores checks for permissions """
 		with self.assertRaises(PermissionError):
 			self.API().download_scores(self._assign, self.accounts['dummy_student3'], {})
-		
+
 	def test_download_scores_basic(self):
 		""" Tests that admin allowed to download scores """
 		self.API().download_scores(self._assign, self.accounts['dummy_admin'], {})
-		
+
 	def test_autograde_check(self):
 		""" Tests that autograde has permissions check """
 		with self.assertRaises(PermissionError):
 			self.API().autograde(self._assign, self.accounts['dummy_student3'], {})
-			
+
 	def test_autograde_notenabled(self):
 		""" Tests if autograding not enabled """
 		with self.assertRaises(BadValueError):
 			self._assign.autograding_enabled = False
 			self.API().autograde(self._assign, self.accounts['dummy_admin'], {})
-			
+
 	def test_autograde_if_check(self):
 		""" Tests if autograding checks for grade_final """
 		with self.assertRaises(BadValueError):
 			self.API().autograde(self._assign, self.accounts['dummy_admin'], {'grade_final': False})
-			
+
 	def test_autograde_rejected_request(self):
 		""" Tests report for autograding failure """
 		with self.assertRaises(BadValueError):
@@ -164,7 +164,7 @@ class AssignmentAPITest(APIBaseTestCase):
 				'grade_final': True,
 				'token': 'gibberish'
 			})
-			
+
 	def test_autograde_successful_request_basic(self):
 		""" Tests successful autograding just runs - does not check for functioanlity """
 		import requests
@@ -173,12 +173,12 @@ class AssignmentAPITest(APIBaseTestCase):
 			'grade_final': True,
 			'token': 'gibberish'
 		})
-		
+
 	def test_queues_check(self):
 		""" Tests that queues checked """
 		with self.assertRaises(PermissionError):
 			self.API().queues(self._assign, self.accounts['dummy_student3'], {})
-			
+
 	def test_queues_result_basic(self):
 		""" Tests that result has results """
 		models.Queue(assignment=self._assign.key).put()

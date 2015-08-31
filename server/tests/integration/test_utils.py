@@ -40,21 +40,21 @@ class UtilsTestCase(APIBaseTestCase):
 
 	def get_accounts(self):
 		return APITest().get_accounts()
-	
+
 	##########################
 	# TEST ZIP FUNCTIONALITY #
 	##########################
-	
+
 	def test_zip_filename_purified(self):
 		""" Test that filename doesn't contain weird chars """
 		user = lambda: '_'
 		user.email = ['test@example.com']
 		fn = utils.make_zip_filename(user, datetime.datetime.now())
-		
+
 		assert fn.split('.')[1] == 'zip'
 		assert '@' not in fn
 		assert ' ' not in fn
-		
+
 	def test_add_subm_to_zip(self):
 		""" Test that submission contents added to zip """
 		results = api.SearchAPI.results({
@@ -65,14 +65,14 @@ class UtilsTestCase(APIBaseTestCase):
 			zipfile_str, zipfile = utils.start_zip()
 			zipfile = utils.add_subm_to_zip(subm, result.__class__, zipfile, result)
 			assert zipfile is None or len(zipfile.infolist()) > 0
-		
+
 	def test_start_zip_basic(self):
 		""" Test that a zip is started properly """
 		zipfile_str, zipfile = utils.start_zip()
 		assert zipfile_str is not None
 		assert zipfile is not None
 		return zipfile_str, zipfile
-	
+
 	def test_start_zip_filecontents(self):
 		""" Test that zip is initialized with file contents dict properly """
 		file_contents = dict(a='file a contents', b='file b contents')
@@ -82,7 +82,7 @@ class UtilsTestCase(APIBaseTestCase):
 		assert 'a' in zipnames
 		assert 'b' in zipnames
 		return zipfile_str, zipfile
-		
+
 	def test_start_zip_dir(self):
 		""" Test that files are saved under specified directory """
 		file_contents, dir = dict(a='file a contents', b='file b contents'), 'dir'
@@ -92,7 +92,7 @@ class UtilsTestCase(APIBaseTestCase):
 		assert 'dir/a' in zipnames
 		assert 'dir/b' in zipnames
 		return zipfile_str, zipfile
-		
+
 	def test_add_to_zip_basic(self):
 		""" Test that a zip is added to properly """
 		zipfile_str, zipfile = self.test_start_zip_basic()
@@ -119,12 +119,12 @@ class UtilsTestCase(APIBaseTestCase):
 		zipnames = [z.filename for z in zipinfo]
 		assert 'dir/c' in zipnames
 		assert 'dir/d' in zipnames
-		
+
 	def test_finish_zip_basic(self):
 		""" Test that zip is ready to go """
 		zipfile_str, zipfile = self.test_add_to_zip_basic()
 		assert utils.finish_zip(zipfile_str, zipfile) is not None
-		
+
 	###########################
 	# TEST OK-GCS ABSTRACTION #
 	###########################

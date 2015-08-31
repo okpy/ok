@@ -217,7 +217,7 @@ class APITest(object): #pylint: disable=no-init
     ## ENTITY PUT ##
 
     ## ENTITY DELETE ##
-    
-    
+
+
 if __name__ == '__main__':
     unittest.main()

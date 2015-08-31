@@ -41,9 +41,9 @@ def register_api_test(f):
 
 
 class URLsUnitTest(APIBaseTestCase):
-	
+
 	url_prefix = ''
-	
+
 	def get_accounts(self):
 		"""
 		Returns the accounts you want to exist in your system.
@@ -88,25 +88,25 @@ class URLsUnitTest(APIBaseTestCase):
 		""" Simple test for repl """
 		url_ok = 'http://okpy.org'
 		self.assertEqual(urls.force_account_chooser(url_ok), url_ok)
-		
+
 		url_notok = 'http://google.com/ServiceLogin'
 		self.assertEqual(
 			urls.force_account_chooser(url_notok),
 			url_notok.replace('ServiceLogin', 'AccountChooser')
 		)
-		
+
 	def get_home(self):
 		""" Access homepage """
 		return self.get('/')
-		
+
 	def get_landing(self):
 		""" Access landing """
 		return self.get('/landing')
-	
+
 	def get_login(self):
 		""" Access login """
 		return self.get('/login')
-	
+
 	def get_manage(self):
 		""" Access administrator panel """
 		return self.get('/manage')
@@ -117,7 +117,7 @@ class URLsUnitTest(APIBaseTestCase):
 		""" Tests that user not logged in is sent to login """
 		self.get_home()
 		self.assertStatusCode(302)
-	
+
 	def test_home_logged_in(self):
 		""" Tests that logged in student stays on page """
 		self.login('student0')
@@ -136,9 +136,9 @@ class URLsUnitTest(APIBaseTestCase):
 		self.assertIn(users.create_logout_url(
 			urls.force_account_chooser(users.create_login_url('/'))
 		), html)
-		
-	# landing	
-	
+
+	# landing
+
 	def test_landing_without_login(self):
 		""" Tests that landing shows login info for non-logged-in user """
 		self.get_landing()
@@ -157,65 +157,65 @@ class URLsUnitTest(APIBaseTestCase):
 		self.assertIn('Student Dashboard', html)
 		self.assertIn(users.create_logout_url('/landing'), html)
 		self.assertIn('Log Out', html)
-	
+
 	# login
-	
+
 	def test_login_without_login(self):
 		""" Tests that login shows without logged-in user """
 		self.get_login()
 		self.assertStatusCode(302)
-		
+
 	def test_login_with_login(self):
 		""" Tests that user redirected home with logged-in user """
 		self.login('student0')
 		self.get_login()
 		self.assertStatusCode(302)
-	
+
 	# manage
-	
+
 	def test_manage_without_login(self):
 		""" Tests that a user not logged in is sent to login """
 		self.get_manage()
 		self.assertStatusCode(302)
-		
+
 	def test_manage_with_student(self):
 		""" Tests that a student cannot access admin """
 		self.login('student0')
 		self.get_manage()
 		self.assertStatusCode(404)
-	
+
 	def test_manage_with_admin(self):
 		""" Tests that admin can access admin panel """
 		self.login('admin')
 		self.get_manage()
 		self.assertStatusCode(200)
-	
+
 	# errors
-	
+
 	def test_server_error(self):
 		""" Tests that server_error behaves normally """
 		with self.app.test_request_context('/landing'):
 			message = self.obj().set(get_exception_message='Some message')
 			response, status_code = urls.server_error(PermissionError(message))
 			self.assertEqual(status_code, 500)
-	
+
 	def test_args_error(self):
 		""" Tests that args_error raises an error """
 		with self.assertRaises(BadValueError):
 			message = self.obj().set(get_exception_message=lambda: 'Some message')
 			urls.args_error(PermissionError(message))
-			
+
 	def test_version_exception(self):
 		""" Tests that no versions throws error """
 		with self.assertRaises(APIException):
 			urls.check_version('1.0')
-	
+
 	# register_api
-	
+
 	def api_wrapper(self):
 		""" Returns nested function, api_wrapper in register_api """
 		return urls.register_api(api.APIResource, 'fake_api', 'fake')
-	
+
 	@register_api_test
 	def test_api_incorrect_version_error(self):
 		""" Tests that IVE is caught """
@@ -227,7 +227,7 @@ class URLsUnitTest(APIBaseTestCase):
 			request.args = {'client_version': '0.8'}
 			response = self.api_wrapper()()
 			self.assertEqual(response.status_code, 403)
-			
+
 	@register_api_test
 	def test_api_checks_version(self):
 		""" Tests that version is checked """
@@ -253,7 +253,7 @@ class URLsUnitTest(APIBaseTestCase):
 			auth.authenticate = self.raise_error
 			self.assertEqual(500, self.api_wrapper()().status_code)
 			auth.authenticate = real_auth
-			
+
 	@register_api_test
 	def test_api_rval_response(self):
 		""" Tests that werkzeug rvals are not changed """

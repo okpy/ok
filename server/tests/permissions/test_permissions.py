@@ -148,7 +148,7 @@ class BaseUnitTest(BaseTestCase):
                 messages=[self.messages['third']]
                 ),
             }
-        
+
         for backup in self.backups.values():
             backup.put()
 
@@ -163,7 +163,7 @@ class BaseUnitTest(BaseTestCase):
                 backup=self.backups["third"].key
                 ),
             }
-        
+
         for submission in self.submissions.values():
             submission.put()
 
@@ -181,7 +181,7 @@ class BaseUnitTest(BaseTestCase):
 
         for finalsubmission in self.finalsubmissions.values():
             finalsubmission.put()
-        
+
         self.groups = {
             'group1': models.Group(
                 member=[self.accounts['student0'].key,
@@ -190,13 +190,13 @@ class BaseUnitTest(BaseTestCase):
             )}
 
         self.groups['group1'].put()
-        
+
         group_message = models.Message(
             kind="group"
         )
-        
+
         group_message.put()
-        
+
         self.messages['group'] = group_message
 
         group_backup = models.Backup(
@@ -214,11 +214,11 @@ class BaseUnitTest(BaseTestCase):
 
         group_submission.put()
         self.submissions['group'] = group_submission
-        
+
         group_finalsubmission = models.FinalSubmission(
             submission=group_submission.key
         )
-        
+
         group_finalsubmission.put()
         self.finalsubmissions['group'] = group_finalsubmission
 
