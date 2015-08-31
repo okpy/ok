@@ -895,8 +895,8 @@ class AssignmentAPI(APIResource):
         """Returns assignment statistics"""
         FSub, Sub = models.FinalSubmission, models.Submission
         return {
-            'finalsubmissions': FSub(FSub.assignment==assignment).count(),
-            'submissions': Sub(Sub.assignment==assignment).count()
+            'finalsubmissions': FSub.query(FSub.assignment==assignment.key).count(),
+            'submissions': Sub.query(Sub.assignment==assignment.key).count()
         }
 
 

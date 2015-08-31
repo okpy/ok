@@ -39,7 +39,7 @@ app.controller("AssignmentModuleController", ["$scope", "$window", "Assignment",
   ]);
 
 app.controller("AssignmentDetailCtrl", ["$scope", "$window", "$stateParams", "Assignment",
-  function ($scope, $stateParams, Assignment) {
+  function ($scope, $window, $stateParams, Assignment) {
     $scope.assignment = Assignment.get({
         id: $stateParams.assignmentId
     }, function (response) {
