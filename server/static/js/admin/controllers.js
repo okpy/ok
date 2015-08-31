@@ -46,6 +46,13 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$window", "$stateParams", "As
     }, function(err) {
         report_error($window, err);
     });
+
+    $scope.statistics = Assignment.statistics({
+      id: $stateParams.assignmentId
+    }, function (response) {
+    }, function (err) {
+      report_error($window, err);
+    })
   }
   ]);
 
@@ -213,7 +220,7 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'url': $scope.assign.url
           }
         }
-        
+
         Assignment.edit(updatedAssign,
           function (response) {
             $scope.assignments = Assignment.query({},
