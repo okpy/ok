@@ -296,7 +296,7 @@ class User(Base):
 
         info = {'user': self}
         info['assignments'] = []
-        assignments = sorted(course.assignments)
+        assignments = course.assignments.order(-Assignment.due_date)
 
         for assignment in assignments:
             assign_info = {}
