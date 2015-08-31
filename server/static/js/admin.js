@@ -192,21 +192,21 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/assignment.edit.html',
       controller: "AssignmentEditCtrl"
     }
-    
+
     var courseAssignmentQueueBase = {
         name: 'course.assignment.queue',
         abstract: true,
         url: '/queues/:assignmentId',
         templateUrl:'/static/partials/admin/queue.base.html'
     }
-    
+
     var courseAssignmentQueueList = {
         name: 'course.assignment.queue.list',
         url: '/',
         templateUrl:'/static/partials/admin/queue.list.html',
         controller: "AssignmentQueueListCtrl"
     }
-    
+
     var courseAssignmentQueueGenerate = {
         name: 'course.assignment.queue.generate',
         url: '/generate',

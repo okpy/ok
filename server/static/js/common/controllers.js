@@ -168,7 +168,7 @@ app.controller("CourseNewCtrl", ["$scope", "Course",
 app.controller("SubmissionDiffCtrl", ['$scope', '$stateParams',  'Submission', '$timeout',
   function($scope, $stateParams, Submission, $timeout) {
     $scope.diff = Submission.diff({id: $stateParams.submissionId});
-    
+
     Submission.get({
       id: $stateParams.submissionId
     }, function(response) {
