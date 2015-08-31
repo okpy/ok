@@ -891,7 +891,7 @@ class AssignmentAPI(APIResource):
 
         return models.Queue.query(models.Queue.assignment == obj.key).fetch()
 
-    def statistics(self, assignment, user, data):
+    def statistics(self, obj, user, data):
         """Returns assignment statistics"""
         need = Need('staff')
         if not assignment.can(user, need, obj):
@@ -899,8 +899,8 @@ class AssignmentAPI(APIResource):
 
         FSub, Sub = models.FinalSubmission, models.Submission
         return {
-            'finalsubmissions': FSub.query(FSub.assignment==assignment.key).count(),
-            'submissions': Sub.query(Sub.assignment==assignment.key).count()
+            'finalsubmissions': FSub.query(FSub.assignment==obj.key).count(),
+            'submissions': Sub.query(Sub.assignment==obj.key).count()
         }
 
 
