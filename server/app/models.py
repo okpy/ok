@@ -294,50 +294,42 @@ class User(Base):
         if not course:
             raise BadValueError("Invalid course")
 
-        info = {'user': self}
-        info['assignments'] = []
-        assignments = course.assignments.order(-Assignment.due_date)
+        @ndb.tasklet
+        def assignment_info(assignment):
+            group = self.get_group(assignment.key) # TODO: async
+            final_submission = self.get_final_submission(assignment.key) # TODO: async
+            if final_submission:
+                submission = final_submission.submission.get() # TODO: async
+                backup = submission.backup.get() # TODO: async
+                final_info = {
+                    'submission': submission,
+                    'backup': backup,
+                    'final_submission': final_submission
+                }
+                if final_submission.revision:
+                    revision = final_submission.revision.get() # TODO: async
+                    final_info['revision'] = revision
+            else:
+                final_info = {}
+            has_backups = self.get_num_backups(assignment.key, 1) > 0 # TODO: async
+            has_submissions = self.get_num_submissions(assignment.key, 1) > 0 # TODO: async
+            return {
+                'group': {
+                    'group_info': group,
+                    'invited': group and self.key in group.invited
+                },
+                'final': final_info,
+                'backups': has_backups,
+                'submissions': has_submissions,
+                'assignment': assignment
+            }
 
-        for assignment in assignments:
-            assign_info = {}
-            group = self.get_group(assignment.key)
-            assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
-            assign_info['final'] = {}
-            final_info = assign_info['final']
+        assignments = course.assignments.order(-Assignment.due_date).map(assignment_info)
 
-            final_info['final_submission'] = self.get_final_submission(assignment.key)
-            if final_info['final_submission']:
-                final_info['submission'] = final_info['final_submission'].submission.get()
-                final_info['backup'] = final_info['submission'].backup.get()
-
-                if final_info['final_submission'].revision:
-                    final_info['revision'] = final_info['final_submission'].revision.get()
-
-                final_info['backup'] = final_info['submission'].backup.get()
-
-                # Percentage
-                final = final_info['backup']
-                solved = 0
-                total = 0
-                for message in final.messages:
-                    if message.kind == 'grading':
-                        for test_type in message.contents:
-                            for key in message.contents[test_type]:
-                                value = message.contents[test_type][key]
-                                if key == 'passed':
-                                    solved += value
-                                if type(value) == int:
-                                    total += value
-                if total > 0:
-                    assign_info['percent'] = round(100*float(solved)/total, 0)
-
-            assign_info['backups'] = self.get_num_backups(assignment.key, 1) > 0
-            assign_info['submissions'] = self.get_num_submissions(assignment.key, 1) > 0
-            assign_info['assignment'] = assignment
-
-            info['assignments'].append(assign_info)
-
-        return info
+        return {
+            'assignments': assignments,
+            'user': self
+        }
 
     def update_final_submission(self, assignment, group=None):
         """Update the final submission of the user and its group.
