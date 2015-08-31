@@ -168,6 +168,10 @@ app.factory('Assignment', ['$resource',
           isArray:true,
           url: '/api/v1/assignment/:id/queues',
           transformResponse: defaultTransformer
+        },
+        statistics: {
+          url: '/api/v1/assignment/:id/statistics',
+          transformResponse: defaultTransformer
         }
       });
     }

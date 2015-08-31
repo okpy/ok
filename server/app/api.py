@@ -795,10 +795,7 @@ class AssignmentAPI(APIResource):
         'queues': {
             'methods': set(['GET']),
         },
-        'submissions': {
-            'web_args': {
-                'final': BooleanArg()
-            }
+        'statistics': {
         }
     }
 
@@ -894,12 +891,13 @@ class AssignmentAPI(APIResource):
 
         return models.Queue.query(models.Queue.assignment == obj.key).fetch()
 
-    def count(self, assignment, user, data):
-        """Returns count of all submissions or final submissions"""
+    def statistics(self, assignment, user, data):
+        """Returns assignment statistics"""
         FSub, Sub = models.FinalSubmission, models.Submission
-        if data['final']:
-            return FSub(FSub.assignment==assignment).count()
-        return Sub(Sub.assignment==assignment).count()
+        return {
+            'finalsubmissions': FSub(FSub.assignment==assignment).count(),
+            'submissions': Sub(Sub.assignment==assignment).count()
+        }
 
 
 class SubmitNDBImplementation(object):
