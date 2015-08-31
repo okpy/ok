@@ -428,7 +428,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
            });
         }
       };
-      
+
       $scope.canReorder = function(assign) {
         if (!assign.assignment.active) {
             $window.swal('Error', 'Cannot reorder group members after the assignment lock date.', 'error');
@@ -436,7 +436,8 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
 
       $scope.randomColor = function randomColor(assignment) {
-        themes = ['blue','gold','purple']
+        // themes = ['blue','gold','purple']
+        themes = ['gold']  // fluctuating (randomly-chosen) colors confuse people
         if (!assignment.color) {
             var blob = document.querySelectorAll('.blob[id="'+assignment.id+'"]');
             assignment.color = blob.length > 0 ? blob[0].getAttribute('color') : themes[Math.ceil(Math.random()*themes.length)-1]

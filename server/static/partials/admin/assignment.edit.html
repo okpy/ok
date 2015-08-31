@@ -87,13 +87,8 @@
           </div>
           <div ng-hide="!assign.autograding_enabled">
             <div class="form-group">
-                <label>Zip File URL</label>
-                <input ng-model="assign.zip_file_url" type="text" class="form-control" placeholder="http://cs61a.org/lab/lab01/lab01.zip">
-            </div>
-
-            <div class="form-group" >
-                <label>Grading Script File </label>
-                <textarea ng-model="assign.grading_script_file" style="height: 20em;" class="form-control"></textarea>
+                <label>Autograder Key (ID of Assignment in Autograder)</label>
+                <input ng-model="assign.autograding_key" type="text" class="form-control" placeholder="5abc3....">
             </div>
 
           </div>

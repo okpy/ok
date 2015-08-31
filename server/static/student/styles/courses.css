@@ -207,7 +207,7 @@ header {
 
 .blob[color="gold"], .colored.sidebar[color="gold"] { background-color:#D9A300 }
 .blob[color="gold"] .blob-alert { background-color:#FFC926 }
-        
+
 /* Blobs */
 .blob {
     color:#666;
@@ -336,7 +336,7 @@ header {
         .blob-shiftcopy img {
             margin-left:-25px;
             margin-right:5px;
-        }   
+        }
         span .arrow, p .arrow {
             margin:0 5px;
         }
@@ -394,6 +394,7 @@ header {
     height:100%;
     z-index:30;
     padding-left:5px;
+    max-width:400px;
 }
     .active.sidebar {
         right:500px;

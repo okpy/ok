@@ -12,7 +12,7 @@ methods should handle:
 
     - file formats
       Prepare .zip, .csv etc. files.
-      
+
     - errors
       Catch and return errors, so that the front-end can
       feed that information back to the user.
@@ -36,11 +36,11 @@ from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL
 
 from app import models, app, analytics, utils
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user, backup_group_file, add_to_file_contents
 
@@ -443,7 +443,7 @@ class ParticipantAPI(APIResource):
         'enrollment': {
         }
     }
-    
+
     # Utility - TODO: remove it in favor of existing permissions implementation
 
     def check(self, emails, course, role):
@@ -457,9 +457,9 @@ class ParticipantAPI(APIResource):
                 raise BadValueError('Check failed.')
             parts.append(part)
         return parts
-    
+
     # Endpoint
-    
+
     # @need('get')
     def enrollment(self):
         user = models.User.lookup(request.args.get('email'))
@@ -678,9 +678,7 @@ class AssignmentAPI(APIResource):
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
                 'autograding_enabled': Arg(bool),
-                'grading_script_file': Arg(str),
-                'zip_file_url': Arg(str),
-                'access_token': Arg(str),
+                'autograding_key': Arg(str),
                 'url': Arg(str)
             }
         },
@@ -696,9 +694,7 @@ class AssignmentAPI(APIResource):
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
                 'autograding_enabled': Arg(bool),
-                'grading_script_file': Arg(str),
-                'zip_file_url': Arg(str),
-                'access_token': Arg(str),
+                'autograding_key': Arg(str),
                 'url': Arg(str)
             }
         },
@@ -717,9 +713,7 @@ class AssignmentAPI(APIResource):
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
                 'autograding_enabled': Arg(bool),
-                'grading_script_file': Arg(str),
-                'zip_file_url': Arg(str),
-                'access_token': Arg(str),
+                'autograding_key': Arg(str),
                 'url': Arg(str)
             }
         },
@@ -823,18 +817,17 @@ class AssignmentAPI(APIResource):
         for fsub in fsubs:
           subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
 
-        ag_url = "http://104.154.46.183:5000"
-        data = {'subm_ids': subm_ids,
-        'assign_name': obj.display_name,
-        'starter_zip_url': obj.zip_file_url,
-        'access_token': data['token'],
-        'grade_script': obj.grading_script_file,
-        'testing': True}
+        data = {
+            'subm_ids': subm_ids,
+            'assignment': obj.autograding_key,
+            'access_token': data['token']
+        }
 
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        r = requests.post(ag_url+'/grade/batch', data=json.dumps(data), headers=headers)
+        r = requests.post(AUTOGRADER_URL+'/api/ok/grade/batch',
+            data=json.dumps(data), headers=headers)
         if r.status_code == requests.codes.ok:
-          return {'status_url': ag_url+'/rq', 'length': str(len(subm_ids))}
+          return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
         else:
           raise BadValueError('The autograder the rejected your request')
       else:
@@ -952,8 +945,9 @@ class SubmissionAPI(APIResource):
         try:
             user = obj.submitter.get()
             name = user.email[0]+'-'+str(obj.created)
-        except IndexError:
+        except IndexError, AttributeError:
             name = str(obj.created)
+
         name = name.replace('.', '-').replace(' ', '_')
         messages = obj.get_messages()
         if 'file_contents' not in messages:
@@ -995,7 +989,13 @@ class SubmissionAPI(APIResource):
         return response
 
     def get_assignment(self, name):
-        """Look up an assignment by name"""
+        """
+        Look up an assignment by name
+
+        :param name: (string) name of assignment
+        :return: (object, Error) the assignment object or
+            raise a validation error
+        """
         assignments = self.db.lookup_assignments_by_name(name)
         if not assignments:
             raise BadValueError('Assignment \'%s\' not found' % name)
@@ -1004,7 +1004,9 @@ class SubmissionAPI(APIResource):
         return assignments[0]
 
     def submit(self, user, assignment, messages, submit, submitter=None):
-        """Process submission messages for an assignment from a user."""
+        """
+        Process submission messages for an assignment from a user.
+        """
         valid_assignment = self.get_assignment(assignment)
 
         if submitter is None:
@@ -1020,27 +1022,40 @@ class SubmissionAPI(APIResource):
                 # In the revision period. Ensure that user has a previously graded submission.
                 fs = user.get_final_submission(valid_assignment)
                 if fs is None or fs.submission.get().score == []:
-                    logging.info('Rejecting Revision without graded FS', submitter)
                     return (403, 'Previous submission was not graded', {
-                        'late': True,
-                        })
+                      'late': True,
+                      })
             else:
                 # Late submission. Do not allow them to submit
-                logging.info('Rejecting Late Submission', submitter)
                 return (403, 'late', {
                     'late': True,
                     })
 
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
+
+        if valid_assignment.autograding_enabled:
+            logging.info("Queing submission to AG")
+            deferred.defer(submit_to_ag, valid_assignment, messages, user)
+
         return (201, 'success', {
             'key': submission.key.id(),
             'course': valid_assignment.course.id(),
             'email': user.email[0]
         })
 
+    def post(self, user, data):
+        submit_flag = False
+        if data['messages'].get('file_contents'):
+            if 'submit' in data['messages']['file_contents']:
+                submit_flag = data['messages']['file_contents']['submit']
+
+        return self.submit(user, data['assignment'],
+                           data['messages'], submit_flag,
+                           data.get('submitter'))
+
     # Endpoints
-    
+
     # no permissions, so that anyone can submit
     def post(self, user, data):
         submit_flag = False
@@ -1051,7 +1066,7 @@ class SubmissionAPI(APIResource):
         return self.submit(user, data['assignment'],
                            data['messages'], submit_flag,
                            data.get('submitter'))
-    
+
     @need('get')
     def zip(self, obj, user, data):
         """Grab all files in submission"""
@@ -1232,7 +1247,7 @@ class SearchAPI(APIResource):
             AssignmentAPI.model.query(
                 op(AssignmentAPI.model.display_name, name)).get(),
     }
-    
+
     # Utilities
 
     # TODO: replace this with existing permissions implementation
@@ -1243,7 +1258,7 @@ class SearchAPI(APIResource):
 
         if user.key not in course.staff and not user.is_admin:
             raise Need('get').exception()
-        
+
     # Search Functionality
 
     @staticmethod
@@ -1359,9 +1374,9 @@ class SearchAPI(APIResource):
     def limits(page, num_per_page):
         """ returns start and ends number based on page and num_per_page """
         return (page-1)*num_per_page, page*num_per_page
-    
+
     # Endpoints
-    
+
     def index(self, user, data):
         """ Performs search query, with some extra information """
         self.check_permissions(user, data)
@@ -1378,7 +1393,8 @@ class SearchAPI(APIResource):
         self.check_permissions(user, data)
 
         now = datetime.datetime.now()
-        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI, models.Submission, user, data, now)
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI(),
+                       models.Submission, user, data, now)
 
         return [make_zip_filename(user, now)]
 
@@ -1448,8 +1464,8 @@ class VersionAPI(APIResource):
             obj.current_version = data['version']
         obj.put()
         return obj
-    
-    
+
+
     @need('get')
     def current(self, obj, user, data):
         if not obj.current_version:
@@ -1624,7 +1640,7 @@ class CourseAPI(APIResource):
     @need('get')
     def assignments(self, course, user, data):
         return course.assignments.fetch()
-    
+
 
 class GroupAPI(APIResource):
     model = models.Group
@@ -1771,7 +1787,7 @@ class QueueAPI(APIResource):
         }
 
     # Utility
-    
+
     def new_entity(self, attributes):
         """create new queue"""
         if 'owner' not in attributes:
@@ -1811,10 +1827,10 @@ class QueuesAPI(APIResource):
             models.Participant.role == STAFF_ROLE,
             models.Participant.course == course_key).fetch())
             if staff_list[0] == '*' or staff.email[0] in staff_list]
-        
+
         if len(staff) == 0:
             raise BadValueError('Course has no registered staff members.')
-        
+
         ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
 
         subms = models.FinalSubmission.query(
@@ -1867,7 +1883,7 @@ class FinalSubmissionAPI(APIResource):
             }
         }
     }
-    
+
     # Utility
 
     def new_entity(self, attributes):
@@ -1926,4 +1942,3 @@ class AnalyticsAPI(APIResource):
         return (201, 'success', {
             'key': job.job_dump.key.id()
         })
-

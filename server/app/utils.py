@@ -9,6 +9,8 @@ import logging
 import datetime
 import itertools
 from os.path import join
+from app import constants
+import requests
 
 try:
     from cStringIO import StringIO
@@ -24,7 +26,7 @@ from google.appengine.ext import deferred
 import cloudstorage as gcs
 
 from app import app
-from app.constants import GRADES_BUCKET
+from app.constants import GRADES_BUCKET, AUTOGRADER_URL
 from app.exceptions import BadValueError
 
 # TODO Looks like this can be removed just by relocating parse_date
@@ -122,7 +124,7 @@ def add_to_zip(zipfile, file_contents, dir=''):
     return zipfile
 
 def create_csv_content(content):
-    """ 
+    """
     Return all contents in CSV file format. Content must be a list of lists.
     """
     scsv = StringIO()
@@ -137,9 +139,9 @@ def create_csv_content(content):
     return contents
 
 def data_for_scores(assignment, user):
-    """ 
+    """
     Returns a tuple of two values a list of lists of score info for assignment.
-    Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']] 
+    Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
     """
     content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
     course = assignment.course.get()
@@ -158,8 +160,8 @@ def data_for_scores(assignment, user):
     return content
 
 def create_gcs_file(gcs_filename, contents, content_type):
-    """ 
-    Creates a GCS csv file with contents CONTENTS. 
+    """
+    Creates a GCS csv file with contents CONTENTS.
     """
     try:
         gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'project-private'})
@@ -409,7 +411,7 @@ def merge_user(user_key, dup_user_key):
         G.invited == dup_user_key)).fetch()
     for group in groups:
         group.exit(dup_user_key)
-        
+
     # Deactivate all enrollments
     E = ModelProxy.Participant
     enrolls = E.query(E.user == dup_user_key).fetch()
@@ -505,7 +507,7 @@ def check_user(user_key):
 
 
 def scores_to_gcs(assignment, user):
-    """ Writes all final submission scores 
+    """ Writes all final submission scores
     for the given assignment to GCS csv file. """
     content = data_for_scores(assignment, user)
     csv_contents = create_csv_content(content)
@@ -543,9 +545,9 @@ def backup_group_file(backup, json_pretty={}):
         order = {i: u['email'][0]
                  for i, u in enumerate(json_data['member'])}
         return (
-            ('group_members_%s.json' % group.key.id(), 
+            ('group_members_%s.json' % group.key.id(),
              str(json.dumps(order, **json_pretty))),
-            ('group_meta_%s.json' % group.key.id(), 
+            ('group_meta_%s.json' % group.key.id(),
              str(json.dumps(json_data, **json_pretty)))
         )
 
@@ -565,19 +567,46 @@ def make_zip_filename(user, now):
     return filename+'.zip'
 
 
-def subms_to_gcs(SearchAPI, SubmissionAPI, Submission, user, data, datetime):
-    """
-    Writes all submissions for a given search query
-    to a GCS zip file.
-    """
-    results = SearchAPI.results(data)
+def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
+                start_cursor=None):
+    """Writes all submissions for a given search query to a GCS zip file."""
     zipfile_str, zipfile = start_zip()
-    subm = SubmissionAPI()
-    for result in results:
-        zipfile = add_subm_to_zip(subm, Submission, zipfile, result)
+    next_cursor, has_more = None, True
+    while has_more:
+        query = SearchAPI.querify(data['query'])
+        results, next_cursor, has_more = query.fetch_page(
+            constants.BATCH_SIZE, start_cursor=next_cursor)
+        for result in results:
+            zipfile = add_subm_to_zip(subm, Submission, zipfile, result)
     zip_contents = finish_zip(zipfile_str, zipfile)
     zip_filename = make_zip_filename(user, datetime)
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
+
+def submit_to_ag(assignment, messages, submitter):
+    if 'file_contents' not in messages:
+        return
+    email = submitter.email[0]
+    data = {
+        'assignment': assignment.autograding_key,
+        'file_contents': messages['file_contents'],
+        'submitter': email
+    }
+    # Ensure user is enrolled.
+    enrollment = ModelProxy.Participant.query(
+        ModelProxy.Participant.course == assignment.course,
+        ModelProxy.Participant.user == submitter.key).get()
+
+    if not enrollment:
+        raise BadValueError('User is not enrolled and cannot be autograded.')
+    logging.info("Starting send to AG")
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    r = requests.post(AUTOGRADER_URL+'/api/file/grade/continous',
+        data=json.dumps(data), headers=headers)
+    if r.status_code == requests.codes.ok:
+        logging.info("Sent to Autograder")
+        return {'status': "pending"}
+    else:
+        raise BadValueError('The autograder the rejected your request')
 
 
 import difflib
