@@ -894,7 +894,7 @@ class AssignmentAPI(APIResource):
     def statistics(self, obj, user, data):
         """Returns assignment statistics"""
         need = Need('staff')
-        if not assignment.can(user, need, obj):
+        if not obj.can(user, need, obj):
             raise need.exception()
 
         FSub, Sub = models.FinalSubmission, models.Submission
