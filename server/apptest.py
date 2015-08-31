@@ -79,7 +79,7 @@ if __name__ == '__main__':
             print "Doing {} testing".format(typ)
             print '='*60
             failed = main(SDK_PATH, TEST_PATH, test_dir) or failed
-            
+
     if not failed:
         print "ALL TESTS PASSED"
     else:

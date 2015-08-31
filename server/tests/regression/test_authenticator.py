@@ -9,18 +9,18 @@ class AuthTestCase(BaseTestCase):
 	"""
 	Testing authenticator
 	"""
-	
+
 	response = '{}'
 	access_token = 'gibberish'
-	
+
 	def test_testing_authenticator(self):
 		self.assertEqual(TestingAuthenticator().authenticate(self.access_token), self.access_token)
-		
+
 	def setup_response(self, response):
 		resp = lambda: '_'
 		resp.json = lambda: response
 		requests.get = lambda x, params: resp
-		
+
 	def test_google_authenticator_error(self):
 		""" Test Google auth error """
 		self.setup_response({'error': 'uh oh'})
@@ -29,7 +29,7 @@ class AuthTestCase(BaseTestCase):
 			assert False
 		except AuthenticationException as e:
 			self.assertEqual('access token invalid', str(e))
-			
+
 	def test_google_authenticator_no_email(self):
 		""" Test Google auth missing email """
 		self.setup_response({})

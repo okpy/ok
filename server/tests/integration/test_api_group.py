@@ -171,13 +171,13 @@ class GroupAPITest(APITest, APIBaseTestCase):
 
 		self.assertStatusCode(200)
 		self.assertEqual(inst.key.get(), None)
-	
+
 	def test_add_member_permission(self):
 		""" Tests that add_member checks for permissions """
 		self.group = self.group.put().get()
 		with self.assertRaises(PermissionError):
 			self.API().add_member(self.group, self.accounts['dummy_student'], {})
-	
+
 	def test_add_member_already_invited(self):
 		""" Tests that repeating invite not allowed """
 		self.group = self.group.put().get()
@@ -238,7 +238,7 @@ class GroupAPITest(APITest, APIBaseTestCase):
 		self.group.put()
 		with self.assertRaises(PermissionError):
 			self.API().accept(self.group, self.accounts['dummy_student'], {})
-			
+
 	def test_accept_error(self):
 		""" TEsts that accept properly propogates errors """
 		self.group.put()
@@ -250,25 +250,25 @@ class GroupAPITest(APITest, APIBaseTestCase):
 		self.group.put()
 		with self.assertRaises(PermissionError):
 			self.API().accept(self.group, self.accounts['dummy_student2'], {})
-			
+
 	def test_exit_permission(self):
 		""" Tests that exit checks for permission """
 		self.group.put()
 		with self.assertRaises(PermissionError):
 			self.API().exit(self.group, self.accounts['dummy_student'], {})
-			
+
 	def test_exit_nonmember(self):
 		""" Tests that exit checks for existing member """
 		self.group.put()
 		with self.assertRaises(BadValueError):
 			self.API().exit(self.group, self.accounts['dummy_admin'], {})
-			
+
 	def test_reorder_permissions(self):
 		""" Tests that reorder checks for permissions """
 		self.group.put()
 		with self.assertRaises(PermissionError):
 			self.API().reorder(self.group, self.accounts['dummy_student'], {})
-			
+
 	def test_reorder_incorrect_number_of_members(self):
 		""" Tests that reorder does not inadvertently lose members """
 		self.group.put()

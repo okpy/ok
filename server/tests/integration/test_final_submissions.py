@@ -236,7 +236,7 @@ class FinalSubmissionTest(APIBaseTestCase):
         self.run_deferred()
 
         self.assertNumFinalSubmissions(1)
-        
+
         subm = models.Submission.query(
             models.Submission.backup == self.backups['second'].key
         ).get()
@@ -246,7 +246,7 @@ class FinalSubmissionTest(APIBaseTestCase):
             dict(submission=subm.key))
 
         self.assertFinalSubmission(self.user, self.backups['second'])
-        
+
     def test_set_different_backup_as_final_submission(self):
         self.login('student0')
 
@@ -264,7 +264,7 @@ class FinalSubmissionTest(APIBaseTestCase):
         self.run_deferred()
 
         self.assertNumFinalSubmissions(1)
-        
+
         subm = models.Submission(backup=self.backups['second'].key)
         subm.put()
 
@@ -352,18 +352,18 @@ class FinalSubmissionTest(APIBaseTestCase):
         self.assertEqual(2, len(models.FinalSubmission.query().fetch()))
         self.assertIsNone(inviter.get_final_submission(self.assign).group)
         self.assertIsNone(invited.get_final_submission(self.assign).group)
-        
+
     ##############
     # SUBMIT NDB #
     ##############
-        
+
     def test_ndb_submit(self):
         """ test backup modifications by ndb submit """
         datestr = '2015-04-20 00:00:00'
         datestr_converted = '2015-04-20 07:00:00'  # because GAE is stubborn
         backup = api.SubmitNDBImplementation().create_submission(
-            self.accounts['student0'], 
-            self.assignments['first'], 
+            self.accounts['student0'],
+            self.assignments['first'],
             {'analytics': {'time': datestr}},
             True,
             self.accounts['student0'])

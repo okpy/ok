@@ -21,7 +21,7 @@ from buffer import Buffer, InputReader, LineReader
 
 # Pairs and Scheme lists
 
-# Hi! 
+# Hi!
 
 class Pair:
     """A pair has two instance attributes: first and second.  For a Pair to be

@@ -40,7 +40,7 @@ class FinalSubmissionAPITest(APIBaseTestCase):
 		self._submission = make_fake_submission(self._backup)
 
 	def get_accounts(self):
-		return APITest().get_accounts()	
+		return APITest().get_accounts()
 
 	# tests for mark as final
 

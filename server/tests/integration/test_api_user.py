@@ -54,7 +54,7 @@ class UserAPITest(APIBaseTestCase):
 		obj = self.obj().set(get_course_info=self.raise_error)
 		with self.assertRaises(TestingError):
 			self.API().get(obj, None, {'course': self._course.key})
-			
+
 	def test_get_instance(self):
 		""" Tests for error if user does not exist """
 		with self.assertRaises(BadKeyError):
@@ -65,24 +65,24 @@ class UserAPITest(APIBaseTestCase):
 		obj = api.UserAPI.model.lookup('dummy2@student.com')
 		self.assertEqual(
 			self.API().get_instance(
-				'dummy2@student.com', 
+				'dummy2@student.com',
 				self.accounts['dummy_admin']), obj)
-			
+
 	def test_get_instance_check_permissions(self):
 		""" Tests that permissions are checked """
 		with self.assertRaises(PermissionError):
 			self.API().get_instance('dummy2@student.com', self.accounts['dummy_student3'])
-			
+
 	def test_new_entity(self):
 		""" Tests that a new entity is created """
 		ent = self.API().new_entity({'email': 'gibberish@student.com'})
 		self.assertEqual(['gibberish@student.com'], ent.email)
-		
+
 	def test_new_entity_exists(self):
 		""" Tests error if student already exists """
 		with self.assertRaises(BadValueError):
 			self.API().new_entity({'email': 'dummy@admin.com'})
-			
+
 	def test_add_email_check(self):
 		""" Tests that add_email checks for permissions """
 		with self.assertRaises(PermissionError):
@@ -90,7 +90,7 @@ class UserAPITest(APIBaseTestCase):
 				self.accounts['dummy_admin'],
 				self.accounts['dummy_student3'],
 				None)
-		
+
 	def test_add_email_function(self):
 		""" Tests that add_email actually adds the email """
 		self.API().add_email(
@@ -99,7 +99,7 @@ class UserAPITest(APIBaseTestCase):
 			{'email': 'hoho@admin.com'})
 		obj = self.API().get_instance('dummy3@student.com', self.accounts['dummy_admin'])
 		self.assertIn('hoho@admin.com', obj.email)
-		
+
 	def test_delete_email_check(self):
 		""" Tests that delete email checks permissions """
 		with self.assertRaises(PermissionError):
@@ -107,7 +107,7 @@ class UserAPITest(APIBaseTestCase):
 				self.accounts['dummy_admin'],
 				self.accounts['dummy_student3'],
 				None)
-			
+
 	def test_delete_email_function(self):
 		""" Tests that delete email actually deletes the email """
 		self.API().add_email(
@@ -120,7 +120,7 @@ class UserAPITest(APIBaseTestCase):
 			{'email': 'hoho@admin.com'})
 		obj = self.API().get_instance('dummy3@student.com', self.accounts['dummy_admin'])
 		self.assertNotIn('hoho@admin.com', obj.email)
-		
+
 	def test_invitations_without_assignment(self):
 		""" Verifies results of invitations, w/o assignment """
 		user = self.accounts['dummy_student3']
@@ -132,21 +132,21 @@ class UserAPITest(APIBaseTestCase):
 		user = self.accounts['dummy_student3']
 		query = models.Group.query(models.Group.invited == user.key).filter(models.Group.assignment==self._assign.key)
 		self.assertEqual(self.API().invitations(user, user, {'assignment': self._assign.key}), list(query))
-		
+
 	def test_queues_basic(self):
 		""" Test that fetching all queues works """
 		queues = self.API().queues(None, self.accounts['dummy_admin'], None)
 		self.assertTrue(isinstance(queues, list))
-		
+
 		for queue in queues:
 			self.assertEqual(queue.assigned_staff, self.accounts['dummy_admin'].key)
-			
+
 	def test_create_staff_permissions(self):
 		""" Tests that create_Staff checks for permissions """
 		admin, user = self.accounts['dummy_admin'], self.accounts['dummy_student3']
 		with self.assertRaises(PermissionError):
 			self.API().create_staff(user, user, {})
-		
+
 	def test_create_staff_function(self):
 		""" Tests that staff is actually added """
 		admin, user = self.accounts['dummy_admin'], self.accounts['dummy_student3']
@@ -157,7 +157,7 @@ class UserAPITest(APIBaseTestCase):
 		})
 		self.assertEqual(1, len(models.Participant.query(models.Participant.course == self._course.key).fetch()))
 		self.assertEqual(models.User.query(models.User.email==self.user3.email[0]).get().role, constants.STAFF_ROLE)
-		
+
 	def test_get_fsubm(self):
 		""" Tests vaildity of fetched final submission """
 		user = self.user2
@@ -165,7 +165,7 @@ class UserAPITest(APIBaseTestCase):
 		self.assertEqual(fsubm.submitter, user.key)
 		self.assertEqual(fsubm.assignment, self._assign.key)
 		self.assertTrue(isinstance(fsubm, models.FinalSubmission))
-		
+
 	def test_get_backups(self):
 		""" Tests validity of fetched backups """
 		backups = self.API().get_backups(self.user2, None, {
@@ -173,7 +173,7 @@ class UserAPITest(APIBaseTestCase):
 			'quantity': 5
 		})
 		self.assertEqual(len(backups), 1)
-		
+
 	def test_get_submissions(self):
 		""" Test get submissions """
 		subms = self.API().get_submissions(self.user2, None, {
@@ -181,7 +181,7 @@ class UserAPITest(APIBaseTestCase):
 			'quantity': 5
 		})
 		self.assertEqual(len(subms), 0)  # because the 1 submission in the DB doesn't have files
-		
+
 		for subm in subms:
 			self.assertTrue(isinstance(subm, models.Submission))
 
@@ -189,14 +189,14 @@ class UserAPITest(APIBaseTestCase):
 		""" Tests that merge user checks permissions """
 		with self.assertRaises(PermissionError):
 			self.API().merge_user(self.user1, self.user2, {})
-			
+
 	def test_merge_user_nonexistent_user(self):
 		""" Tests that merge user throws error with invalid user """
 		with self.assertRaises(BadValueError):
 			self.API().merge_user(self.user2, self.user, {
 				'other_email': 'invalid@dummy.com'
 			})
-	
+
 	def test_merge_user_ok(self):
 		""" Tests that merge user does not die """
 		self.API().merge_user(self.user2, self.user, dict(other_email='dummy3@student.com'))

@@ -164,7 +164,7 @@ def register_api(view, endpoint, url):
 
     def api_wrapper(*args, **kwds):
         # Any client can check for the latest version
-        
+
         try:
             request.fields = {}
             message = "success"
@@ -215,9 +215,9 @@ def register_api(view, endpoint, url):
     app.add_url_rule(
         '%s/<path:path>' % url, view_func=wrapper,
         methods=['GET', 'POST', 'DELETE', 'PUT'])
-    
+
     return api_wrapper  # adding for testing purposes
-    
+
 
 def register_root_api(api):
     api = api()
