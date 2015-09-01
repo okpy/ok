@@ -266,34 +266,40 @@ class User(Base):
             raise BadValueError("Invalid course")
 
         @ndb.tasklet
-        def assignment_info(assignment):
-            group = self.group(assignment.key).get()
-            final_submission = self.final_submission(group, assignment.key).get() # TODO: async
-            has_backups = self.backups(group, assignment.key).get() is None # TODO: async
-            has_submissions = self.submissions(group, assignment.key).get() is None # TODO: async
+        def final_submission_info(group, assignment):
+            final_submission = yield self.final_submission(group, assignment.key).get_async()
             if final_submission:
-                submission = final_submission.submission.get() # TODO: async
-                backup = submission.backup.get() # TODO: async
+                submission = yield final_submission.submission.get_async()
+                backup = yield submission.backup.get_async()
                 final_info = {
                     'submission': submission,
                     'backup': backup,
                     'final_submission': final_submission
                 }
                 if final_submission.revision:
-                    revision = final_submission.revision.get() # TODO: async
+                    revision = yield final_submission.revision.get_async()
                     final_info['revision'] = revision
             else:
                 final_info = {}
-            return {
+            raise ndb.Return(final_info)
+
+        @ndb.tasklet
+        def assignment_info(assignment):
+            group = self.group(assignment.key).get()
+            final_info, first_backup, first_submission = yield (
+                final_submission_info(group, assignment),
+                self.backups(group, assignment.key).get_async(),
+                self.submissions(group, assignment.key).get_async())
+            raise ndb.Return({
                 'group': {
                     'group_info': group,
                     'invited': group and self.key in group.invited
                 },
                 'final': final_info,
-                'backups': has_backups,
-                'submissions': has_submissions,
+                'backups': first_backup is not None,
+                'submissions': first_submission is not None,
                 'assignment': assignment
-            }
+            })
 
         assignments = course.assignments.order(-Assignment.due_date).map(assignment_info)
 
