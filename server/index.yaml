@@ -48,6 +48,13 @@ indexes:
 
 - kind: Backupv2
   properties:
+  - name: assignment
+  - name: submitter
+  - name: server_time
+    direction: desc
+
+- kind: Backupv2
+  properties:
   - name: messages.kind
   - name: submitter
   - name: created
