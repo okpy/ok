@@ -286,18 +286,18 @@ class User(Base):
         @ndb.tasklet
         def assignment_info(assignment):
             group = self.group(assignment.key).get()
-            final_info, first_backup, first_submission = yield (
+            final_info, num_backups, num_submissions = yield (
                 final_submission_info(group, assignment),
-                self.backups(group, assignment.key).get_async(),
-                self.submissions(group, assignment.key).get_async())
+                self.backups(group, assignment.key).count_async(1),
+                self.submissions(group, assignment.key).count_async(1))
             raise ndb.Return({
                 'group': {
                     'group_info': group,
                     'invited': group and self.key in group.invited
                 },
                 'final': final_info,
-                'backups': first_backup is not None,
-                'submissions': first_submission is not None,
+                'backups': num_backups > 0,
+                'submissions': num_submissions,
                 'assignment': assignment
             })
 
