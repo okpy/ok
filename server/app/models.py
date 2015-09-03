@@ -297,7 +297,7 @@ class User(Base):
                 },
                 'final': final_info,
                 'backups': num_backups > 0,
-                'submissions': num_submissions,
+                'submissions': num_submissions > 0,
                 'assignment': assignment
             })
 
