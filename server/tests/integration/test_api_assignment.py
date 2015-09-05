@@ -38,6 +38,7 @@ class AssignmentAPITest(APIBaseTestCase):
 		self._course.put()
 		self._assign = make_fake_assignment(self._course, self.user)
 		self._assign.autograding_enabled = True
+		self._assign.autograding_key = "NotReallyAnAutograderKey"
 		self._assign.name = self._assign.display_name = self.assignment_name
 		self._assign.put()
 		self._group = make_fake_group(self._assign, self.user1, self.user2)
@@ -158,7 +159,8 @@ class AssignmentAPITest(APIBaseTestCase):
 		with self.assertRaises(BadValueError):
 			import requests
 			self.mock(requests, 'post').using(lambda *args, **kwargs: self.obj().set(status_code=900))
-			self.API().autograde(self._assign, self.accounts['dummy_admin'], {
+			# Use the deferred task - since that's where submission occurs.
+			utils.autograde_final_subs(self._assign, self.accounts['dummy_admin'], {
 				'grade_final': True,
 				'token': 'gibberish'
 			})
@@ -167,7 +169,7 @@ class AssignmentAPITest(APIBaseTestCase):
 		""" Tests successful autograding just runs - does not check for functioanlity """
 		import requests
 		self.mock(requests, 'post').using(lambda *args, **kwargs: self.obj().set(status_code=200))
-		self.API().autograde(self._assign, self.accounts['dummy_admin'], {
+		utils.autograde_final_subs(self._assign, self.accounts['dummy_admin'], {
 			'grade_final': True,
 			'token': 'gibberish'
 		})

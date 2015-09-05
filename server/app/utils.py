@@ -610,13 +610,13 @@ def submit_to_ag(assignment, messages, submitter):
 def autograde_final_subs(assignment, user, data):
     subm_ids = {}
     fsubs = list(ModelProxy.FinalSubmission.query(
-                    ModelProxy.FinalSubmission.assignment == obj.key))
+                    ModelProxy.FinalSubmission.assignment == assignment.key))
     for fsub in fsubs:
       subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
 
     data = {
         'subm_ids': subm_ids,
-        'assignment': obj.autograding_key,
+        'assignment': assignment.autograding_key,
         'access_token': data['token']
     }
 
