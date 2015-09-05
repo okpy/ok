@@ -138,6 +138,16 @@ class AssignmentAPITest(APIBaseTestCase):
 		""" Tests that admin allowed to download scores """
 		self.API().download_scores(self._assign, self.accounts['dummy_admin'], {})
 
+	def test_statistics_check(self):
+		""" Tests that stats permissions checked """
+		with self.assertRaises(PermissionError):
+			self.API().statistics(self._assign,
+				self.accounts['dummy_student3'], {})
+
+	def test_statistics_basic(self):
+		""" Tests that stats will be downloaded """
+		self.API().statistics(self._assign, self.accounts['dummy_admin'], {})
+
 	def test_autograde_check(self):
 		""" Tests that autograde has permissions check """
 		with self.assertRaises(PermissionError):
@@ -152,7 +162,15 @@ class AssignmentAPITest(APIBaseTestCase):
 	def test_autograde_if_check(self):
 		""" Tests if autograding checks for grade_final """
 		with self.assertRaises(BadValueError):
-			self.API().autograde(self._assign, self.accounts['dummy_admin'], {'grade_final': False})
+			self.API().autograde(self._assign, self.accounts['dummy_admin'],
+				{'grade_final': False})
+
+	def test_autograde_key_check(self):
+		""" Tests if autograding checks for autograding_key """
+		with self.assertRaises(BadValueError):
+			self._assign.autograding_key = None
+			self.API().autograde(self._assign, self.accounts['dummy_admin'],
+				{'grade_final': False})
 
 	def test_autograde_rejected_request(self):
 		""" Tests report for autograding failure """
