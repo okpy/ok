@@ -14,6 +14,7 @@ from google.appengine.api import users
 
 MC_NAMESPACE = "access-token"
 
+
 def authenticate():
     """Returns the user which made this request."""
     authenticator = app.config["AUTHENTICATOR"]

@@ -13,7 +13,7 @@ GOOGLE_AUTHENTICATOR = GoogleAuthenticator()
 TESTING_AUTHENTICATOR = TestingAuthenticator()
 
 
-class Config(object): #pylint: disable=R0903
+class Config(object):  # pylint: disable=R0903
     """
     Base config
     """
@@ -27,7 +27,7 @@ class Config(object): #pylint: disable=R0903
     CLIENT_VERSION = '1.0.6'
 
 
-class Debug(Config): #pylint: disable=R0903
+class Debug(Config):  # pylint: disable=R0903
     """
     Development config
     """
@@ -37,7 +37,7 @@ class Debug(Config): #pylint: disable=R0903
     AUTHENTICATOR = TESTING_AUTHENTICATOR
 
 
-class Production(Config): #pylint: disable=R0903
+class Production(Config):  # pylint: disable=R0903
     """
     Prod config
     """

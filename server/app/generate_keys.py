@@ -23,7 +23,8 @@ from string import Template
 
 # File settings
 file_name = 'secret_keys.py'
-file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), file_name)
+file_path = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), file_name)
 
 file_template = Template('''# CSRF- and Session keys
 
@@ -35,9 +36,9 @@ SESSION_KEY = '$session_key'
 # Get options from command line
 parser = OptionParser()
 parser.add_option("-f", "--force", dest="force",
-    help="force overwrite of existing secret_keys file", action="store_true")
+                  help="force overwrite of existing secret_keys file", action="store_true")
 parser.add_option("-r", "--randomness", dest="randomness",
-    help="length (randomness) of generated key; default = 24", default=24)
+                  help="length (randomness) of generated key; default = 24", default=24)
 (options, args) = parser.parse_args()
 
 
@@ -75,4 +76,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -31,12 +31,16 @@ from app.exceptions import BadValueError
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
+
+
 class ModelProxy(object):
+
     def __getattribute__(self, key):
         import app
         return app.models.__getattribute__(key)
 
 ModelProxy = ModelProxy()
+
 
 def parse_date(date):
     # TODO Describe what date translation is happening here. Probably needs
@@ -50,6 +54,7 @@ def parse_date(date):
 
     delta = datetime.timedelta(hours=7)
     return datetime.datetime.combine(date.date(), date.time()) + delta
+
 
 def coerce_to_json(data, fields):
     """
@@ -71,8 +76,10 @@ def coerce_to_json(data, fields):
     else:
         return data
 
-#TODO(martinis) somehow having data be an empty list doesn't make it
+# TODO(martinis) somehow having data be an empty list doesn't make it
 # return an empty list, but an empty object.
+
+
 def create_api_response(status, message, data=None):
     """Creates a JSON response that contains status code (HTTP),
     an arbitrary message string, and a dictionary or list of data"""
@@ -122,6 +129,7 @@ def add_to_zip(zipfile, file_contents, dir=''):
         zipfile.writestr(join(dir, filename), contents)
     return zipfile
 
+
 def create_csv_content(content):
     """
     Return all contents in CSV file format. Content must be a list of lists.
@@ -136,6 +144,7 @@ def create_csv_content(content):
     contents = scsv.getvalue()
     scsv.close()
     return contents
+
 
 def data_for_scores(assignment, user):
     """
@@ -152,18 +161,21 @@ def data_for_scores(assignment, user):
         seen_members |= set(members)
         content.extend(group.scores_for_assignment(assignment))
 
-    students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
+    students = [part.user.get() for part in course.get_students(user)
+                if part.user not in seen_members]
     for student in students:
         content.extend(student.scores_for_assignment(assignment)[0])
 
     return content
+
 
 def create_gcs_file(gcs_filename, contents, content_type):
     """
     Creates a GCS csv file with contents CONTENTS.
     """
     try:
-        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'project-private'})
+        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={
+                            'x-goog-acl': 'project-private'})
         gcs_file.write(contents)
         gcs_file.close()
     except Exception as e:
@@ -181,6 +193,7 @@ def make_csv_filename(assignment, infotype):
     assign_name = assignment.display_name
     filename = '{}_{}_{}.csv'.format(infotype, course_name, assign_name)
     return filename.replace('/', '_').replace(' ', '_')
+
 
 def paginate(entries, page, num_per_page):
     """
@@ -215,6 +228,7 @@ def paginate(entries, page, num_per_page):
         '_'.join(str(x) for x in (
             entries.kind, entries.filters, entries.orders)))
     query_serialized = query_serialized.replace(' ', '_')
+
     def get_mem_key(page):
         offset = (page - 1) * num_per_page
         return "cp_%s_%s" % (query_serialized, offset)
@@ -226,7 +240,7 @@ def paginate(entries, page, num_per_page):
     if page > 1:
         cursor = memcache.get(this_page_key)
         if not cursor:
-            page = 1 # Reset to the front, since memcached failed
+            page = 1  # Reset to the front, since memcached failed
             store_cache = False
 
     pages_to_fetch = int(num_per_page)
@@ -278,6 +292,7 @@ def _apply_filter(query, model, arg, value, op):
 
     return query.filter(filtered)
 
+
 def filter_query(query, args, model):
     """
     Applies the filters in |args| to |query|.
@@ -303,6 +318,8 @@ def filter_query(query, args, model):
 ####################
 
 ASSIGN_BATCH_SIZE = 20
+
+
 def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.FinalSubmission.query().filter(
         ModelProxy.FinalSubmission.assignment == assign_key)
@@ -355,6 +372,7 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
         logging.debug(
             'add_to_grading_queues complete with %d updates!', num_updated)
 
+
 def assign_submission(backup_id, submit):
     """
     Create Submisson and FinalSubmission records for a submitted Backup.
@@ -376,9 +394,11 @@ def assign_submission(backup_id, submit):
         if datetime.datetime.now() < assign.get_result().due_date:
             subm.mark_as_final()
 
+
 def sort_by_assignment(key_func, entries):
     entries = sorted(entries, key=key_func)
     return itertools.groupby(entries, key_func)
+
 
 @ndb.toplevel
 def merge_user(user_key, dup_user_key):
@@ -391,6 +411,7 @@ def merge_user(user_key, dup_user_key):
         get_user = lambda: user
     else:
         user = user_key.get_async()
+
         def get_user():
             return user.get_result()
 
@@ -400,6 +421,7 @@ def merge_user(user_key, dup_user_key):
         dup_user_key = dup_user_key.key
     else:
         dup_user = dup_user_key.get_async()
+
         def get_dup_user():
             return dup_user.get_result()
 
@@ -434,7 +456,7 @@ def merge_user(user_key, dup_user_key):
             user.email.append(email.lower())
 
     # Invalidate emails
-    dup_user.email = ['#'+email for email in dup_user.email]
+    dup_user.email = ['#' + email for email in dup_user.email]
     # dup_user.status = 'inactive'
     dup_user.put_async()
     user.put_async()
@@ -446,6 +468,7 @@ def merge_user(user_key, dup_user_key):
         dup_user_key.id(), user_key.id(), dup_user.email)
     log.obj = dup_user_key
     log.put_async()
+
 
 def unique_email_address(user):
     U = ModelProxy.User
@@ -465,6 +488,7 @@ def unique_email_address(user):
 
         merge_user(user, dup_user)
 
+
 def unique_final_submission(user):
     FS = ModelProxy.FinalSubmission
 
@@ -476,6 +500,7 @@ def unique_final_submission(user):
             for subm in lst:
                 subm.key.delete()
 
+
 def unique_group(user):
     G = ModelProxy.Group
     key_func = lambda group: group.assignment
@@ -485,10 +510,12 @@ def unique_group(user):
             # TODO(martinis, denero) figure out what to do
             pass
 
+
 def deferred_check_user(user_id):
     user = ModelProxy.User.get_by_id(user_id)
     if not user:
-        raise deferred.PermanentTaskFailure("User id {} is invalid.".format(user_id))
+        raise deferred.PermanentTaskFailure(
+            "User id {} is invalid.".format(user_id))
 
     unique_email_address(user)
     unique_final_submission(user)
@@ -511,7 +538,8 @@ def scores_to_gcs(assignment, user):
     content = data_for_scores(assignment, user)
     csv_contents = create_csv_content(content)
     create_gcs_file(assignment, csv_contents, 'scores')
-    csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
+    csv_filename = '/{}/{}'.format(GRADES_BUCKET,
+                                   make_csv_filename(assignment, 'scores'))
     create_gcs_file(csv_filename, csv_contents, 'text/csv')
 
 
@@ -532,6 +560,8 @@ def add_to_file_contents(file_contents, file_name, file_content):
     file_contents[file_name] = file_content
 
 # TODO(Alvin): generalize, cleanup everything about zip
+
+
 def backup_group_file(backup, json_pretty={}):
     """ Returns group information: group_[group ID], group JSON """
     G = ModelProxy.Group
@@ -563,11 +593,11 @@ def make_zip_filename(user, now):
     filename = '/{}/{}'.format(
         GRADES_BUCKET,
         filename)
-    return filename+'.zip'
+    return filename + '.zip'
 
 
 def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
-                start_cursor=None):
+                 start_cursor=None):
     """Writes all submissions for a given search query to a GCS zip file."""
     zipfile_str, zipfile = start_zip()
     next_cursor, has_more = None, True
@@ -580,6 +610,7 @@ def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
     zip_contents = finish_zip(zipfile_str, zipfile)
     zip_filename = make_zip_filename(user, datetime)
     create_gcs_file(zip_filename, zip_contents, 'application/zip')
+
 
 def submit_to_ag(assignment, messages, submitter):
     if 'file_contents' not in messages:
@@ -599,8 +630,8 @@ def submit_to_ag(assignment, messages, submitter):
         raise BadValueError('User is not enrolled and cannot be autograded.')
     logging.info("Starting send to AG")
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    r = requests.post(AUTOGRADER_URL+'/api/file/grade/continous',
-        data=json.dumps(data), headers=headers)
+    r = requests.post(AUTOGRADER_URL + '/api/file/grade/continous',
+                      data=json.dumps(data), headers=headers)
     if r.status_code == requests.codes.ok:
         logging.info("Sent to Autograder")
         return {'status': "pending"}

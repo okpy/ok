@@ -21,27 +21,30 @@ from app import utils
 from app.constants import API_PREFIX
 from app.exceptions import *
 
+
 def force_account_chooser(url):
     """Forces the user to choose a particular email account rather than assuming a default."""
     if 'ServiceLogin' in url:
         return url.replace('ServiceLogin', 'AccountChooser')
     return url
 
+
 @app.route("/")
 def home():
     user = users.get_current_user()
     params = {}
     if user is None:
-      return redirect(url_for('landing'))
+        return redirect(url_for('landing'))
     else:
         logging.info("User is %s", user.email())
-        params["user"] = {'id': user.user_id(), 'email' : user.email()}
+        params["user"] = {'id': user.user_id(), 'email': user.email()}
         params['users_link'] = users.create_logout_url('/landing')
         params['users_title'] = "Log Out"
         params['relogin_link'] = users.create_logout_url(
             force_account_chooser(users.create_login_url('/')))
     params['DEBUG'] = app.config['DEBUG']
     return render_template("student.html", **params)
+
 
 @app.route("/landing")
 def landing():
@@ -53,7 +56,7 @@ def landing():
         params['users_title'] = "Sign In"
     else:
         logging.info("User is %s", user.email())
-        params["user"] = {'id': user.user_id(), 'email' : user.email()}
+        params["user"] = {'id': user.user_id(), 'email': user.email()}
         params['users_link'] = users.create_logout_url('/landing')
         params['users_title'] = "Log Out"
         params['relogin_link'] = users.create_logout_url(
@@ -61,41 +64,46 @@ def landing():
     params['DEBUG'] = app.config['DEBUG']
     return render_template("landing.html", **params)
 
+
 @app.route("/sudo/su/<su_email>")
 def sudo(su_email):
     user = users.get_current_user()
     params = {}
     if user is not None:
-        logging.info("Staff Login Attempt from %s, Attempting to login as %s", user.email(), su_email)
+        logging.info(
+            "Staff Login Attempt from %s, Attempting to login as %s", user.email(), su_email)
         userobj = models.User.lookup(user.email())
         if userobj.is_admin:
-          logging.info("Sudo %s to %s granted", user.email(), su_email)
-          substitute = models.User.lookup(su_email)
-          if substitute:
-            params["user"] = {'id': substitute.key, 'email' : substitute.email[0]}
-            params["sudo"] = {'su': substitute.email[0], 'admin': user.email()}
-            params['users_link'] = '/'
-            params['users_title'] = "Exit Sudo Mode"
-            params['relogin_link'] = '/'
-            params['DEBUG'] = app.config['DEBUG']
-            return render_template("sudo.html", **params)
-          else:
-            error = {'code': 404, 'description': "User not found"}
-            return page_not_found(error)
+            logging.info("Sudo %s to %s granted", user.email(), su_email)
+            substitute = models.User.lookup(su_email)
+            if substitute:
+                params["user"] = {'id': substitute.key,
+                                  'email': substitute.email[0]}
+                params["sudo"] = {'su': substitute.email[
+                    0], 'admin': user.email()}
+                params['users_link'] = '/'
+                params['users_title'] = "Exit Sudo Mode"
+                params['relogin_link'] = '/'
+                params['DEBUG'] = app.config['DEBUG']
+                return render_template("sudo.html", **params)
+            else:
+                error = {'code': 404, 'description': "User not found"}
+                return page_not_found(error)
         else:
-          logging.error("Sudo %s to %s failure", user.email(), su_email)
-          error = {'code': 403, 'description': "Insufficient permission"}
-          return page_not_found(error)
+            logging.error("Sudo %s to %s failure", user.email(), su_email)
+            error = {'code': 403, 'description': "Insufficient permission"}
+            return page_not_found(error)
     return redirect(url_for('login'))
+
 
 @app.route("/login")
 def login():
     user = users.get_current_user()
     params = {}
     if user is None:
-      return redirect(users.create_login_url('/'))
+        return redirect(users.create_login_url('/'))
     else:
-      return redirect(url_for('home'))
+        return redirect(url_for('home'))
 
 
 @app.route("/manage")
@@ -113,12 +121,13 @@ def admin():
 
         # TODO: Filter by class.
         query = models.Participant.query(
-          models.Participant.role == 'staff')
+            models.Participant.role == 'staff')
         all_staff = [part.user.id() for part in list(query.fetch())]
 
         if userobj.is_admin or userobj.key.id() in all_staff:
             logging.info("Staff Login Success from %s", user.email())
-            params["user"] = {'id': user.user_id(), 'keyId': userobj.key.id(), 'email' : user.email()}
+            params["user"] = {
+                'id': user.user_id(), 'keyId': userobj.key.id(), 'email': user.email()}
             params["admin"] = {'email': user.email()}
             params['users_link'] = users.create_logout_url('/')
             params['users_title'] = "Log Out"
@@ -131,20 +140,26 @@ def admin():
             error = {'code': 403, 'description': "Insufficient permission"}
             return page_not_found(error)
 
-## Error handlers
+# Error handlers
 # Handle 404 errors
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('error.html', error=e), 404
 
 # Handle 500 errors
+
+
 @app.errorhandler(500)
 def server_error(e):
     return render_template('error.html', error=e), 500
 
+
 @api.parser.error_handler
 def args_error(e):
     raise BadValueError(e.message)
+
 
 def check_version(client):
     latest = models.Version.query(models.Version.name == 'ok').get()
@@ -154,6 +169,7 @@ def check_version(client):
 
     if client != latest.current_version:
         raise IncorrectVersionError(client, latest)
+
 
 def register_api(view, endpoint, url):
     """
@@ -201,7 +217,7 @@ def register_api(view, endpoint, url):
             logging.exception(e.message)
             return utils.create_api_response(e.code, e.message, e.data)
 
-        except Exception as e: #pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             logging.exception(e.message)
             return utils.create_api_response(500, e.message, getattr(e, 'data', None))
 
@@ -234,6 +250,7 @@ register_api(api.GroupAPI, 'group_api', 'group')
 register_api(api.UserAPI, 'user_api', 'user')
 register_api(api.QueueAPI, 'queue_api', 'queue')
 register_api(api.QueuesAPI, 'queues_api', 'queues')
-register_api(api.FinalSubmissionAPI, 'final_submission_api', 'final_submission')
+register_api(api.FinalSubmissionAPI,
+             'final_submission_api', 'final_submission')
 register_api(api.AnalyticsAPI, 'analytics_api', 'analytics')
 register_root_api(api.ParticipantAPI)

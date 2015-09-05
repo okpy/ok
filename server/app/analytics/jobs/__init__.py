@@ -1,7 +1,9 @@
 from app.analytics import Job
 
+
 def register_job(name, job):
     available_jobs[name] = job
+
 
 def get_job(name, user, filters):
     if name not in available_jobs:

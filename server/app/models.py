@@ -22,7 +22,7 @@ Parsing web arguments and error handling go in api.py.
 Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 """
 
-#pylint: disable=no-member, unused-argument, too-many-return-statements
+# pylint: disable=no-member, unused-argument, too-many-return-statements
 
 import datetime
 import itertools
@@ -43,6 +43,7 @@ class JSONEncoder(old_json):
     Wrapper class to try calling an object's to_dict() method. This allows
     us to JSONify objects coming from the ORM. Also handles dates & datetimes.
     """
+
     def default(self, obj):
         if isinstance(obj, ndb.Key):
             got = obj.get()
@@ -57,6 +58,7 @@ class JSONEncoder(old_json):
         return super(JSONEncoder, self).default(obj)
 
 app.json_encoder = JSONEncoder
+
 
 def convert_timezone(utc_dt):
     """Convert times to Pacific time."""
@@ -103,7 +105,7 @@ class Base(ndb.Model):
         # Protect sensitive fields: autograding_key
         # Previous sensitive fields: zip_file_url and script
         sensitive_fields = ['autograding_key',
-            'zip_file_url', 'grading_script_file']
+                            'zip_file_url', 'grading_script_file']
         for sensitive in sensitive_fields:
             if sensitive in result:
                 result[sensitive] = ''
@@ -153,6 +155,7 @@ class Base(ndb.Model):
         """
         return False
 
+
 def make_num_counter(helper):
     def wrapper(self, assignment, max_size=None):
         count = 0
@@ -170,9 +173,9 @@ def make_num_counter(helper):
             for submission_query in all_submissions:
                 count += submission_query.count(max_size)
 
-
         return count
     return wrapper
+
 
 class User(Base):
     """Users may have multiple email addresses. Note: the built-in user model
@@ -202,12 +205,12 @@ class User(Base):
         group = self.get_group(assignment_key)
         if group and self.key in group.member:
             return FinalSubmission.query(
-                FinalSubmission.assignment==assignment_key,
-                FinalSubmission.group==group.key).get()
+                FinalSubmission.assignment == assignment_key,
+                FinalSubmission.group == group.key).get()
         else:
             return FinalSubmission.query(
-                FinalSubmission.assignment==assignment_key,
-                FinalSubmission.submitter==self.key).get()
+                FinalSubmission.assignment == assignment_key,
+                FinalSubmission.submitter == self.key).get()
 
     def _contains_files(self, backup):
         messages = backup.get_messages()
@@ -237,7 +240,8 @@ class User(Base):
             for b in results:
                 all_backups.append(b)
 
-        all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
+        all_backups.sort(
+            lambda x, y: int(-5 * (int(x.server_time > y.server_time) - 0.5)))
 
         return all_backups[:num_backups]
 
@@ -251,8 +255,8 @@ class User(Base):
         all_submissions = []
         for member in members:
             all_submissions.append(Submission.query(
-                Submission.submitter==member,
-                Submission.assignment==assignment))
+                Submission.submitter == member,
+                Submission.assignment == assignment))
 
         return all_submissions
 
@@ -271,24 +275,24 @@ class User(Base):
             return b
 
         all_subms = [update(x) for x in all_subms]
-        all_subms = [x for x in all_subms if x.assignment == assignment \
-                and self._contains_files(x)]
+        all_subms = [x for x in all_subms if x.assignment == assignment
+                     and self._contains_files(x)]
 
-        all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
+        all_subms.sort(
+            lambda x, y: int(-5 * (int(x.server_time > y.server_time) - 0.5)))
 
         return all_subms[:num_submissions]
 
     get_num_submissions = make_num_counter(_get_submissions_helper)
     get_num_backups = make_num_counter(_get_backups_helper)
 
-
     def get_group(self, assignment_key):
         """Return the group for this user for an assignment."""
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key
-        return Group.query(ndb.OR(Group.member==self.key,
-                                  Group.invited==self.key),
-                           Group.assignment==assignment_key).get()
+        return Group.query(ndb.OR(Group.member == self.key,
+                                  Group.invited == self.key),
+                           Group.assignment == assignment_key).get()
 
     def get_course_info(self, course):
         if not course:
@@ -301,17 +305,21 @@ class User(Base):
         for assignment in assignments:
             assign_info = {}
             group = self.get_group(assignment.key)
-            assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
+            assign_info['group'] = {'group_info': group,
+                                    'invited': group and self.key in group.invited}
             assign_info['final'] = {}
             final_info = assign_info['final']
 
-            final_info['final_submission'] = self.get_final_submission(assignment.key)
+            final_info['final_submission'] = self.get_final_submission(
+                assignment.key)
             if final_info['final_submission']:
-                final_info['submission'] = final_info['final_submission'].submission.get()
+                final_info['submission'] = final_info[
+                    'final_submission'].submission.get()
                 final_info['backup'] = final_info['submission'].backup.get()
 
                 if final_info['final_submission'].revision:
-                    final_info['revision'] = final_info['final_submission'].revision.get()
+                    final_info['revision'] = final_info[
+                        'final_submission'].revision.get()
 
                 final_info['backup'] = final_info['submission'].backup.get()
 
@@ -329,10 +337,13 @@ class User(Base):
                                 if type(value) == int:
                                     total += value
                 if total > 0:
-                    assign_info['percent'] = round(100*float(solved)/total, 0)
+                    assign_info['percent'] = round(
+                        100 * float(solved) / total, 0)
 
-            assign_info['backups'] = self.get_num_backups(assignment.key, 1) > 0
-            assign_info['submissions'] = self.get_num_submissions(assignment.key, 1) > 0
+            assign_info['backups'] = self.get_num_backups(
+                assignment.key, 1) > 0
+            assign_info['submissions'] = self.get_num_submissions(
+                assignment.key, 1) > 0
             assign_info['assignment'] = assignment
 
             info['assignments'].append(assign_info)
@@ -392,13 +403,14 @@ class User(Base):
     @classmethod
     def lookup(cls, email):
         """Retrieve a user by email or return None."""
-        assert isinstance(email, (str, unicode)), "Invalid email: " + str(email)
+        assert isinstance(email, (str, unicode)
+                          ), "Invalid email: " + str(email)
         email = email.lower()
         users = cls.query(cls.email == email).fetch()
         if not users:
             return None
         if len(users) > 1:
-            pass # TODO Decide how to handle non-unique users
+            pass  # TODO Decide how to handle non-unique users
         return users[0]
 
     @classmethod
@@ -437,7 +449,7 @@ class User(Base):
         """Ensure that a user can be accessed by at least one email."""
         if not self.email:
             raise BadValueError("No email associated with " + str(self))
-        #utils.check_user(self.key.id())
+        # utils.check_user(self.key.id())
 
     def scores_for_assignment(self, assignment):
         """ Returns a tuple of two elements:
@@ -455,10 +467,11 @@ class User(Base):
             scores = fs.get_scores()
         return (scores, True) if scores else ([[self.email[0], 0, None, None, None]], False)
 
+
 class Course(Base):
     """Courses are expected to have a unique offering."""
-    offering = ndb.StringProperty() # E.g., 'cal/cs61a/fa14'
-    institution = ndb.StringProperty() # E.g., 'UC Berkeley'
+    offering = ndb.StringProperty()  # E.g., 'cal/cs61a/fa14'
+    institution = ndb.StringProperty()  # E.g., 'UC Berkeley'
     display_name = ndb.StringProperty()
     instructor = ndb.KeyProperty(User, repeated=True)
     active = ndb.BooleanProperty(default=True)
@@ -505,7 +518,7 @@ class Course(Base):
 
 class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
-    name = ndb.StringProperty() # E.g., cal/cs61a/fa14/proj1
+    name = ndb.StringProperty()  # E.g., cal/cs61a/fa14/proj1
     display_name = ndb.StringProperty()
     url = ndb.StringProperty()
     points = ndb.FloatProperty()
@@ -514,7 +527,7 @@ class Assignment(Base):
     course = ndb.KeyProperty(Course)
     max_group_size = ndb.IntegerProperty()
     due_date = ndb.DateTimeProperty()
-    lock_date = ndb.DateTimeProperty() # no submissions after this date
+    lock_date = ndb.DateTimeProperty()  # no submissions after this date
     active = ndb.ComputedProperty(
         lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
     revision = ndb.BooleanProperty(default=False)
@@ -545,7 +558,7 @@ class Participant(Base):
     """Tracks participation of students & staff in courses."""
     user = ndb.KeyProperty(User)
     course = ndb.KeyProperty(Course)
-    role = ndb.StringProperty() # See constants.py for roles
+    role = ndb.StringProperty()  # See constants.py for roles
 
     @classmethod
     def _can(cls, user, need, course, query):
@@ -645,7 +658,7 @@ def disjunction(query, filters):
     """Return a query in which at least one filter is true."""
     assert filters, "No filters"
     if len(filters) > 1:
-        return query.filter(ndb.OR(*filters)) #pylint: disable=star-args
+        return query.filter(ndb.OR(*filters))  # pylint: disable=star-args
     else:
         return query.filter(filters[0])
 
@@ -674,6 +687,7 @@ class Backup(Base):
             message_fields = message_fields == "true"
 
         messages = {m.kind: m.contents for m in self.messages}
+
         def test(item):
             if isinstance(message_fields, bool):
                 return message_fields
@@ -729,7 +743,8 @@ class Backup(Base):
             if user.key in [part.user for part in staff_list]:
                 for participant in staff_list:
                     course = participant.course
-                    assigns = Assignment.query(Assignment.course == course).fetch()
+                    assigns = Assignment.query(
+                        Assignment.course == course).fetch()
                     if assigns:
                         filters.append(
                             Backup.assignment.IN([a.key for a in assigns]))
@@ -744,10 +759,11 @@ class Backup(Base):
 
 class Score(Base):
     """The score for a submission, either from a grader or autograder."""
-    tag = ndb.TextProperty() # E.g., "Partner 0" or "composition"
+    tag = ndb.TextProperty()  # E.g., "Partner 0" or "composition"
     score = ndb.IntegerProperty()
-    message = ndb.TextProperty() # Plain text
-    grader = ndb.KeyProperty(User) # For autograders, the user who authenticated
+    message = ndb.TextProperty()  # Plain text
+    # For autograders, the user who authenticated
+    grader = ndb.KeyProperty(User)
     server_time = ndb.DateTimeProperty(auto_now_add=True)
 
 
@@ -767,12 +783,12 @@ class Submission(Base):
         submitter = self.submitter
         if group:
             final = FinalSubmission.query(
-                FinalSubmission.assignment==assignment,
-                FinalSubmission.group==group.key).get()
+                FinalSubmission.assignment == assignment,
+                FinalSubmission.group == group.key).get()
         else:
             final = FinalSubmission.query(
-                FinalSubmission.assignment==assignment,
-                FinalSubmission.submitter==submitter).get()
+                FinalSubmission.assignment == assignment,
+                FinalSubmission.submitter == submitter).get()
         return final
 
     def mark_as_final(self):
@@ -836,7 +852,7 @@ class Diff(Base):
     A diff has three types of lines: insertions, deletions, and matches.
     Every insertion line is associated with a diff line.
     """
-    before = ndb.KeyProperty(Backup) # Set to None to compare to template
+    before = ndb.KeyProperty(Backup)  # Set to None to compare to template
     after = ndb.KeyProperty(Backup)
     diff = ndb.JsonProperty()
 
@@ -868,12 +884,12 @@ class Comment(Base):
     # TODO Populate submission_line so that when diffs are changed, comments
     #      don't move around.
     submission_line = ndb.IntegerProperty()
-    message = ndb.TextProperty() # Markdown
+    message = ndb.TextProperty()  # Markdown
 
     @classmethod
     def _can(cls, user, need, comment=None, query=None):
         if user.is_admin:
-          return True
+            return True
         if need.action in ["get", "modify", "delete"]:
             return comment.author == user.key
         return False
@@ -921,7 +937,7 @@ class Version(Base):
         if 'name' not in values:
             raise ValueError("Need to specify a name")
         inst = cls(key=ndb.Key(cls._get_kind(), values['name']))
-        inst.populate(**values) #pylint: disable=star-args
+        inst.populate(**values)  # pylint: disable=star-args
         return inst
 
     @classmethod
@@ -934,6 +950,7 @@ class Version(Base):
     def get_by_id(cls, key, **kwargs):
         assert not isinstance(id, int), "Only string keys allowed for versions"
         return super(cls, Version).get_by_id(key, **kwargs)
+
 
 class Group(Base):
     """A group is a collection of users who are either members or invited.
@@ -1054,7 +1071,7 @@ class Group(Base):
         error = self.validate()
         if error:
             subms = FinalSubmission.query(
-                FinalSubmission.group==self.key
+                FinalSubmission.group == self.key
             ).fetch()
             for subm in subms:
                 subm.group = None
@@ -1122,18 +1139,18 @@ class Group(Base):
         for m in self.member:
             member = m.get()
             if member:
-              data, success = member.scores_for_assignment(assignment)
-              content.extend(data)
-              if success:
-                  # get_scores_for_student_or_group will return scores for all group members.
-                  return content
+                data, success = member.scores_for_assignment(assignment)
+                content.extend(data)
+                if success:
+                    # get_scores_for_student_or_group will return scores for
+                    # all group members.
+                    return content
 
         # Handle the case where the member key no longer exists.
         if not member:
-          return [["Unknown-"+str(self.member[0]), 0, None, None, None]]
+            return [["Unknown-" + str(self.member[0]), 0, None, None, None]]
 
         return [[member.email[0], 0, None, None, None]]
-
 
 
 class AuditLog(Base):
@@ -1182,21 +1199,21 @@ class Queue(Base):
         groups = ndb.get_multi(filter(None, groups))
         groups = {v.key: v for v in groups}
         for i, fs in enumerate(final_submissions):
-          submission = submissions[i]
-          group = groups.get(fs.group)
-          subms.append(
-            {
-             'id': fs.key.id(),
-             'submission': submission.key.id(),
-             'created': submission.created,
-             'backup': submission.backup.id(),
-             'submitter': submitters[i],
-             'group': group,
-             'score': submission.score,
-            })
+            submission = submissions[i]
+            group = groups.get(fs.group)
+            subms.append(
+                {
+                    'id': fs.key.id(),
+                    'submission': submission.key.id(),
+                    'created': submission.created,
+                    'backup': submission.backup.id(),
+                    'submitter': submitters[i],
+                    'group': group,
+                    'score': submission.score,
+                })
         owner_email = "Unknown"
         if self.owner.get():
-          owner_email = self.owner.get().email[0]
+            owner_email = self.owner.get().email[0]
 
         return {
             'submissions': subms,
@@ -1245,7 +1262,8 @@ class FinalSubmission(Base):
     submission = ndb.KeyProperty(Submission)
     revision = ndb.KeyProperty(Submission)
     queue = ndb.KeyProperty(Queue)
-    server_time = ndb.ComputedProperty(lambda q: q.submission.get().server_time)
+    server_time = ndb.ComputedProperty(
+        lambda q: q.submission.get().server_time)
     # submitter = ndb.ComputedProperty(lambda q: q.submission.get().submitter.get())
     submitter = ndb.KeyProperty(User)
     published = ndb.BooleanProperty(default=False)
@@ -1270,7 +1288,7 @@ class FinalSubmission(Base):
         if action in ("create", "put") and final:
             group = final.submission.get().backup.get().group
             if group:
-              return user.logged_in and user.key in group.member
+                return user.logged_in and user.key in group.member
         return Submission._can(
             user, need, final.submission.get() if final else None, query)
 
@@ -1286,7 +1304,8 @@ class FinalSubmission(Base):
         for each combination of student and score.
         """
         # TODO: get the most recent score for each tag.
-        # Question: will all scores have a grader? In particular the scores from the autograder.
+        # Question: will all scores have a grader? In particular the scores
+        # from the autograder.
         all_scores = []
         if self.group:
             members = [member for member in self.group.get().member]
@@ -1295,13 +1314,13 @@ class FinalSubmission(Base):
         for member in members:
             member_row = member.get()
             if member_row:
-              email = member_row.email[0]
-              for score in self.submission.get().score:
-                  all_scores.append([email,
-                          score.score,
-                          score.message,
-                          score.grader.get().email[0],
-                          score.tag])
+                email = member_row.email[0]
+                for score in self.submission.get().score:
+                    all_scores.append([email,
+                                       score.score,
+                                       score.message,
+                                       score.grader.get().email[0],
+                                       score.tag])
             else:
-              logging.warning("User key not found - " + str(member))
+                logging.warning("User key not found - " + str(member))
         return all_scores

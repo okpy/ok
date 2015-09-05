@@ -35,7 +35,8 @@ class Mapper(object):
         self.init()
 
     def delete(self, entity):
-        self.to_delete.append(entity if isinstance(entity, ndb.Key) else entity.key)
+        self.to_delete.append(entity if isinstance(
+            entity, ndb.Key) else entity.key)
 
     def update(self, entity):
         self.to_put.append(entity)
@@ -96,7 +97,8 @@ class Mapper(object):
             self.finish()
             return
         # If we're resuming, pick up where we left off last time.
-        iter = q.iter(produce_cursors=True, start_cursor=cursor, keys_only=self.keys_only)
+        iter = q.iter(produce_cursors=True, start_cursor=cursor,
+                      keys_only=self.keys_only)
         try:
             # Steps over the results, returning each entity and its index.
             i = 0
@@ -117,7 +119,8 @@ class Mapper(object):
             self._batch_write()
             self.deadline_error()
             # Queue a new task to pick up where we left off.
-            deferred.defer(self._continue, iter.cursor_after(), batch_size, self.data)
+            deferred.defer(self._continue, iter.cursor_after(),
+                           batch_size, self.data)
             logging.error(self.__class__.__name__ + ' DeadlineExceedError')
             return
         self.finish()

@@ -57,4 +57,3 @@ class IncorrectVersionError(APIException):
             'correct': self.correct_version.current_version,
             'download_link': self.correct_version.download_link()
         }
-

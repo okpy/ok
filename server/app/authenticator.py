@@ -46,7 +46,6 @@ class TestingAuthenticator(Authenticator):
     Authenticates a user with an access token.
     FOR TESTING ONLY.
     """
+
     def authenticate(self, access_token):
         return access_token
-
-

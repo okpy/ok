@@ -7,7 +7,7 @@ from flask import Flask
 import os
 from werkzeug.debug import DebuggedApplication
 
-app = Flask('app') #pylint: disable=invalid-name
+app = Flask('app')  # pylint: disable=invalid-name
 
 from app import constants
 from app import models
@@ -22,7 +22,8 @@ DEBUG = (os.environ['SERVER_SOFTWARE'].startswith('Dev')
          if 'SERVER_SOFTWARE' in os.environ
          else True)
 
-TESTING = os.environ["FLASK_CONF"] == "TEST" if "FLASK_CONF" in os.environ else False
+TESTING = os.environ[
+    "FLASK_CONF"] == "TEST" if "FLASK_CONF" in os.environ else False
 if DEBUG and not TESTING and not is_seeded():
     seed()
 

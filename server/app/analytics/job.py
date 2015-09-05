@@ -9,6 +9,7 @@ class JobException(Exception):
     """
     Represents an Exception that happens in a Mapper or Reducer.
     """
+
     def __init__(self, message, job_type):
         self.message = message
         self.job_type = job_type
@@ -19,6 +20,7 @@ class JobMapper(Mapper):
     A wrapper class for the NDB Mapper that stores
     map results in an NDB AnalyticsDump in addition to just mapping.
     """
+
     def __init__(self, kind, user, job_dump, job_mapper, filters):
         super(JobMapper, self).__init__(kind, user)
         self.job_dump = job_dump
@@ -40,6 +42,7 @@ class JobReducer(object):
     A class that performs a reduce job on a map result
     and stores the result in an NDB AnalyticsDump.
     """
+
     def __init__(self, job_dump, job_reducer):
         self.job_dump = job_dump
         self.job_reducer = job_reducer

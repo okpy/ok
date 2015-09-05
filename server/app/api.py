@@ -22,7 +22,7 @@ models.py. See that file for more information
 
 """
 
-#pylint: disable=no-member,unused-argument
+# pylint: disable=no-member,unused-argument
 
 import datetime
 import logging
@@ -76,6 +76,7 @@ parse_json_list_field = parse_json_field
 
 # Arguments to convert query strings to a python type
 
+
 def DateTimeArg(**kwds):
     """
     Converts a webarg to a datetime object
@@ -97,11 +98,13 @@ def DateTimeArg(**kwds):
 
 MODEL_VERSION = 'v2'
 
+
 def try_int(x):
     try:
         return int(x)
     except (ValueError, TypeError):
         return x
+
 
 def KeyArg(cls, **kwds):
     """
@@ -435,12 +438,13 @@ class ParticipantAPI(APIResource):
                 course = part.course.get()
                 offering = course.offering.split('/')
                 try:
-                    term = {'fa': 'fall', 'su': 'summer', 'sp': 'spring'}[offering[2][:2]]
-                    year = '20'+offering[2][2:]
+                    term = {'fa': 'fall', 'su': 'summer',
+                            'sp': 'spring'}[offering[2][:2]]
+                    year = '20' + offering[2][2:]
                 except (IndexError, KeyError):
                     term = year = None
                 data.append({
-                    'url': '/#/course/'+str(course.key.id()),
+                    'url': '/#/course/' + str(course.key.id()),
                     'display_name': course.display_name,
                     'institution': course.institution,
                     'term': term,
@@ -467,14 +471,14 @@ class UserAPI(APIResource):
     The API resource for the User Object
     """
     model = models.User
-    key_type = str # get_instance will convert this to an int
+    key_type = str  # get_instance will convert this to an int
 
     methods = {
         'post': {
             'web_args': {
                 'email': Arg(str),
                 'name': Arg(str),
-                }
+            }
         },
         'add_email': {
             'methods': set(['PUT']),
@@ -491,7 +495,7 @@ class UserAPI(APIResource):
         'get': {
             'web_args': {
                 'course': KeyArg('Course')
-             }
+            }
         },
         'index': {
         },
@@ -509,7 +513,7 @@ class UserAPI(APIResource):
             'web_args': {
                 'email': Arg(str, required=True),
                 'role': Arg(str, required=True),
-                }
+            }
         },
         'final_submission': {
             'methods': set(['GET']),
@@ -597,7 +601,8 @@ class UserAPI(APIResource):
         :param data: -- unused --
         :return: None
         """
-        need = Need('get') # Anyone who can get the User object can add an email
+        need = Need(
+            'get')  # Anyone who can get the User object can add an email
         if not obj.can(user, need, obj):
             raise need.exception()
         obj.append_email(data['email'])
@@ -716,7 +721,7 @@ class AssignmentAPI(APIResource):
                 'max_group_size': Arg(int, required=True),
                 'due_date': DateTimeArg(required=True),
                 'templates': Arg(str, use=lambda temps: json.dumps(temps),
-                    required=True),
+                                 required=True),
                 'revision': Arg(bool),
                 'lock_date': DateTimeArg(),
                 'autograding_enabled': Arg(bool),
@@ -774,7 +779,7 @@ class AssignmentAPI(APIResource):
             }
         },
         'group': {
-          'methods': set(['GET']),
+            'methods': set(['GET']),
         },
         'assign': {
             'methods': set(['POST'])
@@ -852,36 +857,38 @@ class AssignmentAPI(APIResource):
         deferred.defer(scores_to_gcs, obj, user)
 
     def autograde(self, obj, user, data):
-      need = Need('grade')
-      if not obj.can(user, need, obj):
-          raise need.exception()
-      subm_ids = {}
-      if not obj.autograding_enabled:
-        raise BadValueError('Autograding is not enabled for this assignment.')
+        need = Need('grade')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+        subm_ids = {}
+        if not obj.autograding_enabled:
+            raise BadValueError(
+                'Autograding is not enabled for this assignment.')
 
-      if 'grade_final' in data and data['grade_final']:
-        #Collect all final submissions and run grades.
-        fsubs = list(
-            models.FinalSubmission.query(models.FinalSubmission.assignment == obj.key))
-        for fsub in fsubs:
-          subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
+        if 'grade_final' in data and data['grade_final']:
+            # Collect all final submissions and run grades.
+            fsubs = list(
+                models.FinalSubmission.query(models.FinalSubmission.assignment == obj.key))
+            for fsub in fsubs:
+                subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
 
-        data = {
-            'subm_ids': subm_ids,
-            'assignment': obj.autograding_key,
-            'access_token': data['token']
-        }
+            data = {
+                'subm_ids': subm_ids,
+                'assignment': obj.autograding_key,
+                'access_token': data['token']
+            }
 
-        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        r = requests.post(AUTOGRADER_URL+'/api/ok/grade/batch',
-            data=json.dumps(data), headers=headers)
-        if r.status_code == requests.codes.ok:
-          return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
+            headers = {'Content-type': 'application/json',
+                       'Accept': 'text/plain'}
+            r = requests.post(AUTOGRADER_URL + '/api/ok/grade/batch',
+                              data=json.dumps(data), headers=headers)
+            if r.status_code == requests.codes.ok:
+                return {'status_url': AUTOGRADER_URL + '/rq', 'length': str(len(subm_ids))}
+            else:
+                raise BadValueError('The autograder the rejected your request')
         else:
-          raise BadValueError('The autograder the rejected your request')
-      else:
-        # TODO
-        raise BadValueError('Only supports batch uploading.')
+            # TODO
+            raise BadValueError('Only supports batch uploading.')
 
     def queues(self, obj, user, data):
         """ Return all composition queues for this assignment """
@@ -899,8 +906,8 @@ class AssignmentAPI(APIResource):
 
         FSub, Sub = models.FinalSubmission, models.Submission
         return {
-            'finalsubmissions': FSub.query(FSub.assignment==obj.key).count(),
-            'submissions': Sub.query(Sub.assignment==obj.key).count()
+            'finalsubmissions': FSub.query(FSub.assignment == obj.key).count(),
+            'submissions': Sub.query(Sub.assignment == obj.key).count()
         }
 
 
@@ -985,14 +992,14 @@ class SubmissionAPI(APIResource):
                 'submitter': KeyArg('User'),
                 'created': DateTimeArg(),
                 'messages.kind': Arg(str, use=parse_json_field),
-                }
+            }
         },
         'diff': {
             'methods': set(['GET']),
-            },
+        },
         'download': {
             'methods': set(['GET']),
-            },
+        },
         'add_comment': {
             'methods': set(['POST']),
             'web_args': {
@@ -1031,7 +1038,7 @@ class SubmissionAPI(APIResource):
     def data_for_zip(self, obj):
         try:
             user = obj.submitter.get()
-            name = user.email[0]+'-'+str(obj.created)
+            name = user.email[0] + '-' + str(obj.created)
         except IndexError, AttributeError:
             name = str(obj.created)
 
@@ -1217,7 +1224,8 @@ class SubmissionAPI(APIResource):
         """
 
         need = Need('grade')
-        subm_q = self.subm_model.query(self.subm_model.key == data['submission'])
+        subm_q = self.subm_model.query(
+            self.subm_model.key == data['submission'])
         subm = subm_q.get()
 
         # Perform check on the submission because obj is a backup
@@ -1225,7 +1233,7 @@ class SubmissionAPI(APIResource):
             raise need.exception()
 
         if not subm.backup == obj.key:
-          raise ValueError('Submission does not match backup')
+            raise ValueError('Submission does not match backup')
 
         score = models.Score(
             tag=data['key'],
@@ -1234,8 +1242,8 @@ class SubmissionAPI(APIResource):
             grader=user.key)
         score.put()
 
-        subm.score = [autograde for autograde in subm.score \
-            if autograde.tag != data['key']]
+        subm.score = [autograde for autograde in subm.score
+                      if autograde.tag != data['key']]
         subm.score.append(score)
 
         subm.put()
@@ -1267,22 +1275,23 @@ class SubmissionAPI(APIResource):
 
         due = valid_assignment.due_date
         late_flag = valid_assignment.lock_date and \
-                    datetime.datetime.now() >= valid_assignment.lock_date
+            datetime.datetime.now() >= valid_assignment.lock_date
         revision = valid_assignment.revision
 
         if submit and late_flag:
             if revision:
-                # In the revision period. Ensure that user has a previously graded submission.
+                # In the revision period. Ensure that user has a previously
+                # graded submission.
                 fs = user.get_final_submission(valid_assignment)
                 if fs is None or fs.submission.get().score == []:
                     return (403, 'Previous submission was not graded', {
-                      'late': True,
-                      })
+                        'late': True,
+                    })
             else:
                 # Late submission. Do not allow them to submit
                 return (403, 'late', {
                     'late': True,
-                    })
+                })
 
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
@@ -1399,7 +1408,6 @@ class SearchAPI(APIResource):
 
         return [make_zip_filename(user, now)]
 
-
     @staticmethod
     def tokenize(query):
         """
@@ -1501,7 +1509,7 @@ class SearchAPI(APIResource):
     @staticmethod
     def limits(page, num_per_page):
         """ returns start and ends number based on page and num_per_page """
-        return (page-1)*num_per_page, page*num_per_page
+        return (page - 1) * num_per_page, page * num_per_page
 
 
 class VersionAPI(APIResource):
@@ -1514,13 +1522,13 @@ class VersionAPI(APIResource):
             'web_args': {
                 'name': Arg(str, required=True),
                 'base_url': Arg(str, required=True),
-                }
+            }
         },
         'put': {
             'web_args': {
                 'name': Arg(str),
                 'base_url': Arg(str),
-                }
+            }
         },
         'get': {
             'web_args': {
@@ -1554,7 +1562,7 @@ class VersionAPI(APIResource):
                 'version': Arg(str, required=True)
             }
         },
-        }
+    }
 
     def new(self, obj, user, data):
         need = Need('update')
@@ -1700,15 +1708,15 @@ class CourseAPI(APIResource):
 
         user = models.User.get_or_insert(data['email'])
         if user not in course.staff:
-          models.Participant.add_role(user, course, STAFF_ROLE)
+            models.Participant.add_role(user, course, STAFF_ROLE)
 
     def get_staff(self, course, user, data):
         need = Need('staff')
         if not course.can(user, need, course):
             raise need.exception()
         query = models.Participant.query(
-          models.Participant.course == course.key,
-          models.Participant.role == 'staff')
+            models.Participant.course == course.key,
+            models.Participant.role == 'staff')
         return list(query.fetch())
 
     def remove_staff(self, course, user, data):
@@ -1718,7 +1726,8 @@ class CourseAPI(APIResource):
 
         removed_user = models.User.lookup(data['email'])
         if not removed_user:
-            raise BadValueError('No such user with email "%s" exists' % data['email'])
+            raise BadValueError(
+                'No such user with email "%s" exists' % data['email'])
         models.Participant.remove_role(removed_user, course, STAFF_ROLE)
 
     def get_courses(self, course, user, data):
@@ -1738,7 +1747,7 @@ class CourseAPI(APIResource):
         return list(query.fetch())
 
     def add_students(self, course, user, data):
-        need = Need('staff') # Only staff can call this API
+        need = Need('staff')  # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
 
@@ -1747,7 +1756,7 @@ class CourseAPI(APIResource):
             models.Participant.add_role(user, course, STUDENT_ROLE)
 
     def add_student(self, course, user, data):
-        need = Need('staff') # Only staff can call this API
+        need = Need('staff')  # Only staff can call this API
         if not course.can(user, need, course):
             raise need.exception()
 
@@ -1761,7 +1770,8 @@ class CourseAPI(APIResource):
 
         removed_user = models.User.lookup(data['email'])
         if not removed_user:
-            raise BadValueError('No such user with email "%s" exists' % data['email'])
+            raise BadValueError(
+                'No such user with email "%s" exists' % data['email'])
         models.Participant.remove_role(removed_user, course, STUDENT_ROLE)
 
     def assignments(self, course, user, data):
@@ -1784,23 +1794,23 @@ class GroupAPI(APIResource):
             'methods': set(['PUT', 'POST']),
             'web_args': {
                 'email': Arg(str, required=True),
-                },
             },
+        },
         'remove_member': {
             'methods': set(['PUT', 'POST']),
             'web_args': {
                 'email': Arg(str, required=True),
-                },
             },
+        },
         'accept': {
             'methods': set(['PUT', 'POST']),
-            },
+        },
         'decline': {
             'methods': set(['PUT', 'POST']),
-            },
+        },
         'exit': {
             'methods': set(['PUT', 'POST']),
-            },
+        },
         'reorder': {
             'methods': {'PUT', 'POST'},
             'web_args': {
@@ -1925,7 +1935,7 @@ class QueueAPI(APIResource):
                 'owner': KeyArg('User'),
             }
         },
-        }
+    }
 
     def new_entity(self, attributes):
         """
@@ -1964,19 +1974,21 @@ class QueuesAPI(APIResource):
         if self.check_permissions(user, data):
             raise Need('get').exception()
 
-        course_key, assignment_key, staff_list = data['course'], data['assignment'], data['staff']
+        course_key, assignment_key, staff_list = data[
+            'course'], data['assignment'], data['staff']
         userify = lambda parts: [part.user.get() for part in parts]
 
         staff = [staff for staff in
-            userify(models.Participant.query(
-            models.Participant.role == STAFF_ROLE,
-            models.Participant.course == course_key).fetch())
-            if staff_list[0] == '*' or staff.email[0] in staff_list]
+                 userify(models.Participant.query(
+                     models.Participant.role == STAFF_ROLE,
+                     models.Participant.course == course_key).fetch())
+                 if staff_list[0] == '*' or staff.email[0] in staff_list]
 
         if len(staff) == 0:
             raise BadValueError('Course has no registered staff members.')
 
-        ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
+        ParticipantAPI().check([stf.email[0]
+                                for stf in staff], course_key.get(), STAFF_ROLE)
 
         subms = models.FinalSubmission.query(
             models.FinalSubmission.assignment == assignment_key

@@ -1,4 +1,4 @@
-#pylint: disable=missing-docstring,invalid-name
+# pylint: disable=missing-docstring,invalid-name
 
 from app import models
 from app import utils
@@ -8,9 +8,11 @@ import json
 
 SEED_OFFERING = "cal/cs61a/sp15"
 
+
 def is_seeded():
     is_seed = models.Course.offering == SEED_OFFERING
     return bool(models.Course.query(is_seed).get())
+
 
 def seed():
     import os
@@ -42,15 +44,15 @@ def seed():
             max_group_size=4,
             due_date=date,
             lock_date=date,
-            )
+        )
 
     # Will reject all scheme submissions
     def make_past_assignment(course, creator):
         date = (datetime.datetime.now() - datetime.timedelta(days=365))
         with open('app/seed/scheme_templates/scheme.py') as sc, \
-            open('app/seed/scheme_templates/scheme_reader.py') as sr, \
-            open('app/seed/scheme_templates/tests.scm') as tests, \
-            open('app/seed/scheme_templates/questions.scm') as quest:
+                open('app/seed/scheme_templates/scheme_reader.py') as sr, \
+                open('app/seed/scheme_templates/tests.scm') as tests, \
+                open('app/seed/scheme_templates/questions.scm') as quest:
             templates = {}
             templates['scheme.py'] = sc.read(),
             templates['scheme_reader.py'] = sr.read(),
@@ -142,12 +144,11 @@ def seed():
 
         return models.Submission(backup=backup.key, score=[score])
 
-
     def make_seed_scheme_submission(assignment, submitter, final=False):
         with open('app/seed/scheme.py') as sc, \
-             open('app/seed/scheme_reader.py') as sr, \
-             open('app/seed/tests.scm') as tests, \
-             open('app/seed/questions.scm') as quest:
+                open('app/seed/scheme_reader.py') as sr, \
+                open('app/seed/tests.scm') as tests, \
+                open('app/seed/questions.scm') as quest:
             messages = {}
             messages['file_contents'] = {
                 'scheme.py': sc.read(),
@@ -178,7 +179,6 @@ def seed():
             current_version=current_version
         )
 
-
     def make_queue(assignment, submissions, asignee):
         queue = models.Queue(
             assignment=assignment.key,
@@ -189,7 +189,7 @@ def seed():
             backup = subm.backup.get()
             group = None
             if backup.submitter.get().get_group(assignment.key):
-              group = backup.submitter.get().get_group(assignment.key).key
+                group = backup.submitter.get().get_group(assignment.key).key
             fs = models.FinalSubmission(
                 assignment=assignment.key,
                 group=group,
@@ -200,16 +200,16 @@ def seed():
 
     def make_final_with_group(subm, assign, submitter, group):
         fs = models.FinalSubmission(submission=subm.key,
-            assignment=assign.key,
-            submitter=submitter.key,
-            group=group.key)
+                                    assignment=assign.key,
+                                    submitter=submitter.key,
+                                    group=group.key)
         fs.put()
         return fs
 
     def make_final(subm, assign, submitter):
         fs = models.FinalSubmission(submission=subm.key,
-            assignment=assign.key,
-            submitter=submitter.key)
+                                    assignment=assign.key,
+                                    submitter=submitter.key)
         fs.put()
         return fs
 
@@ -236,7 +236,6 @@ def seed():
     # Create a course
     course = make_seed_course(c)
     course.put()
-
 
     a = models.User(
         email=["dummy@admin.com"],
@@ -271,7 +270,6 @@ def seed():
         s.put()
         models.Participant.add_role(s.key, course.key, STAFF_ROLE)
         staff += [s]
-
 
     k = models.User(
         email=["dummy2@admin.com"],
@@ -308,7 +306,6 @@ def seed():
     g1 = make_group(assign, team1)
     g1.put()
 
-
     team2 = group_members[2:4]
     g2 = make_invited_group(assign, team2)
     g2.put()
@@ -316,7 +313,6 @@ def seed():
     team3 = group_members[4:6]
     g3 = make_group(assign, team3)
     g3.put()
-
 
     # Have each member in the group submit one
     for member in group_members:
@@ -346,7 +342,6 @@ def seed():
     # subm.put()
     # subms.append(subm)
 
-
     # scheme final
     # subm = make_seed_scheme_submission(assign2, group_members[1], True)
     # subm.put()
@@ -355,7 +350,7 @@ def seed():
     for i in range(9):
         subm = make_seed_submission(assign, students[i])
         subm.put()
-        #subms.append(subm)
+        # subms.append(subm)
 
         subm = make_seed_submission(assign, students[i], True)
         subm.put()
@@ -363,16 +358,11 @@ def seed():
 
         # Make each individual submission final and score it.
         final = make_final(subm, assign, students[i])
-        score_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
-
+        score_seed_submission(
+            final, i, "Good job, student %s" % str(i), staff[i])
 
     # Seed a queue. This should be auto-generated.
-    make_queue(assign, subms[:len(subms)//2], c)
-    make_queue(assign, subms[len(subms)//2:], k)
+    make_queue(assign, subms[:len(subms) // 2], c)
+    make_queue(assign, subms[len(subms) // 2:], k)
 
     utils.add_to_grading_queues(assign.key)
-
-
-
-
-
