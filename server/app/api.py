@@ -864,7 +864,7 @@ class AssignmentAPI(APIResource):
 
       if 'grade_final' in data and data['grade_final']:
         #Collect all final submissions and run grades.
-        deferred.deffer(autograde_final_subs, obj, user, data)
+        deferred.defer(autograde_final_subs, obj, user, data)
         return {'status_url': AUTOGRADER_URL+'/rq', 'length': 'TBD'}
       else:
         raise BadValueError('Endpoint only supports final submission grading.')
