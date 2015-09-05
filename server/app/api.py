@@ -42,6 +42,7 @@ from app.needs import Need
 from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user, backup_group_file, add_to_file_contents
+from app.utils import autograde_final_subs
 
 from app.exceptions import *
 
@@ -855,33 +856,18 @@ class AssignmentAPI(APIResource):
       need = Need('grade')
       if not obj.can(user, need, obj):
           raise need.exception()
-      subm_ids = {}
+
       if not obj.autograding_enabled:
         raise BadValueError('Autograding is not enabled for this assignment.')
+      if not obj.autograding_key:
+        raise BadValueError('Autograding key not provided in assignment.')
 
       if 'grade_final' in data and data['grade_final']:
         #Collect all final submissions and run grades.
-        fsubs = list(
-            models.FinalSubmission.query(models.FinalSubmission.assignment == obj.key))
-        for fsub in fsubs:
-          subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
-
-        data = {
-            'subm_ids': subm_ids,
-            'assignment': obj.autograding_key,
-            'access_token': data['token']
-        }
-
-        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        r = requests.post(AUTOGRADER_URL+'/api/ok/grade/batch',
-            data=json.dumps(data), headers=headers)
-        if r.status_code == requests.codes.ok:
-          return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
-        else:
-          raise BadValueError('The autograder the rejected your request')
+        deferred.deffer(autograde_final_subs, obj, user, data)
+        return {'status_url': AUTOGRADER_URL+'/rq', 'length': 'TBD'}
       else:
-        # TODO
-        raise BadValueError('Only supports batch uploading.')
+        raise BadValueError('Endpoint only supports final submission grading.')
 
     def queues(self, obj, user, data):
         """ Return all composition queues for this assignment """
