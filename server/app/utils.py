@@ -607,6 +607,27 @@ def submit_to_ag(assignment, messages, submitter):
     else:
         raise BadValueError('The autograder the rejected your request')
 
+def autograde_final_subs(assignment, user, data):
+    subm_ids = {}
+    fsubs = list(ModelProxy.FinalSubmission.query(
+                    ModelProxy.FinalSubmission.assignment == assignment.key))
+    for fsub in fsubs:
+      subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
+
+    data = {
+        'subm_ids': subm_ids,
+        'assignment': assignment.autograding_key,
+        'access_token': data['token']
+    }
+
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    r = requests.post(AUTOGRADER_URL+'/api/ok/grade/batch',
+        data=json.dumps(data), headers=headers)
+    if r.status_code == requests.codes.ok:
+        # TODO: Contact user (via email)
+      return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
+    else:
+      raise BadValueError('The autograder the rejected your request')
 
 import difflib
 
