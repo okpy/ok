@@ -1215,7 +1215,7 @@ class SubmissionAPI(APIResource):
 
         score = models.Score(
             tag=data['key'],
-            score=data['score'],
+            score=int(data['score']),
             message=data['message'],
             grader=user.key)
         score.put()
