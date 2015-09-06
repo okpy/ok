@@ -998,7 +998,7 @@ class SubmissionAPI(APIResource):
             'web_args': {
                 'submission': KeyArg('Submission', required=True),
                 'key': Arg(str, required=True),
-                'score': Arg(int, required=True),
+                'score': Arg(float, required=True),
                 'message': Arg(str, required=True),
             }
         }
