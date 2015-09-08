@@ -20,14 +20,16 @@
           <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
             {{ ::assign.assignment.due_date | amCalendar }}</p>
           <p class="blob-copy" ng-if="assign.final.final_submission">
-            <a ng-hide="assign.final.submission.score.length > 0"  
-               ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})' 
+            <a ng-hide="assign.final.submission.score.length > 0"
+               ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'
                class="link view-submission">
               Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
             </a><br>
-          <a ng-if="assign.final.submission.score.length > 0"  
-             ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"
-             class="link view-submission">Revision ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
+            <div ng-repeat="score in assign.final.submission.score">
+              <a ng-click="showComposition(score, assign.final.backup.id)"
+                 class="link view-submission">{{ score.key }}: ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
+              </a>
+            </div>
         </div>
         <div class="blob-action" ng-click="openDetails(assign)">View
           Details<span class="{{ assign.assignment.active || assign.assignment.revision ? 'white' : 'dark' }} arrow right"></span></div>

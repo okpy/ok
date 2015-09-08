@@ -251,13 +251,13 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
 
       $scope.showComposition = function(score, backupId) {
         if (score) {
-          $window.swal({title: 'Score: '+score.score+'/2',
-              text: 'Message: ' + score.message,
-              showCancelButton: false,
+          $window.swal({title: 'Score: '+score.score+,
+              //text: 'Message: ' + score.message,
+              showCancelButton: true,
               icon: false,
               allowEscapeKey: true,
               allowOutsideClick: true,
-              confirmButtonText: "View Comments",
+              confirmButtonText: "View Code",
               closeOnConfirm: true},
               function(isConfirm){
                 if (isConfirm) {
