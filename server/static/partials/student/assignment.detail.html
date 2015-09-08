@@ -18,13 +18,11 @@
                    class="link view-submission">
                     Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
                 </a><br>
-                <a ng-if="assign.final.submission.score.length > 0"
-                   ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"
-                   class="link view-submission">Revision ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
-            <p class="blob-copy"
-               ng-click="showComposition(assign.final.submission.score[0],assign.final.backup.id)"
-               ng-if="assign.final.submission && assign.final.submission.score.length > 0">
-                Composition Score: {{ assign.final.submission.score[0].score}}/2</p>
+                <div ng-repeat="score in assign.final.submission.score">
+                  <a ng-click="showComposition(score, assign.final.backup.id)"
+                     class="link view-submission">{{ score.tag }} Score: {{ score.score }}  &raquo;</a></p>
+                  </a>
+                </div>
         </div>
         <div ng-if="assign.group.group_info.member.length > 1" ng-click="canReorder(assign)">
             <h3 class="sidebar-subtitle">Group <span ng-hide="assign.assignment.active">(member order locked)</span></h3>
