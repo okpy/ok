@@ -18,9 +18,11 @@
                    class="link view-submission">
                     Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
                 </a><br>
-                <a ng-if="assign.final.submission.score.length > 0"
-                   ng-click="showComposition(assign.final.submission.score[0], assign.final.backup.id)"
-                   class="link view-submission">Revision ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
+                <div ng-repeat="score in assign.final.submission.score">
+                  <a ng-click="showComposition(score, assign.final.backup.id)"
+                     class="link view-submission">{{ score.key }}: ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
+                  </a>
+                </div>
             <p class="blob-copy"
                ng-click="showComposition(assign.final.submission.score[0],assign.final.backup.id)"
                ng-if="assign.final.submission && assign.final.submission.score.length > 0">
