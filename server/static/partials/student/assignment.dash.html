@@ -27,7 +27,7 @@
             </a><br>
             <div ng-repeat="score in assign.final.submission.score">
               <a ng-click="showComposition(score, assign.final.backup.id)"
-                 class="link view-submission">{{ score.key }}: ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
+                 class="link view-submission">{{ score.tag }}: ({{ assign.final.backup.created | amCalendar }}) &raquo;</a></p>
               </a>
             </div>
         </div>
