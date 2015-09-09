@@ -39,10 +39,11 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL
 
 from app import models, app, analytics, utils
 from app.needs import Need
-from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
+from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip
+from app.utils import scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
 from app.utils import add_to_grading_queues, parse_date, assign_submission
 from app.utils import merge_user, backup_group_file, add_to_file_contents
-from app.utils import autograde_final_subs
+from app.utils import autograde_final_subs, promote_student_backups
 
 from app.exceptions import *
 
@@ -790,6 +791,8 @@ class AssignmentAPI(APIResource):
             'methods': set(['POST']),
             'web_args': {
                 'grade_final': BooleanArg(),
+                'testing': BooleanArg(),
+                'backup_promotion': BooleanArg(),
                 'token': Arg(str)
             }
         },
@@ -865,6 +868,11 @@ class AssignmentAPI(APIResource):
       if 'grade_final' in data and data['grade_final']:
         #Collect all final submissions and run grades.
         deferred.defer(autograde_final_subs, obj, user, data)
+    
+        if 'promote_backups' in data and data['promote_backups']:
+            # Force promote backups and run autograder
+            defrred.defer(promote_student_backups, obj, True, user, data)
+
         return {'status_url': AUTOGRADER_URL+'/rq', 'length': 'TBD'}
       else:
         raise BadValueError('Endpoint only supports final submission grading.')

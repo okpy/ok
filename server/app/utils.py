@@ -26,7 +26,7 @@ from google.appengine.ext import deferred
 import cloudstorage as gcs
 
 from app import app
-from app.constants import GRADES_BUCKET, AUTOGRADER_URL
+from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE
 from app.exceptions import BadValueError
 
 # TODO Looks like this can be removed just by relocating parse_date
@@ -609,27 +609,73 @@ def submit_to_ag(assignment, messages, submitter):
     else:
         raise BadValueError('The autograder the rejected your request')
 
+def autograde_subms(assignment, user, data, subm_ids):
+    ag_data = {
+        'subm_ids': subm_ids,
+        'assignment': assignment.autograding_key,
+        'access_token': data['token'],
+        'testing': data['testing']
+    }
+
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    r = requests.post(AUTOGRADER_URL+'/api/ok/grade/batch',
+        data=json.dumps(ag_data), headers=headers)
+    if r.status_code == requests.codes.ok:
+        # TODO: Contact staff (via email)
+      return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
+    else:
+      raise BadValueError('The autograder the rejected your request')
+
 def autograde_final_subs(assignment, user, data):
     subm_ids = {}
     fsubs = list(ModelProxy.FinalSubmission.query(
                     ModelProxy.FinalSubmission.assignment == assignment.key))
     for fsub in fsubs:
       subm_ids[fsub.submission.id()] = fsub.submission.get().backup.id()
+    return autograde_subms(assignment, user, data, subm_ids)
 
-    data = {
-        'subm_ids': subm_ids,
-        'assignment': assignment.autograding_key,
-        'access_token': data['token']
-    }
+def promote_student_backups(assignment, autograde=False, user=None, data=None):
+    """ 
+    Find all students with no final submissions and make their latest backup into 
+    a submission. 
 
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    r = requests.post(AUTOGRADER_URL+'/api/ok/grade/batch',
-        data=json.dumps(data), headers=headers)
-    if r.status_code == requests.codes.ok:
-        # TODO: Contact user (via email)
-      return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
-    else:
-      raise BadValueError('The autograder the rejected your request')
+    :param assignment - an assignment object
+    """
+    enrollment = ModelProxy.Participant.query(
+        ModelProxy.Participant.course == assignment.course,
+        ModelProxy.Participant.role == STUDENT_ROLE).get()
+
+    newly_created_fs = []
+
+    for student in enrollment:
+        fs = student.get_final_submission(assignment)
+        if not fs:
+            recent_bck = student.get_backups(assignment.key, 1)
+            new_sub = force_promote_backup(recent_bck)
+            newly_created_fs.append(new_sub.id())
+
+    if autograde:
+        return autograde_subms(assignment, user, data, newly_created_fs)
+
+
+def force_promote_backup(backup_id):
+    """
+    Create Submisson and FinalSubmission records for a submitted Backup.
+    This ignores deadlines.
+
+    :param backup_id: ID of a Backup
+    """
+    backup = ModelProxy.Backup.get_by_id(backup_id)
+    if not backup.get_messages().get('file_contents'):
+        logging.info("Submission had no file_contents; not processing")
+        return
+
+    assign = backup.assignment.get_async()
+    subm = ModelProxy.Submission(backup=backup.key)
+    subm.put()
+    return subm.mark_as_final()
+
+
 
 import difflib
 
