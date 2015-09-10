@@ -252,7 +252,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.showComposition = function(score, backupId) {
         if (score) {
           $window.swal({title: 'Score: '+score.score,
-              //text: 'Message: ' + score.message,
+              text: 'Message: ' + score.message.replace(/\n/g, "<br />"); ,
               showCancelButton: true,
               icon: false,
               allowEscapeKey: true,
@@ -263,7 +263,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
                 if (isConfirm) {
                   $window.location.replace('#/'+$scope.courseId+'/submission/'+backupId.toString()+'/diff')
                 } else {
-
+                  
                 } });
         }
       }
