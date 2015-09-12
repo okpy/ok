@@ -303,6 +303,8 @@ def filter_query(query, args, model):
 ####################
 
 ASSIGN_BATCH_SIZE = 20
+
+# TODO: This code is used for seeding but not in the API.
 def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.FinalSubmission.query().filter(
         ModelProxy.FinalSubmission.assignment == assign_key)
@@ -354,6 +356,35 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     else:
         logging.debug(
             'add_to_grading_queues complete with %d updates!', num_updated)
+
+def assign_staff_to_queues(assignment_key, staff_list):
+        subms = ModelProxy.FinalSubmission.query(
+            ModelProxy.FinalSubmission.assignment == assignment_key
+        ).fetch()
+
+        queues = []
+
+        for instr in staff_list:
+            q = ModelProxy.Queue.query(
+                ModelProxy.Queue.owner == instr.key,
+                ModelProxy.Queue.assignment == assignment_key).get()
+            if not q:
+                q = ModelProxy.Queue(
+                    owner=instr.key,
+                    assignment=assignment_key,
+                    assigned_staff=[instr.key])
+                q.put()
+            queues.append(q)
+
+        i = 0
+
+        for subm in subms:
+            subm.queue = queues[i].key
+            subm.put()
+            i = (i + 1) % len(staff_list)
+
+        logging.debug(
+            'assign_staff_to_queues complete with %d updates!', len(subms))
 
 def assign_submission(backup_id, submit):
     """
