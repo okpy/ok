@@ -40,7 +40,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL
 from app import models, app, analytics, utils
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
-from app.utils import add_to_grading_queues, parse_date, assign_submission
+from app.utils import assign_staff_to_queues, parse_date, assign_submission
 from app.utils import merge_user, backup_group_file, add_to_file_contents
 from app.utils import autograde_final_subs
 
@@ -458,7 +458,7 @@ class ParticipantAPI(APIResource):
                 course,
                 role)
             if not part:
-                raise BadValueError('Check failed.')
+                raise BadValueError('Permissions check failed.')
             parts.append(part)
         return parts
 
@@ -777,9 +777,6 @@ class AssignmentAPI(APIResource):
         'group': {
           'methods': set(['GET']),
         },
-        'assign': {
-            'methods': set(['POST'])
-        },
         'download_scores': {
             'methods': set(['GET'])
         },
@@ -824,12 +821,6 @@ class AssignmentAPI(APIResource):
     def edit(self, obj, user, data):
         """ Save the assignment. """
         return super(AssignmentAPI, self).put(obj, user, data)
-
-    def assign(self, obj, user, data):
-        need = Need('put')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-        deferred.defer(add_to_grading_queues, obj.key)
 
     def group(self, obj, user, data):
         """User's current group for assignment."""
@@ -1951,8 +1942,10 @@ class QueuesAPI(APIResource):
             raise Need('get').exception()
 
         course_key, assignment_key, staff_list = data['course'], data['assignment'], data['staff']
+
         userify = lambda parts: [part.user.get() for part in parts]
 
+        # Get select staff members
         staff = [staff for staff in
             userify(models.Participant.query(
             models.Participant.role == STAFF_ROLE,
@@ -1962,34 +1955,10 @@ class QueuesAPI(APIResource):
         if len(staff) == 0:
             raise BadValueError('Course has no registered staff members.')
 
+        # Check permissions, raising an error if it fails.
         ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
 
-        subms = models.FinalSubmission.query(
-            models.FinalSubmission.assignment == assignment_key
-        ).fetch()
-
-        queues = []
-
-        for instr in staff:
-            q = models.Queue.query(
-                models.Queue.owner == instr.key,
-                models.Queue.assignment == assignment_key).get()
-            if not q:
-                q = models.Queue(
-                    owner=instr.key,
-                    assignment=assignment_key,
-                    assigned_staff=[instr.key])
-                q.put()
-            queues.append(q)
-
-        i = 0
-
-        for subm in subms:
-            subm.queue = queues[i].key
-            subm.put()
-            i = (i + 1) % len(staff)
-
-        return queues
+        deferred.defer(assign_staff_to_queues, assignment_key, staff)
 
     def check_permissions(self, user, data):
         course = data['course'].get()
