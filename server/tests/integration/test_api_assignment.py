@@ -111,15 +111,6 @@ class AssignmentAPITest(APIBaseTestCase):
 		})
 		self.assertEqual('okpy.org', self._assign.key.get().url)
 
-	def test_assign(self):
-		""" Tests that assign functions without dying """
-		self.API().assign(self.accounts['dummy_admin'], self.accounts['dummy_admin'], {})
-
-	def test_assign_check(self):
-		""" Tests that assign checks for permissions  """
-		with self.assertRaises(PermissionError):
-			self.API().assign(self.accounts['dummy_student3'], self.accounts['dummy_student2'], {})
-
 	def test_invite_err(self):
 		""" Test that error is thrown if need be"""
 		self.mock(models.Group, 'invite_to_group').using(lambda *args: True)
