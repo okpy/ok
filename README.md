@@ -43,7 +43,7 @@ Local Server
 To run the server locally:
 
 ```bash
-$ source activate_server.sh 
+$ source activate_server.sh
 $ cd server
 $ bower install  # to install frontend CSS/JS libraries
 $ ./start_server
@@ -56,10 +56,20 @@ Deploying
 To deploy the current branch:
 
 ```bash
-$ bower install 
+$ bower install
 $ gcloud auth login
 $ appcfg.py update
 ```
+
+To deploy the current branch to staging
+```bash
+$ git checkout staging
+$ git merge <your branch>
+$ git push origin staging # Keep
+$ vim server/app.py # Make sure version is staging
+$ appcfg.py update --version staging # Be sure to deploy to staging
+```
+
 
 Customizing seed content
 -------------------
