@@ -1,5 +1,5 @@
 application: ok-server
-version: 1
+version: staging
 runtime: python27
 api_version: 1
 threadsafe: true
