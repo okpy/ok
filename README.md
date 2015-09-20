@@ -28,8 +28,6 @@ To install:
 Common Bugs
 -------------
   Before installation, ensure that:
-  * Your computer's default Python installation is Python2.
-    - To temporarily symlink the `python` command to Python2, run `rm /usr/bin/python; sudo ln -s /usr/bin/python2.7 /usr/bin/python`
   * Ok directory's absolute path does *not* have spaces.
     - From your Ok directory, run `pwd` to see its full path.
     - In effect, the *installation* will not work in Google Drive or iCloud; the server may be subsequently run in the cloud.
