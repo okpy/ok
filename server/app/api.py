@@ -1264,7 +1264,7 @@ class SubmissionAPI(APIResource):
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
 
-        if valid_assignment.autograding_enabled:
+        if valid_assignment.autograding_enabled and submit:
             logging.info("Queing submission to AG")
             deferred.defer(submit_to_ag, valid_assignment, messages, user)
 
