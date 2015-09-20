@@ -33,6 +33,12 @@ indexes:
   - name: due_date
     direction: desc
 
+- kind: Assignmentv2
+  properties:
+  - name: course
+  - name: due_date
+  direction: desc
+
 - kind: Backupv2
   properties:
   - name: assignment
