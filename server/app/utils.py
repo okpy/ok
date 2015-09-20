@@ -336,10 +336,10 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
             continue
         queues.sort(key=lambda x: len(x.submissions))
 
-        subm = user.get_selected_submission(assign_key, keys_only=True)
-        if subm and user.is_final_submission(subm, assign_key):
-            subm_got = subm.get()
-            if subm_got.get_messages().get('file_contents'):
+        final_subm = user.get_final_submission(assign_key)
+        if final_subm:
+            subm = final_subm.submission.get()
+            if final_subm.backup.get_messages().get('file_contents'):
                 queues[0].submissions.append(subm)
                 seen.add(user.key.id())
                 to_put += 1

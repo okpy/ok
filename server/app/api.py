@@ -683,7 +683,7 @@ class UserAPI(APIResource):
         return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return [subm.submission for subm in obj.get_submissions(data['assignment'], data['quantity'])]
+        return obj.get_submissions(data['assignment'], data['quantity'])
 
     def merge_user(self, obj, user, data):
         """

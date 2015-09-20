@@ -180,7 +180,7 @@ class UserAPITest(APIBaseTestCase):
 			'assignment': self._assign.key,
 			'quantity': 5
 		})
-		self.assertEqual(len(subms), 0)  # because the 1 submission in the DB doesn't have files
+		self.assertEqual(len(subms), 1)
 
 		for subm in subms:
 			self.assertTrue(isinstance(subm, models.Submission))
