@@ -62,24 +62,24 @@ class ModelsTestCase(BaseTestCase):
 		self.assertEqual(user._contains_files(backup_with), 'HUEHUE')
 		self.assertEqual(user._contains_files(backup_without), None)
 
-	def test_get_backups_helper_in_group(self):
+	def test_get_backups_in_group(self):
 		""" Test self not in group """
 		user = models.User(email=['yo@yo.com']).put().get()
 		user.get_group = MagicMock(
 			return_value=MagicMock(
 				member=[user.key]))
-		user._get_backups_helper(None)
+		user.get_backups(None)
 
 		user.get_group.assert_called_with(None)
 		assert user.key in user.get_group(None).member
 
-	def test_get_submissions_helper_in_group(self):
+	def test_get_submissions_in_group(self):
 		""" Test self not in group """
 		user = models.User(email=['yo@yo.com']).put().get()
 		user.get_group = MagicMock(
 			return_value=MagicMock(
 				member=[user.key]))
-		user._get_submissions_helper(None)
+		user.get_submissions(None)
 
 		user.get_group.assert_called_with(None)
 		assert user.key in user.get_group(None).member
