@@ -328,15 +328,18 @@ class ModelsTestCase(BaseTestCase):
 
 		backup = models.Backup(
 			submitter=student.key, assignment=assignment.key).put()
+		revision = models.Backup(
+			submitter=student.key, assignment=assignment.key).put()
 		submission = models.Submission(backup=backup).put()
+		revision = models.Submission(backup=backup).put()
 		models.FinalSubmission(
 			submitter=student.key,
 			assignment=assignment.key,
 			group=make_fake_group(assignment, admin, student).key,
 			submission=submission).put().get()
 
-		self.assertEqual(submission.get().mark_as_final().get().revision,
-		                 submission)
+		self.assertEqual(revision.get().mark_as_final().get().revision,
+		                 revision)
 
 	def test_get_final_wo_final(self):
 		""""""
