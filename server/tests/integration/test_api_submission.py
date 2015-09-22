@@ -39,7 +39,7 @@ class SubmissionAPITest(APIBaseTestCase):
 		self._backup = make_fake_backup(self._assign, self.user2)
 		self._submission = make_fake_submission(self._backup)
 		self._finalsubmission = make_fake_finalsubmission(self._submission, self._assign, self.user2)
-		self._score = models.Score(score=2).put()
+		self._score = models.Score(score=2, tag="composition").put()
 		self._submission.score = [self._score.get()]
 		self._submission.put()
 
