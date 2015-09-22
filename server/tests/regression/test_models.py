@@ -340,6 +340,9 @@ class ModelsTestCase(BaseTestCase):
 
 		self.assertEqual(revision.get().mark_as_final().get().revision,
 		                 revision)
+		# Make sure the original submission is retained.
+		self.assertEqual(revision.get().mark_as_final().get().submission,
+		                 submission)
 
 	def test_get_final_wo_final(self):
 		""""""
