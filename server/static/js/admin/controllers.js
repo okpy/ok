@@ -206,7 +206,8 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
           }
         } else {
           if (!$scope.assign.autograding_key) {
-            $window.swal("No Autograding Key!!", 'The autograder wont work', 'error')
+            $window.swal("No Autograding Key!", 'Please enter the autograder key or disable autograding', 'error');
+            return;
           }
           updatedAssign = {
             'id': $scope.assign.id,
