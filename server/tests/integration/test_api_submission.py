@@ -372,10 +372,10 @@ class SubmissionAPITest(APIBaseTestCase):
         messages, submit = None, True
         status_code, message, data = self.API().submit(user, assignment, messages, submit, submitter)
         self.assertEqual(status_code, 403)
-        self.assertEqual(message, 'late')
+        self.assertEqual(message, 'Late Submission')
 
     def test_submit_late_period(self):
-        """ Tests that late submissions are not allowed """
+        """ Tests that late submissions during the revision period are not allowed """
         user = submitter = self.accounts['dummy_student3']
         assignment = self.assignment_name
         self._assign.lock_date = datetime.datetime.now() - datetime.timedelta(hours=9)
@@ -384,7 +384,7 @@ class SubmissionAPITest(APIBaseTestCase):
         messages, submit = None, True
         status_code, message, data = self.API().submit(user, assignment, messages, submit, submitter)
         self.assertEqual(status_code, 403)
-        self.assertNotEqual(message, 'Late Submission')
+        self.assertEqual(message, 'Late: No submission to revise')
 
     def test_backup_late_period(self):
         """ Tests that late backups are allowed """
