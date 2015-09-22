@@ -205,6 +205,9 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'url': $scope.assign.url
           }
         } else {
+          if (!$scope.assign.autograding_key) {
+            $window.swal("No Autograding Key!!", 'The autograder wont work', 'error')
+          }
           updatedAssign = {
             'id': $scope.assign.id,
             'display_name': $scope.assign.display_name,
@@ -220,7 +223,6 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'url': $scope.assign.url
           }
         }
-
         Assignment.edit(updatedAssign,
           function (response) {
             $scope.assignments = Assignment.query({},
