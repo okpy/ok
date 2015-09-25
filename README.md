@@ -67,7 +67,7 @@ To deploy the current branch to staging
 $ git checkout staging
 $ git merge <your branch>
 $ git push origin staging
-$ head server/app.py # Make sure version is staging
+$ head server/app.yaml # Make sure version is staging
 $ appcfg.py update --version staging # Be sure to deploy to staging
 ```
 
