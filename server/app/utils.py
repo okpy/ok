@@ -119,7 +119,7 @@ def add_to_zip(zipfile, file_contents, dir=''):
     Adds files to a given zip file. Uses specified dir to store files.
     """
     for filename, contents in file_contents.items():
-        zipfile.writestr(join(dir, filename), contents)
+        zipfile.writestr(join(dir, filename.encode('utf-8')), contents.encode('utf-8'))
     return zipfile
 
 def create_csv_content(content):
