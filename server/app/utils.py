@@ -568,20 +568,17 @@ def make_zip_filename(user, now):
     return filename+'.zip'
 
 
-def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
-                start_cursor=None):
+def subms_to_gcs(SearchAPI, subm, Submission, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
-    zipfile_str, zipfile = start_zip()
-    next_cursor, has_more = None, True
-    while has_more:
-        query = SearchAPI.querify(data['query'])
-        results, next_cursor, has_more = query.fetch_page(
-            constants.BATCH_SIZE, start_cursor=next_cursor)
-        for result in results:
-            zipfile = add_subm_to_zip(subm, Submission, zipfile, result)
-    zip_contents = finish_zip(zipfile_str, zipfile)
-    zip_filename = make_zip_filename(user, datetime)
-    create_gcs_file(zip_filename, zip_contents, 'application/zip')
+    query = SearchAPI.querify(data['query'])
+    gcs_file = gcs.open(filename, 'w',
+        content_type='application/zip',
+        options={'x-goog-acl': 'project-private'})
+    with contextlib.closing(gcs_file) as f:
+        with zf.ZipFile(f, 'w') as zipfile:
+            for result in query:
+                add_subm_to_zip(subm, Submission, zipfile, result)
+    logging.info("Exported submissions to " + filename)
 
 def submit_to_ag(assignment, messages, submitter):
     if 'file_contents' not in messages:
