@@ -9,7 +9,7 @@ import contextlib
 import logging
 import datetime
 import itertools
-from os.path import join
+from os import path
 from app import constants
 import requests
 
@@ -115,12 +115,21 @@ def finish_zip(zipfile_str, zipfile):
     return zipfile_str.getvalue()
 
 
-def add_to_zip(zipfile, file_contents, dir=''):
+def add_to_zip(zipfile, files, dir=''):
     """
     Adds files to a given zip file. Uses specified dir to store files.
+
+    :param zipfile: (ZipFile) zip archive to be extended
+    :param files: (dict) map from filenames (str) to file contents.
+        File contents will be encoded into a utf-8 text file.
+    :param dir: (str) directory to place files in. Both this and the filename
+        will be utf-8 encoded.
     """
-    for filename, contents in file_contents.items():
-        zipfile.writestr(join(dir, filename).encode('utf-8'), contents.encode('utf-8'))
+    for filename, contents in files.items():
+        zipfile.writestr(
+            # TODO(knrafto) not sure if zip paths should be utf-8
+            path.join(dir, filename).encode('utf-8'),
+            str(contents).encode('utf-8'))
     return zipfile
 
 def create_csv_content(content):

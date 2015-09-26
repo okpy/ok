@@ -97,7 +97,7 @@ class SubmissionAPITest(APIBaseTestCase):
 			get_messages=lambda: {'file_contents': info},
 			assignment=self._assign.key,
 			to_json=lambda: {}))
-		self.assertEqual(info['gup.py'], '1')
+		self.assertEqual(info['gup.py'], 1)
 
 	def test_zip(self):
 		""" Tests that zip does not crash """
