@@ -5,6 +5,7 @@ Utility functions used by API and other services
 # pylint: disable=no-member
 
 import collections
+import contextlib
 import logging
 import datetime
 import itertools
