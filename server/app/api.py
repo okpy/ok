@@ -40,7 +40,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL
 from app import models, app, analytics, utils
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip, scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
-from app.utils import add_to_grading_queues, parse_date, assign_submission
+from app.utils import assign_staff_to_queues, parse_date, assign_submission
 from app.utils import merge_user, backup_group_file, add_to_file_contents
 from app.utils import autograde_final_subs
 
@@ -458,7 +458,7 @@ class ParticipantAPI(APIResource):
                 course,
                 role)
             if not part:
-                raise BadValueError('Check failed.')
+                raise BadValueError('Permissions check failed.')
             parts.append(part)
         return parts
 
@@ -683,7 +683,7 @@ class UserAPI(APIResource):
         return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return [subm.submission for subm in obj.get_submissions(data['assignment'], data['quantity'])]
+        return obj.get_submissions(data['assignment'], data['quantity'])
 
     def merge_user(self, obj, user, data):
         """
@@ -777,9 +777,6 @@ class AssignmentAPI(APIResource):
         'group': {
           'methods': set(['GET']),
         },
-        'assign': {
-            'methods': set(['POST'])
-        },
         'download_scores': {
             'methods': set(['GET'])
         },
@@ -824,12 +821,6 @@ class AssignmentAPI(APIResource):
     def edit(self, obj, user, data):
         """ Save the assignment. """
         return super(AssignmentAPI, self).put(obj, user, data)
-
-    def assign(self, obj, user, data):
-        need = Need('put')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-        deferred.defer(add_to_grading_queues, obj.key)
 
     def group(self, obj, user, data):
         """User's current group for assignment."""
@@ -910,7 +901,7 @@ class SubmitNDBImplementation(object):
             memcache.set(mc_key, assignments)
         return assignments
 
-    def create_submission(self, user, assignment, messages, submit, submitter):
+    def create_submission(self, user, assignment, messages, submit, submitter, revision=False):
         """
         Create submission using user as parent to ensure ordering.
 
@@ -941,7 +932,7 @@ class SubmitNDBImplementation(object):
                                messages=db_messages,
                                created=created)
         backup.put()
-        deferred.defer(assign_submission, backup.key.id(), submit)
+        deferred.defer(assign_submission, backup.key.id(), submit, revision)
         return backup
 
 
@@ -1253,20 +1244,25 @@ class SubmissionAPI(APIResource):
             if revision:
                 # In the revision period. Ensure that user has a previously graded submission.
                 fs = user.get_final_submission(valid_assignment)
-                if fs is None or fs.submission.get().score == []:
-                    return (403, 'Previous submission was not graded', {
+                if not fs:
+                    return (403, 'Late: No submission to revise', {'late': True})
+                comp_score = [s for s in fs.submission.get().score if s.tag == "composition"]
+                if fs is None or len(comp_score) < 1:
+                    return (403, 'Previous submission does not have a composition score', {
                       'late': True,
-                      })
+                    })
+                logging.info("Accepting Revision Submission")
             else:
+                logging.info("Late submission from user")
                 # Late submission. Do not allow them to submit
-                return (403, 'late', {
+                return (403, 'Late Submission', {
                     'late': True,
                     })
 
         submission = self.db.create_submission(user, valid_assignment,
                                                messages, submit, submitter)
 
-        if valid_assignment.autograding_enabled:
+        if valid_assignment.autograding_enabled and submit:
             logging.info("Queing submission to AG")
             deferred.defer(submit_to_ag, valid_assignment, messages, user)
 
@@ -1943,8 +1939,10 @@ class QueuesAPI(APIResource):
             raise Need('get').exception()
 
         course_key, assignment_key, staff_list = data['course'], data['assignment'], data['staff']
+
         userify = lambda parts: [part.user.get() for part in parts]
 
+        # Get select staff members
         staff = [staff for staff in
             userify(models.Participant.query(
             models.Participant.role == STAFF_ROLE,
@@ -1954,34 +1952,10 @@ class QueuesAPI(APIResource):
         if len(staff) == 0:
             raise BadValueError('Course has no registered staff members.')
 
+        # Check permissions, raising an error if it fails.
         ParticipantAPI().check([stf.email[0] for stf in staff], course_key.get(), STAFF_ROLE)
 
-        subms = models.FinalSubmission.query(
-            models.FinalSubmission.assignment == assignment_key
-        ).fetch()
-
-        queues = []
-
-        for instr in staff:
-            q = models.Queue.query(
-                models.Queue.owner == instr.key,
-                models.Queue.assignment == assignment_key).get()
-            if not q:
-                q = models.Queue(
-                    owner=instr.key,
-                    assignment=assignment_key,
-                    assigned_staff=[instr.key])
-                q.put()
-            queues.append(q)
-
-        i = 0
-
-        for subm in subms:
-            subm.queue = queues[i].key
-            subm.put()
-            i = (i + 1) % len(staff)
-
-        return queues
+        deferred.defer(assign_staff_to_queues, assignment_key, staff)
 
     def check_permissions(self, user, data):
         course = data['course'].get()

@@ -293,86 +293,84 @@ def seed():
     course.put()
 
     # Create a few assignments
-    assign = make_future_assignment(course, c)
-    assign.put()
-    assign2 = make_past_assignment(course, c)
-    assign2.put()
-    assignHW = make_hw_assignment(course, c)
-    assignHW.put()
+    assignments = []
+    for _ in range(4):
+        assignments += [
+            make_future_assignment(course, c),
+            make_past_assignment(course, c),
+            make_hw_assignment(course, c)
+        ]
 
-    # Create submissions
-    subms = []
+    for assign in assignments:
+        assign.put()
+        # Create submissions
+        subms = []
 
-    # Group submission
-    team1 = group_members[0:2]
-    g1 = make_group(assign, team1)
-    g1.put()
-
-
-    team2 = group_members[2:4]
-    g2 = make_invited_group(assign, team2)
-    g2.put()
-
-    team3 = group_members[4:6]
-    g3 = make_group(assign, team3)
-    g3.put()
+        # Group submission
+        team1 = group_members[0:2]
+        g1 = make_group(assign, team1)
+        g1.put()
 
 
-    # Have each member in the group submit one
-    for member in group_members:
-        subm = make_seed_submission(assign, member)
-        subm.put()
+        team2 = group_members[2:4]
+        g2 = make_invited_group(assign, team2)
+        g2.put()
 
-    # for member in group_members:
-    #     subm = make_seed_scheme_submission(assign2, member)
-    #     subm.put()
-
-    group1_subm = make_seed_submission(assign, group_members[1])
-    group1_subm.put()
-    # Make team 1's submission final and score it.
-    final = make_final_with_group(group1_subm, assign, group_members[1], g1)
-    score_seed_submission(final, 2, "Nice job, group 1!", staff[8])
-    subms.append(group1_subm)
-
-    group3_subm = make_seed_submission(assign, group_members[5])
-    group3_subm.put()
-    # Make team 1's submission final and score it.
-    final3 = make_final_with_group(group3_subm, assign, group_members[5], g3)
-    score_seed_submission(final3, 1, "Awesome job, group 3!", staff[8])
-    subms.append(group3_subm)
-
-    # Make this one be a final submission though.
-    # subm = make_seed_submission(assign, group_members[1], True)
-    # subm.put()
-    # subms.append(subm)
+        team3 = group_members[4:6]
+        g3 = make_group(assign, team3)
+        g3.put()
 
 
-    # scheme final
-    # subm = make_seed_scheme_submission(assign2, group_members[1], True)
-    # subm.put()
+        # Have each member in the group submit one
+        for member in group_members:
+            subm = make_seed_submission(assign, member)
+            subm.put()
 
-    # Now create indiviual submission
-    for i in range(9):
-        subm = make_seed_submission(assign, students[i])
-        subm.put()
-        #subms.append(subm)
+        # for member in group_members:
+        #     subm = make_seed_scheme_submission(assign2, member)
+        #     subm.put()
 
-        subm = make_seed_submission(assign, students[i], True)
-        subm.put()
-        subms.append(subm)
+        group1_subm = make_seed_submission(assign, group_members[1])
+        group1_subm.put()
+        # Make team 1's submission final and score it.
+        final = make_final_with_group(group1_subm, assign, group_members[1], g1)
+        score_seed_submission(final, 2, "Nice job, group 1!", staff[8])
+        subms.append(group1_subm)
 
-        # Make each individual submission final and score it.
-        final = make_final(subm, assign, students[i])
-        score_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
+        group3_subm = make_seed_submission(assign, group_members[5])
+        group3_subm.put()
+        # Make team 1's submission final and score it.
+        final3 = make_final_with_group(group3_subm, assign, group_members[5], g3)
+        score_seed_submission(final3, 1, "Awesome job, group 3!", staff[8])
+        subms.append(group3_subm)
+
+        # Make this one be a final submission though.
+        # subm = make_seed_submission(assign, group_members[1], True)
+        # subm.put()
+        # subms.append(subm)
 
 
-    # Seed a queue. This should be auto-generated.
-    make_queue(assign, subms[:len(subms)//2], c)
-    make_queue(assign, subms[len(subms)//2:], k)
+        # scheme final
+        # subm = make_seed_scheme_submission(assign2, group_members[1], True)
+        # subm.put()
 
-    utils.add_to_grading_queues(assign.key)
+        # Now create indiviual submission
+        for i in range(9):
+            subm = make_seed_submission(assign, students[i])
+            subm.put()
+            #subms.append(subm)
+
+            subm = make_seed_submission(assign, students[i], True)
+            subm.put()
+            subms.append(subm)
+
+            # Make each individual submission final and score it.
+            final = make_final(subm, assign, students[i])
+            score_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
 
 
+        # Seed a queue. This should be auto-generated.
+        make_queue(assign, subms[:len(subms)//2], c)
+        make_queue(assign, subms[len(subms)//2:], k)
 
-
-
+        utils.add_to_grading_queues(assign.key)

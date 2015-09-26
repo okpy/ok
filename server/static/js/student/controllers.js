@@ -251,8 +251,13 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
 
       $scope.showComposition = function(score, backupId) {
         if (score) {
+          if (score.message.length > 200) {
+            var gradeResults = open('url','windowName','height=600,width=500');
+            gradeResults.document.write('<pre>' + score.message + '</pre>');
+            score.message = " (In pop-up window)";
+          }
           $window.swal({title: 'Score: '+score.score,
-              //text: 'Message: ' + score.message,
+              text: 'Message: ' + score.message,
               showCancelButton: true,
               icon: false,
               allowEscapeKey: true,
@@ -263,7 +268,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
                 if (isConfirm) {
                   $window.location.replace('#/'+$scope.courseId+'/submission/'+backupId.toString()+'/diff')
                 } else {
-
+                  if (gradeResults) {
+                    gradeResults.close();
+                  }
                 } });
         }
       }

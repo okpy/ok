@@ -313,6 +313,8 @@ def filter_query(query, args, model):
 ####################
 
 ASSIGN_BATCH_SIZE = 20
+
+# TODO: This code is used for seeding but not in the API.
 def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.FinalSubmission.query().filter(
         ModelProxy.FinalSubmission.assignment == assign_key)
@@ -344,10 +346,10 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
             continue
         queues.sort(key=lambda x: len(x.submissions))
 
-        subm = user.get_selected_submission(assign_key, keys_only=True)
-        if subm and user.is_final_submission(subm, assign_key):
-            subm_got = subm.get()
-            if subm_got.get_messages().get('file_contents'):
+        final_subm = user.get_final_submission(assign_key)
+        if final_subm:
+            subm = final_subm.submission.get()
+            if final_subm.backup.get_messages().get('file_contents'):
                 queues[0].submissions.append(subm)
                 seen.add(user.key.id())
                 to_put += 1
@@ -365,7 +367,36 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
         logging.debug(
             'add_to_grading_queues complete with %d updates!', num_updated)
 
-def assign_submission(backup_id, submit):
+def assign_staff_to_queues(assignment_key, staff_list):
+        subms = ModelProxy.FinalSubmission.query(
+            ModelProxy.FinalSubmission.assignment == assignment_key
+        ).fetch()
+
+        queues = []
+
+        for instr in staff_list:
+            q = ModelProxy.Queue.query(
+                ModelProxy.Queue.owner == instr.key,
+                ModelProxy.Queue.assignment == assignment_key).get()
+            if not q:
+                q = ModelProxy.Queue(
+                    owner=instr.key,
+                    assignment=assignment_key,
+                    assigned_staff=[instr.key])
+                q.put()
+            queues.append(q)
+
+        i = 0
+
+        for subm in subms:
+            subm.queue = queues[i].key
+            subm.put()
+            i = (i + 1) % len(staff_list)
+
+        logging.debug(
+            'assign_staff_to_queues complete with %d updates!', len(subms))
+
+def assign_submission(backup_id, submit, revision=False):
     """
     Create Submisson and FinalSubmission records for a submitted Backup.
 
@@ -379,11 +410,14 @@ def assign_submission(backup_id, submit):
 
     if submit:
         assign = backup.assignment.get_async()
-        subm = ModelProxy.Submission(backup=backup.key)
+        subm = ModelProxy.Submission(backup=backup.key, is_revision=revision)
         subm.put()
 
-        # Can only make a final submission before it's due
+        # Can only make a final submission before it's due, or if it's revision
         if datetime.datetime.now() < assign.get_result().due_date:
+            subm.mark_as_final()
+        elif revision:
+            # Mark as final handles changing revision attribute.
             subm.mark_as_final()
 
 def sort_by_assignment(key_func, entries):
