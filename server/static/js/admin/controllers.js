@@ -486,7 +486,6 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
       }, function(response) {
         $scope.submissions = response.data.results;
         $scope.more = response.data.more;
-        $scope.search_query = encodeURIComponent(response.data.query);
         if (response.data.more) {
           $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
         } else {
