@@ -119,7 +119,7 @@ def add_to_zip(zipfile, file_contents, dir=''):
     Adds files to a given zip file. Uses specified dir to store files.
     """
     for filename, contents in file_contents.items():
-        zipfile.writestr(join(dir, filename), contents)
+        zipfile.writestr(join(dir, filename.encode('utf-8')), contents.encode('utf-8'))
     return zipfile
 
 def create_csv_content(content):
@@ -386,7 +386,7 @@ def assign_staff_to_queues(assignment_key, staff_list):
         logging.debug(
             'assign_staff_to_queues complete with %d updates!', len(subms))
 
-def assign_submission(backup_id, submit):
+def assign_submission(backup_id, submit, revision=False):
     """
     Create Submisson and FinalSubmission records for a submitted Backup.
 
@@ -400,11 +400,14 @@ def assign_submission(backup_id, submit):
 
     if submit:
         assign = backup.assignment.get_async()
-        subm = ModelProxy.Submission(backup=backup.key)
+        subm = ModelProxy.Submission(backup=backup.key, is_revision=revision)
         subm.put()
 
-        # Can only make a final submission before it's due
+        # Can only make a final submission before it's due, or if it's revision
         if datetime.datetime.now() < assign.get_result().due_date:
+            subm.mark_as_final()
+        elif revision:
+            # Mark as final handles changing revision attribute.
             subm.mark_as_final()
 
 def sort_by_assignment(key_func, entries):

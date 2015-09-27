@@ -901,7 +901,7 @@ class SubmitNDBImplementation(object):
             memcache.set(mc_key, assignments)
         return assignments
 
-    def create_submission(self, user, assignment, messages, submit, submitter):
+    def create_submission(self, user, assignment, messages, submit, submitter, revision=False):
         """
         Create submission using user as parent to ensure ordering.
 
@@ -932,7 +932,7 @@ class SubmitNDBImplementation(object):
                                messages=db_messages,
                                created=created)
         backup.put()
-        deferred.defer(assign_submission, backup.key.id(), submit)
+        deferred.defer(assign_submission, backup.key.id(), submit, revision)
         return backup
 
 
@@ -1251,13 +1251,18 @@ class SubmissionAPI(APIResource):
             if revision:
                 # In the revision period. Ensure that user has a previously graded submission.
                 fs = user.get_final_submission(valid_assignment)
-                if fs is None or fs.submission.get().score == []:
-                    return (403, 'Previous submission was not graded', {
+                if not fs:
+                    return (403, 'Late: No submission to revise', {'late': True})
+                comp_score = [s for s in fs.submission.get().score if s.tag == "composition"]
+                if fs is None or len(comp_score) < 1:
+                    return (403, 'Previous submission does not have a composition score', {
                       'late': True,
-                      })
+                    })
+                logging.info("Accepting Revision Submission")
             else:
+                logging.info("Late submission from user")
                 # Late submission. Do not allow them to submit
-                return (403, 'late', {
+                return (403, 'Late Submission', {
                     'late': True,
                     })
 
