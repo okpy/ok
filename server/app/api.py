@@ -28,6 +28,7 @@ import datetime
 import logging
 import ast
 import requests
+import zipfile
 import flask
 
 from flask.views import View
@@ -1024,43 +1025,11 @@ class SubmissionAPI(APIResource):
         json_pretty = dict(sort_keys=True, indent=4, separators=(',', ': '))
         group_files = backup_group_file(obj, json_pretty)
         if group_files:
-            for file in group_files:
-                add_to_file_contents(file_contents, *file)
-        add_to_file_contents(file_contents,
-                             'submission_meta.json',
-                             str(json.dumps(obj.to_json(), **json_pretty)))
+            for filename, contents in group_files:
+                file_contents[filename] = contents
+        file_contents['submission_meta.json'] = json.dumps(obj.to_json(), **json_pretty)
 
         return name, file_contents
-
-    def zip(self, obj, user, data):
-        """ Grab all files in submission
-        :param obj:
-        :param user:
-        :param data:
-        :return:
-        """
-        return self.zip_files(*self.data_for_zip(obj))
-
-    def zip_files(self, name, file_contents):
-        """ Zip files
-        :param file_contents:
-        :return:
-        """
-        zipfile = create_zip(file_contents)
-        return name, zipfile
-
-    def make_zip_response(self, name, zipfile):
-        """
-        Makes a zip response using a zip object.
-
-        :param zip:
-        :return:
-        """
-        response = make_response(zipfile)
-        response.headers['Content-Disposition'] = (
-            'attachment; filename=submission-%s.zip' % name)
-        response.headers['Content-Type'] = 'application/zip'
-        return response
 
     def download(self, obj, user, data):
         """
@@ -1071,7 +1040,19 @@ class SubmissionAPI(APIResource):
         :param data: (dictionary) data
         :return: file contents in utf-8
         """
-        return self.make_zip_response(*self.zip(obj, user, data))
+        # WGSI app to get a write() function. See PEP 333
+        def zip_response(environ, start_response):
+            name, files = self.data_for_zip(obj)
+            # Create a fake file object for our response
+            stream = object()
+            stream.write = start_response('200 OK', [
+                ('Content-Disposition', 'attachment; filename=submission-%s.zip' % name),
+                ('Content-Type', 'application/zip')
+            ])
+            with zipfile.ZipFile(stream) as zipfile:
+                add_to_zip(zipfile, files)
+            return ''
+        return make_response(zip_response)
 
     def diff(self, obj, user, data):
         """
