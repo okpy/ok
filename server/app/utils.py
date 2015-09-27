@@ -167,22 +167,16 @@ def data_for_scores(assignment, user):
 
     return content
 
-def create_gcs_file(gcs_filename, contents, content_type):
-    """
-    Creates a GCS csv file with contents CONTENTS.
-    """
-    try:
-        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'project-private'})
-        gcs_file.write(contents)
-        gcs_file.close()
-    except Exception as e:
-        logging.exception("ERROR: {}".format(e))
-        try:
-            gcs.delete(gcs_filename)
-        except gcs.NotFoundError:
-            logging.info("Could not delete file " + gcs_filename)
-    logging.info("Created file " + gcs_filename)
+def gcs_file(filename, content_type):
+    """Open a Cloudstorage file for writing and return it. Example usage:
 
+    with gcs_file('foo', 'application/zip') as f:
+        ...
+    """
+    f = gcs.open(filename, 'w',
+        content_type=content_type,
+        options={'x-goog-acl': 'project-private'})
+    return contextlib.closing(f)
 
 def make_csv_filename(assignment, infotype):
     """ Returns filename of format INFOTYPE_COURSE_ASSIGNMENT.csv """
