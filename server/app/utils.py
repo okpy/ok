@@ -610,13 +610,16 @@ def make_zip_filename(user, now):
 def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
     query = SearchAPI.querify(data['query'])
-    gcs_file = gcs.open(filename, 'w',
-        content_type='application/zip',
-        options={'x-goog-acl': 'project-private'})
-    with contextlib.closing(gcs_file) as f:
-        with zf.ZipFile(f, 'w') as zipfile:
+    with gcs_file(filename, 'application/zip') as f:
+        with zipfile.ZipFile(f, 'w') as zipfile:
             for result in query:
-                add_subm_to_zip(subm, zipfile, result)
+                try:
+                    name, files = subm.data_for_zip(result.backup.get())
+                    add_to_zip(zipfile, files, dir=name)
+                except BadValueError as e:
+                    # wtf comparing exception messages?
+                    if str(e) != 'Submission has no contents to download':
+                        raise e
     logging.info("Exported submissions to " + filename)
 
 def submit_to_ag(assignment, messages, submitter):
