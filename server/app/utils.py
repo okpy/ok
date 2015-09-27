@@ -125,11 +125,10 @@ def add_to_zip(zipfile, files, dir=''):
     :param dir: (str) directory to place files in. Both this and the filename
         will be utf-8 encoded.
     """
-    for filename, contents in files.items():
-        zipfile.writestr(
-            # TODO(knrafto) not sure if zip paths should be utf-8
-            path.join(dir, filename).encode('utf-8'),
-            str(contents).encode('utf-8'))
+    for filename, contents in files.iteritems():
+        # The Python 2.7 zipfile packages encodes filenames as UTF-8, but
+        # does not encode the contents.
+        zipfile.writestr(path.join(dir, filename), unicode(contents).encode('utf-8'))
     return zipfile
 
 def create_csv_content(content):

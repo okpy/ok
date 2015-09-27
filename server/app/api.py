@@ -1093,7 +1093,7 @@ class SubmissionAPI(APIResource):
 
         for key in file_contents.keys():
             try:
-                file_contents[key] = str(file_contents[key]).encode('utf-8')
+                file_contents[key] = unicode(file_contents[key]).encode('utf-8')
             except:  # pragma: no cover
                 pass
 
