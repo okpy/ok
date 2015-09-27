@@ -90,27 +90,6 @@ def create_api_response(status, message, data=None):
     response.status_code = status
     return response
 
-
-def create_zip(file_contents={}, dir=''):
-    return finish_zip(*start_zip(file_contents, dir))
-
-
-def start_zip(file_contents={}, dir=''):
-    """
-    Creates a file from the given dictionary of filenames to contents.
-    Uses specified dir to store all files.
-    """
-    zipfile_str = StringIO()
-    zipfile = zf.ZipFile(zipfile_str, 'w')
-    zipfile = add_to_zip(zipfile, file_contents, dir)
-    return zipfile_str, zipfile
-
-
-def finish_zip(zipfile_str, zipfile):
-    zipfile.close()
-    return zipfile_str.getvalue()
-
-
 def add_to_zip(zipfile, files, dir=''):
     """
     Adds files to a given zip file. Uses specified dir to store files.
@@ -125,22 +104,6 @@ def add_to_zip(zipfile, files, dir=''):
         # The Python 2.7 zipfile packages encodes filenames as UTF-8, but
         # does not encode the contents.
         zipfile.writestr(path.join(dir, filename), unicode(contents).encode('utf-8'))
-    return zipfile
-
-def create_csv_content(content):
-    """
-    Return all contents in CSV file format. Content must be a list of lists.
-    """
-    scsv = StringIO()
-    writer = csv.writer(scsv)
-    try:
-        writer.writerows(content)
-    except csv.Error as e:
-        scsv.close()
-        sys.exit('Error creating CSV: {}'.format(e))
-    contents = scsv.getvalue()
-    scsv.close()
-    return contents
 
 def data_for_scores(assignment, user):
     """
@@ -547,25 +510,6 @@ def scores_to_gcs(assignment, user):
     with gcs_file(csv_filename, 'text/csv') as f:
         csv.writer(f).writerows(content)
     logging.info("Exported scores to " + filename)
-
-
-def add_subm_to_zip(subm, zipfile, submission):
-    """ Adds submission contents to a zipfile in-place, returns zipfile """
-    try:
-        if isinstance(submission, ModelProxy.FinalSubmission):
-            # Get the actual submission
-            submission = submission.submission.get()
-        backup = submission.backup.get()
-        name, file_contents = subm.data_for_zip(backup)
-        return add_to_zip(zipfile, file_contents, name)
-    except BadValueError as e:
-        if str(e) != 'Submission has no contents to download':
-            raise e
-
-
-def add_to_file_contents(file_contents, file_name, file_content):
-    """ add a file to file_contents """
-    file_contents[file_name] = file_content
 
 # TODO(Alvin): generalize, cleanup everything about zip
 def backup_group_file(backup, json_pretty={}):

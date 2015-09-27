@@ -42,7 +42,7 @@ from app import models, app, analytics, utils
 from app.needs import Need
 from app.utils import paginate, filter_query, add_to_zip, scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
 from app.utils import assign_staff_to_queues, parse_date, assign_submission
-from app.utils import merge_user, backup_group_file, add_to_file_contents
+from app.utils import merge_user, backup_group_file
 from app.utils import autograde_final_subs
 
 from app.exceptions import *
