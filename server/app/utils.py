@@ -13,11 +13,7 @@ from os import path
 from app import constants
 import requests
 
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
-import zipfile as zf
+import zipfile
 import csv
 from flask import jsonify, request, Response, json
 
