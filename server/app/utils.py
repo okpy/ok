@@ -561,10 +561,10 @@ def scores_to_gcs(assignment, user):
     create_gcs_file(csv_filename, csv_contents, 'text/csv')
 
 
-def add_subm_to_zip(subm, Submission, zipfile, submission):
+def add_subm_to_zip(subm, zipfile, submission):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
     try:
-        if isinstance(submission, FinalSubmission):
+        if isinstance(submission, ModelProxy.FinalSubmission):
             # Get the actual submission
             submission = submission.submission.get()
         backup = submission.backup.get()
@@ -614,7 +614,7 @@ def make_zip_filename(user, now):
     return filename+'.zip'
 
 
-def subms_to_gcs(SearchAPI, subm, Submission, filename, data):
+def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
     query = SearchAPI.querify(data['query'])
     gcs_file = gcs.open(filename, 'w',
@@ -623,7 +623,7 @@ def subms_to_gcs(SearchAPI, subm, Submission, filename, data):
     with contextlib.closing(gcs_file) as f:
         with zf.ZipFile(f, 'w') as zipfile:
             for result in query:
-                add_subm_to_zip(subm, Submission, zipfile, result)
+                add_subm_to_zip(subm, zipfile, result)
     logging.info("Exported submissions to " + filename)
 
 def submit_to_ag(assignment, messages, submitter):
