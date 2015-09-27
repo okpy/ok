@@ -1009,7 +1009,7 @@ class SubmissionAPI(APIResource):
         try:
             user = obj.submitter.get()
             name = user.email[0]+'-'+str(obj.created)
-        except IndexError, AttributeError:
+        except (IndexError, AttributeError):
             name = str(obj.created)
 
         name = name.replace('.', '-').replace(' ', '_')
