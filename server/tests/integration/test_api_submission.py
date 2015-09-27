@@ -18,7 +18,13 @@ from app import models, constants, utils
 from ddt import ddt, data, unpack
 from app.exceptions import *
 from integration.test_api_base import APITest
+import contextlib
+import zipfile as zf
 
+try:
+	from cStringIO import StringIO
+except:
+	from StringIO import StringIO
 
 class SubmissionAPITest(APIBaseTestCase):
 
@@ -99,40 +105,28 @@ class SubmissionAPITest(APIBaseTestCase):
             to_json=lambda: {}))
         self.assertEqual(info['gup.py'], 1)
 
-    def test_zip(self):
-        """ Tests that zip does not crash """
-        obj = self.obj().set(
-            submitter=self.accounts['dummy_admin'].key,
-            created='created',
-            get_messages=lambda: {'file_contents': {'gup.py': 1}},
-            assignment=self._assign.key,
-            to_json=lambda: {})
-        self.API().zip(obj, self.accounts['dummy_admin'], {})
-
-    def test_zip_files(self):
-        """ Tests that zip_files does not crash """
-        name, file_contents = 'yolo', {'gup.py': 'import fish'}
-        name2, zipfile = self.API().zip_files(name, file_contents)
-        self.assertEqual(name, name2)
-        return name, zipfile
-
-    def test_make_zip_response(self):
-        """ Check zipfile response headers """
-        with self.app.test_request_context('/api/v2'):
-            response = self.API().make_zip_response(*self.test_zip_files())
-            self.assertIn('attachment;', response.headers['Content-Disposition'])
-            self.assertEqual('application/zip', response.headers['Content-Type'])
-
     def test_download(self):
         """ Check that download completes successfully """
+        files = {
+            'gup.py': 'import fish',
+            'monty.py': 'thon'
+        }
         with self.app.test_request_context('/api/v2'):
             user, obj = self.accounts['dummy_admin'], self.obj().set(
                 submitter=self.accounts['dummy_admin'].key,
                 created='created',
-                get_messages=lambda: {'file_contents': {'gup.py': 1}},
+                get_messages=lambda: {'file_contents': files},
                 assignment=self._assign.key,
                 to_json=lambda: {})
-            self.API().download(obj, user, {})
+            response = self.API().download(obj, user, {})
+            self.assertIn('attachment', response.headers['Content-Disposition'])
+            self.assertEqual('application/zip', response.headers['Content-Type'])
+            with contextlib.closing(StringIO(response.get_data())) as buf:
+                with zf.ZipFile(buf, 'r') as zipfile:
+                    self.assertEqual(None, zipfile.testzip())
+                    self.assertEqual(set(files.keys()), set(zipfile.namelist()))
+                    for filename, contents in files.iteritems():
+                        self.assertEqual(contents, zipfile.read(filename))
 
     def test_diff_empty(self):
         """ Tests that diff does not accept empty file_Contents """
