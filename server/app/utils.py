@@ -13,7 +13,7 @@ from os import path
 from app import constants
 import requests
 
-import zipfile
+import zipfile as zf
 import csv
 from flask import jsonify, request, Response, json
 
@@ -550,7 +550,7 @@ def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
     query = SearchAPI.querify(data['query'])
     with gcs_file(filename, 'application/zip') as f:
-        with zipfile.ZipFile(f, 'w') as zipfile:
+        with zf.ZipFile(f, 'w') as zipfile:
             for result in query:
                 try:
                     name, files = subm.data_for_zip(result.backup.get())

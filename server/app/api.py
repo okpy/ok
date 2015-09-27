@@ -28,7 +28,7 @@ import datetime
 import logging
 import ast
 import requests
-import zipfile
+import zipfile as zf
 import flask
 
 from flask.views import View
@@ -1040,16 +1040,31 @@ class SubmissionAPI(APIResource):
         :param data: (dictionary) data
         :return: file contents in utf-8
         """
+        # Create a fake file object for our response
+        class ResponseFile(object):
+            def __init__(self, write):
+                self.bytes_written = 0
+                self._write = write
+
+            def write(self, bytes):
+                self.bytes_written += len(bytes)
+                self._write(bytes)
+
+            def tell(self):
+                return self.bytes_written
+
+            def flush(self):
+                pass
+
         # WGSI app to get a write() function. See PEP 333
         def zip_response(environ, start_response):
             name, files = self.data_for_zip(obj)
-            # Create a fake file object for our response
-            stream = object()
-            stream.write = start_response('200 OK', [
+            write = start_response('200 OK', [
                 ('Content-Disposition', 'attachment; filename=submission-%s.zip' % name),
                 ('Content-Type', 'application/zip')
             ])
-            with zipfile.ZipFile(stream) as zipfile:
+            stream = ResponseFile(write)
+            with zf.ZipFile(stream, 'w') as zipfile:
                 add_to_zip(zipfile, files)
             return ''
         return make_response(zip_response)
