@@ -545,13 +545,12 @@ def check_user(user_key):
 def scores_to_gcs(assignment, user):
     """ Writes all final submission scores
     for the given assignment to GCS csv file. """
-    content = data_for_scores(assignment, user)
-    csv_contents = create_csv_content(content)
-    assign_name = assignment.name
-    # Not sure what this line was doing here.
-    # create_gcs_file(assignment, csv_contents, 'scores')
     csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
-    create_gcs_file(csv_filename, csv_contents, 'text/csv')
+    # TODO(knrafto) content should be an iterator
+    content = data_for_scores(assignment, user)
+    with gcs_file(csv_filename, 'text/csv') as f:
+        csv.writer(f).writerows(content)
+    logging.info("Exported scores to " + filename)
 
 
 def add_subm_to_zip(subm, zipfile, submission):
