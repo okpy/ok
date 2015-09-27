@@ -63,7 +63,7 @@ class UtilsTestCase(APIBaseTestCase):
 		for result in results:
 			subm = api.SubmissionAPI()
 			zipfile_str, zipfile = utils.start_zip()
-			zipfile = utils.add_subm_to_zip(subm, result.__class__, zipfile, result)
+			zipfile = utils.add_subm_to_zip(subm, zipfile, result)
 			assert zipfile is None or len(zipfile.infolist()) > 0
 
 	def test_start_zip_basic(self):
