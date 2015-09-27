@@ -561,12 +561,14 @@ def scores_to_gcs(assignment, user):
     create_gcs_file(csv_filename, csv_contents, 'text/csv')
 
 
-def add_subm_to_zip(subm, Submission, zipfile, result):
+def add_subm_to_zip(subm, Submission, zipfile, submission):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
     try:
-        if isinstance(result, Submission):
-            result = result.backup.get()
-        name, file_contents = subm.data_for_zip(result)
+        if isinstance(submission, FinalSubmission):
+            # Get the actual submission
+            submission = submission.submission.get()
+        backup = submission.backup.get()
+        name, file_contents = subm.data_for_zip(backup)
         return add_to_zip(zipfile, file_contents, name)
     except BadValueError as e:
         if str(e) != 'Submission has no contents to download':
