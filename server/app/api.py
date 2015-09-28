@@ -1021,13 +1021,6 @@ class SubmissionAPI(APIResource):
         if 'submit' in file_contents:
             del file_contents['submit']
 
-        # Need to encode every file before it is.
-        for key in file_contents.keys():
-            try:
-                file_contents[key] = str(file_contents[key]).encode('utf-8')
-            except:  # pragma: no cover
-                pass
-
         json_pretty = dict(sort_keys=True, indent=4, separators=(',', ': '))
         group_files = backup_group_file(obj, json_pretty)
         if group_files:
@@ -1100,7 +1093,7 @@ class SubmissionAPI(APIResource):
 
         for key in file_contents.keys():
             try:
-                file_contents[key] = str(file_contents[key]).encode('utf-8')
+                file_contents[key] = unicode(file_contents[key]).encode('utf-8')
             except:  # pragma: no cover
                 pass
 
@@ -1375,11 +1368,9 @@ class SearchAPI(APIResource):
         """ Sets up zip write to GCS """
         self.check_permissions(user, data)
 
-        now = datetime.datetime.now()
-        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI(),
-                       models.Submission, user, data, now)
-
-        return [make_zip_filename(user, now)]
+        filename = make_zip_filename(user, datetime.datetime.now())
+        deferred.defer(subms_to_gcs, SearchAPI, SubmissionAPI(), filename, data)
+        return [filename]
 
 
     @staticmethod
