@@ -26,7 +26,8 @@
               Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
             </a><br>
             <div ng-repeat="score in assign.final.submission.score">
-              <a ng-click="showComposition(score, assign.final.backup.id)"
+              <a ng-hide="score.tag == 'autograder'"
+                 ng-click="showComposition(score, assign.final.backup.id)"
                  class="link view-submission">{{ score.tag }}: {{ score.score }} &raquo;</a></p>
               </a>
             </div>
