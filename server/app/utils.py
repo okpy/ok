@@ -5,10 +5,11 @@ Utility functions used by API and other services
 # pylint: disable=no-member
 
 import collections
+import contextlib
 import logging
 import datetime
 import itertools
-from os.path import join
+from os import path
 from app import constants
 import requests
 
@@ -114,12 +115,20 @@ def finish_zip(zipfile_str, zipfile):
     return zipfile_str.getvalue()
 
 
-def add_to_zip(zipfile, file_contents, dir=''):
+def add_to_zip(zipfile, files, dir=''):
     """
     Adds files to a given zip file. Uses specified dir to store files.
+
+    :param zipfile: (ZipFile) zip archive to be extended
+    :param files: (dict) map from filenames (str) to file contents.
+        File contents will be encoded into a utf-8 text file.
+    :param dir: (str) directory to place files in. Both this and the filename
+        will be utf-8 encoded.
     """
-    for filename, contents in file_contents.items():
-        zipfile.writestr(join(dir, filename), contents)
+    for filename, contents in files.iteritems():
+        # The Python 2.7 zipfile packages encodes filenames as UTF-8, but
+        # does not encode the contents.
+        zipfile.writestr(path.join(dir, filename), unicode(contents).encode('utf-8'))
     return zipfile
 
 def create_csv_content(content):
@@ -303,6 +312,8 @@ def filter_query(query, args, model):
 ####################
 
 ASSIGN_BATCH_SIZE = 20
+
+# TODO: This code is used for seeding but not in the API.
 def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
     query = ModelProxy.FinalSubmission.query().filter(
         ModelProxy.FinalSubmission.assignment == assign_key)
@@ -334,10 +345,10 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
             continue
         queues.sort(key=lambda x: len(x.submissions))
 
-        subm = user.get_selected_submission(assign_key, keys_only=True)
-        if subm and user.is_final_submission(subm, assign_key):
-            subm_got = subm.get()
-            if subm_got.get_messages().get('file_contents'):
+        final_subm = user.get_final_submission(assign_key)
+        if final_subm:
+            subm = final_subm.submission.get()
+            if final_subm.backup.get_messages().get('file_contents'):
                 queues[0].submissions.append(subm)
                 seen.add(user.key.id())
                 to_put += 1
@@ -355,7 +366,36 @@ def add_to_grading_queues(assign_key, cursor=None, num_updated=0):
         logging.debug(
             'add_to_grading_queues complete with %d updates!', num_updated)
 
-def assign_submission(backup_id, submit):
+def assign_staff_to_queues(assignment_key, staff_list):
+        subms = ModelProxy.FinalSubmission.query(
+            ModelProxy.FinalSubmission.assignment == assignment_key
+        ).fetch()
+
+        queues = []
+
+        for instr in staff_list:
+            q = ModelProxy.Queue.query(
+                ModelProxy.Queue.owner == instr.key,
+                ModelProxy.Queue.assignment == assignment_key).get()
+            if not q:
+                q = ModelProxy.Queue(
+                    owner=instr.key,
+                    assignment=assignment_key,
+                    assigned_staff=[instr.key])
+                q.put()
+            queues.append(q)
+
+        i = 0
+
+        for subm in subms:
+            subm.queue = queues[i].key
+            subm.put()
+            i = (i + 1) % len(staff_list)
+
+        logging.debug(
+            'assign_staff_to_queues complete with %d updates!', len(subms))
+
+def assign_submission(backup_id, submit, revision=False):
     """
     Create Submisson and FinalSubmission records for a submitted Backup.
 
@@ -369,11 +409,14 @@ def assign_submission(backup_id, submit):
 
     if submit:
         assign = backup.assignment.get_async()
-        subm = ModelProxy.Submission(backup=backup.key)
+        subm = ModelProxy.Submission(backup=backup.key, is_revision=revision)
         subm.put()
 
-        # Can only make a final submission before it's due
+        # Can only make a final submission before it's due, or if it's revision
         if datetime.datetime.now() < assign.get_result().due_date:
+            subm.mark_as_final()
+        elif revision:
+            # Mark as final handles changing revision attribute.
             subm.mark_as_final()
 
 def sort_by_assignment(key_func, entries):
@@ -517,12 +560,14 @@ def scores_to_gcs(assignment, user):
     create_gcs_file(csv_filename, csv_contents, 'text/csv')
 
 
-def add_subm_to_zip(subm, Submission, zipfile, result):
+def add_subm_to_zip(subm, zipfile, submission):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
     try:
-        if isinstance(result, Submission):
-            result = result.backup.get()
-        name, file_contents = subm.data_for_zip(result)
+        if isinstance(submission, ModelProxy.FinalSubmission):
+            # Get the actual submission
+            submission = submission.submission.get()
+        backup = submission.backup.get()
+        name, file_contents = subm.data_for_zip(backup)
         return add_to_zip(zipfile, file_contents, name)
     except BadValueError as e:
         if str(e) != 'Submission has no contents to download':
@@ -568,20 +613,17 @@ def make_zip_filename(user, now):
     return filename+'.zip'
 
 
-def subms_to_gcs(SearchAPI, subm, Submission, user, data, datetime,
-                start_cursor=None):
+def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
-    zipfile_str, zipfile = start_zip()
-    next_cursor, has_more = None, True
-    while has_more:
-        query = SearchAPI.querify(data['query'])
-        results, next_cursor, has_more = query.fetch_page(
-            constants.BATCH_SIZE, start_cursor=next_cursor)
-        for result in results:
-            zipfile = add_subm_to_zip(subm, Submission, zipfile, result)
-    zip_contents = finish_zip(zipfile_str, zipfile)
-    zip_filename = make_zip_filename(user, datetime)
-    create_gcs_file(zip_filename, zip_contents, 'application/zip')
+    query = SearchAPI.querify(data['query'])
+    gcs_file = gcs.open(filename, 'w',
+        content_type='application/zip',
+        options={'x-goog-acl': 'project-private'})
+    with contextlib.closing(gcs_file) as f:
+        with zf.ZipFile(f, 'w') as zipfile:
+            for result in query:
+                add_subm_to_zip(subm, zipfile, result)
+    logging.info("Exported submissions to " + filename)
 
 def submit_to_ag(assignment, messages, submitter):
     if 'file_contents' not in messages:

@@ -32,9 +32,9 @@
       <h3 class="box-title" ng-if="submissions.length > 0">All Submissions</h3>
       <h4 class="box-title" ng-if="submissions.length == 0" >No Submissions</h3>
       <div class="box-tools" style="float:right;">
-          <button ng-click="download_zip(search_query, 'True', course.id)" class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button>
-          <button ng-click="download_zip(search_query, 'False', course.id)" class="btn btn-primary btn-sm" ng-if="more || currentPage != 1"> <i class="fa fa-download"></i>  Download Page</button>
-          <button ng-click="download_zip(search_query, 'True', course.id)" class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1"> <i class="fa fa-download"></i>  Download</button>
+          <button ng-click="download_zip(query.string, 'True', course.id)" class="btn btn-primary btn-sm" ng-if="more || currentPage != 1" style="margin-right:5px"> <i class="fa fa-download"></i>  Download All</button>
+          <button ng-click="download_zip(query.string, 'False', course.id)" class="btn btn-primary btn-sm" ng-if="more || currentPage != 1"> <i class="fa fa-download"></i>  Download Page</button>
+          <button ng-click="download_zip(query.string, 'True', course.id)" class="btn btn-primary btn-sm" ng-if="!more && currentPage == 1"> <i class="fa fa-download"></i>  Download</button>
       </div>
     </div>
     <!-- /.box-header -->

@@ -195,149 +195,118 @@ class User(Base):
         if email in self.email and len(self.email) > 1:
             self.email.remove(email)
 
-    def get_final_submission(self, assignment_key):
-        """Get the current final submission for this user."""
+    def final_submission(self, group, assignment_key):
+        """A query for the final submission of a group and assignment."""
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key
-        group = self.get_group(assignment_key)
         if group and self.key in group.member:
             return FinalSubmission.query(
                 FinalSubmission.assignment==assignment_key,
-                FinalSubmission.group==group.key).get()
+                FinalSubmission.group==group.key)
         else:
             return FinalSubmission.query(
                 FinalSubmission.assignment==assignment_key,
-                FinalSubmission.submitter==self.key).get()
+                FinalSubmission.submitter==self.key)
+
+    def get_final_submission(self, assignment_key):
+        """Get the current final submission for this user."""
+        group = self.get_group(assignment_key)
+        return self.final_submission(group, assignment_key).get()
 
     def _contains_files(self, backup):
         messages = backup.get_messages()
         if 'file_contents' in messages:
             return messages['file_contents']
 
-    def _get_backups_helper(self, assignment):
-        group = self.get_group(assignment)
+    def members(self, group):
+        """The members of a group. If group is None, then we are its only member."""
         if not group or self.key not in group.member:
-            members = [self.key]
+            return [self.key]
         else:
-            members = group.member
+            return group.member
 
-        all_backups = []
-        for member in members:
-            all_backups.append(Backup.query(
-                Backup.submitter == member,
-                Backup.assignment == assignment))
-
-        return all_backups
+    def backups(self, group, assignment):
+        """A query that fetches all backups for a group and assignment."""
+        members = self.members(group)
+        return Backup.query(
+            Backup.submitter.IN(members),
+            Backup.assignment == assignment
+        ).order(-Backup.server_time)
 
     def get_backups(self, assignment, num_backups=10):
-        queries = self._get_backups_helper(assignment)
-        backups = [query.fetch(num_backups) for query in queries]
-        all_backups = []
-        for results in backups:
-            for b in results:
-                all_backups.append(b)
-
-        all_backups.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
-
-        return all_backups[:num_backups]
-
-    def _get_submissions_helper(self, assignment):
         group = self.get_group(assignment)
-        if not group or self.key not in group.member:
-            members = [self.key]
-        else:
-            members = group.member
+        return self.backups(group, assignment).fetch(num_backups)
 
-        all_submissions = []
-        for member in members:
-            all_submissions.append(Submission.query(
-                Submission.submitter==member,
-                Submission.assignment==assignment))
-
-        return all_submissions
+    def submissions(self, group, assignment):
+        """A query that fetches all backups for a group and assignment."""
+        members = self.members(group)
+        return Submission.query(
+            Submission.submitter.IN(members),
+            Submission.assignment == assignment
+        ).order(-Backup.server_time)
 
     def get_submissions(self, assignment, num_submissions=10):
-        queries = self._get_submissions_helper(assignment)
+        group = self.get_group(assignment)
+        return self.submissions(group, assignment).fetch(num_submissions)
 
-        subms = [query.fetch() for query in queries]
-        all_subms = []
-        for results in subms:
-            for s in results:
-                all_subms.append(s)
-
-        def update(x):
-            b = x.backup.get()
-            b.submission = x
-            return b
-
-        all_subms = [update(x) for x in all_subms]
-        all_subms = [x for x in all_subms if x.assignment == assignment \
-                and self._contains_files(x)]
-
-        all_subms.sort(lambda x, y: int(-5*(int(x.server_time > y.server_time) - 0.5)))
-
-        return all_subms[:num_submissions]
-
-    get_num_submissions = make_num_counter(_get_submissions_helper)
-    get_num_backups = make_num_counter(_get_backups_helper)
-
-
-    def get_group(self, assignment_key):
-        """Return the group for this user for an assignment."""
+    def group(self, assignment_key):
+        """Return a query that fetches the group for this user for an assignment."""
         if isinstance(assignment_key, Assignment):
             assignment_key = assignment_key.key
         return Group.query(ndb.OR(Group.member==self.key,
                                   Group.invited==self.key),
-                           Group.assignment==assignment_key).get()
+                           Group.assignment==assignment_key)
+
+    def get_group(self, assignment_key):
+        """Return the group for this user for an assignment."""
+        return self.group(assignment_key).get()
 
     def get_course_info(self, course):
         if not course:
             raise BadValueError("Invalid course")
 
-        info = {'user': self}
-        info['assignments'] = []
-        assignments = sorted(course.assignments)
+        @ndb.tasklet
+        def final_submission_info(group, assignment):
+            final_submission = yield self.final_submission(group, assignment.key).get_async()
+            if final_submission:
+                submission = yield final_submission.submission.get_async()
+                backup = yield submission.backup.get_async()
+                final_info = {
+                    'submission': submission,
+                    'backup': backup,
+                    'final_submission': final_submission
+                }
+                if final_submission.revision:
+                    revision = yield final_submission.revision.get_async()
+                    final_info['revision'] = revision
+            else:
+                final_info = {}
+            raise ndb.Return(final_info)
 
-        for assignment in assignments:
-            assign_info = {}
-            group = self.get_group(assignment.key)
-            assign_info['group'] = {'group_info': group, 'invited': group and self.key in group.invited}
-            assign_info['final'] = {}
-            final_info = assign_info['final']
+        @ndb.tasklet
+        def assignment_info(assignment):
+            group = self.group(assignment.key).get()
+            final_info, num_backups, num_submissions = yield (
+                final_submission_info(group, assignment),
+                self.backups(group, assignment.key).count_async(1),
+                self.submissions(group, assignment.key).count_async(1))
+            raise ndb.Return({
+                'group': {
+                    'group_info': group,
+                    'invited': group and self.key in group.invited
+                },
+                'final': final_info,
+                'backups': num_backups > 0,
+                'submissions': num_submissions > 0,
+                'assignment': assignment
+            })
 
-            final_info['final_submission'] = self.get_final_submission(assignment.key)
-            if final_info['final_submission']:
-                final_info['submission'] = final_info['final_submission'].submission.get()
-                final_info['backup'] = final_info['submission'].backup.get()
+        assignments = course.assignments.order(-Assignment.due_date).map(assignment_info)
 
-                if final_info['final_submission'].revision:
-                    final_info['revision'] = final_info['final_submission'].revision.get()
-
-                final_info['backup'] = final_info['submission'].backup.get()
-
-                # Percentage
-                final = final_info['backup']
-                solved = 0
-                total = 0
-                for message in final.messages:
-                    if message.kind == 'grading':
-                        for test_type in message.contents:
-                            for key in message.contents[test_type]:
-                                value = message.contents[test_type][key]
-                                if key == 'passed':
-                                    solved += value
-                                if type(value) == int:
-                                    total += value
-                if total > 0:
-                    assign_info['percent'] = round(100*float(solved)/total, 0)
-
-            assign_info['backups'] = self.get_num_backups(assignment.key, 1) > 0
-            assign_info['submissions'] = self.get_num_submissions(assignment.key, 1) > 0
-            assign_info['assignment'] = assignment
-
-            info['assignments'].append(assign_info)
-
-        return info
+        return {
+            'assignments': assignments,
+            'user': self
+        }
 
     def update_final_submission(self, assignment, group=None):
         """Update the final submission of the user and its group.

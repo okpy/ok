@@ -52,7 +52,7 @@ class QueuesAPITest(APIBaseTestCase):
 				self.accounts['dummy_student3'], {'course': self._course.key}))
 
 	def test_generate_permissions(self):
-		""" TEsts that generate checks for permissions """
+		""" Tests that generate checks for permissions """
 		with self.assertRaises(PermissionError):
 			self.API().generate(
 				self.accounts['dummy_student'], {'course': self._course.key})
