@@ -205,6 +205,10 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'url': $scope.assign.url
           }
         } else {
+          if (!$scope.assign.autograding_key) {
+            $window.swal("No Autograding Key!", 'Please enter the autograder key or disable autograding', 'error');
+            return;
+          }
           updatedAssign = {
             'id': $scope.assign.id,
             'display_name': $scope.assign.display_name,
@@ -220,7 +224,6 @@ app.controller("AssignmentEditCtrl", ["$scope", "$window", "$state", "$statePara
             'url': $scope.assign.url
           }
         }
-
         Assignment.edit(updatedAssign,
           function (response) {
             $scope.assignments = Assignment.query({},
@@ -486,7 +489,6 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
       }, function(response) {
         $scope.submissions = response.data.results;
         $scope.more = response.data.more;
-        $scope.search_query = encodeURIComponent(response.data.query);
         if (response.data.more) {
           $scope.totalItems = $scope.currentPage * $scope.itemsPerPage + 1;
         } else {

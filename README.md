@@ -4,7 +4,7 @@ ok.py
 The ok.py server performs and displays analysis of student progress
 based on logging sent from client scripts.
 
-(Coming soon) Visit http://okpy.org to use our hosted service for your course.
+Contact us to use our hosted service (http://okpy.org) for your course.
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
@@ -13,13 +13,6 @@ The ok.py software was developed for CS 61A at UC Berkeley.
 
 Installation
 -------------
-
-Before installation, ensure that:
-* The default Python installation is Python2.
-  - To temporarily symlink the `python` command to Python2, run `rm /usr/bin/python; sudo ln -s /usr/bin/python2.7 /usr/bin/python`
-* Ok directory's absolute path does *not* have spaces.
-  - From your Ok directory, run `pwd` to see its full path.
-  - In effect, the *installation* will not work in Google Drive or iCloud; the server may be subsequently run in the cloud.
 
 To install:
 * Clone this repo
@@ -31,6 +24,14 @@ To install:
   - If brew cannot find `virtualenv`, use `brew install pyenv-virtualenv`.
 * Run `./install.py`. If you are running into trouble on this step, delete the `env` directory and rerun `./install.py`.
   - If install returns an Error and brew is installed, fix all issues under `brew doctor`.
+
+Common Bugs
+-------------
+  Before installation, ensure that:
+  * Ok directory's absolute path does *not* have spaces.
+    - From your Ok directory, run `pwd` to see its full path.
+    - In effect, the *installation* will not work in Google Drive or iCloud; the server may be subsequently run in the cloud.
+
 
 Testing the Installation
 ------------------------
@@ -66,10 +67,9 @@ To deploy the current branch to staging
 $ git checkout staging
 $ git merge <your branch>
 $ git push origin staging
-$ head server/app.py # Make sure version is staging
-$ appcfg.py update --version staging # Be sure to deploy to staging
+$ head server/app.yaml # Make sure version is staging
+$ appcfg.py update server --version staging # Be sure to deploy to staging
 ```
-
 
 Customizing seed content
 -------------------
@@ -80,7 +80,7 @@ Server Development
 
 The server is developed in Python 2.7+ using the Google App Engine framework.
 
-To start making changes to the server, first change to its virtual enviroment.
+To start making changes to the server, first change to its virtual environment.
 
 ``source activate-server.sh``
 
@@ -90,7 +90,7 @@ To exit this environment, type ``deactivate``.
 Core Features
 -------------
 
-Backup Maintainence
+Backup Maintenance
 - Best-effort maintenance of student backups that occur when ok is run.
 
 Composition Grading
@@ -115,7 +115,7 @@ To add features to ok, please do the following:
     - 'enhancement': This is a new feature that is being added to ok.
     - 'bug': This is when the purpose of the branch is to fix a bug in the current codebase.
     - 'cleanup': This is when technical debt is being reduced (e.g. adding tests, improving code style, etc)
-  * Githubusername is the username of one person who is the point of contact for the branch. The point of contact should be the first person that will field questions about the branch- there might be many other people working on it.
+  * GithubUsername is the username of one person who is the point of contact for the branch. The point of contact should be the first person that will field questions about the branch- there might be many other people working on it.
   * branch name: A descriptive name for the branch
 - Make a pull request, which will get code-reviewed and merged.
 
