@@ -1033,9 +1033,9 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
     }
 
     $scope.closeWriter = function() {
-      $scope.toggleWriter();
       $scope.toggleComment();
       $scope.setEditingComment(null);
+      $scope.setEditorText("");
     }
 
     $scope.toggleComment = function() {
