@@ -656,7 +656,7 @@ def autograde_subms(assignment, user, data, subm_ids):
         'subm_ids': subm_ids,
         'assignment': assignment.autograding_key,
         'access_token': data['token'],
-        'testing': data['testing']
+        'testing': 'testing' in data and data['testing']
     }
 
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
