@@ -545,17 +545,25 @@ def make_zip_filename(user, now):
         filename)
     return filename+'.zip'
 
+def get_backup(obj):
+    """Get a Backup from OBJ, which must be an instance of Backup, Submission,
+    or FinalSubmission.
+    """
+    if isinstance(obj, ModelProxy.FinalSubmission):
+        return obj.submission.get().backup.get()
+    elif isinstance(obj, ModelProxy.Submission):
+        return obj.backup.get()
+    else:
+        return obj
 
 def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
     query = SearchAPI.querify(data['query'])
     with gcs_file(filename, 'application/zip') as f:
         with zf.ZipFile(f, 'w') as zipfile:
-            for submission in query:
+            for result in query:
                 try:
-                    if isinstance(submission, ModelProxy.FinalSubmission):
-                        submission = submission.submission.get()
-                    name, files = subm.data_for_zip(submission.backup.get())
+                    name, files = subm.data_for_zip(get_backup(result))
                     add_to_zip(zipfile, files, dir=name)
                 except BadValueError as e:
                     # wtf comparing exception messages?
