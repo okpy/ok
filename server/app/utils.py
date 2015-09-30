@@ -13,10 +13,6 @@ from os import path
 from app import constants
 import requests
 
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
 import zipfile as zf
 import csv
 from flask import jsonify, request, Response, json
@@ -94,27 +90,6 @@ def create_api_response(status, message, data=None):
     response.status_code = status
     return response
 
-
-def create_zip(file_contents={}, dir=''):
-    return finish_zip(*start_zip(file_contents, dir))
-
-
-def start_zip(file_contents={}, dir=''):
-    """
-    Creates a file from the given dictionary of filenames to contents.
-    Uses specified dir to store all files.
-    """
-    zipfile_str = StringIO()
-    zipfile = zf.ZipFile(zipfile_str, 'w')
-    zipfile = add_to_zip(zipfile, file_contents, dir)
-    return zipfile_str, zipfile
-
-
-def finish_zip(zipfile_str, zipfile):
-    zipfile.close()
-    return zipfile_str.getvalue()
-
-
 def add_to_zip(zipfile, files, dir=''):
     """
     Adds files to a given zip file. Uses specified dir to store files.
@@ -129,22 +104,6 @@ def add_to_zip(zipfile, files, dir=''):
         # The Python 2.7 zipfile packages encodes filenames as UTF-8, but
         # does not encode the contents.
         zipfile.writestr(path.join(dir, filename), unicode(contents).encode('utf-8'))
-    return zipfile
-
-def create_csv_content(content):
-    """
-    Return all contents in CSV file format. Content must be a list of lists.
-    """
-    scsv = StringIO()
-    writer = csv.writer(scsv)
-    try:
-        writer.writerows(content)
-    except csv.Error as e:
-        scsv.close()
-        sys.exit('Error creating CSV: {}'.format(e))
-    contents = scsv.getvalue()
-    scsv.close()
-    return contents
 
 def data_for_scores(assignment, user):
     """
@@ -167,22 +126,16 @@ def data_for_scores(assignment, user):
 
     return content
 
-def create_gcs_file(gcs_filename, contents, content_type):
-    """
-    Creates a GCS csv file with contents CONTENTS.
-    """
-    try:
-        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'project-private'})
-        gcs_file.write(contents)
-        gcs_file.close()
-    except Exception as e:
-        logging.exception("ERROR: {}".format(e))
-        try:
-            gcs.delete(gcs_filename)
-        except gcs.NotFoundError:
-            logging.info("Could not delete file " + gcs_filename)
-    logging.info("Created file " + gcs_filename)
+def gcs_file(filename, content_type):
+    """Open a Cloudstorage file for writing and return it. Example usage:
 
+    with gcs_file('foo', 'application/zip') as f:
+        ...
+    """
+    f = gcs.open(filename, 'w',
+        content_type=content_type,
+        options={'x-goog-acl': 'project-private'})
+    return contextlib.closing(f)
 
 def make_csv_filename(assignment, infotype):
     """ Returns filename of format INFOTYPE_COURSE_ASSIGNMENT.csv """
@@ -551,32 +504,12 @@ def check_user(user_key):
 def scores_to_gcs(assignment, user):
     """ Writes all final submission scores
     for the given assignment to GCS csv file. """
+    filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
+    # TODO(knrafto) content should be an iterator
     content = data_for_scores(assignment, user)
-    csv_contents = create_csv_content(content)
-    assign_name = assignment.name
-    # Not sure what this line was doing here.
-    # create_gcs_file(assignment, csv_contents, 'scores')
-    csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
-    create_gcs_file(csv_filename, csv_contents, 'text/csv')
-
-
-def add_subm_to_zip(subm, zipfile, submission):
-    """ Adds submission contents to a zipfile in-place, returns zipfile """
-    try:
-        if isinstance(submission, ModelProxy.FinalSubmission):
-            # Get the actual submission
-            submission = submission.submission.get()
-        backup = submission.backup.get()
-        name, file_contents = subm.data_for_zip(backup)
-        return add_to_zip(zipfile, file_contents, name)
-    except BadValueError as e:
-        if str(e) != 'Submission has no contents to download':
-            raise e
-
-
-def add_to_file_contents(file_contents, file_name, file_content):
-    """ add a file to file_contents """
-    file_contents[file_name] = file_content
+    with gcs_file(filename, 'text/csv') as f:
+        csv.writer(f).writerows(content)
+    logging.info("Exported scores to " + filename)
 
 # TODO(Alvin): generalize, cleanup everything about zip
 def backup_group_file(backup, json_pretty={}):
@@ -612,17 +545,30 @@ def make_zip_filename(user, now):
         filename)
     return filename+'.zip'
 
+def get_backup(obj):
+    """Get a Backup from OBJ, which must be an instance of Backup, Submission,
+    or FinalSubmission.
+    """
+    if isinstance(obj, ModelProxy.FinalSubmission):
+        return obj.submission.get().backup.get()
+    elif isinstance(obj, ModelProxy.Submission):
+        return obj.backup.get()
+    else:
+        return obj
 
 def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
     query = SearchAPI.querify(data['query'])
-    gcs_file = gcs.open(filename, 'w',
-        content_type='application/zip',
-        options={'x-goog-acl': 'project-private'})
-    with contextlib.closing(gcs_file) as f:
+    with gcs_file(filename, 'application/zip') as f:
         with zf.ZipFile(f, 'w') as zipfile:
             for result in query:
-                add_subm_to_zip(subm, zipfile, result)
+                try:
+                    name, files = subm.data_for_zip(get_backup(result))
+                    add_to_zip(zipfile, files, dir=name)
+                except BadValueError as e:
+                    # wtf comparing exception messages?
+                    if str(e) != 'Submission has no contents to download':
+                        raise e
     logging.info("Exported submissions to " + filename)
 
 def submit_to_ag(assignment, messages, submitter):

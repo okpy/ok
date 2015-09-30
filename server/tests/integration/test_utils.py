@@ -14,7 +14,9 @@ from test_base import APIBaseTestCase
 from test_base import utils, api
 from integration.test_api_base import APITest
 from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
+import contextlib
 import datetime
+import zipfile as zf
 
 try:
 	from cStringIO import StringIO
@@ -55,75 +57,21 @@ class UtilsTestCase(APIBaseTestCase):
 		assert '@' not in fn
 		assert ' ' not in fn
 
-	def test_add_subm_to_zip(self):
-		""" Test that submission contents added to zip """
-		results = api.SearchAPI.results({
-			'query': ''
-		})
-		for result in results:
-			subm = api.SubmissionAPI()
-			zipfile_str, zipfile = utils.start_zip()
-			zipfile = utils.add_subm_to_zip(subm, zipfile, result)
-			assert zipfile is None or len(zipfile.infolist()) > 0
-
-	def test_start_zip_basic(self):
-		""" Test that a zip is started properly """
-		zipfile_str, zipfile = utils.start_zip()
-		assert zipfile_str is not None
-		assert zipfile is not None
-		return zipfile_str, zipfile
-
-	def test_start_zip_filecontents(self):
-		""" Test that zip is initialized with file contents dict properly """
-		file_contents = dict(a='file a contents', b='file b contents')
-		zipfile_str, zipfile = utils.start_zip(file_contents)
-		zipinfo = zipfile.infolist()
-		zipnames = [z.filename for z in zipinfo]
-		assert 'a' in zipnames
-		assert 'b' in zipnames
-		return zipfile_str, zipfile
-
-	def test_start_zip_dir(self):
-		""" Test that files are saved under specified directory """
-		file_contents, dir = dict(a='file a contents', b='file b contents'), 'dir'
-		zipfile_str, zipfile = utils.start_zip(file_contents, dir)
-		zipinfo = zipfile.infolist()
-		zipnames = [z.filename for z in zipinfo]
-		assert 'dir/a' in zipnames
-		assert 'dir/b' in zipnames
-		return zipfile_str, zipfile
-
-	def test_add_to_zip_basic(self):
+	def test_add_to_zip(self):
 		""" Test that a zip is added to properly """
-		zipfile_str, zipfile = self.test_start_zip_basic()
-		zipfile = utils.add_to_zip(zipfile, dict(filename='file contents'))
-		assert len(zipfile.infolist()) == 1
-		return zipfile_str, zipfile
-
-	def test_add_to_zip_filecontents(self):
-		""" Test that zip is initialized with file contents dict properly """
-		zipfile_str, zipfile = self.test_start_zip_filecontents()
-		file_contents = dict(c='file c contents', d='file d contents')
-		zipfile = utils.add_to_zip(zipfile, file_contents)
-		zipinfo = zipfile.infolist()
-		zipnames = [z.filename for z in zipinfo]
-		assert 'c' in zipnames
-		assert 'c' in zipnames
-
-	def test_add_to_zip_dir(self):
-		""" Test that files are saved under specified directory """
-		zipfile_str, zipfile = self.test_start_zip_dir()
-		file_contents, dir = dict(c='file c contents', d='file d contents'), 'dir'
-		zipfile = utils.add_to_zip(zipfile, file_contents, dir)
-		zipinfo = zipfile.infolist()
-		zipnames = [z.filename for z in zipinfo]
-		assert 'dir/c' in zipnames
-		assert 'dir/d' in zipnames
-
-	def test_finish_zip_basic(self):
-		""" Test that zip is ready to go """
-		zipfile_str, zipfile = self.test_add_to_zip_basic()
-		assert utils.finish_zip(zipfile_str, zipfile) is not None
+		files = {
+			'c': 'file c contents',
+			'd': 'file d contents'
+		}
+		directory = 'dir'
+		zip_contents = {directory + '/' + name: contents
+			for name, contents in files.iteritems()}
+		with contextlib.closing(StringIO()) as contents:
+			with zf.ZipFile(contents, 'w') as zipfile:
+				utils.add_to_zip(zipfile, files, directory)
+				self.assertEquals(set(zip_contents.keys()), set(zipfile.namelist()))
+				for filename, content in zip_contents.iteritems():
+					self.assertEquals(content, zipfile.read(filename))
 
 	###########################
 	# TEST OK-GCS ABSTRACTION #
