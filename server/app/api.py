@@ -43,7 +43,7 @@ from app.needs import Need
 from app.utils import paginate, filter_query, add_to_zip
 from app.utils import scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
 from app.utils import add_to_grading_queues, parse_date, assign_submission, assign_staff_to_queues
-from app.utils import merge_user, backup_group_file, add_to_file_contents
+from app.utils import merge_user, backup_group_file
 from app.utils import autograde_final_subs, promote_student_backups
 
 from app.exceptions import *
