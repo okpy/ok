@@ -787,9 +787,9 @@ class AssignmentAPI(APIResource):
         'autograde': {
             'methods': set(['POST']),
             'web_args': {
-                'grade_final': BooleanArg(),
-                'testing': BooleanArg(),
-                'backup_promotion': BooleanArg(),
+                'grade_final': Arg(bool),
+                'testing': Arg(bool, default=False),
+                'backup_promotion': Arg(bool, default=True),
                 'token': Arg(str)
             }
         },

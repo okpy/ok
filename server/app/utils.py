@@ -677,9 +677,9 @@ def autograde_final_subs(assignment, user, data):
     return autograde_subms(assignment, user, data, subm_ids)
 
 def promote_student_backups(assignment, autograde=False, user=None, data=None):
-    """ 
-    Find all students with no final submissions and make their latest backup into 
-    a submission. 
+    """
+    Find all students with no final submissions and make their latest backup into
+    a submission.
 
     :param assignment - an assignment object
     """
