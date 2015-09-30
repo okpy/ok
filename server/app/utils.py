@@ -551,9 +551,11 @@ def subms_to_gcs(SearchAPI, subm, filename, data):
     query = SearchAPI.querify(data['query'])
     with gcs_file(filename, 'application/zip') as f:
         with zf.ZipFile(f, 'w') as zipfile:
-            for result in query:
+            for submission in query:
                 try:
-                    name, files = subm.data_for_zip(result.backup.get())
+                    if isinstance(submission, ModelProxy.FinalSubmission):
+                        submission = submission.submission.get()
+                    name, files = subm.data_for_zip(submission.backup.get())
                     add_to_zip(zipfile, files, dir=name)
                 except BadValueError as e:
                     # wtf comparing exception messages?
