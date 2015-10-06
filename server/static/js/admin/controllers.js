@@ -504,18 +504,30 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     }, function(response) {
       if ($stateParams.query) {
         $scope.query.string = $stateParams.query;
-        $scope.getPage(1);
+        //$scope.getPage(1);
       }
     }, function(err) {
          report_error($window, err);
      });
-
+    $scope.mergeFS = function (submission) {
+      // Make a FS behave more like a Submission.
+      if ("final_submission" in submission) {
+        for (var attr in submission['submission']) {
+          submission[attr] = submission['submission'][attr];
+        }
+      }
+      return submission;
+    }
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
 
     $scope.search = function() {
       $scope.getPage($scope.currentPage)
+    }
+
+    $scope.grade = function (subm_id) {
+
     }
 
     $scope.download_zip = function(query, all, courseId) {

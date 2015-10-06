@@ -52,9 +52,8 @@
           <th>Assignment</th>
           <th>Submitter</th>
           <th>Time</th>
-          <th>Tags</th>
-          <th style="width: 20%">View Code</th>
-            <th>Score</th>
+          <th style="width: 20%">Score</th>
+          <th style="width: 40%">Actions</th>
       </tr>
 
         <tr ng-repeat="submission in submissions" ts-repeat>
@@ -66,22 +65,11 @@
             {{submission.created | amCalendar}}
           </td>
           <!-- Future Progress Bar -->
-          <td >
-            <span class="badge bg-info">{{submission.assignment.display_name}}</span>
-            <span class="badge bg-green" ng-if="submission.messages.file_contents.submit">Marked As Submit</span>
-
-            <span ng-repeat="tag in submission.tags" class="badge bg-blue">
-              {{ tag }}
-            </span>
-            <td>
-              <div class="btn-group download-btn-group">
-                  <a ui-sref='submission.detail({submissionId:submission.backup.id})' type="button" class="btn btn-flat btn-info">View</a>
-                  <a href='/api/v1/submission/{{submission.backup.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
-               </div>
-            </td>
           </td>
             <td>
-                <span ng-if="submission.score.length == 0" class="badge">None</span>
+              <span class="badge bg-green" ng-if="submission.messages.file_contents.submit">Marked As Submit</span>
+
+                <span ng-if="submission.score.length == 0" class="badge">No Scores</span>
                 <span ng-repeat="score in submission.score" class="badge bg-blue">
                     <span class="score-blurb">
                         <label>Tag</label>
@@ -91,9 +79,17 @@
                         <label>Grader</label>
                         <p>{{ score.grader.email[0] }}</p>
                     </span>
-                    {{ score.score }}
+                    {{ score.tag || "Score" }}: {{ score.score }}
                 </span>
             </td>
+            <td>
+              <div class="btn-group download-btn-group">
+                  <a ui-sref='submission.detail({submissionId:submission.backup.id})' type="button" class="btn btn-flat btn-info">View</a>
+                  <a href='/api/v1/submission/{{submission.backup.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
+                  <button ng-click='grade(submission)' class="btn btn-flat btn-info">Autograde</a>
+               </div>
+            </td>
+
         </tr>
       </tbody>
     </table>

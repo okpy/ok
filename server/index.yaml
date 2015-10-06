@@ -42,6 +42,12 @@ indexes:
 - kind: Backupv2
   properties:
   - name: assignment
+  - name: server_time
+    direction: desc
+
+- kind: Backupv2
+  properties:
+  - name: assignment
   - name: submitter
   - name: created
     direction: desc
@@ -50,12 +56,6 @@ indexes:
   properties:
   - name: assignment
   - name: submitter
-  - name: server_time
-    direction: desc
-
-- kind: Backupv2
-  properties:
-  - name: assignment
   - name: server_time
     direction: desc
 
