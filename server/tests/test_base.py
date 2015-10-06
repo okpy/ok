@@ -56,7 +56,8 @@ def make_fake_assignment(course, creator):
         course=course.key,
         creator=creator.key,
         max_group_size=4,
-        due_date=datetime.datetime.now())
+        due_date=datetime.datetime.now(),
+        lock_date=datetime.datetime.now()+datetime.timedelta(days=1))
 
 
 def make_fake_backup(assignment, user):
@@ -68,7 +69,7 @@ def make_fake_backup(assignment, user):
 
 
 def make_fake_submission(backup):
-    rval = models.Submission(backup=backup.key)
+    rval = models.Submission(backup=backup.key, server_time=datetime.datetime.now())
     rval.put()
     return rval
 
@@ -359,4 +360,3 @@ class APIBaseTestCase(BaseTestCase):
 
     def assertEntity(self, inst):
         self.assertJson(inst.to_json())
-

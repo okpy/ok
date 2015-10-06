@@ -60,7 +60,8 @@ class FinalSubmissionTest(APIBaseTestCase):
                 display_name="first display",
                 templates="{}",
                 max_group_size=3,
-                due_date=NOW + datetime.timedelta(days=1)
+                due_date=NOW + datetime.timedelta(days=1),
+                lock_date=NOW + datetime.timedelta(days=2)
                 ),
             }
         for assign in self.assignments.values():
@@ -86,6 +87,14 @@ class FinalSubmissionTest(APIBaseTestCase):
                 messages=[models.Message(
                     kind='file_contents', contents={"trends.py": ""})],
                 ),
+            "late": models.Backup(
+                submitter=self.accounts["student0"].key,
+                assignment=self.assignments["first"].key,
+                server_time = datetime.datetime.now() + datetime.timedelta(days=10),
+                messages=[models.Message(
+                    kind='file_contents', contents={"trends.py": ""})],
+                ),
+
             }
 
         for backup in self.backups.values():
@@ -126,6 +135,10 @@ class FinalSubmissionTest(APIBaseTestCase):
 
     def set_due_date(self, new_date):
         self.assign.due_date = new_date
+        self.assign.put()
+
+    def set_lock_date(self, lock_date):
+        self.assign.lock_date = lock_date
         self.assign.put()
 
     def submit_json(self, assignment=None, messages=None):
@@ -270,6 +283,68 @@ class FinalSubmissionTest(APIBaseTestCase):
 
         api.FinalSubmissionAPI().post(self.user, dict(submission=subm.key))
         self.assertFinalSubmission(self.user, self.backups['second'])
+
+    def test_revise_final_submission(self):
+        self.login('student0')
+
+        self.assertNoFinalSubmissions()
+
+        # Submit
+        self.submit(self.backups['first'])
+        self.run_deferred()
+        self.assertNumFinalSubmissions(1)
+        self.assign.revision = True
+        self.assign.put()
+        self.set_due_date(NOW - datetime.timedelta(days=2))
+        self.set_lock_date(NOW - datetime.timedelta(days=1))
+        # This backup is now late (ignore the fact that it's the same backup)
+
+        subm = models.Submission(backup=self.backups['late'].key)
+        subm.put()
+
+        api.FinalSubmissionAPI().post(self.user, dict(submission=subm.key))
+        self.assertFinalSubmission(self.user, self.backups['first'])
+        # Ensure the right revision is stored.
+        fs = self.all_fs()[0]
+        self.assertEqual(fs.revision, subm.key)
+
+
+    def test_revisions_closed_final_submission(self):
+        self.login('student0')
+        self.assertNoFinalSubmissions()
+
+        # Submit
+        self.submit(self.backups['first'])
+        self.run_deferred()
+        self.assertNumFinalSubmissions(1)
+        self.assign.revision = True
+        self.assign.put()
+        self.set_due_date(NOW - datetime.timedelta(days=2))
+        self.set_lock_date(NOW - datetime.timedelta(days=1))
+        # This backup is now late - but can be submitted as a revision
+        subm = models.Submission(backup=self.backups['late'].key)
+        subm.put()
+
+        api.FinalSubmissionAPI().post(self.user, dict(submission=subm.key))
+        self.assertFinalSubmission(self.user, self.backups['first'])
+        # Ensure the right revision is stored.
+        fs = self.all_fs()[0]
+        self.assertEqual(fs.revision, subm.key)
+        origRevision = subm
+
+        # Close revision period
+        self.assign.revision = False
+        self.assign.put()
+        # This backup is now late - and can't be submitted as a revision
+        subm = models.Submission(backup=self.backups['first'].key)
+        subm.put()
+
+        api.FinalSubmissionAPI().post(self.user, dict(submission=subm.key))
+        self.assertFinalSubmission(self.user, self.backups['first'])
+        self.assertNumFinalSubmissions(1)
+        # Ensure the right revision is stored.
+        fs = self.all_fs()[0]
+        self.assertEqual(fs.revision, origRevision.key)
 
     def test_create_group(self):
         """Merging groups keeps the final submission for that group."""
