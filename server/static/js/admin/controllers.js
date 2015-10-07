@@ -522,12 +522,15 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     }
     $scope.mergeFS = function (submissions) {
       // Make a FS behave more like a Submission.
+
       for (var subNum in submissions) {
         var submission = submissions[subNum];
         if (submission.submission) {
           submission['fsid'] = submission['id'];
           for (var attr in submission.submission) {
-            submission[attr] = submission['submission'][attr];
+            if (attr != "id") {
+              submission[attr] = submission['submission'][attr];
+            }
           }
         }
       }
