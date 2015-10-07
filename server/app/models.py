@@ -747,21 +747,28 @@ class Submission(Base):
     def mark_as_final(self):
         """Create or update a final submission."""
         final = self.get_final()
+        assignment = self.assignment.get()
         if final:
-            assignment = self.assignment.get()
             if assignment.revision:
                 # Follow resubmssion procedure
                 final.revision = self.key
-            else:
+                self.is_revision = True
+                self.put()
+            elif self.server_time <= assignment.lock_date:
                 final.submitter = self.submitter
                 final.submission = self.key
+            else:
+                return ValueError("Cannot flag submission that is past due date")
+            return final.put()
         else:
-            group = self.submitter.get().get_group(self.assignment)
-            final = FinalSubmission(
-                assignment=self.assignment, submission=self.key)
-            if group:
-                final.group = group.key
-        return final.put()
+            if self.server_time < assignment.lock_date:
+                group = self.submitter.get().get_group(self.assignment)
+                final = FinalSubmission(
+                    assignment=self.assignment, submission=self.key)
+                if group:
+                    final.group = group.key
+                return final.put()
+        return ValueError("Cannot flag submission that is past due date")
 
     def resubmit(self, user_key):
         """

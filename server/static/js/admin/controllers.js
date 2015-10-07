@@ -472,8 +472,8 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course',
-  function($scope, $stateParams, $window, Search, Course) {
+app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course', 'Assignment',
+  function($scope, $stateParams, $window, Search, Course, Assignment) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
     $scope.query = {
@@ -504,12 +504,38 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     }, function(response) {
       if ($stateParams.query) {
         $scope.query.string = $stateParams.query;
-        $scope.getPage(1);
+        //$scope.getPage(1);
       }
     }, function(err) {
          report_error($window, err);
      });
 
+    $scope.isSubmit = function (submission)  {
+      if ('backup' in submission && 'messages' in submission.backup) {
+        return 'submit' in submission.backup.messages.file_contents;
+      } else {
+        if ('messages' in submission){
+          return 'submit' in submission.messages.file_contents;
+        }
+      }
+      return false;
+    }
+    $scope.mergeFS = function (submissions) {
+      // Make a FS behave more like a Submission.
+
+      for (var subNum in submissions) {
+        var submission = submissions[subNum];
+        if (submission.submission) {
+          submission['fsid'] = submission['id'];
+          for (var attr in submission.submission) {
+            if (attr != "id") {
+              submission[attr] = submission['submission'][attr];
+            }
+          }
+        }
+      }
+      return submissions;
+    }
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }
@@ -517,6 +543,35 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     $scope.search = function() {
       $scope.getPage($scope.currentPage)
     }
+
+    $scope.autogradeSubm = function (subm) {
+      var assign = subm.assignment;
+      $window.swal({title: "Enter your access token below",
+       text: "You can access it by running the following command in an ok folder \n"+
+         'python3 -c "import pickle; print(pickle.load(open(\'.ok_refresh\', \'rb\'))[\'access_token\'])"',
+       type: "input",
+       showCancelButton: true,
+       closeOnConfirm: true,
+       animation: "slide-from-top",
+       inputPlaceholder: "Paste your access token here. format: ya29.longcode"},
+       function(inputValue) {
+         if (inputValue === false) return false;
+         if (inputValue === "") {
+           swal.showInputError("You need to write something!");
+           return false
+         }
+         Assignment.autograde({
+           id: assign.id,
+           grade_final: false,
+           subm: subm.fsid,
+           token: inputValue,
+         }, function(response) {
+            $window.swal('Success', 'Queued for autograding.', 'success');
+          }, function(err) {
+              report_error($window, err);
+          });
+        });
+      }
 
     $scope.download_zip = function(query, all, courseId) {
       filename = 'query_(your email)_(current time).zip'
