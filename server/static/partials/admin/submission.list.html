@@ -52,11 +52,11 @@
           <th>Assignment</th>
           <th>Submitter</th>
           <th>Time</th>
-          <th style="width: 20%">Score</th>
-          <th style="width: 40%">Actions</th>
+          <th style="width: 30%">Results</th>
+          <th style="width: 30%">Actions</th>
       </tr>
 
-        <tr ng-repeat="submission in submissions" ts-repeat>
+        <tr ng-repeat="submission in mergeFS(submissions)" ts-repeat>
           <td>
               <a ui-sref='course.assignment.edit({courseId: course.id, assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}} </a>
           </td>
@@ -67,8 +67,7 @@
           <!-- Future Progress Bar -->
           </td>
             <td>
-              <span class="badge bg-green" ng-if="submission.messages.file_contents.submit">Marked As Submit</span>
-
+              <span class="badge bg-green" ng-if="isSubmit(submission)">--submit</span>
                 <span ng-if="submission.score.length == 0" class="badge">No Scores</span>
                 <span ng-repeat="score in submission.score" class="badge bg-blue">
                     <span class="score-blurb">
@@ -83,10 +82,10 @@
                 </span>
             </td>
             <td>
-              <div class="btn-group download-btn-group">
+              <div class="btn-group">
                   <a ui-sref='submission.detail({submissionId:submission.backup.id})' type="button" class="btn btn-flat btn-info">View</a>
                   <a href='/api/v1/submission/{{submission.backup.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
-                  <button ng-click='grade(submission)' class="btn btn-flat btn-info">Autograde</a>
+                  <button ng-disabled="!submission.assignment.autograding_enabled && !submission.fsid" ng-click='autogradeSubm(submission)' type="button" class="btn btn-flat btn-info">Autograde</a>
                </div>
             </td>
 

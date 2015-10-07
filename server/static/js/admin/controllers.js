@@ -509,14 +509,29 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     }, function(err) {
          report_error($window, err);
      });
-    $scope.mergeFS = function (submission) {
-      // Make a FS behave more like a Submission.
-      if ("final_submission" in submission) {
-        for (var attr in submission['submission']) {
-          submission[attr] = submission['submission'][attr];
+
+    $scope.isSubmit = function (submission)  {
+      if ('backup' in submission && 'messages' in submission.backup) {
+        return 'submit' in submission.backup.messages.file_contents;
+      } else {
+        if ('messages' in submission){
+          return 'submit' in submission.messages.file_contents;
         }
       }
-      return submission;
+      return false;
+    }
+    $scope.mergeFS = function (submissions) {
+      // Make a FS behave more like a Submission.
+      for (var subNum in submissions) {
+        var submission = submissions[subNum];
+        if (submission.submission) {
+          submission['fsid'] = submission['id'];
+          for (var attr in submission.submission) {
+            submission[attr] = submission['submission'][attr];
+          }
+        }
+      }
+      return submissions;
     }
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
@@ -526,9 +541,34 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
       $scope.getPage($scope.currentPage)
     }
 
-    $scope.grade = function (subm_id) {
-
-    }
+    $scope.autogradeSubm = function (subm) {
+      var assing = subm.assignment;
+      $window.swal({title: "Enter your access token below",
+       text: "You can access it by running the following command in an ok folder \n"+
+         'python3 -c "import pickle; print(pickle.load(open(\'.ok_refresh\', \'rb\'))[\'access_token\'])"',
+       type: "input",
+       showCancelButton: true,
+       closeOnConfirm: true,
+       animation: "slide-from-top",
+       inputPlaceholder: "Paste your access token here. format: ya29.longcode"},
+       function(inputValue) {
+         if (inputValue === false) return false;
+         if (inputValue === "") {
+           swal.showInputError("You need to write something!");
+           return false
+         }
+         Assignment.autograde({
+           id: assign.id,
+           grade_final: false,
+           subm: subm.id,
+           token: inputValue,
+         }, function(response) {
+            $window.swal('Success', 'Queued for autograding.', 'success');
+          }, function(err) {
+              report_error($window, err);
+          });
+        });
+      }
 
     $scope.download_zip = function(query, all, courseId) {
       filename = 'query_(your email)_(current time).zip'
