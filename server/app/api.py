@@ -871,7 +871,7 @@ class AssignmentAPI(APIResource):
             if not subm:
                 raise BadValueError("Requested submission is not a final submission")
             subm_ids = {subm.submission.id(): subm.submission.get().backup.id()}
-            return autograde_subms(obj, user, data, subm_ids)
+            return autograde_subms(obj, user, data, subm_ids, priority="high")
         else:
             raise BadValueError('Endpoint only supports final submission grading.')
 

@@ -651,11 +651,12 @@ def submit_to_ag(assignment, messages, submitter):
     else:
         raise BadValueError('The autograder the rejected your request')
 
-def autograde_subms(assignment, user, data, subm_ids):
+def autograde_subms(assignment, user, data, subm_ids, priority="default"):
     ag_data = {
         'subm_ids': subm_ids,
         'assignment': assignment.autograding_key,
         'access_token': data['token'],
+        'priority': priority,
         'testing': 'testing' in data and data['testing']
     }
 
