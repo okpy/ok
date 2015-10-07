@@ -472,8 +472,8 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
   }]);
 
 
-app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course',
-  function($scope, $stateParams, $window, Search, Course) {
+app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Search', 'Course', 'Assignment',
+  function($scope, $stateParams, $window, Search, Course, Assignment) {
     $scope.itemsPerPage = 20;
     $scope.currentPage = 1;
     $scope.query = {

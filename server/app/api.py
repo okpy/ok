@@ -848,29 +848,32 @@ class AssignmentAPI(APIResource):
         deferred.defer(scores_to_gcs, obj, user)
 
     def autograde(self, obj, user, data):
-      need = Need('grade')
-      if not obj.can(user, need, obj):
-          raise need.exception()
+        need = Need('grade')
+        if not obj.can(user, need, obj):
+            raise need.exception()
 
-      if not obj.autograding_enabled:
-        raise BadValueError('Autograding is not enabled for this assignment.')
-      if not obj.autograding_key:
-        raise BadValueError('Autograding key not provided in assignment.')
+        if not obj.autograding_enabled:
+            raise BadValueError('Autograding is not enabled for this assignment.')
+        if not obj.autograding_key:
+            raise BadValueError('Autograding key not provided in assignment.')
 
-      if 'grade_final' in data and data['grade_final']:
-        #Collect all final submissions and run grades.
-        deferred.defer(autograde_final_subs, obj, user, data)
+        if 'grade_final' in data and data['grade_final']:
+            #Collect all final submissions and run grades.
+            deferred.defer(autograde_final_subs, obj, user, data)
 
-        if 'promote_backups' in data and data['promote_backups']:
-            # Force promote backups and run autograder
-            deferred.defer(promote_student_backups, obj, True, user, data)
+            if 'promote_backups' in data and data['promote_backups']:
+              # Force promote backups and run autograder
+              deferred.defer(promote_student_backups, obj, True, user, data)
 
-        return {'status_url': AUTOGRADER_URL+'/rq', 'length': 'TBD'}
-      elif subm is not None:
-        subm_ids = {subm.submission.id(): subm.submission.get().backup.id()}
-        return autograde_subms(obj, user, data, subm_ids)
-      else:
-        raise BadValueError('Endpoint only supports final submission grading.')
+            return {'status_url': AUTOGRADER_URL+'/rq', 'length': 'TBD'}
+        elif 'subm' in data:
+            subm = models.FinalSubmission.get_by_id(data['subm'])
+            if not subm:
+                raise BadValueError("Requested submission is not a final submission")
+            subm_ids = {subm.submission.id(): subm.submission.get().backup.id()}
+            return autograde_subms(obj, user, data, subm_ids)
+        else:
+            raise BadValueError('Endpoint only supports final submission grading.')
 
     def queues(self, obj, user, data):
         """ Return all composition queues for this assignment """

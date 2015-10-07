@@ -157,11 +157,19 @@ class AssignmentAPITest(APIBaseTestCase):
 				{'grade_final': False})
 
 	def test_autograde_key_check(self):
-		""" Tests if autograding checks for autograding_key """
+		""" Tests if autograding checks for existance of autograding_key """
 		with self.assertRaises(BadValueError):
 			self._assign.autograding_key = None
 			self.API().autograde(self._assign, self.accounts['dummy_admin'],
-				{'grade_final': False})
+				{'grade_final': True})
+
+	def test_autograde_subm_check(self):
+		""" Tests if autograding can handle a single submission """
+		import requests
+		self.mock(requests, 'post').using(lambda *args, **kwargs: self.obj().set(status_code=200))
+		self.API().autograde(self._assign, self.accounts['dummy_admin'],
+			{'grade_final': False, 'subm': self._finalsubmission.key.id(),
+				'token': 'ok'})
 
 	def test_autograde_rejected_request(self):
 		""" Tests report for autograding failure """
