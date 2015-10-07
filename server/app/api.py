@@ -788,7 +788,7 @@ class AssignmentAPI(APIResource):
             'methods': set(['POST']),
             'web_args': {
                 'grade_final': Arg(bool),
-                'subm': KeyArg('FinalSubmission'),
+                'subm': Arg(int),
                 'testing': Arg(bool, default=False),
                 'backup_promotion': Arg(bool, default=True),
                 'token': Arg(str)

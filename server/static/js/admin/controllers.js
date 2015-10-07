@@ -542,7 +542,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     }
 
     $scope.autogradeSubm = function (subm) {
-      var assing = subm.assignment;
+      var assign = subm.assignment;
       $window.swal({title: "Enter your access token below",
        text: "You can access it by running the following command in an ok folder \n"+
          'python3 -c "import pickle; print(pickle.load(open(\'.ok_refresh\', \'rb\'))[\'access_token\'])"',
@@ -560,7 +560,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
          Assignment.autograde({
            id: assign.id,
            grade_final: false,
-           subm: subm.id,
+           subm: subm.fsid,
            token: inputValue,
          }, function(response) {
             $window.swal('Success', 'Queued for autograding.', 'success');
