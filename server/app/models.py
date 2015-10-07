@@ -754,6 +754,8 @@ class Submission(Base):
                 final.revision = self.key
                 self.is_revision = True
                 self.put()
+            elif datetime.datetime.now() > assignment.lock_date:
+                return ValueError("Cannot change submission after due date")
             elif self.server_time <= assignment.lock_date:
                 final.submitter = self.submitter
                 final.submission = self.key
