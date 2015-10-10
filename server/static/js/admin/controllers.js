@@ -1423,6 +1423,18 @@ app.controller("QueueModuleController", ["$scope", "$window", "Queue",
     });
   }]);
 
+app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
+  function($scope, Queue, $window, $state) {
+
+    $scope.queues = Queue.query({
+      "owner": $window.keyId
+    }, function(response) {
+    }, function(err) {
+        report_error($window, err);
+    });
+
+  }]);
+
 app.controller("QueueListCtrl", ['$scope', '$window', 'Queue',
   function($scope, $window, Queue) {
     /* TODO: Fields to this query */
