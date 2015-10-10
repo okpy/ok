@@ -401,13 +401,18 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       $scope.submission = response.submission;
       $scope.backupId = response.submission.backup.id;
       $scope.diff = Submission.diff({id: $scope.backupId});
+      $scope.compScore = null;
+      $scope.compMessage = null;
+      var scores = response.submission.score;
 
-      if (response.submission.score.length > 0) {
-        $scope.compScore = response.submission.score[0].score
-        $scope.compMessage = response.submission.score[0].message
-      } else {
-        $scope.compScore = null;
-        $scope.compMessage = null;
+      if (scores.length > 0) {
+        for (var scoreIdx in scores) {
+          var score = scores[scoreIdx];
+          if (score.tag == "composition") {
+            $scope.compScore = score.score;
+            $scope.compMessage = score.message;
+          }
+        }
       }
     }, function(err) {
          report_error($window, err);
@@ -437,8 +442,8 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
     if (currSubm > -1 && currSubm < submissions.length - 1) {
       $scope.nextId = submissions[currSubm+1];
     }
-
   }
+
 
   $scope.submitGrade = function() {
     Submission.addScore({
@@ -523,7 +528,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     $scope.mergeFS = function (submissions) {
       // Make a FS behave more like a Submission.
 
-      for (var subNum in submissions) {
+      for (var subNum=0; subNum < submissions.length; subNum++) {
         var submission = submissions[subNum];
         if (submission.submission) {
           submission['fsid'] = submission['id'];
@@ -543,7 +548,10 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     $scope.search = function() {
       $scope.getPage($scope.currentPage)
     }
-
+    $scope.showScore = function (score) {
+      var gradeResults = open('','_blank','height=600,width=500');
+      gradeResults.document.write('<pre>' + score.message + '</pre>');
+    }
     $scope.autogradeSubm = function (subm) {
       var assign = subm.assignment;
       $window.swal({title: "Enter your access token below",
@@ -1363,33 +1371,31 @@ app.controller("QueueModuleController", ["$scope", "$window", "Queue",
 app.controller("QueueListCtrl", ['$scope', '$window', 'Queue',
   function($scope, $window, Queue) {
     /* TODO: Fields to this query */
+
      Queue.get(function (response) {
-        $scope.queues = response['results']
+        $scope.queues = response['results'];
       });
      $scope.refresh = function () {
       Queue.pull(function (response) {
-          $scope.queues = response['results']
+          $scope.queues = response['results'];
+          $scope.queues.sort(function(a, b) {
+            return a.remaining - b.remaining;
+          });
        }, function(err) {
            report_error($window, err);
        });
      }
   }]);
 
-app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
-  function($scope, Queue, $window, $state) {
-
-    $scope.queues = Queue.query({
-      "owner": $window.keyId
-    }, function(response) {
-    }, function(err) {
-        report_error($window, err);
-    });
-
-  }]);
-
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$window", "Submission", "$stateParams", "$sessionStorage",
   function ($scope, Queue, $window, Submission, $stateParams, $sessionStorage) {
     $scope.$storage = $sessionStorage;
+
+    $scope.showScore = function (score) {
+      var gradeResults = open('','_blank','height=600,width=500');
+      gradeResults.document.write('<pre>' + score.message + '</pre>');
+    }
+
     Queue.pull({
       id: $stateParams.queueId
     }, function (result) {
@@ -1401,6 +1407,17 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$window", "Submission", "
       });
       $scope.$storage.currentQueue = JSON.stringify(result);
       $scope.submList = result['submissions'];
+      for (var submIndx =0; submIndx < $scope.submList.length; submIndx++) {
+        var subm = $scope.submList[submIndx];
+        subm.graded = false;
+        if (subm.score && subm.score.length != 0) {
+          for (var scoreInd = 0; scoreInd < subm.score.length; scoreInd++) {
+            if (subm.score[scoreInd].tag == "composition") {
+              subm.graded = true;
+            }
+          }
+        }
+      }
     }, function(err) {
         report_error($window, err);
     });

@@ -160,3 +160,11 @@
         left:50%;
         margin-left:-2px;
     }
+
+.score-badge {
+  margin-right: 5px;
+}
+.score-message {
+  max-height: 600px;
+  overflow: scroll;
+}

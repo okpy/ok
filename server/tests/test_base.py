@@ -82,6 +82,14 @@ def make_fake_finalsubmission(submission, assignment, user):
     rval.put()
     return rval
 
+def make_fake_queue(assignment, user):
+    rval = models.Queue(
+        owner=user.key,
+        assigned_staff=[user.key],
+        assignment=assignment.key)
+    rval.put()
+    return rval
+
 
 def make_fake_group(assignment, *args):
     rval = models.Group(

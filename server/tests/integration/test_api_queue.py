@@ -14,7 +14,7 @@ import datetime
 import json
 from test_api_base import APITest
 from test_base import APIBaseTestCase, unittest #pylint: disable=relative-import
-from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
+from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission, make_fake_queue #pylint: disable=relative-import
 from google.appengine.ext import ndb
 from app import models, constants, utils, api
 from ddt import ddt, data, unpack
@@ -24,18 +24,31 @@ from integration.test_api_base import APITest
 
 class QueueAPITest(APIBaseTestCase):
 
-	API = api.QueueAPI
+    API = api.QueueAPI
 
-	def setUp(self):
-		super(QueueAPITest, self).setUp()
+    def setUp(self):
+        super(QueueAPITest, self).setUp()
+        self.user = self.accounts['dummy_admin']
+        self.user1 = self.accounts['dummy_student']
+        self.user2 = self.accounts['dummy_student2']
+        self.user3 = self.accounts['dummy_student3']
+        self.assignment_name = 'Hog Project'
+        self._course = make_fake_course(self.user)
+        self._course.put()
+        self._assign = make_fake_assignment(self._course, self.user)
+        self._assign.name = self._assign.display_name = self.assignment_name
+        self._assign.put()
 
-	def get_accounts(self):
-		return APITest().get_accounts()
+    def get_accounts(self):
+        return APITest().get_accounts()
 
-	def test_new_entity_basic(self):
-		""" Tests that new_entity works """
-		self.API().new_entity({'assigned_staff': [self.accounts['dummy_admin'].key]})
-		self.API().new_entity({
-			'owner': self.accounts['dummy_admin'].key,
-			'assigned_staff': [self.accounts['dummy_admin'].key]
-		})
+    def get_basic_instance(self, mutate=True):
+        return make_fake_queue(self._assign, self.accounts['dummy_admin'])
+
+    def test_new_entity_basic(self):
+        """ Tests that new_entity works """
+        self.API().new_entity({'assigned_staff': [self.accounts['dummy_admin'].key]})
+        self.API().new_entity({
+            'owner': self.accounts['dummy_admin'].key,
+            'assigned_staff': [self.accounts['dummy_admin'].key]
+        })

@@ -65,14 +65,6 @@ app.directive('queueList', function() {
         };
     });
 
-app.directive('userqueueList', function() {
-        return {
-            restrict: 'E',
-            templateUrl: '/static/partials/admin/userqueue.list.html',
-        };
-    });
-
-
 app.directive('staffList', function() {
         return {
             restrict: 'E',

@@ -1143,9 +1143,15 @@ class Queue(Base):
     @property
     def graded(self):
         """
-        Returns the count of graded submissions in this queue.
+        Returns the count of graded composition submissions in this queue.
         """
-        return len([1 for fs in self.submissions if fs.submission.get().score])
+        num_comp = 0
+        for fs in self.submissions:
+            scores = fs.submission.get().score
+            for score in scores:
+                if score.tag == "composition":
+                    num_comp += 1
+        return num_comp
 
     def to_json(self, fields=None):
         if not fields:
@@ -1179,7 +1185,8 @@ class Queue(Base):
         return {
             'submissions': subms,
             'count': len(final_submissions),
-            'graded': len(filter(None, (subm.score for subm in submissions))),
+            'graded': self.graded,
+            'remaining': len(final_submissions) - self.graded,
             'assignment': {'id': self.assignment},
             'assigned_staff': [val.get() for val in self.assigned_staff],
             'owner': owner_email,

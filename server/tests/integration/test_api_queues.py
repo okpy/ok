@@ -23,6 +23,8 @@ from integration.test_api_base import APITest
 
 
 class QueuesAPITest(APIBaseTestCase):
+	""" Tests the queues generation API
+	"""
 
 	API = api.QueuesAPI
 
