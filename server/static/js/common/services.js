@@ -84,6 +84,13 @@ app.factory('Submission', ['$resource',
           url: '/api/v1/submission/:id/add_comment',
           transformResponse: defaultTransformer
         },
+        'editComment': {
+          method:'POST',
+          url: '/api/v1/submission/:id/edit_comment',
+          transformResponse: function(data) {
+            return JSON.parse(data).data;
+          }
+        },
         deleteComment: {
           method: "POST",
           url: '/api/v1/submission/:id/delete_comment',

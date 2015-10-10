@@ -1077,6 +1077,22 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
     $scope.showComment = false;
     $scope.hideBox = false;
     $scope.showWriter = true;
+    $scope.editingComment = null;
+
+    $scope.setEditorText = function(text) {
+      $scope.commentText = {'text':text};
+    }
+
+    $scope.setEditingComment = function(comment) {
+      $scope.editingComment = comment;
+    }
+
+    $scope.closeWriter = function() {
+      $scope.toggleComment();
+      $scope.setEditingComment(null);
+      $scope.setEditorText("");
+    }
+
     $scope.toggleComment = function() {
       $scope.showComment = !$scope.showComment;
       $scope.hideBox = !$scope.showComment;
@@ -1092,6 +1108,16 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
 
 app.controller("CommentController", ["$scope", "$window", "$stateParams", "$timeout", "$modal", "Submission",
   function ($scope, $window, $stateParams, $timeout, $modal, Submission) {
+    $scope.editComment = function(comment) {
+      $scope.setEditorText(comment.message);
+      $scope.setEditingComment(comment);
+      if (!$scope.showWriter) {
+        $scope.toggleWriter();
+      }
+      else if (!$scope.showComment){
+        $scope.toggleComment();
+      }
+    }
     $scope.remove = function() {
       var modal = $modal.open({
         templateUrl: '/static/partials/common/removecomment.modal.html',
@@ -1129,26 +1155,49 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
       }
       return $sce.trustAsHtml(converter.makeHtml(text));
     }
-    $scope.commentText = {text:""}
+
+    // Allow the parent scope to set the writer's text
+    if ($scope.$parent.commentText) {
+      $scope.commentText = $scope.$parent.commentText;
+    }
+    else {
+      $scope.commentText = {text:""}
+    }
+
     $scope.makeComment = function() {
       text = $scope.commentText.text;
       if (text !== undefined && text.trim() != "") {
-        Submission.addComment({
-          id: $scope.backupId,
-          file: $scope.file_name,
-          index: $scope.codeline.rightNum - 1,
-          message: text,
-        }, function (resp) {
-          resp.self = true
-          if ($scope.codeline.comments) {
-            $scope.codeline.comments.push(resp)
-          } else {
-            $scope.codeline.comments = [resp]
-          }
-          $scope.toggleWriter()
-        }, function(err) {
-            report_error($window, err);
-        });
+        if ($scope.editingComment != null) {
+          Submission.editComment({
+            id:$scope.backupId,
+            comment_id:$scope.editingComment.id,
+            message:text,
+          }, function (resp) {
+            resp.self = true;
+            $scope.toggleWriter();
+            $scope.codeline.comments[$scope.codeline.comments.indexOf($scope.editingComment)] = resp;
+            $scope.setEditingComment(null);
+            $scope.setEditorText("");
+          })
+        }
+        else {
+          Submission.addComment({
+            id: $scope.backupId,
+            file: $scope.file_name,
+            index: $scope.codeline.rightNum - 1,
+            message: text,
+          }, function (resp) {
+            resp.self = true
+            if ($scope.codeline.comments) {
+              $scope.codeline.comments.push(resp)
+            } else {
+              $scope.codeline.comments = [resp]
+            }
+            $scope.toggleWriter()
+          }, function(err) {
+              report_error($window, err);
+          });
+        }
       }
     }
   }

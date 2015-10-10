@@ -993,6 +993,13 @@ class SubmissionAPI(APIResource):
                 'message': Arg(str, required=True)
             }
         },
+        'edit_comment': {
+            'methods': set(['POST']),
+            'web_args': {
+                'comment_id':KeyArg('Comment', required=True),
+                'message': Arg(str, required=True)
+            }
+        },
         'delete_comment': {
             'methods': set(['POST']),
             'web_args': {
@@ -1167,6 +1174,22 @@ class SubmissionAPI(APIResource):
             author=user.key,
             parent=diff_obj.key)
         comment.put()
+        return comment
+
+    def edit_comment(self, obj, user, data):
+        """
+            Modifies an existing comment. 
+        """
+        diff_obj = self.diff_model.get_by_id(obj.key.id())
+        if not diff_obj:
+            raise BadValueError("Diff doesn't exist yet")
+
+        msg = data['message']
+        comment = models.Comment.get_by_id(
+            data['comment_id'].id(), parent=diff_obj.key)
+        comment.message = msg
+        comment.put()
+
         return comment
 
     def delete_comment(self, obj, user, data):
