@@ -1114,7 +1114,7 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
       if (text !== undefined && text.trim() != "") {
         if ($scope.editingComment != null) {
           Submission.editComment({
-            id:$scope.backupId,
+            id: $stateParams.submissionId,
             comment:$scope.editingComment.id,
             message:text,
           }, function (resp) {
@@ -1123,11 +1123,13 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
             $scope.codeline.comments[$scope.codeline.comments.indexOf($scope.editingComment)] = resp;
             $scope.setEditingComment(null);
             $scope.setEditorText("");
-          })
+          }, function(err) {
+              report_error($window, err);
+          });
         }
         else {
           Submission.addComment({
-            id: $scope.backupId,
+            id: $stateParams.submissionId,
             file: $scope.file_name,
             index: $scope.codeline.rightNum - 1,
             message: text,
