@@ -311,13 +311,7 @@ class SubmissionAPITest(APIBaseTestCase):
         })
 
     def test_delete_comment_diff_dne(self):
-        """ Tests comment cant be added to nonexsitent diff """
-        self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
-        with self.assertRaises(BadValueError):
-            self.API().delete_comment(self.accounts['dummy_admin'], None, None)
-
-    def test_delete_comment_diff_dne(self):
-        """ Tests comment cant be added to nonexsitent diff """
+        """ Tests comment cant be deleted to nonexsitent diff """
         self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
         with self.assertRaises(BadValueError):
             self.API().delete_comment(self.accounts['dummy_admin'], None, None)
