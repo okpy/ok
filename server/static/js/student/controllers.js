@@ -252,7 +252,7 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       $scope.showComposition = function(score, backupId) {
         if (score) {
           if (score.message.length > 200) {
-            var gradeResults = open('url','windowName','height=600,width=500');
+            var gradeResults = open('','_blank','height=600,width=500');
             gradeResults.document.write('<pre>' + score.message + '</pre>');
             score.message = " (In pop-up window)";
           }

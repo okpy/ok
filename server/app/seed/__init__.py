@@ -25,7 +25,7 @@ def seed():
             offering=SEED_OFFERING,
             instructor=[creator.key])
 
-    def make_future_assignment(course, creator):
+    def make_future_assignment(course, creator, name):
         date = (datetime.datetime.now() + datetime.timedelta(days=365))
         with open('app/seed/hog_template.py') as fp:
             templates = {}
@@ -34,7 +34,7 @@ def seed():
 
         return models.Assignment(
             name='cal/CS61A/sp15/proj1',
-            display_name="Hog",
+            display_name="Hog-"+str(name),
             points=20,
             templates=json.dumps(templates),
             creator=creator.key,
@@ -45,7 +45,7 @@ def seed():
             )
 
     # Will reject all scheme submissions
-    def make_past_assignment(course, creator):
+    def make_past_assignment(course, creator, name):
         date = (datetime.datetime.now() - datetime.timedelta(days=365))
         with open('app/seed/scheme_templates/scheme.py') as sc, \
             open('app/seed/scheme_templates/scheme_reader.py') as sr, \
@@ -60,14 +60,14 @@ def seed():
         return models.Assignment(
             name='cal/61A/fa14/proj4',
             points=20,
-            display_name="Scheme",
+            display_name="Scheme-"+str(name),
             templates=json.dumps(templates),
             course=course.key,
             creator=creator.key,
             max_group_size=4,
             due_date=date)
 
-    def make_hw_assignment(course, creator):
+    def make_hw_assignment(course, creator, name):
         date = (datetime.datetime.now() + datetime.timedelta(days=2))
         with open('app/seed/scheme_templates/scheme.py') as sc:
             templates = {}
@@ -76,7 +76,7 @@ def seed():
         return models.Assignment(
             name='cal/CS61A/sp15/hw1',
             points=2,
-            display_name="Homework 1",
+            display_name="Homework 1-"+str(name),
             templates=json.dumps(templates),
             course=course.key,
             creator=creator.key,
@@ -116,21 +116,17 @@ def seed():
         )
         g.put()
 
+        autograder_output = 'Point breakdown:\n\ttestName: 1.0/1\n\ttestName: 1.0/1\n\nScore:\n\tTotal: 2.0'
         score = models.Score(
-            score=88,
-            tag='test',
+            score=10,
+            tag="Total",
+            message=autograder_output,
             grader=g.key
         )
         score.put()
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
-
-        score = models.Score(
-            score=10
-        )
-
-        score.put()
 
         backup = models.Backup(
             messages=messages,
@@ -294,11 +290,11 @@ def seed():
 
     # Create a few assignments
     assignments = []
-    for _ in range(4):
+    for i in range(4):
         assignments += [
-            make_future_assignment(course, c),
-            make_past_assignment(course, c),
-            make_hw_assignment(course, c)
+            make_future_assignment(course, c, i),
+            make_past_assignment(course, c, i),
+            make_hw_assignment(course, c, i)
         ]
 
     for assign in assignments:
@@ -366,7 +362,9 @@ def seed():
 
             # Make each individual submission final and score it.
             final = make_final(subm, assign, students[i])
-            score_seed_submission(final, i, "Good job, student %s" % str(i), staff[i])
+            # Randomly assign composition so that some are ungraded:
+            if i % 3 < 2:
+                score_seed_submission(final, i % 3, "Good job, student %s" % str(i), staff[i])
 
 
         # Seed a queue. This should be auto-generated.

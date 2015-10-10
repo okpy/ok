@@ -69,12 +69,18 @@
             <td>
               <span class="badge bg-green" ng-if="isSubmit(submission)">--submit</span>
                 <span ng-if="submission.score.length == 0" class="badge">No Scores</span>
-                <span ng-repeat="score in submission.score" class="badge bg-blue">
+                <span ng-repeat="score in submission.score" ng-click="showScore(score)" class="badge bg-blue">
                     <span class="score-blurb">
                         <label>Tag</label>
                         <p>{{ score.tag }}</p>
-                        <label ng-if="score.message">Message</label>
-                        <p ng-if="score.message">{{ score.message }}</p>
+                        <div ng-if="score.message && score.tag != 'composition'">
+                          <label>Output</label>
+                          <p><pre>{{ score.message }}</pre></p>
+                        </div>
+                        <div ng-if="score.message && score.tag == 'composition'">
+                          <label>Message</label>
+                          <p>{{ score.message }}</p>
+                        </div>
                         <label>Grader</label>
                         <p>{{ score.grader.email[0] }}</p>
                     </span>

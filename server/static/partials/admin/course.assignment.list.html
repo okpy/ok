@@ -58,7 +58,7 @@
         </td>
           <!-- Future Progress Bar -->
         <td>
-          <a ui-sref='course.submissions.query({courseId:course.id, query: "-assignment \""+assignment.display_name+"\""})' class="btn btn-primary btn-sm"><i class="fa fa-list"></i></a>
+          <a ui-sref='course.submissions.query({courseId:course.id, query: "-assignment \""+assignment.display_name+"\""})' class="btn btn-primary btn-sm"><i class="fa fa-code"></i></a>
         </td>
         <td>
           <a ng-click="downloadScores(assignment)" class="btn btn-primary btn-sm"><i class="fa fa-download"></i></a>
@@ -78,7 +78,7 @@
             <a class="btn btn-primary btn-sm disabled"><i class="fa fa-flash"></i> Disabled </a>
         </td>
         <td>
-            <a ui-sref="course.assignment.queue.list({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+            <a ui-sref="course.assignment.queue.list({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-tasks"></i></a>
         </td>
           </tr>
         </tbody>

@@ -401,13 +401,18 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       $scope.submission = response.submission;
       $scope.backupId = response.submission.backup.id;
       $scope.diff = Submission.diff({id: $scope.backupId});
+      $scope.compScore = null;
+      $scope.compMessage = null;
+      var scores = response.submission.score;
 
-      if (response.submission.score.length > 0) {
-        $scope.compScore = response.submission.score[0].score
-        $scope.compMessage = response.submission.score[0].message
-      } else {
-        $scope.compScore = null;
-        $scope.compMessage = null;
+      if (scores.length > 0) {
+        for (var scoreIdx in scores) {
+          var score = scores[scoreIdx];
+          if (score.tag == "composition") {
+            $scope.compScore = score.score;
+            $scope.compMessage = score.message;
+          }
+        }
       }
     }, function(err) {
          report_error($window, err);
@@ -437,8 +442,8 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
     if (currSubm > -1 && currSubm < submissions.length - 1) {
       $scope.nextId = submissions[currSubm+1];
     }
-
   }
+
 
   $scope.submitGrade = function() {
     Submission.addScore({
@@ -523,7 +528,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     $scope.mergeFS = function (submissions) {
       // Make a FS behave more like a Submission.
 
-      for (var subNum in submissions) {
+      for (var subNum=0; subNum < submissions.length; subNum++) {
         var submission = submissions[subNum];
         if (submission.submission) {
           submission['fsid'] = submission['id'];
@@ -543,7 +548,10 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
     $scope.search = function() {
       $scope.getPage($scope.currentPage)
     }
-
+    $scope.showScore = function (score) {
+      var gradeResults = open('','_blank','height=600,width=500');
+      gradeResults.document.write('<pre>' + score.message + '</pre>');
+    }
     $scope.autogradeSubm = function (subm) {
       var assign = subm.assignment;
       $window.swal({title: "Enter your access token below",
@@ -1077,6 +1085,26 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
     $scope.showComment = false;
     $scope.hideBox = false;
     $scope.showWriter = true;
+    $scope.editingComment = null;
+
+    $scope.setEditorText = function(text) {
+      $scope.commentText = {'text':text};
+    }
+
+    $scope.setEditingComment = function(comment) {
+      $scope.editingComment = comment;
+    }
+
+    $scope.closeWriter = function() {
+      if ($scope.editingComment) {
+        $scope.toggleWriter();
+      } else {
+        $scope.toggleComment();
+      }
+      $scope.setEditingComment(null);
+      $scope.setEditorText("");
+    }
+
     $scope.toggleComment = function() {
       $scope.showComment = !$scope.showComment;
       $scope.hideBox = !$scope.showComment;
@@ -1092,6 +1120,16 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
 
 app.controller("CommentController", ["$scope", "$window", "$stateParams", "$timeout", "$modal", "Submission",
   function ($scope, $window, $stateParams, $timeout, $modal, Submission) {
+    $scope.editComment = function(comment) {
+      $scope.setEditorText(comment.message);
+      $scope.setEditingComment(comment);
+      if (!$scope.showWriter) {
+        $scope.toggleWriter();
+      }
+      else if (!$scope.showComment){
+        $scope.toggleComment();
+      }
+    }
     $scope.remove = function() {
       var modal = $modal.open({
         templateUrl: '/static/partials/common/removecomment.modal.html',
@@ -1129,26 +1167,51 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
       }
       return $sce.trustAsHtml(converter.makeHtml(text));
     }
-    $scope.commentText = {text:""}
+
+    // Allow the parent scope to set the writer's text
+    if ($scope.$parent.commentText) {
+      $scope.commentText = $scope.$parent.commentText;
+    }
+    else {
+      $scope.commentText = {text:""}
+    }
+
     $scope.makeComment = function() {
       text = $scope.commentText.text;
       if (text !== undefined && text.trim() != "") {
-        Submission.addComment({
-          id: $scope.backupId,
-          file: $scope.file_name,
-          index: $scope.codeline.rightNum - 1,
-          message: text,
-        }, function (resp) {
-          resp.self = true
-          if ($scope.codeline.comments) {
-            $scope.codeline.comments.push(resp)
-          } else {
-            $scope.codeline.comments = [resp]
-          }
-          $scope.toggleWriter()
-        }, function(err) {
-            report_error($window, err);
-        });
+        if ($scope.editingComment != null) {
+          Submission.editComment({
+            id: $scope.backupId,
+            comment:$scope.editingComment.id,
+            message:text,
+          }, function (resp) {
+            resp.self = true;
+            $scope.toggleWriter();
+            $scope.codeline.comments[$scope.codeline.comments.indexOf($scope.editingComment)] = resp;
+            $scope.setEditingComment(null);
+            $scope.setEditorText("");
+          }, function(err) {
+              report_error($window, err);
+          });
+        }
+        else {
+          Submission.addComment({
+            id: $scope.backupId,
+            file: $scope.file_name,
+            index: $scope.codeline.rightNum - 1,
+            message: text,
+          }, function (resp) {
+            resp.self = true
+            if ($scope.codeline.comments) {
+              $scope.codeline.comments.push(resp)
+            } else {
+              $scope.codeline.comments = [resp]
+            }
+            $scope.toggleWriter()
+          }, function(err) {
+              report_error($window, err);
+          });
+        }
       }
     }
   }
@@ -1363,33 +1426,31 @@ app.controller("QueueModuleController", ["$scope", "$window", "Queue",
 app.controller("QueueListCtrl", ['$scope', '$window', 'Queue',
   function($scope, $window, Queue) {
     /* TODO: Fields to this query */
+
      Queue.get(function (response) {
-        $scope.queues = response['results']
+        $scope.queues = response['results'];
       });
      $scope.refresh = function () {
       Queue.pull(function (response) {
-          $scope.queues = response['results']
+          $scope.queues = response['results'];
+          $scope.queues.sort(function(a, b) {
+            return a.remaining - b.remaining;
+          });
        }, function(err) {
            report_error($window, err);
        });
      }
   }]);
 
-app.controller("UserQueueListCtrl", ["$scope", "Queue", "$window", "$state",
-  function($scope, Queue, $window, $state) {
-
-    $scope.queues = Queue.query({
-      "owner": $window.keyId
-    }, function(response) {
-    }, function(err) {
-        report_error($window, err);
-    });
-
-  }]);
-
 app.controller("QueueDetailCtrl", ["$scope", "Queue", "$window", "Submission", "$stateParams", "$sessionStorage",
   function ($scope, Queue, $window, Submission, $stateParams, $sessionStorage) {
     $scope.$storage = $sessionStorage;
+
+    $scope.showScore = function (score) {
+      var gradeResults = open('','_blank','height=600,width=500');
+      gradeResults.document.write('<pre>' + score.message + '</pre>');
+    }
+
     Queue.pull({
       id: $stateParams.queueId
     }, function (result) {
@@ -1401,6 +1462,17 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$window", "Submission", "
       });
       $scope.$storage.currentQueue = JSON.stringify(result);
       $scope.submList = result['submissions'];
+      for (var submIndx =0; submIndx < $scope.submList.length; submIndx++) {
+        var subm = $scope.submList[submIndx];
+        subm.graded = false;
+        if (subm.score && subm.score.length != 0) {
+          for (var scoreInd = 0; scoreInd < subm.score.length; scoreInd++) {
+            if (subm.score[scoreInd].tag == "composition") {
+              subm.graded = true;
+            }
+          }
+        }
+      }
     }, function(err) {
         report_error($window, err);
     });

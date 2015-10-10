@@ -41,13 +41,13 @@
     <table ts-wrapper id="queuedetail"  ng-if="queue.submissions.length > 0" class="table table-responsive table-striped table-bordered">
     <tbody>
     <tr>
-      <th ts-criteria="submitter.email">Submitter</th>
-      <th ts-criteria="submission.created">Time</th>
-      <th ts-criteria="score.score" width="30%">Grade</th>
-      <th ts-criteria="-score.score" width="20%" >Action</th>
+      <th ts-criteria="submitter.email[0]">Submitter</th>
+      <th ts-criteria="subm.created">Time</th>
+      <th ts-criteria="score.length" width="30%">Grade</th>
+      <th ts-criteria="-score.length" width="20%" >Action</th>
     </tr>
 
-    <tr ng-repeat="subm in submList " ts-repeat>
+    <tr ng-repeat="subm in submList" ts-repeat>
       <td>
       <span> Submitter: <a> {{subm.submitter.email[0]}} </a> </span>
       <div ng-if="subm.group"> Group: <a ng-repeat="member in subm.group.member"> {{ member.email[0] }}{{$last ? '' : ','}} </a>  </div>
@@ -56,15 +56,35 @@
         {{subm.created | amCalendar}}
       </td>
       <td>
+        <span ng-if="subm.score.length == 0"  class="badge bg-gray">Ungraded</span>
 
-        <p ng-if="subm.score.length == 0"> Ungraded </p>
-        <p ng-if="subm.score.length != 0" ng-repeat="score in subm.score"> {{score.score}} from {{score.grader.email[0]}} at {{score.created | amCalendar}} </p>
+          <span ng-if="subm.score.length != 0" ng-repeat="score in subm.score" ng-click="showScore(score)"
+                  class="badge bg-blue score-badge">
+              <span class="score-blurb">
+                  <label>Tag</label>
+                  <p>{{ score.tag }}</p>
+                  <label>Time Graded</label>
+                  <p>{{score.created | amCalendar}}</p>
+                  <div ng-if="score.message && score.tag != 'composition'">
+                    <label>Output</label>
+                    <p><pre class="score-message">{{ score.message }}</pre></p>
+                  </div>
+                  <div ng-if="score.message && score.tag == 'composition'">
+                    <label>Message</label>
+                    <p>{{ score.message }}</p>
+                  </div>
+                  <label>Grader</label>
+                  <p>{{ score.grader.email[0] }}</p>
+              </span>
+              <span ng-if="score.tag != 'composition'"> {{ score.tag || "Score" }}: {{ score.score }} </span>
+              <span ng-if="score.tag == 'composition'"> {{ score.score }} from {{ score.grader.email[0] }} </span>
+          </span>
       </td>
       <td>
-          <a ui-sref='submission.final({finalId:subm.id})' type="button" ng-if="subm.score.length == 0"
+          <a ui-sref='submission.final({finalId:subm.id})' type="button" ng-if="!subm.graded"
             class="btn btn-block btn-flat btn-info">Grade</a>
 
-          <a ui-sref='submission.final({finalId:subm.id})' type="button" ng-if="subm.score.length != 0"
+          <a ui-sref='submission.final({finalId:subm.id})' type="button" ng-if="subm.graded"
             class="btn btn-block btn-flat btn-warning">Re-grade</a>
       </td>
 
