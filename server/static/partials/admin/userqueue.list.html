@@ -20,7 +20,8 @@
           <th ts-criteria="assignment.id.display_name" ts-default>Assignment</th>
           <th ts-criteria="assignment.id.course.offering">Course</th>
           <th ts-criteria="assigned_staff.length">Staff</th>
-          <th ts-criteria="count | parseInt">Submissions</th>
+          <th ts-criteria="count">Submissions</th>
+          <th ts-criteria="remaining">Remaining</th>
           <th>View</th>
         </tr>
       </thead>
@@ -45,6 +46,9 @@
         </td>
         <td>
           {{queue.submissions.length}}
+        </td>
+        <td>
+          {{queue.remaining}}
         </td>
         <td>
           <a class="btn btn-primary btn-sm" ui-sref='queue.detail({queueId:queue.id})'>
