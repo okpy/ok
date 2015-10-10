@@ -11,7 +11,7 @@ tests.py
 """
 
 import datetime
-from test_base import APIBaseTestCase, unittest, api #pylint: disable=relative-import
+from test_base import APIBaseTestCase, unittest, api, mock, Mock #pylint: disable=relative-import
 from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
 from google.appengine.ext import ndb
 from app import models, constants, utils
@@ -311,11 +311,20 @@ class SubmissionAPITest(APIBaseTestCase):
         })
 
     def test_delete_comment_diff_dne(self):
-        """ Tests comment cant be deleted to nonexsitent diff """
+        """ Tests comment cant be added to nonexistent diff """
         self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
+        # INVESTIGATE: mock with statements
+        # with Mock(models.Diff, 'get_by_id').using(
+        #     staticmethod(lambda keyId: False)) as mock:
         with self.assertRaises(BadValueError):
-            self.API().delete_comment(self.accounts['dummy_admin'], None, None)
+            self.API().delete_comment(
+                self.accounts['dummy_admin'], None, None)
 
+    # INVESTIGATE: mock decorators
+    # @mock(models.Diff, 'get_by_id',
+    #     staticmethod(lambda keyId: self.accounts['dummy_admin']))
+    # @mock(models.Comment, 'get_by_id',
+    #     staticmethod(lambda *args, **kwargs: None))
     def test_delete_comment_dne(self):
         """ Tests that nonexistent comment cant be removed """
         self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: self.accounts['dummy_admin']))
