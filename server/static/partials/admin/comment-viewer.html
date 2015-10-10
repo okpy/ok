@@ -7,6 +7,9 @@
             <strong>{{comment.author.email[0]}}</strong> wrote:
           </div>
           <div class='right'>
+            <button type="button" ng-click="editComment(comment)" class="btn btn-danger btn-xs">
+              <span class="glyphicon glyphicon-edit"></span>
+            </button>
             <button type="button" ng-click="remove()" class="btn btn-danger btn-xs">
               <span class="glyphicon glyphicon-remove"></span>
             </button>
@@ -47,10 +50,13 @@
         </tabset>
         <div class='comment-buttons'>
           <div class="left">
-            <button ng-click="toggleComment()" class="btn btn-default">Close</button>
+            <button ng-click="closeWriter()" class="btn btn-default">Close</button>
           </div>
           <div class="right">
-            <button type="submit" ng-disabled="commentText.text == ''" ng-click="makeComment()" class="btn btn-primary">Comment</button>
+            <button type="submit" ng-disabled="commentText.text == ''" ng-click="makeComment()" class="btn btn-primary">
+              <span ng-hide="editingComment">Comment</span>
+              <span ng-show="editingComment">Edit</span>
+            </button>
           </div>
           <div class="clearfix"></div>
         </div>
