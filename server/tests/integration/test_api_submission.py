@@ -263,14 +263,15 @@ class SubmissionAPITest(APIBaseTestCase):
         }
         diff_obj = models.Diff(id=123123).put().get()
         # Shouldn't need a mock
+        self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: diff_obj))
         comment = self.API().add_comment(diff_obj, self.accounts['dummy_admin'], data)
         self.assertNotEqual(None, comment)
         edit = {
-            'comment': comment.key.id(),
+            'comment': comment.key,
             'message': 'Some less unhelpful message',
         }
         edited = self.API().edit_comment(diff_obj, self.accounts['dummy_admin'], edit)
-        self.assertEqual(edited.mesage, edit['message'])
+        self.assertEqual(edited.message, edit['message'])
 
     def test_edit_comment_permission(self):
         """ Ensure that comment cannot be edited by other users """
@@ -281,11 +282,10 @@ class SubmissionAPITest(APIBaseTestCase):
         }
         diff_obj = models.Diff(id=1).put().get()
         # TODO: Investigate why this method needs a mock and the others dont.
-        #self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: diff_obj))
-
+        self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: diff_obj))
         comment = self.API().add_comment(diff_obj, self.accounts['dummy_admin'], data)
         edit = {
-            'comment': comment.key.id(),
+            'comment': comment.key,
             'message': 'Some less unhelpful message',
         }
 
@@ -303,12 +303,11 @@ class SubmissionAPITest(APIBaseTestCase):
             'message': 'Some unhelpful message',
             'file': ''
         }
-        # Shouldn't really need mock
         self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: diff_obj))
         comment = self.API().add_comment(diff_obj, self.accounts['dummy_admin'], data)
         self.assertNotEqual(None, comment)
         self.API().delete_comment(diff_obj, self.accounts['dummy_admin'], {
-            'comment': comment.key.id()
+            'comment': comment.key
         })
 
     def test_delete_comment_diff_dne(self):
