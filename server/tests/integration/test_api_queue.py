@@ -23,12 +23,14 @@ from integration.test_api_base import APITest
 
 
 class QueueAPITest(APIBaseTestCase):
-
+    model = models.Queue
     API = api.QueueAPI
+    name = 'queue'
 
     def setUp(self):
         super(QueueAPITest, self).setUp()
         self.user = self.accounts['dummy_admin']
+        self.staff = self.accounts['dummy_staff']
         self.user1 = self.accounts['dummy_student']
         self.user2 = self.accounts['dummy_student2']
         self.user3 = self.accounts['dummy_student3']
@@ -52,3 +54,25 @@ class QueueAPITest(APIBaseTestCase):
             'owner': self.accounts['dummy_admin'].key,
             'assigned_staff': [self.accounts['dummy_admin'].key]
         })
+
+    def test_get_instance_basic(self):
+        """ Tests that get queue works """
+        queue = self.get_basic_instance()
+        res = self.API().get_instance(queue.key.id(), self.user)
+        self.assertEqual(res, queue)
+
+    def test_get_basic(self):
+        """ Tests that get queue works """
+        queue = self.get_basic_instance()
+        res = self.API().get(queue, self.user, None)
+        self.assertEqual(res, queue)
+
+    def test_get_fields(self):
+        """ Tests that get queue to_json gives us the expected fields """
+        queue = self.get_basic_instance()
+        queue.put()
+        res = self.API().get(queue, self.user, None)
+        data = res.to_json()
+        keys =  ['count', 'graded', 'owner', 'assignment', 'id', 'submissions', 'remaining', 'assigned_staff']
+        for key in keys:
+            self.assertIn(key, data.keys())
