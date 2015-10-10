@@ -1139,7 +1139,7 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
       });
       modal.result.then(function() {
         Submission.deleteComment({
-          id: $scope.backupId,
+          id: $stateParams.submissionId,
           comment: $scope.comment.id
         }, function (result){
           $scope.toggleBox();
