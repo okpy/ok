@@ -253,6 +253,70 @@ class SubmissionAPITest(APIBaseTestCase):
         comment = self.API().add_comment(diff_obj, self.accounts['dummy_admin'], data)
         self.assertNotEqual(None, comment)
 
+
+    def test_edit_comment_normal(self):
+        """ Tests that comments can be edited """
+        data = {
+            'index': 33,
+            'message': 'Some unhelpful message',
+            'file': ''
+        }
+        diff_obj = models.Diff(id=123123).put().get()
+        # Shouldn't need a mock
+        comment = self.API().add_comment(diff_obj, self.accounts['dummy_admin'], data)
+        self.assertNotEqual(None, comment)
+        edit = {
+            'comment': comment.key.id(),
+            'message': 'Some less unhelpful message',
+        }
+        edited = self.API().edit_comment(diff_obj, self.accounts['dummy_admin'], edit)
+        self.assertEqual(edited.mesage, edit['message'])
+
+    def test_edit_comment_permission(self):
+        """ Ensure that comment cannot be edited by other users """
+        data = {
+            'index': 32,
+            'message': 'Some unhelpful message',
+            'file': ''
+        }
+        diff_obj = models.Diff(id=1).put().get()
+        # TODO: Investigate why this method needs a mock and the others dont.
+        #self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: diff_obj))
+
+        comment = self.API().add_comment(diff_obj, self.accounts['dummy_admin'], data)
+        edit = {
+            'comment': comment.key.id(),
+            'message': 'Some less unhelpful message',
+        }
+
+        with self.assertRaises(PermissionError):
+            comment = self.API().edit_comment(diff_obj, self.accounts['dummy_student'], edit)
+        with self.assertRaises(PermissionError):
+            comment = self.API().edit_comment(diff_obj, self.accounts['dummy_staff'], edit)
+
+    def test_delete_comment_normal(self):
+        """ Test that the comment is actually deleted (kind of)
+        """
+        diff_obj = models.Diff(id=1).put().get()
+        data = {
+            'index': 32,
+            'message': 'Some unhelpful message',
+            'file': ''
+        }
+        # Shouldn't really need mock
+        self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: diff_obj))
+        comment = self.API().add_comment(diff_obj, self.accounts['dummy_admin'], data)
+        self.assertNotEqual(None, comment)
+        self.API().delete_comment(diff_obj, self.accounts['dummy_admin'], {
+            'comment': comment.key.id()
+        })
+
+    def test_delete_comment_diff_dne(self):
+        """ Tests comment cant be added to nonexsitent diff """
+        self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
+        with self.assertRaises(BadValueError):
+            self.API().delete_comment(self.accounts['dummy_admin'], None, None)
+
     def test_delete_comment_diff_dne(self):
         """ Tests comment cant be added to nonexsitent diff """
         self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId: False))
@@ -279,49 +343,10 @@ class SubmissionAPITest(APIBaseTestCase):
                 'comment': self.accounts['dummy_student'].key
             })
 
-    def test_delete_comment_normal(self):
-        """ Test that the comment is actually deleted (kind of) """
-        self.mock(models.Diff, 'get_by_id').using(staticmethod(lambda keyId:
-            self.accounts['dummy_admin']))
-        self.mock(models.Comment, 'get_by_id').using(staticmethod(lambda *args, **kwargs:
-            self.accounts['dummy_admin']))
-        self.API().delete_comment(self.accounts['dummy_admin'], self.accounts['dummy_admin'], {
-            'comment': self.accounts['dummy_student'].key
-        })
 
-    # def test_add_tag_dup(self):
-    #     """ Tests that duplicate tag cannot beadded """
-    #     obj = self.obj().set(tags=['a', 'b', 'c'])
-    #     user = self.accounts['dummy_student3']
-    #     data = {'tag': 'a'}
-    #     with self.assertRaises(BadValueError):
-    #         self.API().add_tag(obj, user, data)
-    #
-    # def test_add_tag_not_submitted(self):
-    #     """ Tests "normal" (not SUBMITTED_TAG) and not duplicated tag is added """
-    #     obj = self.obj().set(tags=[], put=lambda: '_')
-    #     user = self.accounts['dummy_student3']
-    #     data = {'tag': 'a'}
-    #     with self.assertRaises(BadValueError):
-    #         self.API().add_tag(obj, user, data)
-    #         self.assertIn('a', obj.tags)
-    #
-    # def test_add_tag_submitted(self):
-    #     """ Tests SUBMITTED_TAG works """
-    #     obj = self._submission
-    #     user = self.accounts['dummy_student3']
-    #     data = {'tag': 'submitted'}
-    #     self.mock(api.SubmissionAPI, 'SUBMITED_TAG').using('submitted')
-    #     with self.assertRaises(BadValueError):
-    #         models.Submission(
-    #             models.Submission.assignment == self._assign.key,
-    #             models.Submission.submitter == self.accounts['dummy_student3'].key,
-    #             models.Submission.tags == 'submitted'
-    #         ).put()
-    #         self.API().add_tag(obj, user, data)
 
     def test_score_check(self):
-        """ Tests that permissinos are chcekd """
+        """ Tests that permissions are chcekd """
         with self.assertRaises(PermissionError):
             self.API().score(self._submission, self.accounts['dummy_student'], {'submission': self._submission.key})
 

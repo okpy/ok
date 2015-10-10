@@ -981,7 +981,7 @@ class SubmissionAPI(APIResource):
         'edit_comment': {
             'methods': set(['POST']),
             'web_args': {
-                'comment_id':KeyArg('Comment', required=True),
+                'comment':KeyArg('Comment', required=True),
                 'message': Arg(str, required=True)
             }
         },
@@ -1163,15 +1163,24 @@ class SubmissionAPI(APIResource):
 
     def edit_comment(self, obj, user, data):
         """
-            Modifies an existing comment. 
+            Modifies an existing comment.
         """
         diff_obj = self.diff_model.get_by_id(obj.key.id())
         if not diff_obj:
             raise BadValueError("Diff doesn't exist yet")
 
-        msg = data['message']
         comment = models.Comment.get_by_id(
-            data['comment_id'].id(), parent=diff_obj.key)
+            data['comment'].id(), parent=diff_obj.key)
+
+        need = Need('edit')
+        if not comment.can(user, need, comment):
+            raise need.exception()
+
+        msg = data['message']
+
+        if msg.strip() == '':
+            raise BadValueError('Cannot make empty comment. Did you mean to delete the comment?')
+
         comment.message = msg
         comment.put()
 

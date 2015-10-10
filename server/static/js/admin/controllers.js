@@ -1115,7 +1115,7 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
         if ($scope.editingComment != null) {
           Submission.editComment({
             id:$scope.backupId,
-            comment_id:$scope.editingComment.id,
+            comment:$scope.editingComment.id,
             message:text,
           }, function (resp) {
             resp.self = true;
