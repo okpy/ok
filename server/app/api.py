@@ -1307,7 +1307,7 @@ class SubmissionAPI(APIResource):
                     })
 
         submission = self.db.create_submission(user, valid_assignment,
-                                               messages, submit, submitter)
+                                               messages, submit, submitter, revision)
 
         if valid_assignment.autograding_enabled and submit and not late_flag:
             logging.info("Queueing submission to AG")
