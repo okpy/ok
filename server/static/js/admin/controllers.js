@@ -1096,7 +1096,11 @@ app.controller("DiffLineController", ["$scope", "$timeout", "$location", "$ancho
     }
 
     $scope.closeWriter = function() {
-      $scope.toggleComment();
+      if ($scope.editingComment) {
+        $scope.toggleWriter();
+      } else {
+        $scope.toggleComment();
+      }
       $scope.setEditingComment(null);
       $scope.setEditorText("");
     }
@@ -1139,7 +1143,7 @@ app.controller("CommentController", ["$scope", "$window", "$stateParams", "$time
       });
       modal.result.then(function() {
         Submission.deleteComment({
-          id: $stateParams.submissionId,
+          id: $scope.backupId,
           comment: $scope.comment.id
         }, function (result){
           $scope.toggleBox();
@@ -1177,7 +1181,7 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
       if (text !== undefined && text.trim() != "") {
         if ($scope.editingComment != null) {
           Submission.editComment({
-            id: $stateParams.submissionId,
+            id: $scope.backupId,
             comment:$scope.editingComment.id,
             message:text,
           }, function (resp) {
@@ -1192,7 +1196,7 @@ app.controller("WriteCommentController", ["$scope", "$window", "$sce", "$statePa
         }
         else {
           Submission.addComment({
-            id: $stateParams.submissionId,
+            id: $scope.backupId,
             file: $scope.file_name,
             index: $scope.codeline.rightNum - 1,
             message: text,
