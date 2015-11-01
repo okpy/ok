@@ -42,6 +42,7 @@ def seed():
             max_group_size=4,
             due_date=date,
             lock_date=date,
+            url='cs61a.org/proj/hog',
             )
 
     # Will reject all scheme submissions
