@@ -452,6 +452,14 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
         return assignment
       }
 
+      $scope.makeAbsoluteURL = function makeAbsoluteURL(url) {
+        if (url.indexOf("http") == 0) {
+          return url
+        } else {
+          return "http://" + url
+        }
+      }
+
         $scope.openDetails = function openDetails(assign) {
             $scope.currGroup = assign.group
             $scope.currAssign = assign

@@ -10,8 +10,13 @@
             <p class="blob-status" ng-if="assign.final.final_submission &&  assign.final.final_submission.revision"> Revision submitted </p>
             <h2 class="blob-title ng-binding">{{ assign.assignment.display_name }}</h2>
 
-            <p class="blob-shiftcopy blob-copy ng-binding"><span class="icon-clock"></span>due
-                {{ ::assign.assignment.due_date | amCalendar }}<br><a style="margin-left:-20px" ng-show="{{ assign.assignment.url.length > 0 }}" href="{{ assign.assignment.url }}"><i class="fa fa-link"></i> {{ assign.assignment.url }}</a></p>
+            <p class="blob-shiftcopy blob-copy ng-binding">
+                <span class="icon-clock"></span>due {{ ::assign.assignment.due_date | amCalendar }}<br>
+                <a style="margin-left:-20px" ng-show="{{ assign.assignment.url.length > 0 }}"
+                   href="{{ makeAbsoluteURL(assign.assignment.url) }}">
+                    <i class="fa fa-link"></i> {{ assign.assignment.url }}
+                </a>
+            </p>
             <p class="blob-copy" ng-if="assign.final.final_submission">
                 <a ng-hide="assign.final.submission.score.length > 0"
                    ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'

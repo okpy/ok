@@ -16,7 +16,7 @@ Installation
 
 To install:
 * Clone this repo
-* Install [Google App Engine SDK](https://developers.google.com/appengine/downloads) and add it to your `$PATH`. You can do `brew install google-app-engine` on a mac.
+* Install [Google App Engine SDK for Python](https://developers.google.com/appengine/downloads) and add it to your `$PATH`. You can do `brew install google-app-engine` on a mac.
 * `export GAE_SDK=<location of unzipped GAE SDK>`
   - For brew, this location should be in /usr/local/Cellar/google-app-engine/1.9.X/share/google-app-engine.
   - Some files that should be present when running `ls $GAE_SDK` are `dev_appserver.py` and `api_server.py`.
@@ -102,7 +102,7 @@ Autograding
 Projects using ok.py
 --------------------
 
-[CS61A](cs61a.org) uses ok.py for all assignments.
+[CS61A](http://cs61a.org) uses ok.py for all assignments.
 
 Developer Guidelines
 --------------------
