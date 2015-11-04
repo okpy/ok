@@ -172,7 +172,7 @@ def create_gcs_file(gcs_filename, contents, content_type):
     Creates a GCS csv file with contents CONTENTS.
     """
     try:
-        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'project-private'})
+        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'bucket-owner-full-control'})
         gcs_file.write(contents)
         gcs_file.close()
     except Exception as e:
