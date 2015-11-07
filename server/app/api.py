@@ -29,13 +29,14 @@ import logging
 import ast
 import requests
 import flask
+import pytz
 
 from flask.views import View
 from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL, TIMEZONE
 
 from app import models, app, analytics, utils
 from app.needs import Need
@@ -92,9 +93,11 @@ def DateTimeArg(**kwds):
 
         date = datetime.datetime.strptime(arg,
                                           app.config['GAE_DATETIME_FORMAT'])
-        delta = datetime.timedelta(hours=7)
-        date = (datetime.datetime.combine(date.date(), date.time()) + delta)
-        return (op, date) if op else date
+
+        course_tz = pytz.timezone(TIMEZONE)
+        course_time = course_tz.localize(date)
+        utc_date = course_tz.normalize(course_time).astimezone(pytz.utc)
+        return (op, utc_date) if op else utc_date
     return Arg(None, use=parse_date, **kwds)
 
 MODEL_VERSION = 'v2'

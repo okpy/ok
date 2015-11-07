@@ -61,7 +61,7 @@ app.json_encoder = JSONEncoder
 
 def convert_timezone(utc_dt, tz=TIMEZONE):
     """Convert times to specified (defaults to America/Los_Angeles)."""
-    coruse_tz = pytz.timezone('America/Los_Angeles')
+    coruse_tz = pytz.timezone(tz)
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(coruse_tz)
     return coruse_tz.normalize(local_dt) # Normalize for DST edgecases.
 
