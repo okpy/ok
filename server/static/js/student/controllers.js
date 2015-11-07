@@ -453,7 +453,9 @@ app.controller("AssignmentDashController", ['$scope', '$window', '$state',  '$st
       }
 
       $scope.makeAbsoluteURL = function makeAbsoluteURL(url) {
-        if (url.indexOf("http") == 0) {
+        if (!url) {
+          return "#"
+        } else if (url.indexOf("http") == 0) {
           return url
         } else {
           return "http://" + url
