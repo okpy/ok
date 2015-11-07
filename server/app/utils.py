@@ -696,9 +696,12 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
         fs = student.get_final_submission(assignment)
         if not fs:
             recent_bcks = student.get_backups(assignment.key, 1)
+            # TODO: Also get submissions that weren't marked as final for some reason
             if len(recent_bcks) > 0:
                 try:
-                    new_sub = force_promote_backup(recent_bcks[0].key.id())
+                    # TODO: Get a bunch of backups and choose to closest to due date
+                    closest_backup = recent_bcks[0]
+                    new_sub = force_promote_backup(closest_backup.key.id())
                     newly_created_fs.append(new_sub.id())
                 except ValueError as e:
                     error_msg = "{email} only had backups past the due date".format(email=student.email[0])
