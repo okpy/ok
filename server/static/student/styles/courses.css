@@ -5,12 +5,15 @@ h1,h2,h3,h4,h5,h6 {
 p, a, li, span:not([class^="hljs-"]) {
     font-family:'Roboto';
 }
-a, a:hover {
+a, a:hover, a:focus {
     text-decoration:inherit;
     font-size:inherit;
     font-weight:inherit;
     color:inherit;
     float:none;
+}
+a:focus {
+    outline: 0;
 }
     p a {       border-bottom:1px dotted #666 }
     p a:hover { border-bottom:1px solid #666 }

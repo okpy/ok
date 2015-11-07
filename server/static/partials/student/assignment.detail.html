@@ -21,7 +21,7 @@
                 <a ng-hide="assign.final.submission.score.length > 0"
                    ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'
                    class="link view-submission">
-                    Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
+                    Submission ({{ assign.final.backup.server_time | amCalendar }}) &raquo;
                 </a><br>
                 <div ng-repeat="score in assign.final.submission.score">
                   <a ng-click="showComposition(score, assign.final.backup.id)"
@@ -68,7 +68,7 @@
         <h2 class="sidebar-subtitle">Submissions</h2>
         <ul class="subms sidebar-list">
             <li ng-if="!assign.submissions || assign.submissions.length == 0">No submissions found.</li>
-            <li ng-repeat="subm in assign.submissions | orderBy:'created':true">
+            <li ng-repeat="subm in assign.submissions | orderBy:'server_time':true">
                 <a class="flag"
                    ng-class=" {active: assign.final.final_submission && subm.id == assign.final.submission.id }"
                     ng-click="changeSubmission(subm)">
@@ -79,7 +79,7 @@
                     <span class="cloth"></span>
                     <span class="stem"></span>
                 </a>
-                {{ subm.created | amCalendar }} by {{ subm.submitter.email[0] }}
+                {{ subm.server_time | amCalendar }} by {{ subm.submitter.email[0] }}
                 <a ui-sref="submission.detail({courseId: courseId, submissionId:subm.backup.id})">view
                     <span class="arrow right dark fat"></span>
                 </a>
@@ -91,8 +91,8 @@
         <h2 class="sidebar-subtitle">Backups</h2>
         <ul class="sidebar-list">
             <li ng-if="!assign.backups || assign.backups.length == 0">No backups found. Have you run ok?</li>
-            <li ng-repeat="backup in assign.backups | orderBy:'created':true">
-                {{ backup.created | amCalendar }} by {{ backup.submitter.email[0] }}
+            <li ng-repeat="backup in assign.backups | orderBy:'server_time':true">
+                {{ backup.server_time | amCalendar }} by {{ backup.submitter.email[0] }}
                 <a ui-sref="submission.detail({courseId: courseId, submissionId:backup.id})">view
                     <span class="arrow right dark fat"></span>
                 </a>

@@ -12,6 +12,7 @@ import itertools
 from os import path
 from app import constants
 import requests
+import pytz
 
 try:
     from cStringIO import StringIO
@@ -27,7 +28,7 @@ from google.appengine.ext import deferred
 import cloudstorage as gcs
 
 from app import app
-from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE
+from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE, TIMEZONE
 from app.exceptions import BadValueError
 
 # TODO Looks like this can be removed just by relocating parse_date
@@ -48,6 +49,8 @@ def parse_date(date):
     except ValueError:
         date = datetime.datetime.strptime(
             date, "%Y-%m-%d %H:%M:%S")
+
+    logging.debug("utils.parse_date being used")
 
     delta = datetime.timedelta(hours=7)
     return datetime.datetime.combine(date.date(), date.time()) + delta
@@ -413,7 +416,7 @@ def assign_submission(backup_id, submit, revision=False):
         subm.put()
 
         # Can only make a final submission before it's due, or if it's revision
-        if datetime.datetime.now() < assign.get_result().due_date:
+        if datetime.datetime.now(pytz.utc) < normalize_to_utc(assign.get_result().due_date):
             subm.mark_as_final()
         elif revision:
             # Mark as final handles changing revision attribute.
@@ -729,3 +732,17 @@ def diff(s1, s2):
     lines1 = s1.split('\n')
     lines2 = s2.split('\n')
     return list(differ.compare(lines1, lines2))
+
+
+# Timezone Awareness
+
+
+def normalize_to_utc(dt):
+    '''Convert naive time to UTC time without info'''
+    if dt:
+        if hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+            return dt # To avoid pytz error
+        return pytz.utc.localize(dt)
+    else:
+        return dt # Allow none DT, (for testing?)
+

@@ -23,14 +23,16 @@
             <a ng-hide="assign.final.submission.score.length > 0"
                ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'
                class="link view-submission">
-              Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
+              Submission ({{ assign.final.backup.server_time | amCalendar }}) &raquo;
             </a><br>
-            <div ng-repeat="score in assign.final.submission.score">
-              <a ng-hide="score.tag == 'autograder'"
-                 ng-click="showComposition(score, assign.final.backup.id)"
-                 class="link view-submission">{{ score.tag }}: {{ score.score }} &raquo;</a></p>
-              </a>
-            </div>
+          </p>
+          <div ng-repeat="score in assign.final.submission.score">
+            <p><a ng-hide="score.tag == 'autograder'"
+               ng-click="showComposition(score, assign.final.backup.id)"
+               class="link view-submission"
+               href="javascript:void(0)">{{ score.tag }}: {{ score.score }} &raquo;</a>
+            </a></p>
+          </div>
         </div>
         <div class="blob-action" ng-click="openDetails(assign)">View
           Details<span class="{{ assign.assignment.active || assign.assignment.revision ? 'white' : 'dark' }} arrow right"></span></div>

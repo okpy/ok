@@ -27,9 +27,10 @@ Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 import datetime
 import itertools
 import logging
+import pytz
 
 from app import app
-from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
+from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES, TIMEZONE
 from app.exceptions import *
 from app import utils
 from flask import json
@@ -58,14 +59,11 @@ class JSONEncoder(old_json):
 
 app.json_encoder = JSONEncoder
 
-def convert_timezone(utc_dt):
-    """Convert times to Pacific time."""
-    # This looks like a hack... is it even right? What about daylight savings?
-    # Correct approach: each course should have a timezone. All times should be
-    # stored in UTC for easy comparison. Dates should be converted to
-    # course-local time when displayed.
-    delta = datetime.timedelta(hours=-7)
-    return datetime.datetime.combine(utc_dt.date(), utc_dt.time()) + delta
+def convert_timezone(utc_dt, tz=TIMEZONE):
+    """Convert times to specified (defaults to America/Los_Angeles)."""
+    coruse_tz = pytz.timezone(tz)
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(coruse_tz)
+    return coruse_tz.normalize(local_dt) # Normalize for DST edgecases.
 
 
 class Base(ndb.Model):
@@ -485,7 +483,8 @@ class Assignment(Base):
     due_date = ndb.DateTimeProperty()
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
-        lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
+        lambda a: utils.normalize_to_utc(a.due_date) and 
+            datetime.datetime.now(pytz.utc) <= utils.normalize_to_utc(a.due_date))
     revision = ndb.BooleanProperty(default=False)
     autograding_key = ndb.StringProperty()
     autograding_enabled = ndb.BooleanProperty(default=False)
@@ -754,16 +753,16 @@ class Submission(Base):
                 final.revision = self.key
                 self.is_revision = True
                 self.put()
-            elif datetime.datetime.now() > assignment.lock_date:
+            elif datetime.datetime.now(pytz.utc) > utils.normalize_to_utc(assignment.lock_date):
                 return ValueError("Cannot change submission after due date")
-            elif self.server_time <= assignment.lock_date:
+            elif utils.normalize_to_utc(self.server_time) <= utils.normalize_to_utc(assignment.lock_date):
                 final.submitter = self.submitter
                 final.submission = self.key
             else:
                 return ValueError("Cannot flag submission that is past due date")
             return final.put()
         else:
-            if self.server_time < assignment.lock_date:
+            if utils.normalize_to_utc(self.server_time) < utils.normalize_to_utc(assignment.lock_date):
                 group = self.submitter.get().get_group(self.assignment)
                 final = FinalSubmission(
                     assignment=self.assignment, submission=self.key)

@@ -10,7 +10,7 @@
 
 <div>
   <div class="center-block">
-    <h2>Submission: {{submission.created | amCalendar}} </h2>
+    <h2>Submission: {{submission.server_time | amCalendar}} </h2>
     <span ng-if="submission.score.length != 0" ng-repeat="score in submission.score" class="badge bg-info">
       Graded - {{score.score}} - {{score.grader.email[0]}}
     </span>
