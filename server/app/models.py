@@ -27,9 +27,10 @@ Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 import datetime
 import itertools
 import logging
+import pytz
 
 from app import app
-from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
+from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES, TIMEZONE
 from app.exceptions import *
 from app import utils
 from flask import json
@@ -58,15 +59,11 @@ class JSONEncoder(old_json):
 
 app.json_encoder = JSONEncoder
 
-def convert_timezone(utc_dt):
-    """Convert times to Pacific time."""
-    # This looks like a hack... is it even right? What about daylight savings?
-    # Correct approach: each course should have a timezone. All times should be
-    # stored in UTC for easy comparison. Dates should be converted to
-    # course-local time when displayed.
-    delta = datetime.timedelta(hours=-7)
-    return datetime.datetime.combine(utc_dt.date(), utc_dt.time()) + delta
-
+def convert_timezone(utc_dt, tz=TIMEZONE):
+    """Convert times to specified (defaults to America/Los_Angeles)."""
+    coruse_tz = pytz.timezone('America/Los_Angeles')
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(coruse_tz)
+    return coruse_tz.normalize(local_dt) # Normalize for DST edgecases.
 
 class Base(ndb.Model):
     """Shared utility methods and properties."""
