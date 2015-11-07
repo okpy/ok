@@ -96,8 +96,9 @@ def DateTimeArg(**kwds):
 
         course_tz = pytz.timezone(TIMEZONE)
         course_time = course_tz.localize(date)
-        utc_date = course_tz.normalize(course_time).astimezone(pytz.utc)
+        utc_date = course_tz.normalize(course_time).astimezone(pytz.utc).replace(tzinfo=None)
         return (op, utc_date) if op else utc_date
+
     return Arg(None, use=parse_date, **kwds)
 
 MODEL_VERSION = 'v2'
@@ -1285,9 +1286,9 @@ class SubmissionAPI(APIResource):
         if submitter is None:
             submitter = user.key
 
-        due = valid_assignment.due_date
-        late_flag = valid_assignment.lock_date and \
-                    datetime.datetime.now() >= valid_assignment.lock_date
+        due = utils.normalize_to_utc(valid_assignment.due_date)
+        late_flag = utils.normalize_to_utc(valid_assignment.lock_date) and \
+                    datetime.datetime.now(pytz.utc) >= utils.normalize_to_utc(valid_assignment.lock_date)
         revision = valid_assignment.revision
 
         if submit and late_flag:

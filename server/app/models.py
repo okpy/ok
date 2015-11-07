@@ -65,6 +65,7 @@ def convert_timezone(utc_dt, tz=TIMEZONE):
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(coruse_tz)
     return coruse_tz.normalize(local_dt) # Normalize for DST edgecases.
 
+
 class Base(ndb.Model):
     """Shared utility methods and properties."""
     created = ndb.DateTimeProperty(auto_now_add=True)
@@ -482,7 +483,8 @@ class Assignment(Base):
     due_date = ndb.DateTimeProperty()
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
-        lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
+        lambda a: utils.normalize_to_utc(a.due_date) and 
+            datetime.datetime.now(pytz.utc) <= utils.normalize_to_utc(a.due_date))
     revision = ndb.BooleanProperty(default=False)
     autograding_key = ndb.StringProperty()
     autograding_enabled = ndb.BooleanProperty(default=False)
@@ -751,16 +753,16 @@ class Submission(Base):
                 final.revision = self.key
                 self.is_revision = True
                 self.put()
-            elif datetime.datetime.now() > assignment.lock_date:
+            elif datetime.datetime.now(pytz.utc) > utils.normalize_to_utc(assignment.lock_date):
                 return ValueError("Cannot change submission after due date")
-            elif self.server_time <= assignment.lock_date:
+            elif utils.normalize_to_utc(self.server_time) <= utils.normalize_to_utc(assignment.lock_date):
                 final.submitter = self.submitter
                 final.submission = self.key
             else:
                 return ValueError("Cannot flag submission that is past due date")
             return final.put()
         else:
-            if self.server_time < assignment.lock_date:
+            if utils.normalize_to_utc(self.server_time) < utils.normalize_to_utc(assignment.lock_date):
                 group = self.submitter.get().get_group(self.assignment)
                 final = FinalSubmission(
                     assignment=self.assignment, submission=self.key)
