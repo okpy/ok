@@ -29,14 +29,14 @@
 
       </div>
       <div class="center-block">
-
         <div class="btn-group">
           <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()" ng-show="hideEmpty"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
           <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()" ng-hide="hideEmpty"><i class="fa fa-fw fa-arrows-v"></i> Collapse Code</button>
-          <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.backup.id}}/download'>
-            <i class="fa fa-fw fa-cloud-download"></i> Download </button>
-          </div>
+          <a class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.backup.id}}/download'>
+            <i class="fa fa-fw fa-cloud-download"></i> Download 
+          </a>
         </div>
+      </div>
 
         <div ng-repeat="(file_name, contents) in diff.diff">
           <diff/>
