@@ -414,13 +414,13 @@ class User(Base):
                     element for each combination of group member and score.
                 2) A boolean indicating whether the student had a
                     scored final submission for ASSIGNMENT.
-            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
         """
         fs = self.get_final_submission(assignment.key)
         scores = []
         if fs:
             scores = fs.get_scores()
-        return (scores, True) if scores else ([[self.email[0], 0, None, None, None]], False)
+        return (scores, True) if scores else ([[self.email[0], 0, None, None, None, None, None]], False)
 
 class Course(Base):
     """Courses are expected to have a unique offering."""
@@ -483,7 +483,7 @@ class Assignment(Base):
     due_date = ndb.DateTimeProperty()
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
-        lambda a: utils.normalize_to_utc(a.due_date) and 
+        lambda a: utils.normalize_to_utc(a.due_date) and
             datetime.datetime.now(pytz.utc) <= utils.normalize_to_utc(a.due_date))
     revision = ndb.BooleanProperty(default=False)
     autograding_key = ndb.StringProperty()
@@ -1264,7 +1264,7 @@ class FinalSubmission(Base):
 
     def get_scores(self):
         """
-        Return a list of lists of the format [[student, score, message, grader, tag]]
+        Return a list of lists of the format [[student, score, message, grader, tag, subm_id, revision_id]]
         if the submission has been scored. Otherwise an empty list.
         If the submission is a group submission, there will be an element
         for each combination of student and score.
@@ -1280,12 +1280,16 @@ class FinalSubmission(Base):
             member_row = member.get()
             if member_row:
               email = member_row.email[0]
-              for score in self.submission.get().score:
+              revision_id = None if not self.revision else self.revision.id()
+              subm = self.submission.get()
+              for score in subm.score:
                   all_scores.append([email,
                           score.score,
                           score.message,
                           score.grader.get().email[0],
-                          score.tag])
+                          score.tag,
+                          subm.key.id(),
+                          revision_id])
             else:
               logging.warning("User key not found - " + str(member))
         return all_scores
