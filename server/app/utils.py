@@ -152,9 +152,9 @@ def create_csv_content(content):
 def data_for_scores(assignment, user):
     """
     Returns a tuple of two values a list of lists of score info for assignment.
-    Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+    Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
     """
-    content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+    content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
     course = assignment.course.get()
     groups = ModelProxy.Group.lookup_by_assignment(assignment)
     seen_members = set()
@@ -373,7 +373,6 @@ def assign_staff_to_queues(assignment_key, staff_list):
         subms = ModelProxy.FinalSubmission.query(
             ModelProxy.FinalSubmission.assignment == assignment_key
         ).fetch()
-
         queues = []
 
         for instr in staff_list:
