@@ -1107,9 +1107,9 @@ class Group(Base):
 
         # Handle the case where the member key no longer exists.
         if not member:
-          return [["Unknown-"+str(self.member[0]), 0, None, None, None]]
+          return [["Unknown-"+str(self.member[0]), 0, None, None, None, None, None]]
 
-        return [[member.email[0], 0, None, None, None]]
+        return [[member.email[0], 0, None, None, None, None, None]]
 
 
 
