@@ -794,7 +794,7 @@ class AssignmentAPI(APIResource):
                 'grade_final': Arg(bool),
                 'subm': Arg(int),
                 'testing': Arg(bool, default=False),
-                'backup_promotion': Arg(bool, default=True),
+                'promote_backups': Arg(bool, default=True),
                 'token': Arg(str)
             }
         },
@@ -864,7 +864,6 @@ class AssignmentAPI(APIResource):
         if 'grade_final' in data and data['grade_final']:
             #Collect all final submissions and run grades.
             deferred.defer(autograde_final_subs, obj, user, data)
-
             if 'promote_backups' in data and data['promote_backups']:
               # Force promote backups and run autograder
               deferred.defer(promote_student_backups, obj, True, user, data)

@@ -686,17 +686,17 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
 
     :param assignment - an assignment object
     """
-    enrollment = ModelProxy.Participant.query(
+    enrollment = list(ModelProxy.Participant.query(
         ModelProxy.Participant.course == assignment.course,
-        ModelProxy.Participant.role == STUDENT_ROLE).get()
+        ModelProxy.Participant.role == STUDENT_ROLE))
 
     newly_created_fs = []
-
-    for student in enrollment:
+    for participant in enrollment:
+        student = participant.user.get()
         fs = student.get_final_submission(assignment)
         if not fs:
-            recent_bck = student.get_backups(assignment.key, 1)
-            new_sub = force_promote_backup(recent_bck)
+            recent_bck = student.get_backups(assignment.key, 1)[0]
+            new_sub = force_promote_backup(recent_bck.key.id())
             newly_created_fs.append(new_sub.id())
 
     if autograde:
