@@ -701,7 +701,8 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
                     new_sub = force_promote_backup(recent_bcks[0].key.id())
                     newly_created_fs.append(new_sub.id())
                 except ValueError as e:
-                    logging.error(e) # For invalid submissions
+                    error_msg = "{email} only had backups past the due date".format(email=student.email[0])
+                    logging.info(error_msg)
                     continue
 
     if autograde:

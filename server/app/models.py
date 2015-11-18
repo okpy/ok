@@ -763,12 +763,11 @@ class Submission(Base):
                 raise ValueError("Cannot flag submission that is past due date")
             return final.put()
         else:
-            if utils.normalize_to_utc(self.server_time) < utils.normalize_to_utc(assignment.lock_date):
+            if utils.normalize_to_utc(self.server_time) < utils.normalize_to_utc(assignment.due_date):
                 group = self.submitter.get().get_group(self.assignment)
                 final = FinalSubmission(
                     assignment=self.assignment, submission=self.key,
                     submitter=backup.submitter)
-                logging.info(final)
                 if group:
                     final.group = group.key
                 return final.put()
