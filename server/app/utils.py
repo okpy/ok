@@ -695,13 +695,14 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
         student = participant.user.get()
         fs = student.get_final_submission(assignment)
         if not fs:
-            recent_bck = student.get_backups(assignment.key, 1)[0]
-            try:
-                new_sub = force_promote_backup(recent_bck.key.id())
-            except ValueError:
-                continue
-            logging.info("Promoted student backup to final submission;")
-            newly_created_fs.append(new_sub.id())
+            recent_bcks = student.get_backups(assignment.key, 1)
+            if len(recent_bcks) > 0:
+                try:
+                    new_sub = force_promote_backup(recent_bcks[0].key.id())
+                    newly_created_fs.append(new_sub.id())
+                except ValueError as e:
+                    logging.error(e) # For invalid submissions
+                    continue
 
     if autograde:
         return autograde_subms(assignment, user, data, newly_created_fs)
@@ -719,8 +720,9 @@ def force_promote_backup(backup_id):
         logging.info("Submission had no file_contents; not processing")
         return
 
-    assign = backup.assignment.get_async()
-    subm = ModelProxy.Submission(backup=backup.key)
+    subm = ModelProxy.Submission(backup=backup.key,
+                 server_time=backup.server_time)
+    subm.put()
     return subm.mark_as_final()
 
 import difflib
