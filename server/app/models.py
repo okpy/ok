@@ -747,6 +747,7 @@ class Submission(Base):
         """Create or update a final submission."""
         final = self.get_final()
         assignment = self.assignment.get()
+        backup = self.backup.get()
         if final:
             if assignment.revision:
                 # Follow resubmssion procedure
@@ -763,9 +764,9 @@ class Submission(Base):
             return final.put()
         else:
             logging.info("Attempting to mark as final")
-            logging.info(self.server_time)
+            logging.info(backup.server_time)
             logging.info(assignment.lock_date)
-            if utils.normalize_to_utc(self.server_time) < utils.normalize_to_utc(assignment.lock_date):
+            if utils.normalize_to_utc(backup.server_time) < utils.normalize_to_utc(assignment.lock_date):
                 group = self.submitter.get().get_group(self.assignment)
                 final = FinalSubmission(
                     assignment=self.assignment, submission=self.key)
