@@ -695,7 +695,7 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
         student = participant.user.get()
         fs = student.get_final_submission(assignment)
         if not fs:
-            backup_q = student.backups(group, assignment)
+            backup_q = student.backups(fs.group, assignment)
             elgible_backups = backup_q.filter(Backup.server_time <= assignment.due_date)
             chosen_backup = elgible_backups.get()
 
