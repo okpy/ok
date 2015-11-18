@@ -701,14 +701,8 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
 
             # TODO: Also get submissions that weren't marked as final for some reason
             if chosen_backup:
-                try:
-                    # TODO: Get a bunch of backups and choose to closest to due date
-                    new_sub = force_promote_backup(chosen_backup.key.id())
-                    newly_created_fs.append(new_sub.id())
-                except ValueError as e:
-                    error_msg = "{email} only had backups past the due date".format(email=student.email[0])
-                    logging.info(error_msg)
-                    continue
+                new_sub = force_promote_backup(chosen_backup.key.id())
+                newly_created_fs.append(new_sub.id())
 
     if autograde:
         return autograde_subms(assignment, user, data, newly_created_fs)
