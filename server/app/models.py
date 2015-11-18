@@ -224,7 +224,8 @@ class User(Base):
             return group.member
 
     def backups(self, group, assignment):
-        """A query that fetches all backups for a group and assignment."""
+        """A query that fetches all backups for a group and assignment
+            (ordered by recency with the most recent backup first)."""
         members = self.members(group)
         return Backup.query(
             Backup.submitter.IN(members),

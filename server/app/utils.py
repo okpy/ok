@@ -697,7 +697,7 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
         if not fs:
             backup_q = student.backups(group, assignment)
             elgible_backups = backup_q.filter(Backup.server_time <= assignment.due_date)
-            chosen_backup = elgible_backups.order(-Backup.server_time).get()
+            chosen_backup = elgible_backups.get()
 
             # TODO: Also get submissions that weren't marked as final for some reason
             if chosen_backup:
