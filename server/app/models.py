@@ -754,14 +754,17 @@ class Submission(Base):
                 self.is_revision = True
                 self.put()
             elif datetime.datetime.now(pytz.utc) > utils.normalize_to_utc(assignment.lock_date):
-                return ValueError("Cannot change submission after due date")
+                raise ValueError("Cannot change submission after due date")
             elif utils.normalize_to_utc(self.server_time) <= utils.normalize_to_utc(assignment.lock_date):
                 final.submitter = self.submitter
                 final.submission = self.key
             else:
-                return ValueError("Cannot flag submission that is past due date")
+                raise ValueError("Cannot flag submission that is past due date")
             return final.put()
         else:
+            logging.info("Attempting to mark as final")
+            logging.info(self.server_time)
+            logging.info(assignment.lock_date)
             if utils.normalize_to_utc(self.server_time) < utils.normalize_to_utc(assignment.lock_date):
                 group = self.submitter.get().get_group(self.assignment)
                 final = FinalSubmission(
@@ -769,7 +772,7 @@ class Submission(Base):
                 if group:
                     final.group = group.key
                 return final.put()
-        return ValueError("Cannot flag submission that is past due date")
+        raise ValueError("Cannot flag submission that is past due date")
 
     def resubmit(self, user_key):
         """

@@ -696,7 +696,11 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
         fs = student.get_final_submission(assignment)
         if not fs:
             recent_bck = student.get_backups(assignment.key, 1)[0]
-            new_sub = force_promote_backup(recent_bck.key.id())
+            try:
+                new_sub = force_promote_backup(recent_bck.key.id())
+            except ValueError:
+                continue
+            logging.info("Promoted student backup to final submission;")
             newly_created_fs.append(new_sub.id())
 
     if autograde:
@@ -717,10 +721,7 @@ def force_promote_backup(backup_id):
 
     assign = backup.assignment.get_async()
     subm = ModelProxy.Submission(backup=backup.key)
-    subm.put()
     return subm.mark_as_final()
-
-
 
 import difflib
 
