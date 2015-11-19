@@ -691,7 +691,7 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
         ModelProxy.Participant.course == assignment.course,
         ModelProxy.Participant.role == STUDENT_ROLE))
 
-    new_submission = []
+    new_submissions = {}
     for participant in enrollment:
         student = participant.user.get()
         fs = student.get_final_submission(assignment.key)
@@ -704,11 +704,12 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
             # TODO: Also get submissions that weren't marked as final for some reason
             if chosen_backup:
                 new_fsub = force_promote_backup(chosen_backup.key.id())
-                new_submission.append(new_fsub.submission.id())
+                new_subm = new_fsub.get().submission
+                new_submissions[new_subm.id()] = new_subm.get().backup.id()
                 logging.info("Promoted backup for {}".format(student.email[0]))
 
     if autograde:
-        return autograde_subms(assignment, user, data, new_submission)
+        return autograde_subms(assignment, user, data, new_submissions)
 
 
 def force_promote_backup(backup_id):
