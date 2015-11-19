@@ -338,6 +338,13 @@ class FinalSubmissionTest(APIBaseTestCase):
         # This backup is now late - and can't be submitted as a revision
         subm = models.Submission(backup=self.backups['first'].key)
         subm.put()
+        try:
+            api.FinalSubmissionAPI().post(self.user, dict(submission=subm.key))
+        except ValueError as e:
+            self.assertEqual(str(e), 'Cannot change submission after due date')
+
+        self.set_lock_date(NOW + datetime.timedelta(days=1))
+
 
         api.FinalSubmissionAPI().post(self.user, dict(submission=subm.key))
         self.assertFinalSubmission(self.user, self.backups['first'])

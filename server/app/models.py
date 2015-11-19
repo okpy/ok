@@ -224,7 +224,8 @@ class User(Base):
             return group.member
 
     def backups(self, group, assignment):
-        """A query that fetches all backups for a group and assignment."""
+        """A query that fetches all backups for a group and assignment
+            (ordered by recency with the most recent backup first)."""
         members = self.members(group)
         return Backup.query(
             Backup.submitter.IN(members),
@@ -747,6 +748,7 @@ class Submission(Base):
         """Create or update a final submission."""
         final = self.get_final()
         assignment = self.assignment.get()
+        backup = self.backup.get()
         if final:
             if assignment.revision:
                 # Follow resubmssion procedure
@@ -754,22 +756,23 @@ class Submission(Base):
                 self.is_revision = True
                 self.put()
             elif datetime.datetime.now(pytz.utc) > utils.normalize_to_utc(assignment.lock_date):
-                return ValueError("Cannot change submission after due date")
+                raise ValueError("Cannot change submission after due date")
             elif utils.normalize_to_utc(self.server_time) <= utils.normalize_to_utc(assignment.lock_date):
                 final.submitter = self.submitter
                 final.submission = self.key
             else:
-                return ValueError("Cannot flag submission that is past due date")
+                raise ValueError("Cannot flag submission that is past due date")
             return final.put()
         else:
             if utils.normalize_to_utc(self.server_time) < utils.normalize_to_utc(assignment.lock_date):
                 group = self.submitter.get().get_group(self.assignment)
                 final = FinalSubmission(
-                    assignment=self.assignment, submission=self.key)
+                    assignment=self.assignment, submission=self.key,
+                    submitter=backup.submitter)
                 if group:
                     final.group = group.key
                 return final.put()
-        return ValueError("Cannot flag submission that is past due date")
+        raise ValueError("Cannot flag submissions that are past due date")
 
     def resubmit(self, user_key):
         """

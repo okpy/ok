@@ -175,7 +175,7 @@ class AssignmentAPITest(APIBaseTestCase):
         """ Tests report for autograding failure """
         with self.assertRaises(BadValueError):
             import requests
-            self.mock(requests, 'post').using(lambda *args, **kwargs: self.obj().set(status_code=900))
+            self.mock(requests, 'post').using(lambda *args, **kwargs: self.obj().set(status_code=500, text="Not allowed"))
             # Use the deferred task - since that's where submission occurs.
             utils.autograde_final_subs(self._assign, self.accounts['dummy_admin'], {
                 'grade_final': True,
