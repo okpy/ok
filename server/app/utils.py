@@ -693,16 +693,18 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
     newly_created_fs = []
     for participant in enrollment:
         student = participant.user.get()
-        fs = student.get_final_submission(assignment)
+        fs = student.get_final_submission(assignment.key)
+        group = student.get_group(assignment.key)
         if not fs:
-            backup_q = student.backups(fs.group, assignment)
-            elgible_backups = backup_q.filter(Backup.server_time <= assignment.due_date)
+            backup_q = student.backups(group, assignment.key)
+            elgible_backups = backup_q.filter(ModelProxy.Backup.server_time <= assignment.due_date)
             chosen_backup = elgible_backups.get()
 
             # TODO: Also get submissions that weren't marked as final for some reason
             if chosen_backup:
                 new_sub = force_promote_backup(chosen_backup.key.id())
                 newly_created_fs.append(new_sub.id())
+                logging.info("Promoted backup for {}".format(student.email[0]))
 
     if autograde:
         return autograde_subms(assignment, user, data, newly_created_fs)
