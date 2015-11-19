@@ -18,6 +18,12 @@ def seed():
     import random
     from google.appengine.ext import ndb
 
+    admin_user = models.User(
+        email=["test@example.com"],
+        is_admin=True
+    )
+    admin_user.put()
+
     def make_seed_course(creator):
         return models.Course(
             display_name="CS 61A",
@@ -102,7 +108,7 @@ def seed():
         delta = datetime.timedelta(days=days, seconds=seconds)
         sdate = (datetime.datetime.now() - delta)
 
-    def make_seed_submission(assignment, submitter, final=False):
+    def make_seed_backup(assignment, submitter, final=False):
         with open('app/seed/hog_modified.py') as fp:
             messages = {}
             messages['file_contents'] = {
@@ -111,20 +117,6 @@ def seed():
                 'submit': final
             }
 
-        g = models.User(
-            email=["test@example.com"],
-            is_admin=True
-        )
-        g.put()
-
-        autograder_output = 'Point breakdown:\n\ttestName: 1.0/1\n\ttestName: 1.0/1\n\nScore:\n\tTotal: 2.0'
-        score = models.Score(
-            score=10,
-            tag="Total",
-            message=autograder_output,
-            grader=g.key
-        )
-        score.put()
 
         messages = [models.Message(kind=kind, contents=contents)
                     for kind, contents in messages.items()]
@@ -136,7 +128,18 @@ def seed():
             client_time=random_date())
 
         backup.put()
+        return backup
 
+    def make_seed_submission(assignment, submitter, final=False, grader=admin_user):
+        backup = make_seed_backup(assignment, submitter, final)
+        autograder_output = 'Point breakdown:\n\ttestName: 1.0/1\n\ttestName: 1.0/1\n\nScore:\n\tTotal: 2.0'
+        score = models.Score(
+            score=10,
+            tag="Total",
+            message=autograder_output,
+            grader=grader.key
+        )
+        score.put()
         return models.Submission(backup=backup.key, score=[score])
 
 
@@ -163,7 +166,6 @@ def seed():
             client_time=random_date())
 
         backup.put()
-
         return models.Submission(backup=backup.key)
 
     def make_version(current_version):
@@ -224,15 +226,11 @@ def seed():
         subm.put()
 
     # Start putting things in the DB.
-
-    c = models.User(
-        email=["test@example.com"],
-        is_admin=True
-    )
-    c.put()
-    # Create a course
-    course = make_seed_course(c)
+    c = admin_user # bad variable name in use by many parts of this script
+    
+    course = make_seed_course(admin_user)
     course.put()
+
 
 
     a = models.User(
@@ -269,6 +267,13 @@ def seed():
         models.Participant.add_role(s.key, course.key, STAFF_ROLE)
         staff += [s]
 
+    for i in range(9):
+        forgetful_s = models.User(
+            email=["forget"+str(i)+"@student.com"],
+        )
+        forgetful_s.put()
+        models.Participant.add_role(forgetful_s.key, course.key, STUDENT_ROLE)
+        students += [forgetful_s]
 
     k = models.User(
         email=["dummy2@admin.com"],
@@ -346,12 +351,13 @@ def seed():
         # subm.put()
         # subms.append(subm)
 
+        # Create some Backups 
+        for s in students:
+            for i in range(3):
+                make_seed_backup(assign, s)
 
-        # scheme final
-        # subm = make_seed_scheme_submission(assign2, group_members[1], True)
-        # subm.put()
 
-        # Now create indiviual submission
+        # Now create indiviual submission, TODO: Enumerate instead of indexing
         for i in range(9):
             subm = make_seed_submission(assign, students[i])
             subm.put()
