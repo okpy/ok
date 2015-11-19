@@ -669,7 +669,8 @@ def autograde_subms(assignment, user, data, subm_ids, priority="default"):
         # TODO: Contact staff (via email)
       return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
     else:
-      raise BadValueError('The autograder the rejected your request')
+      error_message = 'The autograder the rejected your request. {}'.format(r.text)
+      raise BadValueError(error_message)
 
 def autograde_final_subs(assignment, user, data):
     subm_ids = {}
@@ -690,7 +691,7 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
         ModelProxy.Participant.course == assignment.course,
         ModelProxy.Participant.role == STUDENT_ROLE))
 
-    newly_created_fs = []
+    new_submission = []
     for participant in enrollment:
         student = participant.user.get()
         fs = student.get_final_submission(assignment.key)
@@ -702,12 +703,12 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
 
             # TODO: Also get submissions that weren't marked as final for some reason
             if chosen_backup:
-                new_sub = force_promote_backup(chosen_backup.key.id())
-                newly_created_fs.append(new_sub.id())
+                new_fsub = force_promote_backup(chosen_backup.key.id())
+                new_submission.append(new_fsub.submission.id())
                 logging.info("Promoted backup for {}".format(student.email[0]))
 
     if autograde:
-        return autograde_subms(assignment, user, data, newly_created_fs)
+        return autograde_subms(assignment, user, data, new_submission)
 
 
 def force_promote_backup(backup_id):
