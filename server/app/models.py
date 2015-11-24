@@ -1325,7 +1325,6 @@ class FinalSubmission(Base):
                         average_score = int(sum([s[1] for s in other_partner_parts])/len(other_partner_parts))
                         score[1] = average_score
                   elif is_partnered:
-                        # Only supports two member groups for now.
                         expected_letter = chr(97 + position) # 0 -> a, etc
                         if score[4].lower().strip() != "partner {}".format(expected_letter):
                             continue
