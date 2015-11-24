@@ -421,11 +421,15 @@ class User(Base):
         scores = []
         if fs:
             scores = fs.get_scores()
+        existing_subms = [s[5] for s in scores]
         submissions = self.get_submissions(assignment.key, num_submissions=50)  # Fetch all submissions as well
         for subm in submissions:
-            subm_scores = subm.export_scores()
-            if subm_scores:
-                scores.extend(subm_scores)
+            # Only include new submissions
+            subm_scores = [s for s in subm.export_scores() if s[5] not in existing_subms]
+
+            for score in subm_scores:
+                score[0] = self.email[0] # Emails should for be the person recieving the grade
+                score.append(subm_scores)
 
         return (scores, True) if scores else ([[self.email[0], 0, None, None, None, None, None, None]], False)
 
@@ -1124,6 +1128,9 @@ class Group(Base):
             member = m.get()
             if member:
               data, success = member.scores_for_assignment(assignment)
+              for score in data:
+                score[0] = member.email[0] # Emails should for be the person recieving the grade
+
               content.extend(data)
               if success:
                   # get_scores_for_student_or_group will return scores for all group members.
@@ -1298,7 +1305,8 @@ class FinalSubmission(Base):
             members = [member for member in self.group.get().member]
         else:
             members = [self.submitter]
-        for member in members:
+        for position, member in enumerate(members):
+            group_size = len(members)
             member_row = member.get()
             if member_row:
               email = member_row.email[0]
@@ -1306,10 +1314,28 @@ class FinalSubmission(Base):
               subm = self.submission.get()
               subm_scores = subm.export_scores()
               for score in subm_scores:
+                  score[0] = email # Score record should have user's email
+                  if not score[1]: # Blank - no scores avaialble
+                        all_scores.append(score)
+                        continue
+                  # Check for ordering.
+                  is_partnered = 'partner' in score[4].lower()
+                  # Individual group:
+                  if group_size == 1 and is_partnered:
+                        # Score is an average of all partnered parts of project
+                        other_partner_parts = [sc for sc in subm_scores if 'partner' in sc[[4]]]
+                        average_score = int(sum([s[1] for s in other_partner_parts])/len(other_partner_parts))
+                        score[1] = average_score
+                  elif is_partnered:
+                        # Only supports two member groups for now.
+                        expected_letter = chr(97 + position) # 0 -> a, etc
+                        if score[4].lower().strip() != "partner {}".format(expected_letter):
+                            continue
                   # temporary check for revision
                   score[6] = revision_id
                   score[7] = True # Set the FS Attribute to True
-              all_scores.extend(subm_scores)
+
+                  all_scores.append(score)
             else:
               logging.warning("User key not found - " + str(member))
         return all_scores
