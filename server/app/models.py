@@ -1128,8 +1128,6 @@ class Group(Base):
             member = m.get()
             if member:
               data, success = member.scores_for_assignment(assignment)
-              for score in data:
-                score[0] = member.email[0] # Emails should for be the person recieving the grade
 
               content.extend(data)
               if success:

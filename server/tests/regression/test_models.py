@@ -202,6 +202,9 @@ class ModelsTestCase(BaseTestCase):
         # Repeating the process should get the same results
         self.assertEqual(scores_out, user2.scores_for_assignment(assign.get()))
 
+        # Getting the scores via the group should also have the same result
+        self.assertEqual(scores, group.get().scores_for_assignment(assign.get()))
+
     ##########
     # Course #
     ##########
