@@ -114,7 +114,7 @@ class ModelsTestCase(BaseTestCase):
         user = models.User(email=['yo@yo.com']).put().get()
         self.assertEqual(
             user.scores_for_assignment(assign),
-            ([[user.email[0], 0, None, None, None, None, None]], False))
+            ([[user.email[0], 0, None, None, None, None, None, None]], False))
 
     def test_scores_forassign_w_fs_wo_scores(self):
         """Tests that fs scores are loaded"""
@@ -151,8 +151,11 @@ class ModelsTestCase(BaseTestCase):
         user = user.get()
         self.assertNotEqual(user.get_final_submission(assign), None)
         scores_out = user.scores_for_assignment(assign.get())
-        self.assertTrue(len(scores_out[0]) == 1)
-        self.assertTrue(len(scores_out[0][0]) == 7)
+        self.assertTrue(len(scores_out[0]) == 2) # two submissions with scores
+        self.assertTrue(len(scores_out[0][0]) == 8) # test that both scores have len 8
+        self.assertTrue(len(scores_out[0][1]) == 8) # test that both scores have len 8
+
+        self.assertTrue(scores_out[0][0][7]) # first submission should be a final one
         self.assertEqual(scores_out[0][0][5], subm.id())
         self.assertEqual(scores_out[0][0][6], revision.id())
 

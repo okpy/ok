@@ -152,9 +152,9 @@ def create_csv_content(content):
 def data_for_scores(assignment, user):
     """
     Returns a tuple of two values a list of lists of score info for assignment.
-    Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
+    Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID', 'IS_FINAL']]
     """
-    content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
+    content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID', 'IS_FINAL']]
     course = assignment.course.get()
     groups = ModelProxy.Group.lookup_by_assignment(assignment)
     seen_members = set()
