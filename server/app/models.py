@@ -1321,7 +1321,7 @@ class FinalSubmission(Base):
                   # Individual group:
                   if group_size == 1 and is_partnered:
                         # Score is an average of all partnered parts of project
-                        other_partner_parts = [sc for sc in subm_scores if 'partner' in sc[[4]]]
+                        other_partner_parts = [sc for sc in subm_scores if 'partner' in sc[4]]
                         average_score = int(sum([s[1] for s in other_partner_parts])/len(other_partner_parts))
                         score[1] = average_score
                   elif is_partnered:
