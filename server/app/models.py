@@ -463,12 +463,10 @@ class Course(Base):
         return Assignment.query(Assignment.course == self.key)
 
     def get_students(self, user):
-
         query = Participant.query(
             Participant.course == self.key,
             Participant.role == 'student')
-
-        return list(query.fetch())
+        return query.fetch()
 
 
 class Assignment(Base):

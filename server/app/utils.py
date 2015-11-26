@@ -134,66 +134,6 @@ def add_to_zip(zipfile, files, dir=''):
         zipfile.writestr(path.join(dir, filename), unicode(contents).encode('utf-8'))
     return zipfile
 
-def create_csv_content(content):
-    """
-    Return all contents in CSV file format. Content must be a list of lists.
-    """
-    scsv = StringIO()
-    writer = csv.writer(scsv)
-    try:
-        writer.writerows(content)
-    except csv.Error as e:
-        scsv.close()
-        sys.exit('Error creating CSV: {}'.format(e))
-    contents = scsv.getvalue()
-    scsv.close()
-    return contents
-
-def data_for_scores(assignment, user):
-    """
-    Returns a tuple of two values a list of lists of score info for assignment.
-    Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
-    """
-    content = [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
-    course = assignment.course.get()
-    groups = ModelProxy.Group.lookup_by_assignment(assignment)
-    seen_members = set()
-
-    for group in groups:
-        members = group.member
-        seen_members |= set(members)
-        content.extend(group.scores_for_assignment(assignment))
-
-    students = [part.user.get() for part in course.get_students(user) if part.user not in seen_members]
-    for student in students:
-        content.extend(student.scores_for_assignment(assignment)[0])
-
-    return content
-
-def create_gcs_file(gcs_filename, contents, content_type):
-    """
-    Creates a GCS csv file with contents CONTENTS.
-    """
-    try:
-        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'project-private'})
-        gcs_file.write(contents)
-        gcs_file.close()
-    except Exception as e:
-        logging.exception("ERROR: {}".format(e))
-        try:
-            gcs.delete(gcs_filename)
-        except gcs.NotFoundError:
-            logging.info("Could not delete file " + gcs_filename)
-    logging.info("Created file " + gcs_filename)
-
-
-def make_csv_filename(assignment, infotype):
-    """ Returns filename of format INFOTYPE_COURSE_ASSIGNMENT.csv """
-    course_name = assignment.course.get().offering
-    assign_name = assignment.display_name
-    filename = '{}_{}_{}.csv'.format(infotype, course_name, assign_name)
-    return filename.replace('/', '_').replace(' ', '_')
-
 def paginate(entries, page, num_per_page):
     """
     Added stuff from
@@ -549,18 +489,55 @@ def check_user(user_key):
 
     deferred.defer(deferred_check_user, user_key)
 
+def create_gcs_file(filename, content_type):
+    """
+    Create a Google Cloud Storage file with name FILENAME and content type
+    (MIME type) CONTENT_TYPE. Returns the newly opened file object.
+
+    Use with contextlib.closing like this:
+    with contextlib.closing(create_gcs_file('grades.csv', 'text/csv')) as f:
+    """
+    return gcs.open(filename, 'w',
+        content_type=content_type,
+        options={'x-goog-acl': 'project-private'})
+
+def write_scores_to_csv(csv_file, assignment, user):
+    """
+    Write scores to a CSV file for an assignment.
+    Format: ['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']
+    """
+    writer = csv.writer(csv_file)
+    seen_members = set()
+
+    # header
+    writer.writerow(['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID'])
+
+    # students with groups
+    for group in ModelProxy.Group.lookup_by_assignment(assignment):
+        seen_members.update(group.member)
+        writer.writerows(group.scores_for_assignment(assignment))
+
+    # students without groups
+    course = assignment.course.get()
+    for part in course.get_students(user):
+        if part.user not in seen_members:
+            student = part.user.get()
+            writer.writerows(student.scores_for_assignment(assignment))
+
+def make_csv_filename(assignment, infotype):
+    """ Returns filename of format INFOTYPE_COURSE_ASSIGNMENT.csv """
+    course_name = assignment.course.get().offering
+    assign_name = assignment.display_name
+    filename = '{}_{}_{}.csv'.format(infotype, course_name, assign_name)
+    return filename.replace('/', '_').replace(' ', '_')
 
 def scores_to_gcs(assignment, user):
     """ Writes all final submission scores
     for the given assignment to GCS csv file. """
-    content = data_for_scores(assignment, user)
-    csv_contents = create_csv_content(content)
-    assign_name = assignment.name
-    # Not sure what this line was doing here.
-    # create_gcs_file(assignment, csv_contents, 'scores')
     csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
-    create_gcs_file(csv_filename, csv_contents, 'text/csv')
-
+    with contextlib.closing(create_gcs_file(csv_filename, 'text/csv')) as f:
+        write_scores_to_csv(f)
+    logging.info("Exported scores to " + filename)
 
 def add_subm_to_zip(subm, zipfile, submission):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
@@ -618,10 +595,7 @@ def make_zip_filename(user, now):
 def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
     query = SearchAPI.querify(data['query'])
-    gcs_file = gcs.open(filename, 'w',
-        content_type='application/zip',
-        options={'x-goog-acl': 'project-private'})
-    with contextlib.closing(gcs_file) as f:
+    with contextlib.closing(create_gcs_file(filename, 'application/zip')) as f:
         with zf.ZipFile(f, 'w') as zipfile:
             for result in query:
                 add_subm_to_zip(subm, zipfile, result)
@@ -752,4 +726,3 @@ def normalize_to_utc(dt):
         return pytz.utc.localize(dt)
     else:
         return dt # Allow none DT, (for testing?)
-
