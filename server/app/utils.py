@@ -522,7 +522,7 @@ def write_scores_to_csv(csv_file, assignment, user):
     for part in course.get_students(user):
         if part.user not in seen_members:
             student = part.user.get()
-            writer.writerows(student.scores_for_assignment(assignment))
+            writer.writerows(student.scores_for_assignment(assignment)[0])
 
 def make_csv_filename(assignment, infotype):
     """ Returns filename of format INFOTYPE_COURSE_ASSIGNMENT.csv """
