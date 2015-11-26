@@ -506,7 +506,7 @@ def write_scores_to_csv(csv_file, assignment, user):
     Write scores to a CSV file for an assignment.
     Format: ['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']
     """
-    writer = csv.writer(csv_file)
+    writer = csv.writer(csv_file, lineterminator='\n')
     seen_members = set()
 
     # header
