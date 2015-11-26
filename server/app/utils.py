@@ -537,7 +537,7 @@ def scores_to_gcs(assignment, user):
     csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
     with contextlib.closing(create_gcs_file(csv_filename, 'text/csv')) as f:
         write_scores_to_csv(f, assignment, user)
-    logging.info("Exported scores to " + filename)
+    logging.info("Exported scores to " + csv_filename)
 
 def add_subm_to_zip(subm, zipfile, submission):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
