@@ -160,13 +160,6 @@ class ModelsTestCase(BaseTestCase):
     # Course #
     ##########
 
-    def test_course_get_students_basic(self):
-        """Tests that get_students functions"""
-        student_key = models.User(email=['yo@yo.com']).put()
-        course = make_fake_course(student_key.get())
-        students = course.get_students(student_key)
-        self.assertTrue(isinstance(students, list))
-
     def test_course_get_students_function(self):
         """Tests that get_students works"""
         student_key = models.User(email=['yo@yo.com']).put()
@@ -174,7 +167,6 @@ class ModelsTestCase(BaseTestCase):
         models.Participant.add_role(
             student_key, course.key, constants.STUDENT_ROLE)
         enrollment = course.get_students(student_key)
-        self.assertTrue(isinstance(enrollment, list))
         students = [student.user for student in enrollment]
         self.assertIn(student_key, students)
 
