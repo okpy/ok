@@ -463,13 +463,9 @@ class Course(Base):
         return Assignment.query(Assignment.course == self.key)
 
     def get_students(self, user):
-
-        query = Participant.query(
+        return Participant.query(
             Participant.course == self.key,
             Participant.role == 'student')
-
-        return list(query.fetch())
-
 
 class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
@@ -956,7 +952,7 @@ class Group(Base):
         """ Returns all groups with the given assignment """
         if isinstance(assignment, Assignment):
             assign_key = assignment.key
-        return Group.query(Group.assignment == assign_key).fetch()
+        return Group.query(Group.assignment == assign_key)
 
     #@ndb.transactional
     def invite(self, email):
