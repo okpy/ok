@@ -422,14 +422,19 @@ class User(Base):
         if fs:
             scores = fs.get_scores()
         existing_subms = [s[5] for s in scores]
-        submissions = self.get_submissions(assignment.key, num_submissions=50)  # Fetch all submissions as well
+        group = self.get_group(assignment)
+
+        submissions = self.submissions(group, assignment.key).fetch(5)
+
         for subm in submissions:
             # Only include new submissions
             subm_scores = [s for s in subm.export_scores() if s[5] not in existing_subms]
 
             for score in subm_scores:
                 score[0] = self.email[0] # Emails should for be the person recieving the grade
-                score.append(subm_scores)
+
+            if subm_scores:
+                scores.extend(subm_scores)
 
         return (scores, True) if scores else ([[self.email[0], 0, None, None, None, None, None, None]], False)
 
