@@ -5,7 +5,7 @@ api_version: 1
 threadsafe: true
 instance_class: F2
 
-default_expiration: "10m"
+default_expiration: "5m"
 
 builtins:
 - appstats: on
