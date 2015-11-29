@@ -5,6 +5,9 @@ api_version: 1
 threadsafe: true
 instance_class: F2
 
+automatic_scaling:
+  max_idle_instances: 1
+
 default_expiration: "10m"
 
 builtins:
