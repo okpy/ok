@@ -1374,16 +1374,19 @@ class SearchAPI(APIResource):
 
     # maps flags to processing functions (e.g., instantiate objects)
     flags = {
-        'user': lambda op, email:
+        'user': lambda course_key, op, email:
             UserAPI.model.query(
                 op(UserAPI.model.email, email)).get(),
-        'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
-        'onlybackup': lambda op, boolean: boolean.lower() == 'true',
-        'onlyfinal': lambda op, boolean: boolean.lower() == 'true',
-        'onlywcode': lambda op, boolean: boolean.lower() == 'true',
-        'assignment': lambda op, name:
-            AssignmentAPI.model.query(
-                op(AssignmentAPI.model.display_name, name)).get(),
+        'date': lambda course_key, op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
+        'onlybackup': lambda course_key, op, boolean: boolean.lower() == 'true',
+        'onlyfinal': lambda course_key, op, boolean: boolean.lower() == 'true',
+        'onlywcode': lambda course_key, op, boolean: boolean.lower() == 'true',
+        'assignment': lambda course_key, op, name: (
+            AssignmentAPI.model
+            .query(op(AssignmentAPI.model.display_name, name))
+            .filter(AssignmentAPI.model.course == course_key)
+            .get()
+        )
     }
 
     def check_permissions(self, user, data):
@@ -1397,7 +1400,10 @@ class SearchAPI(APIResource):
     @staticmethod
     def results(data):
         """ Returns results of query, limiting results accordingly """
-        results = SearchAPI.querify(data['query']).fetch()
+        course_key = ndb.Key(
+            CourseAPI.model._get_kind(),
+            CourseAPI.key_type(data['courseId']))
+        results = SearchAPI.querify(data['query'], course_key).fetch()
         if data.get('all', 'true').lower() != 'true':
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
@@ -1456,13 +1462,13 @@ class SearchAPI(APIResource):
         return scope
 
     @classmethod
-    def objectify(cls, query):
+    def objectify(cls, query, course_key):
         """ converts keys into objects """
         scope = cls.translate(query)
         for k, v in scope.items():
             op, arg = v
             try:
-                scope[k] = (op, cls.flags[k](op, arg))
+                scope[k] = (op, cls.flags[k](course_key, op, arg))
             except KeyError:
                 raise BadValueError('No such flag "%s". Only \
                 these are allowed: %s' % (k, str(
@@ -1472,9 +1478,9 @@ class SearchAPI(APIResource):
         return scope
 
     @classmethod
-    def querify(cls, query):
+    def querify(cls, query, course_key):
         """ converts mush into a query object """
-        objects = cls.objectify(query)
+        objects = cls.objectify(query, course_key)
         model = cls.get_model(objects)
         args = cls.get_args(model, objects)
         query = model.query(*args)
