@@ -58,6 +58,7 @@ class UtilsTestCase(APIBaseTestCase):
 	def test_add_subm_to_zip(self):
 		""" Test that submission contents added to zip """
 		results = api.SearchAPI.results({
+			'courseId': self._course.key.id(),
 			'query': ''
 		})
 		for result in results:
