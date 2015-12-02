@@ -31,6 +31,7 @@ class SearchAPITest(APIBaseTestCase):
 		self.user = self.accounts['dummy_student2']
 		self._course = make_fake_course(self.user)
 		self._course.put()
+		self._course_id = self._course.key.id()
 		self._assign = make_fake_assignment(self._course, self.user)
 		self._assign.name = self._assign.display_name = self.assignment_name
 		self._assign.put()
@@ -157,13 +158,13 @@ class SearchAPITest(APIBaseTestCase):
 		""" Test that invalid flag is caught, raises BadValueError instead """
 		with self.assertRaises(BadValueError):
 			query = '-yolo Scheme'
-			self.API.objectify(query)
+			self.API.objectify(query, self._course.key)
 
 	def test_bad_arg(self):
 		""" Test that invalid arg is caught, raises BadValueError instead """
 		with self.assertRaises(BadValueError):
 			query = '-assignment Scheme -date yolo'
-			self.API.objectify(query)
+			self.API.objectify(query, self._course.key)
 
 
 	#################
@@ -173,31 +174,31 @@ class SearchAPITest(APIBaseTestCase):
 	def test_flag_onlyfinal(self):
 		""" Testing if onlyfinal flag operates without error """
 		query = '-assignment "%s" -onlyfinal %s'
-		self.API.querify(query % (self.assignment_name, 'true'))
-		self.API.querify(query % (self.assignment_name, 'false'))
+		self.API.querify(query % (self.assignment_name, 'true'), self._course_id)
+		self.API.querify(query % (self.assignment_name, 'false'), self._course_id)
 
 	def test_flag_onlyfinal_with_quotations(self):
 		""" Testing if onlyfinal flag with double quotations operates without error """
 		query = '-date --after "2015-06-22" -assignment "%s" -onlyfinal %s'
-		self.API.querify(query % (self.assignment_name, 'true'))
-		self.API.querify(query % (self.assignment_name, 'false'))
+		self.API.querify(query % (self.assignment_name, 'true'), self._course_id)
+		self.API.querify(query % (self.assignment_name, 'false'), self._course_id)
 
 	def test_flag_onlybackup(self):
 		""" Testing if onlybackup flag operates without error """
 		query = '-assignment "%s" -onlybackup %s'
-		self.API.querify(query % (self.assignment_name, 'true'))
-		self.API.querify(query % (self.assignment_name, 'false'))
+		self.API.querify(query % (self.assignment_name, 'true'), self._course_id)
+		self.API.querify(query % (self.assignment_name, 'false'), self._course_id)
 
 	def test_flag_with_user(self):
 		""" Testing if user flag operates without error """
 		query = '-assignment "%s" -user %s'
-		self.API.querify(query % (self.assignment_name, 'dummy2@student.com'))
-		self.API.querify(query % (self.assignment_name, 'dummy@admin.com'))
+		self.API.querify(query % (self.assignment_name, 'dummy2@student.com'), self._course_id)
+		self.API.querify(query % (self.assignment_name, 'dummy@admin.com'), self._course_id)
 
 	def test_flag_onlybackup_results(self):
 		""" Testing if onlybackup actually returns ONLY backups. """
 		query = '-assignment "%s" -onlybackup true' % self.assignment_name
-		results = self.API.querify(query).fetch()
+		results = self.API.querify(query, self._course_id).fetch()
 		self.assertTrue(len(results) > 0)
 
 		for result in results:
@@ -206,7 +207,7 @@ class SearchAPITest(APIBaseTestCase):
 	def test_flag_onlyfinal_results(self):
 		""" Testing if onlybackup actually returns ONLY backups. """
 		query = '-assignment "%s" -onlyfinal true' % self.assignment_name
-		results = self.API.querify(query).fetch()
+		results = self.API.querify(query, self._course_id).fetch()
 		self.assertTrue(len(results) > 0)
 
 		for result in results:
@@ -215,7 +216,7 @@ class SearchAPITest(APIBaseTestCase):
 	def test_flag_onlybackup_negated(self):
 		""" Testing that onlybackup negated does not limit results. """
 		query = '-assignment "%s" -onlybackup false' % self.assignment_name
-		results = self.API.querify(query).fetch()
+		results = self.API.querify(query, self._course_id).fetch()
 		self.assertTrue(len(results) > 0)
 
 		backups = [result for result in results if isinstance(result, models.Backup)]
@@ -224,7 +225,7 @@ class SearchAPITest(APIBaseTestCase):
 	def test_flag_onlyfinal_negated(self):
 		""" Testing that onlyfinal negated does not limit results. """
 		query = '-assignment "%s" -onlyfinal false' % self.assignment_name
-		results = self.API.querify(query).fetch()
+		results = self.API.querify(query, self._course_id).fetch()
 		self.assertTrue(len(results) > 0)
 
 		finals = [result for result in results if isinstance(result, models.FinalSubmission)]
@@ -233,7 +234,7 @@ class SearchAPITest(APIBaseTestCase):
 	def test_onlywcode(self):
 		""" Tests that onlywcode flag is disabled for now """
 		with self.assertRaises(BadValueError):
-			self.API.querify('-onlywcode true')
+			self.API.querify('-onlywcode true', self._course_id)
 
 	###############
 	# PERMISSIONS #
@@ -332,7 +333,7 @@ class SearchAPITest(APIBaseTestCase):
 	def test_order_functionality(self):
 		""" Tests that order actually works """
 		model = models.Submission
-		query = self.API.querify('-assignment "%s"' % self.assignment_name)
+		query = self.API.querify('-assignment "%s"' % self.assignment_name, self._course_id)
 		results = self.API.order(model, query)
 
 		time = None
@@ -343,12 +344,12 @@ class SearchAPITest(APIBaseTestCase):
 	def test_get_args_with_invalid_assignment(self):
 		""" Tests that get_args catches invalid/nonexistent assignment """
 		with self.assertRaises(BadValueError):
-			self.API.querify('-assignment Nonexistent')
+			self.API.querify('-assignment Nonexistent', self._course_id)
 
 	def test_get_args_with_invalid_user(self):
 		""" Tests that get_args catches invalid/nonexistent user """
 		with self.assertRaises(BadValueError):
-			self.API.querify('-user wh@tever.com')
+			self.API.querify('-user wh@tever.com', self._course_id)
 
 	def test_limits_validity(self):
 		""" Tests that limits are properly computer """

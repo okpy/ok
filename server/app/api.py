@@ -1400,10 +1400,7 @@ class SearchAPI(APIResource):
     @staticmethod
     def results(data):
         """ Returns results of query, limiting results accordingly """
-        course_key = ndb.Key(
-            CourseAPI.model._get_kind(),
-            CourseAPI.key_type(data['courseId']))
-        results = SearchAPI.querify(data['query'], course_key).fetch()
+        results = SearchAPI.querify(data['query'], data['courseId']).fetch()
         if data.get('all', 'true').lower() != 'true':
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
@@ -1478,8 +1475,11 @@ class SearchAPI(APIResource):
         return scope
 
     @classmethod
-    def querify(cls, query, course_key):
+    def querify(cls, query, course_id):
         """ converts mush into a query object """
+        course_key = ndb.Key(
+            CourseAPI.model._get_kind(),
+            CourseAPI.key_type(course_id))
         objects = cls.objectify(query, course_key)
         model = cls.get_model(objects)
         args = cls.get_args(model, objects)
