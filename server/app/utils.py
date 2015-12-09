@@ -594,7 +594,7 @@ def make_zip_filename(user, now):
 
 def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
-    query = SearchAPI.querify(data['query'])
+    query = SearchAPI.querify(data['query'], data['courseId'])
     with contextlib.closing(create_gcs_file(filename, 'application/zip')) as f:
         with zf.ZipFile(f, 'w') as zipfile:
             for result in query:
