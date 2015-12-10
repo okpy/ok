@@ -424,7 +424,7 @@ class User(Base):
         existing_subms = [s[5] for s in scores]
         group = self.get_group(assignment)
 
-        submissions = self.submissions(group, assignment.key).fetch(5)
+        submissions = self.submissions(group, assignment.key).fetch(50)
 
         for subm in submissions:
             # Only include new submissions
@@ -1124,16 +1124,17 @@ class Group(Base):
         """
         content = []
         member = self.member[0].get()
-
+        success = False
         for m in self.member:
             member = m.get()
             if member:
               data, success = member.scores_for_assignment(assignment)
-
               content.extend(data)
-              if success:
-                  # get_scores_for_student_or_group will return scores for all group members.
-                  return content
+
+        if success:
+            # Might result in duplicates - but trying to see if this will give me all data
+            # get_scores_for_student_or_group will return scores for all group members.
+            return content
 
         # Handle the case where the member key no longer exists.
         if not member:
