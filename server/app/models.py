@@ -237,12 +237,12 @@ class User(Base):
         return self.backups(group, assignment).fetch(num_backups)
 
     def submissions(self, group, assignment):
-        """A query that fetches all backups for a group and assignment."""
+        """A query that fetches all submissions for a group and assignment."""
         members = self.members(group)
         return Submission.query(
             Submission.submitter.IN(members),
             Submission.assignment == assignment
-        ).order(-Backup.server_time)
+        ).order(-Submission.server_time)
 
     def get_submissions(self, assignment, num_submissions=10):
         group = self.get_group(assignment)
@@ -415,13 +415,28 @@ class User(Base):
                     element for each combination of group member and score.
                 2) A boolean indicating whether the student had a
                     scored final submission for ASSIGNMENT.
-            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID', 'IS_FINAL']]
         """
         fs = self.get_final_submission(assignment.key)
         scores = []
         if fs:
             scores = fs.get_scores()
-        return (scores, True) if scores else ([[self.email[0], 0, None, None, None, None, None]], False)
+        existing_subms = [s[5] for s in scores]
+        group = self.get_group(assignment)
+
+        submissions = self.submissions(group, assignment.key).fetch(50)
+
+        for subm in submissions:
+            # Only include new submissions
+            subm_scores = [s for s in subm.export_scores() if s[5] not in existing_subms]
+
+            for score in subm_scores:
+                score[0] = self.email[0] # Emails should for be the person recieving the grade
+
+            if subm_scores:
+                scores.extend(subm_scores)
+
+        return (scores, True) if scores else ([[self.email[0], 0, None, None, None, None, None, None]], False)
 
 class Course(Base):
     """Courses are expected to have a unique offering."""
@@ -740,6 +755,20 @@ class Submission(Base):
                 FinalSubmission.submitter==submitter).get()
         return final
 
+    def export_scores(self):
+        subm_scores = []
+        email = self.submitter.get().email[0]
+        for score in self.score:
+            revision_id = None if self.is_revision else self.key.id()
+            subm_scores.append([email, score.score, score.message,
+                  score.grader.get().email[0],
+                  score.tag,
+                  self.key.id(),
+                  revision_id,
+                  False])
+        return subm_scores
+
+
     def mark_as_final(self):
         """Create or update a final submission."""
         final = self.get_final()
@@ -794,6 +823,7 @@ class Submission(Base):
             final.submitter = user_key
             final.submission = new_subm_key.get_result()
             final.put()
+
 
     @classmethod
     def _can(cls, user, need, submission, query):
@@ -1090,25 +1120,27 @@ class Group(Base):
             There is one element for each combination of
             group member and score.
             Ensures that each student only appears once in the list.
-            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISON', 'IS_FINAL']]
         """
         content = []
         member = self.member[0].get()
-
+        success = False
         for m in self.member:
             member = m.get()
             if member:
               data, success = member.scores_for_assignment(assignment)
               content.extend(data)
-              if success:
-                  # get_scores_for_student_or_group will return scores for all group members.
-                  return content
+
+        if success:
+            # Might result in duplicates - but trying to see if this will give me all data
+            # get_scores_for_student_or_group will return scores for all group members.
+            return content
 
         # Handle the case where the member key no longer exists.
         if not member:
-          return [["Unknown-"+str(self.member[0]), 0, None, None, None, None, None]]
+          return [["Unknown-"+str(self.member[0]), 0, None, None, None, None, None, None]]
 
-        return [[member.email[0], 0, None, None, None, None, None]]
+        return [[member.email[0], 0, None, None, None, None, None, None]]
 
 
 
@@ -1263,32 +1295,49 @@ class FinalSubmission(Base):
 
     def get_scores(self):
         """
-        Return a list of lists of the format [[student, score, message, grader, tag, subm_id, revision_id]]
+        Return a list of lists of the format [[student, score, message, grader, tag, subm_id, revision_id, is_final]]
         if the submission has been scored. Otherwise an empty list.
         If the submission is a group submission, there will be an element
         for each combination of student and score.
         """
-        # TODO: get the most recent score for each tag.
-        # Question: will all scores have a grader? In particular the scores from the autograder.
         all_scores = []
         if self.group:
             members = [member for member in self.group.get().member]
         else:
             members = [self.submitter]
-        for member in members:
+        for position, member in enumerate(members):
+            group_size = len(members)
             member_row = member.get()
             if member_row:
               email = member_row.email[0]
               revision_id = None if not self.revision else self.revision.id()
               subm = self.submission.get()
-              for score in subm.score:
-                  all_scores.append([email,
-                          score.score,
-                          score.message,
-                          score.grader.get().email[0],
-                          score.tag,
-                          subm.key.id(),
-                          revision_id])
+              subm_scores = subm.export_scores()
+              for score in subm_scores:
+                  score[0] = email # Score record should have user's email
+                  if not score[1]: # Blank - no scores avaialble
+                        all_scores.append(score)
+                        continue
+                  # Check for ordering.
+                  is_partnered = 'partner' in score[4].lower()
+                  # Individual group:
+                  if group_size == 1 and is_partnered:
+                        # Score is an average of all partnered parts of project
+                        other_partner_parts = [sc for sc in subm_scores if 'partner' in sc[4].lower()]
+                        if not other_partner_parts:
+                            average_score = score[1]
+                        else:
+                            average_score = int(sum([s[1] for s in other_partner_parts])/len(other_partner_parts))
+                        score[1] = average_score
+                  elif is_partnered:
+                        expected_letter = chr(97 + position) # 0 -> a, etc
+                        if score[4].lower().strip() != "partner {}".format(expected_letter):
+                            continue
+                  # temporary check for revision
+                  score[6] = revision_id
+                  score[7] = True # Set the FS Attribute to True
+
+                  all_scores.append(score)
             else:
               logging.warning("User key not found - " + str(member))
         return all_scores

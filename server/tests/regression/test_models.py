@@ -114,7 +114,7 @@ class ModelsTestCase(BaseTestCase):
         user = models.User(email=['yo@yo.com']).put().get()
         self.assertEqual(
             user.scores_for_assignment(assign),
-            ([[user.email[0], 0, None, None, None, None, None]], False))
+            ([[user.email[0], 0, None, None, None, None, None, None]], False))
 
     def test_scores_forassign_w_fs_wo_scores(self):
         """Tests that fs scores are loaded"""
@@ -136,7 +136,7 @@ class ModelsTestCase(BaseTestCase):
         assign = models.Assignment().put()
         user = models.User(email=['yo@yo.com']).put()
         backup = models.Backup(submitter=user, assignment=assign).put()
-        score = models.Score(score=10, grader=user, message="Nice!")
+        score = models.Score(score=10, grader=user, message="Nice!", tag="Total")
         subm = models.Submission(
             backup=backup,
             score=[score]).put()
@@ -151,10 +151,59 @@ class ModelsTestCase(BaseTestCase):
         user = user.get()
         self.assertNotEqual(user.get_final_submission(assign), None)
         scores_out = user.scores_for_assignment(assign.get())
-        self.assertTrue(len(scores_out[0]) == 1)
-        self.assertTrue(len(scores_out[0][0]) == 7)
-        self.assertEqual(scores_out[0][0][5], subm.id())
-        self.assertEqual(scores_out[0][0][6], revision.id())
+
+        scores = scores_out[0]
+        self.assertEqual(len(scores), 1) # two scores from one submission
+        self.assertEqual(len(scores[0]), 8) # test that both scores have len 8
+        self.assertTrue(scores[0][7]) # first submission should be a final one
+        self.assertEqual(scores[0][5], subm.id())
+        self.assertEqual(scores[0][6], revision.id())
+
+    def test_scores_group_assign_w_fs_w_rev_scores(self):
+        """Tests that fs scores are loaded"""
+        assign = models.Assignment().put()
+        ag = models.User(email=['autograder@yo.com']).put()
+
+        member1 = models.User(email=['yo@yo.com']).put()
+        member2 = models.User(email=['therealyo@yo.com']).put()
+        group = make_fake_group(assign.get(), member1.get(), member2.get()).key
+
+        backup = models.Backup(submitter=member1, assignment=assign).put()
+        score = models.Score(score=10, grader=ag, message="All Correct", tag="Partner A")
+        score2 = models.Score(score=5, grader=ag, message="Not quite! Sorry!", tag="Partner B")
+        subm = models.Submission(
+            backup=backup,
+            score=[score, score2]).put()
+        revision = models.Submission(
+            backup=backup).put()
+        fs = models.FinalSubmission(
+            submitter=member1,
+            group=group,
+            assignment=assign,
+            submission=subm,
+            revision=revision).put()
+
+        user1 = member1.get()
+        user2 = member2.get()
+        self.assertNotEqual(user1.get_final_submission(assign), None)
+        scores_out = user1.scores_for_assignment(assign.get())
+
+        scores = scores_out[0]
+        self.assertEqual(len(scores), 2) # two scores from one submission
+        self.assertEqual(len(scores[0]), 8) # test that both scores have len 8
+        self.assertEqual(len(scores[1]), 8) # test that both scores have len 8
+
+        self.assertEqual(scores[0][0], user1.email[0])
+        self.assertEqual(scores[1][0], user2.email[0])
+
+        self.assertEqual(scores[0][1], score.score) # should get a 10
+        self.assertEqual(scores[1][1], score2.score)  # should get a 5
+
+        # Repeating the process should get the same results
+        self.assertEqual(scores_out, user2.scores_for_assignment(assign.get()))
+
+        # Getting the scores via the group should also have the same result
+        self.assertEqual(scores, group.get().scores_for_assignment(assign.get()))
 
     ##########
     # Course #

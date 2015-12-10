@@ -504,13 +504,13 @@ def create_gcs_file(filename, content_type):
 def write_scores_to_csv(csv_file, assignment, user):
     """
     Write scores to a CSV file for an assignment.
-    Format: ['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']
+    Format: ['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID', 'IS_FINAL']
     """
     writer = csv.writer(csv_file, lineterminator='\n')
     seen_members = set()
 
     # header
-    writer.writerow(['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID'])
+    writer.writerow(['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID', 'IS_FINAL'])
 
     # students with groups
     for group in ModelProxy.Group.lookup_by_assignment(assignment):
