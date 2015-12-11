@@ -1271,10 +1271,12 @@ class FinalSubmission(Base):
         # TODO: get the most recent score for each tag.
         # Question: will all scores have a grader? In particular the scores from the autograder.
         all_scores = []
+        members = [self.submitter]
         if self.group:
-            members = [member for member in self.group.get().member]
-        else:
-            members = [self.submitter]
+            group = self.group.get()
+            if group:
+                members = [member for member in group.member]
+
         for member in members:
             member_row = member.get()
             if member_row:
