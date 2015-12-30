@@ -25,6 +25,7 @@
       <table ts-wrapper ng-if="members.length > 0" class="table table-striped table-bordered table-responsive">
         <tr>
           <th ts-criteria="email">Email</th>
+          <th ts-criteria="created">Enrollment Date</th>
           <th ts-criteria="role">Role</th>
           <th width="10%"> Remove </th>
         </tr>
@@ -34,6 +35,7 @@
               {{member.user.email[0]}}
             </a>
           </td>
+          <td>{{member.created}}</td>
           <td>{{member.role}}</td>
           <td><a ng-click="remove(member.user.email[0])" class="btn btn-danger">Remove</a></td>
         </tr>

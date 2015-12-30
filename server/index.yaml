@@ -291,3 +291,10 @@ indexes:
   properties:
   - name: email
   - name: status
+
+- kind: FinalSubmissionv2
+  properties:
+  - name: submitter
+  - name: server_time
+    direction: desc
+

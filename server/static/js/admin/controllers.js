@@ -504,6 +504,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
        });
     }
 
+
     $scope.course = Course.get({
       id: $stateParams.courseId
     }, function(response) {
