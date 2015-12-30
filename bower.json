@@ -1,0 +1,34 @@
+{
+  "name": "okpyserver",
+  "homepage": "https://github.com/Cal-CS-61A-Staff/ok",
+  "authors": [
+    "Sumukh Sridhara <sumukh1@gmail.com>"
+  ],
+  "description": "Ok.py server - Code Submission & Analytics",
+  "main": "bower.json",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "okpy",
+    "ok",
+    "61a"
+  ],
+  "license": "Apache",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "static/vendor",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.6",
+    "jquery": "~2.1.4",
+    "modernizr": "~2.8.3"
+  },
+  "devDependencies": {},
+  "directory": "js"
+}
