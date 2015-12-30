@@ -1,31 +1,28 @@
 language: python
 
 env:
-  - CMD=server/apptest.py GAE_VERSION=1.9.23
+  - SERVER_ENV=dev
 
 python:
   - "2.7"
+  - "3.3"
+  - "3.4"
 
 install:
   - pip install pip --upgrade
-  - pip install -r server_requirements.txt
+  - make env
+  - source env/bin/activate
 
 script:
-  - FLASK_CONF=TEST coverage run $CMD --sdk_location $GAE_SDK --quiet
+  - make test
 
 before_script:
-  - wget https://storage.googleapis.com/appengine-sdks/featured/google_appengine_$GAE_VERSION.zip -o gae_sdk.zip
-  - unzip -q google_appengine_$GAE_VERSION.zip
-  - mv google_appengine gae_sdk
-  - export GAE_SDK=$PWD/gae_sdk
-  - export PATH=$PATH:$GAE_SDK
-  - export PYTHONPATH=$PYTHONPATH:$GAE_SDK
-  - python server/app/generate_keys.py
+  - manage.py createdb
 
 after_success:
   - coveralls
   - coveralls debug
-  
+
 sudo: false
 
 cache:

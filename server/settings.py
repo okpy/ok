@@ -1,35 +1,31 @@
-import tempfile
-db_file = tempfile.NamedTemporaryFile()
+
+# TODO @Sumukh Better Secret Management System
+try:
+    from secret_keys import ProdConfig  # NOQA
+except ImportError as e:
+    pass
 
 
-class Config(object):
-    SECRET_KEY = 'REPLACE ME'
+class TestConfig(object):
+    SECRET_KEY = 'Testing*ok*server*'
 
 
-class ProdConfig(Config):
-    ENV = 'prod'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'
-
-    CACHE_TYPE = 'simple'
-
-
-class DevConfig(Config):
+class DevConfig(TestConfig):
     ENV = 'dev'
     DEBUG = True
     DEBUG_TB_INTERCEPT_REDIRECTS = False
-
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://okdev:@localhost:5432/okdev'
 
     CACHE_TYPE = 'null'
     ASSETS_DEBUG = True
 
 
-class TestConfig(Config):
+class TestConfig(TestConfig):
     ENV = 'test'
     DEBUG = True
     DEBUG_TB_INTERCEPT_REDIRECTS = False
 
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_file.name
+    SQLALCHEMY_DATABASE_URI = 'postgresql://okdev:@localhost:5432/okdev'
     SQLALCHEMY_ECHO = True
 
     CACHE_TYPE = 'null'

@@ -11,6 +11,7 @@ Flask-WTF==0.12
 Flask-Migrate==1.7.0
 
 # Other
+psycopg2==2.6.1
 itsdangerous==0.24
 cssmin==0.2.0
 jsmin==2.2.0
