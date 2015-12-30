@@ -167,12 +167,27 @@ def data_for_scores(assignment, user):
 
     return content
 
-def create_gcs_file(gcs_filename, contents, content_type):
+def create_gcs_file(gcs_filename, contents, content_type, user):
     """
     Creates a GCS csv file with contents CONTENTS.
     """
     try:
-        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl': 'project-private'})
+        gcs_file = gcs.open(gcs_filename, 'w', content_type=content_type, options={'x-goog-acl':
+            [
+                {
+                    "entity": "project-owners-931757735585",
+                    "projectTeam": {
+                        "projectNumber": "931757735585",
+                        "team": "owners"
+                    },
+                    "role": "OWNER"
+                },
+                {
+                    "entity": "user-" + user.email,
+                    "email": user.email,
+                    "role": "OWNER"
+                }
+            ]})
         gcs_file.write(contents)
         gcs_file.close()
     except Exception as e:
@@ -557,7 +572,7 @@ def scores_to_gcs(assignment, user):
     # Not sure what this line was doing here.
     # create_gcs_file(assignment, csv_contents, 'scores')
     csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
-    create_gcs_file(csv_filename, csv_contents, 'text/csv')
+    create_gcs_file(csv_filename, csv_contents, 'text/csv', user)
 
 
 def add_subm_to_zip(subm, zipfile, submission):
