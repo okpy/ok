@@ -23,11 +23,11 @@
             <a ng-hide="assign.final.submission.score.length > 0"
                ui-sref='submission.detail({courseId: courseId, submissionId:assign.final.backup.id})'
                class="link view-submission">
-              Submission ({{ assign.final.backup.created | amCalendar }}) &raquo;
+              Submission ({{ assign.final.backup.server_time | amCalendar }}) &raquo;
             </a><br>
           </p>
           <div ng-repeat="score in assign.final.submission.score">
-            <p><a ng-hide="score.tag == 'autograder'"
+            <p><a ng-if="score.tag != 'autograder' || window.sudo"
                ng-click="showComposition(score, assign.final.backup.id)"
                class="link view-submission"
                href="javascript:void(0)">{{ score.tag }}: {{ score.score }} &raquo;</a>

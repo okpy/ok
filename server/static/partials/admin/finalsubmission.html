@@ -10,7 +10,7 @@
 
 <div>
   <div class="center-block">
-    <h2>Submission: {{submission.created | amCalendar}} </h2>
+    <h2>Submission: {{submission.server_time | amCalendar}} </h2>
     <span ng-if="submission.score.length != 0" ng-repeat="score in submission.score" class="badge bg-info">
       Graded - {{score.score}} - {{score.grader.email[0]}}
     </span>
@@ -29,14 +29,14 @@
 
       </div>
       <div class="center-block">
-
         <div class="btn-group">
           <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()" ng-show="hideEmpty"><i class="fa fa-fw fa-arrows-v"></i> Expand Code</button>
           <button type="button" class="btn btn-flat btn-info" ng-click="toggleBlank()" ng-hide="hideEmpty"><i class="fa fa-fw fa-arrows-v"></i> Collapse Code</button>
-          <button class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.backup.id}}/download'>
-            <i class="fa fa-fw fa-cloud-download"></i> Download </button>
-          </div>
+          <a class="btn btn-flat btn-info" href='/api/v1/submission/{{submission.backup.id}}/download'>
+            <i class="fa fa-fw fa-cloud-download"></i> Download 
+          </a>
         </div>
+      </div>
 
         <div ng-repeat="(file_name, contents) in diff.diff">
           <diff/>

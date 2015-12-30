@@ -27,9 +27,10 @@ Specification: https://github.com/Cal-CS-61A-Staff/ok/wiki/Models
 import datetime
 import itertools
 import logging
+import pytz
 
 from app import app
-from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES
+from app.constants import STUDENT_ROLE, STAFF_ROLE, VALID_ROLES, TIMEZONE
 from app.exceptions import *
 from app import utils
 from flask import json
@@ -58,14 +59,11 @@ class JSONEncoder(old_json):
 
 app.json_encoder = JSONEncoder
 
-def convert_timezone(utc_dt):
-    """Convert times to Pacific time."""
-    # This looks like a hack... is it even right? What about daylight savings?
-    # Correct approach: each course should have a timezone. All times should be
-    # stored in UTC for easy comparison. Dates should be converted to
-    # course-local time when displayed.
-    delta = datetime.timedelta(hours=-7)
-    return datetime.datetime.combine(utc_dt.date(), utc_dt.time()) + delta
+def convert_timezone(utc_dt, tz=TIMEZONE):
+    """Convert times to specified (defaults to America/Los_Angeles)."""
+    coruse_tz = pytz.timezone(tz)
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(coruse_tz)
+    return coruse_tz.normalize(local_dt) # Normalize for DST edgecases.
 
 
 class Base(ndb.Model):
@@ -226,7 +224,8 @@ class User(Base):
             return group.member
 
     def backups(self, group, assignment):
-        """A query that fetches all backups for a group and assignment."""
+        """A query that fetches all backups for a group and assignment
+            (ordered by recency with the most recent backup first)."""
         members = self.members(group)
         return Backup.query(
             Backup.submitter.IN(members),
@@ -416,13 +415,13 @@ class User(Base):
                     element for each combination of group member and score.
                 2) A boolean indicating whether the student had a
                     scored final submission for ASSIGNMENT.
-            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG']]
+            Format: [['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']]
         """
         fs = self.get_final_submission(assignment.key)
         scores = []
         if fs:
             scores = fs.get_scores()
-        return (scores, True) if scores else ([[self.email[0], 0, None, None, None]], False)
+        return (scores, True) if scores else ([[self.email[0], 0, None, None, None, None, None]], False)
 
 class Course(Base):
     """Courses are expected to have a unique offering."""
@@ -464,13 +463,9 @@ class Course(Base):
         return Assignment.query(Assignment.course == self.key)
 
     def get_students(self, user):
-
-        query = Participant.query(
+        return Participant.query(
             Participant.course == self.key,
             Participant.role == 'student')
-
-        return list(query.fetch())
-
 
 class Assignment(Base):
     """Assignments are particular to courses and have unique names."""
@@ -485,7 +480,8 @@ class Assignment(Base):
     due_date = ndb.DateTimeProperty()
     lock_date = ndb.DateTimeProperty() # no submissions after this date
     active = ndb.ComputedProperty(
-        lambda a: a.due_date and datetime.datetime.now() <= a.due_date)
+        lambda a: utils.normalize_to_utc(a.due_date) and
+            datetime.datetime.now(pytz.utc) <= utils.normalize_to_utc(a.due_date))
     revision = ndb.BooleanProperty(default=False)
     autograding_key = ndb.StringProperty()
     autograding_enabled = ndb.BooleanProperty(default=False)
@@ -748,29 +744,31 @@ class Submission(Base):
         """Create or update a final submission."""
         final = self.get_final()
         assignment = self.assignment.get()
+        backup = self.backup.get()
         if final:
             if assignment.revision:
                 # Follow resubmssion procedure
                 final.revision = self.key
                 self.is_revision = True
                 self.put()
-            elif datetime.datetime.now() > assignment.lock_date:
-                return ValueError("Cannot change submission after due date")
-            elif self.server_time <= assignment.lock_date:
+            elif datetime.datetime.now(pytz.utc) > utils.normalize_to_utc(assignment.lock_date):
+                raise ValueError("Cannot change submission after due date")
+            elif utils.normalize_to_utc(self.server_time) <= utils.normalize_to_utc(assignment.lock_date):
                 final.submitter = self.submitter
                 final.submission = self.key
             else:
-                return ValueError("Cannot flag submission that is past due date")
+                raise ValueError("Cannot flag submission that is past due date")
             return final.put()
         else:
-            if self.server_time < assignment.lock_date:
+            if utils.normalize_to_utc(self.server_time) < utils.normalize_to_utc(assignment.lock_date):
                 group = self.submitter.get().get_group(self.assignment)
                 final = FinalSubmission(
-                    assignment=self.assignment, submission=self.key)
+                    assignment=self.assignment, submission=self.key,
+                    submitter=backup.submitter)
                 if group:
                     final.group = group.key
                 return final.put()
-        return ValueError("Cannot flag submission that is past due date")
+        raise ValueError("Cannot flag submissions that are past due date")
 
     def resubmit(self, user_key):
         """
@@ -954,7 +952,7 @@ class Group(Base):
         """ Returns all groups with the given assignment """
         if isinstance(assignment, Assignment):
             assign_key = assignment.key
-        return Group.query(Group.assignment == assign_key).fetch()
+        return Group.query(Group.assignment == assign_key)
 
     #@ndb.transactional
     def invite(self, email):
@@ -1108,9 +1106,9 @@ class Group(Base):
 
         # Handle the case where the member key no longer exists.
         if not member:
-          return [["Unknown-"+str(self.member[0]), 0, None, None, None]]
+          return [["Unknown-"+str(self.member[0]), 0, None, None, None, None, None]]
 
-        return [[member.email[0], 0, None, None, None]]
+        return [[member.email[0], 0, None, None, None, None, None]]
 
 
 
@@ -1265,7 +1263,7 @@ class FinalSubmission(Base):
 
     def get_scores(self):
         """
-        Return a list of lists of the format [[student, score, message, grader, tag]]
+        Return a list of lists of the format [[student, score, message, grader, tag, subm_id, revision_id]]
         if the submission has been scored. Otherwise an empty list.
         If the submission is a group submission, there will be an element
         for each combination of student and score.
@@ -1281,12 +1279,16 @@ class FinalSubmission(Base):
             member_row = member.get()
             if member_row:
               email = member_row.email[0]
-              for score in self.submission.get().score:
+              revision_id = None if not self.revision else self.revision.id()
+              subm = self.submission.get()
+              for score in subm.score:
                   all_scores.append([email,
                           score.score,
                           score.message,
                           score.grader.get().email[0],
-                          score.tag])
+                          score.tag,
+                          subm.key.id(),
+                          revision_id])
             else:
               logging.warning("User key not found - " + str(member))
         return all_scores

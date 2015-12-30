@@ -29,13 +29,14 @@ import logging
 import ast
 import requests
 import flask
+import pytz
 
 from flask.views import View
 from flask.app import request, json
 from flask import session, make_response, redirect
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
-from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL
+from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL, TIMEZONE
 
 from app import models, app, analytics, utils
 from app.needs import Need
@@ -92,9 +93,12 @@ def DateTimeArg(**kwds):
 
         date = datetime.datetime.strptime(arg,
                                           app.config['GAE_DATETIME_FORMAT'])
-        delta = datetime.timedelta(hours=7)
-        date = (datetime.datetime.combine(date.date(), date.time()) + delta)
-        return (op, date) if op else date
+
+        course_tz = pytz.timezone(TIMEZONE)
+        course_time = course_tz.localize(date)
+        utc_date = course_tz.normalize(course_time).astimezone(pytz.utc).replace(tzinfo=None)
+        return (op, utc_date) if op else utc_date
+
     return Arg(None, use=parse_date, **kwds)
 
 MODEL_VERSION = 'v2'
@@ -790,7 +794,7 @@ class AssignmentAPI(APIResource):
                 'grade_final': Arg(bool),
                 'subm': Arg(int),
                 'testing': Arg(bool, default=False),
-                'backup_promotion': Arg(bool, default=True),
+                'promote_backups': Arg(bool, default=True),
                 'token': Arg(str)
             }
         },
@@ -860,7 +864,6 @@ class AssignmentAPI(APIResource):
         if 'grade_final' in data and data['grade_final']:
             #Collect all final submissions and run grades.
             deferred.defer(autograde_final_subs, obj, user, data)
-
             if 'promote_backups' in data and data['promote_backups']:
               # Force promote backups and run autograder
               deferred.defer(promote_student_backups, obj, True, user, data)
@@ -1282,9 +1285,9 @@ class SubmissionAPI(APIResource):
         if submitter is None:
             submitter = user.key
 
-        due = valid_assignment.due_date
-        late_flag = valid_assignment.lock_date and \
-                    datetime.datetime.now() >= valid_assignment.lock_date
+        due = utils.normalize_to_utc(valid_assignment.due_date)
+        late_flag = utils.normalize_to_utc(valid_assignment.lock_date) and \
+                    datetime.datetime.now(pytz.utc) >= utils.normalize_to_utc(valid_assignment.lock_date)
         revision = valid_assignment.revision
 
         if submit and late_flag:
@@ -1371,16 +1374,19 @@ class SearchAPI(APIResource):
 
     # maps flags to processing functions (e.g., instantiate objects)
     flags = {
-        'user': lambda op, email:
+        'user': lambda course_key, op, email:
             UserAPI.model.query(
                 op(UserAPI.model.email, email)).get(),
-        'date': lambda op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
-        'onlybackup': lambda op, boolean: boolean.lower() == 'true',
-        'onlyfinal': lambda op, boolean: boolean.lower() == 'true',
-        'onlywcode': lambda op, boolean: boolean.lower() == 'true',
-        'assignment': lambda op, name:
-            AssignmentAPI.model.query(
-                op(AssignmentAPI.model.display_name, name)).get(),
+        'date': lambda course_key, op, s: datetime.datetime.strptime(s, '%Y-%m-%d'),
+        'onlybackup': lambda course_key, op, boolean: boolean.lower() == 'true',
+        'onlyfinal': lambda course_key, op, boolean: boolean.lower() == 'true',
+        'onlywcode': lambda course_key, op, boolean: boolean.lower() == 'true',
+        'assignment': lambda course_key, op, name: (
+            AssignmentAPI.model
+            .query(op(AssignmentAPI.model.display_name, name))
+            .filter(AssignmentAPI.model.course == course_key)
+            .get()
+        )
     }
 
     def check_permissions(self, user, data):
@@ -1394,7 +1400,7 @@ class SearchAPI(APIResource):
     @staticmethod
     def results(data):
         """ Returns results of query, limiting results accordingly """
-        results = SearchAPI.querify(data['query']).fetch()
+        results = SearchAPI.querify(data['query'], data['courseId']).fetch()
         if data.get('all', 'true').lower() != 'true':
             start, end = SearchAPI.limits(data['page'], data['num_per_page'])
             results = results[start:end]
@@ -1453,13 +1459,13 @@ class SearchAPI(APIResource):
         return scope
 
     @classmethod
-    def objectify(cls, query):
+    def objectify(cls, query, course_key):
         """ converts keys into objects """
         scope = cls.translate(query)
         for k, v in scope.items():
             op, arg = v
             try:
-                scope[k] = (op, cls.flags[k](op, arg))
+                scope[k] = (op, cls.flags[k](course_key, op, arg))
             except KeyError:
                 raise BadValueError('No such flag "%s". Only \
                 these are allowed: %s' % (k, str(
@@ -1469,9 +1475,12 @@ class SearchAPI(APIResource):
         return scope
 
     @classmethod
-    def querify(cls, query):
+    def querify(cls, query, course_id):
         """ converts mush into a query object """
-        objects = cls.objectify(query)
+        course_key = ndb.Key(
+            CourseAPI.model._get_kind(),
+            CourseAPI.key_type(course_id))
+        objects = cls.objectify(query, course_key)
         model = cls.get_model(objects)
         args = cls.get_args(model, objects)
         query = model.query(*args)

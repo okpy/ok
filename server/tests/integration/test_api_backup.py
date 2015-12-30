@@ -10,6 +10,7 @@ tests.py
 
 """
 
+import time
 import datetime
 from test_base import APIBaseTestCase, unittest, api #pylint: disable=relative-import
 from test_base import make_fake_assignment, make_fake_course, make_fake_backup, make_fake_submission, make_fake_finalsubmission #pylint: disable=relative-import
@@ -69,20 +70,25 @@ class BackupAPITest(APITest, APIBaseTestCase):
 		self.assertStatusCode(400)
 
 	def test_sorting(self):
-		time = datetime.datetime.now()
+		curr_time = datetime.datetime.now()
 		delta = datetime.timedelta(days=1)
-		changed_time = time - delta
+		changed_time = curr_time - delta
 
 		inst = self.get_basic_instance()
 		inst.created = changed_time
 		inst.put()
 
 		inst2 = self.get_basic_instance(mutate=True)
-		inst2.created = time
+		inst2.created = curr_time
 		inst2.put()
 
-		self.get_index(created='>|%s' % str(changed_time - datetime.timedelta(hours=7)))
+		# Account for DST
+		is_dst = time.localtime().tm_isdst
+		diff_time = 7 if is_dst else 8
+		t_offset = datetime.timedelta(hours=diff_time)
+
+		self.get_index(created='>|%s' % str(changed_time - t_offset))
 		self.assertJson([inst2.to_json()])
 
-		self.get_index(created='<|%s' % str(time - datetime.timedelta(hours=7)))
+		self.get_index(created='<|%s' % str(curr_time - t_offset))
 		self.assertJson([inst.to_json()])

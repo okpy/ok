@@ -114,7 +114,7 @@ class ModelsTestCase(BaseTestCase):
         user = models.User(email=['yo@yo.com']).put().get()
         self.assertEqual(
             user.scores_for_assignment(assign),
-            ([[user.email[0], 0, None, None, None]], False))
+            ([[user.email[0], 0, None, None, None, None, None]], False))
 
     def test_scores_forassign_w_fs_wo_scores(self):
         """Tests that fs scores are loaded"""
@@ -131,34 +131,34 @@ class ModelsTestCase(BaseTestCase):
         self.assertNotEqual(user.get_final_submission(assign), None)
         self.assertFalse(user.scores_for_assignment(assign.get())[1])
 
-    def test_scores_forassign_w_fs_w_scores(self):
+    def test_scores_forassign_w_fs_w_rev_scores(self):
         """Tests that fs scores are loaded"""
         assign = models.Assignment().put()
         user = models.User(email=['yo@yo.com']).put()
         backup = models.Backup(submitter=user, assignment=assign).put()
-        score = models.Score(score=10, grader=user)
+        score = models.Score(score=10, grader=user, message="Nice!")
         subm = models.Submission(
             backup=backup,
             score=[score]).put()
-        models.FinalSubmission(
+        revision = models.Submission(
+            backup=backup).put()
+        fs = models.FinalSubmission(
             submitter=user,
             assignment=assign,
-            submission=subm).put()
+            submission=subm,
+            revision=revision).put()
 
         user = user.get()
         self.assertNotEqual(user.get_final_submission(assign), None)
-        self.assertTrue(user.scores_for_assignment(assign.get())[1])
+        scores_out = user.scores_for_assignment(assign.get())
+        self.assertTrue(len(scores_out[0]) == 1)
+        self.assertTrue(len(scores_out[0][0]) == 7)
+        self.assertEqual(scores_out[0][0][5], subm.id())
+        self.assertEqual(scores_out[0][0][6], revision.id())
 
     ##########
     # Course #
     ##########
-
-    def test_course_get_students_basic(self):
-        """Tests that get_students functions"""
-        student_key = models.User(email=['yo@yo.com']).put()
-        course = make_fake_course(student_key.get())
-        students = course.get_students(student_key)
-        self.assertTrue(isinstance(students, list))
 
     def test_course_get_students_function(self):
         """Tests that get_students works"""
@@ -167,7 +167,6 @@ class ModelsTestCase(BaseTestCase):
         models.Participant.add_role(
             student_key, course.key, constants.STUDENT_ROLE)
         enrollment = course.get_students(student_key)
-        self.assertTrue(isinstance(enrollment, list))
         students = [student.user for student in enrollment]
         self.assertIn(student_key, students)
 

@@ -571,6 +571,7 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
          Assignment.autograde({
            id: assign.id,
            grade_final: false,
+           promote_backups: true,
            subm: subm.fsid,
            token: inputValue,
          }, function(response) {
@@ -688,6 +689,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
           Assignment.autograde({
             id: assign.id,
             grade_final: true,
+            promote_backups: true,
             token: inputValue,
           }, function(response) {
              $window.swal('Success', 'Queued for autograding.', 'success');

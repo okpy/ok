@@ -12,6 +12,7 @@ import itertools
 from os import path
 from app import constants
 import requests
+import pytz
 
 try:
     from cStringIO import StringIO
@@ -27,7 +28,7 @@ from google.appengine.ext import deferred
 import cloudstorage as gcs
 
 from app import app
-from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE
+from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE, TIMEZONE
 from app.exceptions import BadValueError
 
 # TODO Looks like this can be removed just by relocating parse_date
@@ -48,6 +49,8 @@ def parse_date(date):
     except ValueError:
         date = datetime.datetime.strptime(
             date, "%Y-%m-%d %H:%M:%S")
+
+    logging.debug("utils.parse_date being used")
 
     delta = datetime.timedelta(hours=7)
     return datetime.datetime.combine(date.date(), date.time()) + delta
@@ -131,6 +134,7 @@ def add_to_zip(zipfile, files, dir=''):
         zipfile.writestr(path.join(dir, filename), unicode(contents).encode('utf-8'))
     return zipfile
 
+<<<<<<< HEAD
 def create_csv_content(content):
     """
     Return all contents in CSV file format. Content must be a list of lists.
@@ -206,6 +210,8 @@ def make_csv_filename(assignment, infotype):
     filename = '{}_{}_{}.csv'.format(infotype, course_name, assign_name)
     return filename.replace('/', '_').replace(' ', '_')
 
+=======
+>>>>>>> d51f33e6649a456da931da9e110321ed7c672d1a
 def paginate(entries, page, num_per_page):
     """
     Added stuff from
@@ -385,7 +391,6 @@ def assign_staff_to_queues(assignment_key, staff_list):
         subms = ModelProxy.FinalSubmission.query(
             ModelProxy.FinalSubmission.assignment == assignment_key
         ).fetch()
-
         queues = []
 
         for instr in staff_list:
@@ -428,7 +433,7 @@ def assign_submission(backup_id, submit, revision=False):
         subm.put()
 
         # Can only make a final submission before it's due, or if it's revision
-        if datetime.datetime.now() < assign.get_result().due_date:
+        if datetime.datetime.now(pytz.utc) < normalize_to_utc(assign.get_result().due_date):
             subm.mark_as_final()
         elif revision:
             # Mark as final handles changing revision attribute.
@@ -562,17 +567,55 @@ def check_user(user_key):
 
     deferred.defer(deferred_check_user, user_key)
 
+def create_gcs_file(filename, content_type):
+    """
+    Create a Google Cloud Storage file with name FILENAME and content type
+    (MIME type) CONTENT_TYPE. Returns the newly opened file object.
+
+    Use with contextlib.closing like this:
+    with contextlib.closing(create_gcs_file('grades.csv', 'text/csv')) as f:
+    """
+    return gcs.open(filename, 'w',
+        content_type=content_type,
+        options={'x-goog-acl': 'project-private'})
+
+def write_scores_to_csv(csv_file, assignment, user):
+    """
+    Write scores to a CSV file for an assignment.
+    Format: ['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID']
+    """
+    writer = csv.writer(csv_file, lineterminator='\n')
+    seen_members = set()
+
+    # header
+    writer.writerow(['STUDENT', 'SCORE', 'MESSAGE', 'GRADER', 'TAG', 'SUBM_ID', 'REVISION_ID'])
+
+    # students with groups
+    for group in ModelProxy.Group.lookup_by_assignment(assignment):
+        seen_members.update(group.member)
+        writer.writerows(group.scores_for_assignment(assignment))
+
+    # students without groups
+    course = assignment.course.get()
+    for part in course.get_students(user):
+        if part.user not in seen_members:
+            student = part.user.get()
+            writer.writerows(student.scores_for_assignment(assignment)[0])
+
+def make_csv_filename(assignment, infotype):
+    """ Returns filename of format INFOTYPE_COURSE_ASSIGNMENT.csv """
+    course_name = assignment.course.get().offering
+    assign_name = assignment.display_name
+    filename = '{}_{}_{}.csv'.format(infotype, course_name, assign_name)
+    return filename.replace('/', '_').replace(' ', '_')
 
 def scores_to_gcs(assignment, user):
     """ Writes all final submission scores
     for the given assignment to GCS csv file. """
-    content = data_for_scores(assignment, user)
-    csv_contents = create_csv_content(content)
-    assign_name = assignment.name
-    # Not sure what this line was doing here.
-    # create_gcs_file(assignment, csv_contents, 'scores')
     csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
-    create_gcs_file(csv_filename, csv_contents, 'text/csv', user)
+    with contextlib.closing(create_gcs_file(csv_filename, 'text/csv')) as f:
+        write_scores_to_csv(f, assignment, user)
+    logging.info("Exported scores to " + csv_filename)
 
 
 def add_subm_to_zip(subm, zipfile, submission):
@@ -630,11 +673,8 @@ def make_zip_filename(user, now):
 
 def subms_to_gcs(SearchAPI, subm, filename, data):
     """Writes all submissions for a given search query to a GCS zip file."""
-    query = SearchAPI.querify(data['query'])
-    gcs_file = gcs.open(filename, 'w',
-        content_type='application/zip',
-        options={'x-goog-acl': 'project-private'})
-    with contextlib.closing(gcs_file) as f:
+    query = SearchAPI.querify(data['query'], data['courseId'])
+    with contextlib.closing(create_gcs_file(filename, 'application/zip')) as f:
         with zf.ZipFile(f, 'w') as zipfile:
             for result in query:
                 add_subm_to_zip(subm, zipfile, result)
@@ -682,7 +722,8 @@ def autograde_subms(assignment, user, data, subm_ids, priority="default"):
         # TODO: Contact staff (via email)
       return {'status_url': AUTOGRADER_URL+'/rq', 'length': str(len(subm_ids))}
     else:
-      raise BadValueError('The autograder the rejected your request')
+      error_message = 'The autograder rejected your request. {}'.format(r.text)
+      raise BadValueError(error_message)
 
 def autograde_final_subs(assignment, user, data):
     subm_ids = {}
@@ -699,21 +740,30 @@ def promote_student_backups(assignment, autograde=False, user=None, data=None):
 
     :param assignment - an assignment object
     """
-    enrollment = ModelProxy.Participant.query(
+    enrollment = list(ModelProxy.Participant.query(
         ModelProxy.Participant.course == assignment.course,
-        ModelProxy.Participant.role == STUDENT_ROLE).get()
+        ModelProxy.Participant.role == STUDENT_ROLE))
 
-    newly_created_fs = []
-
-    for student in enrollment:
-        fs = student.get_final_submission(assignment)
+    new_submissions = {}
+    for participant in enrollment:
+        student = participant.user.get()
+        fs = student.get_final_submission(assignment.key)
+        group = student.get_group(assignment.key)
         if not fs:
-            recent_bck = student.get_backups(assignment.key, 1)
-            new_sub = force_promote_backup(recent_bck)
-            newly_created_fs.append(new_sub.id())
+            backup_q = student.backups(group, assignment.key)
+            elgible_backups = backup_q.filter(ModelProxy.Backup.server_time <= assignment.due_date)
+            chosen_backup = elgible_backups.get()
+
+            # TODO: Also get submissions that weren't marked as final for some reason
+            if chosen_backup:
+                back_id = chosen_backup.key.id()
+                new_fsub = force_promote_backup(back_id)
+                new_subm = new_fsub.get().submission
+                new_submissions[new_subm.id()] = back_id
+                logging.info("Promoted backup for {}".format(student.email[0]))
 
     if autograde:
-        return autograde_subms(assignment, user, data, newly_created_fs)
+        return autograde_subms(assignment, user, data, new_submissions)
 
 
 def force_promote_backup(backup_id):
@@ -728,12 +778,10 @@ def force_promote_backup(backup_id):
         logging.info("Submission had no file_contents; not processing")
         return
 
-    assign = backup.assignment.get_async()
-    subm = ModelProxy.Submission(backup=backup.key)
+    subm = ModelProxy.Submission(backup=backup.key,
+                 server_time=backup.server_time)
     subm.put()
     return subm.mark_as_final()
-
-
 
 import difflib
 
@@ -744,3 +792,16 @@ def diff(s1, s2):
     lines1 = s1.split('\n')
     lines2 = s2.split('\n')
     return list(differ.compare(lines1, lines2))
+
+
+# Timezone Awareness
+
+
+def normalize_to_utc(dt):
+    '''Convert naive time to UTC time without info'''
+    if dt:
+        if hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+            return dt # To avoid pytz error
+        return pytz.utc.localize(dt)
+    else:
+        return dt # Allow none DT, (for testing?)

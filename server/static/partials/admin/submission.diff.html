@@ -1,6 +1,6 @@
 <div>
   <div class="center-block">
-    <h2>Submission: {{submission.created | amCalendar}} </h2>
+    <h2>Submission: {{submission.server_time | amCalendar}} </h2>
     <span ng-repeat="tag in submission.tags" class="badge bg-info">
       {{tag}}
     </span>
