@@ -17,7 +17,7 @@ class TestModels:
         db.session.add(admin)
         db.session.commit()
 
-        user = User.query.filter_by(username="admin").first()
+        user = User.query.filter_by(email="admin").first()
         assert user is not None
 
     def test_user_password(self, testapp):
@@ -25,5 +25,5 @@ class TestModels:
 
         admin = User('admin', 'supersafepassword')
 
-        assert admin.username == 'admin'
-        assert admin.check_password('supersafepassword')
+        assert admin.email == 'admin'
+        assert admin.check_login('supersafepassword')

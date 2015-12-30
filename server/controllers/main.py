@@ -19,7 +19,7 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).one()
+        user = User.query.filter_by(email=form.username.data).one()
         login_user(user)
 
         flash("Logged in successfully.", "success")

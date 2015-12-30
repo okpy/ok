@@ -9,7 +9,7 @@ from server import create_app
 from server.models import db, User
 
 # default to dev config because no one should use this in
-# production anyway
+# production anyway.
 env = os.environ.get('APPNAME_ENV', 'dev')
 app = create_app('server.settings.%sConfig' % env.capitalize())
 
