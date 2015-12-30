@@ -25,3 +25,8 @@ dist
 *.coverage
 *.coveralls.yml
 *coverage_report/*
+
+# static assets
+*.webassets-cache/*
+server/static/vendor/*
+.cache

@@ -7,6 +7,7 @@ from server.models import User
 
 main = Blueprint('main', __name__)
 
+
 @main.route('/')
 @cache.cached(timeout=1000)
 def home():
