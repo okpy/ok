@@ -1,9 +1,10 @@
 [run]
 branch = True
-include = server/app/*
+include = server/*
 omit =
     *__init__.py
-    
+    *static*
+    *templates*
     # GCS API wrapper
     *cloudstorage*
 
@@ -25,7 +26,7 @@ exclude_lines =
     if 0:
     if __name__ == .__main__.:
 
-ignore_errors = True
+ignore_errors = False
 
 [html]
 directory = coverage_report

@@ -1,5 +1,0 @@
-[pre-commit-hook]
-params=--rcfile=./pylintrc
-
-[General]
-init-hook='import sys; sys.path.append("$HOME/src/ok/env/lib/python2.7/site-packages")'
