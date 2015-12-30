@@ -33,3 +33,4 @@ dist
 
 # local development
 database.db
+*.db
