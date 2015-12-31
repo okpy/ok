@@ -134,7 +134,7 @@ def add_to_zip(zipfile, files, dir=''):
         zipfile.writestr(path.join(dir, filename), unicode(contents).encode('utf-8'))
     return zipfile
 
-<<<<<<< HEAD
+
 def create_csv_content(content):
     """
     Return all contents in CSV file format. Content must be a list of lists.
