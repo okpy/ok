@@ -6,6 +6,9 @@ from webassets.loaders import PythonLoader as PythonAssetsLoader
 from server import assets
 from server.models import db
 from server.controllers.main import main
+from server.controllers.api import endpoints as api
+
+from server.constants import API_PREFIX
 
 from server.extensions import (
     cache,
@@ -48,5 +51,7 @@ def create_app(object_name):
 
     # register our blueprints
     app.register_blueprint(main)
+    # TODO Auth Blueprint
+    app.register_blueprint(api, url_prefix=API_PREFIX)
 
     return app

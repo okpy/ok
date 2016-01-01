@@ -13,6 +13,8 @@ env
 
 # Don't store secret keys in version control
 secret_keys.py
+*secret.json*
+
 
 # pip-related files
 *.egg-info

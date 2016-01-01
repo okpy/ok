@@ -1,9 +1,14 @@
+from simplekv.fs import FilesystemStore
 
 # TODO @Sumukh Better Secret Management System
 try:
     from secret_keys import ProdConfig  # NOQA
+    from secret_keys import google_creds
 except ImportError as e:
-    pass
+    google_creds = {
+        'GOOGLE_ID': '',
+        'GOOGLE_SECRET': ''
+    }
 
 
 class TestConfig(object):
@@ -18,6 +23,7 @@ class DevConfig(TestConfig):
 
     CACHE_TYPE = 'null'
     ASSETS_DEBUG = True
+    SESSION_STORE = FilesystemStore('./session-cache')
 
 
 class TestConfig(TestConfig):
@@ -30,3 +36,4 @@ class TestConfig(TestConfig):
 
     CACHE_TYPE = 'null'
     WTF_CSRF_ENABLED = False
+    SESSION_STORE = FilesystemStore('./session-cache')

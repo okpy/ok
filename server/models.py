@@ -13,16 +13,15 @@ class TimestampMixin(object):
 class User(db.Model, UserMixin, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     email = db.Column(db.String(), unique=True, nullable=False, index=True)
-    access_token = db.Column(db.String())
     is_admin = db.Column(db.Boolean(), default=False)
-    secondary = db.Column(db.String())  # SID or Login
+    sid = db.Column(db.String())  # SID or Login
+    secondary = db.Column(db.String())  # Other usernames
     alt_email = db.Column(db.String())
     active = db.Column(db.Boolean(), default=True)
 
-    def __init__(self, email, access_token=None, sid=None):
+    def __init__(self, email, name=None, sid=None):
         self.email = email
-        self.access_token = access_token
-        self.secondary = sid
+        self.sid = sid
 
     def check_login(self, value):
         return value and self.access_token == value
@@ -46,7 +45,7 @@ class User(db.Model, UserMixin, TimestampMixin):
         return self.id
 
     def __repr__(self):
-        return '<User %r>' % self.username
+        return '<User %r>' % self.email
 
 
 class Course(db.Model, TimestampMixin):
@@ -217,6 +216,6 @@ class Group(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     members = db.Column(db.ForeignKey("user.id"), nullable=False)
-    # TODO Flesh Out Group Implementation
+    order = db.Column(db.String())
 
 # TODO AuditLog

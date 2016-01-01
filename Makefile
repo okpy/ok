@@ -11,7 +11,7 @@ env:
 	easy_install pip && \
 	pip install virtualenv && \
 	virtualenv . && \
-	. env/bin/activate && \
+	source env/bin/activate && \
 	make deps
 
 deps:
