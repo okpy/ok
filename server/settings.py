@@ -1,13 +1,11 @@
-from simplekv.fs import FilesystemStore
-
 # TODO @Sumukh Better Secret Management System
 try:
     from secret_keys import ProdConfig  # NOQA
     from secret_keys import google_creds
 except ImportError as e:
     google_creds = {
-        'GOOGLE_ID': '',
-        'GOOGLE_SECRET': ''
+        'GOOGLE_ID': 'fake',
+        'GOOGLE_SECRET': 'fake'
     }
 
 
@@ -23,7 +21,6 @@ class DevConfig(TestConfig):
 
     CACHE_TYPE = 'null'
     ASSETS_DEBUG = True
-    SESSION_STORE = FilesystemStore('./session-cache')
 
 
 class TestConfig(TestConfig):
@@ -31,9 +28,8 @@ class TestConfig(TestConfig):
     DEBUG = True
     DEBUG_TB_INTERCEPT_REDIRECTS = False
 
-    SQLALCHEMY_DATABASE_URI = 'postgresql://okdev:@localhost:5432/okdev'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:@localhost:5432/okdev'
     SQLALCHEMY_ECHO = True
 
     CACHE_TYPE = 'null'
     WTF_CSRF_ENABLED = False
-    SESSION_STORE = FilesystemStore('./session-cache')

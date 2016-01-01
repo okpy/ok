@@ -1,7 +1,8 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects import postgresql as pg
 from flask.ext.login import UserMixin, AnonymousUserMixin
-from constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
+
+from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 
 db = SQLAlchemy()
 

@@ -1,7 +1,10 @@
 language: python
 
 env:
-  - SERVER_ENV=dev
+  - SERVER_ENV=test
+
+addons:
+  postgresql: "9.3"
 
 python:
   - "2.7"
@@ -10,21 +13,27 @@ python:
 
 install:
   - pip install pip --upgrade
-  - make env
-  - source env/bin/activate
+  - pip install -r requirements.txt
+  - pip install python-coveralls
+  - npm install -g bower
+  - bower install
 
 script:
   - make test
 
 before_script:
-  - manage.py createdb
+  - psql -c 'create database okdev;' -U postgres
+  - ./manage.py createdb
 
 after_success:
   - coveralls
-  - coveralls debug
+
+after_failure:
+  - coveralls
 
 sudo: false
 
 cache:
   directories:
-  - /home/travis/virtualenv/python2.7.9/
+  - $HOME/.cache/pip
+  - lib/python2.7/site-packages
