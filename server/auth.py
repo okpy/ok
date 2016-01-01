@@ -4,6 +4,17 @@ from server.settings import google_creds
 import requests
 
 
+def token_email(access_token):
+    response = requests.get(GoogleAuthenticator.API_URL, params={
+        'access_token': access_token
+    }).json()
+    if 'error' in response:
+        raise AuthenticationException("access token invalid")
+    if 'email' not in response:
+        raise AuthenticationException("email doesn't exist")
+    return response['email'].lower()
+
+
 class AuthenticationException(Exception):
     """
     Exception thrown when authentication fails.
@@ -58,15 +69,8 @@ class GoogleAuthenticator(Authenticator):
     def get(self, *args, **kwargs):
         return self.google.get(*args, **kwargs)
 
-    def email(access_token):
-        response = requests.get(GoogleAuthenticator.API_URL, params={
-            'access_token': access_token
-        }).json()
-        if 'error' in response:
-            raise AuthenticationException("access token invalid")
-        if 'email' not in response:
-            raise AuthenticationException("email doesn't exist")
-        return response['email'].lower()
+    def email(self, access_token):
+        return token_email(access_token)
 
 
 class TestingAuthenticator(Authenticator):

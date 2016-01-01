@@ -1,11 +1,9 @@
 from flask import Blueprint, render_template, flash, request, redirect, \
     url_for, session
 from flask.ext.login import login_user, logout_user, login_required
-from flask_oauthlib.client import OAuth
 
 from server.extensions import cache
 from server.models import User, db
-from server.settings import google_creds
 from server.auth import GoogleAuthenticator
 
 main = Blueprint('main', __name__)
@@ -16,8 +14,9 @@ main = Blueprint('main', __name__)
 def home():
     return render_template('index.html')
 
-# TODO : Add testing auth mode
+# TODO : Add testing auth mode, cleanup google attr
 google = GoogleAuthenticator(main).google
+
 
 @main.route("/login")
 def login():
@@ -27,6 +26,7 @@ def login():
 @main.route("/logout")
 def logout():
     logout_user()
+    session['google_token'] = None
     flash("You have been logged out.", "success")
     return redirect(url_for(".home"))
 

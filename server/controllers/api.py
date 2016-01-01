@@ -2,7 +2,12 @@
 """
 API.py - /api/{version}/endpoints
 
-    Primarily for OK Client & some frontend features
+    The API provides an interface for external clients to interface with
+    the server.
+
+    Primary Clients: OK client, Server-side Autograder
+    Other Clients: Some front-end features. Research Code
+
     Example of defining a new API:
 
     class UserAPI(Resource):
@@ -13,14 +18,18 @@ API.py - /api/{version}/endpoints
 """
 
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request, session
+
 import flask_restful as restful
+# from flask_restful import reqparse
+import datetime
+
 from flask_restful.representations.json import output_json
 
 from functools import wraps
 
 from flask.ext.login import current_user
-from server.auth import GoogleAuthenticator
+from server.auth import token_email
 
 # from server.extensions import cache
 from server.models import User
@@ -29,8 +38,6 @@ endpoints = Blueprint('api', __name__)
 api = restful.Api(endpoints, catch_all_404s=True)
 
 API_VERSION = 'v3'
-
-from flask_restful import reqparse
 
 
 @api.representation('application/json')
@@ -49,10 +56,6 @@ def api_output(data, code, headers=None):
     }
     return output_json(data, code, headers)
 
-default_parser = reqparse.RequestParser()
-default_parser.add_argument('token', type=str, help='User Authentication')
-default_parser.add_argument('client_version', type=str)
-
 
 def authenticate(func):
     """ Provide user object to API methods. Decorates all API methods.
@@ -63,14 +66,13 @@ def authenticate(func):
         if getattr(func, 'public', False):
             return func(*args, **kwargs)
 
-        default_args = default_parser.parse_args()
-
+        token = request.args.get('token', '')
         user = None
-        if current_user.is_authenticated():
-            user = current_user
-        elif args['token']:
-            email = GoogleAuthenticator.email(default_args['token'])
+        if token:
+            email = token_email(token)
             user = User.query.filter_by(email=email).first()
+        elif current_user.is_authenticated:
+            user = current_user
 
         if user:
             kwargs['user'] = user
@@ -83,8 +85,7 @@ def authenticate(func):
 def check_version(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        default_args = default_parser.parse_args()
-        supplied = default_args['client_version']
+        supplied = request.args.get('client_version', '')
         current_version, download_link = '2', ''  # TODO Actual Version Check
         if not supplied or supplied == current_version:
             return func(*args, **kwargs)
@@ -122,15 +123,72 @@ class PublicResource(Resource):
     method_decorators = [check_version]
 
 
-class v3InfoAPI(PublicResource):
-    def get(self):
+class v3Info(Resource):
+    def get(self, user):
         return {
-            'version': '3',
-            'url': '/api/v3/',
-            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
+            'version': API_VERSION,
+            'url': '/api/{}/'.format(API_VERSION),
+            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki',
+            'token': session['google_token']  # FOR TESTING ONLY
         }
+
+#  TODO Document why there are seperate classes for Subm/Submission
+#  Might decide to combine them at some point
+#  Fewer methods/APIs as V1 since the frontend will not use the API
+
+
+class Submission(Resource):
+    """ Submission retreival resource.
+        Authenticated. Permissions: >= User/Staff
+        Used by: Ok Client Submission.
+
+    """
+    def get(self, user, id):
+        return {'time': str(datetime.datetime.now())}
+
+
+class Submissions(Resource):
+    """ Submission Creation Resource.
+        Authenticated. No other permissions check
+    """
+    def post(self, user):
+        return {'id': 1}
+
+
+class Backup(Resource):
+    """ Submission retreival resource.
+        Authenticated. Permissions: >= User/Staff
+        Used by: Ok Client Submission/Exports.
+    """
+    def get(self, id, user):
+        return {'time': str(datetime.datetime.now())}
+
+
+class Backups(Resource):
+    """ Backup creation resource.
+        Authenticated. Permissions: >= User/Staff
+        Used by: Ok Client Backup/Exports.
+    """
+    def post(self, user):
+        return {'id': 1}
+
+
+class Scores(Resource):
+    """ Score creation resource.
+        Authenticated. Permissions: >= Staff
+        Used by: Autograder
+    """
+    def post(self, backup, user):
+        return {'time': str(datetime.datetime.now())}
 
 
 # TODO API should automatically add data, error, code (to match old interface)
 
-api.add_resource(v3InfoAPI, '/v3')
+api.add_resource(v3Info, '/v3')
+
+api.add_resource(Submissions, '/v3/submission')
+api.add_resource(Submission, '/v3/submission/<int:id>')
+
+api.add_resource(Backups, '/v3/backup/')
+api.add_resource(Backup, '/v3/backup/<int:id>')
+api.add_resource(Scores, '/v3/backup/<int:backup>/score')
