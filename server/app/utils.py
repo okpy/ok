@@ -13,6 +13,7 @@ from os import path
 from app import constants
 import requests
 import pytz
+import apiclient
 
 try:
     from cStringIO import StringIO
@@ -30,6 +31,7 @@ import cloudstorage as gcs
 from app import app
 from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE, TIMEZONE
 from app.exceptions import BadValueError
+
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
@@ -539,6 +541,18 @@ def scores_to_gcs(assignment, user):
     with contextlib.closing(create_gcs_file(csv_filename, 'text/csv')) as f:
         write_scores_to_csv(f, assignment, user)
     logging.info("Exported scores to " + csv_filename)
+    give_file_access(csv_filename, user)
+
+def give_file_access(obj_name, user):
+    """Gives USER owner access over object OBJ_NAME."""
+    email = user.email[0]
+    req = apiclient.objectAccessControls().insert(
+        bucket=GRADES_BUCKET,
+        object=obj_name,
+        body={'entity': 'user-' + email, 'role': 'OWNER', 'email': email})
+    # Some error handling
+    resp = req.execute()
+    logging.info("Gave " + email + " OWNER access to " + obj_name)
 
 
 def add_subm_to_zip(subm, zipfile, submission):
