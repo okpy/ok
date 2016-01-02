@@ -26,7 +26,7 @@ def login():
 @main.route("/logout")
 def logout():
     logout_user()
-    session['google_token'] = None
+    session.pop('google_token')
     flash("You have been logged out.", "success")
     return redirect(url_for(".home"))
 

@@ -4,6 +4,8 @@ from flask.ext.login import UserMixin, AnonymousUserMixin
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 
+import datetime
+
 db = SQLAlchemy()
 
 
@@ -57,12 +59,6 @@ class Course(db.Model, TimestampMixin):
     creator = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), default=True)
 
-    def __init__(self, offering, institution, display_name, creator=None):
-        self.offering = offering
-        self.institution = institution
-        self.display_name = display_name
-        self.creator = creator
-
     def __repr__(self):
         return '<Course %r>' % self.offering
 
@@ -78,13 +74,13 @@ class Assignment(db.Model, TimestampMixin):
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(), index=True, unique=True)
-    creator = db.Column(db.ForeignKey("user.id"), nullable=False)
     course = db.Column(db.ForeignKey("course.id"), nullable=False)
     display_name = db.Column(db.String(), nullable=False)
-    url = db.Column(db.String())
-    max_group_size = db.Column(db.Integer(), default=1)
     due_date = db.Column(db.DateTime, nullable=False)
     lock_date = db.Column(db.DateTime, nullable=False)
+    creator = db.Column(db.ForeignKey("user.id"))
+    url = db.Column(db.String())
+    max_group_size = db.Column(db.Integer(), default=1)
     revisions = db.Column(db.Boolean(), default=False)
     autograding_key = db.Column(db.String())
 
@@ -113,6 +109,16 @@ class Participant(db.Model, TimestampMixin):
         return self.course == course and self.role in STAFF_ROLES
 
 
+class Message(db.Model, TimestampMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    backup = db.Column(db.ForeignKey("backup.id"))
+    contents = db.Column(pg.JSON())
+    kind = db.Column(db.String())
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
 class Backup(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     messages = db.relationship("Message")
@@ -121,20 +127,16 @@ class Backup(db.Model, TimestampMixin):
     submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
 
-
-class Message(db.Model, TimestampMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    contents = db.Column(pg.JSON())
-    kind = db.Column(db.String())
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class Submission(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    queue = db.Column(db.ForeignKey("queue.id"), nullable=False)
     submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
+    queue = db.Column(db.ForeignKey("queue.id"))
     flagged = db.Column(db.Boolean(), default=False)
     revision = db.Column(db.ForeignKey("submission.id"))
 

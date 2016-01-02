@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import os
+from datetime import datetime, timedelta
 
 from flask.ext.script import Manager, Server
 from flask.ext.script.commands import ShowUrls, Clean
 from flask.ext.migrate import Migrate, MigrateCommand
 from server import create_app
-from server.models import db, User
+from server.models import db, User, Course, Assignment
 
 # default to dev config because no one should use this in
 # production anyway.
@@ -35,8 +36,17 @@ def make_shell_context():
 def seed():
     """ Create default records for development.
     """
-    admin = User('okadmin', 'supersafepassword')
+    admin = User('okadmin@okpy.org')
     db.session.add(admin)
+    course = Course(offering="cs61a/sp16", display_name="CS61A (Test)")
+    db.session.add(course)
+    future = datetime.now() + timedelta(days=1)
+    db.session.commit()
+
+    assign = Assignment(name="cs61a/sp16/test", creator=admin.id,
+                        course=course.id, display_name="test",
+                        due_date=future, lock_date=future)
+    db.session.add(assign)
     db.session.commit()
 
 
