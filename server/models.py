@@ -111,7 +111,7 @@ class Participant(db.Model, TimestampMixin):
 class Message(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     backup = db.Column(db.ForeignKey("backup.id"), index=True)
-    contents = db.Column(pg.JSON())
+    contents = db.Column(pg.JSONB())
     kind = db.Column(db.String(), index=True)
 
     def as_dict(self):
@@ -181,7 +181,7 @@ class Diff(db.Model, TimestampMixin):
     backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     before = db.Column(db.ForeignKey("backup.id"))
-    diff = db.Column(pg.JSON())
+    diff = db.Column(pg.JSONB())
     comments = db.relationship('Comment')
     updated = db.Column(db.DateTime, onupdate=db.func.now())
 
