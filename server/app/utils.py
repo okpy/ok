@@ -13,7 +13,7 @@ from os import path
 from app import constants
 import requests
 import pytz
-import apiclient
+from googleapiclient import discovery
 
 try:
     from cStringIO import StringIO
@@ -32,6 +32,9 @@ from app import app
 from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE, TIMEZONE
 from app.exceptions import BadValueError
 
+# Construct a Resource for interacting with the 
+# Google Cloudstorage JSON API.
+service = discovery.build('storage', 'v1', http=http)
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
@@ -546,13 +549,13 @@ def scores_to_gcs(assignment, user):
 def give_file_access(obj_name, user):
     """Gives USER owner access over object OBJ_NAME."""
     email = user.email[0]
-    req = apiclient.objectAccessControls().insert(
+    req = service.objectAccessControls().insert(
         bucket=GRADES_BUCKET,
         object=obj_name,
         body={'entity': 'user-' + email, 'role': 'OWNER', 'email': email})
-    # Some error handling
+    # Some error handling ?
     resp = req.execute()
-    logging.info("Gave " + email + " OWNER access to " + obj_name)
+    logging.info(resp)
 
 
 def add_subm_to_zip(subm, zipfile, submission):
