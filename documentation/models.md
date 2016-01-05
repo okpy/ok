@@ -1,26 +1,28 @@
 # Ok v3 Models
 
-See `models.py` for the most recent version of these models. This is intended as a reference. 
+See `models.py` for the most recent version of these models. This is intended as a reference.
 
-# Model Ideas: 
--  Do we need FinalSubmission: 
-  - Not really. If we have a "flagged" boolean on submissions - we can enforce that only one submission is flagged. (By default nothing will be flagged and we'll grade the most recent one). 
-    - This gets unweidly with groups. 
+## Model Ideas:
+-  Do we need FinalSubmission:
+  - Not really. If we have a "flagged" boolean on submissions - we can enforce that only one submission is flagged. (By default nothing will be flagged and we'll grade the most recent one).
+    - This gets unweidly with groups.
     - Smaller searches with a FS table. (versus searching the entire Submission table) - maybe neglible with the proper indexes.
-  - Still leaning towards having the FS table - but not presenting it as a "Concept" to users. Users will just see a checkmark ✅ next to their submission. 
+  - Still leaning towards having the FS table - but not presenting it as a "Concept" to users. Users will just see a checkmark ✅ next to their submission.
 
-- Groups: 
+- Groups:
   -  We have a list of constraints for groups on the [Wiki](https://github.com/Cal-CS-61A-Staff/ok/wiki/Group-&-Submission-Consistency)
-  -  What if we associate submissions & backups with groups? 
-    -   Makes it easier to get submissions (though not by much) 
-    -   Handling group transitions while maintaining the full list of constraints above will be hard. 
-  -   I'm open to changs here. 
+  -  What if we associate submissions & backups with groups?
+    -   Makes it easier to get submissions (though not by much)
+    -   Handling group transitions while maintaining the full list of constraints above will be hard.
+  -   I'm open to changs here.
 
 - Pondering the creation of a GroupMember table (to avoid have an array in the Group Table
-  - Schema: KEY id, FK group id, FK assignment, FK user id, ENUM STRING status (invited|member) 
-  - Could index by assignment & user id (and place a constraint that there's only one record per combination) 
+  - Schema: KEY id, FK group id, FK assignment, FK user id, ENUM STRING status (invited|member)
+  - Could index by assignment & user id (and place a constraint that there's only one record per combination)
 
-## User
+## Models
+
+### User
 Introduced concepts of SID and Secondary (inst logins or github usernames)
 
 `alt_email` is for the eventual merging of emails. The previous approach used an array of emails. The merging process still needs some thought
@@ -37,7 +39,7 @@ class User(db.Model, UserMixin, TimestampMixin):
 
 ```
 
-Course:
+### Course:
 
 ```python
 class Course(db.Model, TimestampMixin):
@@ -48,18 +50,17 @@ class Course(db.Model, TimestampMixin):
     display_name = db.Column(db.String())
     creator = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), default=True)
-
 ```
 
-## Assignments 
+### Assignments
 Assignments are specific to courses and have unique names.
-Example: 
 
-         name - cal/cs61a/fa14/proj1
-        display_name - Hog
-        due_date - DEADLINE (Publically displayed)
-        lock_date - DEADLINE+1 (Hard Deadline for submissions)
-        url - cs61a.org/proj/hog/hog.zip
+Example:
+name - cal/cs61a/fa14/proj1
+display_name - Hog
+due_date - DEADLINE (Publically displayed)
+lock_date - DEADLINE+1 (Hard Deadline for submissions)
+url - cs61a.org/proj/hog/hog.zip
 
 
 
@@ -80,8 +81,8 @@ class Assignment(db.Model, TimestampMixin):
 
 ```
 
-## Participant
-This stores enrollment data (along with permissions level for course staff) 
+### Participant
+This stores enrollment data (along with permissions level for course staff)
 
 ```python
 class Participant(db.Model, TimestampMixin):
@@ -92,14 +93,11 @@ class Participant(db.Model, TimestampMixin):
 
 ```
 
-# Messages 
-Messages are what the OK Client sends to the server according to the variety of protocols the client supports. The server must accept whatever the client sends and store it. The contents of the message is a serialized JSON object. 
+### Messages
+Messages are what the OK Client sends to the server according to the variety of protocols the client supports. The server must accept whatever the client sends and store it. The contents of the message is a serialized JSON object.
 
 Example Messages from the ok-client:
-
- messages: 
-
- { "file\_contents": {"'ok.py: "import ok"}, "analytics": {'q1': []} }
+> { "file\_contents": {"'ok.py: "import ok"}, "analytics": {'q1': []} }
 
 ```python
 class Message(db.Model, TimestampMixin):
@@ -110,9 +108,9 @@ class Message(db.Model, TimestampMixin):
 
 ```
 
-# Backups
+### Backups
 
-Backups are the primary model in which data about student code goes. It contains all the fields neccesary to use as a submission. 
+Backups are the primary model in which data about student code goes. It contains all the fields neccesary to use as a submission.
 
 Client Time is the time on the Users machine
 
@@ -131,7 +129,7 @@ class Backup(db.Model, TimestampMixin):
 
 
 
-# Submissions
+### Submissions
 
 Submissions are very similiar to backups but have the additional fields of queue (All queue entries will be submissions of some kind)
 
@@ -147,9 +145,9 @@ class Submission(db.Model, TimestampMixin):
     revision = db.Column(db.ForeignKey("submission.id"))
 ```
 
-# Final Submission
+### Final Submission
 
-Determines which submission the student wants us to grade. Just a pointer to a submission. This model may not be needed. (See model ideas) 
+Determines which submission the student wants us to grade. Just a pointer to a submission. This model may not be needed. (See model ideas)
 
 ```python
 class FinalSubmission(db.Model):
@@ -160,15 +158,15 @@ class FinalSubmission(db.Model):
 
 
 
-# Other Models: 
+## Other Models:
 
-Eventual each model will have it's own section. 
+Eventual each model will have it's own section.
 
-Notable: 
+Notable:
 - Groups: See Model Ideas
 - Scores now are floats
 - Version: Ok-Client Versioning for autoupgrading
-- Diff/Comments: Link to backups. (this way it is possible to query for all comments on a backup) 
+- Diff/Comments: Link to backups. (this way it is possible to query for all comments on a backup)
 
 ```python
 class Score(db.Model, TimestampMixin):

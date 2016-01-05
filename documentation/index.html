@@ -23,7 +23,7 @@
   <!-- Initializer -->
   <script>
     Flatdoc.run({
-      fetcher: Flatdoc.github('Cal-CS61A-Staff/ok', 'documentation/models.md')
+      fetcher: Flatdoc.file([ 'ok.md', 'v3-design-doc.md', 'models.md' ])
     });
   </script>
 </head>
@@ -31,20 +31,27 @@
 
   <div class='header'>
     <div class='left'>
-      <h1>Ok</h1>
+      <h1> <img src="logo-dark.png"  height="20px" /> </h1>
       <ul>
-        <li><a href='https://github.com/Cal-CS61A-Staff/ok'>View on GitHub</a></li>
-        <li><a href='https://github.com/Cal-CS61A-Staff/ok/issues'>Issues</a></li>
+        <li><a href='https://github.com/Cal-CS-61A-Staff/ok'>View on GitHub</a></li>
+        <li><a href='https://github.com/Cal-CS-61A-Staff/ok/issues'>Issues</a></li>
       </ul>
     </div>
     <div class='right'>
       <!-- GitHub buttons: see http://ghbtns.com -->
-      <iframe src="http://ghbtns.com/github-btn.html?user=Cal-CS61A-Staff&amp;repo=ok&amp;type=watch&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+
+      <iframe src="http://ghbtns.com/github-btn.html?user=Cal-CS-61A-Staff&amp;repo=ok&amp;type=watch&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+      <iframe src="http://ghbtns.com/github-btn.html?user=Cal-CS-61A-Staff&amp;repo=ok&amp;type=fork&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
     </div>
   </div>
 
   <div class='content-root'>
     <div class='menubar'>
+      <div class='section'>
+        <a class='big button' href='https://okpy.org' target='_blank'>
+          okpy.org
+        </a>
+      </div>
       <div class='menu section' role='flatdoc-menu'></div>
     </div>
     <div role='flatdoc-content' class='content'></div>
