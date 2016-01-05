@@ -542,11 +542,12 @@ def make_csv_filename(assignment, infotype):
 def scores_to_gcs(assignment, user):
     """ Writes all final submission scores
     for the given assignment to GCS csv file. """
-    csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
+    obj_name = make_csv_filename(assignment, 'scores')
+    csv_filename = '/{}/{}'.format(GRADES_BUCKET, obj_name)
     with contextlib.closing(create_gcs_file(csv_filename, 'text/csv')) as f:
         write_scores_to_csv(f, assignment, user)
     logging.info("Exported scores to " + csv_filename)
-    give_file_access(csv_filename, user)
+    give_file_access(obj_name, user)
 
 def give_file_access(obj_name, user):
     """Gives USER owner access over object OBJ_NAME."""
