@@ -1,0 +1,38 @@
+# Standard ignores
+*.pyc
+*.pyo
+*.DS_Store
+*.swp
+*.idea
+*.project
+*.pydevproject
+*.kpf
+*.iml
+venv
+env
+
+# Don't store secret keys in version control
+secret_keys.py
+*secret.json*
+
+
+# pip-related files
+*.egg-info
+dist
+
+# ok-related files
+*.ok_refresh
+*.ok_messages
+
+*.coverage
+*.coveralls.yml
+*coverage_report/*
+
+# static assets
+*.webassets-cache*
+*server/static/vendor/*
+.cache
+
+# local development
+database.db
+*.db
