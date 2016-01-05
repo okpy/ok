@@ -32,3 +32,6 @@ coveralls==0.5
 mock==1.3.0
 google-api-python-client==1.4.2
 GoogleAppEngineCloudStorageClient==1.9.22.1
+httplib2>=0.8
+oauth2client>=1.4.6
+uritemplate>=0.6
