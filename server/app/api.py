@@ -849,8 +849,8 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
         deferred.defer(scores_to_gcs, obj, user)
-        
-        return [make_csv_filename(obj, 'scores')]
+
+        return {'filename': make_csv_filename(obj, 'scores')}
 
     def autograde(self, obj, user, data):
         need = Need('grade')

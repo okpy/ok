@@ -702,17 +702,17 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
       $scope.downloadScores = function(assign) {
         Assignment.download_scores({
           id: assign.id
-        }, function(response) {
+        }, function (response) {
           $window.swal({
             title: 'Success',
-            text:'Writing scores to ' + response[0] +
+            text:'Writing scores to ' + response.filename +
             '\n Scores will be ready in Google Cloud Storage ok_grades_bucket in a few minutes',
             type: 'success',
             confirmButtonText: 'View scores',
             cancelButtonText: 'Not now',
             showCancelButton: true},
             function() {
-              $window.location = 'https://console.developers.google.com/m/cloudstorage/b/ok_grades_bucket/o/' + response[0];
+              $window.location = 'https://console.developers.google.com/storage/browserok_grades_bucket/' + response.filename;
             });
         }, function(err) {
           report_error($window, err);
