@@ -14,7 +14,7 @@ Flask-RESTful==0.3.5
 
 # Google
 google-api-python-client==1.4.2
-
+GoogleAppEngineCloudStorageClient==1.9.22.1
 # Other
 psycopg2==2.6.1
 itsdangerous==0.24
