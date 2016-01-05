@@ -37,7 +37,7 @@ from app.exceptions import BadValueError
 
 # Construct a Resource for interacting with the 
 # Google Cloudstorage JSON API.
-credentials = AppAssertionCredentials(scope='https://www.googleapis.com/auth/devstorage.read_write')
+credentials = AppAssertionCredentials(scope='https://www.googleapis.com/auth/devstorage.full_control')
 http = credentials.authorize(httplib2.Http(memcache))
 service = discovery.build('storage', 'v1', http=http)
 
