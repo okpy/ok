@@ -851,24 +851,6 @@ class AssignmentAPI(APIResource):
 
         deferred.defer(scores_to_gcs, obj, user)
 
-# ok/server/static/partials/admin/course.assignment.list.html
-    def open_scores(self, obj, user, data):
-        """Download the GCS scores file."""
-        # Wrong permission check?
-        need = Need('staff')
-        if not obj.can(user, need, obj):
-            raise need.exception()
-        try:
-            # validate filename how? And why?
-            filename = '/ok_grades_bucket/' + data['gcs_file_name']
-            logging.info("Request for file " + filename, "By User " + user.email[0])
-            gcs_file = gcs.open(filename, 'r')
-            # gcs_file.close() - when?
-            return send_file(gcs_file, mimetype='text/csv', as_attachment=True, attachment_filename=filename)
-        except Exception as e:
-            logging.exception("ERROR: {}".format(e))
-        return "Failed"
-
     def autograde(self, obj, user, data):
         need = Need('grade')
         if not obj.can(user, need, obj):
