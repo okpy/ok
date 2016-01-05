@@ -13,6 +13,7 @@ from os import path
 from app import constants
 import requests
 import pytz
+import httplib2
 from googleapiclient import discovery
 
 try:
@@ -34,6 +35,7 @@ from app.exceptions import BadValueError
 
 # Construct a Resource for interacting with the 
 # Google Cloudstorage JSON API.
+http = httplib2.Http()
 service = discovery.build('storage', 'v1', http=http)
 
 # TODO Looks like this can be removed just by relocating parse_date
@@ -556,7 +558,6 @@ def give_file_access(obj_name, user):
     # Some error handling ?
     resp = req.execute()
     logging.info(resp)
-
 
 def add_subm_to_zip(subm, zipfile, submission):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
