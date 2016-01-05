@@ -27,15 +27,18 @@ from flask import jsonify, request, Response, json
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
+from oauth2client.appengine import AppAssertionCredentials
 import cloudstorage as gcs
 
 from app import app
 from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE, TIMEZONE
 from app.exceptions import BadValueError
 
+
 # Construct a Resource for interacting with the 
 # Google Cloudstorage JSON API.
-http = httplib2.Http()
+credentials = AppAssertionCredentials(scope='https://www.googleapis.com/auth/devstorage.read_write')
+http = credentials.authorize(httplib2.Http(memcache))
 service = discovery.build('storage', 'v1', http=http)
 
 # TODO Looks like this can be removed just by relocating parse_date
@@ -557,7 +560,7 @@ def give_file_access(obj_name, user):
         object=obj_name,
         body={'entity': 'user-' + email, 'role': 'OWNER', 'email': email})
     # Some error handling ?
-    resp = req.execute()
+    resp = req.execute(http=http)
     logging.info(resp)
 
 def add_subm_to_zip(subm, zipfile, submission):
