@@ -2,7 +2,6 @@ from flask.ext.cache import Cache
 from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.login import LoginManager
 from flask_assets import Environment
-
 from server.models import User
 
 # Setup flask cache

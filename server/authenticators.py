@@ -93,18 +93,18 @@ class TestingAuthenticator(Authenticator):
     def response(self):
         # TODO: Other users
         return {
-            'email': 'test@example.com',
+            'email': 'okstaff@okpy.org',
             'access_token': 'fake',
             'name': ''
         }
 
     def get(self, *args, **kwargs):
         resp = namedtuple('response', 'data')
-        return resp(data = {
-                'email': 'test@example.com',
-                'access_token': 'fake',
-                'name': ''
-            })
+        return resp(data={
+            'email': 'okstaff@okpy.org',
+            'access_token': 'fake',
+            'name': ''
+        })
 
     def email(self, access_token):
-        return 'test@example.com'
+        return 'okstaff@okpy.org'

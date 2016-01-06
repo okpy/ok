@@ -32,12 +32,41 @@
       <script src="{{ url_for('static', filename='lib/modernizr/modernizr.js') }}"></script>
 
     </head>
-    <body class="skin-yellow layout-boxed">
+    <body class="skin-yellow layout-fixed">
 
-      {% block body %}
-      {% endblock %}
+      <div class="wrapper">
+        <header class="main-header">
+          <!-- Logo -->
+          <a href="{{ url_for('admin.index') }}" class="logo">
+            <!-- mini logo for sidebar mini 50x50 pixels -->
+            <span class="logo-mini"><b>ok</b></span>
+            <!-- logo for regular state and mobile devices -->
+            <span class="logo-lg"><b>ok</b></span>
+          </a>
+          <!-- Header Navbar: style can be found in header.less -->
+          <nav class="navbar navbar-static-top" role="navigation">
+            <!-- Sidebar toggle button-->
+            <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+              <span class="sr-only">Toggle navigation</span>
+            </a>
 
+          </nav>
+        </header>
 
+        {% include 'staff/sidebar.html' %}
+
+      <div class="content-wrapper">
+        {% block main %}
+        {% endblock %}
+      </div>
+
+      <footer class="main-footer">
+          <div class="pull-right hidden-xs">
+            <b>Ok Server v3.X.X</b> <a href="http://github.com/Cal-CS-61A-Staff">Documentation</a>
+          </div>
+          <strong> {{ current_user.email }}  </strong>
+        </footer>
+      </div>
       {% assets "common_js" %}
           <script type="text/javascript" src="{{ ASSET_URL }}"></script>
       {% endassets %}

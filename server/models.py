@@ -1,6 +1,8 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.ext.hybrid import hybrid_property
+
 from flask.ext.login import UserMixin, AnonymousUserMixin
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
@@ -46,6 +48,13 @@ class User(db.Model, UserMixin, TimestampMixin):
     def get_id(self):
         return self.id
 
+    # TODO: Cache enrollment queries
+    def enrollments(self, roles=['student']):
+        return Participant.query.filter(
+            Participant.user == self.id,
+            Participant.role.in_(roles)
+        ).all()
+
     def __repr__(self):
         return '<User %r>' % self.email
 
@@ -84,7 +93,7 @@ class Assignment(db.Model, TimestampMixin):
     revisions = db.Column(db.Boolean(), default=False)
     autograding_key = db.Column(db.String())
 
-    # TODO Active property
+    @hybrid_property
     def active(self):
         return db.func.now() < self.lock_date
 
@@ -92,18 +101,24 @@ class Assignment(db.Model, TimestampMixin):
 class Participant(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     user = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
-    course = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
+    course_id = db.Column(db.ForeignKey("course.id"), index=True,
+                          nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), nullable=False)
+    course = db.relationship("Course", backref="participants")
 
-    def __init__(self, user, course, role=STUDENT_ROLE):
+    def __init__(self, user, course_id, role=STUDENT_ROLE):
         self.user = user
-        self.course = course
+        self.course_id = course_id
         self.role = role
 
     def has_role(self, course, role):
         if self.course != course:
             return False
         return self.role == role
+
+    @hybrid_property
+    def is_course_staff(self):
+        return self.role in STAFF_ROLES
 
     def is_staff(self, course):
         return self.course == course and self.role in STAFF_ROLES

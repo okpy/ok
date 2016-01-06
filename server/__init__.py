@@ -7,6 +7,8 @@ from server import assets
 from server.models import db
 from server.controllers.main import main
 from server.controllers.api import endpoints as api
+from server.controllers.admin import admin
+from server.controllers.student import student
 
 from server.constants import API_PREFIX
 
@@ -41,7 +43,7 @@ def create_app(object_name):
     # initialize SQLAlchemy
     db.init_app(app)
 
-    login_manager.init_app(app)    
+    login_manager.init_app(app)
 
     # Import and register the different asset bundles
     assets_env.init_app(app)
@@ -51,7 +53,12 @@ def create_app(object_name):
 
     # register our blueprints
     app.register_blueprint(main)
-    # TODO Auth Blueprint
+    # TODO Move auth to seperate Blueprint
+
+    app.register_blueprint(admin, url_prefix='/admin')
+
+    app.register_blueprint(student, url_prefix='/dashboard')
+
     app.register_blueprint(api, url_prefix=API_PREFIX)
 
     return app

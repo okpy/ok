@@ -1,0 +1,70 @@
+<aside class="main-sidebar">
+    <section class="sidebar">
+      <!-- Sidebar user panel -->
+      <!-- sidebar menu: : style can be found in sidebar.less -->
+      <ul class="sidebar-menu">
+        <li class="header">Home</li>
+        <li {% if request.endpoint == "admin.index" %} class="active" {% endif %} >
+          <a href="{{ url_for('admin.index') }}">
+            <i class="fa fa-home"></i> <span>Dashboard</span> </i>
+          </a>
+        </li>
+
+        <li class="header">Courses</li>
+            {% for course in courses %}
+
+              <li class="treeview  {% if loop.length == 1 %} active {% endif %} ">
+                <a href="#">
+                  <i class="fa fa-university"></i> <span>{{ course.display_name }} - {{ course.offering }}</span>
+                  <i class="fa fa-angle-left pull-right"></i>
+                </a>
+
+                <ul class="treeview-menu {% if loop.length == 1 %} menu-open {% endif %} ">
+                  <li><a href="#"><i class="fa fa-circle-o"></i> Dashboard </a></li>
+                  <li><a href="#"><i class="fa fa-circle-o"></i> Assignments </a></li>
+                  <li><a href="#"><i class="fa fa-circle-o"></i> Students </a></li>
+                  <li><a href="#"><i class="fa fa-circle-o"></i> Staff </a></li>
+                </ul>
+            {% endfor %}
+
+          {% if current_user.is_admin %}
+            <li><a href="#"><i class="fa fa-plus"></i> Create Course </a></li>
+          {% endif %}
+
+        </li>
+
+        {% if current_user.is_admin %}
+        <!-- Admin Links -->
+        <li class="header">Admin</li>
+        <li><a href="https://cloud.console.google.com/">
+            <i class="fa fa-server"></i> <span>GCE Console</span></a>
+        </li>
+        <li><a href="https://cloud.console.google.com/">
+            <i class="fa fa-download"></i> <span>Cloud Storage Bucket</span></a>
+        </li>
+        <li><a href="#">
+            <i class="fa fa-database"></i> <span>Query Tool</span></a>
+        </li>
+        <li><a href="#">
+            <i class="fa fa-dashboard"></i> <span>Statistics</span></a>
+        </li>
+        <li><a href="#">
+            <i class="fa fa-database"></i> <span>Logs</span></a>
+        </li>
+        {% endif %}
+
+
+        <li class="header">Account</li>
+        <li><a href="https://cal-cs-61a-staff.github.io/ok/">
+            <i class="fa fa-book"></i> <span>Documentation</span></a>
+        </li>
+        <li><a href="{{ url_for('student.index' )}}">
+            <i class="fa fa-graduation-cap"></i> <span>Student Dashboard</span></a>
+        </li>
+        <li><a href="{{ url_for('main.logout' )}}">
+            <i class="fa fa-sign-out"></i> <span>Logout</span></a>
+        </li>
+      </ul>
+    </section>
+    <!-- /.sidebar -->
+  </aside>
