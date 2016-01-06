@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+      <title>{% block title %}{% endblock %}</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+      {% block meta %}
+          <meta name="description" content="">
+          <meta name="author" content="">
+      {% endblock %}
+
+      {% assets "common_css" %}
+          <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+      {% endassets %}
+
+      {% assets "adminlte_css" %}
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+          <!-- Ionicons -->
+          <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+          <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+
+      {% endassets %}
+
+      {% block css %}
+      {% endblock %}
+
+      <script src="{{ url_for('static', filename='lib/modernizr/modernizr.js') }}"></script>
+
+    </head>
+    <body class="skin-yellow layout-boxed">
+
+      {% block body %}
+      {% endblock %}
+
+
+      {% assets "common_js" %}
+          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
+      {% assets "adminlte_js" %}
+          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
+
+      {% block js %}
+      {% endblock %}
+    </body>
+</html>
