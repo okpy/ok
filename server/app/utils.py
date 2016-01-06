@@ -24,11 +24,6 @@ import zipfile as zf
 import csv
 from flask import jsonify, request, Response, json
 
-from google.appengine.tools import dev_appserver
-from google.appengine.tools.dev_appserver_main import ParseArguments
-args, option_dict = ParseArguments(sys.argv) # Otherwise the option_dict isn't populated.
-dev_appserver.SetupStubs('local', **option_dict)
-
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
