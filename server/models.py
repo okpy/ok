@@ -1,4 +1,5 @@
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects import postgresql as pg
 from flask.ext.login import UserMixin, AnonymousUserMixin
 
@@ -51,7 +52,7 @@ class User(db.Model, UserMixin, TimestampMixin):
 
 class Course(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    offering = db.Column(db.String(), unique=True, index=True)
+    offering = db.Column(db.String(), unique=True)
     # offering - E.g., 'cal/cs61a/fa14
     institution = db.Column(db.String())  # E.g., 'UC Berkeley'
     display_name = db.Column(db.String())
@@ -125,33 +126,31 @@ class Backup(db.Model, TimestampMixin):
     client_time = db.Column(db.DateTime())
     submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    submit = db.Column(db.Boolean(), default=False)
+    flagged = db.Column(db.Boolean(), default=False)
 
-    db.Index('idx_backAUser', 'assignment', 'submitter'),
+    db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
+    db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
+    db.Index('idx_submittedBacks', 'assignment', 'submit')
+    db.Index('idx_flaggedBacks', 'assignment', 'flagged')
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class Submission(db.Model, TimestampMixin):
+    """ A submission is created from --submit or when a backup is flagged for
+    grading.
+
+    **This model may be removed. Do not depend on it for features.**
+    """
     id = db.Column(db.Integer(), primary_key=True)
     backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
-    queue = db.Column(db.ForeignKey("queue.id"))
     flagged = db.Column(db.Boolean(), default=False)
-    revision = db.Column(db.ForeignKey("submission.id"))
 
     db.Index('idx_flaggedSubms', 'assignment', 'submitter', 'flagged'),
-
-
-class FinalSubmission(db.Model):
-    id = db.Column(db.Integer(), primary_key=True)
-    submission = db.Column(db.ForeignKey("submission.id"), nullable=False)
-    assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-
-    @property
-    def created(self):
-        return self.submission.created
 
 
 class Score(db.Model, TimestampMixin):
@@ -202,13 +201,65 @@ class Comment(db.Model, TimestampMixin):
     message = db.Column(db.Text())  # Markdown
 
 
-class Queue(db.Model, TimestampMixin):
-    """A queue of submissions to grade."""
+class CommentBank(db.Model, TimestampMixin):
+    """ CommentBank is a set of common comments for assignments.
+    An assignment value of null applies to all assignments.
+    The statistics column will be used by the frontend.
+    """
+    id = db.Column(db.Integer(), primary_key=True)
+    assignment = db.Column(db.ForeignKey("assignment.id"), index=True)
+    author = db.Column(db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(db.Text())  # Markdown
+    frequency = db.Column(db.Integer())
+    statistics = db.Column(pg.JSONB())  # closest function, line number etc
+
+
+class GradingTask(db.Model, TimestampMixin):
+    """Each task represent a single submission assigned to a grader."""
+    id = db.Column(db.Integer(), primary_key=True)
+    assignment = db.Column(db.ForeignKey("assignment.id"), index=True,
+                           nullable=False)
+    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    course = db.Column(db.ForeignKey("course.id"))
+    primary_owner = db.Column(db.ForeignKey("user.id"), index=True)
+    kind = db.Column(db.Text())  # e.g. "composition"
+    description = db.Column(db.Text())  # e.g. "Helpful links for grading"
+
+    def is_complete(self):
+        return self.kind in [s.tag for s in self.backup.scores]
+
+
+class GroupMember(db.Model, TimestampMixin):
+    """A member of a group must accept the invite to join the group.
+    Only members of a group can view each other's submissions.
+
+    A user may have multiple entries for a single group/assignment
+    but may only be invited or participate in a single group per assignment.
+    This is enforced by a uniqueness constraint on status. The rows here
+    can serve as an audit log for group activity.
+
+    The invite status value can be one of: invited, accepted, null
+    The invite detail message can be one of: revoked, declined, left, removed
+        Revoked - The invite was cancelled.
+        Declined - The user turned down the invite and did not join.
+        Left - The user accept the invite but later left.
+        Removed - The user was removed by another meber.
+    This distinction is neccesary because a user may leave multiple groups.
+    """
+    status_values = ['invited', 'accepted']
+    detail_values = ['revoked', 'declined', 'left', 'removed']
+
     id = db.Column(db.Integer(), primary_key=True)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    course = db.Column(db.ForeignKey("course.id"), nullable=False)
-    primary_owner = db.Column(db.ForeignKey("user.id"), nullable=False)
-    description = db.Column(db.Text())
+    group = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
+    user = db.Column(db.ForeignKey("user.id"), nullable=False, index=True)
+    extra = db.Column(db.String())  # e.g. Member "A"
+
+    status = db.Column(db.Enum(*status_values, name="status"), index=True)
+    detail = db.Column(db.Enum(*detail_values, name='detail'))
+    updated = db.Column(db.DateTime, onupdate=db.func.now())
+
+    UniqueConstraint('assignment', 'user', 'status', name='uq_userInOneGroup')
 
 
 class Group(db.Model, TimestampMixin):
@@ -221,7 +272,4 @@ class Group(db.Model, TimestampMixin):
     """
     id = db.Column(db.Integer(), primary_key=True)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    members = db.Column(db.ForeignKey("user.id"), nullable=False)
-    order = db.Column(db.String())
-
-# TODO AuditLog
+    members = db.relationship("GroupMember")
