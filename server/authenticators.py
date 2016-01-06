@@ -63,7 +63,7 @@ class GoogleAuthenticator(Authenticator):
         )
 
     def authorize(self, callback):
-        return self.google(callback=callback)
+        return self.google.authorize(callback=callback)
 
     def response(self):
         return self.google.authorized_response()
