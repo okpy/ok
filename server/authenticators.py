@@ -1,5 +1,7 @@
+from flask import redirect
 from flask_oauthlib.client import OAuth
-from server.settings import google_creds
+from server.secret_keys import google_creds
+from collections import namedtuple
 
 import requests
 
@@ -79,14 +81,30 @@ class TestingAuthenticator(Authenticator):
     FOR TESTING ONLY.
     """
 
+    def __init__(self, app):
+        self.google = self
+
     def authenticate(self, callback):
-        return callback
+        return redirect(callback)
+
+    def authorize(self, callback):
+        return redirect(callback)
 
     def response(self):
-        return {'email': 'test@example.com', 'access_token': 'fake'}
+        # TODO: Other users
+        return {
+            'email': 'test@example.com',
+            'access_token': 'fake',
+            'name': ''
+        }
 
     def get(self, *args, **kwargs):
-        return self.response()
+        resp = namedtuple('response', 'data')
+        return resp(data = {
+                'email': 'test@example.com',
+                'access_token': 'fake',
+                'name': ''
+            })
 
     def email(self, access_token):
-        return access_token
+        return 'test@example.com'

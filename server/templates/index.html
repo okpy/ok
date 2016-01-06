@@ -3,6 +3,43 @@
 {% block title %}Home{% endblock %}
 
 {% block body %}
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Flask Foundation</a>
+    </div>
+    <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+            <li><a href="{{ url_for('.home') }}">Home</a></li>
+
+            {% if not current_user.is_authenticated %}
+                <li><a href="{{ url_for('.login') }}">Login</a></li>
+            {% else %}
+                <li><a href="{{ url_for('.logout') }}">Logout</a></li>
+            {% endif %}
+
+            <li><a href="{{ url_for('.restricted') }}">Login Restricted Page</a></li>
+        </ul>
+    </div><!--/.nav-collapse -->
+</div>
+
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <div class="jumbotron">
         <h1>Flask Foundation</h1>
         <p>The unopinionated flask framework</p>
@@ -43,4 +80,6 @@
             <p>The CSS Library Bootstrap is included, along with the Javascript libraries modernizr and jQuery.</p>
         </div>
     </div>
+</div>
+
 {% endblock %}

@@ -31,7 +31,7 @@ from flask_restful.representations.json import output_json
 from functools import wraps
 
 from flask.ext.login import current_user
-from server.auth import token_email
+from server.authenticators import token_email
 
 # from server.extensions import cache
 import server.models as models
