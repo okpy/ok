@@ -183,7 +183,7 @@ def make_backup(user, assignment, messages, submit, submitter):
         client_time = datetime.datetime.now()
 
     backup = models.Backup(client_time=client_time, submitter=user.id,
-                           assignment=assignment.id)
+                           assignment=assignment.id, submit=submit)
     messages = [models.Message(kind=k, backup=backup,
                 contents=m) for k, m in messages.iteritems()]
     backup.messages = messages
