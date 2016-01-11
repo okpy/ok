@@ -4,6 +4,10 @@ from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from flask.ext.login import UserMixin, AnonymousUserMixin
+from flask.ext.cache import Cache
+cache = Cache()
+
+from datetime import datetime as dt
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 
@@ -83,7 +87,8 @@ class Assignment(db.Model, TimestampMixin):
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(), index=True, unique=True)
-    course = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
+    course_id = db.Column(db.ForeignKey("course.id"), index=True,
+                          nullable=False)
     display_name = db.Column(db.String(), nullable=False)
     due_date = db.Column(db.DateTime, nullable=False)
     lock_date = db.Column(db.DateTime, nullable=False)
@@ -92,10 +97,11 @@ class Assignment(db.Model, TimestampMixin):
     max_group_size = db.Column(db.Integer(), default=1)
     revisions = db.Column(db.Boolean(), default=False)
     autograding_key = db.Column(db.String())
+    course = db.relationship("Course", backref="assignments")
 
     @hybrid_property
     def active(self):
-        return db.func.now() < self.lock_date
+        return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
 
 class Participant(db.Model, TimestampMixin):
@@ -151,6 +157,14 @@ class Backup(db.Model, TimestampMixin):
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    @staticmethod
+    def statistics(self):
+        db.session.query(Backup).from_statement(
+            db.text("""SELECT date_trunc('hour', backup.created), count(backup.id)  FROM backup
+            WHERE backup.created >= NOW() - '1 day'::INTERVAL
+            GROUP BY date_trunc('hour', backup.created)
+            ORDER BY date_trunc('hour', backup.created)""")).all()
 
 
 class Submission(db.Model, TimestampMixin):

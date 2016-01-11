@@ -15,7 +15,7 @@ class DevConfig(TestConfig):
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:@localhost:5432/okdev'
 
-    CACHE_TYPE = 'null'
+    CACHE_TYPE = 'simple'
     ASSETS_DEBUG = True
 
 
@@ -27,7 +27,7 @@ class TestConfig(TestConfig):
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:@localhost:5432/okdev'
     SQLALCHEMY_ECHO = True
 
-    CACHE_TYPE = 'null'
+    CACHE_TYPE = 'simple'
     WTF_CSRF_ENABLED = False
 
 

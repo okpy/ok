@@ -4,6 +4,7 @@ from flask.ext.login import login_user, logout_user, login_required
 
 from server.models import User, db
 from server.authenticators import GoogleAuthenticator, TestingAuthenticator
+from server.extensions import cache
 
 main = Blueprint('main', __name__)
 
@@ -19,6 +20,7 @@ def choose_auth():
     return google_auth
 
 
+@cache.cached(1000)
 @main.route('/')
 def home():
     return render_template('index.html')

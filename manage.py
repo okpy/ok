@@ -44,7 +44,7 @@ def seed():
     db.session.commit()
 
     assign = Assignment(name="cs61a/sp16/test", creator=staff_member.id,
-                        course=course.id, display_name="test",
+                        course_id=course.id, display_name="test",
                         due_date=future, lock_date=future)
     db.session.add(assign)
     db.session.commit()
@@ -59,6 +59,16 @@ def createdb():
     """ Creates a database with all of the tables defined in
         your SQLAlchemy models
     """
+    db.create_all()
+
+
+@manager.command
+def resetedb():
+    """ Drop & create a database with all of the tables defined in
+        your SQLAlchemy models.
+        DO NOT USE IN PRODUCTION.
+    """
+    db.drop_all()
     db.create_all()
 
 if __name__ == "__main__":

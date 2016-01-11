@@ -1,0 +1,66 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} Ok - {{ current_course.display_name }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        New assignment
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li class="active"><a href="#"><i class="fa fa-plus"></i> New Assignment</a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+              {{message}}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <div class="row">
+      <div class="col-md-6">
+
+        <!-- Default box -->
+
+          <div class="box">
+            <div class="box-body">
+              {% call forms.render_form(form, action_url="", action_text='Create Assignment',
+                                          class_='form') %}
+                  {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', type='text') }}
+                  {{ forms.render_field(form.name, label_visible=true, placeholder='cs61a/sp16/proj01', type='text') }}
+                  {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
+                  {{ forms.render_field(form.due_date, label_visible=true, type='text') }}
+                  {{ forms.render_field(form.lock_date, label_visible=true, type='text') }}
+                  {{ forms.render_field(form.url, label_visible=true, placeholder='http://cs61a.org/proj/hog (Optional)', type='text') }}
+                  {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
+                  {{ forms.render_checkbox_field(form.revisions, label_visible=true) }}
+              {% endcall %}
+            </div>
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+      </div>
+
+
+
+
+
+  <!-- </body> do not close body in template-->
+{% endblock %}

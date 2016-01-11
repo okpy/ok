@@ -25,6 +25,9 @@
           <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
 
       {% endassets %}
+      {% assets "staff_css" %}
+          <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+      {% endassets %}
 
       {% block css %}
       {% endblock %}
@@ -70,9 +73,11 @@
       {% assets "common_js" %}
           <script type="text/javascript" src="{{ ASSET_URL }}"></script>
       {% endassets %}
+
       {% assets "adminlte_js" %}
           <script type="text/javascript" src="{{ ASSET_URL }}"></script>
       {% endassets %}
+
 
       {% block js %}
       {% endblock %}

@@ -5,23 +5,41 @@
       <ul class="sidebar-menu">
         <li class="header">Home</li>
         <li {% if request.endpoint == "admin.index" %} class="active" {% endif %} >
-          <a href="{{ url_for('admin.index') }}">
+          <a href="{{ url_for('.index') }}">
             <i class="fa fa-home"></i> <span>Dashboard</span> </i>
           </a>
         </li>
+        <li {% if request.endpoint == "admin.grading" %} class="active" {% endif %} >
+          <a href="{{ url_for('.index') }}">
+            <i class="fa fa-inbox"></i> <span>Grading</span> </i>
+            <span class="label label-primary pull-right">4</span>
+          </a>
+
+        </li>
+
+
 
         <li class="header">Courses</li>
             {% for course in courses %}
-
-              <li class="treeview  {% if loop.length == 1 %} active {% endif %} ">
+              <li class="treeview  {% if (request.endpoint == "admin.index" and loop.length == 1) %}active default{% endif %} {% if request.view_args['cid'] == course.id %} active{% endif %}" >
                 <a href="#">
                   <i class="fa fa-university"></i> <span>{{ course.display_name }} - {{ course.offering }}</span>
                   <i class="fa fa-angle-left pull-right"></i>
                 </a>
 
-                <ul class="treeview-menu {% if loop.length == 1 %} menu-open {% endif %} ">
-                  <li><a href="#"><i class="fa fa-circle-o"></i> Dashboard </a></li>
-                  <li><a href="#"><i class="fa fa-circle-o"></i> Assignments </a></li>
+                <ul class="treeview-menu {% if (loop.length == 1 or request.view_args['cid'] == course.id) %}menu-open{% endif %}">
+                  <li>
+                    <a href="{{ url_for('.course', cid=course.id) }}">
+                      <i class="fa fa-circle-o {% if (request.endpoint == "admin.course" and request.view_args['cid'] == course.id) %}text-yellow{% endif %}"></i>
+                      Dashboard
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('.course_assignments', cid=course.id) }}">
+                      <i class="fa fa-circle-o {% if (request.endpoint == "admin.course_assignments" and request.view_args['cid'] == course.id) %}text-yellow{% endif %}"></i>
+                      Assignments
+                    </a>
+                  </li>
                   <li><a href="#"><i class="fa fa-circle-o"></i> Students </a></li>
                   <li><a href="#"><i class="fa fa-circle-o"></i> Staff </a></li>
                 </ul>

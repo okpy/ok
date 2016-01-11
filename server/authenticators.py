@@ -6,17 +6,6 @@ from collections import namedtuple
 import requests
 
 
-def token_email(access_token):
-    response = requests.get(GoogleAuthenticator.API_URL, params={
-        'access_token': access_token
-    }).json()
-    if 'error' in response:
-        raise AuthenticationException("access token invalid")
-    if 'email' not in response:
-        raise AuthenticationException("email doesn't exist")
-    return response['email'].lower()
-
-
 class AuthenticationException(Exception):
     """
     Exception thrown when authentication fails.
@@ -72,7 +61,18 @@ class GoogleAuthenticator(Authenticator):
         return self.google.get(*args, **kwargs)
 
     def email(self, access_token):
-        return token_email(access_token)
+        return self.token_email(access_token)
+
+    @staticmethod
+    def token_email(access_token):
+        response = requests.get(GoogleAuthenticator.API_URL, params={
+            'access_token': access_token
+        }).json()
+        if 'error' in response:
+            raise AuthenticationException("access token invalid")
+        if 'email' not in response:
+            raise AuthenticationException("email doesn't exist")
+        return response['email'].lower()
 
 
 class TestingAuthenticator(Authenticator):
@@ -107,4 +107,8 @@ class TestingAuthenticator(Authenticator):
         })
 
     def email(self, access_token):
+        return 'okstaff@okpy.org'
+
+    @staticmethod
+    def token_email(access_token):
         return 'okstaff@okpy.org'

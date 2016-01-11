@@ -1,0 +1,169 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} Ok - {{ current_course.display_name }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ assignment.display_name }}
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li class="active"><a href="#"><i class="fa fa-book"></i> {{ assignment.display_name }}</a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+              {{message}}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+        <!-- Stats Row -->
+        <div class="row">
+            <div class="col-md-6 col-sm-6 col-xs-12">
+              <div class="info-box">
+                <span class="info-box-icon bg-aqua"><i class="fa fa-inbox"></i></span>
+
+                <div class="info-box-content">
+                  <span class="info-box-text">Submissions</span>
+                  <span class="info-box-number">TBD</span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+            <!-- /.col -->
+            <div class="col-md-6 col-sm-6 col-xs-12">
+              <div class="info-box">
+                <span class="info-box-icon bg-yellow"><i class="fa fa-files-o"></i></span>
+
+                <div class="info-box-content">
+                  <span class="info-box-text">Backups</span>
+                  <span class="info-box-number">TBD</span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+            <!-- /.col -->
+          </div>
+
+
+          <div class="row">
+                  <div class="col-md-12">
+                    <div class="box">
+                      <div class="box-header with-border">
+                        <h3 class="box-title">Statistics</h3>
+                        <div class="box-tools pull-right">
+                          <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <!-- /.box-header -->
+                      <div class="box-body">
+                        <!-- .row --->
+                        <div class="row">
+                          <div class="col-sm-3 col-xs-6">
+                            <div class="description-block border-right">
+                              <h5 class="description-header">TBD</h5>
+                              <span class="description-text">Submissions</span>
+                            </div>
+                            <!-- /.description-block -->
+                          </div>
+                          <!-- /.col -->
+                          <div class="col-sm-3 col-xs-6">
+                            <div class="description-block border-right">
+                              <h5 class="description-header">TBD</h5>
+                              <span class="description-text">Backups</span>
+                            </div>
+                            <!-- /.description-block -->
+                          </div>
+                          <!-- /.col -->
+                          <div class="col-sm-3 col-xs-6">
+                            <div class="description-block border-right">
+                              <h5 class="description-header">TBD</h5>
+                              <span class="description-text">Students with Submissions</span>
+                            </div>
+                            <!-- /.description-block -->
+                          </div>
+                          <!-- /.col -->
+                          <div class="col-sm-3 col-xs-6">
+                            <div class="description-block">
+                              <h5 class="description-header">TBD</h5>
+                              <span class="description-text">Groups</span>
+                            </div>
+                            <!-- /.description-block -->
+                          </div>
+                        </div>
+                        <!-- /.row -->
+
+
+                      </div>
+                      <!-- ./box-body -->
+                      <div class="box-footer">
+                        <div class="row margin">
+                          <p>Search Submissions</p>
+                            <div class="input-group margin">
+                              <input type="text" placeholder="Student Email" class="form-control disabled">
+                              <span class="input-group-btn">
+                                <button type="button" class="btn btn-info btn-flat disabled">Search</button>
+                              </span>
+                            </div>
+                        </div>
+                      </div>
+                      <!-- /.box-footer -->
+                    </div>
+                    <!-- /.box -->
+                  </div>
+                  <!-- /.col -->
+                </div>
+
+        <!-- Default box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Edit {{ assignment.display_name }} Assignment</h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                <i class="fa fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="box-body">
+              <!-- form goes here -->
+              {% call forms.render_form(form, action_url="", action_text='Edit Assignment',
+                                          class_='form') %}
+                  {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', type='text') }}
+                  {{ forms.render_field(form.name, label_visible=true, placeholder='cs61a/sp16/proj01', type='text') }}
+                  {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
+                  {{ forms.render_field(form.due_date, label_visible=true, type='text') }}
+                  {{ forms.render_field(form.lock_date, label_visible=true, type='text') }}
+                  {{ forms.render_field(form.url, label_visible=true, placeholder='http://cs61a.org/proj/hog (Optional)', type='text') }}
+                  {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
+                  {{ forms.render_checkbox_field(form.revisions, label_visible=true) }}
+              {% endcall %}
+          </div>
+          <!-- /.box-body -->
+          <!-- /.box-footer-->
+        </div>
+        <!-- /.box -->
+
+
+
+
+  <!-- </body> do not close body in template-->
+{% endblock %}

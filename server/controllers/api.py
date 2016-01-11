@@ -18,7 +18,7 @@ API.py - /api/{version}/endpoints
 """
 
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request, session, current_app
 
 import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
@@ -31,9 +31,7 @@ from flask_restful.representations.json import output_json
 from functools import wraps
 
 from flask.ext.login import current_user
-from server.authenticators import token_email
 
-# from server.extensions import cache
 import server.models as models
 
 
@@ -90,7 +88,7 @@ def authenticate(func):
         token = request.args.get('access_token', '')
         user = None
         if token:
-            email = token_email(token)
+            email = current_app.config['AUTH'].token_email(token)
             user = models.User.query.filter_by(email=email).first()
         elif current_user.is_authenticated:
             user = current_user
