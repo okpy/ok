@@ -124,6 +124,16 @@ def logout():
     flash("You have been logged out.", "success")
     return redirect(url_for("main.home"))
 
+# Used to get a Google API access token.
+@auth.route("/access-token")
+def access_token():
+    return google_auth.authorize(callback=url_for('.access_token_authorized', _external=True))
+
+@auth.route("/access-token/authorized")
+def access_token_authorized():
+    resp = google_auth.authorized_response()
+    return resp['access_token']
+
 @auth.route("/restricted")
 @login_required
 def restricted():
