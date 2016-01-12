@@ -5,9 +5,10 @@ from webassets.loaders import PythonLoader as PythonAssetsLoader
 
 from server import assets
 from server.models import db
-from server.controllers.main import main
-from server.controllers.api import endpoints as api
 from server.controllers.admin import admin
+from server.controllers.api import endpoints as api
+from server.controllers.auth import auth
+from server.controllers.main import main
 from server.controllers.student import student
 
 from server.constants import API_PREFIX
@@ -53,7 +54,8 @@ def create_app(object_name):
 
     # register our blueprints
     app.register_blueprint(main)
-    # TODO Move auth to seperate Blueprint
+
+    app.register_blueprint(auth)
 
     app.register_blueprint(admin, url_prefix='/admin')
 
