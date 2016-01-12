@@ -284,6 +284,10 @@ class Backup(Resource):
         if key is None:
             restful.abort(405)
         backup = self.model.query.filter_by(id=key).first()
+        # TODO CHECK
+        if backup.user != user or not user.is_admin:
+            restful.abort(403)
+
         return backup
 
     @marshal_with(schema.post_fields)
@@ -309,6 +313,9 @@ class Submission(Resource):
         if key is None:
             restful.abort(405)
         submission = self.model.query.filter_by(id=key).first()
+        # TODO CHECK .user obj
+        if submission.user != user or not user.is_admin:
+            restful.abort(403)
         return submission
 
     @marshal_with(schema.post_fields)
