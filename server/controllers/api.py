@@ -308,8 +308,6 @@ class Submission(Resource):
     def get(self, user, key=None):
         if key is None:
             restful.abort(405)
-        if key is None:
-            restful.abort(405)
         submission = self.model.query.filter_by(id=key).first()
         return submission
 
