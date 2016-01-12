@@ -82,22 +82,10 @@ def authenticate(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Public methods do not need authentication
-        if getattr(func, 'public', False):
-            return func(*args, **kwargs)
-
-        token = request.args.get('access_token', '')
-        user = None
-        if token:
-            email = current_app.config['AUTH'].token_email(token)
-            user = models.User.query.filter_by(email=email).first()
-        elif current_user.is_authenticated:
-            user = current_user
-
-        if user:
-            kwargs['user'] = user
-            return func(*args, **kwargs)
-
-        restful.abort(401)  # TODO : Custom Auth Error Message.
+        if not getattr(func, 'public', False) and not current_user.is_authenticated:
+            restful.abort(401)  # TODO: Custom Auth Error Message.
+        kwargs['user'] = current_user
+        return func(*args, **kwargs)
     return wrapper
 
 
@@ -151,8 +139,7 @@ class v3Info(Resource):
         return {
             'version': API_VERSION,
             'url': '/api/{}/'.format(API_VERSION),
-            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki',
-            'access_token': session['google_token']  # FOR TESTING ONLY
+            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
         }
 
 #  Fewer methods/APIs as V1 since the frontend will not use the API

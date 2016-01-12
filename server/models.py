@@ -27,27 +27,12 @@ class User(db.Model, UserMixin, TimestampMixin):
     alt_email = db.Column(db.String())
     active = db.Column(db.Boolean(), default=True)
 
-    def __init__(self, email, name=None, sid=None):
+    def __init__(self, email, sid=None):
         self.email = email
         self.sid = sid
 
-    def check_login(self, value):
-        return value and self.access_token == value
-
-    def is_authenticated(self):
-        if isinstance(self, AnonymousUserMixin):
-            return False
-        else:
-            return True
-
     def is_active(self):
         return self.active
-
-    def is_anonymous(self):
-        if isinstance(self, AnonymousUserMixin):
-            return True
-        else:
-            return False
 
     def get_id(self):
         return self.id
