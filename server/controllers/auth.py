@@ -32,6 +32,10 @@ google_auth = oauth.remote_app(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
 )
 
+@google_auth.tokengetter
+def google_oauth_token(token=None):
+    return session.get('google_token', None)
+
 def user_from_email(email):
     """
     Get a User with the given email address, or create one if no User with
@@ -99,7 +103,9 @@ def authorized():
         flash(error, "error")
         # TODO Error Page
         return redirect(url_for("main.home"))
-    user = user_from_access_token(resp['access_token'])
+    access_token = resp['access_token']
+    user = user_from_access_token(access_token)
+    session['google_token'] = (access_token, '')  # (access_token, secret)
     return authorize_user(user)
 
 # Backdoor log in if you want to impersonate a user.
@@ -121,6 +127,7 @@ def testing_authorized():
 @auth.route("/logout")
 def logout():
     logout_user()
+    session.pop('google_token', None)
     flash("You have been logged out.", "success")
     return redirect(url_for("main.home"))
 
