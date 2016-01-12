@@ -23,6 +23,6 @@ $ ./manage.py seed
 
 Running App:
 
-$ ./manage.py runserver
+$ ./manage.py server
 
 Open http://localhost:5000 in your browser of choice.
