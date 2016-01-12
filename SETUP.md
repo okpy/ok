@@ -12,7 +12,7 @@ $ pip install -r requirements.txt
 OSX Postgres Setup:
 
 $ brew install postgres
-$ brew services postgres start
+$ brew services start postgres
 $ createuser -d postgres
 $ createdb okdev -U postgres
 
