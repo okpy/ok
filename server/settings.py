@@ -4,7 +4,7 @@ class TestConfig(object):
     DEBUG = True
     SECRET_KEY = 'Testing*ok*server*'
     RESTFUL_JSON = {'indent': 4}
-    TESTING_LOGIN = True  # Do NOT turn on for prod
+    TESTING_LOGIN = True
 
 class DevConfig(TestConfig):
     ENV = 'dev'
