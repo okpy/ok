@@ -87,8 +87,6 @@ def login():
     """
     Authenticates a user with an access token using Google APIs.
     """
-    if use_testing_login():
-        return redirect(url_for('.testing_login'))
     return google_auth.authorize(callback=url_for('.authorized', _external=True))
 
 @auth.route('/login/authorized')
