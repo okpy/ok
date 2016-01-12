@@ -41,12 +41,20 @@ def authorize_user(email, name):
     login_user(user)
     return redirect(request.args.get("next") or url_for("main.home"))
 
+def use_testing_login():
+    """
+    Return True if we use the unsecure testing login instead of Google OAuth.
+    Requires TESTING_LOGIN = True in the config and the environment is not prod.
+    """
+    return current_app.config.get('TESTING_LOGIN', False) and \
+        current_app.config.get('ENV') != 'prod'
+
 @auth.route("/login")
 def login():
     """
     Authenticates a user with an access token using Google APIs.
     """
-    if current_app.config.get('TESTING_LOGIN', False):
+    if use_testing_login():
         return redirect(url_for('.testing_login'))
     return google_auth.authorize(callback=url_for('.authorized', _external=True))
 
@@ -69,16 +77,16 @@ def authorized():
 
 # Backdoor log in if you want to impersonate a user.
 # Will not give you a Google auth token.
-# Requires that TESTING_LOGIN = True in the config; production should NEVER have this on.
+# Requires that TESTING_LOGIN = True in the config and we must not be running in prod.
 @auth.route('/testing-login')
 def testing_login():
-    if not current_app.config.get('TESTING_LOGIN', False):
+    if not use_testing_login():
         abort(404)
     return render_template('testing-login.html', callback=url_for(".testing_authorized"))
 
 @auth.route('/testing-login/authorized', methods=['POST'])
 def testing_authorized():
-    if not current_app.config.get('TESTING_LOGIN', False):
+    if not use_testing_login():
         abort(404)
     session['google_token'] = ('fake', '')
     return authorize_user(request.form['email'], '')
