@@ -27,7 +27,7 @@ class User(db.Model, UserMixin, TimestampMixin):
     alt_email = db.Column(db.String())
     active = db.Column(db.Boolean(), default=True)
 
-    def __init__(self, email, name=None, sid=None):
+    def __init__(self, email, sid=None):
         self.email = email
         self.sid = sid
 

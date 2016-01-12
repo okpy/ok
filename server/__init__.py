@@ -7,7 +7,7 @@ from server import assets
 from server.models import db
 from server.controllers.admin import admin
 from server.controllers.api import endpoints as api
-from server.controllers.auth import auth
+from server.controllers.auth import auth, login_manager
 from server.controllers.main import main
 from server.controllers.student import student
 
@@ -16,8 +16,7 @@ from server.constants import API_PREFIX
 from server.extensions import (
     cache,
     assets_env,
-    debug_toolbar,
-    login_manager
+    debug_toolbar
 )
 
 
