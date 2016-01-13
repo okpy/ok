@@ -1,4 +1,4 @@
-from helpers import OkTestCase
+from .helpers import OkTestCase
 
 class TestAuth(OkTestCase):
     email = 'martymcfly@aol.com'
