@@ -5,7 +5,7 @@ from server.models import db
 
 class OkTestCase(TestCase):
     def create_app(self):
-        return create_app('server.settings.TestConfig')
+        return create_app('server.settings.test.TestConfig')
 
     def setUp(self):
         db.create_all()

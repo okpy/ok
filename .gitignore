@@ -15,6 +15,9 @@ env
 *secrets.json*
 secret_keys.py
 
+server/settings/prod*
+server/settings/staging*
+
 
 # pip-related files
 *.egg-info
@@ -30,7 +33,12 @@ dist
 
 # static assets
 *.webassets-cache*
-*server/static/vendor/*
+server/static/vendor/*
+
+# generated static assets (assets.py)
+server/static/public/css/*.css
+server/static/public/js/*.js
+
 .cache
 
 # local development
