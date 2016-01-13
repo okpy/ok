@@ -15,6 +15,7 @@ $ brew install postgres
 $ brew services start postgres
 $ createuser -d postgres
 $ createdb okdev -U postgres
+$ createdb oktest -U postgres
 
 DB Setup:
 
