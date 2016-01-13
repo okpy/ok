@@ -12,7 +12,7 @@ from server.models import db, User, Course, Assignment, Participant
 # default to dev config because no one should use this in
 # production anyway.
 env = os.environ.get('SERVER_ENV', 'dev')
-app = create_app('server.settings.%sConfig' % env.capitalize())
+app = create_app('server.settings.{0}.{1}Config'.format(env, env.capitalize()))
 
 migrate = Migrate(app, db)
 manager = Manager(app)

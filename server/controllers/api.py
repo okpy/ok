@@ -17,8 +17,7 @@ API.py - /api/{version}/endpoints
     api.add_resource(UserAPI, '/v3/user')
 """
 
-
-from flask import Blueprint, jsonify, request, session, current_app
+from flask import Blueprint, jsonify, request
 
 import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
@@ -36,6 +35,16 @@ import server.models as models
 
 
 endpoints = Blueprint('api', __name__)
+endpoints.config = {}
+
+@endpoints.record
+def record_params(setup_state):
+    """ Load used app configs into local config on registration from
+    server/__init__.py """
+    app = setup_state.app
+    endpoints.config['tz'] = app.config.get('TIMEZONE', 'utc')  # sample config
+
+
 api = restful.Api(endpoints, catch_all_404s=True)
 
 API_VERSION = 'v3'
@@ -83,7 +92,7 @@ def authenticate(func):
     def wrapper(*args, **kwargs):
         # Public methods do not need authentication
         if not getattr(func, 'public', False) and not current_user.is_authenticated:
-            restful.abort(401)  # TODO: Custom Auth Error Message.
+            restful.abort(401)
         kwargs['user'] = current_user
         return func(*args, **kwargs)
     return wrapper

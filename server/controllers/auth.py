@@ -8,20 +8,16 @@ from flask import abort, Blueprint, current_app, flash, redirect, \
 from flask_oauthlib.client import OAuth
 from flask.ext.login import LoginManager, login_user, logout_user, login_required
 
-from server.models import User, db
-from server.secret_keys import google_creds
+from server.models import User
 
 auth = Blueprint('auth', __name__)
 
-login_manager = LoginManager()
-login_manager.login_view = "auth.login"
-login_manager.login_message_category = "warning"
+auth.config = {}
 
 oauth = OAuth()
 google_auth = oauth.remote_app(
     'google',
-    consumer_key=google_creds['GOOGLE_ID'],
-    consumer_secret=google_creds['GOOGLE_SECRET'],
+    app_key='GOOGLE',
     request_token_params={
         'scope': 'email'
     },
@@ -32,21 +28,21 @@ google_auth = oauth.remote_app(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
 )
 
+@auth.record
+def record_params(setup_state):
+    """ Load used app configs into local config on registration from
+    server/__init__.py """
+    app = setup_state.app
+    oauth.init_app(app)
+
+login_manager = LoginManager()
+login_manager.login_view = "auth.login"
+login_manager.login_message_category = "warning"
+
+
 @google_auth.tokengetter
 def google_oauth_token(token=None):
     return session.get('google_token', None)
-
-def user_from_email(email):
-    """
-    Get a User with the given email address, or create one if no User with
-    this email is found.
-    """
-    user = User.query.filter_by(email=email).one_or_none()
-    if not user:
-        user = User(email)
-        db.session.add(user)
-        db.session.commit()
-    return user
 
 def user_from_access_token(token):
     """
@@ -56,7 +52,7 @@ def user_from_access_token(token):
     resp = google_auth.get('userinfo', token=(token, ''))
     if resp.status != 200:
         return None
-    return user_from_email(resp.data['email'])
+    return User.from_email(resp.data['email'])
 
 @login_manager.user_loader
 def load_user(userid):
@@ -118,7 +114,7 @@ def testing_login():
 def testing_authorized():
     if not use_testing_login():
         abort(404)
-    user = user_from_email(request.form['email'])
+    user = User.from_email(request.form['email'])
     return authorize_user(user)
 
 @auth.route("/logout")
