@@ -31,11 +31,8 @@ class User(db.Model, UserMixin, TimestampMixin):
         self.email = email
         self.sid = sid
 
-    def is_active(self):
-        return self.active
-
-    def get_id(self):
-        return self.id
+    def __repr__(self):
+        return '<User %r>' % self.email
 
     # TODO: Cache enrollment queries
     def enrollments(self, roles=['student']):
@@ -44,8 +41,18 @@ class User(db.Model, UserMixin, TimestampMixin):
             Participant.role.in_(roles)
         ).all()
 
-    def __repr__(self):
-        return '<User %r>' % self.email
+    @staticmethod
+    def from_email(email):
+        """
+        Get a User with the given email address, or create one if no User with
+        this email is found.
+        """
+        user = User.query.filter_by(email=email).one_or_none()
+        if not user:
+            user = User(email)
+            db.session.add(user)
+            db.session.commit()
+        return user
 
 
 class Course(db.Model, TimestampMixin):
