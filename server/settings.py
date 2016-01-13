@@ -18,7 +18,7 @@ class TestConfig(TestConfig):
     ENV = 'test'
     DEBUG_TB_INTERCEPT_REDIRECTS = False
 
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:@localhost:5432/okdev'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:@localhost:5432/oktest'
     SQLALCHEMY_ECHO = True
 
     CACHE_TYPE = 'simple'
