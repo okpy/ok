@@ -3,29 +3,16 @@
 
 import pytest
 
-create_user = True
-
-
 @pytest.mark.usefixtures("testapp")
 class TestLogin:
     def test_login(self, testapp):
-        """ Tests if the login form functions """
+        """ Tests if the login and logout form functions """
 
-        rv = testapp.post('/login', data=dict(
-            username='admin',
-            password="supersafepassword"
+        rv = testapp.post('/testing-login/authorized', data=dict(
+            name='Marty McFly',
+            email='martymcfly@aol.com'
         ), follow_redirects=True)
-
         assert rv.status_code == 200
-        assert 'Logged in successfully.' in str(rv.data)
 
-    def test_login_fail(self, testapp):
-        """ Tests if the login form fails correctly """
-
-        rv = testapp.post('/login', data=dict(
-            username='admin',
-            password=""
-        ), follow_redirects=True)
-
+        rv = testapp.get('/logout', follow_redirects=True)
         assert rv.status_code == 200
-        assert 'Invalid username or password' in str(rv.data)
