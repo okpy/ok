@@ -16,8 +16,7 @@ install:
 script:
 - make test
 before_script:
-- psql -c 'create database okdev;' -U postgres
-- "./manage.py createdb"
+- psql -c 'create database oktest;' -U postgres
 after_success:
 - coveralls
 after_failure:
