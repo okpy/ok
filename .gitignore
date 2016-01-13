@@ -15,8 +15,8 @@ env
 *secrets.json*
 secret_keys.py
 
-server/settings/prod*
-server/settings/staging*
+server/settings/prod*.py
+server/settings/staging*.py
 
 
 # pip-related files

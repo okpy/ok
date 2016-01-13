@@ -23,12 +23,3 @@ class TestConfig:
         assert app.config['DEBUG'] is True
         assert app.config['SQLALCHEMY_DATABASE_URI'] == test_db
         assert app.config['CACHE_TYPE'] == 'simple'
-
-    def test_prod_config(self):
-        """ Tests if the production config loads correctly """
-
-        app = create_app('server.settings.prod.ProdConfig')
-
-        assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
-        assert app.config['CACHE_TYPE'] == 'simple'
-        assert app.config['SECRET_KEY'] is not None
