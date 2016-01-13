@@ -2,7 +2,7 @@ language: python
 env:
 - SERVER_ENV=test
 addons:
-  postgresql: '9.3'
+  postgresql: '9.4'
 python:
 - '2.7'
 - '3.3'
