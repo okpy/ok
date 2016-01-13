@@ -21,7 +21,6 @@ class TestConfig:
         test_db = 'postgresql://postgres:@localhost:5432/oktest'
 
         assert app.config['DEBUG'] is True
-        assert app.config['SQLALCHEMY_ECHO'] is True
         assert app.config['SQLALCHEMY_DATABASE_URI'] == test_db
         assert app.config['CACHE_TYPE'] == 'simple'
 
