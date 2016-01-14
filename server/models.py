@@ -27,10 +27,6 @@ class User(db.Model, UserMixin, TimestampMixin):
     alt_email = db.Column(db.String())
     active = db.Column(db.Boolean(), default=True)
 
-    def __init__(self, email, sid=None):
-        self.email = email
-        self.sid = sid
-
     def __repr__(self):
         return '<User %r>' % self.email
 
@@ -42,17 +38,9 @@ class User(db.Model, UserMixin, TimestampMixin):
         ).all()
 
     @staticmethod
-    def from_email(email):
-        """
-        Get a User with the given email address, or create one if no User with
-        this email is found.
-        """
-        user = User.query.filter_by(email=email).one_or_none()
-        if not user:
-            user = User(email)
-            db.session.add(user)
-            db.session.commit()
-        return user
+    def lookup(email):
+        """Get a User with the given email address, or None."""
+        return User.query.filter_by(email=email).one_or_none()
 
 
 class Course(db.Model, TimestampMixin):

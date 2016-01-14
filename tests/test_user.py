@@ -1,15 +1,16 @@
 from .helpers import OkTestCase
 
-from server.models import User
+from server.models import db, User
 
 class TestUser(OkTestCase):
-    def test_from_email(self):
+    def test_lookup(self):
         email = 'martymcfly@aol.com'
 
-        user1 = User.from_email(email)
-        assert user1.email == email
-        assert not user1.is_admin
-        assert user1.active
+        user = User.lookup(email)
+        assert user is None
 
-        user2 = User.from_email(email)
-        assert user1.id == user2.id
+        db.session.add(User(email=email))
+        db.session.commit()
+
+        user = User.lookup(email)
+        assert user.email == email

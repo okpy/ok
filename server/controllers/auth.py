@@ -8,7 +8,7 @@ from flask import abort, Blueprint, current_app, flash, redirect, \
 from flask_oauthlib.client import OAuth
 from flask.ext.login import LoginManager, login_user, logout_user, login_required
 
-from server.models import User
+from server.models import db, User
 
 auth = Blueprint('auth', __name__)
 
@@ -39,6 +39,15 @@ def record_params(setup_state):
 def google_oauth_token(token=None):
     return session.get('google_token', None)
 
+def user_from_email(email):
+    """Get a User with the given email, or create one."""
+    user = User.lookup(email)
+    if not user:
+        user = User(email=email)
+        db.session.add(user)
+        db.session.commit()
+    return user
+
 def user_from_access_token(token):
     """
     Get a User with the given Google access token, or create one if no User with
@@ -47,7 +56,7 @@ def user_from_access_token(token):
     resp = google_auth.get('userinfo', token=(token, ''))
     if resp.status != 200:
         return None
-    return User.from_email(resp.data['email'])
+    return user_from_email(resp.data['email'])
 
 login_manager = LoginManager()
 
@@ -117,7 +126,7 @@ def testing_login():
 def testing_authorized():
     if not use_testing_login():
         abort(404)
-    user = User.from_email(request.form['email'])
+    user = user_from_email(request.form['email'])
     return authorize_user(user)
 
 @auth.route("/logout")
