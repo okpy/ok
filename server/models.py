@@ -1,7 +1,9 @@
 from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import backref
+from werkzeug.exceptions import BadRequest
 
 from flask.ext.login import UserMixin, AnonymousUserMixin
 from flask.ext.cache import Cache
@@ -55,6 +57,12 @@ class Course(db.Model, TimestampMixin):
     def __repr__(self):
         return '<Course %r>' % self.offering
 
+    def is_enrolled(self, user):
+        return Participant.query.filter_by(
+            user=user,
+            course=self
+        ).count() > 0
+
 
 class Assignment(db.Model, TimestampMixin):
     """Assignments are particular to courses and have unique names.
@@ -86,16 +94,13 @@ class Assignment(db.Model, TimestampMixin):
 
 class Participant(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    user = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
+    user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
-    role = db.Column(db.Enum(*VALID_ROLES, name='role'), nullable=False)
-    course = db.relationship("Course", backref="participants")
+    role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
 
-    def __init__(self, user, course_id, role=STUDENT_ROLE):
-        self.user = user
-        self.course_id = course_id
-        self.role = role
+    user = db.relationship("User", backref="participants")
+    course = db.relationship("Course", backref="participants")
 
     def has_role(self, course, role):
         if self.course != course:
@@ -242,43 +247,136 @@ class GroupMember(db.Model, TimestampMixin):
     """A member of a group must accept the invite to join the group.
     Only members of a group can view each other's submissions.
 
-    A user may have multiple entries for a single group/assignment
-    but may only be invited or participate in a single group per assignment.
-    This is enforced by a uniqueness constraint on status. The rows here
-    can serve as an audit log for group activity.
+    A user may only be invited or participate in a single group per assignment.
 
-    The invite status value can be one of: invited, accepted, null
-    The invite detail message can be one of: revoked, declined, left, removed
-        Revoked - The invite was cancelled.
-        Declined - The user turned down the invite and did not join.
-        Left - The user accept the invite but later left.
-        Removed - The user was removed by another meber.
-    This distinction is neccesary because a user may leave multiple groups.
+    The status value can be one of:
+        pending - The user has been invited to the group.
+        active  - The user accepted the invite and is part of the group.
     """
-    status_values = ['invited', 'accepted']
-    detail_values = ['revoked', 'declined', 'left', 'removed']
+    __tablename__ = 'GroupMember'
+    __table_args__ = (
+        PrimaryKeyConstraint('user_id', 'assignment_id', name='pk_GroupMember'),
+    )
+    status_values = ['pending', 'active']
 
-    id = db.Column(db.Integer(), primary_key=True)
-    assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    group = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
-    user = db.Column(db.ForeignKey("user.id"), nullable=False, index=True)
-    extra = db.Column(db.String())  # e.g. Member "A"
+    user_id = db.Column(db.ForeignKey("user.id"), nullable=False, index=True)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    group_id = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
 
     status = db.Column(db.Enum(*status_values, name="status"), index=True)
-    detail = db.Column(db.Enum(*detail_values, name='detail'))
     updated = db.Column(db.DateTime, onupdate=db.func.now())
 
-    UniqueConstraint('assignment', 'user', 'status', name='uq_userInOneGroup')
+    user = db.relationship("User")
+    assignment = db.relationship("Assignment")
+    group = db.relationship("Group",
+        backref=backref('members', cascade="all, delete-orphan"))
 
 
 class Group(db.Model, TimestampMixin):
     """A group is a collection of users who are either members or invited.
 
-    Members of a group can view each other's submissions.
+    Groups are created when a member not in a group invites another member.
+    Invited members may accept or decline invitations. Active members may
+    revoke invitations and remove members (including themselves).
 
-    Specification:
-    https://github.com/Cal-CS-61A-Staff/ok/wiki/Group-&-Submission-Consistency
+    A group must have at least 1 active member and at lease 2 participants.
+    Degenerates groups are deleted.
     """
     id = db.Column(db.Integer(), primary_key=True)
-    assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    members = db.relationship("GroupMember")
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+
+    assignment = db.relationship("Assignment")
+
+    def size(self):
+        return GroupMember.query.filter_by(group=self).count()
+
+    def has_status(self, user, status):
+        return GroupMember.query.filter_by(
+            user=user,
+            group=self,
+            status=status
+        ).count() > 0
+
+    @staticmethod
+    def lookup(user, assignment):
+        member = GroupMember.query.filter_by(
+            user=user,
+            assignment=assignment
+        ).one_or_none()
+        if member:
+            return member.group
+
+    @staticmethod
+    def invite(sender, recipient, assignment):
+        """Invite a user to a group, creating a group if necessary."""
+        if not assignment.active:
+            raise BadRequest('The assignment is past due')
+        group = Group.lookup(sender, assignment)
+        if not group:
+            group = Group(assignment=assignment)
+            db.session.add(group)
+            group._add_member(sender, 'active')
+        elif not group.has_status(sender, 'active'):
+            raise BadRequest('You are not in the group')
+        group._add_member(recipient, 'pending')
+
+    def remove(self, user, target_user):
+        """Remove a user from the group.
+
+        The user must be an active member in the group, and the target user
+        must be an active or pending member. You may remove yourself to leave
+        the group. The assignment must also be active.
+        """
+        if not self.assignment.active:
+            raise BadRequest('The assignment is past due')
+        if not self.has_status(user, 'active'):
+            raise BadRequest('You are not in the group')
+        self._remove_member(target_user)
+
+    def accept(self, user):
+        """Accept an invitation."""
+        if not self.assignment.active:
+            raise BadRequest('The assignment is past due')
+        member = GroupMember.query.filter_by(
+            user=user,
+            group=self,
+            status='pending'
+        ).one_or_none()
+        if not member:
+            raise BadRequest('{0} is not invited to this group'.format(user.email))
+        member.status = 'active'
+
+    def decline(self, user):
+        """Decline an invitation."""
+        if not self.assignment.active:
+            raise BadRequest('The assignment is past due')
+        self._remove_member(user)
+
+    def _add_member(self, user, status):
+        if self.size() >= self.assignment.max_group_size:
+            raise BadRequest('This group is full')
+        if not self.assignment.course.is_enrolled(user):
+            raise BadRequest('{0} is not enrolled'.format(user.email))
+        member = GroupMember.query.filter_by(
+            user=user,
+            assignment=self.assignment
+        ).one_or_none()
+        if member:
+            raise BadRequest('{0} is already in this group'.format(user.email))
+        member = GroupMember(
+            user=user,
+            group=self,
+            assignment=self.assignment,
+            status=status)
+        db.session.add(member)
+
+    def _remove_member(self, user):
+        member = GroupMember.query.filter_by(
+            user=user,
+            group=self
+        ).one_or_none()
+        if not member:
+            raise BadRequest('{0} is not in this group'.format(user.email))
+        db.session.delete(member)
+        if self.size() <= 1:
+            db.session.delete(self)
