@@ -14,7 +14,6 @@ from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 
 db = SQLAlchemy()
 
-
 class TimestampMixin(object):
     created = db.Column(db.DateTime, server_default=db.func.now())
 
