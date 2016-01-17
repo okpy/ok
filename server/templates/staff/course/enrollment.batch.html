@@ -1,0 +1,69 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} Ok - {{ current_course.display_name }} Enrollment{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ current_course.display_name }} Enrollment
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.enrollment', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Enrollment</a>
+        </li>
+        <li><a href="#"><i class="fa fa-plus"></i>Batch Enroll</a></li>
+
+      </ol>
+  </section>
+
+  <section class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+              {{message}}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+      <div class="col-md-12 col-xs-12">
+        <!-- Default box -->
+        <!--  Box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Batch Enroll (Students)</h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                <i class="fa fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="box-body">
+            <p> Add new students to the course </p>
+            {% call forms.render_form(batch_form, action_url=url_for('.batch_enroll', cid=current_course.id), action_text='Batch Enroll',
+                                        class_='form') %}
+                {{ forms.render_field(batch_form.csv, label_visible=true, placeholder='Line Seperated CSV') }}
+            {% endcall %}
+
+          </div>
+          <!-- /.box-body -->
+          <!-- /.box-footer-->
+        </div>
+
+
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- </body> do not close body in template-->
+{% endblock %}
