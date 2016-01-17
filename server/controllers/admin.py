@@ -60,15 +60,18 @@ def get_courses(cid=None):
 @is_staff()
 def index():
     courses, current_course = get_courses()
+    if courses:
+        return redirect(url_for(".course_assignments", cid=courses[0].id))
     return render_template('staff/index.html', courses=courses)
 
 
 @admin.route("/course/<int:cid>")
 @is_staff(course_arg='cid')
 def course(cid):
-    courses, current_course = get_courses(cid)
-    return render_template('staff/course/index.html',
-                           courses=courses, current_course=current_course)
+    return redirect(url_for(".course_assignments", cid=cid))
+    #courses, current_course = get_courses(cid)
+    #return render_template('staff/course/index.html',
+    #                       courses=courses, current_course=current_course)
 
 
 @admin.route("/course/<int:cid>/assignments")

@@ -40,8 +40,11 @@
                       Assignments
                     </a>
                   </li>
-                  <li><a href="#"><i class="fa fa-circle-o"></i> Students </a></li>
-                  <li><a href="#"><i class="fa fa-circle-o"></i> Staff </a></li>
+                  <li>
+                    <a href="{{ url_for('.enrollment', cid=course.id) }}">
+                      <i class="fa fa-circle-o {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == course.id) %}text-yellow{% endif %}"></i> Enrollment
+                    </a>
+                  </li>
                 </ul>
             {% endfor %}
 
