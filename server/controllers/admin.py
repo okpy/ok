@@ -5,8 +5,8 @@ from functools import wraps
 import pytz
 
 from server.models import User, Course, Assignment, Participant, db
-from server.constants import STAFF_ROLES
-from server.forms import AssignmentForm
+from server.constants import STAFF_ROLES, VALID_ROLES
+import server.forms as forms
 
 admin = Blueprint('admin', __name__)
 
@@ -89,7 +89,7 @@ def course_assignments(cid):
 def new_assignment(cid):
     courses, current_course = get_courses(cid)
     # TODO  Form Creation
-    form = AssignmentForm()
+    form = forms.AssignmentForm()
 
     if form.validate_on_submit():
         model = Assignment(course_id=cid, creator=current_user.id)
@@ -115,11 +115,50 @@ def assignment(cid, aid):
     assgn.due_date = convert_to_pacific(assgn.due_date)
     assgn.lock_date = convert_to_pacific(assgn.lock_date)
 
-    form = AssignmentForm(obj=assgn)
+    form = forms.AssignmentForm(obj=assgn)
+
+    # TODO : Actually save updates.
 
     if assgn.course != current_course:
         return abort(401)
 
     return render_template('staff/course/assignment.html', assignment=assgn,
                            form=form, courses=courses,
+                           current_course=current_course)
+
+@admin.route("/course/<int:cid>/enrollment",
+             methods=['GET'])
+@is_staff(course_arg='cid')
+def enrollment(cid):
+    courses, current_course = get_courses(cid)
+    # TODO : Get all staff enrollments.
+    return render_template('staff/course/enrollment.html',
+                           courses=courses,
+                           current_course=current_course)
+
+@admin.route("/course/<int:cid>/enrollment/new",
+             methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def new_enrollment(cid):
+    courses, current_course = get_courses(cid)
+    form = forms.EnrollmentForm()
+    if form.validate_on_submit():
+        usr = User.lookup(form.data.email)
+        if usr:
+            form.populate_obj(usr)
+        else:
+            usr = User()
+            form.populate_obj(usr)
+        role = form.data.role
+        # if role not in VALID_ROLES:
+        #     form.role.errors.append("That is not a valid role")
+        #     abort(403)
+        particpant = Participant(course_id=cid, creator=current_user.id,
+                                 user=usr.id, role=role)
+        db.session.add(particpant)
+        db.session.commit()
+
+    return render_template('staff/course/enrollment.new.html',
+                           form=form,
+                           courses=courses,
                            current_course=current_course)

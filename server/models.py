@@ -109,14 +109,14 @@ class Participant(db.Model, TimestampMixin):
         self.course_id = course_id
         self.role = role
 
+    @hybrid_property
+    def is_course_staff(self):
+        return self.role in STAFF_ROLES
+
     def has_role(self, course, role):
         if self.course != course:
             return False
         return self.role == role
-
-    @hybrid_property
-    def is_course_staff(self):
-        return self.role in STAFF_ROLES
 
     def is_staff(self, course):
         return self.course == course and self.role in STAFF_ROLES
