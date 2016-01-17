@@ -39,7 +39,11 @@
                 <h3 class="box-title"><span> Students </span></h3>
                 <div class="box-tools">
                   <div class="input-group input-group-md" style="width: 200px;">
+                    {% if query %}
+                      <input type="text" name="query" class="form-control pull-right" value={{query}}>
+                    {% else %}
                       <input type="text" name="query" class="form-control pull-right" placeholder="Search By User Email">
+                    {% endif %}
                       <div class="input-group-btn">
                           <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
                       </div>

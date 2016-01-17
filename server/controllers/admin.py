@@ -139,13 +139,24 @@ def enrollment(cid, page):
         Participant.enroll_from_form(cid, single_form)
         flash("Added {email} as {role}".format(email=email, role=role), "success")
 
-    students = Participant.query.filter_by(course_id=cid,
-            role=STUDENT_ROLE).paginate(page=page, per_page=5)
+    query = request.args.get('query')
+    students = None
+    if query:
+        find_student = User.query.filter_by(email=query)
+        student = find_student.first()
+        if student:
+            students = Participant.query.filter_by(course_id=cid, role=STUDENT_ROLE,
+                user_id=student.id).paginate(page=page, per_page=1)
+        else:
+            flash("No student found with email {}".format(query), "warning")
+    if not students:
+        students = Participant.query.filter_by(course_id=cid,
+                role=STUDENT_ROLE).paginate(page=page, per_page=5)
     staff = Participant.query.filter(Participant.course_id == cid,
             Participant.role.in_(STAFF_ROLES)).all()
 
     return render_template('staff/course/enrollment.html',
-                           enrollments=students, staff=staff,
+                           enrollments=students, staff=staff, query=query,
                            single_form=single_form,
                            courses=courses,
                            current_course=current_course)
