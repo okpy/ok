@@ -1,11 +1,12 @@
-from flask import Blueprint, render_template, flash, redirect, url_for, abort
+from flask import Blueprint, render_template, flash, redirect, url_for, abort, request
 
 from flask.ext.login import login_required, current_user
 from functools import wraps
 import pytz
+import csv
 
 from server.models import User, Course, Assignment, Participant, db
-from server.constants import STAFF_ROLES, VALID_ROLES
+from server.constants import STAFF_ROLES, VALID_ROLES, STUDENT_ROLE
 import server.forms as forms
 
 admin = Blueprint('admin', __name__)
@@ -127,38 +128,42 @@ def assignment(cid, aid):
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/enrollment",
-             methods=['GET'])
+             methods=['GET', 'POST'], defaults={'page': 1})
+@admin.route("/course/<int:cid>/enrollment/page/<int:page>",)
 @is_staff(course_arg='cid')
-def enrollment(cid):
+def enrollment(cid, page):
     courses, current_course = get_courses(cid)
-    # TODO : Get all staff enrollments.
+    single_form = forms.EnrollmentForm(prefix="single")
+    if single_form.validate_on_submit():
+        email, role = single_form.email.data, single_form.role.data
+        Participant.enroll_from_form(cid, single_form)
+        flash("Added {email} as {role}".format(email=email, role=role), "success")
+
+    students = Participant.query.filter_by(course_id=cid,
+            role=STUDENT_ROLE).paginate(page=page, per_page=5)
+    staff = Participant.query.filter(Participant.course_id == cid,
+            Participant.role.in_(STAFF_ROLES)).all()
+
     return render_template('staff/course/enrollment.html',
+                           enrollments=students, staff=staff,
+                           single_form=single_form,
                            courses=courses,
                            current_course=current_course)
 
-@admin.route("/course/<int:cid>/enrollment/new",
+
+@admin.route("/course/<int:cid>/enrollment/batch",
              methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
-def new_enrollment(cid):
+def batch_enroll(cid):
     courses, current_course = get_courses(cid)
-    form = forms.EnrollmentForm()
-    if form.validate_on_submit():
-        usr = User.lookup(form.data.email)
-        if usr:
-            form.populate_obj(usr)
-        else:
-            usr = User()
-            form.populate_obj(usr)
-        role = form.data.role
-        # if role not in VALID_ROLES:
-        #     form.role.errors.append("That is not a valid role")
-        #     abort(403)
-        particpant = Participant(course_id=cid, creator=current_user.id,
-                                 user=usr.id, role=role)
-        db.session.add(particpant)
-        db.session.commit()
+    batch_form = forms.BatchEnrollmentForm()
+    if batch_form.validate_on_submit():
+        new, updated = Participant.enroll_from_csv(cid, batch_form)
+        msg = "Added {new}, Updated {old} students".format(new=new, old=updated)
+        flash(msg, "success")
+        return redirect(url_for(".enrollment", cid=cid))
 
-    return render_template('staff/course/enrollment.new.html',
-                           form=form,
+    return render_template('staff/course/enrollment.batch.html',
+                           batch_form=batch_form,
                            courses=courses,
                            current_course=current_course)

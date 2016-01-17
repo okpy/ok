@@ -13,9 +13,9 @@ class TestGroup(OkTestCase):
         db.session.add(self.course)
 
         self.assignment = Assignment(
-            name='cal/cs61a/sp16/proj1'
+            name='cal/cs61a/sp16/proj1',
             course_id=self.course.id,
-            display_name='Hog'
+            display_name='Hog',
             due_date=datetime.datetime.now(),
             lock_date=datetime.datetime.now() + datetime.timedelta(days=1),
         )

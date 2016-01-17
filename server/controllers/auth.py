@@ -74,7 +74,7 @@ def load_user_from_request(request):
 @login_manager.unauthorized_handler
 def unauthorized():
     session['after_login'] = request.url
-    return redirect(url_for('.login'))
+    return redirect(url_for('auth.login'))
 
 def authorize_user(user):
     login_user(user)

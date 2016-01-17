@@ -7,6 +7,7 @@ from flask.ext.login import UserMixin, AnonymousUserMixin
 from flask.ext.cache import Cache
 cache = Cache()
 
+import csv
 from datetime import datetime as dt
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
@@ -20,6 +21,7 @@ class TimestampMixin(object):
 
 class User(db.Model, UserMixin, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String())
     email = db.Column(db.String(), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
     sid = db.Column(db.String())  # SID or Login
@@ -32,16 +34,12 @@ class User(db.Model, UserMixin, TimestampMixin):
 
     # TODO: Cache enrollment queries
     def enrollments(self, roles=['student']):
-        return Participant.query.filter(
-            Participant.user == self.id,
-            Participant.role.in_(roles)
-        ).all()
+        return [e for e in self.participations if e.role in roles]
 
     @staticmethod
     def lookup(email):
         """Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
-
 
 class Course(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
@@ -86,16 +84,16 @@ class Assignment(db.Model, TimestampMixin):
 
 class Participant(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    user = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
+    user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
-    role = db.Column(db.Enum(*VALID_ROLES, name='role'), nullable=False)
+    role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE,
+                     nullable=False)
     course = db.relationship("Course", backref="participants")
+    user = db.relationship("User", backref="participations")
+    notes = db.Column(db.String()) # For Section Info etc.
 
-    def __init__(self, user, course_id, role=STUDENT_ROLE):
-        self.user = user
-        self.course_id = course_id
-        self.role = role
+    UniqueConstraint('user_id', 'course_id', name='uq_userHasOneRole')
 
     @hybrid_property
     def is_course_staff(self):
@@ -108,6 +106,58 @@ class Participant(db.Model, TimestampMixin):
 
     def is_staff(self, course):
         return self.course == course and self.role in STAFF_ROLES
+
+    @staticmethod
+    def enroll_from_form(cid, form):
+        usr = User.lookup(form.email.data)
+        if usr:
+            form.populate_obj(usr)
+        else:
+            usr = User()
+            form.populate_obj(usr)
+            db.session.add(usr)
+        db.session.commit()
+        role = form.role.data
+        Participant.create(cid, [usr.id], role)
+
+    @staticmethod
+    def enroll_from_csv(cid, form):
+        new_users, existing_uids = [], []
+        rows = form.csv.data.splitlines()
+        entries = list(csv.reader(rows))
+        for usr in entries:
+            email, name, sid, login, notes = usr
+            usr_obj = User.lookup(email)
+            if not usr_obj:
+                usr_obj = User(email=email, name=name, sid=sid, secondary=login)
+                new_users.append(usr_obj)
+            else:
+                usr_obj.name = name
+                usr_obj.sid = sid
+                usr_obj.secondary = login
+                usr_obj.notes = notes
+                existing_uids.append(usr_obj.id)
+
+        db.session.add_all(new_users)
+        db.session.commit()
+        user_ids = [u.id for u in new_users] + existing_uids
+        Participant.create(cid, user_ids, STUDENT_ROLE)
+        return len(new_users), len(existing_uids)
+
+
+    @staticmethod
+    def create(cid, usr_ids=[], role=STUDENT_ROLE):
+        new_records = []
+        for usr_id in usr_ids:
+            record = Participant.query.filter_by(user_id=usr_id,
+                                                   course_id=cid).one_or_none()
+            if record:
+                record.role = role
+            else:
+                record = Participant(course_id=cid, user_id=usr_id, role=role)
+                new_records.append(record)
+        db.session.add_all(new_records)
+        db.session.commit()
 
 
 class Message(db.Model, TimestampMixin):
