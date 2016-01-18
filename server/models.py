@@ -293,8 +293,8 @@ class Group(db.Model, TimestampMixin):
     Invited members may accept or decline invitations. Active members may
     revoke invitations and remove members (including themselves).
 
-    A group must have at least 1 active member and at lease 2 participants.
-    Degenerates groups are deleted.
+    A group must have at least 2 participants.
+    Degenerate groups are deleted.
     """
     id = db.Column(db.Integer(), primary_key=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)

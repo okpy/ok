@@ -107,7 +107,6 @@ class TestGroup(OkTestCase):
         self.assertRaises(BadRequest, group.decline, self.user3)
         self.assertRaises(BadRequest, group.remove, self.user1, self.user2)
 
-
     def test_accept(self):
         Group.invite(self.user1, self.user2, self.assignment)
         group = Group.lookup(self.user1, self.assignment)
