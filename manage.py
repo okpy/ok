@@ -38,8 +38,10 @@ def seed():
     """
     staff_member = User(email='okstaff@okpy.org')
     db.session.add(staff_member)
-    courses = [Course(offering="cs61a/test16", display_name="CS61A (Test)"),
-               Course(offering="ds8/test16", display_name="DS8 (Test)")]
+    courses = [Course(offering="cs61a/test16", display_name="CS61A (Test)",
+                      institution="UC Berkeley"),
+               Course(offering="ds8/test16", display_name="DS8 (Test)",
+                      institution="UC Berkeley")]
     db.session.add_all(courses)
     future = datetime.now() + timedelta(days=1)
     db.session.commit()
@@ -55,6 +57,10 @@ def seed():
     staff = Participant(user_id=staff_member.id, course_id=courses[0].id,
                         role="staff")
     db.session.add(staff)
+    staff_also_student = Participant(user_id=staff_member.id,
+                        course_id=courses[1].id, role="student")
+    db.session.add(staff_also_student)
+
     student_enrollment = [Participant(user_id=student.id, role="student",
                           course_id=courses[0].id) for student in students]
     db.session.add_all(student_enrollment)

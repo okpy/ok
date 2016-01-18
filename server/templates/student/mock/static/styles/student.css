@@ -5,7 +5,7 @@
   position:relative;
 }
 body, html, main {
-  height:100%;
+  min-height:100%;
 }
 i, br {
   float:none;
@@ -21,12 +21,14 @@ i, br {
 }
 header,.header-bg {
   height:4em;
+  position:fixed;
   width:100%;
   top:0;
   left:0;
 }
   header {
     height:4em;
+    position:fixed;
     width:100%;
     top:0;
     left:0;
@@ -36,7 +38,7 @@ header,.header-bg {
   }
   .header-bg {
     z-index:25;
-    background:url('../img/header-bg.png') center repeat;
+    background:url('../images/header-bg.png') center repeat;
   }
   header span, header a {
     color:inherit;
@@ -77,14 +79,11 @@ header,.header-bg {
 aside.sidebar {
   background-color:#f6f6f6;
   z-index:10;
-  overflow-y:scroll;
-  -ms-overflow-style: none;
-  overflow: -moz-scrollbars-none;
+  overflow-y: scroll;
 }
-
-aside.sidebar::-webkit-scrollbar {
-    display: none;
-}
+  .sidebar ::-webkit-scrollbar {
+      display: none; /* Only for webkit, TODO: Other browsers */
+  }
 
   .sidebar.left, header .left {
     left:0;
@@ -94,31 +93,15 @@ aside.sidebar::-webkit-scrollbar {
     right:0;
     float:right;
   }
-  .logo-box {
-    padding-top: 20%;
-    padding-bottom: 20%;
-    background-color:#FFF;
-    box-sizing:border-box;
-    max-width: 100%;
-
-  }
   .software-logo {
     width:100%;
-    padding-left:20%;
-    padding-right: 20%
+    background-color:#FFF;
+    box-sizing:border-box;
+    padding:20%;
   }
   .software-name {
-    width:100%;
     text-transform:uppercase;
     font-weight:700;
-    text-align:center;
-    font-family:'Quicksand'
-  }
-  .logo-name {
-    width:100%;
-    font-weight:500;
-    font-size: 16px;
-    font-size: 1vw;
     text-align:center;
     font-family:'Quicksand'
   }
@@ -182,6 +165,7 @@ section {
       padding:0;
       float:left;
       padding:0 0 2em 0;
+      margin-top:4em;
     }
     .subcontent {
       float:left;
@@ -435,7 +419,7 @@ header .logo {
     padding:1em 7em;
   }
   .content {
-    padding: 0 0 5em 0;
+    padding: 3em 0 5em 0;
   }
 }
 
@@ -443,6 +427,7 @@ header .logo {
 @media (min-width: 992px) {
   aside.sidebar {
     position:fixed;
-    height:100%;
+    height:calc(100% - 4em);
+    top:4em;
   }
 }

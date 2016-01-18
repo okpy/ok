@@ -57,7 +57,7 @@ class User(db.Model, UserMixin, TimestampMixin):
         return '<User %r>' % self.email
 
     # TODO: Cache enrollment queries
-    def enrollments(self, roles=['student']):
+    def enrollments(self, roles=[STUDENT_ROLE]):
         return [e for e in self.participations if e.role in roles]
 
     @staticmethod

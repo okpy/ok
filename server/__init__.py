@@ -58,7 +58,7 @@ def create_app(object_name):
 
     app.register_blueprint(admin, url_prefix='/admin')
 
-    app.register_blueprint(student, url_prefix='/dashboard')
+    app.register_blueprint(student, url_prefix='/student')
 
     app.register_blueprint(api, url_prefix=API_PREFIX)
 

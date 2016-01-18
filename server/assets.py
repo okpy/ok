@@ -37,6 +37,13 @@ adminlte_js = Bundle(
     output='public/js/adminlte.js'
 )
 
+landing_css = Bundle(
+    'css/landing.css',
+    filters='cssmin',
+    output='public/css/landing.css'
+)
+
+
 student_css = Bundle(
     'css/student.css',
     filters='cssmin',

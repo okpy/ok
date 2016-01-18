@@ -1,85 +1,60 @@
-{% extends "base.html" %}
+<html>
+  <head>
+    <title>Ok | CS61A</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% assets "common_css" %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+    {% endassets %}
 
-{% block title %}Home{% endblock %}
+    {% assets "student_css" %}
+        <!-- third-party libraries -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+        <link href='https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700' rel='stylesheet' type='text/css'>
+        <!-- Ionicons -->
+        <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+    {% endassets %}
 
-{% block body %}
+    {% assets "landing_css" %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+    {% endassets %}
+  </head>
+  <body class="home">
+    <header>
+      <div class="left col-md-2">
+        <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo">
+      </div>
+      <div class="right col-md-2">
+        <div class="stripes">
+          <div class="stripe"></div>
+          <div class="stripe"></div>
+          <div class="stripe"></div>
+        </div>
 
-<div class="navbar navbar-inverse navbar-fixed-top">
-    <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="#">Flask Foundation</a>
-    </div>
-    <div class="collapse navbar-collapse">
-        <ul class="nav navbar-nav">
-            <li><a href="{{ url_for('.home') }}">Home</a></li>
-
-            {% if not current_user.is_authenticated %}
-                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-            {% else %}
-                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-            {% endif %}
-
-            <li><a href="{{ url_for('auth.restricted') }}">Login Restricted Page</a></li>
-        </ul>
-    </div><!--/.nav-collapse -->
-</div>
-
-<div class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible" role="alert">
-                  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                  {{ message }}
-                </div>
-            {% endfor %}
+        {% if not current_user.is_authenticated %}
+          <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
+        {% else %}
+          <a href="{{ url_for('auth.logout') }}" class="btn pill">Logout</a>
         {% endif %}
-    {% endwith %}
 
-    <div class="jumbotron">
-        <h1>Flask Foundation</h1>
-        <p>The unopinionated flask framework</p>
+      </div>
+    </header>
+    <div class="landing">
+      <div class="col-md-3"></div>
+      <div class="col-md-6">
+        {% include 'alerts.html' %}
+        <h1 class="title">Automate grading. Personalize feedback.</h1>
+        <p>Ok autogrades coding assignments and facilitates code submission, review, composition, and analytics for advanced diagnoses for your class.</p>
+        {% if not current_user.is_authenticated %}
+          <a href="{{ url_for('auth.login') }}" class="button">Login with Google</a>
+        {% else %}
+          <a href="{{ url_for('student.index') }}" class="button"> Student Dashboard </a>
+        {% endif %}
+      </div>
     </div>
-
-    <div class="row">
-        <div class="col-lg-12">
-            <h1>What's Included</h1>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-4">
-            <h3>MVC Structure</h3>
-            <p>While there are many other flask templates out there, far too many are either structured poorly or are tied down to a specific method of deployment, or both.</p>
-            <p>So Flask Foundation has a best practices setup with blueprints and SQLAlchemy models that will allow you to grow cleanly</p>
-        </div>
-
-        <div class="col-md-4">
-            <h3>Flask Extensions</h3>
-            <p>Several flask extensions are included to handle the common tasks of web developers. The included extensions are flask-login, flask-assets, flask-WTF, flask-cache, flask-script, and flask-sqlalchemy.</p>
-        </div>
-
-        <div class="col-md-4">
-            <h3>Management Scripts</h3>
-            <p>Using the Makefile, you can easily setup your development environment with a few simple commands. With the power of flask-script you can create your own commands with the flask app context setup for you.</p>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-4">
-            <h3>Tests</h3>
-            <p>Example tests, built with py.test, are included in to demonstrate how to test a flask app.</p>
-        </div>
-
-        <div class="col-md-4">
-            <h3>Common Libraries</h3>
-            <p>The CSS Library Bootstrap is included, along with the Javascript libraries modernizr and jQuery.</p>
-        </div>
-    </div>
-</div>
-
-{% endblock %}
+  </body>
+  {% assets "common_js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+</html>
