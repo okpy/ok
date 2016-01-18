@@ -8,7 +8,7 @@ from flask import abort, Blueprint, current_app, flash, redirect, \
 from flask_oauthlib.client import OAuth
 from flask.ext.login import LoginManager, login_user, logout_user, login_required
 
-from server.models import User
+from server.models import db, User
 
 auth = Blueprint('auth', __name__)
 
@@ -35,14 +35,18 @@ def record_params(setup_state):
     app = setup_state.app
     oauth.init_app(app)
 
-login_manager = LoginManager()
-login_manager.login_view = "auth.login"
-login_manager.login_message_category = "warning"
-
-
 @google_auth.tokengetter
 def google_oauth_token(token=None):
     return session.get('google_token', None)
+
+def user_from_email(email):
+    """Get a User with the given email, or create one."""
+    user = User.lookup(email)
+    if not user:
+        user = User(email=email)
+        db.session.add(user)
+        db.session.commit()
+    return user
 
 def user_from_access_token(token):
     """
@@ -52,7 +56,9 @@ def user_from_access_token(token):
     resp = google_auth.get('userinfo', token=(token, ''))
     if resp.status != 200:
         return None
-    return User.from_email(resp.data['email'])
+    return user_from_email(resp.data['email'])
+
+login_manager = LoginManager()
 
 @login_manager.user_loader
 def load_user(userid):
@@ -65,10 +71,16 @@ def load_user_from_request(request):
         return None
     return user_from_access_token(token)
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    session['after_login'] = request.url
+    return redirect(url_for('.login'))
+
 def authorize_user(user):
     login_user(user)
     flash("Logged in successfully.", "success")
-    return redirect(request.args.get("next") or url_for("main.home"))
+    after_login = session.pop('after_login', None)
+    return redirect(after_login or url_for("main.home"))
 
 def use_testing_login():
     """
@@ -86,8 +98,8 @@ def login():
     return google_auth.authorize(callback=url_for('.authorized', _external=True))
 
 @auth.route('/login/authorized')
-def authorized():
-    resp = google_auth.authorized_response()
+@google_auth.authorized_handler
+def authorized(resp):
     if resp is None or 'access_token' not in resp:
         error = 'Access denied: reason=%s error=%s' % (
             request.args['error_reason'],
@@ -114,7 +126,7 @@ def testing_login():
 def testing_authorized():
     if not use_testing_login():
         abort(404)
-    user = User.from_email(request.form['email'])
+    user = user_from_email(request.form['email'])
     return authorize_user(user)
 
 @auth.route("/logout")
