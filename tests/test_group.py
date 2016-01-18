@@ -100,6 +100,8 @@ class TestGroup(OkTestCase):
         group.accept(self.user2)
 
         self.assignment.lock_date = datetime.datetime.now() - datetime.timedelta(days=1)
+        db.session.commit()
+
         self.assertRaises(BadRequest, Group.invite, self.user1, self.user2, self.assignment)
         self.assertRaises(BadRequest, group.accept, self.user3)
         self.assertRaises(BadRequest, group.decline, self.user3)

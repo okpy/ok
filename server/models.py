@@ -1,4 +1,5 @@
 from flask.ext.sqlalchemy import SQLAlchemy
+import functools
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -14,6 +15,19 @@ from datetime import datetime as dt
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 
 db = SQLAlchemy()
+
+def transaction(f):
+    """Decorator for database (session) transactions."""
+    @functools.wraps(f)
+    def wrapper(*args, **kwds):
+        try:
+            value = f(*args, **kwds)
+            db.session.commit()
+            return value
+        except:
+            db.session.rollback()
+            raise
+    return wrapper
 
 
 class TimestampMixin(object):
@@ -307,6 +321,7 @@ class Group(db.Model, TimestampMixin):
             return member.group
 
     @staticmethod
+    @transaction
     def invite(sender, recipient, assignment):
         """Invite a user to a group, creating a group if necessary."""
         if not assignment.active:
@@ -320,6 +335,7 @@ class Group(db.Model, TimestampMixin):
             raise BadRequest('You are not in the group')
         group._add_member(recipient, 'pending')
 
+    @transaction
     def remove(self, user, target_user):
         """Remove a user from the group.
 
@@ -333,6 +349,7 @@ class Group(db.Model, TimestampMixin):
             raise BadRequest('You are not in the group')
         self._remove_member(target_user)
 
+    @transaction
     def accept(self, user):
         """Accept an invitation."""
         if not self.assignment.active:
@@ -346,6 +363,7 @@ class Group(db.Model, TimestampMixin):
             raise BadRequest('{0} is not invited to this group'.format(user.email))
         member.status = 'active'
 
+    @transaction
     def decline(self, user):
         """Decline an invitation."""
         if not self.assignment.active:
