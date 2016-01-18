@@ -29,4 +29,4 @@ class TestAuth(OkTestCase):
 
         self.client.get('/logout')
         response = self.client.get('/restricted')
-        self.assert_redirects(response, '/login?next=%2Frestricted')
+        self.assert_redirects(response, '/login')
