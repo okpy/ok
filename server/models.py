@@ -60,6 +60,12 @@ class User(db.Model, UserMixin, TimestampMixin):
     def enrollments(self, roles=[STUDENT_ROLE]):
         return [e for e in self.participations if e.role in roles]
 
+    def is_enrolled(self, course_id, roles=VALID_ROLES):
+        for enroll in self.participations:
+            if enroll.course_id == course_id and enroll.role in roles:
+                return enroll
+        return False
+
     @staticmethod
     def lookup(email):
         """Get a User with the given email address, or None."""

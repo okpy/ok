@@ -1,5 +1,5 @@
 {% extends "student/base.html" %}
-{% import 'student/courses/_coursetable.html' as table %}
+{% import 'student/course/_assigntable.html' as table %}
 
 {% block title %} Courses | Ok {% endblock %}
 
@@ -34,23 +34,24 @@
 
         <div class="subcontent heading">
           <div class="wrap">
-            <h1>Courses</h1>
+            <div class="string-nav">
+              <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
+              <span>{{ course.display_name}} | {{ course.offering }}</span>
+            </div>
+            <h1>{{ course.display_name}}</h1>
           </div>
 
           {% include 'alerts.html' %}
 
         </div>
         <!-- start desktop/tablet version -->
-        {{ table.render_courses(instructor, tname="Instructor Courses") }}
-        {{ table.render_courses(current, tname="Current Courses", empty=True) }}
-        {{ table.render_courses(past, tname="Past Courses") }}
+        {{ table.render_assgn(active, tname="Current Assignments", empty=True) }}
+        {{ table.render_assgn(inactive, tname="Past Assignments") }}
 
         <!-- end desktop/tablet version -->
         <!-- start mobile version -->
-        {{ table.render_courses_mobile(instructor, tname="Instructor Courses") }}
-        {{ table.render_courses_mobile(current, tname="Current Courses", empty=True) }}
-        {{ table.render_courses_mobile(past, tname="Past Courses") }}
-
+        {{ table.render_assgn_mobile(active, tname="Current Assignments", empty=True) }}
+        {{ table.render_assgn_mobile(inactive, tname="Past Assignments") }}
         <!-- end mobile version -->
       </section>
     </main>

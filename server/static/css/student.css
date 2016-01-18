@@ -28,6 +28,7 @@ header,.header-bg {
   header {
     height:4em;
     width:100%;
+    float: left;
     top:0;
     left:0;
     z-index:30;
