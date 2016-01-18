@@ -142,7 +142,7 @@ def enrollment(cid, page):
         Participant.enroll_from_form(cid, single_form)
         flash("Added {email} as {role}".format(email=email, role=role), "success")
 
-    query = request.args.get('query')
+    query = request.args.get('query', '').strip()
     students = None
     if query:
         find_student = User.query.filter_by(email=query)

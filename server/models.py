@@ -119,7 +119,7 @@ class Participant(db.Model, TimestampMixin):
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
 
-    user = db.relationship("User", backref="participants")
+    user = db.relationship("User", backref="participations")
     course = db.relationship("Course", backref="participants")
     notes = db.Column(db.String()) # For Section Info etc.
 
