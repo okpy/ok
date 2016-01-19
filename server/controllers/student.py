@@ -26,7 +26,7 @@ def index(auto_redir=True):
     }
     # Make the choice for users in one course
     if len(enrollments) == 1 and auto_redir:
-        return redirect(url_for(".course", cid=enrollments[0].id))
+        return redirect(url_for(".course", cid=enrollments[0].course_id))
     return render_template('student/courses/index.html', **courses)
 
 
