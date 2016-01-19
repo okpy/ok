@@ -1,7 +1,10 @@
 {% extends "student/base.html" %}
-{% import 'student/courses/_coursetable.html' as table %}
+{% import 'student/assignment/_tablehelper.html' as table %}
 
-{% block title %} Courses | Ok {% endblock %}
+{% block title %} Assignment | Ok {% endblock %}
+{% block css %}
+  <!-- src="https:// .. .js" -->
+{% endblock %}
 
 {% block header %}
 
@@ -34,24 +37,27 @@
 
         <div class="subcontent heading">
           <div class="wrap">
-            <h1>Courses</h1>
+            <div class="string-nav">
+              <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for(".assignment", cid=course.id, aid=assignment.id) }}">Homework 2</a></span> &raquo;
+            </div>
+            <h1>{{ course.display_name}}</h1>
           </div>
-
           {% include 'alerts.html' %}
-
         </div>
         <!-- start desktop/tablet version -->
-        {{ table.render_courses(instructor, tname="Instructor Courses", admin=True) }}
-        {{ table.render_courses(current, tname="Current Courses", empty=True) }}
-        {{ table.render_courses(past, tname="Past Courses") }}
-
-        <!-- end desktop/tablet version -->
-        <!-- start mobile version -->
-        {{ table.render_courses_mobile(instructor, tname="Instructor Courses") }}
-        {{ table.render_courses_mobile(current, tname="Current Courses", empty=True) }}
-        {{ table.render_courses_mobile(past, tname="Past Courses") }}
+        <div class="subcontent list hidden-xs hidden-sm">
+          <div class="wrap">
+            Code View Here
+          </div>
+        </div>
+        <!-- start desktop/tablet version -->
 
         <!-- end mobile version -->
       </section>
     </main>
+{% endblock %}
+
+{% block js %}
+  <!-- src="https:// .. .js" -->
 {% endblock %}

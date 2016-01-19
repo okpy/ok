@@ -7,7 +7,7 @@ import functools
 
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
-from server.models import User, Course, db
+from server.models import User, Course, Assignment, db
 
 
 student = Blueprint('student', __name__)
@@ -63,3 +63,30 @@ def course(cid):
     }
     return render_template('student/course/index.html', course=course,
                            **assignments)
+
+@student.route("/course/<int:cid>/assignment/<int:aid>")
+@login_required
+@is_enrolled
+def assignment(cid, aid):
+    assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if assgn:
+        course = assgn.course
+        return render_template('student/course/index.html', course=course,
+                               assignment=assgn)
+    else:
+        flash("That assignment does not exist", "warning")
+        return
+
+@student.route("/course/<int:cid>/assignment/<int:aid>/submission/<int:bid>")
+@login_required
+@is_enrolled
+def submisison(cid, aid, bid):
+    assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if assgn:
+        course = assgn.course
+
+        return render_template('student/assignment/code.html', course=course,
+                               assignment=assgn)
+    else:
+        flash("That assignment does not exist", "warning")
+        return

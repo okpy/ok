@@ -235,10 +235,11 @@ class Submission(db.Model, TimestampMixin):
     **This model may be removed. Do not depend on it for features.**
     """
     id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
     flagged = db.Column(db.Boolean(), default=False)
+    backup = db.relationship("Backup")
 
     db.Index('idx_flaggedSubms', 'assignment', 'submitter', 'flagged'),
 
