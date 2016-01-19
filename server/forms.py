@@ -42,7 +42,7 @@ class AssignmentForm(BaseForm):
     due_date = DateTimeField(u'Due Date (Pacific Time)',
                              default=dt.datetime.now,
                              validators=[validators.required()])
-    lock_date = DateTimeField(u'Lock Date (UTC)',
+    lock_date = DateTimeField(u'Lock Date (Pacific Time)',
                               default=dt.datetime.now,
                               validators=[validators.required()])
     max_group_size = IntegerField(u'Max Group Size', default=1,

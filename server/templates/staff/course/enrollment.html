@@ -102,7 +102,7 @@
                       {% endif %}
                     {%- endfor %}
                     {% if enrollments.has_next %}
-                      <li><a href="{{ url_for('.enrollment', cid=current_course.id, page=enrollments.prev_num) }}">»</a></li>
+                      <li><a href="{{ url_for('.enrollment', cid=current_course.id, page=enrollments.next_num) }}">»</a></li>
                     {% endif %}
                   </ul>
             </div>

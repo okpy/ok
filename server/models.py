@@ -138,6 +138,7 @@ class Participant(db.Model, TimestampMixin):
         return self.course == course and self.role in STAFF_ROLES
 
     @staticmethod
+    @transaction
     def enroll_from_form(cid, form):
         usr = User.lookup(form.email.data)
         if usr:
@@ -151,6 +152,7 @@ class Participant(db.Model, TimestampMixin):
         Participant.create(cid, [usr.id], role)
 
     @staticmethod
+    @transaction
     def enroll_from_csv(cid, form):
         new_users, existing_uids = [], []
         rows = form.csv.data.splitlines()
@@ -176,6 +178,7 @@ class Participant(db.Model, TimestampMixin):
 
 
     @staticmethod
+    @transaction
     def create(cid, usr_ids=[], role=STUDENT_ROLE):
         new_records = []
         for usr_id in usr_ids:
@@ -187,8 +190,6 @@ class Participant(db.Model, TimestampMixin):
                 record = Participant(course_id=cid, user_id=usr_id, role=role)
                 new_records.append(record)
         db.session.add_all(new_records)
-        db.session.commit()
-
 
 class Message(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)

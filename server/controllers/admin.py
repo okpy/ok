@@ -130,11 +130,9 @@ def assignment(cid, aid):
                            form=form, courses=courses,
                            current_course=current_course)
 
-@admin.route("/course/<int:cid>/enrollment",
-             methods=['GET', 'POST'], defaults={'page': 1})
-@admin.route("/course/<int:cid>/enrollment/page/<int:page>",)
+@admin.route("/course/<int:cid>/enrollment", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
-def enrollment(cid, page):
+def enrollment(cid):
     courses, current_course = get_courses(cid)
     single_form = forms.EnrollmentForm(prefix="single")
     if single_form.validate_on_submit():
@@ -143,6 +141,8 @@ def enrollment(cid, page):
         flash("Added {email} as {role}".format(email=email, role=role), "success")
 
     query = request.args.get('query', '').strip()
+    page = request.args.get('page', 1, type=int)
+
     students = None
     if query:
         find_student = User.query.filter_by(email=query)
