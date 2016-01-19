@@ -44,12 +44,14 @@
         {{ table.render_courses(instructor, tname="Instructor Courses", admin=True) }}
         {{ table.render_courses(current, tname="Current Courses", empty=True) }}
         {{ table.render_courses(past, tname="Past Courses") }}
+        {{ table.render_courses(all, tname="All Courses") }}
 
         <!-- end desktop/tablet version -->
         <!-- start mobile version -->
         {{ table.render_courses_mobile(instructor, tname="Instructor Courses") }}
         {{ table.render_courses_mobile(current, tname="Current Courses", empty=True) }}
         {{ table.render_courses_mobile(past, tname="Past Courses") }}
+        {{ table.render_courses_mobile(past, tname="All Courses") }}
 
         <!-- end mobile version -->
       </section>

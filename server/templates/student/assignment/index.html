@@ -17,7 +17,7 @@
 
 {% block body %}
     <main>
-      {% include 'student/courses/sidebar.html' %}
+      {% include 'student/assignment/sidebar.html' %}
       <div class="col-md-2"></div>
       <section class="content nomapa col-md-10 col-xs-12">
         <header>
@@ -36,22 +36,25 @@
           <div class="wrap">
             <div class="string-nav">
               <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
-              <span>{{ course.display_name}} | {{ course.offering }}</span>
+              <span><a href="{{ url_for(".course", cid=course.id) }}"> {{ course.offering }}</a></span> &raquo;
+              <span>{{ assignment.display_name }}</span>
             </div>
-            <h1>{{ course.display_name}}</h1>
+            <h1>{{ assignment.display_name}}</h1>
           </div>
 
           {% include 'alerts.html' %}
 
         </div>
         <!-- start desktop/tablet version -->
-        {{ table.render_assgn(active, tname="Current Assignments", empty=True) }}
-        {{ table.render_assgn(inactive, tname="Past Assignments") }}
+        {% if group %}
+        {% endif %}
 
-        <!-- end desktop/tablet version -->
+        {{ table.render_subms(subms, course.id, flagged, tname="Recent Submissions") }}
+        {{ table.render_backups(backups, course.id, tname="Recent Backups") }}
         <!-- start mobile version -->
-        {{ table.render_assgn_mobile(active, tname="Current Assignments", empty=True) }}
-        {{ table.render_assgn_mobile(inactive, tname="Past Assignments") }}
+        {{ table.render_subms_mobile(subms, course.id, flagged, tname="Recent Submissions") }}
+        {{ table.render_backups_mobile(backups, course.id, tname="Recent Backups") }}
+
         <!-- end mobile version -->
       </section>
     </main>

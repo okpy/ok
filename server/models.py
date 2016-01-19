@@ -117,27 +117,36 @@ class Assignment(db.Model, TimestampMixin):
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
-    def backups(self):
-        """Returns a query for the backups that the current user has for this
+    def group(self, usr_id):
+        # TODO merge with group.lookup
+        member = GroupMember.query.filter_by(
+            user_id=usr_id,
+            assignment_id=self.id
+        ).one_or_none()
+        if member:
+            return member.group
+
+    def backups(self, usr_id):
+        """Returns a query for the backups that the list of usrs has for this
         assignment.
         """
-        return Backup.query.filter_by(
-            submitter=current_user.id,
-            assignment=self.id
-        ).order_by(Backup.client_time.desc)
+        return Backup.query.filter(
+            Backup.submitter == usr_id,
+            Backup.assignment == self.id
+        ).order_by(Backup.client_time.desc())
 
-    def submissions(self):
+    def submissions(self, usr_id):
         """Returns a query for the submission that the current user has for this
         assignment.
         """
-        return Submission.query.filter_by(
-            submitter=current_user.id,
-            assignment=self.id
-        ).order_by(Submission.created.desc)  # TODO: client time
+        return Submission.query.filter(
+            Submission.submitter == usr_id,
+            Submission.assignment == self.id
+        ).order_by(Submission.created.desc())  # TODO: client time
 
-    def submission_time(self):
+    def submission_time(self, usr_id):
         """Returns the time of the most recent submission, or None."""
-        most_recent = self.submissions().first()
+        most_recent = self.submissions(usr_id).first()
         if most_recent:
             return most_recent.backup.client_time
 
@@ -229,6 +238,9 @@ class Backup(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     messages = db.relationship("Message")
     scores = db.relationship("Score")
+    user = db.relationship("User")
+    assign = db.relationship("Assignment")
+
     client_time = db.Column(db.DateTime())
     submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
@@ -242,6 +254,33 @@ class Backup(db.Model, TimestampMixin):
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def can_view(self, user, group=None, assign=None):
+        if user.is_admin:
+            return True
+        if user.id == self.submitter:
+            return True
+
+        # Allow group members to view
+        if not group or group.assignment_id != self.assignment_id:
+            group = Group.lookup(user, self.assignment_id)
+
+        if group:
+            member_ids = group.users()
+            if self.submitter in member_ids:
+                return True
+
+        if not assign or assign.id != self.assignment_id:
+            assign = Assignment.get(self.assignment_id)
+            if not assign:
+                return False
+
+        # Allow staff members to view
+        course = assign.course
+        return user.is_enrolled(course.id, STAFF_ROLES)
+
+
+
 
     @staticmethod
     def statistics(self):
@@ -264,6 +303,7 @@ class Submission(db.Model, TimestampMixin):
     submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
     flagged = db.Column(db.Boolean(), default=False)
     backup = db.relationship("Backup")
+    user = db.relationship("User")
 
     db.Index('idx_flaggedSubms', 'assignment', 'submitter', 'flagged'),
 
@@ -393,6 +433,9 @@ class Group(db.Model, TimestampMixin):
             group=self,
             status=status
         ).count() > 0
+
+    def users(self):
+        return [m.user for m in self.members]
 
     @staticmethod
     def lookup(user, assignment):

@@ -9,8 +9,12 @@
     </div>
   <li class="sidebar-title">Announcements</li>
   <ul class="staff">
+    {% if announcements %}
     <li class="top-level"><i class="fa fa-bullhorn"></i><div class="list-item">Project 1 has been released! <span>See cs61a.org.</span></div></li>
     <li class="top-level"><i class="fa fa-bullhorn"></i><div class="list-item">Superhuman Sumukh saved the day, yet again! <span>Ok has been resurrected.</span></div></li>
+    {% else %}
+    <li class="top-level"><i class="fa fa-bullhorn"></i><div class="list-item">Welcome to Ok! <br> <span>Checkout the <a class="dashed" href="http://cs61a.org/articles/using-ok.html">Ok User Guide</a></span></div></li>
+    {% endif %}
   </ul>
   <li class="sidebar-title">Actions</li>
   <ul class="staff">

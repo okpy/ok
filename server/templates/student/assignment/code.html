@@ -20,7 +20,7 @@
 
 {% block body %}
     <main>
-      {% include 'student/courses/sidebar.html' %}
+      {% include 'student/assignment/sidebar.html' %}
       <div class="col-md-2"></div>
       <section class="content nomapa col-md-10 col-xs-12">
         <header>
@@ -39,19 +39,29 @@
           <div class="wrap">
             <div class="string-nav">
               <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for(".course", cid=course.id) }}"> {{ course.offering }}</a></span> &raquo;
               <span><a href="{{ url_for(".assignment", cid=course.id, aid=assignment.id) }}">Homework 2</a></span> &raquo;
+              <span> Backup {{ backup.id }} </span>
             </div>
-            <h1>{{ course.display_name}}</h1>
+            <h1>{{ assignment.display_name}} Backup {{ backup.id }} </h1>
           </div>
           {% include 'alerts.html' %}
         </div>
         <!-- start desktop/tablet version -->
-        <div class="subcontent list hidden-xs hidden-sm">
+        <div class="subcontent list">
           <div class="wrap">
-            Code View Here
+            <p> Recieved at <time datetime="{{ backup.created }}">{{ backup.created }}</time> from {{ submitter.email }} </p>
+            {% if files %}
+              {% for file, code in files.iteritems() %}
+              {{ file }}
+                <pre><code class="python">{{code}}</code></pre>
+              {% endfor %}
+            {% else %}
+              <span> This backup does not contain any code </span>
+            {% endif %}
           </div>
         </div>
-        <!-- start desktop/tablet version -->
+        <!-- start mobile version -->
 
         <!-- end mobile version -->
       </section>
@@ -60,4 +70,9 @@
 
 {% block js %}
   <!-- src="https:// .. .js" -->
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/default.min.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/github.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
 {% endblock %}

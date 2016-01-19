@@ -31,6 +31,7 @@ from functools import wraps
 
 from flask.ext.login import current_user
 
+from server.extensions import cache
 import server.models as models
 
 
@@ -63,7 +64,7 @@ def json_field(field):
         elif field == 'true':
             return True
         return field
-    return json.loads(field)
+    return json.dumps(field)
 
 
 @api.representation('application/json')
@@ -93,6 +94,7 @@ def authenticate(func):
         # Public methods do not need authentication
         if not getattr(func, 'public', False) and not current_user.is_authenticated:
             restful.abort(401)
+        # The login manager takes care of converting a token to a user.
         kwargs['user'] = current_user
         return func(*args, **kwargs)
     return wrapper
@@ -102,7 +104,9 @@ def check_version(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         supplied = request.args.get('client_version', '')
-        current_version, download_link = '2', ''  # TODO Actual Version Check
+        current_version, download_link = 'v1.5.0', 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.0/ok'
+        # TODO Actual Version Check
+        # Ok Client will still get updates from the ok-server
         if not supplied or supplied == current_version:
             return func(*args, **kwargs)
 
@@ -122,6 +126,12 @@ def check_version(func):
         response.status_code = 403
         return response
     return wrapper
+
+@cache.memoize(1000)
+def name_to_assign_id(name):
+    assgn = models.Assignment.query.filter_by(name=name).one_or_none()
+    if assgn:
+        return assgn.id
 
 
 class Resource(restful.Resource):
@@ -144,23 +154,24 @@ class PublicResource(Resource):
 
 
 class v3Info(PublicResource):
-    def get(self, user):
+    def get(self):
         return {
             'version': API_VERSION,
             'url': '/api/{}/'.format(API_VERSION),
-            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
+            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki',
+            'test': name_to_assign_id('ds8/test12/test')
         }
 
 #  Fewer methods/APIs as V1 since the frontend will not use the API
 #  TODO Permsisions for API actions
 
 
-def make_backup(user, assignment, messages, submit, submitter):
+def make_backup(user, assignment, messages, submit):
     """
     Create backup with message objects.
 
     :param user: (object) caller
-    :param assignment: (Assignment)
+    :param assignment: (int) Assignment ID
     :param messages: Data content of backup/submission
     :param submit: Whether this backup is a submission to be graded
     :param submitter: (object) caller or submitter
@@ -177,7 +188,7 @@ def make_backup(user, assignment, messages, submit, submitter):
         client_time = datetime.datetime.now()
 
     backup = models.Backup(client_time=client_time, submitter=user.id,
-                           assignment=assignment.id, submit=submit)
+                           assignment=assignment, submit=submit)
     messages = [models.Message(kind=k, backup=backup,
                 contents=m) for k, m in messages.iteritems()]
     backup.messages = messages
@@ -185,6 +196,7 @@ def make_backup(user, assignment, messages, submit, submitter):
     models.db.session.add(backup)
     models.db.session.commit()
     return backup
+
 
 
 class APISchema():
@@ -227,16 +239,17 @@ class BackupSchema(APISchema):
     }
 
     post_fields = {
-        'id': fields.Integer,
-        'url': fields.String,
-        'message': fields.String,
+        'email': fields.Integer,
+        'key': fields.String,
+        'course': fields.String,
+        'assign': fields.String,
     }
 
     def __init__(self):
         APISchema.__init__(self)
         self.parser.add_argument('assignment', type=str, required=True,
                                  help='Name of Assignment')
-        self.parser.add_argument('messages', type=json_field, required=True,
+        self.parser.add_argument('messages', type=dict, required=True,
                                  help='Backup Contents as JSON')
 
         # Optional - probably not needed now that there are two endpoints
@@ -247,10 +260,9 @@ class BackupSchema(APISchema):
     def store_backup(self, user):
         args = self.parse_args()
         # TODO Assignment Memcache.
-        assignment = models.Assignment.query.filter_by(
-            name=args['assignment']).first()
-        messages, submit, submitter = args['messages'], args['submit'], user
-        backup = make_backup(user, assignment, messages, submit, submitter)
+        assignment_id = name_to_assign_id(args['assignment'])
+        messages, submit = args['messages'], args['submit']
+        backup = make_backup(user, assignment_id, messages, submit)
         return backup
 
 
@@ -305,17 +317,19 @@ class Backup(Resource):
         # TODO CHECK
         if backup.user != user or not user.is_admin:
             restful.abort(403)
-
         return backup
 
-    @marshal_with(schema.post_fields)
     def post(self, user, key=None):
         if key is not None:
             restful.abort(405)
         backup = self.schema.store_backup(user)
-        return {'id': backup.id,
-                'message': "Backup Succesful",
-                'url': 'tbd'}
+        return {
+            'email': current_user.email,
+            'key': backup.id,
+            'course': backup.assign.course_id,
+            'assign': backup.assignment
+        }
+
 
 
 class Submission(Resource):
@@ -336,19 +350,20 @@ class Submission(Resource):
             restful.abort(403)
         return submission
 
-    @marshal_with(schema.post_fields)
     def post(self, user, key=None):
         if key is not None:
             restful.abort(405)
-        back = self.schema.store_backup(user)
-        subm = models.Submission(backup=back.id, assignment=back.assignment,
+        backup = self.schema.store_backup(user)
+        subm = models.Submission(backup_id=backup.id, assignment=backup.assignment,
                                  submitter=user.id)
         models.db.session.add(subm)
         models.db.session.commit()
-        return {'id': subm.id,
-                'message': "Submission Succesful",
-                'url': 'tbd'}
-
+        return {
+            'email': current_user.email,
+            'key': backup.id,
+            'course': backup.assign.course_id,
+            'assign': backup.assignment
+        }
 
 class Score(Resource):
     """ Score creation resource.

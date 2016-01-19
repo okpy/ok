@@ -37,7 +37,7 @@ class BaseForm(Form):
 
 class AssignmentForm(BaseForm):
     display_name = StringField(u'Display Name',
-                               validators=[validators.required()]),
+                               validators=[validators.required()])
     name = StringField(u'Offering', validators=[validators.required()])
     due_date = DateTimeField(u'Due Date (Pacific Time)',
                              default=dt.datetime.now,

@@ -17,7 +17,7 @@
 
 {% block body %}
     <main>
-      {% include 'student/courses/sidebar.html' %}
+      {% include 'student/course/sidebar.html' %}
       <div class="col-md-2"></div>
       <section class="content nomapa col-md-10 col-xs-12">
         <header>
@@ -45,13 +45,13 @@
 
         </div>
         <!-- start desktop/tablet version -->
-        {{ table.render_assgn(active, tname="Current Assignments", empty=True) }}
-        {{ table.render_assgn(inactive, tname="Past Assignments") }}
+        {{ table.render_assgn(active, cid=course.id, tname="Current Assignments", empty=True) }}
+        {{ table.render_assgn(inactive, cid=course.id, tname="Past Assignments") }}
 
         <!-- end desktop/tablet version -->
         <!-- start mobile version -->
-        {{ table.render_assgn_mobile(active, tname="Current Assignments", empty=True) }}
-        {{ table.render_assgn_mobile(inactive, tname="Past Assignments") }}
+        {{ table.render_assgn_mobile(active, cid=course.id, tname="Current Assignments", empty=True) }}
+        {{ table.render_assgn_mobile(inactive,cid=course.id, tname="Past Assignments") }}
         <!-- end mobile version -->
       </section>
     </main>

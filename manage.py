@@ -7,7 +7,8 @@ from flask.ext.script import Manager, Server
 from flask.ext.script.commands import ShowUrls, Clean
 from flask.ext.migrate import Migrate, MigrateCommand
 from server import create_app
-from server.models import db, User, Course, Assignment, Participant
+from server.models import db, User, Course, Assignment, Participant, \
+    Backup, Submission, Message
 
 # default to dev config because no one should use this in
 # production anyway.
@@ -31,6 +32,23 @@ def make_shell_context():
     """
     return dict(app=app, db=db, User=User)
 
+def make_backup(user, assign, time, messages, submit=True):
+    backup = Backup(client_time=time,
+                           submitter=user.id,
+                           assignment=assign.id, submit=submit)
+    messages = [Message(kind=k, backup=backup,
+                contents=m) for k, m in messages.iteritems()]
+    backup.messages = messages
+    db.session.add_all(messages)
+    db.session.add(backup)
+
+    if submit:
+        subm = Submission(submitter=user.id,
+                          assignment=assign.id, backup=backup)
+        db.session.add(subm)
+
+
+
 
 @manager.command
 def seed():
@@ -49,11 +67,22 @@ def seed():
     students = [User(email='student{}@okpy.org'.format(i)) for i in range(60)]
     db.session.add_all(students)
 
-    assign = Assignment(name="cs61a/sp16/test", creator=staff_member.id,
+    assign = Assignment(name="cs61a/test16/test", creator=staff_member.id,
                         course_id=courses[0].id, display_name="test",
                         due_date=future, lock_date=future)
     db.session.add(assign)
+    assign2 = Assignment(name="ds8/test16/test", creator=staff_member.id,
+                        course_id=courses[1].id, display_name="test",
+                        due_date=future, lock_date=future)
+    db.session.add(assign2)
     db.session.commit()
+
+    messages = {'file_contents': {'backup.py': '1'}, 'analytics': {}}
+    for i in range(20):
+        time = datetime.now()-timedelta(days=i)
+        make_backup(staff_member, assign2, time, messages)
+    db.session.commit()
+
     staff = Participant(user_id=staff_member.id, course_id=courses[0].id,
                         role="staff")
     db.session.add(staff)

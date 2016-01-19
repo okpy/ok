@@ -53,6 +53,8 @@ def user_from_access_token(token):
     Get a User with the given Google access token, or create one if no User with
     this email is found. If the token is invalid, return None.
     """
+    if use_testing_login():
+        return user_from_email("okstaff@okpy.org")
     resp = google_auth.get('userinfo', token=(token, ''))
     if resp.status != 200:
         return None
@@ -80,7 +82,7 @@ def authorize_user(user):
     login_user(user)
     flash("Logged in successfully.", "success")
     after_login = session.pop('after_login', None)
-    return redirect(after_login or url_for("main.home"))
+    return redirect(after_login or url_for("student.index"))
 
 def use_testing_login():
     """
@@ -135,8 +137,3 @@ def logout():
     session.pop('google_token', None)
     flash("You have been logged out.", "success")
     return redirect(url_for("main.home"))
-
-@auth.route("/restricted")
-@login_required
-def restricted():
-    return "You can only see this if you are logged in!", 200

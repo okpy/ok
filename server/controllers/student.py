@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, flash, request, redirect, \
-    url_for, session,  current_app
+    url_for, session,  current_app, abort
 from flask.ext.login import login_user, logout_user, login_required, \
     current_user
 
@@ -7,7 +7,7 @@ import functools
 
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
-from server.models import User, Course, Assignment, db
+from server.models import User, Course, Assignment, Group, Backup, db
 
 
 student = Blueprint('student', __name__)
@@ -18,10 +18,12 @@ student = Blueprint('student', __name__)
 def index(auto_redir=True):
     enrollments = current_user.enrollments(VALID_ROLES)
     student_enrollments = [e for e in enrollments if e.role == STUDENT_ROLE]
+    all_courses = Course.query.all()
     courses = {
         'instructor': [e.course for e in enrollments if e.role in STAFF_ROLES],
         'current': [e.course for e in student_enrollments if e.course.active],
         'past': [e.course for e in student_enrollments if not e.course.active],
+        'all': all_courses,
         'num_enrolled': len(enrollments)
     }
     # Make the choice for users in one course
@@ -54,9 +56,13 @@ def is_enrolled(func):
 @is_enrolled
 def course(cid):
     course = Course.query.get(cid)
+    # TODO : Should consider group submissions as well.
+    user_id = current_user.id
     assignments = {
-        'active': [a for a in course.assignments if a.active],
-        'inactive': [a for a in course.assignments if not a.active]
+        'active': [(a, a.submission_time(user_id), a.group(user_id)) \
+                        for a in course.assignments if a.active],
+        'inactive': [(a, a.submission_time(user_id), a.group(user_id)) \
+                            for a in course.assignments if not a.active]
     }
     return render_template('student/course/index.html', course=course,
                            **assignments)
@@ -68,22 +74,45 @@ def assignment(cid, aid):
     assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if assgn:
         course = assgn.course
-        return render_template('student/course/index.html', course=course,
-                               assignment=assgn)
+        group = Group.lookup(current_user, assgn)
+        if group:
+            # usr_ids = [u.id for u in group.users()]
+            # TODO : Fetch backups from group.
+            pass
+        backups = assgn.backups(current_user.id).limit(5).all()
+        subms = assgn.submissions(current_user.id).limit(5).all()
+        flagged = any([s.flagged for s in subms])
+        print(flagged)
+        return render_template('student/assignment/index.html', course=course,
+                assignment=assgn, backups=backups, subms=subms, flagged=flagged)
     else:
-        flash("That assignment does not exist", "warning")
-        return
+        # flash("That assignment does not exist", "warning")
+        abort(404)
 
-@student.route("/course/<int:cid>/assignment/<int:aid>/submission/<int:bid>")
+@student.route("/course/<int:cid>/assignment/<int:aid>/<int:bid>")
 @login_required
 @is_enrolled
-def submisison(cid, aid, bid):
+def code(cid, aid, bid):
     assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if assgn:
         course = assgn.course
-
-        return render_template('student/assignment/code.html', course=course,
-                               assignment=assgn)
+        group = Group.lookup(current_user, assgn)
+        backup = Backup.query.get(bid)
+        if backup and backup.can_view(current_user, group, assgn):
+            submitter = User.query.get(backup.submitter)
+            file_contents = [m for m in backup.messages if
+                                m.kind == "file_contents"]
+            if file_contents:
+                files = file_contents[0].contents
+                return render_template('student/assignment/code.html', course=course,
+                        assignment=assgn, backup=backup, submitter=submitter,
+                        files=files)
+            else:
+                flash("That code submission doesn't contain any code")
+        else:
+            flash("That code doesn't exist (or you don't have permission)", "danger")
+            abort(403)
     else:
-        flash("That assignment does not exist", "warning")
-        return
+        flash("That assignment does not exist", "danger")
+
+    abort(404)
