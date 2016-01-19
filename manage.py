@@ -36,21 +36,29 @@ def make_shell_context():
 def seed():
     """ Create default records for development.
     """
-    staff_member = User('okstaff@okpy.org')
+    staff_member = User(email='okstaff@okpy.org')
     db.session.add(staff_member)
-    course = Course(offering="cs61a/sp16", display_name="CS61A (Test)")
-    db.session.add(course)
+    courses = [Course(offering="cs61a/test16", display_name="CS61A (Test)"),
+               Course(offering="ds8/test16", display_name="DS8 (Test)")]
+    db.session.add_all(courses)
     future = datetime.now() + timedelta(days=1)
     db.session.commit()
 
+    students = [User(email='student{}@okpy.org'.format(i)) for i in range(60)]
+    db.session.add_all(students)
+
     assign = Assignment(name="cs61a/sp16/test", creator=staff_member.id,
-                        course_id=course.id, display_name="test",
+                        course_id=courses[0].id, display_name="test",
                         due_date=future, lock_date=future)
     db.session.add(assign)
     db.session.commit()
-    staff = Participant(user=staff_member.id, course_id=course.id,
+    staff = Participant(user_id=staff_member.id, course_id=courses[0].id,
                         role="staff")
     db.session.add(staff)
+    student_enrollment = [Participant(user_id=student.id, role="student",
+                          course_id=courses[0].id) for student in students]
+    db.session.add_all(student_enrollment)
+
     db.session.commit()
 
 
@@ -63,13 +71,17 @@ def createdb():
 
 
 @manager.command
-def resetedb():
+def resetdb():
     """ Drop & create a database with all of the tables defined in
         your SQLAlchemy models.
         DO NOT USE IN PRODUCTION.
     """
-    db.drop_all()
-    db.create_all()
+    if env == "dev":
+        db.drop_all()
+        db.create_all()
+        seed()
+        print("Dropped")
+
 
 if __name__ == "__main__":
     manager.run()

@@ -140,10 +140,10 @@ class Resource(restful.Resource):
 
 
 class PublicResource(Resource):
-    method_decorators = [check_version]
+    method_decorators = []
 
 
-class v3Info(Resource):
+class v3Info(PublicResource):
     def get(self, user):
         return {
             'version': API_VERSION,
@@ -266,6 +266,28 @@ class SubmissionSchema(BackupSchema):
         'created': fields.DateTime(dt_format='rfc822')
     }
 
+class CourseSchema(APISchema):
+    get_fields = {
+        'id': fields.Integer,
+        'name': fields.String,
+        'display_name': fields.String,
+        'active': fields.Boolean,
+    }
+
+
+class ParticipationSchema(APISchema):
+    get_fields = {
+        'course_id': fields.Integer,
+        'role': fields.String,
+        'course': fields.Nested(CourseSchema.get_fields),
+    }
+
+class EnrollmentSchema(APISchema):
+
+    get_fields = {
+        'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
+    }
+
 
 class Backup(Resource):
     """ Submission retreival resource.
@@ -280,6 +302,10 @@ class Backup(Resource):
         if key is None:
             restful.abort(405)
         backup = self.model.query.filter_by(id=key).first()
+        # TODO CHECK
+        if backup.user != user or not user.is_admin:
+            restful.abort(403)
+
         return backup
 
     @marshal_with(schema.post_fields)
@@ -305,6 +331,9 @@ class Submission(Resource):
         if key is None:
             restful.abort(405)
         submission = self.model.query.filter_by(id=key).first()
+        # TODO CHECK .user obj
+        if submission.user != user or not user.is_admin:
+            restful.abort(403)
         return submission
 
     @marshal_with(schema.post_fields)
@@ -338,18 +367,21 @@ class Score(Resource):
         return {'id': score.id, 'backup': 1}
 
 
-class Enrollment(Resource):
+class Enrollment(PublicResource):
     """ View what courses students are enrolled in.
         Authenticated. Permissions: >= User
         Used by: Ok Client Auth
     """
     model = models.Participant
+    schema = EnrollmentSchema()
 
-    def get(self, email, user):
+    @marshal_with(schema.get_fields)
+    def get(self, email):
         course = request.args.get('course', '')  # TODO use reqparse
-        if course:
-            return {'created': str(datetime.datetime.now())}
-        return {}
+        user = models.User.lookup(email)
+        if course and user:
+            return {'courses': user.participations}
+        return {'courses': []}
 
 api.add_resource(v3Info, '/v3')
 

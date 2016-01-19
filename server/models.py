@@ -1,6 +1,5 @@
 from flask.ext.sqlalchemy import SQLAlchemy
-import functools
-from sqlalchemy import PrimaryKeyConstraint
+from sqlalchemy import PrimaryKeyConstraint, MetaData
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref
@@ -10,11 +9,22 @@ from flask.ext.login import UserMixin, AnonymousUserMixin
 from flask.ext.cache import Cache
 cache = Cache()
 
+import functools
+import csv
 from datetime import datetime as dt
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 
-db = SQLAlchemy()
+convention = {
+    "ix": 'ix_%(column_0_label)s',
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+}
+
+metadata = MetaData(naming_convention=convention)
+db = SQLAlchemy(metadata=metadata)
 
 def transaction(f):
     """Decorator for database (session) transactions."""
@@ -29,13 +39,13 @@ def transaction(f):
             raise
     return wrapper
 
-
 class TimestampMixin(object):
     created = db.Column(db.DateTime, server_default=db.func.now())
 
 
 class User(db.Model, UserMixin, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String())
     email = db.Column(db.String(), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
     sid = db.Column(db.String())  # SID or Login
@@ -48,16 +58,12 @@ class User(db.Model, UserMixin, TimestampMixin):
 
     # TODO: Cache enrollment queries
     def enrollments(self, roles=['student']):
-        return Participant.query.filter(
-            Participant.user == self.id,
-            Participant.role.in_(roles)
-        ).all()
+        return [e for e in self.participations if e.role in roles]
 
     @staticmethod
     def lookup(email):
         """Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
-
 
 class Course(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
@@ -113,20 +119,69 @@ class Participant(db.Model, TimestampMixin):
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
 
-    user = db.relationship("User", backref="participants")
+    user = db.relationship("User", backref="participations")
     course = db.relationship("Course", backref="participants")
+    notes = db.Column(db.String()) # For Section Info etc.
 
     def has_role(self, course, role):
         if self.course != course:
             return False
         return self.role == role
 
-    @hybrid_property
-    def is_course_staff(self):
-        return self.role in STAFF_ROLES
-
     def is_staff(self, course):
         return self.course == course and self.role in STAFF_ROLES
+
+    @staticmethod
+    def enroll_from_form(cid, form):
+        usr = User.lookup(form.email.data)
+        if usr:
+            form.populate_obj(usr)
+        else:
+            usr = User()
+            form.populate_obj(usr)
+            db.session.add(usr)
+        db.session.commit()
+        role = form.role.data
+        Participant.create(cid, [usr.id], role)
+
+    @staticmethod
+    def enroll_from_csv(cid, form):
+        new_users, existing_uids = [], []
+        rows = form.csv.data.splitlines()
+        entries = list(csv.reader(rows))
+        for usr in entries:
+            email, name, sid, login, notes = usr
+            usr_obj = User.lookup(email)
+            if not usr_obj:
+                usr_obj = User(email=email, name=name, sid=sid, secondary=login)
+                new_users.append(usr_obj)
+            else:
+                usr_obj.name = name
+                usr_obj.sid = sid
+                usr_obj.secondary = login
+                usr_obj.notes = notes
+                existing_uids.append(usr_obj.id)
+
+        db.session.add_all(new_users)
+        db.session.commit()
+        user_ids = [u.id for u in new_users] + existing_uids
+        Participant.create(cid, user_ids, STUDENT_ROLE)
+        return len(new_users), len(existing_uids)
+
+
+    @staticmethod
+    def create(cid, usr_ids=[], role=STUDENT_ROLE):
+        new_records = []
+        for usr_id in usr_ids:
+            record = Participant.query.filter_by(user_id=usr_id,
+                                                   course_id=cid).one_or_none()
+            if record:
+                record.role = role
+            else:
+                record = Participant(course_id=cid, user_id=usr_id, role=role)
+                new_records.append(record)
+        db.session.add_all(new_records)
+        db.session.commit()
 
 
 class Message(db.Model, TimestampMixin):
@@ -260,9 +315,7 @@ class GradingTask(db.Model, TimestampMixin):
 class GroupMember(db.Model, TimestampMixin):
     """A member of a group must accept the invite to join the group.
     Only members of a group can view each other's submissions.
-
     A user may only be invited or participate in a single group per assignment.
-
     The status value can be one of:
         pending - The user has been invited to the group.
         active  - The user accepted the invite and is part of the group.
@@ -288,11 +341,9 @@ class GroupMember(db.Model, TimestampMixin):
 
 class Group(db.Model, TimestampMixin):
     """A group is a collection of users who are either members or invited.
-
     Groups are created when a member not in a group invites another member.
     Invited members may accept or decline invitations. Active members may
     revoke invitations and remove members (including themselves).
-
     A group must have at least 2 participants.
     Degenerate groups are deleted.
     """
@@ -338,7 +389,6 @@ class Group(db.Model, TimestampMixin):
     @transaction
     def remove(self, user, target_user):
         """Remove a user from the group.
-
         The user must be an active member in the group, and the target user
         must be an active or pending member. You may remove yourself to leave
         the group. The assignment must also be active.
