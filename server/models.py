@@ -117,6 +117,30 @@ class Assignment(db.Model, TimestampMixin):
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
+    def backups(self):
+        """Returns a query for the backups that the current user has for this
+        assignment.
+        """
+        return Backup.query.filter_by(
+            submitter=current_user.id,
+            assignment=self.id
+        ).order_by(Backup.client_time.desc)
+
+    def submissions(self):
+        """Returns a query for the submission that the current user has for this
+        assignment.
+        """
+        return Submission.query.filter_by(
+            submitter=current_user.id,
+            assignment=self.id
+        ).order_by(Submission.created.desc)  # TODO: client time
+
+    def submission_time(self):
+        """Returns the time of the most recent submission, or None."""
+        most_recent = self.submissions().first()
+        if most_recent:
+            return most_recent.backup.client_time
+
 
 class Participant(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
