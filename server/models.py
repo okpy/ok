@@ -71,6 +71,7 @@ class User(db.Model, UserMixin, TimestampMixin):
         """Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
 
+
 class Course(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     offering = db.Column(db.String(), unique=True)
@@ -84,7 +85,7 @@ class Course(db.Model, TimestampMixin):
         return '<Course %r>' % self.offering
 
     def is_enrolled(self, user):
-        return Participant.query.filter_by(
+        return Enrollment.query.filter_by(
             user=user,
             course=self
         ).count() > 0
@@ -151,7 +152,7 @@ class Assignment(db.Model, TimestampMixin):
             return most_recent.backup.client_time
 
 
-class Participant(db.Model, TimestampMixin):
+class Enrollment(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
@@ -182,7 +183,7 @@ class Participant(db.Model, TimestampMixin):
             db.session.add(usr)
         db.session.commit()
         role = form.role.data
-        Participant.create(cid, [usr.id], role)
+        Enrollment.create(cid, [usr.id], role)
 
     @staticmethod
     @transaction
@@ -206,7 +207,7 @@ class Participant(db.Model, TimestampMixin):
         db.session.add_all(new_users)
         db.session.commit()
         user_ids = [u.id for u in new_users] + existing_uids
-        Participant.create(cid, user_ids, STUDENT_ROLE)
+        Enrollment.create(cid, user_ids, STUDENT_ROLE)
         return len(new_users), len(existing_uids)
 
 
@@ -215,14 +216,15 @@ class Participant(db.Model, TimestampMixin):
     def create(cid, usr_ids=[], role=STUDENT_ROLE):
         new_records = []
         for usr_id in usr_ids:
-            record = Participant.query.filter_by(user_id=usr_id,
+            record = Enrollment.query.filter_by(user_id=usr_id,
                                                    course_id=cid).one_or_none()
             if record:
                 record.role = role
             else:
-                record = Participant(course_id=cid, user_id=usr_id, role=role)
+                record = Enrollment(course_id=cid, user_id=usr_id, role=role)
                 new_records.append(record)
         db.session.add_all(new_records)
+
 
 class Message(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)

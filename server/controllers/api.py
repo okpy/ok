@@ -387,7 +387,7 @@ class Enrollment(PublicResource):
         Authenticated. Permissions: >= User
         Used by: Ok Client Auth
     """
-    model = models.Participant
+    model = models.Enrollment
     schema = EnrollmentSchema()
 
     @marshal_with(schema.get_fields)

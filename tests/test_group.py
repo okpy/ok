@@ -1,7 +1,7 @@
 import datetime
 from werkzeug.exceptions import BadRequest
 
-from server.models import db, Assignment, Course, Group, Participant, User
+from server.models import db, Assignment, Course, Group, Enrollment, User
 
 from .helpers import OkTestCase
 
@@ -21,7 +21,7 @@ class TestGroup(OkTestCase):
 
         def make_student(n):
             user = User(email='student{0}@aol.com'.format(n))
-            participant = Participant(
+            participant = Enrollment(
                 user=user,
                 course=self.course)
             db.session.add(participant)

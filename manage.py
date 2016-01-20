@@ -7,7 +7,7 @@ from flask.ext.script import Manager, Server
 from flask.ext.script.commands import ShowUrls, Clean
 from flask.ext.migrate import Migrate, MigrateCommand
 from server import create_app
-from server.models import db, User, Course, Assignment, Participant, \
+from server.models import db, User, Course, Assignment, Enrollment, \
     Backup, Submission, Message
 
 # default to dev config because no one should use this in
@@ -83,14 +83,14 @@ def seed():
         make_backup(staff_member, assign2, time, messages)
     db.session.commit()
 
-    staff = Participant(user_id=staff_member.id, course_id=courses[0].id,
+    staff = Enrollment(user_id=staff_member.id, course_id=courses[0].id,
                         role="staff")
     db.session.add(staff)
-    staff_also_student = Participant(user_id=staff_member.id,
+    staff_also_student = Enrollment(user_id=staff_member.id,
                         course_id=courses[1].id, role="student")
     db.session.add(staff_also_student)
 
-    student_enrollment = [Participant(user_id=student.id, role="student",
+    student_enrollment = [Enrollment(user_id=student.id, role="student",
                           course_id=courses[0].id) for student in students]
     db.session.add_all(student_enrollment)
 
