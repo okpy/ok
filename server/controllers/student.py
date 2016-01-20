@@ -7,8 +7,8 @@ import functools
 
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
-from server.models import User, Course, Assignment, Group, Backup, db
-
+from server.models import User, Course, Assignment, Group, Backup, Diff, db
+from server.utils import generate_diff
 
 student = Blueprint('student', __name__)
 
@@ -100,15 +100,36 @@ def code(cid, aid, bid):
         backup = Backup.query.get(bid)
         if backup and backup.can_view(current_user, group, assgn):
             submitter = User.query.get(backup.submitter)
-            file_contents = [m for m in backup.messages if
-                                m.kind == "file_contents"]
-            if file_contents:
-                files = file_contents[0].contents
-                return render_template('student/assignment/code.html', course=course,
-                        assignment=assgn, backup=backup, submitter=submitter,
-                        files=files)
-            else:
+            file_contents = [m for m in backup.messages
+                             if m.kind == "file_contents"]
+            if not file_contents:
                 flash("That code submission doesn't contain any code")
+                abort(404)
+
+            template_files = assgn.template
+            student_files = file_contents[0].contents
+            student_files.pop('submit', None)
+
+            if template_files is None:
+                # Only render a diff for assignments with templates
+                student_code = {k: v.split('\n') for k, v in student_files.iteritems()}
+                return render_template('student/assignment/code_nodiff.html',
+                                       course=course, assignment=assgn,
+                                       backup=backup, submitter=submitter,
+                                       diffs=student_code)
+
+            diff = Diff.query.filter_by(assignment=aid, backup=bid).one_or_none()
+            if diff is None:
+                diff = Diff(assignment=aid, backup=bid)
+                diff.diff = generate_diff(template_files, student_files)
+                # db.session.add(diff)
+                # db.session.commit()
+
+            return render_template('student/assignment/code_diff.html',
+                                    course=course, assignment=assgn,
+                                    backup=backup, submitter=submitter,
+                                    diffs=diff.diff)
+
         else:
             flash("That code doesn't exist (or you don't have permission)", "danger")
             abort(403)

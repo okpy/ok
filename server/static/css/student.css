@@ -430,6 +430,53 @@ header .logo {
 .string-nav {
   padding:2em 1.5em 0.5em 1.5em;
 }
+
+.diff-linenum {
+    width: 1%;
+    min-width: 50px;
+    line-height: 1.2em;
+    border: solid #ddd;
+    border-width: 0px 1px;
+    text-align: right;
+}
+
+.diff tbody {
+    border: solid #ddd;
+    border-width: 1px;
+}
+
+.diff td {
+    padding: 0 10px;
+    line-height: 20px;
+}
+
+.diff tr {
+    border: none;
+}
+
+.diff pre {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.diff pre code {
+    background: initial;
+    padding: 0;
+}
+
+.diff-none {
+    background-color: initial !important;
+}
+
+.diff-before {
+    background-color: #ffecec !important;
+}
+
+.diff-after {
+    background-color: #dbffdb !important;
+}
+
 /* Small devices (tablets, 768px and up) */
 @media (min-width: 768px) {
   .subcontent {
