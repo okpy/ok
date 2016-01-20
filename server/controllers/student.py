@@ -7,8 +7,8 @@ import functools
 
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
-from server.models import User, Course, Assignment, Group, Backup, db
-
+from server.models import User, Course, Assignment, Group, Backup, Diff, db
+from server.utils import generate_diff
 
 student = Blueprint('student', __name__)
 
@@ -100,15 +100,29 @@ def code(cid, aid, bid):
         backup = Backup.query.get(bid)
         if backup and backup.can_view(current_user, group, assgn):
             submitter = User.query.get(backup.submitter)
-            file_contents = [m for m in backup.messages if
-                                m.kind == "file_contents"]
-            if file_contents:
-                files = file_contents[0].contents
-                return render_template('student/assignment/code.html', course=course,
-                        assignment=assgn, backup=backup, submitter=submitter,
-                        files=files)
-            else:
-                flash("That code submission doesn't contain any code")
+
+            diff = Diff.query.filter_by(assignment=aid, backup=bid).one_or_none()
+            if diff is None:
+                file_contents = [m for m in backup.messages
+                                 if m.kind == "file_contents"]
+                if file_contents:
+                    diff = Diff(assignment=aid, backup=bid)
+
+                    template_files = assgn.template
+                    student_files = file_contents[0].contents
+                    diff.diff = generate_diff(template_files, student_files)
+
+                    # db.session.add(diff)
+                    # db.session.commit()
+                else:
+                    flash("That code submission doesn't contain any code")
+                    abort(404)
+
+            return render_template('student/assignment/code.html',
+                                    course=course, assignment=assgn,
+                                    backup=backup, submitter=submitter,
+                                    diffs=diff.diff)
+
         else:
             flash("That code doesn't exist (or you don't have permission)", "danger")
             abort(403)

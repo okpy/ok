@@ -112,6 +112,7 @@ class Assignment(db.Model, TimestampMixin):
     revisions = db.Column(db.Boolean(), default=False)
     autograding_key = db.Column(db.String())
     course = db.relationship("Course", backref="assignments")
+    template = db.Column(pg.JSONB())
 
     @hybrid_property
     def active(self):
