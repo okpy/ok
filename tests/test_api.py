@@ -32,7 +32,7 @@ class TestAuth(OkTestCase):
 
         response = self.client.post('/api/v3/backups/', data=json.dumps(data),
             headers=[('Content-Type', 'application/json')])
-        backup = assignment.backups(user).first()
+        backup = assignment.backups(user.id).first()
         assert backup is not None
 
         self.assert_200(response)
@@ -51,7 +51,7 @@ class TestAuth(OkTestCase):
         data['submit'] = True
         response = self.client.post('/api/v3/backups/', data=json.dumps(data),
             headers=[('Content-Type', 'application/json')])
-        submission = assignment.submissions(user).first()
+        submission = assignment.submissions(user.id).first()
         assert submission is not None
 
         self.assert_200(response)
