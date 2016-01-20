@@ -51,24 +51,10 @@
         <div class="subcontent list">
           <div class="wrap">
             <p> Received at <time datetime="{{ backup.created }}">{{ backup.created }}</time> from {{ submitter.email }} </p>
-            {% if diffs %}
-              {% for file, diff in diffs.iteritems() %}
-              <h2>{{ file }}</h2>
-              <table class="diff">
-                {% for diff_cls, left, right, line in diff.lines %}
-                <tr class="{{ diff_cls }}">
-                  <td class="diff-linenum">{{ left }}</td>
-                  <td class="diff-linenum">{{ right }}</td>
-                  <td class="{{ diff_cls }}">
-                    <pre class="{{ diff_cls }}"><code>{{ line }}</code></pre>
-                  </td>
-                </tr>
-                {% endfor %}
-              </table>
-              {% endfor %}
-            {% else %}
-              <span>This backup does not contain any code.</span>
-            {% endif %}
+
+            {% block code %}
+            <span>This backup does not contain any code.</span>
+            {% endblock %}
           </div>
         </div>
         <!-- start mobile version -->
@@ -83,6 +69,4 @@
   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/default.min.css">
   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/github.min.css">
   <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/highlight.min.js"></script>
-  <script src="/static/js/diff.js"></script>
-
 {% endblock %}

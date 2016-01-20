@@ -1,0 +1,38 @@
+{% extends "student/assignment/code_base.html" %}
+
+{% block code %}
+{% if diffs %}
+{% for file, code in diffs.iteritems() %}
+  <h2>{{ file }}</h2>
+  <table class="diff">
+    {% for line in code %}
+    <tr>
+      <td class="diff-linenum">{{ loop.index }}</td>
+      <td class="diff-none">
+        <pre class="diff-none"><code>{{ line }}</code></pre>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+{% endfor %}
+{% else %}
+{{ super() }}
+{% endif %}
+{% endblock %}
+
+{% block js %}
+{{ super() }}
+    <script>
+$("table.diff").each(function(i, table) {
+    var lineCode = $(table).find('pre code');
+    var line, result, state;
+    for (j = 0; j < lineCode.length; j++) {
+        line = lineCode[j];
+        // TODO: infer language by filetype
+        result = hljs.highlight("python", $(line).text(), true, state);
+        state = result.top;
+        $(line).html(result.value);
+    }
+});
+    </script>
+{% endblock %}
