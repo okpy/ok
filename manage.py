@@ -8,7 +8,7 @@ from flask.ext.script.commands import ShowUrls, Clean
 from flask.ext.migrate import Migrate, MigrateCommand
 from server import create_app
 from server.models import db, User, Course, Assignment, Enrollment, \
-    Backup, Submission, Message
+    Backup, Message
 
 # default to dev config because no one should use this in
 # production anyway.
@@ -34,21 +34,13 @@ def make_shell_context():
 
 def make_backup(user, assign, time, messages, submit=True):
     backup = Backup(client_time=time,
-                           submitter=user.id,
-                           assignment=assign.id, submit=submit)
+                           submitter=user,
+                           assignment=assign, submit=submit)
     messages = [Message(kind=k, backup=backup,
                 contents=m) for k, m in messages.items()]
     backup.messages = messages
     db.session.add_all(messages)
     db.session.add(backup)
-
-    if submit:
-        subm = Submission(submitter=user.id,
-                          assignment=assign.id, backup=backup)
-        db.session.add(subm)
-
-
-
 
 @manager.command
 def seed():

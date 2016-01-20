@@ -166,15 +166,14 @@ class v3Info(PublicResource):
 #  TODO Permsisions for API actions
 
 
-def make_backup(user, assignment, messages, submit):
+def make_backup(user, assignment_id, messages, submit):
     """
     Create backup with message objects.
 
     :param user: (object) caller
-    :param assignment: (int) Assignment ID
+    :param assignment_id: (int) Assignment ID
     :param messages: Data content of backup/submission
     :param submit: Whether this backup is a submission to be graded
-    :param submitter: (object) caller or submitter
     :return: (Backup) backup
     """
 
@@ -187,8 +186,8 @@ def make_backup(user, assignment, messages, submit):
     else:
         client_time = datetime.datetime.now()
 
-    backup = models.Backup(client_time=client_time, submitter=user.id,
-                           assignment=assignment, submit=submit)
+    backup = models.Backup(client_time=client_time, submitter=user,
+                           assignment_id=assignment_id, submit=submit)
     messages = [models.Message(kind=k, backup=backup,
                 contents=m) for k, m in messages.items()]
     backup.messages = messages
@@ -239,7 +238,7 @@ class BackupSchema(APISchema):
     }
 
     post_fields = {
-        'email': fields.Integer,
+        'email': fields.String,
         'key': fields.String,
         'course': fields.String,
         'assign': fields.String,
@@ -251,11 +250,8 @@ class BackupSchema(APISchema):
                                  help='Name of Assignment')
         self.parser.add_argument('messages', type=dict, required=True,
                                  help='Backup Contents as JSON')
-
-        # Optional - probably not needed now that there are two endpoints
-        self.parser.add_argument('submit', type=bool,
+        self.parser.add_argument('submit', type=bool, default=False,
                                  help='Flagged as a submission')
-        self.parser.add_argument('submitter', help='Name of Assignment')
 
     def store_backup(self, user):
         args = self.parse_args()
@@ -265,18 +261,6 @@ class BackupSchema(APISchema):
         backup = make_backup(user, assignment_id, messages, submit)
         return backup
 
-
-class SubmissionSchema(BackupSchema):
-
-    get_fields = {
-        'id': fields.Integer,
-        'assignment': fields.Integer,
-        'submitter': fields.Integer,
-        'backup': fields.Nested(BackupSchema.get_fields),
-        'flagged': fields.Boolean,
-        'revision': fields.Boolean,
-        'created': fields.DateTime(dt_format='rfc822')
-    }
 
 class CourseSchema(APISchema):
     get_fields = {
@@ -301,6 +285,7 @@ class EnrollmentSchema(APISchema):
     }
 
 
+# TODO: should be two classes, one for /backups/ and one for /backups/<int:key>/
 class Backup(Resource):
     """ Submission retreival resource.
         Authenticated. Permissions: >= User/Staff
@@ -326,43 +311,8 @@ class Backup(Resource):
         return {
             'email': current_user.email,
             'key': backup.id,
-            'course': backup.assign.course_id,
-            'assign': backup.assignment
-        }
-
-
-
-class Submission(Resource):
-    """ Submission resource.
-        Authenticated. Permissions: >= Student/Staff
-        Used by: Ok Client Submission.
-    """
-    model = models.Submission
-    schema = SubmissionSchema()
-
-    @marshal_with(schema.get_fields)
-    def get(self, user, key=None):
-        if key is None:
-            restful.abort(405)
-        submission = self.model.query.filter_by(id=key).first()
-        # TODO CHECK .user obj
-        if submission.user != user or not user.is_admin:
-            restful.abort(403)
-        return submission
-
-    def post(self, user, key=None):
-        if key is not None:
-            restful.abort(405)
-        backup = self.schema.store_backup(user)
-        subm = models.Submission(backup_id=backup.id, assignment=backup.assignment,
-                                 submitter=user.id)
-        models.db.session.add(subm)
-        models.db.session.commit()
-        return {
-            'email': current_user.email,
-            'key': backup.id,
-            'course': backup.assign.course_id,
-            'assign': backup.assignment
+            'course': backup.assignment.course_id,
+            'assignment': backup.assignment_id
         }
 
 class Score(Resource):
@@ -400,7 +350,6 @@ class Enrollment(PublicResource):
 
 api.add_resource(v3Info, '/v3')
 
-api.add_resource(Submission, '/v3/submission', '/v3/submission/<int:key>')
-api.add_resource(Backup, '/v3/backup', '/v3/backup/<int:key>')
+api.add_resource(Backup, '/v3/backups/', '/v3/backups/<int:key>/')
 api.add_resource(Score, '/v3/score')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>')

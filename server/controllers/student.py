@@ -99,7 +99,7 @@ def code(cid, aid, bid):
         group = Group.lookup(current_user, assgn)
         backup = Backup.query.get(bid)
         if backup and backup.can_view(current_user, group, assgn):
-            submitter = User.query.get(backup.submitter)
+            submitter = User.query.get(backup.submitter_id)
             file_contents = [m for m in backup.messages if
                                 m.kind == "file_contents"]
             if file_contents:

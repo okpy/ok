@@ -132,24 +132,25 @@ class Assignment(db.Model, TimestampMixin):
         assignment.
         """
         return Backup.query.filter(
-            Backup.submitter == usr_id,
-            Backup.assignment == self.id
+            Backup.submitter_id == usr_id,
+            Backup.assignment == self
         ).order_by(Backup.client_time.desc())
 
     def submissions(self, usr_id):
         """Returns a query for the submission that the current user has for this
         assignment.
         """
-        return Submission.query.filter(
-            Submission.submitter == usr_id,
-            Submission.assignment == self.id
-        ).order_by(Submission.created.desc())  # TODO: client time
+        return Backup.query.filter(
+            Backup.submitter_id == usr_id,
+            Backup.assignment == self,
+            Backup.submit == True
+        ).order_by(Backup.client_time.desc())
 
     def submission_time(self, usr_id):
         """Returns the time of the most recent submission, or None."""
         most_recent = self.submissions(usr_id).first()
         if most_recent:
-            return most_recent.backup.client_time
+            return most_recent.client_time
 
 
 class Enrollment(db.Model, TimestampMixin):
@@ -244,10 +245,13 @@ class Backup(db.Model, TimestampMixin):
     assign = db.relationship("Assignment")
 
     client_time = db.Column(db.DateTime())
-    submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
-    assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), default=False)
     flagged = db.Column(db.Boolean(), default=False)
+
+    submitter = db.relationship("User")
+    assignment = db.relationship("Assignment")
 
     db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
@@ -260,7 +264,7 @@ class Backup(db.Model, TimestampMixin):
     def can_view(self, user, group=None, assign=None):
         if user.is_admin:
             return True
-        if user.id == self.submitter:
+        if user.id == self.submitter_id:
             return True
 
         # Allow group members to view
@@ -269,7 +273,7 @@ class Backup(db.Model, TimestampMixin):
 
         if group:
             member_ids = group.users()
-            if self.submitter in member_ids:
+            if self.submitter_id in member_ids:
                 return True
 
         if not assign or assign.id != self.assignment_id:
@@ -291,23 +295,6 @@ class Backup(db.Model, TimestampMixin):
             WHERE backup.created >= NOW() - '1 day'::INTERVAL
             GROUP BY date_trunc('hour', backup.created)
             ORDER BY date_trunc('hour', backup.created)""")).all()
-
-
-class Submission(db.Model, TimestampMixin):
-    """ A submission is created from --submit or when a backup is flagged for
-    grading.
-
-    **This model may be removed. Do not depend on it for features.**
-    """
-    id = db.Column(db.Integer(), primary_key=True)
-    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
-    flagged = db.Column(db.Boolean(), default=False)
-    backup = db.relationship("Backup")
-    user = db.relationship("User")
-
-    db.Index('idx_flaggedSubms', 'assignment', 'submitter', 'flagged'),
 
 
 class Score(db.Model, TimestampMixin):
