@@ -81,15 +81,16 @@ def assignment(cid, aid):
     if assgn:
         course = assgn.course
         group = Group.lookup(current_user, assgn)
+        # TODO this is repetitive
         if group:
             backups = assgn.group_backups(group.id).limit(5).all()
             subms = assgn.group_submissions(group.id).limit(5).all()
+            final_submission = assgn.group_final_submission(group.id)
         else:
             backups = assgn.backups(current_user.id).limit(5).all()
             subms = assgn.submissions(current_user.id).limit(5).all()
-        # TODO: this is confusing if the flag is more than 5 submissions back
-        flagged = any([s.flagged for s in subms])
-        print(flagged)
+            final_submission = assgn.final_submission(current_user.id)
+        flagged = final_submission and final_submission.flagged
         return render_template('student/assignment/index.html', course=course,
                 assignment=assgn, backups=backups, subms=subms, flagged=flagged)
     else:
