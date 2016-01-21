@@ -118,40 +118,74 @@ class Assignment(db.Model, TimestampMixin):
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
-    def group(self, usr_id):
+    def group(self, user_id):
         # TODO merge with group.lookup
         member = GroupMember.query.filter_by(
-            user_id=usr_id,
+            user_id=user_id,
             assignment_id=self.id
         ).one_or_none()
         if member:
             return member.group
 
-    def backups(self, usr_id):
+    def backups(self, user_id):
         """Returns a query for the backups that the list of usrs has for this
         assignment.
         """
         return Backup.query.filter(
-            Backup.submitter_id == usr_id,
-            Backup.assignment == self
+            Backup.submitter_id == user_id,
+            Backup.assignment_id == self.id
         ).order_by(Backup.client_time.desc())
 
-    def submissions(self, usr_id):
+    def submissions(self, user_id):
         """Returns a query for the submission that the current user has for this
         assignment.
         """
         return Backup.query.filter(
-            Backup.submitter_id == usr_id,
-            Backup.assignment == self,
+            Backup.submitter_id == user_id,
+            Backup.assignment_id == self.id,
             Backup.submit == True
         ).order_by(Backup.client_time.desc())
 
-    def submission_time(self, usr_id):
-        """Returns the time of the most recent submission, or None."""
-        most_recent = self.submissions(usr_id).first()
-        if most_recent:
-            return most_recent.client_time
+    def final_submission(self, user_id):
+        """Return a final submission for a user, or None."""
+        return Backup.query.filter(
+            Backup.submitter_id == user_id,
+            Backup.assignment_id == self.id,
+            Backup.submit == True
+        ).order_by(Backup.flagged.desc(), Backup.client_time.desc()).first()
 
+    # TODO less copy-paste
+    def group_backups(self, group_id):
+        """Returns a query for the backups in a group."""
+        return Backup.query.join(
+            GroupMember,
+            GroupMember.user_id == Backup.submitter_id
+        ).filter(
+            GroupMember.group_id == group_id,
+            GroupMember.assignment_id == self.id,
+        ).order_by(Backup.client_time.desc())
+
+    def group_submissions(self, group_id):
+        """Returns a query for the submissions in a group."""
+        return Backup.query.join(
+            GroupMember,
+            GroupMember.user_id == Backup.submitter_id
+        ).filter(
+            GroupMember.group_id == group_id,
+            GroupMember.assignment_id == self.id,
+            Backup.submit == True
+        ).order_by(Backup.client_time.desc())
+
+    def group_final_submission(self, group_id):
+        """Return a final submission for a group, or None."""
+        return Backup.query.join(
+            GroupMember,
+            GroupMember.user_id == Backup.submitter_id
+        ).filter(
+            GroupMember.group_id == group_id,
+            GroupMember.assignment_id == self.id,
+            Backup.submit == True
+        ).order_by(Backup.flagged.desc(), Backup.client_time.desc()).first()
 
 class Enrollment(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)

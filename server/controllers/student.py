@@ -56,13 +56,19 @@ def is_enrolled(func):
 @is_enrolled
 def course(cid):
     course = Course.query.get(cid)
-    # TODO : Should consider group submissions as well.
     user_id = current_user.id
+    def assignment_info(assignment):
+        group = Group.lookup(current_user, assignment)
+        if group:
+            final_submission = assignment.final_submission(group.id)
+        else:
+            final_submission = assignment.final_submission(user_id)
+        submission_time = final_submission and final_submission.client_time
+        return assignment, submission_time, group
+
     assignments = {
-        'active': [(a, a.submission_time(user_id), a.group(user_id)) \
-                        for a in course.assignments if a.active],
-        'inactive': [(a, a.submission_time(user_id), a.group(user_id)) \
-                            for a in course.assignments if not a.active]
+        'active': [assignment_info(a) for a in course.assignments if a.active],
+        'inactive': [assignment_info(a) for a in course.assignments if not a.active]
     }
     return render_template('student/course/index.html', course=course,
                            **assignments)
@@ -76,11 +82,12 @@ def assignment(cid, aid):
         course = assgn.course
         group = Group.lookup(current_user, assgn)
         if group:
-            # usr_ids = [u.id for u in group.users()]
-            # TODO : Fetch backups from group.
-            pass
-        backups = assgn.backups(current_user.id).limit(5).all()
-        subms = assgn.submissions(current_user.id).limit(5).all()
+            backups = assgn.group_backups(group.id).limit(5).all()
+            subms = assgn.group_submissions(group.id).limit(5).all()
+        else:
+            backups = assgn.backups(current_user.id).limit(5).all()
+            subms = assgn.submissions(current_user.id).limit(5).all()
+        # TODO: this is confusing if the flag is more than 5 submissions back
         flagged = any([s.flagged for s in subms])
         print(flagged)
         return render_template('student/assignment/index.html', course=course,
