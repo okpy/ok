@@ -144,7 +144,7 @@ class Assignment(db.Model, TimestampMixin):
             Backup.submitter_id == user_id,
             Backup.assignment_id == self.id,
             Backup.submit == True
-        ).order_by(Backup.client_time.desc())
+        ).order_by(Backup.created.desc())
 
     def final_submission(self, user_id):
         """Return a final submission for a user, or None."""
@@ -152,7 +152,7 @@ class Assignment(db.Model, TimestampMixin):
             Backup.submitter_id == user_id,
             Backup.assignment_id == self.id,
             Backup.submit == True
-        ).order_by(Backup.flagged.desc(), Backup.client_time.desc()).first()
+        ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
 
     # TODO less copy-paste
     def group_backups(self, group_id):
@@ -174,7 +174,7 @@ class Assignment(db.Model, TimestampMixin):
             GroupMember.group_id == group_id,
             GroupMember.assignment_id == self.id,
             Backup.submit == True
-        ).order_by(Backup.client_time.desc())
+        ).order_by(Backup.created.desc())
 
     def group_final_submission(self, group_id):
         """Return a final submission for a group, or None."""
@@ -185,7 +185,7 @@ class Assignment(db.Model, TimestampMixin):
             GroupMember.group_id == group_id,
             GroupMember.assignment_id == self.id,
             Backup.submit == True
-        ).order_by(Backup.flagged.desc(), Backup.client_time.desc()).first()
+        ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
 
 class Enrollment(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
