@@ -2,7 +2,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import backref
+from sqlalchemy.orm import aliased, backref
 from werkzeug.exceptions import BadRequest
 
 from flask.ext.login import UserMixin, AnonymousUserMixin
@@ -118,72 +118,49 @@ class Assignment(db.Model, TimestampMixin):
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
-    def group(self, user_id):
-        # TODO merge with group.lookup
-        member = GroupMember.query.filter_by(
-            user_id=user_id,
-            assignment_id=self.id
-        ).one_or_none()
-        if member:
-            return member.group
+    def active_user_ids(self, user_id):
+        """Return a set of the ids of all users that are active in the same group
+        that our user is active in. If the user is not in a group, return just
+        that user's id (i.e. as if they were in a 1-person group).
+        """
+        user_member = aliased(GroupMember)
+        members = GroupMember.query.join(
+            user_member, GroupMember.group_id == user_member.group_id
+        ).filter(
+            user_member.user_id == user_id,
+            user_member.assignment_id == self.id,
+            user_member.status == 'active',
+            GroupMember.status == 'active'
+        ).all()
+        if not members:
+            return {user_id}
+        else:
+            return {member.user_id for member in members}
 
-    def backups(self, user_id):
-        """Returns a query for the backups that the list of usrs has for this
+    def backups(self, user_ids):
+        """Return a query for the backups that the list of usrs has for this
         assignment.
         """
         return Backup.query.filter(
-            Backup.submitter_id == user_id,
+            Backup.submitter_id.in_(user_ids),
             Backup.assignment_id == self.id
         ).order_by(Backup.client_time.desc())
 
-    def submissions(self, user_id):
-        """Returns a query for the submission that the current user has for this
+    def submissions(self, user_ids):
+        """Return a query for the submission that the current user has for this
         assignment.
         """
         return Backup.query.filter(
-            Backup.submitter_id == user_id,
+            Backup.submitter_id.in_(user_ids),
             Backup.assignment_id == self.id,
             Backup.submit == True
         ).order_by(Backup.created.desc())
 
-    def final_submission(self, user_id):
+    def final_submission(self, user_ids):
         """Return a final submission for a user, or None."""
         return Backup.query.filter(
-            Backup.submitter_id == user_id,
+            Backup.submitter_id.in_(user_ids),
             Backup.assignment_id == self.id,
-            Backup.submit == True
-        ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
-
-    # TODO less copy-paste
-    def group_backups(self, group_id):
-        """Returns a query for the backups in a group."""
-        return Backup.query.join(
-            GroupMember,
-            GroupMember.user_id == Backup.submitter_id
-        ).filter(
-            GroupMember.group_id == group_id,
-            GroupMember.assignment_id == self.id,
-        ).order_by(Backup.client_time.desc())
-
-    def group_submissions(self, group_id):
-        """Returns a query for the submissions in a group."""
-        return Backup.query.join(
-            GroupMember,
-            GroupMember.user_id == Backup.submitter_id
-        ).filter(
-            GroupMember.group_id == group_id,
-            GroupMember.assignment_id == self.id,
-            Backup.submit == True
-        ).order_by(Backup.created.desc())
-
-    def group_final_submission(self, group_id):
-        """Return a final submission for a group, or None."""
-        return Backup.query.join(
-            GroupMember,
-            GroupMember.user_id == Backup.submitter_id
-        ).filter(
-            GroupMember.group_id == group_id,
-            GroupMember.assignment_id == self.id,
             Backup.submit == True
         ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
 
@@ -295,32 +272,18 @@ class Backup(db.Model, TimestampMixin):
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
-    def can_view(self, user, group=None, assign=None):
+    def can_view(self, user, member_ids, course):
         if user.is_admin:
             return True
         if user.id == self.submitter_id:
             return True
 
         # Allow group members to view
-        if not group or group.assignment_id != self.assignment_id:
-            group = Group.lookup(user, self.assignment_id)
-
-        if group:
-            member_ids = group.users()
-            if self.submitter_id in member_ids:
-                return True
-
-        if not assign or assign.id != self.assignment_id:
-            assign = Assignment.get(self.assignment_id)
-            if not assign:
-                return False
+        if self.submitter_id in member_ids:
+            return True
 
         # Allow staff members to view
-        course = assign.course
         return user.is_enrolled(course.id, STAFF_ROLES)
-
-
-
 
     @staticmethod
     def statistics(self):

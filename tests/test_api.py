@@ -1,11 +1,11 @@
 import datetime
 import json
-from server.models import db, Assignment, Course, User
+from server.models import db, Assignment, Backup, Course, User
 
 from .helpers import OkTestCase
 
 class TestAuth(OkTestCase):
-    def test_submit(self):
+    def _test_backup(self, submit):
         email = 'student@okpy.org'
         self.login(email)
         user = User.lookup(email)
@@ -27,12 +27,13 @@ class TestAuth(OkTestCase):
                 'file_contents': {
                     'hog.py': 'print "Hello world!"'
                 }
-            }
+            },
+            'submit': submit
         }
 
         response = self.client.post('/api/v3/backups/', data=json.dumps(data),
             headers=[('Content-Type', 'application/json')])
-        backup = assignment.backups(user.id).first()
+        backup = Backup.query.filter(Backup.submitter_id == user.id).first()
         assert backup is not None
 
         self.assert_200(response)
@@ -46,23 +47,10 @@ class TestAuth(OkTestCase):
         assert backup.assignment == assignment
         assert backup.submitter_id == user.id
         assert len(backup.messages) == len(data['messages'])
-        assert not backup.submit
+        assert backup.submit == submit
 
-        data['submit'] = True
-        response = self.client.post('/api/v3/backups/', data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')])
-        submission = assignment.submissions(user.id).first()
-        assert submission is not None
+    def test_backup(self):
+        self._test_backup(False)
 
-        self.assert_200(response)
-        assert response.json['data'] == {
-            'email': email,
-            'key': submission.id,
-            'course': course.id,
-            'assignment': assignment.id
-        }
-
-        assert submission.assignment == assignment
-        assert submission.submitter_id == user.id
-        assert len(submission.messages) == len(data['messages'])
-        assert submission.submit
+    def test_submit(self):
+        self._test_backup(True)

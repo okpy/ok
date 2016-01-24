@@ -10,7 +10,7 @@
           <th>Due Date</th>
           <!-- <th>Group</th> -->
         </tr>
-        {% for assgn, subm_time, group in assignments %}
+        {% for assgn, subm_time in assignments %}
         <tr>
           <td>
             <span>
@@ -95,7 +95,7 @@
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
       <h2>{{ tname }}</h2>
-      {% for assgn, subm_time, group in assignments %}
+      {% for assgn, subm_time in assignments %}
       <div class="cell col-xs-12">
         <div class="cell-title">
           <a class="dashed" href="{{ url_for('.assignment', cid=cid, aid=assgn.id)}}">
