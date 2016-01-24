@@ -383,7 +383,7 @@ class GroupMember(db.Model, TimestampMixin):
         pending - The user has been invited to the group.
         active  - The user accepted the invite and is part of the group.
     """
-    __tablename__ = 'GroupMember'
+    __tablename__ = 'group_member'
     __table_args__ = (
         PrimaryKeyConstraint('user_id', 'assignment_id', name='pk_GroupMember'),
     )
