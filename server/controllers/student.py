@@ -56,13 +56,17 @@ def is_enrolled(func):
 @is_enrolled
 def course(cid):
     course = Course.query.get(cid)
-    # TODO : Should consider group submissions as well.
-    user_id = current_user.id
+    def assignment_info(assignment):
+        # TODO does this make O(n) db queries?
+        # TODO need group info too
+        user_ids = assignment.active_user_ids(current_user.id)
+        final_submission = assignment.final_submission(user_ids)
+        submission_time = final_submission and final_submission.client_time
+        return assignment, submission_time
+
     assignments = {
-        'active': [(a, a.submission_time(user_id), a.group(user_id)) \
-                        for a in course.assignments if a.active],
-        'inactive': [(a, a.submission_time(user_id), a.group(user_id)) \
-                            for a in course.assignments if not a.active]
+        'active': [assignment_info(a) for a in course.assignments if a.active],
+        'inactive': [assignment_info(a) for a in course.assignments if not a.active]
     }
     return render_template('student/course/index.html', course=course,
                            **assignments)
@@ -74,15 +78,11 @@ def assignment(cid, aid):
     assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if assgn:
         course = assgn.course
-        group = Group.lookup(current_user, assgn)
-        if group:
-            # usr_ids = [u.id for u in group.users()]
-            # TODO : Fetch backups from group.
-            pass
-        backups = assgn.backups(current_user.id).limit(5).all()
-        subms = assgn.submissions(current_user.id).limit(5).all()
-        flagged = any([s.flagged for s in subms])
-        print(flagged)
+        user_ids = assgn.active_user_ids(current_user.id)
+        backups = assgn.backups(user_ids).limit(5).all()
+        subms = assgn.submissions(user_ids).limit(5).all()
+        final_submission = assgn.final_submission(user_ids)
+        flagged = final_submission and final_submission.flagged
         return render_template('student/assignment/index.html', course=course,
                 assignment=assgn, backups=backups, subms=subms, flagged=flagged)
     else:
@@ -96,10 +96,10 @@ def code(cid, aid, bid):
     assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if assgn:
         course = assgn.course
-        group = Group.lookup(current_user, assgn)
+        user_ids = assgn.active_user_ids(current_user.id)
         backup = Backup.query.get(bid)
-        if backup and backup.can_view(current_user, group, assgn):
-            submitter = User.query.get(backup.submitter)
+        if backup and backup.can_view(current_user, user_ids, course):
+            submitter = User.query.get(backup.submitter_id)
             file_contents = [m for m in backup.messages if
                                 m.kind == "file_contents"]
             if file_contents:

@@ -5,7 +5,7 @@ from functools import wraps
 import pytz
 import csv
 
-from server.models import User, Course, Assignment, Participant, db
+from server.models import User, Course, Assignment, Enrollment, db
 from server.constants import STAFF_ROLES, VALID_ROLES, STUDENT_ROLE
 import server.forms as forms
 
@@ -139,7 +139,7 @@ def enrollment(cid):
     single_form = forms.EnrollmentForm(prefix="single")
     if single_form.validate_on_submit():
         email, role = single_form.email.data, single_form.role.data
-        Participant.enroll_from_form(cid, single_form)
+        Enrollment.enroll_from_form(cid, single_form)
         flash("Added {email} as {role}".format(email=email, role=role), "success")
 
     query = request.args.get('query', '').strip()
@@ -150,15 +150,15 @@ def enrollment(cid):
         find_student = User.query.filter_by(email=query)
         student = find_student.first()
         if student:
-            students = Participant.query.filter_by(course_id=cid, role=STUDENT_ROLE,
+            students = Enrollment.query.filter_by(course_id=cid, role=STUDENT_ROLE,
                 user_id=student.id).paginate(page=page, per_page=1)
         else:
             flash("No student found with email {}".format(query), "warning")
     if not students:
-        students = Participant.query.filter_by(course_id=cid,
+        students = Enrollment.query.filter_by(course_id=cid,
                 role=STUDENT_ROLE).paginate(page=page, per_page=5)
-    staff = Participant.query.filter(Participant.course_id == cid,
-            Participant.role.in_(STAFF_ROLES)).all()
+    staff = Enrollment.query.filter(Enrollment.course_id == cid,
+            Enrollment.role.in_(STAFF_ROLES)).all()
 
     return render_template('staff/course/enrollment.html',
                            enrollments=students, staff=staff, query=query,
@@ -174,7 +174,7 @@ def batch_enroll(cid):
     courses, current_course = get_courses(cid)
     batch_form = forms.BatchEnrollmentForm()
     if batch_form.validate_on_submit():
-        new, updated = Participant.enroll_from_csv(cid, batch_form)
+        new, updated = Enrollment.enroll_from_csv(cid, batch_form)
         msg = "Added {new}, Updated {old} students".format(new=new, old=updated)
         flash(msg, "success")
         return redirect(url_for(".enrollment", cid=cid))
