@@ -1,6 +1,5 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData
-from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
 from werkzeug.exceptions import BadRequest
@@ -11,20 +10,21 @@ cache = Cache()
 
 import functools
 import csv
+import json
 from datetime import datetime as dt
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 
-convention = {
-    "ix": 'ix_%(column_0_label)s',
-    "uq": "uq_%(table_name)s_%(column_0_name)s",
-    "ck": "ck_%(table_name)s_%(constraint_name)s",
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s"
-}
-
-metadata = MetaData(naming_convention=convention)
-db = SQLAlchemy(metadata=metadata)
+# convention = {
+#     "ix": 'ix_%(column_0_label)s',
+#     "uq": "uq_%(table_name)s_%(column_0_name)s",
+#     "ck": "ck_%(table_name)s_%(constraint_name)s",
+#     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+#     "pk": "pk_%(table_name)s"
+# }
+#
+# metadata = MetaData(naming_convention=convention)
+db = SQLAlchemy()
 
 def transaction(f):
     """Decorator for database (session) transactions."""
@@ -241,8 +241,16 @@ class Enrollment(db.Model, TimestampMixin):
 class Message(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     backup = db.Column(db.ForeignKey("backup.id"), index=True)
-    contents = db.Column(pg.JSONB())
+    raw_contents = db.Column(db.String())
     kind = db.Column(db.String(), index=True)
+
+    @hybrid_property
+    def contents(self):
+        return json.dumps(str(self.raw_contents))
+
+    @contents.setter
+    def contents(self, value):
+        self.raw_contents = str(json.dumps(value))
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -306,7 +314,6 @@ class Score(db.Model, TimestampMixin):
 class Version(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(), nullable=False)
-    versions = db.Column(pg.ARRAY(db.String()), nullable=False)
     current_version = db.Column(db.String(), nullable=False)
     base_url = db.Column(db.String())
 
@@ -321,7 +328,7 @@ class Diff(db.Model, TimestampMixin):
     backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     before = db.Column(db.ForeignKey("backup.id"))
-    diff = db.Column(pg.JSONB())
+    diff = db.Column(db.String()) # TODO : Remove Diff Object.
     comments = db.relationship('Comment')
     updated = db.Column(db.DateTime, onupdate=db.func.now())
 
@@ -352,7 +359,6 @@ class CommentBank(db.Model, TimestampMixin):
     author = db.Column(db.ForeignKey("user.id"), nullable=False)
     message = db.Column(db.Text())  # Markdown
     frequency = db.Column(db.Integer())
-    statistics = db.Column(pg.JSONB())  # closest function, line number etc
 
 
 class GradingTask(db.Model, TimestampMixin):

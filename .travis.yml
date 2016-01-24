@@ -1,8 +1,8 @@
 language: python
 env:
 - SERVER_ENV=test
-addons:
-  postgresql: '9.4'
+# addons:
+#   postgresql: '9.4'
 python:
 - '3.3'
 - '3.4'
@@ -13,11 +13,9 @@ install:
 - pip install python-coveralls
 script:
 - make test
-before_script:
-- psql -c 'create database oktest;' -U postgres
+# before_script:
+# - psql -c 'create database oktest;' -U postgres
 after_success:
-- coveralls
-after_failure:
 - coveralls
 sudo: false
 cache:
