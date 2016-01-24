@@ -23,7 +23,7 @@ sudo: false
 cache:
   directories:
   - "$HOME/.cache/pip"
-  - lib/python2.7/site-packages
+  - lib/python3.5/site-packages
 notifications:
   slack:
     secure: mGqCgRCFMB89AKsYVOZI79sifCFOLaQkuY3rvFKMitpD1GYQQpkBbZ9Z1SWi0VQV63oOKTQBrPCeDSwhZMaJA/dCZZIuz6e9nkVyJJUIrqAuH9PjgQr6FM4FkKzVLpHdPnXIikAvUAKiPRzzj8z4KO1EohBRR/xb2/4TpoWrkSA=
