@@ -37,7 +37,7 @@ def make_backup(user, assign, time, messages, submit=True):
                            submitter=user.id,
                            assignment=assign.id, submit=submit)
     messages = [Message(kind=k, backup=backup,
-                contents=m) for k, m in messages.iteritems()]
+                contents=m) for k, m in messages.items()]
     backup.messages = messages
     db.session.add_all(messages)
     db.session.add(backup)

@@ -4,9 +4,9 @@ env:
 addons:
   postgresql: '9.4'
 python:
-- '2.7'
 - '3.3'
 - '3.4'
+- '3.5'
 install:
 - pip install pip --upgrade
 - pip install -r requirements.txt

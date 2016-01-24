@@ -52,7 +52,7 @@
           <div class="wrap">
             <p> Recieved at <time datetime="{{ backup.created }}">{{ backup.created }}</time> from {{ submitter.email }} </p>
             {% if files %}
-              {% for file, code in files.iteritems() %}
+              {% for file, code in files.items() %}
               {{ file }}
                 <pre><code class="python">{{code}}</code></pre>
               {% endfor %}
