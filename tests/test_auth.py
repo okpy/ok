@@ -24,9 +24,9 @@ class TestAuth(OkTestCase):
     def test_restricted(self):
         """User should see /restricted if logged in, but not if logged out."""
         self.login(self.email)
-        response = self.client.get('/restricted')
+        response = self.client.get('/student')
         self.assert_200(response)
 
         self.client.get('/logout')
-        response = self.client.get('/restricted')
+        response = self.client.get('/student')
         self.assert_redirects(response, '/login')
