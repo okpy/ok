@@ -163,6 +163,43 @@ class Assignment(db.Model, TimestampMixin):
             Backup.submit == True
         ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
 
+    @transaction
+    def flag(self, backup_id, member_ids):
+        """Flag a submission. First unflags any submissions by one of
+        MEMBER_IDS, which is a list of group member user IDs.
+        """
+        self._unflag_all(member_ids)
+        backup = Backup.query.filter(
+            Backup.id == backup_id,
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == False
+        ).one_or_none()
+        if not backup:
+            raise BadRequest('Could not find backup')
+        backup.flagged = True
+
+    @transaction
+    def unflag(self, backup_id, member_ids):
+        """Unflag a submission."""
+        backup = Backup.query.filter(
+            Backup.id == backup_id,
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == True
+        ).one_or_none()
+        if not backup:
+            raise BadRequest('Could not find backup')
+        backup.flagged = False
+
+    def _unflag_all(self, member_ids):
+        """Unflag all submissions by members of MEMBER_IDS."""
+        # There should only ever be one flagged submission
+        backup = Backup.query.filter(
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == True
+        ).one_or_none()
+        if backup:
+            backup.flagged = False
+
 class Enrollment(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
@@ -478,6 +515,7 @@ class Group(db.Model, TimestampMixin):
         if not member:
             raise BadRequest('{0} is not invited to this group'.format(user.email))
         member.status = 'active'
+        self.assignment._unflag_all(self.assignment.active_user_ids(user.id))
 
     @transaction
     def decline(self, user):
