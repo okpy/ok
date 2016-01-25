@@ -165,7 +165,6 @@ class v3Info(PublicResource):
 #  Fewer methods/APIs as V1 since the frontend will not use the API
 #  TODO Permsisions for API actions
 
-
 def make_backup(user, assignment_id, messages, submit):
     """
     Create backup with message objects.
@@ -195,7 +194,6 @@ def make_backup(user, assignment_id, messages, submit):
     models.db.session.add(backup)
     models.db.session.commit()
     return backup
-
 
 
 class APISchema():
