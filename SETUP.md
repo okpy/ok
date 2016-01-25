@@ -9,14 +9,6 @@ $ virtualenv env
 $ source env/bin/activate
 $ pip install -r requirements.txt
 
-OSX Postgres Setup:
-
-$ brew install postgres
-$ brew services start postgres
-$ createuser -d postgres
-$ createdb okdev -U postgres
-$ createdb oktest -U postgres
-
 DB Setup:
 
 $ ./manage.py createdb
@@ -27,3 +19,7 @@ Running App:
 $ ./manage.py server
 
 Open http://localhost:5000 in your browser of choice.
+
+Settings:
+
+$ cp server/settings/prod.sample.py server/settings/prod.py
