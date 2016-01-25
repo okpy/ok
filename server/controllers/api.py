@@ -133,7 +133,6 @@ def name_to_assign_id(name):
     if assgn:
         return assgn.id
 
-
 class Resource(restful.Resource):
     version = 'v3'
     method_decorators = [authenticate, check_version]

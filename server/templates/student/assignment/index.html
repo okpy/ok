@@ -36,8 +36,8 @@
           <div class="wrap">
             <div class="string-nav">
               <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
-              <span><a href="{{ url_for(".course", cid=course.id) }}"> {{ course.offering }}</a></span> &raquo;
-              <span>{{ assignment.display_name }}</span>
+              <span><a href="{{ url_for(".course", course=course.offering) }}"> {{ course.offering }}</a></span> &raquo;
+              <span>{{ assignment.offering_name() }}</span>
             </div>
             <h1>{{ assignment.display_name}}</h1>
           </div>
@@ -49,11 +49,11 @@
         {% if group %}
         {% endif %}
 
-        {{ table.render_subms(subms, course.id, flagged, tname="Recent Submissions") }}
-        {{ table.render_backups(backups, course.id, tname="Recent Backups") }}
+        {{ table.render_subms(subms, course, flagged, tname="Recent Submissions") }}
+        {{ table.render_backups(backups, course, tname="Recent Backups") }}
         <!-- start mobile version -->
-        {{ table.render_subms_mobile(subms, course.id, flagged, tname="Recent Submissions") }}
-        {{ table.render_backups_mobile(backups, course.id, tname="Recent Backups") }}
+        {{ table.render_subms_mobile(subms, course, flagged, tname="Recent Submissions") }}
+        {{ table.render_backups_mobile(backups, course, tname="Recent Backups") }}
 
         <!-- end mobile version -->
       </section>

@@ -1,4 +1,4 @@
-{% macro render_subms(subms, cid, flagged, tname="Submissions", empty=True) %}
+{% macro render_subms(subms, course, flagged, tname="Submissions", empty=True) %}
   {% if subms %}
   <div class="subcontent list hidden-xs hidden-sm">
     <div class="wrap">
@@ -36,7 +36,7 @@
               {% endif %}
           </td>
           <td>
-            <a href="{{ url_for('.code', cid=cid, aid=subm.assignment_id, bid=subm.id)}}">
+            <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id)}}">
               <time datetime="{{subm.created}}">{{subm.created}}</time>
             </a>
           </td>
@@ -68,7 +68,7 @@
 
           </td>
           <td>
-              <a href="{{ url_for('.code', cid=cid, aid=subm.assignment_id, bid=subm.id)}}" class="no-dash button-small">
+              <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id)}}" class="no-dash button-small">
                 View Code
               </a>
           </td>
@@ -88,7 +88,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_backups(backups, cid, tname="Backups", empty=True) %}
+{% macro render_backups(backups, course, tname="Backups", empty=True) %}
   {% if backups %}
   <div class="subcontent list hidden-xs hidden-sm">
     <div class="wrap">
@@ -102,7 +102,7 @@
         {% for backup in backups %}
         <tr>
           <td>
-            <a href="{{ url_for('.code', cid=cid, aid=backup.assignment_id, bid=backup.id)}}">
+            <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id)}}">
               <time datetime="{{backup.created}}" >{{backup.created}}</time>
             </a>
           </td>
@@ -112,7 +112,7 @@
             </span>
           </td>
           <td>
-              <a href="{{ url_for('.code', cid=cid, aid=backup.assignment_id, bid=backup.id)}}" class="no-dash button-small">
+              <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id)}}" class="no-dash button-small">
                 View Code
               </a>
           </td>
@@ -130,7 +130,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_subms_mobile(subms, cid, flagged, tname="Backups", empty=True) %}
+{% macro render_subms_mobile(subms, course, flagged, tname="Backups", empty=True) %}
   {% if subms %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
@@ -138,7 +138,7 @@
       {% for subm in subms %}
 
       <div class="cell col-xs-12">
-        <div class="cell-title"><a href="{{ url_for('.code', cid=cid, aid=subm.assignment_id, bid=subm.id)}}"><time datetime="{{subm.created}}">{{subm.created}}</time>      </a></div>
+        <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id)}}"><time datetime="{{subm.created}}">{{subm.created}}</time>      </a></div>
         <div class="cell-text"><span>Submitter:  {{ subm.user.email }}</span></div>
         <div class="cell-status">
           <span>
@@ -156,7 +156,7 @@
 
           <br>
 
-        <a href="{{ url_for('.code', cid=cid, aid=subm.assignment_id, bid=subm.id)}}" class="dashed">
+        <a href="{{url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id)}}" class="dashed">
             View Code
         </a>
 
@@ -174,7 +174,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_backups_mobile(backups, cid, tname="Backups", empty=True) %}
+{% macro render_backups_mobile(backups, course, tname="Backups", empty=True) %}
   {% if backups %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
@@ -182,10 +182,10 @@
       {% for backup in backups %}
 
       <div class="cell col-xs-12">
-        <div class="cell-title"><a href="{{ url_for('.code', cid=cid, aid=backup.assignment_id, bid=backup.id)}}"><time datetime="{{backup.created}}" >{{backup.created}}</time>     </a></div>
+        <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id)}}"><time datetime="{{backup.created}}" >{{backup.created}}</time>     </a></div>
         <div class="cell-text"><span>Submitter:  {{ backup.user.email }}</span></div>
         <div class="cell-status">
-        <a href="{{ url_for('.code', cid=cid, aid=backup.assignment_id, bid=backup.id)}}" class="dashed">
+        <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id)}}" class="dashed">
             View Code
         </a>
 

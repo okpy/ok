@@ -38,6 +38,12 @@ def transaction(f):
             raise
     return wrapper
 
+class DictMixin(object):
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
 class TimestampMixin(object):
     created = db.Column(db.DateTime, server_default=db.func.now())
 
@@ -71,7 +77,7 @@ class User(db.Model, UserMixin, TimestampMixin):
         return User.query.filter_by(email=email).one_or_none()
 
 
-class Course(db.Model, TimestampMixin):
+class Course(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
     offering = db.Column(db.String(), unique=True)
     # offering - E.g., 'cal/cs61a/fa14
@@ -90,7 +96,7 @@ class Course(db.Model, TimestampMixin):
         ).count() > 0
 
 
-class Assignment(db.Model, TimestampMixin):
+class Assignment(db.Model, TimestampMixin, DictMixin):
     """Assignments are particular to courses and have unique names.
         name - cal/cs61a/fa14/proj1
         display_name - Hog
@@ -162,6 +168,13 @@ class Assignment(db.Model, TimestampMixin):
             Backup.assignment_id == self.id,
             Backup.submit == True
         ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
+
+    def offering_name(self):
+        """ Returns the assignment name without the course offering.
+        """
+        return self.name.replace(self.course.offering + '/', '')
+
+
 
 class Enrollment(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
@@ -245,17 +258,14 @@ class Message(db.Model, TimestampMixin):
 
     @hybrid_property
     def contents(self):
-        return json.dumps(str(self.raw_contents))
+        return json.loads(str(self.raw_contents))
 
     @contents.setter
     def contents(self, value):
         self.raw_contents = str(json.dumps(value))
 
-    def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
-
-class Backup(db.Model, TimestampMixin):
+class Backup(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
     messages = db.relationship("Message")
     scores = db.relationship("Score")
@@ -275,9 +285,6 @@ class Backup(db.Model, TimestampMixin):
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
     db.Index('idx_submittedBacks', 'assignment', 'submit')
     db.Index('idx_flaggedBacks', 'assignment', 'flagged')
-
-    def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def can_view(self, user, member_ids, course):
         if user.is_admin:

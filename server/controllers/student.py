@@ -8,9 +8,32 @@ import functools
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 from server.models import User, Course, Assignment, Group, Backup, db
-
+from server.utils import assignment_by_name, course_by_name
 
 student = Blueprint('student', __name__)
+
+def get_course(func):
+    """ A decorator for routes to ensure that user is enrolled in the course.
+    A user is enrolled if they are participating in the course
+    with any role. Gets the course offering from the route's COURSE argument.
+    Then binds the actual course object to the course keyword argument.
+
+    Usage:
+    @get_course # Get the course  from the cid param of the routes
+    def my_route(course): return course.id
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        course = course_by_name(kwargs['course'])
+        if not course:
+            print("Course not found", kwargs['course'])
+            return abort(404)
+        kwargs['course'] = course
+        enrolled = current_user.is_enrolled(course.id)
+        if not enrolled and not current_user.is_admin:
+            flash("You have not been added to this course on OK", "warning")
+        return func(*args, **kwargs)
+    return wrapper
 
 
 @student.route("/")
@@ -32,30 +55,10 @@ def index(auto_redir=True):
     return render_template('student/courses/index.html', **courses)
 
 
-def is_enrolled(func):
-    """ A decorator for routes to ensure that user is enrolled in
-    the course. Gets the course id from the named arg cid of the route.
-    A user is enrolled if they are participating in the course with any role.
-
-    Usage:
-    @is_enrolled # Get the course id from the cid param of the routes
-    def my_route(cid): ...
-    """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        course_id = kwargs['cid']
-        enrolled = current_user.is_enrolled(course_id)
-        if not enrolled and not current_user.is_admin:
-            flash("You have not been added to this course on OK", "warning")
-        return func(*args, **kwargs)
-    return wrapper
-
-
-@student.route("/course/<int:cid>")
+@student.route("/<path:course>/")
 @login_required
-@is_enrolled
-def course(cid):
-    course = Course.query.get(cid)
+@get_course
+def course(course):
     def assignment_info(assignment):
         # TODO does this make O(n) db queries?
         # TODO need group info too
@@ -71,48 +74,77 @@ def course(cid):
     return render_template('student/course/index.html', course=course,
                            **assignments)
 
-@student.route("/course/<int:cid>/assignment/<int:aid>")
-@login_required
-@is_enrolled
-def assignment(cid, aid):
-    assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
-    if assgn:
-        course = assgn.course
-        user_ids = assgn.active_user_ids(current_user.id)
-        backups = assgn.backups(user_ids).limit(5).all()
-        subms = assgn.submissions(user_ids).limit(5).all()
-        final_submission = assgn.final_submission(user_ids)
-        flagged = final_submission and final_submission.flagged
-        return render_template('student/assignment/index.html', course=course,
-                assignment=assgn, backups=backups, subms=subms, flagged=flagged)
-    else:
-        # flash("That assignment does not exist", "warning")
-        abort(404)
 
-@student.route("/course/<int:cid>/assignment/<int:aid>/<int:bid>")
+@student.route("/<path:course>/assignments/")
 @login_required
-@is_enrolled
-def code(cid, aid, bid):
-    assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
-    if assgn:
-        course = assgn.course
-        user_ids = assgn.active_user_ids(current_user.id)
-        backup = Backup.query.get(bid)
-        if backup and backup.can_view(current_user, user_ids, course):
-            submitter = User.query.get(backup.submitter_id)
-            file_contents = [m for m in backup.messages if
-                                m.kind == "file_contents"]
-            if file_contents:
-                files = file_contents[0].contents
-                return render_template('student/assignment/code.html', course=course,
-                        assignment=assgn, backup=backup, submitter=submitter,
-                        files=files)
-            else:
-                flash("That code submission doesn't contain any code")
+def assignments(course):
+    return redirect(url_for(".course", course=course))
+
+# CLEANUP : Really long route, used variable to keep lines under 80 chars.
+ASSIGNMENT_DETAIL = "/<path:course>/assignments/<string:assign>/"
+
+@student.route(ASSIGNMENT_DETAIL)
+@login_required
+@get_course
+def assignment(course, assign):
+    assign = assignment_by_name(assign, course.offering)
+    if not assign:
+        return abort(404)
+    user_ids = assign.active_user_ids(current_user.id)
+    backups = assign.backups(user_ids).limit(5).all()
+    subms = assign.submissions(user_ids).limit(5).all()
+    final_submission = assign.final_submission(user_ids)
+    flagged = final_submission and final_submission.flagged
+    return render_template('student/assignment/index.html', course=course,
+            assignment=assign, backups=backups, subms=subms, flagged=flagged)
+
+# TODO : Consolidate subm/backup list into one route? So many decorators ...
+@student.route(ASSIGNMENT_DETAIL + "backups/", defaults={'submit': False})
+@student.route(ASSIGNMENT_DETAIL + "submission/", defaults={'submit': True})
+@login_required
+@get_course
+def list_backups(course, assign, submit):
+    assign = assignment_by_name(assign, course.offering)
+    if not assign:
+        return abort(404)
+    page = request.args.get('page', 1, type=int)
+    user_ids = assign.active_user_ids(current_user.id)
+
+    final_submission = assign.final_submission(user_ids)
+    flagged = final_submission and final_submission.flagged
+
+    if submit :
+        subms = assign.submissions(user_ids).paginate(page=page, per_page=10)
+        return render_template('student/assignment/list.html', course=course,
+                assignment=assign, subms=subms, flagged=flagged)
+
+    backups = assign.backups(user_ids).paginate(page=page, per_page=10)
+    return render_template('student/assignment/list.html', course=course,
+            assignment=assign, backups=backups, flagged=flagged)
+
+
+@student.route(ASSIGNMENT_DETAIL + "code/<int:bid>")
+@login_required
+@get_course
+def code(course, assign, bid):
+    assign = assignment_by_name(assign, course.offering)
+    if not assign:
+        return abort(404)
+    user_ids = assign.active_user_ids(current_user.id)
+    backup = Backup.query.get(bid)
+    if backup and backup.can_view(current_user, user_ids, course):
+        submitter = User.query.get(backup.submitter_id)
+        file_contents = [m for m in backup.messages if
+                            m.kind == "file_contents"]
+        files = {}
+        if file_contents:
+            files = file_contents[0].contents
         else:
-            flash("That code doesn't exist (or you don't have permission)", "danger")
-            abort(403)
-    else:
-        flash("That assignment does not exist", "danger")
+            flash("That code submission doesn't contain any code")
 
-    abort(404)
+        return render_template('student/assignment/code.html', course=course,
+                assignment=assign, backup=backup, submitter=submitter,
+                files=files)
+    else:
+        flash("File doesn't exist (or you don't have permission)", "danger")
+        abort(403)

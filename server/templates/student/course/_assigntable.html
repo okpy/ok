@@ -1,4 +1,4 @@
-{% macro render_assgn(assignments, cid, tname="Assignments", empty=False) %}
+{% macro render_assign(assignments, course, tname="Assignments", empty=False) %}
   {% if assignments %}
   <div class="subcontent list hidden-xs hidden-sm">
     <div class="wrap">
@@ -10,12 +10,12 @@
           <th>Due Date</th>
           <!-- <th>Group</th> -->
         </tr>
-        {% for assgn, subm_time in assignments %}
+        {% for assign, subm_time in assignments %}
         <tr>
           <td>
             <span>
-              <a class="dashed"  href="{{ url_for('.assignment', cid=cid, aid=assgn.id)}}">
-                  {{assgn.display_name}}
+              <a class="dashed"  href="{{ url_for('.assignment', course=course.offering, assign=assign.offering_name())}}">
+                  {{assign.display_name}}
               </a>
             </span>
           </td>
@@ -51,17 +51,17 @@
           </td> -->
           </td>
           <td>
-            {% if assgn.active %}
+            {% if assign.active %}
             <div class="due-dot green"></div>
             <div class="due">
-              <span class="due-text green">in <timefromnow datetime="{{assgn.due_date}}">{{assgn.due_date}}</timefromnow> </span>
-              <span class="due-date"><time datetime="{{assgn.due_date}}">{{assgn.due_date.strftime('%m/%d %I:%M %p')}}</time></span>
+              <span class="due-text green">in <timefromnow datetime="{{assign.due_date}}">{{assign.due_date}}</timefromnow> </span>
+              <span class="due-date"><time datetime="{{assign.due_date}}">{{assign.due_date.strftime('%m/%d %I:%M %p')}}</time></span>
             </div>
             {% else %}
             <div class="due-dot red"></div>
             <div class="due">
-              <span class="due-text red"><timefromnow datetime="{{assgn.due_date}}">{{assgn.due_date}}</timefromnow> ago</span>
-              <span class="due-date"><time datetime="{{assgn.due_date}}">{{assgn.due_date.strftime('%m/%d %I:%M %p')}}</time></span>
+              <span class="due-text red"><timefromnow datetime="{{assign.due_date}}">{{assign.due_date}}</timefromnow> ago</span>
+              <span class="due-date"><time datetime="{{assign.due_date}}">{{assign.due_date.strftime('%m/%d %I:%M %p')}}</time></span>
             </div>
 
             {% endif %}
@@ -90,16 +90,16 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_assgn_mobile(assignments, cid, tname="Assignments", admin=False, empty=False) %}
+{% macro render_assign_mobile(assignments, course, tname="Assignments", admin=False, empty=False) %}
   {% if assignments %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
       <h2>{{ tname }}</h2>
-      {% for assgn, subm_time in assignments %}
+      {% for assign, subm_time in assignments %}
       <div class="cell col-xs-12">
         <div class="cell-title">
-          <a class="dashed" href="{{ url_for('.assignment', cid=cid, aid=assgn.id)}}">
-              {{assgn.display_name}} &raquo;
+          <a class="dashed" href="{{ url_for('.assignment', course=course.offering, assign=assign.offering_name())}}">
+              {{assign.display_name}} &raquo;
           </a>
         </div>
         <div class="cell-text">
@@ -115,14 +115,14 @@
         </div>
         <!-- <div class="cell-text"><span>Score: 6/7</span></div> -->
         <div class="cell-status">
-          {% if assgn.active %}
+          {% if assign.active %}
           <span class="due-dot green"></div>
-            <span class="green">Due in <timefromnow datetime="{{assgn.due_date}}">{{assgn.due_date}}</timefromnow> </span>
-            <span><time datetime="{{assgn.due_date}}">{{assgn.due_date.strftime('%m/%d %I:%M %p')}}</time></span>
+            <span class="green">Due in <timefromnow datetime="{{assign.due_date}}">{{assign.due_date}}</timefromnow> </span>
+            <span><time datetime="{{assign.due_date}}">{{assign.due_date.strftime('%m/%d %I:%M %p')}}</time></span>
           {% else %}
           <span class="due-dot red"></div>
-            <span class=" red">Due <timefromnow datetime="{{assgn.due_date}}">{{assgn.due_date}}</timefromnow> ago</span>
-            <span><time datetime="{{assgn.due_date}}">{{assgn.due_date.strftime('%m/%d %I:%M %p')}}</time></span>
+            <span class=" red">Due <timefromnow datetime="{{assign.due_date}}">{{assign.due_date}}</timefromnow> ago</span>
+            <span><time datetime="{{assign.due_date}}">{{assign.due_date.strftime('%m/%d %I:%M %p')}}</time></span>
           {% endif %}
         </div>
       </div>
