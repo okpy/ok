@@ -94,9 +94,6 @@ def new_assignment(cid):
     courses, current_course = get_courses(cid)
     # TODO  Form Creation
     form = forms.AssignmentForm()
-    print(form.display_name)
-    print(form.name)
-
     if form.validate_on_submit():
         model = Assignment(course_id=cid, creator=current_user.id)
         form.populate_obj(model)
@@ -120,7 +117,6 @@ def assignment(cid, aid):
     # Convert TZ to Pacific
     assgn.due_date = convert_to_pacific(assgn.due_date)
     assgn.lock_date = convert_to_pacific(assgn.lock_date)
-    print(assgn.display_name)
     form = forms.AssignmentForm(obj=assgn)
 
     # TODO : Actually save updates.

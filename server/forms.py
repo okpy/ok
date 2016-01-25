@@ -60,7 +60,7 @@ class AssignmentForm(BaseForm):
         if not check_validate:
             return False
 
-        # Ensure assignment offering is unique
+        # If the name is changed , ensure assignment offering is unique
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn:
             self.name.errors.append('That offering already exists')
