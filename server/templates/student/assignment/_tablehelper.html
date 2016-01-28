@@ -15,11 +15,11 @@
         <tr>
           <td class="tip-trigger">
             <form class="form-inline" action="{{ url_for('.flag', cid=cid, aid=subm.assignment_id, bid=subm.id) }}" method="post">
+              {% if not subm.flagged %}
+                <input type="hidden" name="flag">
+              {% endif %}
+              <input type="hidden" name="next" value="{{ request.full_path }}">
               <div class="final-{{ 'yes' if subm.flagged else 'no' }}">
-                {% if not subm.flagged %}
-                  <input type="hidden" name="flag">
-                {% endif %}
-                <input type="hidden" name="next" value="{{ request.full_path }}">
                 <button type="submit"><i class="fa fa-flag"></i></button>
               </div>
             </form>
