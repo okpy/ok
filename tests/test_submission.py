@@ -75,11 +75,6 @@ class TestSubmission(OkTestCase):
         assert final == most_recent
         assert not submission.flagged
 
-    def test_flag_already_flagged(self):
-        submission = self.assignment.submissions(self.active_user_ids).all()[3]
-        self.assignment.flag(submission.id, self.active_user_ids)
-        self.assertRaises(BadRequest, self.assignment.flag, submission.id, self.active_user_ids)
-
     def test_unflag_not_flagged(self):
         submission = self.assignment.submissions(self.active_user_ids).all()[3]
         self.assertRaises(BadRequest, self.assignment.unflag, submission.id, self.active_user_ids)
@@ -93,7 +88,6 @@ class TestSubmission(OkTestCase):
 
     def test_accept_unflag(self):
         # when a user accepts an invitation, unflag their submissions.
-
         submission = self.assignment.submissions([self.user1.id]).all()[3]
         self.assignment.flag(submission.id, [self.user1.id])
 
