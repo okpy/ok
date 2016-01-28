@@ -116,3 +116,21 @@ def code(cid, aid, bid):
         flash("That assignment does not exist", "danger")
 
     abort(404)
+
+@student.route("/course/<int:cid>/assignment/<int:aid>/<int:bid>/flag/", methods=['POST'])
+@login_required
+@is_enrolled
+def flag(cid, aid, bid):
+    assgn = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if assgn:
+        course = assgn.course
+        user_ids = assgn.active_user_ids(current_user.id)
+        flag = 'flag' in request.form
+        next_url = request.form['next']
+        if flag:
+            assgn.flag(bid, user_ids)
+        else:
+            assgn.unflag(bid, user_ids)
+        return redirect(next_url)
+    else:
+        abort(404)
