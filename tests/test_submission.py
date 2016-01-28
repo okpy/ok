@@ -91,5 +91,16 @@ class TestSubmission(OkTestCase):
         self.assignment.flag(submission.id, [self.user1.id])
         self.assertRaises(BadRequest, self.assignment.unflag, submission.id, [self.user2.id])
 
-    def test_invite_unflag(self):
-        pass
+    def test_accept_unflag(self):
+        # when a user accepts an invitation, unflag their submissions.
+
+        submission = self.assignment.submissions([self.user1.id]).all()[3]
+        self.assignment.flag(submission.id, [self.user1.id])
+
+        Group.invite(self.user2, self.user1, self.assignment)
+        assert submission.flagged
+
+        group = Group.lookup(self.user1, self.assignment)
+        group.accept(self.user1)
+        assert not submission.flagged
+
