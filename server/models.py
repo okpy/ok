@@ -250,7 +250,7 @@ class Enrollment(db.Model, TimestampMixin):
         db.session.add_all(new_records)
 
 
-class Message(db.Model, TimestampMixin):
+class Message(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
     backup = db.Column(db.ForeignKey("backup.id"), index=True)
     raw_contents = db.Column(db.String())

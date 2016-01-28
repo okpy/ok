@@ -4,9 +4,6 @@ from flask.ext.rq import get_queue
 
 main = Blueprint('main', __name__)
 
-def foo(i):
-    print(i)
-    return i
 
 @cache.cached(5000)
 @main.route('/')

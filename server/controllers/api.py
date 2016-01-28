@@ -187,7 +187,7 @@ def make_backup(user, assignment_id, messages, submit):
     backup = models.Backup(client_time=client_time, submitter=user,
                            assignment_id=assignment_id, submit=submit)
     messages = [models.Message(kind=k, backup=backup,
-                contents=m) for k, m in messages.items()]
+                raw_contents=str(m)) for k, m in messages.items()]
     backup.messages = messages
     models.db.session.add_all(messages)
     models.db.session.add(backup)
