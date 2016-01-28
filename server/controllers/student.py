@@ -100,7 +100,7 @@ def assignment(course, assign):
 
 # TODO : Consolidate subm/backup list into one route? So many decorators ...
 @student.route(ASSIGNMENT_DETAIL + "backups/", defaults={'submit': False})
-@student.route(ASSIGNMENT_DETAIL + "submission/", defaults={'submit': True})
+@student.route(ASSIGNMENT_DETAIL + "submissions/", defaults={'submit': True})
 @login_required
 @get_course
 def list_backups(course, assign, submit):
@@ -114,6 +114,7 @@ def list_backups(course, assign, submit):
     flagged = final_submission and final_submission.flagged
 
     if submit :
+        # Submissions should take a flag for backups
         subms = assign.submissions(user_ids).paginate(page=page, per_page=10)
         return render_template('student/assignment/list.html', course=course,
                 assignment=assign, subms=subms, flagged=flagged)
@@ -123,7 +124,7 @@ def list_backups(course, assign, submit):
             assignment=assign, backups=backups, flagged=flagged)
 
 
-@student.route(ASSIGNMENT_DETAIL + "code/<int:bid>")
+@student.route(ASSIGNMENT_DETAIL + "code/<int:bid>/")
 @login_required
 @get_course
 def code(course, assign, bid):
