@@ -276,9 +276,11 @@ class Enrollment(db.Model, TimestampMixin):
 
 class Message(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), index=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
     raw_contents = db.Column(db.String())
     kind = db.Column(db.String(), index=True)
+
+    backup = db.relationship("Backup")
 
     @hybrid_property
     def contents(self):
