@@ -2,6 +2,7 @@
 
 import os
 from datetime import datetime, timedelta
+import json
 
 from flask.ext.script import Manager, Server
 from flask.ext.script.commands import ShowUrls, Clean
@@ -36,8 +37,8 @@ def make_backup(user, assign, time, messages, submit=True):
     backup = Backup(client_time=time,
                            submitter=user,
                            assignment=assign, submit=submit)
-    messages = [Message(kind=k, backup=backup,
-                contents=m) for k, m in messages.items()]
+    messages = [Message(kind=k, backup=backup.id,
+                raw_contents=json.dumps(m)) for k, m in messages.items()]
     backup.messages = messages
     db.session.add_all(messages)
     db.session.add(backup)
