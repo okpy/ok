@@ -72,8 +72,9 @@ def seed():
 
     messages = {'file_contents': {'backup.py': '1'}, 'analytics': {}}
     for i in range(20):
-        time = datetime.now()-timedelta(days=i)
-        make_backup(staff_member, assign2, time, messages)
+        for submit in (False, True):
+            time = datetime.now()-timedelta(days=i)
+            make_backup(staff_member, assign2, time, messages, submit=submit)
     db.session.commit()
 
     staff = Enrollment(user_id=staff_member.id, course_id=courses[0].id,
