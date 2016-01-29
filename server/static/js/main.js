@@ -12,7 +12,7 @@ jQuery(document).ready(function($){
     $('time').each(function(i, e) {
         var time = moment($(e).attr('datetime'));
         var localTime  = moment.utc(time);
-        $(e).html(time.format('LLL'));
+        $(e).html(time.format('MM/DD h:m A'));
     });
     $('timefromnow').each(function(i, e) {
         var due = moment($(e).attr('datetime'));

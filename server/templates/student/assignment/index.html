@@ -36,8 +36,8 @@
           <div class="wrap">
             <div class="string-nav">
               <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
-              <span><a href="{{ url_for(".course", cid=course.id) }}"> {{ course.offering }}</a></span> &raquo;
-              <span>{{ assignment.display_name }}</span>
+              <span><a href="{{ url_for(".course", course=course.offering) }}"> {{ course.offering }}</a></span> &raquo;
+              <span>{{ assignment.offering_name() }}</span>
             </div>
             <h1>{{ assignment.display_name}}</h1>
           </div>
@@ -48,12 +48,26 @@
         <!-- start desktop/tablet version -->
         {% if group %}
         {% endif %}
+        <div class="subcontent row hidden-xs hidden-sm">
+          <div class="col-md-12">
+                       <!-- TODO: Better link to view all backups -->
 
-        {{ table.render_subms(subms, course.id, flagged, tname="Recent Submissions") }}
-        {{ table.render_backups(backups, course.id, tname="Recent Backups") }}
+            {{ table.render_subms(subms, course, flagged, tname="Recent Submissions") }}
+            <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=True) }}" class="no-dash button-large">
+                View More Submissions
+              </a>
+          </div>
+          <div class="col-md-12">
+            {{  table.render_backups(backups, course, tname="Recent Backups") }}
+            <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=False) }}" class="no-dash button-large">
+                View More Backups
+              </a>
+
+          </div>
+        </div>
         <!-- start mobile version -->
-        {{ table.render_subms_mobile(subms, course.id, flagged, tname="Recent Submissions") }}
-        {{ table.render_backups_mobile(backups, course.id, tname="Recent Backups") }}
+        {{ table.render_subms_mobile(subms, course, flagged, tname="Recent Submissions") }}
+        {{ table.render_backups_mobile(backups, course, tname="Recent Backups") }}
 
         <!-- end mobile version -->
       </section>
