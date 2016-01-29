@@ -148,7 +148,8 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         """
         return Backup.query.filter(
             Backup.submitter_id.in_(user_ids),
-            Backup.assignment_id == self.id
+            Backup.assignment_id == self.id,
+            Backup.submit == False
         ).order_by(Backup.client_time.desc())
 
     def submissions(self, user_ids):
