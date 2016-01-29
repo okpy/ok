@@ -19,9 +19,9 @@
                 <input type="hidden" name="flag">
               {% endif %}
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <div class="final-{{ 'yes' if subm.flagged else 'no' }}">
-                <button type="submit"><i class="fa fa-flag"></i></button>
-              </div>
+              <button class="final-button" type="submit">
+                <i class="fa fa-flag final-{{ 'yes' if subm.flagged else 'no' }}"></i>
+              </button>
             </form>
             <div class="tip">
               {% if subm.flagged %}
