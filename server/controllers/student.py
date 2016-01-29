@@ -106,7 +106,7 @@ def assignment(course, assign):
 def list_backups(course, assign, submit):
     assign = assignment_by_name(assign, course.offering)
     if not assign:
-        return abort(404)
+        abort(404)
     page = request.args.get('page', 1, type=int)
     user_ids = assign.active_user_ids(current_user.id)
 
@@ -124,15 +124,18 @@ def list_backups(course, assign, submit):
             assignment=assign, backups=backups, flagged=flagged)
 
 
-@student.route(ASSIGNMENT_DETAIL + "code/<int:bid>/")
+@student.route(ASSIGNMENT_DETAIL + "submissions/<int:bid>/", defaults={'submit': True})
+@student.route(ASSIGNMENT_DETAIL + "backups/<int:bid>/", defaults={'submit': False})
 @login_required
 @get_course
-def code(course, assign, bid):
+def code(course, assign, bid, submit):
     assign = assignment_by_name(assign, course.offering)
     if not assign:
-        return abort(404)
+        abort(404)
     user_ids = assign.active_user_ids(current_user.id)
     backup = Backup.query.get(bid)
+    if backup.submit != submit:
+        abort(404)
     if backup and backup.can_view(current_user, user_ids, course):
         submitter = User.query.get(backup.submitter_id)
         file_contents = [m for m in backup.messages if
