@@ -41,9 +41,9 @@
               <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
               <span><a href="{{ url_for(".course", course=course.offering) }}"> {{ course.offering }}</a></span> &raquo;
               <span><a href="{{ url_for(".assignment", course=course.offering, assign=assignment.offering_name()) }}"> {{ assignment.display_name }}</a></span> &raquo;
-              <span> Backup {{ backup.id }} </span>
+              <span> {{backup_type}} {{ backup.id }} </span>
             </div>
-            <h1>{{ assignment.display_name}} Backup {{ backup.id }} </h1>
+            <h1>{{ assignment.display_name}} {{backup_type}} {{ backup.id }} </h1>
           </div>
           {% include 'alerts.html' %}
         </div>

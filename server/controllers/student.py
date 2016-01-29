@@ -142,10 +142,10 @@ def code(course, assign, bid):
             files = file_contents[0].contents
         else:
             flash("That code submission doesn't contain any code")
-
+        backup_type = "Submission" if backup.submit else "Backup"
         return render_template('student/assignment/code.html', course=course,
                 assignment=assign, backup=backup, submitter=submitter,
-                files=files)
+                files=files, backup_type=backup_type)
     else:
         flash("File doesn't exist (or you don't have permission)", "danger")
         abort(403)

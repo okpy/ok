@@ -48,9 +48,23 @@
         <!-- start desktop/tablet version -->
         {% if group %}
         {% endif %}
+        <div class="subcontent row hidden-xs hidden-sm">
+          <div class="col-md-7">
+                       <!-- TODO: Better link to view all backups -->
 
-        {{ table.render_subms(subms, course, flagged, tname="Recent Submissions") }}
-        {{ table.render_backups(backups, course, tname="Recent Backups") }}
+            {{ table.render_subms(subms, course, flagged, tname="Recent Submissions") }}
+            <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=True) }}" class="no-dash button-large">
+                View More Submissions
+              </a>
+          </div>
+          <div class="col-md-5">
+            {{  table.render_backups(backups, course, tname="Recent Backups") }}
+            <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=False) }}" class="no-dash button-large">
+                View More Backups
+              </a>
+
+          </div>
+        </div>
         <!-- start mobile version -->
         {{ table.render_subms_mobile(subms, course, flagged, tname="Recent Submissions") }}
         {{ table.render_backups_mobile(backups, course, tname="Recent Backups") }}

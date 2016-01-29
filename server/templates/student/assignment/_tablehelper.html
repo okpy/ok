@@ -1,14 +1,13 @@
 {% macro render_subms(subms, course, flagged, tname="Submissions", empty=True) %}
   {% if subms %}
-  <div class="subcontent list hidden-xs hidden-sm">
+  <div class="list hidden-xs hidden-sm">
     <div class="wrap">
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
           <th class="col-md-1">Flagged</th>
-          <th>Date</th>
+          <th>Time</th>
           <th>Submitter</th>
-          <th>Status</th>
           <th>Code</th>
         </tr>
         {% for subm in subms %}
@@ -46,33 +45,10 @@
             </span>
           </td>
           <td>
-            <div class="due-dot green"></div>
-            <div class="due">
-              {% if subm.flagged %}
-                <span class="due-text green">submitted</span>
-                <span class="due-date">Flagged for grading</span>
-              {% elif not flagged and loop.index == 1 %}
-                <span class="due-date">Newest submission</span>
-              {% else %}
-                <span class="due-date">Recieved!</span>
-              {% endif %}
-            </div>
-              <!-- Score - for later.
-            <td class="tip-trigger"><span>-/0
-              <div class="tip group-members">
-                <span><b>correctness:</b> -/0</span>
-                <span><b>composition:</b> -/0</span>
-              </div>
-            </span>
-          </td> -->
-
-          </td>
-          <td>
               <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id)}}" class="no-dash button-small">
                 View Code
               </a>
           </td>
-
           </td>
         </tr>
         {% endfor %}
@@ -90,12 +66,12 @@
 
 {% macro render_backups(backups, course, tname="Backups", empty=True) %}
   {% if backups %}
-  <div class="subcontent list hidden-xs hidden-sm">
+  <div class="list hidden-xs hidden-sm">
     <div class="wrap">
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
-          <th>Date</th>
+          <th>Time</th>
           <th>Creator</th>
           <th>Code</th>
         </tr>
