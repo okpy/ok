@@ -1,6 +1,7 @@
 #! ../env/bin/python
 
 from flask import Flask
+from flask.ext.rq import RQ
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
 from server import assets
@@ -33,6 +34,9 @@ def create_app(object_name):
     app = Flask(__name__)
 
     app.config.from_object(object_name)
+
+    # initialize redis task queues
+    RQ(app)
 
     # initialize the cache
     cache.init_app(app)

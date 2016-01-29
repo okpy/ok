@@ -22,4 +22,4 @@ class TestConfig:
 
         assert app.config['DEBUG'] is True
         assert app.config['SQLALCHEMY_DATABASE_URI'] == test_db
-        assert app.config['CACHE_TYPE'] == 'simple'
+        assert app.config['CACHE_TYPE'] == 'null'

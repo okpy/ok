@@ -133,7 +133,6 @@ def name_to_assign_id(name):
     if assgn:
         return assgn.id
 
-
 class Resource(restful.Resource):
     version = 'v3'
     method_decorators = [authenticate, check_version]
@@ -165,7 +164,6 @@ class v3Info(PublicResource):
 #  Fewer methods/APIs as V1 since the frontend will not use the API
 #  TODO Permsisions for API actions
 
-
 def make_backup(user, assignment_id, messages, submit):
     """
     Create backup with message objects.
@@ -189,13 +187,12 @@ def make_backup(user, assignment_id, messages, submit):
     backup = models.Backup(client_time=client_time, submitter=user,
                            assignment_id=assignment_id, submit=submit)
     messages = [models.Message(kind=k, backup=backup,
-                contents=m) for k, m in messages.items()]
+                raw_contents=json.dumps(m)) for k, m in messages.items()]
     backup.messages = messages
     models.db.session.add_all(messages)
     models.db.session.add(backup)
     models.db.session.commit()
     return backup
-
 
 
 class APISchema():
