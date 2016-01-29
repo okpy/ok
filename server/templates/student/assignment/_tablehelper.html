@@ -12,23 +12,23 @@
         </tr>
         {% for subm in subms %}
         <tr>
-          <td class="tip-trigger">
-            <form class="form-inline" action="{{ url_for('.flag', cid=cid, aid=subm.assignment_id, bid=subm.id) }}" method="post">
+          <td>
+            <form class="form-inline" action="{{ url_for('.flag', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id) }}" method="post">
               {% if not subm.flagged %}
                 <input type="hidden" name="flag">
               {% endif %}
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="final-button" type="submit">
+              <button class="tip-trigger final-button" type="submit">
+                <div class="tip">
+                  {% if subm.flagged %}
+                    <span>Flagged for grading (click to unflag)</span>
+                  {% else %}
+                    <span>Not flagged for grading (click to flag)</span>
+                  {% endif %}
+                </div>
                 <i class="fa fa-flag final-{{ 'yes' if subm.flagged else 'no' }}"></i>
               </button>
             </form>
-            <div class="tip">
-              {% if subm.flagged %}
-                <span>Flagged for grading (click to unflag)</span>
-              {% else %}
-                <span>Not flagged for grading (click to flag)</span>
-              {% endif %}
-            </div>
           </td>
           <td>
             <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}">

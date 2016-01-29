@@ -272,7 +272,7 @@ section {
     }
 .tip {
   position:absolute;
-  bottom:100%;
+  bottom:150%;
   background-color:#4A74A2;
   padding:0.75em 1.5em;
   border-radius:1.5em;
@@ -323,6 +323,7 @@ section {
   height: 100%;
   border: none;
   background: none;
+  outline: none;
 }
 .final-yes {
   color:#4A74A2;
