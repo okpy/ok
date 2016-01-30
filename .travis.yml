@@ -1,29 +1,23 @@
 language: python
 env:
 - SERVER_ENV=test
-addons:
-  postgresql: '9.4'
 python:
-- '2.7'
 - '3.3'
 - '3.4'
+- '3.5'
 install:
 - pip install pip --upgrade
 - pip install -r requirements.txt
 - pip install python-coveralls
 script:
 - make test
-before_script:
-- psql -c 'create database oktest;' -U postgres
 after_success:
-- coveralls
-after_failure:
 - coveralls
 sudo: false
 cache:
   directories:
   - "$HOME/.cache/pip"
-  - lib/python2.7/site-packages
+  - lib/python3.5/site-packages
 notifications:
   slack:
     secure: mGqCgRCFMB89AKsYVOZI79sifCFOLaQkuY3rvFKMitpD1GYQQpkBbZ9Z1SWi0VQV63oOKTQBrPCeDSwhZMaJA/dCZZIuz6e9nkVyJJUIrqAuH9PjgQr6FM4FkKzVLpHdPnXIikAvUAKiPRzzj8z4KO1EohBRR/xb2/4TpoWrkSA=

@@ -5,3 +5,15 @@
 .block {
   display: block;
 }
+
+pre code  {
+  font-family: Menlo,Monaco,Consolas,'Courier New',monospace !important;
+}
+
+.dashed {
+  border-bottom: 1px dashed #999;
+}
+
+.no-dash {
+  border-bottom: none !important;
+}

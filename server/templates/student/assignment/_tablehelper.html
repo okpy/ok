@@ -1,0 +1,176 @@
+{% macro render_subms(subms, course, flagged, tname="Submissions", empty=True) %}
+  {% if subms %}
+  <div class="list hidden-xs hidden-sm">
+    <div class="wrap">
+      <h2>{{ tname }}</h2>
+      <table>
+        <tr class="header">
+          <th class="col-md-1">Flagged</th>
+          <th>Time</th>
+          <th>Submitter</th>
+          <th>Code</th>
+        </tr>
+        {% for subm in subms %}
+        <tr>
+          <td>
+            <form class="form-inline" action="{{ url_for('.flag', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id) }}" method="post">
+              {% if not subm.flagged %}
+                <input type="hidden" name="flag">
+              {% endif %}
+              <input type="hidden" name="next" value="{{ request.full_path }}">
+              <button class="tip-trigger final-button" type="submit">
+                <div class="tip">
+                  {% if subm.flagged %}
+                    <span>Flagged for grading (click to unflag)</span>
+                  {% else %}
+                    <span>Not flagged for grading (click to flag)</span>
+                  {% endif %}
+                </div>
+                <i class="fa fa-flag final-{{ 'yes' if subm.flagged else 'no' }}"></i>
+              </button>
+            </form>
+          </td>
+          <td>
+            <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}">
+              <time datetime="{{subm.created}}">{{subm.created}}</time>
+            </a>
+          </td>
+          <td>
+            <span class="due-date">
+              {{ subm.user.email }}
+            </span>
+          </td>
+          <td>
+              <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id)}}" class="no-dash button-small">
+                View Code
+              </a>
+          </td>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+  {% elif empty %}
+  <div class="subcontent list hidden-xs hidden-sm">
+    <div class="wrap">
+      <h2>No {{ tname }}</h2>
+    </div>
+  </div>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_backups(backups, course, tname="Backups", empty=True) %}
+  {% if backups %}
+  <div class="list hidden-xs hidden-sm">
+    <div class="wrap">
+      <h2>{{ tname }}</h2>
+      <table>
+        <tr class="header">
+          <th>Time</th>
+          <th>Creator</th>
+          <th>Code</th>
+        </tr>
+        {% for backup in backups %}
+        <tr>
+          <td>
+            <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}">
+              <time datetime="{{backup.created}}" >{{backup.created}}</time>
+            </a>
+          </td>
+          <td>
+            <span class="due-date">
+              {{ backup.user.email }}
+            </span>
+          </td>
+          <td>
+              <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}" class="no-dash button-small">
+                View Code
+              </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+  {% elif empty %}
+  <div class="subcontent list hidden-xs hidden-sm">
+    <div class="wrap">
+      <h2>No {{ tname }}</h2>
+    </div>
+  </div>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_subms_mobile(subms, course, flagged, tname="Backups", empty=True) %}
+  {% if subms %}
+  <div class="subcontent list hidden-md hidden-lg">
+    <div class="wrap">
+      <h2>{{tname}}</h2>
+      {% for subm in subms %}
+
+      <div class="cell col-xs-12">
+        <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}"><time datetime="{{subm.created}}">{{subm.created}}</time>      </a></div>
+        <div class="cell-text"><span>Submitter:  {{ subm.user.email }}</span></div>
+        <div class="cell-status">
+          <span>
+
+          {% if subm.flagged %}
+            <i class="fa fa-flag green"></i> Flagged for grading
+          {% elif not flagged and loop.index == 1 %}
+
+          <i class="fa fa-flag grey"></i> This is the most recent submission.
+          Unless you flag another submission, the most recent submission will be graded</span>
+          {% else %}
+            <div class="due-dot grey"></div> Not flagged for grading.
+          {% endif %}
+        </span>
+
+          <br>
+
+        <a href="{{url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}" class="dashed">
+            View Code
+        </a>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% elif empty %}
+  <div class="subcontent list hidden-md hidden-lg">
+    <div class="wrap">
+      <h2>No {{ tname }}</h2>
+    </div>
+  </div>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_backups_mobile(backups, course, tname="Backups", empty=True) %}
+  {% if backups %}
+  <div class="subcontent list hidden-md hidden-lg">
+    <div class="wrap">
+      <h2>{{tname}}</h2>
+      {% for backup in backups %}
+
+      <div class="cell col-xs-12">
+        <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}"><time datetime="{{backup.created}}" >{{backup.created}}</time>     </a></div>
+        <div class="cell-text"><span>Submitter:  {{ backup.user.email }}</span></div>
+        <div class="cell-status">
+        <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id)}}" class="dashed">
+            View Code
+        </a>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% elif empty %}
+  <div class="subcontent list hidden-md hidden-lg">
+    <div class="wrap">
+      <h2>No {{ tname }}</h2>
+    </div>
+  </div>
+  {% endif %}
+{% endmacro %}

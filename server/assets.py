@@ -13,6 +13,7 @@ common_css = Bundle(
 common_js = Bundle(
     'lib/jquery/jquery.min.js',
     'lib/bootstrap/js/bootstrap.min.js',
+    'lib/moment/moment-with-locales.min.js',
     Bundle(
         'js/main.js',
         filters='jsmin'
@@ -36,6 +37,13 @@ adminlte_js = Bundle(
     'lib/admin/plugins/datatables/dataTables.bootstrap.min.js',
     output='public/js/adminlte.js'
 )
+
+landing_css = Bundle(
+    'css/landing.css',
+    filters='cssmin',
+    output='public/css/landing.css'
+)
+
 
 student_css = Bundle(
     'css/student.css',

@@ -1,6 +1,7 @@
 #! ../env/bin/python
 
 from flask import Flask
+from flask.ext.rq import RQ
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
 from server import assets
@@ -34,6 +35,9 @@ def create_app(object_name):
 
     app.config.from_object(object_name)
 
+    # initialize redis task queues
+    RQ(app)
+
     # initialize the cache
     cache.init_app(app)
 
@@ -58,7 +62,7 @@ def create_app(object_name):
 
     app.register_blueprint(admin, url_prefix='/admin')
 
-    app.register_blueprint(student, url_prefix='/dashboard')
+    app.register_blueprint(student, url_prefix='/student')
 
     app.register_blueprint(api, url_prefix=API_PREFIX)
 

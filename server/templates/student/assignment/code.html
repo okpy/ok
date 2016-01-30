@@ -1,0 +1,78 @@
+{% extends "student/base.html" %}
+{% import 'student/assignment/_tablehelper.html' as table %}
+
+{% block title %} Assignment | Ok {% endblock %}
+{% block css %}
+  <!-- src="https:// .. .js" -->
+{% endblock %}
+
+{% block header %}
+
+  <!-- <div class="left col-md-2">
+    <div class="stripes">
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+    </div>
+  </div> -->
+
+{% endblock %}
+
+{% block body %}
+    <main>
+      {% include 'student/assignment/sidebar.html' %}
+      <div class="col-md-2"></div>
+      <section class="content nomapa col-md-10 col-xs-12">
+        <header>
+          <div class="header-bg">
+            <div class="right col-md-3">
+                <a href="#" class="header-text"><span>Logout</span></a>
+                <div class="header-text user-profile">
+                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
+                  <i class="fa fa-user"></i>
+                </div>
+              </div>
+          </div>
+        </header>
+
+        <div class="subcontent heading">
+          <div class="wrap">
+            <div class="string-nav">
+              <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for(".course", course=course.offering) }}"> {{ course.offering }}</a></span> &raquo;
+              <span><a href="{{ url_for(".assignment", course=course.offering, assign=assignment.offering_name()) }}"> {{ assignment.display_name }}</a></span> &raquo;
+              <span> {{backup_type}} {{ backup.id }} </span>
+            </div>
+            <h1>{{ assignment.display_name}} {{backup_type}} {{ backup.id }} </h1>
+          </div>
+          {% include 'alerts.html' %}
+        </div>
+        <!-- start desktop/tablet version -->
+        <div class="subcontent list">
+          <div class="wrap">
+            <p> Recieved at <time datetime="{{ backup.created }}">{{ backup.created }}</time> from {{ submitter.email }} </p>
+            {% if files %}
+              {% for file, code in files.items() %}
+              {{ file }}
+                <pre><code class="python">{{code}}</code></pre>
+              {% endfor %}
+            {% else %}
+              <span> This backup does not contain any code </span>
+            {% endif %}
+          </div>
+        </div>
+        <!-- start mobile version -->
+
+        <!-- end mobile version -->
+      </section>
+    </main>
+{% endblock %}
+
+{% block js %}
+  <!-- src="https:// .. .js" -->
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/default.min.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/github.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+{% endblock %}

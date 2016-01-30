@@ -1,8 +1,7 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData
-from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import backref
+from sqlalchemy.orm import aliased, backref
 from werkzeug.exceptions import BadRequest
 
 from flask.ext.login import UserMixin, AnonymousUserMixin
@@ -11,6 +10,7 @@ cache = Cache()
 
 import functools
 import csv
+import json
 from datetime import datetime as dt
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
@@ -18,7 +18,6 @@ from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 convention = {
     "ix": 'ix_%(column_0_label)s',
     "uq": "uq_%(table_name)s_%(column_0_name)s",
-    "ck": "ck_%(table_name)s_%(constraint_name)s",
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s"
 }
@@ -39,6 +38,12 @@ def transaction(f):
             raise
     return wrapper
 
+class DictMixin(object):
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
 class TimestampMixin(object):
     created = db.Column(db.DateTime, server_default=db.func.now())
 
@@ -57,15 +62,22 @@ class User(db.Model, UserMixin, TimestampMixin):
         return '<User %r>' % self.email
 
     # TODO: Cache enrollment queries
-    def enrollments(self, roles=['student']):
+    def enrollments(self, roles=[STUDENT_ROLE]):
         return [e for e in self.participations if e.role in roles]
+
+    def is_enrolled(self, course_id, roles=VALID_ROLES):
+        for enroll in self.participations:
+            if enroll.course_id == course_id and enroll.role in roles:
+                return enroll
+        return False
 
     @staticmethod
     def lookup(email):
         """Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
 
-class Course(db.Model, TimestampMixin):
+
+class Course(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
     offering = db.Column(db.String(), unique=True)
     # offering - E.g., 'cal/cs61a/fa14
@@ -78,13 +90,13 @@ class Course(db.Model, TimestampMixin):
         return '<Course %r>' % self.offering
 
     def is_enrolled(self, user):
-        return Participant.query.filter_by(
+        return Enrollment.query.filter_by(
             user=user,
             course=self
         ).count() > 0
 
 
-class Assignment(db.Model, TimestampMixin):
+class Assignment(db.Model, TimestampMixin, DictMixin):
     """Assignments are particular to courses and have unique names.
         name - cal/cs61a/fa14/proj1
         display_name - Hog
@@ -111,8 +123,97 @@ class Assignment(db.Model, TimestampMixin):
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
+    def active_user_ids(self, user_id):
+        """Return a set of the ids of all users that are active in the same group
+        that our user is active in. If the user is not in a group, return just
+        that user's id (i.e. as if they were in a 1-person group).
+        """
+        user_member = aliased(GroupMember)
+        members = GroupMember.query.join(
+            user_member, GroupMember.group_id == user_member.group_id
+        ).filter(
+            user_member.user_id == user_id,
+            user_member.assignment_id == self.id,
+            user_member.status == 'active',
+            GroupMember.status == 'active'
+        ).all()
+        if not members:
+            return {user_id}
+        else:
+            return {member.user_id for member in members}
 
-class Participant(db.Model, TimestampMixin):
+    def backups(self, user_ids):
+        """Return a query for the backups that the list of usrs has for this
+        assignment.
+        """
+        return Backup.query.filter(
+            Backup.submitter_id.in_(user_ids),
+            Backup.assignment_id == self.id,
+            Backup.submit == False
+        ).order_by(Backup.client_time.desc())
+
+    def submissions(self, user_ids):
+        """Return a query for the submission that the current user has for this
+        assignment.
+        """
+        return Backup.query.filter(
+            Backup.submitter_id.in_(user_ids),
+            Backup.assignment_id == self.id,
+            Backup.submit == True
+        ).order_by(Backup.created.desc())
+
+    def final_submission(self, user_ids):
+        """Return a final submission for a user, or None."""
+        return Backup.query.filter(
+            Backup.submitter_id.in_(user_ids),
+            Backup.assignment_id == self.id,
+            Backup.submit == True
+        ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
+
+    @transaction
+    def flag(self, backup_id, member_ids):
+        """Flag a submission. First unflags any submissions by one of
+        MEMBER_IDS, which is a list of group member user IDs.
+        """
+        self._unflag_all(member_ids)
+        backup = Backup.query.filter(
+            Backup.id == backup_id,
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == False
+        ).one_or_none()
+        if not backup:
+            raise BadRequest('Could not find backup')
+        backup.flagged = True
+
+    @transaction
+    def unflag(self, backup_id, member_ids):
+        """Unflag a submission."""
+        backup = Backup.query.filter(
+            Backup.id == backup_id,
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == True
+        ).one_or_none()
+        if not backup:
+            raise BadRequest('Could not find backup')
+        backup.flagged = False
+
+    def _unflag_all(self, member_ids):
+        """Unflag all submissions by members of MEMBER_IDS."""
+        # There should only ever be one flagged submission
+        backup = Backup.query.filter(
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == True
+        ).one_or_none()
+        if backup:
+            backup.flagged = False
+
+    def offering_name(self):
+        """ Returns the assignment name without the course offering.
+        """
+        return self.name.replace(self.course.offering + '/', '')
+
+
+class Enrollment(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
@@ -132,6 +233,7 @@ class Participant(db.Model, TimestampMixin):
         return self.course == course and self.role in STAFF_ROLES
 
     @staticmethod
+    @transaction
     def enroll_from_form(cid, form):
         usr = User.lookup(form.email.data)
         if usr:
@@ -142,9 +244,10 @@ class Participant(db.Model, TimestampMixin):
             db.session.add(usr)
         db.session.commit()
         role = form.role.data
-        Participant.create(cid, [usr.id], role)
+        Enrollment.create(cid, [usr.id], role)
 
     @staticmethod
+    @transaction
     def enroll_from_csv(cid, form):
         new_users, existing_uids = [], []
         rows = form.csv.data.splitlines()
@@ -165,52 +268,75 @@ class Participant(db.Model, TimestampMixin):
         db.session.add_all(new_users)
         db.session.commit()
         user_ids = [u.id for u in new_users] + existing_uids
-        Participant.create(cid, user_ids, STUDENT_ROLE)
+        Enrollment.create(cid, user_ids, STUDENT_ROLE)
         return len(new_users), len(existing_uids)
 
 
     @staticmethod
+    @transaction
     def create(cid, usr_ids=[], role=STUDENT_ROLE):
         new_records = []
         for usr_id in usr_ids:
-            record = Participant.query.filter_by(user_id=usr_id,
+            record = Enrollment.query.filter_by(user_id=usr_id,
                                                    course_id=cid).one_or_none()
             if record:
                 record.role = role
             else:
-                record = Participant(course_id=cid, user_id=usr_id, role=role)
+                record = Enrollment(course_id=cid, user_id=usr_id, role=role)
                 new_records.append(record)
         db.session.add_all(new_records)
-        db.session.commit()
 
 
-class Message(db.Model, TimestampMixin):
+class Message(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), index=True)
-    contents = db.Column(pg.JSONB())
+    backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
+    raw_contents = db.Column(db.String())
     kind = db.Column(db.String(), index=True)
 
-    def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    backup = db.relationship("Backup")
+
+    @hybrid_property
+    def contents(self):
+        return json.loads(str(self.raw_contents))
+
+    @contents.setter
+    def contents(self, value):
+        self.raw_contents = str(json.dumps(value))
 
 
-class Backup(db.Model, TimestampMixin):
+class Backup(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
     messages = db.relationship("Message")
     scores = db.relationship("Score")
+    user = db.relationship("User")
+    assign = db.relationship("Assignment")
+
     client_time = db.Column(db.DateTime())
-    submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
-    assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), default=False)
     flagged = db.Column(db.Boolean(), default=False)
+
+    submitter = db.relationship("User")
+    assignment = db.relationship("Assignment")
 
     db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
     db.Index('idx_submittedBacks', 'assignment', 'submit')
     db.Index('idx_flaggedBacks', 'assignment', 'flagged')
 
-    def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    def can_view(self, user, member_ids, course):
+        if user.is_admin:
+            return True
+        if user.id == self.submitter_id:
+            return True
+
+        # Allow group members to view
+        if self.submitter_id in member_ids:
+            return True
+
+        # Allow staff members to view
+        return user.is_enrolled(course.id, STAFF_ROLES)
 
     @staticmethod
     def statistics(self):
@@ -219,21 +345,6 @@ class Backup(db.Model, TimestampMixin):
             WHERE backup.created >= NOW() - '1 day'::INTERVAL
             GROUP BY date_trunc('hour', backup.created)
             ORDER BY date_trunc('hour', backup.created)""")).all()
-
-
-class Submission(db.Model, TimestampMixin):
-    """ A submission is created from --submit or when a backup is flagged for
-    grading.
-
-    **This model may be removed. Do not depend on it for features.**
-    """
-    id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submitter = db.Column(db.ForeignKey("user.id"), nullable=False)
-    flagged = db.Column(db.Boolean(), default=False)
-
-    db.Index('idx_flaggedSubms', 'assignment', 'submitter', 'flagged'),
 
 
 class Score(db.Model, TimestampMixin):
@@ -248,7 +359,6 @@ class Score(db.Model, TimestampMixin):
 class Version(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(), nullable=False)
-    versions = db.Column(pg.ARRAY(db.String()), nullable=False)
     current_version = db.Column(db.String(), nullable=False)
     base_url = db.Column(db.String())
 
@@ -263,7 +373,7 @@ class Diff(db.Model, TimestampMixin):
     backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
     assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     before = db.Column(db.ForeignKey("backup.id"))
-    diff = db.Column(pg.JSONB())
+    diff = db.Column(db.String()) # TODO : Remove Diff Object.
     comments = db.relationship('Comment')
     updated = db.Column(db.DateTime, onupdate=db.func.now())
 
@@ -294,7 +404,6 @@ class CommentBank(db.Model, TimestampMixin):
     author = db.Column(db.ForeignKey("user.id"), nullable=False)
     message = db.Column(db.Text())  # Markdown
     frequency = db.Column(db.Integer())
-    statistics = db.Column(pg.JSONB())  # closest function, line number etc
 
 
 class GradingTask(db.Model, TimestampMixin):
@@ -320,7 +429,7 @@ class GroupMember(db.Model, TimestampMixin):
         pending - The user has been invited to the group.
         active  - The user accepted the invite and is part of the group.
     """
-    __tablename__ = 'GroupMember'
+    __tablename__ = 'group_member'
     __table_args__ = (
         PrimaryKeyConstraint('user_id', 'assignment_id', name='pk_GroupMember'),
     )
@@ -361,6 +470,9 @@ class Group(db.Model, TimestampMixin):
             group=self,
             status=status
         ).count() > 0
+
+    def users(self):
+        return [m.user for m in self.members]
 
     @staticmethod
     def lookup(user, assignment):
@@ -412,6 +524,7 @@ class Group(db.Model, TimestampMixin):
         if not member:
             raise BadRequest('{0} is not invited to this group'.format(user.email))
         member.status = 'active'
+        self.assignment._unflag_all(self.assignment.active_user_ids(user.id))
 
     @transaction
     def decline(self, user):

@@ -1,0 +1,59 @@
+{% extends "student/base.html" %}
+{% import 'student/courses/_coursetable.html' as table %}
+
+{% block title %} Courses | Ok {% endblock %}
+
+{% block header %}
+
+  <!-- <div class="left col-md-2">
+    <div class="stripes">
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+    </div>
+  </div> -->
+
+{% endblock %}
+
+{% block body %}
+    <main>
+      {% include 'student/courses/sidebar.html' %}
+      <div class="col-md-2"></div>
+      <section class="content nomapa col-md-10 col-xs-12">
+        <header>
+          <div class="header-bg">
+            <div class="right col-md-3">
+                <a href="#" class="header-text"><span>Logout</span></a>
+                <div class="header-text user-profile">
+                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
+                  <i class="fa fa-user"></i>
+                </div>
+              </div>
+          </div>
+        </header>
+
+        <div class="subcontent heading">
+          <div class="wrap">
+            <h1>Courses</h1>
+          </div>
+
+          {% include 'alerts.html' %}
+
+        </div>
+        <!-- start desktop/tablet version -->
+        {{ table.render_courses(instructor, tname="Instructor Courses", admin=True) }}
+        {{ table.render_courses(current, tname="Current Courses", empty=True) }}
+        {{ table.render_courses(past, tname="Past Courses") }}
+        {{ table.render_courses(all, tname="All Courses") }}
+
+        <!-- end desktop/tablet version -->
+        <!-- start mobile version -->
+        {{ table.render_courses_mobile(instructor, tname="Instructor Courses") }}
+        {{ table.render_courses_mobile(current, tname="Current Courses", empty=True) }}
+        {{ table.render_courses_mobile(past, tname="Past Courses") }}
+        {{ table.render_courses_mobile(past, tname="All Courses") }}
+
+        <!-- end mobile version -->
+      </section>
+    </main>
+{% endblock %}

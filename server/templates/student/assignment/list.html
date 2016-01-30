@@ -1,0 +1,89 @@
+{% extends "student/base.html" %}
+{% import 'student/assignment/_tablehelper.html' as table %}
+
+{% if backups %}
+  {% set name='Backups' %}
+  {% set paginate=backups %}
+{% else %}
+  {% set name='Submissions' %}
+  {% set paginate=subms %}
+{% endif %}
+
+{% block title %} {{ assignment.display_name }} | Ok {% endblock %}
+
+{% block header %}
+
+  <!-- <div class="left col-md-2">
+    <div class="stripes">
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+    </div>
+  </div> -->
+
+{% endblock %}
+
+{% block body %}
+    <main>
+      {% include 'student/assignment/sidebar.html' %}
+      <div class="col-md-2"></div>
+      <section class="content nomapa col-md-10 col-xs-12">
+        <header>
+          <div class="header-bg">
+            <div class="right col-md-3">
+                <a href="#" class="header-text"><span>Logout</span></a>
+                <div class="header-text user-profile">
+                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
+                  <i class="fa fa-user"></i>
+                </div>
+              </div>
+          </div>
+        </header>
+
+        <div class="subcontent heading">
+          <div class="wrap">
+            <div class="string-nav">
+              <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for(".course", course=course.offering) }}"> {{ course.offering }}</a></span> &raquo;
+              <span><a href="{{ url_for(".assignment", course=course.offering, assign=assignment.offering_name()) }}"> {{ assignment.display_name }}</a></span> &raquo;
+              {{ name }}
+            </div>
+            <h1>
+              {{ paginate.total }} {{ name }}
+            </h1>
+          </div>
+
+          {% include 'alerts.html' %}
+
+        </div>
+
+        <div class="subcontent">
+             <!-- TODO: Better pagination here -->
+            {% if backups %}
+              {{ table.render_backups(backups.items, course, tname="Backups") }}
+              {{ table.render_backups_mobile(backups.items, course, tname="Backups") }}
+            {% elif subms %}
+              {{ table.render_subms(subms.items, course, flagged, tname="Submissions") }}
+              {{ table.render_subms_mobile(subms.items, course, flagged, tname="Submissions") }}
+            {% endif %}
+
+            <ul class="pager">
+              {% if paginate.has_prev %}
+                <li><a href="{{ url_for('.list_backups', course=course.offering, assign=assignment.offering_name(), page=paginate.prev_num)}}"><span aria-hidden="true">&larr;</span>Page {{ paginate.prev_num }}</a></li>
+              {% else %}
+                <li class="disabled"><a href="#"><span aria-hidden="true">&larr;</span>Previous</a></li>
+              {% endif %}
+              {% if paginate.has_next %}
+                <li><a href="{{ url_for('.list_backups', course=course.offering, assign=assignment.offering_name(), page=paginate.next_num)}}"><span aria-hidden="true">&rarr;</span> Page {{ paginate.next_num }}</a></li>
+              {% else %}
+                <li class="disabled"><a href="#"><span aria-hidden="true">&rarr;</span> Next </a></li>
+              {% endif %}
+          </div>
+
+        </div>
+
+
+      </section>
+
+    </main>
+{% endblock %}

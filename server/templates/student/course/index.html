@@ -1,0 +1,58 @@
+{% extends "student/base.html" %}
+{% import 'student/course/_assigntable.html' as table %}
+
+{% block title %} Courses | Ok {% endblock %}
+
+{% block header %}
+
+  <!-- <div class="left col-md-2">
+    <div class="stripes">
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+    </div>
+  </div> -->
+
+{% endblock %}
+
+{% block body %}
+    <main>
+      {% include 'student/course/sidebar.html' %}
+      <div class="col-md-2"></div>
+      <section class="content nomapa col-md-10 col-xs-12">
+        <header>
+          <div class="header-bg">
+            <div class="right col-md-3">
+                <a href="#" class="header-text"><span>Logout</span></a>
+                <div class="header-text user-profile">
+                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
+                  <i class="fa fa-user"></i>
+                </div>
+              </div>
+          </div>
+        </header>
+
+        <div class="subcontent heading">
+          <div class="wrap">
+            <div class="string-nav">
+              <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
+              <span>{{ course.display_name}} | {{ course.offering }}</span>
+            </div>
+            <h1>{{ course.display_name}}</h1>
+          </div>
+
+          {% include 'alerts.html' %}
+
+        </div>
+        <!-- start desktop/tablet version -->
+        {{ table.render_assign(active, course=course, tname="Current Assignments", empty=True) }}
+        {{ table.render_assign(inactive, course=course, tname="Past Assignments") }}
+
+        <!-- end desktop/tablet version -->
+        <!-- start mobile version -->
+        {{ table.render_assign_mobile(active, course=course, tname="Current Assignments", empty=True) }}
+        {{ table.render_assign_mobile(inactive,course=course, tname="Past Assignments") }}
+        <!-- end mobile version -->
+      </section>
+    </main>
+{% endblock %}

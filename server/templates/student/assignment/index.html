@@ -1,0 +1,75 @@
+{% extends "student/base.html" %}
+{% import 'student/assignment/_tablehelper.html' as table %}
+
+{% block title %} Assignment | Ok {% endblock %}
+
+{% block header %}
+
+  <!-- <div class="left col-md-2">
+    <div class="stripes">
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+    </div>
+  </div> -->
+
+{% endblock %}
+
+{% block body %}
+    <main>
+      {% include 'student/assignment/sidebar.html' %}
+      <div class="col-md-2"></div>
+      <section class="content nomapa col-md-10 col-xs-12">
+        <header>
+          <div class="header-bg">
+            <div class="right col-md-3">
+                <a href="#" class="header-text"><span>Logout</span></a>
+                <div class="header-text user-profile">
+                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
+                  <i class="fa fa-user"></i>
+                </div>
+              </div>
+          </div>
+        </header>
+
+        <div class="subcontent heading">
+          <div class="wrap">
+            <div class="string-nav">
+              <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for(".course", course=course.offering) }}"> {{ course.offering }}</a></span> &raquo;
+              <span>{{ assignment.offering_name() }}</span>
+            </div>
+            <h1>{{ assignment.display_name}}</h1>
+          </div>
+
+          {% include 'alerts.html' %}
+
+        </div>
+        <!-- start desktop/tablet version -->
+        {% if group %}
+        {% endif %}
+        <div class="subcontent row hidden-xs hidden-sm">
+          <div class="col-md-12">
+                       <!-- TODO: Better link to view all backups -->
+
+            {{ table.render_subms(subms, course, flagged, tname="Recent Submissions") }}
+            <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=True) }}" class="no-dash button-large">
+                View More Submissions
+              </a>
+          </div>
+          <div class="col-md-12">
+            {{  table.render_backups(backups, course, tname="Recent Backups") }}
+            <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=False) }}" class="no-dash button-large">
+                View More Backups
+              </a>
+
+          </div>
+        </div>
+        <!-- start mobile version -->
+        {{ table.render_subms_mobile(subms, course, flagged, tname="Recent Submissions") }}
+        {{ table.render_backups_mobile(backups, course, tname="Recent Backups") }}
+
+        <!-- end mobile version -->
+      </section>
+    </main>
+{% endblock %}

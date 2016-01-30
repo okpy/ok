@@ -37,12 +37,12 @@ class BaseForm(Form):
 
 class AssignmentForm(BaseForm):
     display_name = StringField(u'Display Name',
-                               validators=[validators.required()]),
+                               validators=[validators.required()])
     name = StringField(u'Offering', validators=[validators.required()])
     due_date = DateTimeField(u'Due Date (Pacific Time)',
                              default=dt.datetime.now,
                              validators=[validators.required()])
-    lock_date = DateTimeField(u'Lock Date (UTC)',
+    lock_date = DateTimeField(u'Lock Date (Pacific Time)',
                               default=dt.datetime.now,
                               validators=[validators.required()])
     max_group_size = IntegerField(u'Max Group Size', default=1,
@@ -60,7 +60,7 @@ class AssignmentForm(BaseForm):
         if not check_validate:
             return False
 
-        # Ensure assignment offering is unique
+        # If the name is changed , ensure assignment offering is unique
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn:
             self.name.errors.append('That offering already exists')

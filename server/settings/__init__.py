@@ -8,9 +8,11 @@ except ImportError:
 class Config:
     SECRET_KEY = 'samplekey'
     GOOGLE = {
-        'consumer_key': os.getenv('GOOGLE_ID', 'fake'),
-        'secret': os.getenv('GOOGLE_SECRET', 'fake')
+        'consumer_key': os.getenv('GOOGLE_ID', ''),
+        'consumer_secret': os.getenv('GOOGLE_SECRET', '')
     }
+    TESTING = False
+    CACHE_KEY_PREFIX = 'ok-cache'
 
 class LocalConfig(Config):
     DEBUG = True

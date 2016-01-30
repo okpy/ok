@@ -6,24 +6,28 @@
   <head>
       <title>{% block title %}{% endblock %}</title>
       <meta charset="utf-8">
+
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
       {% block meta %}
-          <meta name="description" content="">
-          <meta name="author" content="">
+          <meta name="description" content="Okpy helps courses build better programming projects">
+          <meta name="author" content="Cal-CS-61A-Staff">
       {% endblock %}
+
 
       {% assets "common_css" %}
           <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
       {% endassets %}
 
-      {% assets "adminlte_css" %}
-          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+      {% assets "student_css" %}
+          <!-- third-party libraries -->
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+          <link href='https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700' rel='stylesheet' type='text/css'>
           <!-- Ionicons -->
           <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
           <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-
       {% endassets %}
 
       {% block css %}
@@ -33,19 +37,24 @@
 
     </head>
 
+    <body>
+      {% block header %}
+      {% endblock %}
+
       {% block body %}
       {% endblock %}
-
-
-      {% assets "common_js" %}
-          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-      {% endassets %}
-      
-      {% assets "adminlte_js" %}
-          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-      {% endassets %}
-
-      {% block js %}
-      {% endblock %}
     </body>
-</html>
+
+    {% assets "common_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+    {% assets "student_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+    {% block js %}
+    {% endblock %}
+
+
+  </html>

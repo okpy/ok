@@ -1,0 +1,35 @@
+<aside class="sidebar nomapa col-md-2 left hidden-sm hidden-xs">
+    <div class="logo-box">
+      <a href="{{ url_for('student.index') }}">
+        <div class="software-logo">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Ok Logo">
+        </div>
+      </a>
+      <p class="logo-name"> {{ current_user.email }}</p>
+    </div>
+    <li class="sidebar-title">Announcements</li>
+    <ul class="staff">
+      {% if announcements %}
+      {% else %}
+      <li class="top-level"><i class="fa fa-bullhorn"></i><div class="list-item">Welcome to Ok! <br> <span>Checkout the <a class="dashed" href="http://cs61a.org/articles/using-ok.html">Ok User Guide</a></span></div></li>
+      {% endif %}
+    </ul>
+
+  <li class="sidebar-title">Actions</li>
+  <ul class="staff">
+    <li class="top-level">
+      <i class="fa fa-list"></i>
+      <div class="list-item">
+        <a href="{{ url_for('student.index' )}}">Choose Courses</a>
+      </div>
+      {% if request.endpoint == 'student.index' %}
+        <i class="fa fa-eye viewing"></i>
+      {% endif %}
+    </li>
+    </a>
+    <a href="{{ url_for('auth.logout' )}}">
+      <li class="top-level"><i class="fa fa-sign-out"></i><div class="list-item">Logout<span></span></div></li>
+    </a>
+  </ul>
+
+</aside>
