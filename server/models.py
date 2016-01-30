@@ -170,11 +170,47 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
             Backup.submit == True
         ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
 
+    @transaction
+    def flag(self, backup_id, member_ids):
+        """Flag a submission. First unflags any submissions by one of
+        MEMBER_IDS, which is a list of group member user IDs.
+        """
+        self._unflag_all(member_ids)
+        backup = Backup.query.filter(
+            Backup.id == backup_id,
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == False
+        ).one_or_none()
+        if not backup:
+            raise BadRequest('Could not find backup')
+        backup.flagged = True
+
+    @transaction
+    def unflag(self, backup_id, member_ids):
+        """Unflag a submission."""
+        backup = Backup.query.filter(
+            Backup.id == backup_id,
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == True
+        ).one_or_none()
+        if not backup:
+            raise BadRequest('Could not find backup')
+        backup.flagged = False
+
+    def _unflag_all(self, member_ids):
+        """Unflag all submissions by members of MEMBER_IDS."""
+        # There should only ever be one flagged submission
+        backup = Backup.query.filter(
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == True
+        ).one_or_none()
+        if backup:
+            backup.flagged = False
+
     def offering_name(self):
         """ Returns the assignment name without the course offering.
         """
         return self.name.replace(self.course.offering + '/', '')
-
 
 
 class Enrollment(db.Model, TimestampMixin):
@@ -253,9 +289,11 @@ class Enrollment(db.Model, TimestampMixin):
 
 class Message(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), index=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
     raw_contents = db.Column(db.String())
     kind = db.Column(db.String(), index=True)
+
+    backup = db.relationship("Backup")
 
     @hybrid_property
     def contents(self):
@@ -391,7 +429,7 @@ class GroupMember(db.Model, TimestampMixin):
         pending - The user has been invited to the group.
         active  - The user accepted the invite and is part of the group.
     """
-    __tablename__ = 'GroupMember'
+    __tablename__ = 'group_member'
     __table_args__ = (
         PrimaryKeyConstraint('user_id', 'assignment_id', name='pk_GroupMember'),
     )
@@ -486,6 +524,7 @@ class Group(db.Model, TimestampMixin):
         if not member:
             raise BadRequest('{0} is not invited to this group'.format(user.email))
         member.status = 'active'
+        self.assignment._unflag_all(self.assignment.active_user_ids(user.id))
 
     @transaction
     def decline(self, user):

@@ -123,9 +123,8 @@ def list_backups(course, assign, submit):
     return render_template('student/assignment/list.html', course=course,
             assignment=assign, backups=backups, flagged=flagged)
 
-
-@student.route(ASSIGNMENT_DETAIL + "submissions/<int:bid>/", defaults={'submit': True})
 @student.route(ASSIGNMENT_DETAIL + "backups/<int:bid>/", defaults={'submit': False})
+@student.route(ASSIGNMENT_DETAIL + "submissions/<int:bid>/", defaults={'submit': True})
 @login_required
 @get_course
 def code(course, assign, bid, submit):
@@ -151,4 +150,22 @@ def code(course, assign, bid, submit):
                 files=files, backup_type=backup_type)
     else:
         flash("File doesn't exist (or you don't have permission)", "danger")
-        abort(403)
+        abort(404)
+
+@student.route(ASSIGNMENT_DETAIL + "submissions/<int:bid>/flag/", methods=['POST'])
+@login_required
+@get_course
+def flag(course, assign, bid):
+    assign = assignment_by_name(assign, course.offering)
+    if assign:
+        course = assign.course
+        user_ids = assign.active_user_ids(current_user.id)
+        flag = 'flag' in request.form
+        next_url = request.form['next']
+        if flag:
+            assign.flag(bid, user_ids)
+        else:
+            assign.unflag(bid, user_ids)
+        return redirect(next_url)
+    else:
+        abort(404)
