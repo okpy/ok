@@ -157,7 +157,7 @@
         <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}"><time datetime="{{backup.created}}" >{{backup.created}}</time>     </a></div>
         <div class="cell-text"><span>Submitter:  {{ backup.user.email }}</span></div>
         <div class="cell-status">
-        <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id)}}" class="dashed">
+        <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}" class="dashed">
             View Code
         </a>
 

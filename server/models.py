@@ -38,8 +38,11 @@ def transaction(f):
             raise
     return wrapper
 
-class DictMixin(object):
 
+class DictMixin(object):
+    """ For objects that may have to be serialized into a dictionary.
+    Must contain an integer ID property.
+    """
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
@@ -89,6 +92,10 @@ class Course(db.Model, TimestampMixin, DictMixin):
     def __repr__(self):
         return '<Course %r>' % self.offering
 
+    @staticmethod
+    def by_name(name):
+        return Course.query.filter_by(offering=name).one_or_none()
+
     def is_enrolled(self, user):
         return Enrollment.query.filter_by(
             user=user,
@@ -122,6 +129,16 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
     @hybrid_property
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
+
+    @staticmethod
+    def by_name(name, course_offering=None):
+        """ Return assignment object when given a name. If a course offering is
+        provided, the assignment name is prefixed by the course offering.
+        """
+        if course_offering:
+            name = course_offering + '/' + name
+        return Assignment.query.filter_by(name=name).one_or_none()
+
 
     def active_user_ids(self, user_id):
         """Return a set of the ids of all users that are active in the same group

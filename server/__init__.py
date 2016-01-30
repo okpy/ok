@@ -6,6 +6,7 @@ from webassets.loaders import PythonLoader as PythonAssetsLoader
 
 from server import assets
 from server.models import db
+from server.utils import HashidConverter
 from server.controllers.admin import admin
 from server.controllers.api import endpoints as api
 from server.controllers.auth import auth, login_manager
@@ -54,6 +55,9 @@ def create_app(object_name):
     assets_loader = PythonAssetsLoader(assets)
     for name, bundle in assets_loader.load_bundles().items():
         assets_env.register(name, bundle)
+
+    # custom URL handling
+    app.url_map.converters['hashid'] = HashidConverter
 
     # register our blueprints
     app.register_blueprint(main)
