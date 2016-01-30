@@ -36,6 +36,7 @@ psycopg2==2.6.1
 itsdangerous==0.24
 cssmin==0.2.0
 jsmin==2.2.0
+hashids==1.1.0
 
 # Testing
 pytest==2.8.5

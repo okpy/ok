@@ -2,7 +2,9 @@
 
 from flask import Flask
 from flask.ext.rq import RQ
+from hashids import Hashids
 from webassets.loaders import PythonLoader as PythonAssetsLoader
+from werkzeug.routing import BaseConverter
 
 from server import assets
 from server.models import db
@@ -20,6 +22,17 @@ from server.extensions import (
     debug_toolbar
 )
 
+class HashidConverter(BaseConverter):
+    # ID hashing configuration.
+    # DO NOT CHANGE ONCE THE APP IS PUBLICLY AVAILABLE. You will break every
+    # link with an ID in it.
+    hashids = Hashids(min_length=6)
+
+    def to_python(self, value):
+        return self.hashids.decode(value)
+
+    def to_url(self, value):
+        return self.hashids.encode(value)
 
 def create_app(object_name):
     """
@@ -54,6 +67,9 @@ def create_app(object_name):
     assets_loader = PythonAssetsLoader(assets)
     for name, bundle in assets_loader.load_bundles().items():
         assets_env.register(name, bundle)
+
+    # custom URL handling
+    app.url_map.converters['hashid'] = HashidConverter
 
     # register our blueprints
     app.register_blueprint(main)
