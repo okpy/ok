@@ -4,7 +4,7 @@ from flask import Flask
 from flask.ext.rq import RQ
 from hashids import Hashids
 from webassets.loaders import PythonLoader as PythonAssetsLoader
-from werkzeug.routing import BaseConverter
+from werkzeug.routing import BaseConverter, ValidationError
 
 from server import assets
 from server.models import db
@@ -29,7 +29,10 @@ class HashidConverter(BaseConverter):
     hashids = Hashids(min_length=6)
 
     def to_python(self, value):
-        return self.hashids.decode(value)
+        numbers = self.hashids.decode(value)
+        if len(numbers) != 1:
+            raise ValidationError('Could not decode hash {} into ID'.format(value))
+        return numbers[0]
 
     def to_url(self, value):
         return self.hashids.encode(value)
