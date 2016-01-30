@@ -16,7 +16,7 @@
             <div class="due">
               <span>
                 {% if admin %}
-                <a href="{{ url_for('admin.course', cid=course.id) }}">{{course.display_name}}</a>
+                <a href="{{ url_for('admin.course', cid=course.id) }}" data-no-instant>{{course.display_name}}</a>
                 {% else %}
                 <a href="{{ url_for('student.course', course=course.offering) }}">{{course.display_name}}</a>
                 {% endif %}

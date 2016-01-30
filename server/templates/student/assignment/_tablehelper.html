@@ -78,7 +78,7 @@
         {% for backup in backups %}
         <tr>
           <td>
-            <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}">
+            <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}" data-no-instant>
               <time datetime="{{backup.created}}" >{{backup.created}}</time>
             </a>
           </td>
@@ -88,7 +88,7 @@
             </span>
           </td>
           <td>
-              <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}" class="no-dash button-small">
+              <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}" class="no-dash button-small" data-no-instant>
                 View Code
               </a>
           </td>
@@ -114,7 +114,7 @@
       {% for subm in subms %}
 
       <div class="cell col-xs-12">
-        <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}"><time datetime="{{subm.created}}">{{subm.created}}</time>      </a></div>
+        <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}" data-no-instant><time datetime="{{subm.created}}">{{subm.created}}</time>      </a></div>
         <div class="cell-text"><span>Submitter:  {{ subm.user.email }}</span></div>
         <div class="cell-status">
           <span>
