@@ -183,10 +183,7 @@ class TestGroup(OkTestCase):
         state = {
             'id': group.id,
             'assignment_id': group.assignment_id,
-            'members': [{
-                'user_id': self.user1.id,
-                'status': 'active'
-            }]
+            'members': []
         }
 
         action = latest_action()
@@ -194,6 +191,10 @@ class TestGroup(OkTestCase):
         assert action.user_id == self.user1.id
         assert action.target_id == self.user2.id
         assert action.group_before == json.dumps(state)
+        state['members'].append({
+            'user_id': self.user1.id,
+            'status': 'active'
+        })
         state['members'].append({
             'user_id': self.user2.id,
             'status': 'pending'

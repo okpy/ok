@@ -491,13 +491,15 @@ class Group(db.Model, TimestampMixin):
         if not assignment.active:
             raise BadRequest('The assignment is past due')
         group = Group.lookup(sender, assignment)
+        add_sender = group is None
         if not group:
             group = Group(assignment=assignment)
             db.session.add(group)
-            group._add_member(sender, 'active')
         elif not group.has_status(sender, 'active'):
             raise BadRequest('You are not in the group')
         with group._log('invite', sender.id, recipient.id):
+            if add_sender:
+                group._add_member(sender, 'active')
             group._add_member(recipient, 'pending')
 
     @transaction
