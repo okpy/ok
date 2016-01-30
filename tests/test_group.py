@@ -1,7 +1,8 @@
 import datetime
+import json
 from werkzeug.exceptions import BadRequest
 
-from server.models import db, Assignment, Group, User
+from server.models import db, Assignment, Group, GroupAction, User
 
 from .helpers import OkTestCase
 
@@ -171,3 +172,72 @@ class TestGroup(OkTestCase):
 
         self.assertRaises(BadRequest, group.remove, self.user2, self.user3)
         self.assertRaises(BadRequest, group.remove, self.user3, self.user2)
+
+    def test_log(self):
+        def latest_action():
+            return GroupAction.query.order_by(GroupAction.id.desc()).first()
+
+        Group.invite(self.user1, self.user2, self.assignment)
+        group = Group.lookup(self.user1, self.assignment)
+
+        state = {
+            'id': group.id,
+            'assignment_id': group.assignment_id,
+            'members': [{
+                'user_id': self.user1.id,
+                'status': 'active'
+            }]
+        }
+
+        action = latest_action()
+        assert action.action_type == 'invite'
+        assert action.user_id == self.user1.id
+        assert action.target_id == self.user2.id
+        assert action.group_before == json.dumps(state)
+        state['members'].append({
+            'user_id': self.user2.id,
+            'status': 'pending'
+        })
+        assert action.group_after == json.dumps(state)
+
+        group.accept(self.user2)
+
+        action = latest_action()
+        assert action.action_type == 'accept'
+        assert action.user_id == self.user2.id
+        assert action.target_id == self.user2.id
+        assert action.group_before == json.dumps(state)
+        state['members'][1]['status'] = 'active'
+        assert action.group_after == json.dumps(state)
+
+        Group.invite(self.user1, self.user3, self.assignment)
+
+        action = latest_action()
+        assert action.action_type == 'invite'
+        assert action.user_id == self.user1.id
+        assert action.target_id == self.user3.id
+        assert action.group_before == json.dumps(state)
+        state['members'].append({
+            'user_id': self.user3.id,
+            'status': 'pending'
+        })
+        assert action.group_after == json.dumps(state)
+
+        group.decline(self.user3)
+
+        action = latest_action()
+        assert action.action_type == 'decline'
+        assert action.user_id == self.user3.id
+        assert action.target_id == self.user3.id
+        assert action.group_before == json.dumps(state)
+        state['members'].pop(2)
+        assert action.group_after == json.dumps(state)
+
+        group.remove(self.user2, self.user1)
+        action = latest_action()
+        assert action.action_type == 'remove'
+        assert action.user_id == self.user2.id
+        assert action.target_id == self.user1.id
+        assert action.group_before == json.dumps(state)
+        state['members'] = []
+        assert action.group_after == json.dumps(state)

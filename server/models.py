@@ -9,6 +9,7 @@ from flask.ext.cache import Cache
 cache = Cache()
 
 import functools
+import contextlib
 import csv
 import json
 from datetime import datetime as dt
@@ -496,7 +497,8 @@ class Group(db.Model, TimestampMixin):
             group._add_member(sender, 'active')
         elif not group.has_status(sender, 'active'):
             raise BadRequest('You are not in the group')
-        group._add_member(recipient, 'pending')
+        with group._log('invite', sender.id, recipient.id):
+            group._add_member(recipient, 'pending')
 
     @transaction
     def remove(self, user, target_user):
@@ -509,7 +511,8 @@ class Group(db.Model, TimestampMixin):
             raise BadRequest('The assignment is past due')
         if not self.has_status(user, 'active'):
             raise BadRequest('You are not in the group')
-        self._remove_member(target_user)
+        with self._log('remove', user.id, target_user.id):
+            self._remove_member(target_user)
 
     @transaction
     def accept(self, user):
@@ -523,7 +526,8 @@ class Group(db.Model, TimestampMixin):
         ).one_or_none()
         if not member:
             raise BadRequest('{0} is not invited to this group'.format(user.email))
-        member.status = 'active'
+        with self._log('accept', user.id, user.id):
+            member.status = 'active'
         self.assignment._unflag_all(self.assignment.active_user_ids(user.id))
 
     @transaction
@@ -531,7 +535,8 @@ class Group(db.Model, TimestampMixin):
         """Decline an invitation."""
         if not self.assignment.active:
             raise BadRequest('The assignment is past due')
-        self._remove_member(user)
+        with self._log('decline', user.id, user.id):
+            self._remove_member(user)
 
     def _add_member(self, user, status):
         if self.size() >= self.assignment.max_group_size:
@@ -545,7 +550,7 @@ class Group(db.Model, TimestampMixin):
         if member:
             raise BadRequest('{0} is already in this group'.format(user.email))
         member = GroupMember(
-            user=user,
+            user_id=user.id,
             group=self,
             assignment=self.assignment,
             status=status)
@@ -561,3 +566,54 @@ class Group(db.Model, TimestampMixin):
         db.session.delete(member)
         if self.size() <= 1:
             db.session.delete(self)
+
+    def serialize(self):
+        """Turn the group into a string, which is a JSON object with:
+        - id: the group id
+        - assignment_id: the assignment id
+        - members: a list of objects, with keys
+            - user_id: the user id
+            - status: the user's status ("pending" or "active")
+        """
+        members = GroupMember.query.filter_by(group_id=self.id).all()
+        return json.dumps({
+            'id': self.id,
+            'assignment_id': self.assignment_id,
+            'members': [{
+                'user_id': member.user_id,
+                'status': member.status
+            } for member in members]
+        })
+
+    @contextlib.contextmanager
+    def _log(self, action_type, user_id, target_id):
+        """Usage:
+
+        with self._log('invite', user_id, target_id):
+            ...
+        """
+        before = self.serialize()
+        yield
+        after = self.serialize()
+        action = GroupAction(
+            action_type=action_type,
+            user_id=user_id,
+            target_id=target_id,
+            group_before=before,
+            group_after=after)
+        db.session.add(action)
+
+
+class GroupAction(db.Model, TimestampMixin):
+    """A group event, for auditing purposes. All group activity is logged."""
+    action_types = ['invite', 'accept', 'decline', 'remove']
+
+    id = db.Column(db.Integer(), primary_key=True)
+    action_type = db.Column(db.Enum(*action_types, name='action_type'), nullable=False)
+    # user who initiated request
+    user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    # user whose status was affected
+    target_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    # see Group.serialize for format
+    group_before = db.Column(db.String())
+    group_after = db.Column(db.String())
