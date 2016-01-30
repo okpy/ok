@@ -12,27 +12,23 @@
         </tr>
         {% for subm in subms %}
         <tr>
-
-          <td class="tip-trigger">
-            {% if subm.flagged %}
-            <span class="final-yes"><i class="fa fa-flag"></i>
-              <div class="tip">
-                <span>Marked for grading</span>
-              </div>
-            </span>
-            {% elif not flagged and loop.index == 1 %}
-            <span class="grey"><i class="fa fa-flag"></i>
-              <div class="tip">
-                <span> This is the most recent submission. <br> Unless you flag another submission, this one will be graded</span>
-              </div>
-            </span>
-            {% else %}
-              <span class="final-no"><i class="fa fa-flag-o"></i>
-                <div class="tip grey">
-                  <span>Not flagged for grading.
-                </div>
-              </span>
+          <td>
+            <form class="form-inline" action="{{ url_for('.flag', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id) }}" method="post">
+              {% if not subm.flagged %}
+                <input type="hidden" name="flag">
               {% endif %}
+              <input type="hidden" name="next" value="{{ request.full_path }}">
+              <button class="tip-trigger final-button" type="submit">
+                <div class="tip">
+                  {% if subm.flagged %}
+                    <span>Flagged for grading (click to unflag)</span>
+                  {% else %}
+                    <span>Not flagged for grading (click to flag)</span>
+                  {% endif %}
+                </div>
+                <i class="fa fa-flag final-{{ 'yes' if subm.flagged else 'no' }}"></i>
+              </button>
+            </form>
           </td>
           <td>
             <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}">
