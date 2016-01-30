@@ -8,7 +8,6 @@ import functools
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 from server.models import User, Course, Assignment, Group, Backup, db
-from server.utils import assignment_by_name, course_by_name
 
 student = Blueprint('student', __name__)
 
@@ -24,7 +23,7 @@ def get_course(func):
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        course = course_by_name(kwargs['course'])
+        course = Course.by_name(kwargs['course'])
         if not course:
             print("Course not found", kwargs['course'])
             return abort(404)
@@ -87,7 +86,7 @@ ASSIGNMENT_DETAIL = "/<path:course>/assignments/<string:assign>/"
 @login_required
 @get_course
 def assignment(course, assign):
-    assign = assignment_by_name(assign, course.offering)
+    assign = Assignment.by_name(assign, course.offering)
     if not assign:
         return abort(404)
     user_ids = assign.active_user_ids(current_user.id)
@@ -104,7 +103,7 @@ def assignment(course, assign):
 @login_required
 @get_course
 def list_backups(course, assign, submit):
-    assign = assignment_by_name(assign, course.offering)
+    assign = Assignment.by_name(assign, course.offering)
     if not assign:
         abort(404)
     page = request.args.get('page', 1, type=int)
@@ -128,7 +127,7 @@ def list_backups(course, assign, submit):
 @login_required
 @get_course
 def code(course, assign, bid, submit):
-    assign = assignment_by_name(assign, course.offering)
+    assign = Assignment.by_name(assign, course.offering)
     if not assign:
         abort(404)
     user_ids = assign.active_user_ids(current_user.id)
@@ -156,7 +155,7 @@ def code(course, assign, bid, submit):
 @login_required
 @get_course
 def flag(course, assign, bid):
-    assign = assignment_by_name(assign, course.offering)
+    assign = Assignment.by_name(assign, course.offering)
     if assign:
         course = assign.course
         user_ids = assign.active_user_ids(current_user.id)

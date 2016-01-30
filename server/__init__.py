@@ -2,12 +2,11 @@
 
 from flask import Flask
 from flask.ext.rq import RQ
-from hashids import Hashids
 from webassets.loaders import PythonLoader as PythonAssetsLoader
-from werkzeug.routing import BaseConverter, ValidationError
 
 from server import assets
 from server.models import db
+from server.utils import HashidConverter
 from server.controllers.admin import admin
 from server.controllers.api import endpoints as api
 from server.controllers.auth import auth, login_manager
@@ -22,20 +21,6 @@ from server.extensions import (
     debug_toolbar
 )
 
-class HashidConverter(BaseConverter):
-    # ID hashing configuration.
-    # DO NOT CHANGE ONCE THE APP IS PUBLICLY AVAILABLE. You will break every
-    # link with an ID in it.
-    hashids = Hashids(min_length=6)
-
-    def to_python(self, value):
-        numbers = self.hashids.decode(value)
-        if len(numbers) != 1:
-            raise ValidationError('Could not decode hash {} into ID'.format(value))
-        return numbers[0]
-
-    def to_url(self, value):
-        return self.hashids.encode(value)
 
 def create_app(object_name):
     """
