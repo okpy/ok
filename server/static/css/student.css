@@ -500,7 +500,6 @@ table.highlight {
 
 table.highlight td {
   padding: 0 10px;
-  border-color: rgb(238, 238, 238);
 }
 
 .line-number::before {
