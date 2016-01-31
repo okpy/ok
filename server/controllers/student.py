@@ -90,16 +90,14 @@ def assignment(course, assign):
     if not assign:
         return abort(404)
     user_ids = assign.active_user_ids(current_user.id)
-    backups = assign.backups(user_ids).limit(5).all()
-    subms = assign.submissions(user_ids).limit(5).all()
+    backups = assign.backups(user_ids, submit=False).limit(5).all()
+    subms = assign.backups(user_ids, submit=True).limit(5).all()
     final_submission = assign.final_submission(user_ids)
     flagged = final_submission and final_submission.flagged
     return render_template('student/assignment/index.html', course=course,
             assignment=assign, backups=backups, subms=subms, flagged=flagged)
 
-# TODO : Consolidate subm/backup list into one route? So many decorators ...
-@student.route(ASSIGNMENT_DETAIL + "backups/", defaults={'submit': False})
-@student.route(ASSIGNMENT_DETAIL + "submissions/", defaults={'submit': True})
+@student.route(ASSIGNMENT_DETAIL + "<bool(backups, submissions):submit>/")
 @login_required
 @get_course
 def list_backups(course, assign, submit):
@@ -108,22 +106,12 @@ def list_backups(course, assign, submit):
         abort(404)
     page = request.args.get('page', 1, type=int)
     user_ids = assign.active_user_ids(current_user.id)
-
-    final_submission = assign.final_submission(user_ids)
-    flagged = final_submission and final_submission.flagged
-
-    if submit :
-        # Submissions should take a flag for backups
-        subms = assign.submissions(user_ids).paginate(page=page, per_page=10)
-        return render_template('student/assignment/list.html', course=course,
-                assignment=assign, subms=subms, flagged=flagged)
-
-    backups = assign.backups(user_ids).paginate(page=page, per_page=10)
+    backups = assign.backups(user_ids, submit)
+    paginate = backups.paginate(page=page, per_page=10)
     return render_template('student/assignment/list.html', course=course,
-            assignment=assign, backups=backups, flagged=flagged)
+            assignment=assign, paginate=paginate, submit=submit)
 
-@student.route(ASSIGNMENT_DETAIL + "backups/<hashid:bid>/", defaults={'submit': False})
-@student.route(ASSIGNMENT_DETAIL + "submissions/<hashid:bid>/", defaults={'submit': True})
+@student.route(ASSIGNMENT_DETAIL + "<bool(backups, submissions):submit>/<hashid:bid>/")
 @login_required
 @get_course
 def code(course, assign, bid, submit):
