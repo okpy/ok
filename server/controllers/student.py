@@ -90,8 +90,8 @@ def assignment(course, assign):
     if not assign:
         return abort(404)
     user_ids = assign.active_user_ids(current_user.id)
-    backups = assign.backups(user_ids, submit=False).limit(5).all()
-    subms = assign.backups(user_ids, submit=True).limit(5).all()
+    backups = assign.backups(user_ids).limit(5).all()
+    subms = assign.submissions(user_ids).limit(5).all()
     final_submission = assign.final_submission(user_ids)
     flagged = final_submission and final_submission.flagged
     return render_template('student/assignment/index.html', course=course,
@@ -106,7 +106,10 @@ def list_backups(course, assign, submit):
         abort(404)
     page = request.args.get('page', 1, type=int)
     user_ids = assign.active_user_ids(current_user.id)
-    backups = assign.backups(user_ids, submit)
+    if submit:
+        backups = assign.submissions(user_ids)
+    else:
+        backups = assign.backups(user_ids)
     paginate = backups.paginate(page=page, per_page=10)
     return render_template('student/assignment/list.html', course=course,
             assignment=assign, paginate=paginate, submit=submit)
