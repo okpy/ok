@@ -60,7 +60,7 @@ def create_app(object_name):
     app.url_map.converters['hashid'] = utils.HashidConverter
 
     # custom Jinja rendering
-    app.jinja_env.globals.update(highlight=highlight)
+    app.jinja_env.globals.update(highlight=highlight, utils=utils)
 
     # register our blueprints
     app.register_blueprint(main)
