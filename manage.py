@@ -43,22 +43,6 @@ def make_backup(user, assign, time, messages, submit=True):
     db.session.add_all(messages)
     db.session.add(backup)
 
-original_file = """
-import antigravity
-
-def foo(n):
-    print 'Hello world!'
-    return n
-"""
-
-modified_file = """
-def foo(n):
-    return n
-
-def bar(n):
-    print 'Hello world!'
-"""
-
 @manager.command
 def seed():
     """ Create default records for development.
@@ -76,7 +60,10 @@ def seed():
     students = [User(email='student{}@okpy.org'.format(i)) for i in range(60)]
     db.session.add_all(students)
 
-    files = {'backup.py': original_file}
+    original_file = open('tests/files/before.py').read()
+    modified_file = open('tests/files/after.py').read()
+
+    files = {'difflib.py': original_file}
     assign = Assignment(name="cs61a/test16/test", creator=staff_member.id,
                         course_id=courses[0].id, display_name="test",
                         due_date=future, lock_date=future)
@@ -87,7 +74,7 @@ def seed():
     db.session.add(assign2)
     db.session.commit()
 
-    messages = {'file_contents': {'backup.py': modified_file}, 'analytics': {}}
+    messages = {'file_contents': {'difflib.py': modified_file}, 'analytics': {}}
     for i in range(20):
         for submit in (False, True):
             time = datetime.now()-timedelta(days=i)
