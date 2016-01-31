@@ -1,4 +1,5 @@
 import difflib
+import itertools
 
 import pygments
 import pygments.lexers
@@ -9,6 +10,10 @@ def highlight(filename, source):
     return pygments.highlight(source,
         pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False),
         pygments.formatters.HtmlFormatter(nowrap=True))
+
+def highlight_file(filename, source):
+    """Given a source file, generate a sequence of (line index, HTML) pairs."""
+    return zip(itertools.count(1), highlight(filename, source).splitlines())
 
 def highlight_diff(filename, a, b):
     """Given two input strings, generate a sequence of 4-tuples. The elements

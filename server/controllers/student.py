@@ -114,7 +114,7 @@ def list_backups(course, assign, submit):
 @student.route(ASSIGNMENT_DETAIL + "<bool(backups, submissions):submit>/<hashid:bid>/")
 @login_required
 @get_course
-def code(course, assign, bid, submit):
+def code(course, assign, submit, bid):
     assign = Assignment.by_name(assign, course.offering)
     if not assign:
         abort(404)
@@ -122,8 +122,9 @@ def code(course, assign, bid, submit):
     backup = Backup.query.get(bid)
     if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, course)):
         abort(404)
+    use_diff = request.args.get('diff', False)
     return render_template('student/assignment/code.html',
-        course=course, assignment=assign, backup=backup,
+        course=course, assignment=assign, backup=backup, use_diff=use_diff,
         files_before=assign.files(), files_after=backup.files())
 
 @student.route(ASSIGNMENT_DETAIL + "submissions/<hashid:bid>/flag/", methods=['POST'])
