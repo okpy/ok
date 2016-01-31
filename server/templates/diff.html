@@ -21,7 +21,6 @@
 
 {% macro highlight_diff(filename, a, b) %}
   {% call source_file(filename) %}
-    {# TODO element ids #}
     {% for tag, i, j, line in highlight.highlight_diff(filename, a, b) %}
       <tr class="highlight-{{ tag }}">
         {{ line_number(i) }}
@@ -41,7 +40,6 @@
 
 {% macro highlight_file(filename, source) %}
   {% call source_file(filename) %}
-    {# TODO element ids #}
     {% for i, line in highlight.highlight_file(filename, source) %}
       <tr>
         {{ line_number(i) }}
