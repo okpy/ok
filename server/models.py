@@ -167,7 +167,7 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         else:
             return {member.user_id for member in members}
 
-    def backups(self, user_ids, submit):
+    def backups(self, user_ids, submit=False):
         """Return a query for the backups that the list of users has for this
         assignment.
         """
@@ -176,6 +176,9 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
             Backup.assignment_id == self.id,
             Backup.submit == submit
         ).order_by(Backup.client_time.desc())
+
+    def submissions(self, user_ids):
+        return self.backups(user_ids, submit=True)
 
     def final_submission(self, user_ids):
         """Return a final submission for a user, or None."""
