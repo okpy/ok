@@ -124,11 +124,19 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
     max_group_size = db.Column(db.Integer(), default=1)
     revisions = db.Column(db.Boolean(), default=False)
     autograding_key = db.Column(db.String())
+    raw_files = db.Column(db.Text())  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
     @hybrid_property
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
+
+    def files(self):
+        """Return a dictionary of filenames to contents."""
+        if self.raw_files is None:
+            return {}
+        else:
+            return json.loads(str(self.raw_files))
 
     @staticmethod
     def by_name(name, course_offering=None):
