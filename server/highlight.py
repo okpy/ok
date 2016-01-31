@@ -6,14 +6,14 @@ import pygments.lexers
 import pygments.formatters
 
 def highlight(filename, source):
-    """Highlights an input string into an HTML string."""
+    """Highlights an input string into a list of HTML strings, one per line."""
     return pygments.highlight(source,
         pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False),
-        pygments.formatters.HtmlFormatter(nowrap=True))
+        pygments.formatters.HtmlFormatter(nowrap=True)).splitlines(keepends=True)
 
 def highlight_file(filename, source):
     """Given a source file, generate a sequence of (line index, HTML) pairs."""
-    return zip(itertools.count(1), highlight(filename, source).splitlines())
+    return zip(itertools.count(1), highlight(filename, source))
 
 def highlight_diff(filename, a, b):
     """Given two input strings, generate a sequence of 4-tuples. The elements
@@ -23,8 +23,8 @@ def highlight_diff(filename, a, b):
         * the line number of the second file (or None)
         * the rendered HTML string of the line
     """
-    highlighted_a = highlight(filename, a).splitlines()
-    highlighted_b = highlight(filename, b).splitlines()
+    highlighted_a = highlight(filename, a)
+    highlighted_b = highlight(filename, b)
 
     def delete(i1, i2):
         for i in range(i1, i2):
