@@ -47,6 +47,7 @@ landing_css = Bundle(
 
 student_css = Bundle(
     'css/student.css',
+    'css/highlight.css',
     filters='cssmin',
     output='public/css/student.css'
 )
