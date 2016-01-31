@@ -360,6 +360,16 @@ class Backup(db.Model, TimestampMixin, DictMixin):
         # Allow staff members to view
         return user.is_enrolled(course.id, STAFF_ROLES)
 
+    def files(self):
+        """Return a dictionary of filenames to contents."""
+        message = Message.query.filter_by(
+            backup_id=self.id,
+            kind='file_contents').first()
+        if message:
+            return message.contents
+        else:
+            return {}
+
     @staticmethod
     def statistics(self):
         db.session.query(Backup).from_statement(
