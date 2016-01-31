@@ -52,7 +52,11 @@
         <!-- start desktop/tablet version -->
         <div class="subcontent list">
           <div class="wrap">
-            <p> Recieved at <time datetime="{{ backup.created }}">{{ backup.created }}</time> from {{ backup.submitter.email }} </p>
+            <p> Recieved at <time datetime="{{ backup.created }}">{{ backup.created }}</time> from {{ backup.submitter.email }}
+              <a href="{{ url_for('.code', course=course.offering, assign=assignment.offering_name(), bid=backup.id, submit=backup.submit, diff=None if use_diff else 1) }}" class="no-dash button-small">
+                View {{ 'Code' if use_diff else 'Diff' }}
+              </a>
+            </p>
             {% if use_diff %}
               {{ diff.highlight_diffs(files_before, files_after) }}
             {% else %}
