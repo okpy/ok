@@ -69,6 +69,8 @@ def create_app(object_name):
     # register our blueprints
     app.register_blueprint(main)
 
+    # OAuth should not need CSRF protection
+    csrf.exempt(auth)
     app.register_blueprint(auth)
 
     app.register_blueprint(admin, url_prefix='/admin')

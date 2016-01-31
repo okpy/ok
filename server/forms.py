@@ -1,6 +1,6 @@
 from flask_wtf import Form
-from wtforms import StringField, DateTimeField, BooleanField, IntegerField
-from wtforms import SelectField, TextAreaField, SubmitField, validators
+from wtforms import StringField, DateTimeField, BooleanField, IntegerField, \
+    SelectField, TextAreaField, SubmitField, HiddenField, validators
 
 from wtforms.widgets.core import HTMLString, html_params, escape
 from wtforms.fields.html5 import EmailField
@@ -112,13 +112,5 @@ class BatchEnrollmentForm(BaseForm):
                 return False
         return True
 
-class InviteMemberForm(BaseForm):
-    email = EmailField(u'Email',
-                       validators=[validators.required(), validators.email()])
-    submit = SubmitField('Invite')
-
-class RemoveMemberForm(BaseForm):
-    submit = SubmitField('Remove')
-
-class DummyForm(BaseForm):
-    submit = SubmitField('Submit')
+class CSRFForm(BaseForm):
+    pass

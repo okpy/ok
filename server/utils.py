@@ -1,5 +1,6 @@
 from hashids import Hashids
 from werkzeug.routing import BaseConverter, ValidationError
+from urllib.parse import urlparse, urljoin
 
 from server.extensions import cache
 
@@ -17,3 +18,9 @@ class HashidConverter(BaseConverter):
 
     def to_url(self, value):
         return self.hashids.encode(value)
+
+def is_safe_redirect_url(request, target):
+  host_url = urlparse(request.host_url)
+  redirect_url = urlparse(urljoin(request.host_url, target))
+  return redirect_url.scheme in ('http', 'https') and \
+    host_url.netloc == redirect_url.netloc

@@ -389,6 +389,9 @@ header .logo {
   input.button-small {
     border:none;
   }
+  button.button-small {
+    border:none;
+  }
 
   .button-small {
     background-color:#eee;

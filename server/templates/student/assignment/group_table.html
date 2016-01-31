@@ -1,0 +1,68 @@
+{% import 'student/assignment/_formhelpers.html' as forms %}
+
+<table class="top-align">
+  <tbody>
+    <tr class="header">
+      <th>Email</th>
+      <th>Status</th>
+      <th>Info</th>
+    </tr>
+    {% if group %}
+      {% for member in group.members %}
+        <tr>
+          <td><span>{{ member.user.email }}</span></td>
+          <td><span>{{ member.status }} </span> </td>
+          <td>
+            {% if member.status == 'active' and can_remove %}
+              {% call forms.render_form(csrf_form, action_url='group/remove', class_='') %}
+                  <input class="hidden" id="email" class="form-action" name="email" type="hidden" value="{{ member.user.email }}">
+                  <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="Remove">
+                {% if member.user == current_user %}
+                  <input class="button-small remove-confirm" type="submit" value="Leave">
+                {% else %}
+                  <input class="button-small remove-confirm" type="submit" value="Remove">
+                {% endif %}
+              {% endcall %}
+            {% elif member.status == 'pending'  %}
+              {% if member.user ==  current_user %}
+                {% call forms.render_form(csrf_form, action_url='group/respond', class_='') %}
+                  <input class="hidden" class="form-info" id="email" name="email" type="hidden" value="{{ member.user.email }}">
+                  <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="accept">
+                  <button class="button-small"  type="submit" value="Accept">
+                    <i class="fa fa-check "></i>
+                  </button>
+                {% endcall %}
+              {% endif %}
+              {% call forms.render_form(csrf_form, action_url='group/respond', class_='') %}
+                  <input class="hidden" class="form-user" id="email" name="email" type="hidden" value="{{ member.user.email }}">
+                  <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="decline">
+                  <button class="button-small remove-confirm" type="submit" value="Decline">
+                    <i class="fa fa-minus-circle"></i>
+                  </button>
+              {% endcall %}
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    {% elif assignment.active %}
+      <tr>
+        <td><span>{{ current_user.email }}</span></td>
+        <td><span> No Group </span></td>
+        <td><span> Max {{ assignment.max_group_size }} Members</span></td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>
+{% if can_invite %}
+<div class="row">
+  {% call forms.render_form(csrf_form, action_url='group/invite', class_='form') %}
+    <div class="col-md-9 col-xs-8">
+      <input class="invite-input" required id="email" name="email" placeholder="test@example.com" type="email" value="">
+    </div>
+    <div class="col-md-3 col-xs-4">
+      <input class="button-small btn-invite" id="submit" name="submit" type="submit" value="Invite">
+    </div>
+  {% endcall %}
+</div>
+
+{% endif %}
