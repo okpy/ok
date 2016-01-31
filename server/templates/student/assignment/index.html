@@ -45,9 +45,24 @@
           {% include 'alerts.html' %}
 
         </div>
+
+
+        <div class="subcontent row hidden-xs hidden-sm">
+
+          <div class="col-md-6">
+            <h2> Group </h2>
+            {% if group %}
+              {{ group }}
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            <h2> Current Submission </h2>
+            {% if group %}
+              {{ group }}
+            {% endif %}
+          </div>
+        </div>
         <!-- start desktop/tablet version -->
-        {% if group %}
-        {% endif %}
         <div class="subcontent row hidden-xs hidden-sm">
           <div class="col-md-12">
                        <!-- TODO: Better link to view all backups -->
