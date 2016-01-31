@@ -209,7 +209,7 @@ section {
   tr {
     border-bottom:1px solid #eee;
   }
-  th, td {
+  .list th, .list td {
     padding:1em;
   }
   .due-dot,.prog-dot {
