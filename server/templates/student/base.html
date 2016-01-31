@@ -47,10 +47,15 @@
 
     {% assets "common_js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+
     {% endassets %}
 
     {% assets "student_js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+        {% if not config['DEBUG'] %}
+          <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/instantclick/3.0.1/instantclick.min.js"></script>
+          <script data-no-instant>InstantClick.init(50);</script>
+        {% endif %}
     {% endassets %}
 
     {% block js %}
