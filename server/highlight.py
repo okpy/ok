@@ -24,15 +24,15 @@ def highlight_diff(filename, a, b):
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == 'replace':
             for i in range(i1, i2):
-                yield 'delete', i, None, highlighted_a[i]
+                yield 'delete', i + 1, None, highlighted_a[i]
             for j in range(j1, j2):
-                yield 'insert', None, j, highlighted_b[j]
+                yield 'insert', None, j + 1, highlighted_b[j]
         elif tag == 'delete':
             for i in range(i1, i2):
-                yield 'delete', i, None, highlighted_a[i]
+                yield 'delete', i + 1, None, highlighted_a[i]
         elif tag == 'insert':
             for j in range(j1, j2):
-                yield 'insert', None, j, highlighted_b[j]
+                yield 'insert', None, j + 1, highlighted_b[j]
         elif tag == 'equal':
             for i, j in zip(range(i1, i2), range(j1, j2)):
-                yield 'equal', i, j, highlighted_b[j]
+                yield 'equal', i + 1, j + 1, highlighted_b[j]
