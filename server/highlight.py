@@ -38,10 +38,23 @@ def highlight_diff(filename, a, b):
         for i, j in zip(range(i1, i2), range(j1, j2)):
             yield 'equal', i + 1, j + 1, ' ' + highlighted_b[j]
 
+    def format_range_unified(start, stop):
+        """Convert range to the "ed" format. From difflib.py"""
+        # Per the diff spec at http://www.unix.org/single_unix_specification/
+        beginning = start + 1     # lines start numbering with one
+        length = stop - start
+        if length == 1:
+            return '{}'.format(beginning)
+        if not length:
+            beginning -= 1        # empty ranges begin at line just before the range
+        return '{},{}'.format(beginning, length)
+
     matcher = difflib.SequenceMatcher(None, a.splitlines(), b.splitlines())
     for group in matcher.get_grouped_opcodes():
         first, last = group[0], group[-1]
-        header = '@@ -{},{} +{},{} @@'.format(first[1], last[2], first[3], last[4])
+        header = '@@ -{} +{} @@'.format(
+            format_range_unified(first[1], last[2]),
+            format_range_unified(first[3], last[4]))
         yield 'header', None, None, header
         for tag, i1, i2, j1, j2 in group:
             if tag == 'replace':
