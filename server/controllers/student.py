@@ -89,13 +89,19 @@ def assignment(course, assign):
     assign = Assignment.by_name(assign, course.offering)
     if not assign:
         return abort(404)
+
     user_ids = assign.active_user_ids(current_user.id)
-    backups = assign.backups(user_ids).limit(5).all()
-    subms = assign.submissions(user_ids).limit(5).all()
-    final_submission = assign.final_submission(user_ids)
-    flagged = final_submission and final_submission.flagged
-    return render_template('student/assignment/index.html', course=course,
-            assignment=assign, backups=backups, subms=subms, flagged=flagged)
+    fs = assign.final_submission(user_ids)
+    data = {
+        'course': course,
+        'assignment': assign,
+        'backups' : assign.backups(user_ids).limit(5).all(),
+        'subms' : assign.submissions(user_ids).limit(5).all(),
+        'final_submission' : fs,
+        'flagged' : fs and fs.flagged,
+        'group' : Group.lookup(current_user, assign)
+    }
+    return render_template('student/assignment/index.html', **data)
 
 # TODO : Consolidate subm/backup list into one route? So many decorators ...
 @student.route(ASSIGNMENT_DETAIL + "backups/", defaults={'submit': False})
