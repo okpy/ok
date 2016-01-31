@@ -104,7 +104,9 @@
 
               <div class="cell col-xs-12">
                 <div class="cell-title">
-                <a class="due-text green" href> <time datetime="{{final_submission.created}}"></time> </a>
+                  <a href="{{ url_for('.code', course=course.offering, assign=assignment.offering_name(), bid=final_submission.id, submit=final_submission.submit)}}" class="due-text green">
+                    <time datetime="{{final_submission.created}}"></time>
+                  </a>
                 </div>
                 <div class="cell-text">
                   <span>Submitted by {{ final_submission.submitter.email }}</span>
@@ -118,7 +120,7 @@
                 </div>
                 <div class="cell-status">
                   <span>
-                  <a href="" class="dashed">
+                  <a href="{{ url_for('.code', course=course.offering, assign=assignment.offering_name(), bid=final_submission.id, submit=final_submission.submit)}}" class="dashed">
                       View Code
                   </a>
                   </span>
@@ -142,7 +144,7 @@
           <div class="col-md-12">
                        <!-- TODO: Better link to view all backups -->
 
-            {{ table.render_subms(subms, course, flagged, tname="Recent Submissions") }}
+            {{ table.render_subms(subms, course, flagged, flag_form, tname="Recent Submissions") }}
             {% if subms %}
             <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=True) }}" class="no-dash button-large">
                 View More Submissions

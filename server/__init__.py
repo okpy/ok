@@ -2,6 +2,8 @@
 
 from flask import Flask
 from flask.ext.rq import RQ
+from flask_wtf.csrf import CsrfProtect
+
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
 from server import assets
@@ -20,6 +22,7 @@ from server.extensions import (
     assets_env,
     debug_toolbar
 )
+
 
 
 def create_app(object_name):
@@ -41,6 +44,10 @@ def create_app(object_name):
 
     # initialize the cache
     cache.init_app(app)
+
+    # Protect All Routes from csrf
+    csrf = CsrfProtect()
+    csrf.init_app(app)
 
     # initialize the debug tool bar
     debug_toolbar.init_app(app)
@@ -68,6 +75,8 @@ def create_app(object_name):
 
     app.register_blueprint(student, url_prefix='/student')
 
+    # API does not need CSRF protection
+    csrf.exempt(api)
     app.register_blueprint(api, url_prefix=API_PREFIX)
 
     return app

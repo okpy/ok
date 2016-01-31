@@ -1,6 +1,8 @@
 from flask_wtf import Form
 from wtforms import StringField, DateTimeField, BooleanField, IntegerField
 from wtforms import SelectField, TextAreaField, SubmitField, validators
+
+from wtforms.widgets.core import HTMLString, html_params, escape
 from wtforms.fields.html5 import EmailField
 
 import datetime as dt
@@ -117,3 +119,6 @@ class InviteMemberForm(BaseForm):
 
 class RemoveMemberForm(BaseForm):
     submit = SubmitField('Remove')
+
+class DummyForm(BaseForm):
+    submit = SubmitField('Submit')

@@ -7,7 +7,7 @@ import functools
 
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
-from server.forms import InviteMemberForm, RemoveMemberForm
+from server.forms import InviteMemberForm, RemoveMemberForm, DummyForm
 from server.models import User, Course, Assignment, Group, Backup, db
 
 
@@ -96,7 +96,6 @@ def assignment(course, assign):
     fs = assign.final_submission(user_ids)
     group = Group.lookup(current_user, assign)
     can_invite = assign.max_group_size > 1
-    print(can_invite)
     if group:
         can_invite = len(group.members) < assign.max_group_size
 
@@ -110,7 +109,8 @@ def assignment(course, assign):
         'group' : group,
         'can_invite': can_invite,
         'invite_form': InviteMemberForm(),
-        'remove_form': RemoveMemberForm()
+        'remove_form': RemoveMemberForm(),
+        'flag_form': DummyForm() # TODO: Possible to use just one "SingleButton" Form Class
     }
     return render_template('student/assignment/index.html', **data)
 
