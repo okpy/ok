@@ -521,6 +521,12 @@ table.highlight td {
   white-space: pre;
 }
 
+.highlight-header td {
+  background-color: rgb(244, 247, 251);
+  border-color: rgb(210, 223, 240);
+  color: rgba(0, 0, 0, 0.3);
+}
+
 .highlight-insert td {
   background-color: rgb(219, 255, 219);
   border-color: rgb(193, 233, 193);
