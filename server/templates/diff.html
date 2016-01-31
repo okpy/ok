@@ -1,6 +1,6 @@
-{# Renders a line number. If i is None then no number is displayed. #}
+{# Renders a 1-indexed line number. If i is None then no number is displayed. #}
 {% macro line_number(i) %}
-  <td class="diff-line-number" data-line-number="{{ '' if i is none else i }}"></td>
+  <td class="diff-line-number" data-line-number="{{ '' if i is none else i + 1 }}"></td>
 {% endmacro %}
 
 {% macro diff_file(filename, a, b) %}
