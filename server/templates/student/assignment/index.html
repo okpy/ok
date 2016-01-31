@@ -1,5 +1,6 @@
 {% extends "student/base.html" %}
 {% import 'student/assignment/_tablehelper.html' as table %}
+{% import 'student/assignment/_formhelpers.html' as forms %}
 
 {% block title %} Assignment | Ok {% endblock %}
 
@@ -47,19 +48,93 @@
         </div>
 
 
-        <div class="subcontent row hidden-xs hidden-sm">
+        <div class="subcontent row">
 
-          <div class="col-md-6">
+          <div class="col-md-6 col-sm-6">
             <h2> Group </h2>
-            {% if group %}
-              {{ group }}
+
+            <table class="top-align">
+              <tbody>
+                <tr class="header">
+                  <th>Email</th>
+                  <th>Info</th>
+                </tr>
+                {% if group %}
+                  {% for member in group.members %}
+                    <tr>
+                      <td><span>{{ member.user.email }}</span></td>
+                      <td>
+                          {% call forms.render_form(remove_form, action_url='', class_='') %}
+                              {{ forms.render_field(remove_form.submit, label_visible=False, class="button-small") }}
+                          {% endcall %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td><span>{{ current_user.email }}</span></td>
+                    <td><span> No Group </span></td>
+                  </tr>
+                {% endif %}
+
+              </tbody>
+            </table>
+            {% if can_invite %}
+            <div class="row">
+              <!-- TODO Invite Form URL -->
+              {% call forms.render_form(invite_form, action_url='', class_='form') %}
+                <div class="col-md-9 col-xs-8">
+                  {{ forms.render_field(invite_form.email, label_visible=False, class="invite-input", placeholder="test@example.com") }}
+                </div>
+                <div class="col-md-3 col-xs-4">
+                  {{ forms.render_field(invite_form.submit, label_visible=False, class="button-small btn-invite") }}
+                </div>
+              {% endcall %}
+            </div>
+
             {% endif %}
+
+
+
           </div>
-          <div class="col-md-6">
+          <div class="col-md-6 col-sm-6">
             <h2> Current Submission </h2>
-            {% if group %}
-              {{ group }}
+
+            {% if final_submission %}
+
+              <div class="cell col-xs-12">
+                <div class="cell-title">
+                <a class="due-text green" href> <time datetime="{{final_submission.created}}"></time> </a>
+                </div>
+                <div class="cell-text">
+                  <span>Submitted by {{ final_submission.submitter.email }}</span>
+                </div>
+                <div class="cell-text">
+                  {% if final_submission.flagged %}
+                    <span>Latest Submission. The newest submission will be graded. </span>
+                  {% else %}
+                    <span>Flagged for Grading. </span>
+                  {% endif %}
+                </div>
+                <div class="cell-status">
+                  <span>
+                  <a href="" class="dashed">
+                      View Code
+                  </a>
+                  </span>
+                </div>
+            {% else %}
+
+            <div class="cell col-xs-12">
+              <div class="cell-title">
+                <a class="due-text red"> No Submission </a>
+              </div>
+              <div class="cell-text">
+                <span> {{ current_user.email }} does not have any submissions for {{ assignment.display_name }} </span>
+              </div>
+            </div>
             {% endif %}
+      </div>
           </div>
         </div>
         <!-- start desktop/tablet version -->
@@ -68,15 +143,19 @@
                        <!-- TODO: Better link to view all backups -->
 
             {{ table.render_subms(subms, course, flagged, tname="Recent Submissions") }}
+            {% if subms %}
             <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=True) }}" class="no-dash button-large">
                 View More Submissions
               </a>
+            {% endif %}
           </div>
           <div class="col-md-12">
             {{  table.render_backups(backups, course, tname="Recent Backups") }}
+            {% if backups %}
             <a href="{{ url_for(".list_backups", course=course.offering, assign=assignment.offering_name(), submit=False) }}" class="no-dash button-large">
                 View More Backups
               </a>
+            {% endif %}
 
           </div>
         </div>

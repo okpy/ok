@@ -386,6 +386,10 @@ header .logo {
     border:0.25em solid rgba(255,255,255,0.75);
     color:#FFF;
   }
+  input.button-small {
+    border:none;
+  }
+
   .button-small {
     background-color:#eee;
     color:#999;
@@ -418,11 +422,22 @@ header .logo {
       color:#FFF;
       text-decoration:none;
     }
-.invite-input {
-  padding:0.5em;
-  margin:1em 0;
-  color:#666;
-}
+
+  .invite-input {
+    width: 95%;
+    margin:1.5em 0 0 1em;
+    color:#666;
+    outline: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom-width: 1px;
+    border-bottom-style: dashed;
+    border-bottom-color: rgb(153, 153, 153);
+  }
+  .btn-invite {
+    margin:1em 0 0 0;
+  }
 .content h1 {
   padding:0 0.5em;
 }

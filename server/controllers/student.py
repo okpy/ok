@@ -7,7 +7,9 @@ import functools
 
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
+from server.forms import InviteMemberForm, RemoveMemberForm
 from server.models import User, Course, Assignment, Group, Backup, db
+
 
 student = Blueprint('student', __name__)
 
@@ -92,6 +94,12 @@ def assignment(course, assign):
 
     user_ids = assign.active_user_ids(current_user.id)
     fs = assign.final_submission(user_ids)
+    group = Group.lookup(current_user, assign)
+    can_invite = assign.max_group_size > 1
+    print(can_invite)
+    if group:
+        can_invite = len(group.members) < assign.max_group_size
+
     data = {
         'course': course,
         'assignment': assign,
@@ -99,7 +107,10 @@ def assignment(course, assign):
         'subms' : assign.submissions(user_ids).limit(5).all(),
         'final_submission' : fs,
         'flagged' : fs and fs.flagged,
-        'group' : Group.lookup(current_user, assign)
+        'group' : group,
+        'can_invite': can_invite,
+        'invite_form': InviteMemberForm(),
+        'remove_form': RemoveMemberForm()
     }
     return render_template('student/assignment/index.html', **data)
 
