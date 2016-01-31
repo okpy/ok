@@ -132,24 +132,11 @@ def code(course, assign, bid, submit):
         abort(404)
     user_ids = assign.active_user_ids(current_user.id)
     backup = Backup.query.get(bid)
-    if backup.submit != submit:
+    if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, course)):
         abort(404)
-    if backup and backup.can_view(current_user, user_ids, course):
-        submitter = User.query.get(backup.submitter_id)
-        file_contents = [m for m in backup.messages if
-                            m.kind == "file_contents"]
-        files = {}
-        if file_contents:
-            files = file_contents[0].contents
-        else:
-            flash("That code submission doesn't contain any code")
-        backup_type = "Submission" if backup.submit else "Backup"
-        return render_template('student/assignment/code.html', course=course,
-                assignment=assign, backup=backup, submitter=submitter,
-                files=files, backup_type=backup_type)
-    else:
-        flash("File doesn't exist (or you don't have permission)", "danger")
-        abort(404)
+    return render_template('student/assignment/code.html',
+        course=course, assignment=assign, backup=backup,
+        files_before=assign.files(), files_after=backup.files())
 
 @student.route(ASSIGNMENT_DETAIL + "submissions/<hashid:bid>/flag/", methods=['POST'])
 @login_required

@@ -1,5 +1,6 @@
 {% extends "student/base.html" %}
 {% import 'student/assignment/_tablehelper.html' as table %}
+{% import 'diff.html' as diff %}
 
 {% block title %} Assignment | Ok {% endblock %}
 {% block css %}
@@ -35,6 +36,7 @@
           </div>
         </header>
 
+        {% set backup_type = 'Submission' if backup.submit else 'Backup' %}
         <div class="subcontent heading">
           <div class="wrap">
             <div class="string-nav">
@@ -50,12 +52,9 @@
         <!-- start desktop/tablet version -->
         <div class="subcontent list">
           <div class="wrap">
-            <p> Recieved at <time datetime="{{ backup.created }}">{{ backup.created }}</time> from {{ submitter.email }} </p>
-            {% if files %}
-              {% for file, code in files.items() %}
-              {{ file }}
-                <pre><code class="python">{{code}}</code></pre>
-              {% endfor %}
+            <p> Recieved at <time datetime="{{ backup.created }}">{{ backup.created }}</time> from {{ backup.submitter.email }} </p>
+            {% if files_after %}
+              {{ diff.diff_files(files_before, files_after) }}
             {% else %}
               <span> This backup does not contain any code </span>
             {% endif %}

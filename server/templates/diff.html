@@ -1,0 +1,29 @@
+{# Renders a line number. If i is None then no number is displayed. #}
+{% macro line_number(i) %}
+  <td class="diff-line-number" data-line-number="{{ '' if i is none else i }}"></td>
+{% endmacro %}
+
+{% macro diff_file(filename, a, b) %}
+  <div class="diff-file">
+    <div class="diff-file-header">{{ filename }}</div>
+    <table class="diff">
+      <tbody>
+      {# TODO element ids #}
+      {% for tag, i, j, source_line in highlight.highlight_diff(filename, a, b) %}
+        <tr class="diff-line-{{ tag }}">
+          {{ line_number(i) }}
+          {{ line_number(j) }}
+          <td class="diff-line-source">{{ source_line | safe }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endmacro %}
+
+{% macro diff_files(files_before, files_after) %}
+  {% for filename in files_before.keys().__or__(files_after.keys()) | sort %}
+    {{ diff_file(filename,
+      files_before.get(filename, ''), files_after.get(filename, '')) }}
+  {% endfor %}
+{% endmacro %}
