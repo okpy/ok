@@ -361,15 +361,6 @@ class Backup(db.Model, TimestampMixin, DictMixin):
             ORDER BY date_trunc('hour', backup.created)""")).all()
 
 
-class Score(db.Model, TimestampMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    grader = db.Column(db.ForeignKey("user.id"), nullable=False)
-    tag = db.Column(db.String(), nullable=False)
-    score = db.Column(db.Float())
-    message = db.Column(db.Text())
-
-
 class GroupMember(db.Model, TimestampMixin):
     """A member of a group must accept the invite to join the group.
     Only members of a group can view each other's submissions.
