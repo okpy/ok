@@ -472,39 +472,42 @@ header .logo {
   }
 }
 
-/* Diff rendering */
-.diff-file {
+/* Source file and diff rendering */
+.source-file {
   position: relative;
   font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
   font-size: 12px;
   line-height: 18px;
   margin-top: 20px;
   margin-bottom: 15px;
+  background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 3px;
   border-color: rgb(221, 221, 221);
 }
 
-.diff-file-header {
+.source-file-header {
   background-color: rgb(247, 247, 247);
   padding: 5px 10px;
   border: 1px solid #ddd;
   border-width: 0 0 1px 0;
 }
 
-table.diff {
+table.highlight {
+  background-color: #fff;
   border-collapse: separate;
 }
 
-table.diff td {
+table.highlight td {
   padding: 0 10px;
+  border-color: rgb(238, 238, 238);
 }
 
-.diff-line-number::before {
+.line-number::before {
   content: attr(data-line-number);
 }
 
-.diff-line-number {
+.line-number {
   text-align: right;
   background-color: inherit;
   border: solid #eee;
@@ -514,20 +517,16 @@ table.diff td {
   min-width: 50px;
 }
 
-.diff-line-source {
+.highlight-source {
   white-space: pre;
 }
 
-.diff-line-insert td {
+.highlight-insert td {
   background-color: rgb(219, 255, 219);
   border-color: rgb(193, 233, 193);
 }
 
-.diff-line-delete td {
+.highlight-delete td {
   background-color: rgb(255, 221, 221);
   border-color: rgb(241, 192, 192);
-}
-
-.diff-line-equal td {
-  border-color: rgb(238, 238, 238);
 }

@@ -1,29 +1,58 @@
 {# Renders a line number. If i is None then no number is displayed. #}
 {% macro line_number(i) %}
-  <td class="diff-line-number" data-line-number="{{ '' if i is none else i }}"></td>
+  <td class="line-number" data-line-number="{{ '' if i is none else i }}"></td>
 {% endmacro %}
 
-{% macro diff_file(filename, a, b) %}
-  <div class="diff-file">
-    <div class="diff-file-header">{{ filename }}</div>
-    <table class="diff">
+{% macro source_line(line) %}
+  {# The newline makes blank lines copyable #}
+  <td class="highlight-source">{{ line | safe }}{{ '\n' }}</td>
+{% endmacro %}
+
+{% macro source_file(filename) %}
+  <div class="source-file">
+    <div class="source-file-header">{{ filename }}</div>
+    <table class="highlight">
       <tbody>
-      {# TODO element ids #}
-      {% for tag, i, j, source_line in highlight.highlight_diff(filename, a, b) %}
-        <tr class="diff-line-{{ tag }}">
-          {{ line_number(i) }}
-          {{ line_number(j) }}
-          <td class="diff-line-source">{{ source_line | safe }}</td>
-        </tr>
-      {% endfor %}
+        {{ caller() }}
       </tbody>
     </table>
   </div>
 {% endmacro %}
 
-{% macro diff_files(files_before, files_after) %}
+{% macro highlight_diff(filename, a, b) %}
+  {% call source_file(filename) %}
+    {# TODO element ids #}
+    {% for tag, i, j, line in highlight.highlight_diff(filename, a, b) %}
+      <tr class="highlight-{{ tag }}">
+        {{ line_number(i) }}
+        {{ line_number(j) }}
+        {{ source_line(line) }}
+      </tr>
+    {% endfor %}
+  {% endcall %}
+{% endmacro %}
+
+{% macro highlight_diffs(files_before, files_after) %}
   {% for filename in files_before.keys().__or__(files_after.keys()) | sort %}
-    {{ diff_file(filename,
+    {{ highlight_diff(filename,
       files_before.get(filename, ''), files_after.get(filename, '')) }}
+  {% endfor %}
+{% endmacro %}
+
+{% macro highlight_file(filename, source) %}
+  {% call source_file(filename) %}
+    {# TODO element ids #}
+    {% for i, line in highlight.highlight_file(filename, source) %}
+      <tr>
+        {{ line_number(i) }}
+        {{ source_line(line) }}
+      </tr>
+    {% endfor %}
+  {% endcall %}
+{% endmacro %}
+
+{% macro highlight_files(files) %}
+  {% for filename, source in files.items() %}
+    {{ highlight_file(filename, source) }}
   {% endfor %}
 {% endmacro %}
