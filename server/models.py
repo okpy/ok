@@ -323,10 +323,6 @@ class Message(db.Model, TimestampMixin, DictMixin):
 
 class Backup(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    messages = db.relationship("Message")
-    scores = db.relationship("Score")
-    user = db.relationship("User")
-    assign = db.relationship("Assignment")
 
     client_time = db.Column(db.DateTime())
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
@@ -336,6 +332,7 @@ class Backup(db.Model, TimestampMixin, DictMixin):
 
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
+    messages = db.relationship("Message")
 
     db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')

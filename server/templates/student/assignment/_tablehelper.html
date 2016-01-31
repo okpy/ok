@@ -37,7 +37,7 @@
           </td>
           <td>
             <span class="due-date">
-              {{ subm.user.email }}
+              {{ subm.submitter.email }}
             </span>
           </td>
           <td>
@@ -80,7 +80,7 @@
           </td>
           <td>
             <span class="due-date">
-              {{ backup.user.email }}
+              {{ backup.submitter.email }}
             </span>
           </td>
           <td>
@@ -111,7 +111,7 @@
 
       <div class="cell col-xs-12">
         <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}"><time datetime="{{subm.created}}">{{subm.created}}</time>      </a></div>
-        <div class="cell-text"><span>Submitter:  {{ subm.user.email }}</span></div>
+        <div class="cell-text"><span>Submitter:  {{ subm.submitter.email }}</span></div>
         <div class="cell-status">
           <span>
 
@@ -155,7 +155,7 @@
 
       <div class="cell col-xs-12">
         <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}"><time datetime="{{backup.created}}" >{{backup.created}}</time>     </a></div>
-        <div class="cell-text"><span>Submitter:  {{ backup.user.email }}</span></div>
+        <div class="cell-text"><span>Submitter:  {{ backup.submitter.email }}</span></div>
         <div class="cell-status">
         <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}" class="dashed">
             View Code
