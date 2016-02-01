@@ -2,6 +2,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
+import pytz
 from werkzeug.exceptions import BadRequest
 
 from flask.ext.login import UserMixin, AnonymousUserMixin
@@ -50,6 +51,18 @@ class JSON(types.TypeDecorator):
     def process_result_value(self, value, dialect):
         # SQL -> Python
         return json.loads(value)
+
+
+class Timezone(types.TypeDecorator):
+    impl = types.String
+
+    def process_bind_param(self, value, dialect):
+        # Python -> SQL
+        return value.zone
+
+    def process_result_value(self, value, dialect):
+        # SQL -> Python
+        return pytz.timezone(value)
 
 
 class DictMixin(object):
@@ -101,7 +114,7 @@ class Course(db.Model, TimestampMixin, DictMixin):
     display_name = db.Column(db.String())
     creator = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), default=True)
-    timezone = db.Column(db.String(), default='US/Pacific')
+    timezone = db.Column(Timezone, default=pytz.timezone('US/Pacific'))
 
     def __repr__(self):
         return '<Course %r>' % self.offering
