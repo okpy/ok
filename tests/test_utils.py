@@ -4,7 +4,7 @@ from server import utils
 
 from .helpers import OkTestCase
 
-class TestURL(OkTestCase):
+class TestUtils(OkTestCase):
     def test_hashids(self):
         """Tests converting hashes in URLs to IDs. Do not change the values in
         this test.
