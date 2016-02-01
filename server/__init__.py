@@ -2,6 +2,7 @@
 
 from flask import Flask
 from flask.ext.rq import RQ
+import humanize
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
 from server import assets, highlight, utils
@@ -60,7 +61,11 @@ def create_app(object_name):
     app.url_map.converters['hashid'] = utils.HashidConverter
 
     # custom Jinja rendering
-    app.jinja_env.globals.update(highlight=highlight, utils=utils)
+    app.jinja_env.globals.update({
+        'highlight': highlight,
+        'humanize': humanize,
+        'utils': utils
+    })
 
     # register our blueprints
     app.register_blueprint(main)

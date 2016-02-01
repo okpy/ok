@@ -56,13 +56,13 @@
             {% if assign.active %}
             <div class="due-dot green"></div>
             <div class="due">
-              <span class="due-text green">in <timefromnow datetime="{{assign.due_date}}">{{assign.due_date}}</timefromnow> </span>
+              <span class="due-text green">{{ humanize.naturaltime(assign.due_date) }}</span>
               <span class="due-date">{{ time(assign.due_date, course) }}</span>
             </div>
             {% else %}
             <div class="due-dot red"></div>
             <div class="due">
-              <span class="due-text red"><timefromnow datetime="{{assign.due_date}}">{{assign.due_date}}</timefromnow> ago</span>
+              <span class="due-text red">{{ humanize.naturaltime(assign.due_date) }}</span>
               <span class="due-date">{{ time(assign.due_date, course) }}</span>
             </div>
 
@@ -119,11 +119,11 @@
         <div class="cell-status">
           {% if assign.active %}
           <span class="due-dot green"></div>
-            <span class="green">Due in <timefromnow datetime="{{assign.due_date}}">{{assign.due_date}}</timefromnow> </span>
+            <span class="green">{{ humanize.naturaltime(assign.due_date) }}</span>
             <span>{{ time(assign.due_date, course) }}</span>
           {% else %}
           <span class="due-dot red"></div>
-            <span class=" red">Due <timefromnow datetime="{{assign.due_date}}">{{assign.due_date}}</timefromnow> ago</span>
+            <span class=" red">{{ humanize.naturaltime(assign.due_date) }}</span>
             <span>{{ time(assign.due_date, course) }}</span>
           {% endif %}
         </div>
