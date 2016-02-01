@@ -49,7 +49,7 @@
 {% endmacro %}
 
 {% macro highlight_files(files) %}
-  {% for filename, source in files.items() %}
+  {% for filename, source in files | dictsort %}
     {{ highlight_file(filename, source) }}
   {% endfor %}
 {% endmacro %}
