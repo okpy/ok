@@ -101,6 +101,7 @@ class Course(db.Model, TimestampMixin, DictMixin):
     display_name = db.Column(db.String())
     creator = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), default=True)
+    timezone = db.Column(db.String(), default='US/Pacific')
 
     def __repr__(self):
         return '<Course %r>' % self.offering
