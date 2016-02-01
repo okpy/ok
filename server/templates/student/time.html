@@ -1,0 +1,4 @@
+{# Render a Python datetime object `dt` in the course's timezone. #}
+{% macro time(dt, course) %}
+  {{ course.timezone.localize(dt).strftime('%a %m%d %H:%M %p') }}
+{% endmacro %}
