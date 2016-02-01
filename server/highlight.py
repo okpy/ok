@@ -52,7 +52,7 @@ def highlight_diff(filename, a, b):
     matcher = difflib.SequenceMatcher(None, a.splitlines(), b.splitlines())
     for group in matcher.get_grouped_opcodes():
         first, last = group[0], group[-1]
-        header = '@@ -{} +{} @@'.format(
+        header = '@@ -{} +{} @@\n'.format(
             format_range_unified(first[1], last[2]),
             format_range_unified(first[3], last[4]))
         yield 'header', None, None, header
