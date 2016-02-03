@@ -25,9 +25,13 @@
       <section class="content nomapa col-md-10 col-xs-12">
         <header>
           <div class="header-bg">
-            <div class="right col-md-3">
-                <a href="#" class="header-text"><span>Logout</span></a>
-                <div class="header-text user-profile">
+            <div class="right col-md-5">
+
+
+                <a href="{{ url_for('auth.logout') }}" class="header-text"><span>Logout</span></a>
+
+                <div class="header-text user-profile hidden-sm hidden-xs">
+
                   <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
                   <i class="fa fa-user"></i>
                 </div>

@@ -97,10 +97,10 @@ def assignment(course, assign):
     fs = assign.final_submission(user_ids)
     group = Group.lookup(current_user, assign)
     can_invite = assign.max_group_size > 1
-    can_remove = False
+    can_remove = group.has_status(current_user, 'active')
+
     if group:
         can_invite = len(group.members) < assign.max_group_size
-        can_remove = current_user in [m.user for m in group.members if m.status == 'active']
 
     data = {
         'course': course,
@@ -130,16 +130,17 @@ def list_backups(course, assign, submit):
 
     final_submission = assign.final_submission(user_ids)
     flagged = final_submission and final_submission.flagged
+    csrf_form = CSRFForm()
 
     if submit :
         # Submissions should take a flag for backups
         subms = assign.submissions(user_ids).paginate(page=page, per_page=10)
         return render_template('student/assignment/list.html', course=course,
-                assignment=assign, subms=subms, flagged=flagged)
+                assignment=assign, subms=subms, flagged=flagged, csrf_form=csrf_form)
 
     backups = assign.backups(user_ids).paginate(page=page, per_page=10)
     return render_template('student/assignment/list.html', course=course,
-            assignment=assign, backups=backups, flagged=flagged)
+            assignment=assign, backups=backups, flagged=flagged, csrf_form=csrf_form)
 
 @student.route(ASSIGNMENT_DETAIL + "backups/<hashid:bid>/", defaults={'submit': False})
 @student.route(ASSIGNMENT_DETAIL + "submissions/<hashid:bid>/", defaults={'submit': True})
@@ -199,13 +200,15 @@ def group_invite(course, assign):
     assignment = Assignment.by_name(assign, course.offering)
     if not assignment:
         abort(404)
-
-    invitee = User.lookup(request.form['email'])
+    email = request.form['email']
+    invitee = User.lookup(email)
     if not invitee:
-        flash("{} is not enrolled".format(request.form['email']), 'warning')
+        flash("{} is not enrolled".format(email), 'warning')
     else:
         try:
             Group.invite(current_user, invitee, assignment)
+            success = "{} has been invited. They can accept the invite by logging into okpy.org".format(email)
+            flash(success, "success")
         except BadRequest as e:
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', course=course.offering, assign=assign))

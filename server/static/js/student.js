@@ -10,9 +10,7 @@ jQuery(document).ready(function($){
             confirmButtonText: "Yes, I'm sure!",
             closeOnConfirm: true
         }, function(isConfirm){
-          debugger;
             if (isConfirm) form.submit();
-
         });
     })
 

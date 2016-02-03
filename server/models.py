@@ -75,6 +75,9 @@ class User(db.Model, UserMixin, TimestampMixin):
                 return enroll
         return False
 
+    def identifier(self):
+        return self.name or self.email
+
     @staticmethod
     def lookup(email):
         """Get a User with the given email address, or None."""

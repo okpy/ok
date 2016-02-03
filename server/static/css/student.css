@@ -441,6 +441,10 @@ header .logo {
   .btn-invite {
     margin:1em 0 0 0;
   }
+  .btn-accept {
+     margin-bottom: 1em;
+     outline: none;
+  }
 .content h1 {
   padding:0 0.5em;
 }
