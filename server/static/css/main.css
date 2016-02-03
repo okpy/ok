@@ -17,3 +17,7 @@ pre code  {
 .no-dash {
   border-bottom: none !important;
 }
+
+.text-center {
+    text-align: center;
+}

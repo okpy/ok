@@ -454,23 +454,6 @@ header .logo {
 .string-nav {
   padding:2em 1.5em 0.5em 1.5em;
 }
-/* Small devices (tablets, 768px and up) */
-@media (min-width: 768px) {
-  .subcontent {
-    padding:1em 7em;
-  }
-  .content {
-    padding: 0 0 5em 0;
-  }
-}
-
-/* Medium devices (desktops, 992px and up) */
-@media (min-width: 992px) {
-  aside.sidebar {
-    position:fixed;
-    height:100%;
-  }
-}
 
 /* Source file and diff rendering */
 .source-file {
@@ -478,7 +461,6 @@ header .logo {
   font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
   font-size: 12px;
   line-height: 18px;
-  margin-top: 20px;
   margin-bottom: 15px;
   background-color: #fff;
   border: 1px solid #ddd;
@@ -534,4 +516,24 @@ table.highlight td {
 .highlight-delete td {
   background-color: rgb(255, 221, 221);
   border-color: rgb(241, 192, 192);
+}
+
+
+
+/* Small devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .subcontent {
+    padding:1em 7em;
+  }
+  .content {
+    padding: 0 0 5em 0;
+  }
+}
+
+/* Medium devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  aside.sidebar {
+    position:fixed;
+    height:100%;
+  }
 }
