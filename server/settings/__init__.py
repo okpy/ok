@@ -13,6 +13,7 @@ class Config:
     }
     TESTING = False
     CACHE_KEY_PREFIX = 'ok-cache'
+    SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
 
 class LocalConfig(Config):
     DEBUG = True
