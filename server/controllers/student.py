@@ -67,7 +67,8 @@ def course(course):
         user_ids = assignment.active_user_ids(current_user.id)
         final_submission = assignment.final_submission(user_ids)
         submission_time = final_submission and final_submission.client_time
-        return assignment, submission_time
+        group = Group.lookup(current_user, assignment)
+        return assignment, submission_time, group
 
     assignments = {
         'active': [assignment_info(a) for a in course.assignments if a.active],
@@ -97,7 +98,7 @@ def assignment(course, assign):
     fs = assign.final_submission(user_ids)
     group = Group.lookup(current_user, assign)
     can_invite = assign.max_group_size > 1
-    can_remove = group.has_status(current_user, 'active')
+    can_remove = group and group.has_status(current_user, 'active')
 
     if group:
         can_invite = len(group.members) < assign.max_group_size

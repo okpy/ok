@@ -482,7 +482,7 @@ class Group(db.Model, TimestampMixin):
 
     assignment = db.relationship("Assignment")
 
-    def size(self):
+    def size(self, status=None):
         return GroupMember.query.filter_by(group=self).count()
 
     def has_status(self, user, status):
@@ -490,6 +490,14 @@ class Group(db.Model, TimestampMixin):
             user=user,
             group=self,
             status=status
+        ).count() > 0
+
+    def is_pending(self):
+        """ Returns a boolean indicating if group has an invitation pending.
+        """
+        return GroupMember.query.filter_by(
+            group=self,
+            status='pending'
         ).count() > 0
 
     def users(self):
