@@ -192,7 +192,7 @@ def flag(course, assign, bid):
     else:
         abort(404)
 
-@student.route(ASSIGNMENT_DETAIL + "group/invite", methods=['POST'])
+@student.route(ASSIGNMENT_DETAIL + "group/invite/", methods=['POST'])
 @login_required
 @get_course
 def group_invite(course, assign):
@@ -211,7 +211,7 @@ def group_invite(course, assign):
     return redirect(url_for('.assignment', course=course.offering, assign=assign))
 
 
-@student.route(ASSIGNMENT_DETAIL + "group/remove", methods=['POST'])
+@student.route(ASSIGNMENT_DETAIL + "group/remove/", methods=['POST'])
 @login_required
 @get_course
 def group_remove(course, assign):
@@ -233,7 +233,7 @@ def group_remove(course, assign):
 
     return redirect(url_for('.assignment', course=course.offering, assign=assign))
 
-@student.route(ASSIGNMENT_DETAIL + "group/respond", methods=['POST'])
+@student.route(ASSIGNMENT_DETAIL + "group/respond/", methods=['POST'])
 @login_required
 @get_course
 def group_respond(course, assign):

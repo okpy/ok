@@ -14,7 +14,7 @@
           <td><span>{{ member.status }} </span> </td>
           <td>
             {% if member.status == 'active' and can_remove %}
-              {% call forms.render_form(csrf_form, action_url='group/remove', class_='') %}
+              {% call forms.render_form(csrf_form, action_url='group/remove/', class_='') %}
                   <input class="hidden" id="email" class="form-action" name="email" type="hidden" value="{{ member.user.email }}">
                   <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="Remove">
                 {% if member.user == current_user %}
@@ -25,7 +25,7 @@
               {% endcall %}
             {% elif member.status == 'pending'  %}
               {% if member.user ==  current_user %}
-                {% call forms.render_form(csrf_form, action_url='group/respond', class_='') %}
+                {% call forms.render_form(csrf_form, action_url='group/respond/', class_='') %}
                   <input class="hidden" class="form-info" id="email" name="email" type="hidden" value="{{ member.user.email }}">
                   <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="accept">
                   <button class="button-small"  type="submit" value="Accept">
@@ -33,7 +33,7 @@
                   </button>
                 {% endcall %}
               {% endif %}
-              {% call forms.render_form(csrf_form, action_url='group/respond', class_='') %}
+              {% call forms.render_form(csrf_form, action_url='group/respond/', class_='') %}
                   <input class="hidden" class="form-user" id="email" name="email" type="hidden" value="{{ member.user.email }}">
                   <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="decline">
                   <button class="button-small remove-confirm" type="submit" value="Decline">
@@ -55,7 +55,7 @@
 </table>
 {% if can_invite %}
 <div class="row">
-  {% call forms.render_form(csrf_form, action_url='group/invite', class_='form') %}
+  {% call forms.render_form(csrf_form, action_url='group/invite/', class_='form') %}
     <div class="col-md-9 col-xs-8">
       <input class="invite-input" required id="email" name="email" placeholder="test@example.com" type="email" value="">
     </div>
