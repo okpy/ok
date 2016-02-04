@@ -10,7 +10,8 @@ from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 from server.forms import CSRFForm
 from server.models import User, Course, Assignment, Group, Backup, db
-from server.utils import is_safe_redirect_url
+from server.utils import is_safe_redirect_url, group_action_email, \
+    invite_email, send_email
 
 student = Blueprint('student', __name__)
 
@@ -189,6 +190,7 @@ def group_invite(course, assign):
         try:
             Group.invite(current_user, invitee, assignment)
             success = "{} has been invited. They can accept the invite by logging into okpy.org".format(email)
+            invite_email(current_user, invitee, assignment)
             flash(success, "success")
         except BadRequest as e:
             flash(e.description, 'danger')
@@ -211,10 +213,13 @@ def group_remove(course, assign):
         flash("You are not in a group", 'warning')
     else:
         try:
+            members = [m.user.email for m in group.members]
             group.remove(current_user, target)
+            subject = "{} has been removed from your group".format(target.email)
+            body = "{} removed {} from the group.".format(current_user.email, target.email)
+            res = send_email(members, subject, body)
         except BadRequest as e:
             flash(e.description, 'danger')
-
     return redirect(url_for('.assignment', course=course.offering, assign=assign))
 
 @student.route(ASSIGNMENT_DETAIL + "group/respond/", methods=['POST'])
@@ -235,8 +240,15 @@ def group_respond(course, assign):
         try:
             if action == "accept":
                 group.accept(current_user)
+                subject = "{} has accepted your invitation".format(current_user.email)
+                body = "Your group now has {} members".format(len(group.members))
+                group_action_email(group.members, subject, body)
             else:
+                members = [m.user.email for m in group.members]
                 group.decline(current_user)
+                subject = "{} has declined your invitation".format(current_user.email)
+                send_email(members, subject, subject)
+
         except BadRequest as e:
             flash(e.description, 'warning')
 

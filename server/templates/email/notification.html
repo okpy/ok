@@ -1,0 +1,19 @@
+{% extends "email/base.html" %}
+
+{% block body %}
+<h3> FYI: </h3>
+
+<p>{{ body}}</p>
+{% if link and link_text %}
+<!-- button -->
+<table class="btn-primary" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td>
+      <a href="{{link}}">{{link_text}}</a>
+    </td>
+  </tr>
+</table>
+{% endif %}
+<!-- /button -->
+
+{% endblock %}

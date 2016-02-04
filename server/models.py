@@ -14,6 +14,7 @@ import csv
 import json
 from datetime import datetime as dt
 
+from server.utils import send_email, group_action_email, flag_change_email
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
 
 convention = {
@@ -225,6 +226,7 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         if not backup:
             raise BadRequest('Could not find backup')
         backup.flagged = False
+        flag_change_email(member_ids, self)
 
     def _unflag_all(self, member_ids):
         """Unflag all submissions by members of MEMBER_IDS."""
@@ -235,6 +237,7 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         ).one_or_none()
         if backup:
             backup.flagged = False
+            flag_change_email(member_ids, self)
 
     def offering_name(self):
         """ Returns the assignment name without the course offering.
