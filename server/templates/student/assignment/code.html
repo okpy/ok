@@ -1,6 +1,5 @@
 {% extends "student/base.html" %}
 {% import 'student/assignment/_tablehelper.html' as table %}
-{% from 'student/time.html' import time %}
 {% import 'diff.html' as diff %}
 
 {% block title %} Assignment | Ok {% endblock %}
@@ -46,7 +45,7 @@
               <span><a href="{{ url_for(".assignment", course=course.offering, assign=assignment.offering_name()) }}"> {{ assignment.display_name }}</a></span> &raquo;
               <span> {{backup_type}} {{ utils.encode_id(backup.id) }} </span>
             </div>
-            <h3 class="text-center">Received on {{ time(backup.created, course) }} from {{ backup.submitter.email }}</h3>
+            <h3 class="text-center">Received on {{ utils.time(backup.created, course) }} from {{ backup.submitter.email }}</h3>
           </div>
           {% include 'alerts.html' %}
         </div>

@@ -1,5 +1,3 @@
-{% from 'student/time.html' import time %}
-
 {% macro render_assign(assignments, course, tname="Assignments", empty=False) %}
   {% if assignments %}
   <div class="subcontent list hidden-xs hidden-sm">
@@ -26,7 +24,7 @@
             <div class="due-dot green"></div>
             <div class="due">
               <span class="due-text green">Submitted</span>
-              <span class="due-date">{{ time(subm_time, course) }}</span>
+              <span class="due-date">{{ utils.time(subm_time, course) }}</span>
             </div>
             {% else %}
             <div class="due-dot grey"></div>
@@ -57,13 +55,13 @@
             <div class="due-dot green"></div>
             <div class="due">
               <span class="due-text green">{{ humanize.naturaltime(assign.due_date) }}</span>
-              <span class="due-date">{{ time(assign.due_date, course) }}</span>
+              <span class="due-date">{{ utils.time(assign.due_date, course) }}</span>
             </div>
             {% else %}
             <div class="due-dot red"></div>
             <div class="due">
               <span class="due-text red">{{ humanize.naturaltime(assign.due_date) }}</span>
-              <span class="due-date">{{ time(assign.due_date, course) }}</span>
+              <span class="due-date">{{ utils.time(assign.due_date, course) }}</span>
             </div>
 
             {% endif %}
@@ -108,7 +106,7 @@
           {% if subm_time %}
             <span class="due-dot green"></span>
             <span class="green">Submitted</span>
-            <span>{{ time(subm_time, course) }}</span>
+            <span>{{ utils.time(subm_time, course) }}</span>
           {% else %}
           <!-- <span class="due-dot grey">
           <span class="grey">No Submission</span>
@@ -120,11 +118,11 @@
           {% if assign.active %}
           <span class="due-dot green"></div>
             <span class="green">{{ humanize.naturaltime(assign.due_date) }}</span>
-            <span>{{ time(assign.due_date, course) }}</span>
+            <span>{{ utils.time(assign.due_date, course) }}</span>
           {% else %}
           <span class="due-dot red"></div>
             <span class=" red">{{ humanize.naturaltime(assign.due_date) }}</span>
-            <span>{{ time(assign.due_date, course) }}</span>
+            <span>{{ utils.time(assign.due_date, course) }}</span>
           {% endif %}
         </div>
       </div>
