@@ -26,3 +26,7 @@ td.slim-cell {
   padding-top: 0em;
   padding-bottom: 0em;
 }
+
+.text-center {
+    text-align: center;
+}
