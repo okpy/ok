@@ -30,9 +30,11 @@ google_auth = oauth.remote_app(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
 )
 
-client_auth = oauth.remote_app(
+oauth_client = OAuth()
+
+client_auth = oauth_client.remote_app(
     'google',
-    consumer_key='931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com'
+    consumer_key='931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com',
     consumer_secret='zGY9okExIBnompFTWcBmOZo4', # not actually a secret, from ok-client.
     request_token_params={
         'scope': 'email',
