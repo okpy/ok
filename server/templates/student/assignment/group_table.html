@@ -11,7 +11,7 @@
       {% for member in group.members %}
         <tr>
           <td><span>{{ member.user.email }}</span></td>
-          <td><span>{{ "Group Member" if member.status == "active" else "Invited" }} </span> </td>
+          <td><span>{{ "Member" if member.status == "active" else "Invited" }} </span> </td>
           <td>
             {% if member.status == 'active' and can_remove %}
               {% call forms.render_form(csrf_form, action_url='group/remove/', class_='') %}
