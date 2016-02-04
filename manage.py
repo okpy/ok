@@ -60,17 +60,21 @@ def seed():
     students = [User(email='student{}@okpy.org'.format(i)) for i in range(60)]
     db.session.add_all(students)
 
+    original_file = open('tests/files/before.py').read()
+    modified_file = open('tests/files/after.py').read()
+
+    files = {'difflib.py': original_file}
     assign = Assignment(name="cs61a/test16/test", creator=staff_member.id,
                         course_id=courses[0].id, display_name="test",
                         due_date=future, lock_date=future)
     db.session.add(assign)
     assign2 = Assignment(name="ds8/test16/test", creator=staff_member.id,
                         course_id=courses[1].id, display_name="test",
-                        due_date=future, lock_date=future)
+                        due_date=future, lock_date=future, raw_files = json.dumps(files))
     db.session.add(assign2)
     db.session.commit()
 
-    messages = {'file_contents': {'backup.py': '1'}, 'analytics': {}}
+    messages = {'file_contents': {'difflib.py': modified_file}, 'analytics': {}}
     for i in range(20):
         for submit in (False, True):
             time = datetime.now()-timedelta(days=i)

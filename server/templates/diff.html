@@ -1,0 +1,57 @@
+{# Renders a line number. If i is None then no number is displayed. #}
+{% macro line_number(i) %}
+  <td class="line-number" data-line-number="{{ '' if i is none else i }}"></td>
+{% endmacro %}
+
+{% macro source_line(line) %}
+  <td class="highlight-source">{{ line | safe }}</td>
+{% endmacro %}
+
+{% macro source_file(filename) %}
+  <div class="source-file table-responsive">
+    <table class="highlight">
+      <thead>
+        <tr><th class="source-file-header" colspan=3>{{ filename }}</td></tr>
+      </thead>
+      <tbody>
+        {{ caller() }}
+      </tbody>
+    </table>
+  </div>
+{% endmacro %}
+
+{% macro highlight_diff(filename, a, b) %}
+  {% call source_file(filename) %}
+    {% for tag, i, j, line in highlight.highlight_diff(filename, a, b) %}
+      <tr class="highlight-{{ tag }}">
+        {{ line_number(i) }}
+        {{ line_number(j) }}
+        {{ source_line(line) }}
+      </tr>
+    {% endfor %}
+  {% endcall %}
+{% endmacro %}
+
+{% macro highlight_diffs(files_before, files_after) %}
+  {% for filename in files_before.keys().__or__(files_after.keys()) | sort %}
+    {{ highlight_diff(filename,
+      files_before.get(filename, ''), files_after.get(filename, '')) }}
+  {% endfor %}
+{% endmacro %}
+
+{% macro highlight_file(filename, source) %}
+  {% call source_file(filename) %}
+    {% for i, line in highlight.highlight_file(filename, source) %}
+      <tr>
+        {{ line_number(i) }}
+        {{ source_line(line) }}
+      </tr>
+    {% endfor %}
+  {% endcall %}
+{% endmacro %}
+
+{% macro highlight_files(files) %}
+  {% for filename, source in files | dictsort %}
+    {{ highlight_file(filename, source) }}
+  {% endfor %}
+{% endmacro %}

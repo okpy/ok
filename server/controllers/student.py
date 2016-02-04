@@ -97,9 +97,7 @@ def assignment(course, assign):
     return render_template('student/assignment/index.html', course=course,
             assignment=assign, backups=backups, subms=subms, flagged=flagged)
 
-# TODO : Consolidate subm/backup list into one route? So many decorators ...
-@student.route(ASSIGNMENT_DETAIL + "backups/", defaults={'submit': False})
-@student.route(ASSIGNMENT_DETAIL + "submissions/", defaults={'submit': True})
+@student.route(ASSIGNMENT_DETAIL + "<bool(backups, submissions):submit>/")
 @login_required
 @get_course
 def list_backups(course, assign, submit):
@@ -108,48 +106,29 @@ def list_backups(course, assign, submit):
         abort(404)
     page = request.args.get('page', 1, type=int)
     user_ids = assign.active_user_ids(current_user.id)
-
-    final_submission = assign.final_submission(user_ids)
-    flagged = final_submission and final_submission.flagged
-
-    if submit :
-        # Submissions should take a flag for backups
-        subms = assign.submissions(user_ids).paginate(page=page, per_page=10)
-        return render_template('student/assignment/list.html', course=course,
-                assignment=assign, subms=subms, flagged=flagged)
-
-    backups = assign.backups(user_ids).paginate(page=page, per_page=10)
+    if submit:
+        backups = assign.submissions(user_ids)
+    else:
+        backups = assign.backups(user_ids)
+    paginate = backups.paginate(page=page, per_page=10)
     return render_template('student/assignment/list.html', course=course,
-            assignment=assign, backups=backups, flagged=flagged)
+            assignment=assign, paginate=paginate, submit=submit)
 
-@student.route(ASSIGNMENT_DETAIL + "backups/<hashid:bid>/", defaults={'submit': False})
-@student.route(ASSIGNMENT_DETAIL + "submissions/<hashid:bid>/", defaults={'submit': True})
+@student.route(ASSIGNMENT_DETAIL + "<bool(backups, submissions):submit>/<hashid:bid>/")
 @login_required
 @get_course
-def code(course, assign, bid, submit):
+def code(course, assign, submit, bid):
     assign = Assignment.by_name(assign, course.offering)
     if not assign:
         abort(404)
     user_ids = assign.active_user_ids(current_user.id)
     backup = Backup.query.get(bid)
-    if backup.submit != submit:
+    if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, course)):
         abort(404)
-    if backup and backup.can_view(current_user, user_ids, course):
-        submitter = User.query.get(backup.submitter_id)
-        file_contents = [m for m in backup.messages if
-                            m.kind == "file_contents"]
-        files = {}
-        if file_contents:
-            files = file_contents[0].contents
-        else:
-            flash("That code submission doesn't contain any code")
-        backup_type = "Submission" if backup.submit else "Backup"
-        return render_template('student/assignment/code.html', course=course,
-                assignment=assign, backup=backup, submitter=submitter,
-                files=files, backup_type=backup_type)
-    else:
-        flash("File doesn't exist (or you don't have permission)", "danger")
-        abort(404)
+    use_diff = request.args.get('diff', False)
+    return render_template('student/assignment/code.html',
+        course=course, assignment=assign, backup=backup, use_diff=use_diff,
+        files_before=assign.files(), files_after=backup.files())
 
 @student.route(ASSIGNMENT_DETAIL + "submissions/<hashid:bid>/flag/", methods=['POST'])
 @login_required

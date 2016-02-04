@@ -4,9 +4,8 @@ from flask import Flask
 from flask.ext.rq import RQ
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
-from server import assets
+from server import assets, highlight, utils
 from server.models import db
-from server.utils import HashidConverter
 from server.controllers.admin import admin
 from server.controllers.api import endpoints as api
 from server.controllers.auth import auth, login_manager
@@ -57,7 +56,11 @@ def create_app(object_name):
         assets_env.register(name, bundle)
 
     # custom URL handling
-    app.url_map.converters['hashid'] = HashidConverter
+    app.url_map.converters['bool'] = utils.BoolConverter
+    app.url_map.converters['hashid'] = utils.HashidConverter
+
+    # custom Jinja rendering
+    app.jinja_env.globals.update(highlight=highlight, utils=utils)
 
     # register our blueprints
     app.register_blueprint(main)

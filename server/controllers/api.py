@@ -312,22 +312,6 @@ class Backup(Resource):
             'assignment': backup.assignment_id
         }
 
-class Score(Resource):
-    """ Score creation resource.
-        Authenticated. Permissions: >= Staff
-        Used by: Autograder
-    """
-    model = models.Score
-
-    def post(self, user):
-        # TODO : Actual arg parse here (for autograder)
-        score = models.Score(backup=1, score=1,
-                             tag="test", grader=user.id)
-        models.db.session.add(score)
-        models.db.session.commit()
-
-        return {'id': score.id, 'backup': 1}
-
 
 class Enrollment(PublicResource):
     """ View what courses students are enrolled in.
@@ -348,5 +332,4 @@ class Enrollment(PublicResource):
 api.add_resource(v3Info, '/v3')
 
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<int:key>/')
-api.add_resource(Score, '/v3/score')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>')
