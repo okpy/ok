@@ -7,7 +7,7 @@ import humanize
 
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
-from server import assets, highlight, utils
+from server import assets, converters, highlight, utils
 from server.models import db
 from server.controllers.admin import admin
 from server.controllers.api import endpoints as api
@@ -64,8 +64,7 @@ def create_app(object_name):
         assets_env.register(name, bundle)
 
     # custom URL handling
-    app.url_map.converters['bool'] = utils.BoolConverter
-    app.url_map.converters['hashid'] = utils.HashidConverter
+    converters.init_app(app)
 
     # custom Jinja rendering
     app.jinja_env.globals.update({
