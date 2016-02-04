@@ -101,7 +101,6 @@ def unauthorized():
 
 def authorize_user(user):
     login_user(user)
-    flash("Logged in successfully.", "success")
     after_login = session.pop('after_login', None)
     return redirect(after_login or url_for('student.index'))
 
@@ -185,5 +184,4 @@ def testing_authorized():
 def logout():
     logout_user()
     session.pop('google_token', None)
-    flash("You have been logged out.", "success")
     return redirect(url_for('student.index'))
