@@ -1,4 +1,6 @@
-{% macro render_subms(subms, course, flagged, tname="Submissions", empty=True) %}
+{% import 'student/assignment/_formhelpers.html' as forms %}
+
+{% macro render_subms(subms, course, flagged, flag_form, tname="Submissions", empty=True) %}
   {% if subms %}
   <div class="list hidden-xs hidden-sm">
     <div class="wrap">
@@ -13,7 +15,7 @@
         {% for subm in subms %}
         <tr>
           <td>
-            <form class="form-inline" action="{{ url_for('.flag', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id) }}" method="post">
+            {% call forms.render_form(flag_form, action_url=url_for('.flag', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id), class_='form-inline') %}
               {% if not subm.flagged %}
                 <input type="hidden" name="flag">
               {% endif %}
@@ -28,7 +30,7 @@
                 </div>
                 <i class="fa fa-flag final-{{ 'yes' if subm.flagged else 'no' }}"></i>
               </button>
-            </form>
+            {% endcall %}
           </td>
           <td>
             <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}">
@@ -102,7 +104,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_subms_mobile(subms, course, flagged, tname="Backups", empty=True) %}
+{% macro render_subms_mobile(subms, course, flagged, flag_form, tname="Backups", empty=True) %}
   {% if subms %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">

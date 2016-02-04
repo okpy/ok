@@ -22,9 +22,9 @@
       <section class="content nomapa col-md-10 col-xs-12">
         <header>
           <div class="header-bg">
-            <div class="right col-md-3">
-                <a href="#" class="header-text"><span>Logout</span></a>
-                <div class="header-text user-profile">
+            <div class="right col-md-5 col-sm-3">
+                <a href="{{ url_for('auth.logout') }}" class="header-text"><span>Logout</span></a>
+                <div class="header-text user-profile hidden-sm hidden-xs">
                   <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
                   <i class="fa fa-user"></i>
                 </div>
@@ -33,6 +33,8 @@
         </header>
 
         <div class="subcontent heading">
+            {% include 'alerts.html' %}
+
           <div class="wrap">
             <div class="string-nav">
               <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
@@ -41,7 +43,6 @@
             <h1>{{ course.display_name}}</h1>
           </div>
 
-          {% include 'alerts.html' %}
 
         </div>
         <!-- start desktop/tablet version -->

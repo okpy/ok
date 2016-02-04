@@ -18,6 +18,15 @@ pre code  {
   border-bottom: none !important;
 }
 
+.top-align {
+    margin-top: -1em;
+}
+
+td.slim-cell {
+  padding-top: 0em;
+  padding-bottom: 0em;
+}
+
 .text-center {
     text-align: center;
 }
