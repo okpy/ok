@@ -209,7 +209,7 @@ section {
   tr {
     border-bottom:1px solid #eee;
   }
-  th, td {
+  .list th, .list td {
     padding:1em;
   }
   .due-dot,.prog-dot {
@@ -454,6 +454,72 @@ header .logo {
 .string-nav {
   padding:2em 1.5em 0.5em 1.5em;
 }
+
+/* Source file and diff rendering */
+.source-file {
+  position: relative;
+  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  margin-bottom: 15px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  border-color: rgb(221, 221, 221);
+}
+
+.source-file-header {
+  background-color: rgb(247, 247, 247);
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  border-width: 0 0 1px 0;
+}
+
+table.highlight {
+  background-color: #fff;
+  border-collapse: separate;
+}
+
+table.highlight td {
+  padding: 0 10px;
+}
+
+.line-number::before {
+  content: attr(data-line-number);
+}
+
+.line-number {
+  text-align: right;
+  background-color: inherit;
+  border: solid #eee;
+  border-width: 0 1px 0 0;
+  color: rgba(0, 0, 0, 0.3);
+  width: 1%;
+  min-width: 50px;
+}
+
+.highlight-source {
+  white-space: pre;
+}
+
+.highlight-header td {
+  background-color: rgb(244, 247, 251);
+  border-color: rgb(210, 223, 240);
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.highlight-insert td {
+  background-color: rgb(219, 255, 219);
+  border-color: rgb(193, 233, 193);
+}
+
+.highlight-delete td {
+  background-color: rgb(255, 221, 221);
+  border-color: rgb(241, 192, 192);
+}
+
+
+
 /* Small devices (tablets, 768px and up) */
 @media (min-width: 768px) {
   .subcontent {

@@ -125,11 +125,19 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
     max_group_size = db.Column(db.Integer(), default=1)
     revisions = db.Column(db.Boolean(), default=False)
     autograding_key = db.Column(db.String())
+    raw_files = db.Column(db.Text())  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
     @hybrid_property
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
+
+    def files(self):
+        """Return a dictionary of filenames to contents."""
+        if self.raw_files is None:
+            return {}
+        else:
+            return json.loads(str(self.raw_files))
 
     @staticmethod
     def by_name(name, course_offering=None):
@@ -161,7 +169,7 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
             return {member.user_id for member in members}
 
     def backups(self, user_ids):
-        """Return a query for the backups that the list of usrs has for this
+        """Return a query for the backups that the list of users has for this
         assignment.
         """
         return Backup.query.filter(
@@ -171,7 +179,7 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         ).order_by(Backup.client_time.desc())
 
     def submissions(self, user_ids):
-        """Return a query for the submission that the current user has for this
+        """Return a query for the submissions that the list of users has for this
         assignment.
         """
         return Backup.query.filter(
@@ -324,10 +332,6 @@ class Message(db.Model, TimestampMixin, DictMixin):
 
 class Backup(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    messages = db.relationship("Message")
-    scores = db.relationship("Score")
-    user = db.relationship("User")
-    assign = db.relationship("Assignment")
 
     client_time = db.Column(db.DateTime())
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
@@ -337,6 +341,7 @@ class Backup(db.Model, TimestampMixin, DictMixin):
 
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
+    messages = db.relationship("Message")
 
     db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
@@ -356,6 +361,16 @@ class Backup(db.Model, TimestampMixin, DictMixin):
         # Allow staff members to view
         return user.is_enrolled(course.id, STAFF_ROLES)
 
+    def files(self):
+        """Return a dictionary of filenames to contents."""
+        message = Message.query.filter_by(
+            backup_id=self.id,
+            kind='file_contents').first()
+        if message:
+            return message.contents
+        else:
+            return {}
+
     @staticmethod
     def statistics(self):
         db.session.query(Backup).from_statement(
@@ -363,80 +378,6 @@ class Backup(db.Model, TimestampMixin, DictMixin):
             WHERE backup.created >= NOW() - '1 day'::INTERVAL
             GROUP BY date_trunc('hour', backup.created)
             ORDER BY date_trunc('hour', backup.created)""")).all()
-
-
-class Score(db.Model, TimestampMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    grader = db.Column(db.ForeignKey("user.id"), nullable=False)
-    tag = db.Column(db.String(), nullable=False)
-    score = db.Column(db.Float())
-    message = db.Column(db.Text())
-
-
-class Version(db.Model, TimestampMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(), nullable=False)
-    current_version = db.Column(db.String(), nullable=False)
-    base_url = db.Column(db.String())
-
-
-class Diff(db.Model, TimestampMixin):
-    """A diff between two versions of the same project, with comments.
-    A diff has three types of lines: insertions, deletions, and matches.
-    Every insertion line is associated with a diff line.
-    If BEFORE is None, the BACKUP is diffed against the Assignment template.
-    """
-    id = db.Column(db.Integer(), primary_key=True)
-    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    assignment = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    before = db.Column(db.ForeignKey("backup.id"))
-    diff = db.Column(db.String()) # TODO : Remove Diff Object.
-    comments = db.relationship('Comment')
-    updated = db.Column(db.DateTime, onupdate=db.func.now())
-
-
-class Comment(db.Model, TimestampMixin):
-    """A comment is part of a diff. The key has the diff as its parent.
-    The diff a reference to the backup it was originated from.
-    Line is the line # on the Diff Object.
-    Submission_line is the closest line on the submitted file.
-    """
-    id = db.Column(db.Integer(), primary_key=True)
-    diff = db.Column(db.ForeignKey("diff.id"), nullable=False)
-    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    author = db.Column(db.ForeignKey("user.id"), nullable=False)
-    filename = db.Column(db.String(), nullable=False)
-    line = db.Column(db.Integer(), nullable=False)
-    submission_line = db.Column(db.Integer())
-    message = db.Column(db.Text())  # Markdown
-
-
-class CommentBank(db.Model, TimestampMixin):
-    """ CommentBank is a set of common comments for assignments.
-    An assignment value of null applies to all assignments.
-    The statistics column will be used by the frontend.
-    """
-    id = db.Column(db.Integer(), primary_key=True)
-    assignment = db.Column(db.ForeignKey("assignment.id"), index=True)
-    author = db.Column(db.ForeignKey("user.id"), nullable=False)
-    message = db.Column(db.Text())  # Markdown
-    frequency = db.Column(db.Integer())
-
-
-class GradingTask(db.Model, TimestampMixin):
-    """Each task represent a single submission assigned to a grader."""
-    id = db.Column(db.Integer(), primary_key=True)
-    assignment = db.Column(db.ForeignKey("assignment.id"), index=True,
-                           nullable=False)
-    backup = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    course = db.Column(db.ForeignKey("course.id"))
-    primary_owner = db.Column(db.ForeignKey("user.id"), index=True)
-    kind = db.Column(db.Text())  # e.g. "composition"
-    description = db.Column(db.Text())  # e.g. "Helpful links for grading"
-
-    def is_complete(self):
-        return self.kind in [s.tag for s in self.backup.scores]
 
 
 class GroupMember(db.Model, TimestampMixin):

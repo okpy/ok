@@ -1,13 +1,7 @@
 {% extends "student/base.html" %}
 {% import 'student/assignment/_tablehelper.html' as table %}
 
-{% if backups %}
-  {% set name='Backups' %}
-  {% set paginate=backups %}
-{% else %}
-  {% set name='Submissions' %}
-  {% set paginate=subms %}
-{% endif %}
+{% set name = 'Submissions' if submit else 'Backups' %}
 
 {% block title %} {{ assignment.display_name }} | Ok {% endblock %}
 
@@ -59,22 +53,22 @@
 
         <div class="subcontent">
              <!-- TODO: Better pagination here -->
-            {% if backups %}
-              {{ table.render_backups(backups.items, course, tname="Backups") }}
-              {{ table.render_backups_mobile(backups.items, course, tname="Backups") }}
-            {% elif subms %}
-              {{ table.render_subms(subms.items, course, flagged, tname="Submissions") }}
-              {{ table.render_subms_mobile(subms.items, course, flagged, tname="Submissions") }}
+            {% if submit %}
+              {{ table.render_subms(paginate.items, course, flagged, tname="Submissions") }}
+              {{ table.render_subms_mobile(paginate.items, course, flagged, tname="Submissions") }}
+            {% else %}
+              {{ table.render_backups(paginate.items, course, tname="Backups") }}
+              {{ table.render_backups_mobile(paginate.items, course, tname="Backups") }}
             {% endif %}
 
             <ul class="pager">
               {% if paginate.has_prev %}
-                <li><a href="{{ url_for('.list_backups', course=course.offering, assign=assignment.offering_name(), page=paginate.prev_num)}}"><span aria-hidden="true">&larr;</span>Page {{ paginate.prev_num }}</a></li>
+                <li><a href="{{ url_for('.list_backups', course=course.offering, assign=assignment.offering_name(), page=paginate.prev_num, submit=submit)}}"><span aria-hidden="true">&larr;</span>Page {{ paginate.prev_num }}</a></li>
               {% else %}
                 <li class="disabled"><a href="#"><span aria-hidden="true">&larr;</span>Previous</a></li>
               {% endif %}
               {% if paginate.has_next %}
-                <li><a href="{{ url_for('.list_backups', course=course.offering, assign=assignment.offering_name(), page=paginate.next_num)}}"><span aria-hidden="true">&rarr;</span> Page {{ paginate.next_num }}</a></li>
+                <li><a href="{{ url_for('.list_backups', course=course.offering, assign=assignment.offering_name(), page=paginate.next_num, submit=submit)}}"><span aria-hidden="true">&rarr;</span> Page {{ paginate.next_num }}</a></li>
               {% else %}
                 <li class="disabled"><a href="#"><span aria-hidden="true">&rarr;</span> Next </a></li>
               {% endif %}
