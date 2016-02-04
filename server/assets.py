@@ -8,6 +8,8 @@ common_css = Bundle(
         filters='cssmin',
     ),
     'lib/bootstrap/css/bootstrap.min.css',
+    'lib/swal/sweetalert.min.css',
+    'css/swal-theme.css',
     output='public/css/common.css'
 )
 
@@ -15,6 +17,7 @@ common_js = Bundle(
     'lib/jquery/jquery.min.js',
     'lib/bootstrap/js/bootstrap.min.js',
     'lib/moment/moment-with-locales.min.js',
+    'lib/swal/sweetalert.min.js',
     Bundle(
         'js/main.js',
         filters='jsmin'

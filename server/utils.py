@@ -3,6 +3,8 @@ import logging
 
 from hashids import Hashids
 from werkzeug.routing import BaseConverter, ValidationError
+from urllib.parse import urlparse, urljoin
+
 from server.extensions import cache
 from flask import render_template
 
@@ -44,6 +46,12 @@ class HashidConverter(BaseConverter):
 
     def to_url(self, value):
         return encode_id(value)
+
+def is_safe_redirect_url(request, target):
+  host_url = urlparse(request.host_url)
+  redirect_url = urlparse(urljoin(request.host_url, target))
+  return redirect_url.scheme in ('http', 'https') and \
+    host_url.netloc == redirect_url.netloc
 
 def send_email(to, subject, body, link="http://okpy.org", linktext="Sign into okpy.org"):
     """ Send an email using sendgrid.
