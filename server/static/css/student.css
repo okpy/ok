@@ -280,6 +280,7 @@ section {
   left: 50%;
   transform: translateX(-50%);
   display:none;
+  z-index: 1000;
 }
   .tip.grey {
     background-color:#999;
@@ -425,6 +426,11 @@ header .logo {
       color:#FFF;
       text-decoration:none;
     }
+
+  .group-action {
+    outline: none;
+    width: 100%;
+  }
 
   .invite-input {
     width: 95%;
