@@ -2,7 +2,6 @@
 
 import os
 from datetime import datetime, timedelta
-import json
 
 from flask.ext.script import Manager, Server
 from flask.ext.script.commands import ShowUrls, Clean
@@ -38,7 +37,7 @@ def make_backup(user, assign, time, messages, submit=True):
                            submitter=user,
                            assignment=assign, submit=submit)
     messages = [Message(kind=k, backup=backup.id,
-                raw_contents=json.dumps(m)) for k, m in messages.items()]
+                contents=m) for k, m in messages.items()]
     db.session.add_all(messages)
     db.session.commit()
     backup.messages = messages
@@ -71,7 +70,7 @@ def seed():
     db.session.add(assign)
     assign2 = Assignment(name="ds8/test16/test", creator=staff_member.id,
                         course_id=courses[1].id, display_name="test",
-                        due_date=future, lock_date=future, max_group_size=2, raw_files = json.dumps(files))
+                        due_date=future, lock_date=future, max_group_size=2, files=files)
     db.session.add(assign2)
     db.session.commit()
 

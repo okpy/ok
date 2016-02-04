@@ -1,5 +1,4 @@
 import datetime
-import json
 from werkzeug.exceptions import BadRequest
 
 from server.models import db, Assignment, Group, GroupAction, User
@@ -190,7 +189,7 @@ class TestGroup(OkTestCase):
         assert action.action_type == 'invite'
         assert action.user_id == self.user1.id
         assert action.target_id == self.user2.id
-        assert action.group_before == json.dumps(state)
+        assert action.group_before == state
         state['members'].append({
             'user_id': self.user1.id,
             'status': 'active'
@@ -199,7 +198,7 @@ class TestGroup(OkTestCase):
             'user_id': self.user2.id,
             'status': 'pending'
         })
-        assert action.group_after == json.dumps(state)
+        assert action.group_after == state
 
         group.accept(self.user2)
 
@@ -207,9 +206,9 @@ class TestGroup(OkTestCase):
         assert action.action_type == 'accept'
         assert action.user_id == self.user2.id
         assert action.target_id == self.user2.id
-        assert action.group_before == json.dumps(state)
+        assert action.group_before == state
         state['members'][1]['status'] = 'active'
-        assert action.group_after == json.dumps(state)
+        assert action.group_after == state
 
         Group.invite(self.user1, self.user3, self.assignment)
 
@@ -217,12 +216,12 @@ class TestGroup(OkTestCase):
         assert action.action_type == 'invite'
         assert action.user_id == self.user1.id
         assert action.target_id == self.user3.id
-        assert action.group_before == json.dumps(state)
+        assert action.group_before == state
         state['members'].append({
             'user_id': self.user3.id,
             'status': 'pending'
         })
-        assert action.group_after == json.dumps(state)
+        assert action.group_after == state
 
         group.decline(self.user3)
 
@@ -230,15 +229,15 @@ class TestGroup(OkTestCase):
         assert action.action_type == 'decline'
         assert action.user_id == self.user3.id
         assert action.target_id == self.user3.id
-        assert action.group_before == json.dumps(state)
+        assert action.group_before == state
         state['members'].pop(2)
-        assert action.group_after == json.dumps(state)
+        assert action.group_after == state
 
         group.remove(self.user2, self.user1)
         action = latest_action()
         assert action.action_type == 'remove'
         assert action.user_id == self.user2.id
         assert action.target_id == self.user1.id
-        assert action.group_before == json.dumps(state)
+        assert action.group_before == state
         state['members'] = []
-        assert action.group_after == json.dumps(state)
+        assert action.group_after == state

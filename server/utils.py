@@ -38,6 +38,10 @@ class HashidConverter(BaseConverter):
     def to_url(self, value):
         return encode_id(value)
 
+def local_time(dt, course):
+    """Format a time string in a course's locale."""
+    return course.timezone.localize(dt).strftime('%a %m/%d %H:%M %p')
+
 def is_safe_redirect_url(request, target):
   host_url = urlparse(request.host_url)
   redirect_url = urlparse(urljoin(request.host_url, target))

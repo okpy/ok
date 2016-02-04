@@ -150,7 +150,7 @@ def code(course, assign, submit, bid):
     use_diff = request.args.get('diff', False)
     return render_template('student/assignment/code.html',
         course=course, assignment=assign, backup=backup, use_diff=use_diff,
-        files_before=assign.files(), files_after=backup.files())
+        files_before=assign.files, files_after=backup.files())
 
 @student.route(ASSIGNMENT_DETAIL + "submissions/<hashid:bid>/flag/", methods=['POST'])
 @login_required

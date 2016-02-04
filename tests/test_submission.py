@@ -1,5 +1,4 @@
 import datetime
-import json
 from werkzeug.exceptions import BadRequest
 
 from server.models import db, Backup, Group, Message
@@ -25,7 +24,7 @@ class TestSubmission(OkTestCase):
                     submitter_id=user_id,
                     assignment=self.assignment, submit=True)
                 messages = [Message(kind=k, backup=backup,
-                    raw_contents=json.dumps(m)) for k, m in message_dict.items()]
+                    contents=m) for k, m in message_dict.items()]
                 db.session.add_all(messages)
                 db.session.add(backup)
         db.session.commit()
