@@ -44,6 +44,6 @@ def send_email(to, subject, body, link="http://okpy.org", linktext="Sign into ok
         status, msg = sg.send(message)
         return status
     except SendGridClientError as e:
-        log.info(exc_info=True)
+        log.error(exc_info=True)
     except SendGridServerError as e:
-        log.info(exc_info=True)
+        log.error(exc_info=True)
