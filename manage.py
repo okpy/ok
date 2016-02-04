@@ -8,7 +8,7 @@ from flask.ext.script.commands import ShowUrls, Clean
 from flask.ext.migrate import Migrate, MigrateCommand
 from server import create_app
 from server.models import db, User, Course, Assignment, Enrollment, \
-    Backup, Message
+    Backup, Message, Group
 
 # default to dev config because no one should use this in
 # production anyway.
@@ -70,7 +70,7 @@ def seed():
     db.session.add(assign)
     assign2 = Assignment(name="ds8/test16/test", creator=staff_member.id,
                         course_id=courses[1].id, display_name="test",
-                        due_date=future, lock_date=future, files=files)
+                        due_date=future, lock_date=future, max_group_size=2, files=files)
     db.session.add(assign2)
     db.session.commit()
 
@@ -81,6 +81,7 @@ def seed():
             make_backup(staff_member, assign2, time, messages, submit=submit)
     db.session.commit()
 
+
     staff = Enrollment(user_id=staff_member.id, course_id=courses[0].id,
                         role="staff")
     db.session.add(staff)
@@ -89,8 +90,11 @@ def seed():
     db.session.add(staff_also_student)
 
     student_enrollment = [Enrollment(user_id=student.id, role="student",
-                          course_id=courses[0].id) for student in students]
+                          course_id=courses[1].id) for student in students]
     db.session.add_all(student_enrollment)
+
+
+    Group.invite(staff_member, students[0], assign2)
 
     db.session.commit()
 

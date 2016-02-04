@@ -8,9 +8,9 @@
           <th>Name</th>
           <th>Status</th>
           <th>Due Date</th>
-          <!-- <th>Group</th> -->
+          <th>Group</th>
         </tr>
-        {% for assign, subm_time in assignments %}
+        {% for assign, subm_time, group in assignments %}
         <tr>
           <td>
             <span>
@@ -67,15 +67,59 @@
             {% endif %}
 
           </td>
-          <!-- <td class="tip-trigger">
-            <i class="fa fa-user"></i>
-            <span class="red">1 (Invitation Pending)
-              <div class="tip group-members">
-                <span><i class="fa fa-user"></i> Group Member </span>
-                <span><i class="fa fa-inbox"></i> Group Invited </span>
-              </div>
-            </span>
-          </td> -->
+          {% if group %}
+          <td class="tip-trigger">
+              {% if group.is_pending() %}
+              <div class="due-dot red"></div>
+                <div class="due">
+                      <span class="due-text red"> Invitation Pending </span>
+                      <span class="due-date error"> Waiting for a response from: </span>
+                      {% for member in group.members %}
+                           {% if member.status == "pending" %}
+                            <span class="due-date red">{{ member.user.email }} </span>
+                           {% endif %}
+                      {% endfor %}
+                  {% else %}
+                  <div class="due-dot green"></div>
+                    <div class="due">
+
+                    <span class="due-text"> {{ group.members | length }} Members </span>
+                    <span class="due-date">Max Group Size: {{assign.max_group_size }} members</span>
+                  {% endif %}
+                  <div class="tip group-members">
+                      {% for member in group.members %}
+                           {% if member.status == "active" %}
+                            <span><i class="fa fa-user"></i> {{ member.user.email }} </span>
+                           {% else %}
+                            <span><i class="fa fa-inbox red"></i> Pending invite for: {{ member.user.email }}  </span>
+
+                           {% endif %}
+                      {% endfor %}
+                  </div>
+                </div>
+          </td>
+          {% elif assign.max_group_size == 1 %}
+          <td>
+            <div class="due-dot"></div>
+            <div class="due">
+              <span class="due-text">Indvidual Assignment</span>
+              <span class="due-date">No Partners Allowed</span>
+            </div>
+          </td>
+          {% else %}
+          <td class="tip-trigger">
+                <div class="due-dot grey"></div>
+                <div class="due">
+                  <span class="due-text">No group</span>
+                  <span class="due-date">Max Group Size: {{assign.max_group_size }} members</span>
+                  <div class="tip group-members">
+                    <span> Maximum Group Size is {{assign.max_group_size }} </span>
+                  </div>
+
+                </div>
+            </td>
+
+          {% endif %}
         </tr>
         {% endfor %}
       </table>
@@ -95,7 +139,7 @@
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
       <h2>{{ tname }}</h2>
-      {% for assign, subm_time in assignments %}
+      {% for assign, subm_time, group in assignments %}
       <div class="cell col-xs-12">
         <div class="cell-title">
           <a class="dashed" href="{{ url_for('.assignment', course=course.offering, assign=assign.offering_name())}}">

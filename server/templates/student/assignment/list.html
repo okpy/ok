@@ -24,9 +24,13 @@
       <section class="content nomapa col-md-10 col-xs-12">
         <header>
           <div class="header-bg">
-            <div class="right col-md-3">
-                <a href="#" class="header-text"><span>Logout</span></a>
-                <div class="header-text user-profile">
+            <div class="right col-md-5">
+
+
+                <a href="{{ url_for('auth.logout') }}" class="header-text"><span>Logout</span></a>
+
+                <div class="header-text user-profile hidden-sm hidden-xs">
+
                   <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
                   <i class="fa fa-user"></i>
                 </div>
@@ -52,10 +56,9 @@
         </div>
 
         <div class="subcontent">
-             <!-- TODO: Better pagination here -->
             {% if submit %}
-              {{ table.render_subms(paginate.items, course, flagged, tname="Submissions") }}
-              {{ table.render_subms_mobile(paginate.items, course, flagged, tname="Submissions") }}
+              {{ table.render_subms(paginate.items, course, flagged, csrf_form, tname="Submissions") }}
+              {{ table.render_subms_mobile(paginate.items, course, flagged, csrf_form, tname="Submissions") }}
             {% else %}
               {{ table.render_backups(paginate.items, course, tname="Backups") }}
               {{ table.render_backups_mobile(paginate.items, course, tname="Backups") }}

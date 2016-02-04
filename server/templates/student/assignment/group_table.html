@@ -1,0 +1,96 @@
+{% import 'student/assignment/_formhelpers.html' as forms %}
+
+<table class="top-align">
+  <tbody>
+    <tr class="header">
+      <th>Email</th>
+      <th>Status</th>
+      <th>Info</th>
+    </tr>
+    {% if group %}
+      {% for member in group.members %}
+        <tr>
+          <td><span>{{ member.user.email }}</span></td>
+          <td><span>{{ "Member" if member.status == "active" else "Invited" }} </span> </td>
+          <td>
+            {% if member.status == 'active' and can_remove %}
+              {% call forms.render_form(csrf_form, action_url='group/remove/', class_='') %}
+              <div class="">
+
+                {% if member.user == current_user %}
+                  <input class="hidden" class="user-identifier" name="user-identifier" type="hidden" value="yourself">
+                  <input class="hidden" class="form-action" name="email" type="hidden" value="{{ member.user.email }}">
+                  <button class="button-small group-action remove-confirm tip-trigger" type="submit" value="Leave">
+                      Leave <div class="tip"> <span> Remove yourself from the group </span> </div>
+                  </button>
+
+                {% else %}
+                  <input class="hidden" class="form-action user-identifier" name="email" type="hidden" value="{{ member.user.email }}">
+                  <button class="button-small group-action remove-confirm tip-trigger" type="submit" value="Remove">
+                      Remove <div class="tip"> <span> {{ member.user.email }} will no longer have access to group submissions. </span> </div>
+                  </button>
+                {% endif %}
+            </div>
+
+              {% endcall %}
+            {% elif member.status == 'pending'  %}
+
+                  {% if member.user ==  current_user %}
+                    {% call forms.render_form(csrf_form, action_url='group/respond/', class_='') %}
+                      <input class="hidden" class="user-identifier" name="user-identifier" type="hidden" value="yourself">
+                      <input class="hidden" class="form-info" name="email" type="hidden" value="{{ member.user.email }}">
+                      <input class="hidden" class="form-action" name="action" type="hidden" value="accept">
+                      <button class="button-small group-action btn-accept tip-trigger"  type="submit" value="Accept">
+                        <i class="fa fa-check "></i> Accept <div class="tip"> <span> Join the group </span> </div>
+                      </button>
+                    {% endcall %}
+                    <br> <br>
+                {% endif %}
+
+                  {% call forms.render_form(csrf_form, action_url='group/respond/', class_='') %}
+                    {% if member.user ==  current_user %}
+                        <input class="hidden" class="user-identifier" name="user-identifier" type="hidden" value="yourself">
+                        <input class="hidden" class="form-user" name="email" type="hidden" value="{{ member.user.email }}">
+                        <button class="button-small group-action tip-trigger"  type="submit" value="Decline">
+                          <i class="fa fa-minus-circle "></i> Decline <div class="tip"> <span> Reject the invitation </span> </div>
+                        </button>
+                    {% else %}
+                        <input class="hidden" class="form-user user-identifier" name="email" type="hidden" value="{{ member.user.email }}">
+                        <button class="button-small group-action tip-trigger"  type="submit" value="Revoke">
+                          <i class="fa fa-minus-circle "></i> Revoke <div class="tip"> <span> Undo the invitation. </span> </div>
+                        </button>
+
+                    {% endif %}
+                        <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="decline">
+
+
+                  {% endcall %}
+
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    {% elif assignment.active %}
+      <tr>
+        <td><span>{{ current_user.email }}</span></td>
+        <td><span> No Group </span></td>
+        <td><span class="tip-trigger"> <div class="tip"> <span> The maximum group size is {{ assignment.max_group_size }}</span> </div> Max Group Size: {{ assignment.max_group_size }} </span></td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>
+{% if can_invite %}
+<div class="row">
+  {% call forms.render_form(csrf_form, action_url='group/invite/', class_='form') %}
+    <div class="col-md-9 col-xs-8">
+      <input class="invite-input" required id="email" name="email" placeholder="test@example.com" type="email" value="">
+    </div>
+    <div class="col-md-3 col-xs-4">
+      <button class="button-small group-action btn-invite" id="submit" name="submit" type="submit" value="Invite">
+          <i class="fa fa-plus"></i> Invite
+      </button>
+    </div>
+  {% endcall %}
+</div>
+
+{% endif %}

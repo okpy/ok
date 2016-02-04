@@ -1,6 +1,8 @@
 from flask_wtf import Form
-from wtforms import StringField, DateTimeField, BooleanField, IntegerField
-from wtforms import SelectField, TextAreaField, validators
+from wtforms import StringField, DateTimeField, BooleanField, IntegerField, \
+    SelectField, TextAreaField, SubmitField, HiddenField, validators
+
+from wtforms.widgets.core import HTMLString, html_params, escape
 from wtforms.fields.html5 import EmailField
 
 import datetime as dt
@@ -109,3 +111,6 @@ class BatchEnrollmentForm(BaseForm):
                 self.csv.errors.append(err)
                 return False
         return True
+
+class CSRFForm(BaseForm):
+    pass
