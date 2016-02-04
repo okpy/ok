@@ -103,7 +103,7 @@ def authorize_user(user):
     login_user(user)
     flash("Logged in successfully.", "success")
     after_login = session.pop('after_login', None)
-    return redirect(after_login or url_for("student.index"))
+    return redirect(after_login or url_for('student.index'))
 
 def use_testing_login():
     """
@@ -159,7 +159,7 @@ def authorized(resp):
         )
         flash(error, "error")
         # TODO Error Page
-        return redirect(url_for("main.home"))
+        return redirect(url_for('student.index'))
     access_token = resp['access_token']
     user = user_from_access_token(access_token)
     session['google_token'] = (access_token, '')  # (access_token, secret)
@@ -186,4 +186,4 @@ def logout():
     logout_user()
     session.pop('google_token', None)
     flash("You have been logged out.", "success")
-    return redirect(url_for("main.home"))
+    return redirect(url_for('student.index'))

@@ -162,12 +162,8 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
     @staticmethod
-    def by_name(name, course_offering=None):
-        """ Return assignment object when given a name. If a course offering is
-        provided, the assignment name is prefixed by the course offering.
-        """
-        if course_offering:
-            name = course_offering + '/' + name
+    def by_name(name):
+        """Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
 
@@ -254,11 +250,6 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         ).one_or_none()
         if backup:
             backup.flagged = False
-
-    def offering_name(self):
-        """ Returns the assignment name without the course offering.
-        """
-        return self.name.replace(self.course.offering + '/', '')
 
 
 class Enrollment(db.Model, TimestampMixin):
