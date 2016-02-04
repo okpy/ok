@@ -31,12 +31,7 @@
           <div class="stripe"></div>
           <div class="stripe"></div>
         </div>
-
-        {% if not current_user.is_authenticated %}
-          <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
-        {% else %}
-          <a href="{{ url_for('auth.logout') }}" class="btn pill">Logout</a>
-        {% endif %}
+        <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
 
       </div>
     </header>
@@ -46,11 +41,7 @@
         {% include 'alerts.html' %}
         <h1 class="title">Automate grading. Personalize feedback.</h1>
         <p>Ok autogrades coding assignments and facilitates code submission, review, composition, and analytics for advanced diagnoses for your class.</p>
-        {% if not current_user.is_authenticated %}
-          <a href="{{ url_for('auth.login') }}" class="button">Login with Google</a>
-        {% else %}
-          <a href="{{ url_for('student.index') }}" class="button"> Student Dashboard </a>
-        {% endif %}
+        <a href="{{ url_for('auth.login') }}" class="button">Login with Google</a>
       </div>
     </div>
   </body>
