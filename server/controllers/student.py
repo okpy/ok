@@ -169,7 +169,7 @@ def group_invite(name):
             flash(success, "success")
         except BadRequest as e:
             flash(e.description, 'danger')
-    return redirect(url_for('.assignment', offering=assignment.course.offering, name=assignment))
+    return redirect(url_for('.assignment', name=assignment.name))
 
 
 @student.route('/<assignment_name:name>/group/remove/', methods=['POST'])
@@ -187,7 +187,7 @@ def group_remove(name):
             group.remove(current_user, target)
         except BadRequest as e:
             flash(e.description, 'danger')
-    return redirect(url_for('.assignment', offering=assignment.course.offering, name=assignment))
+    return redirect(url_for('.assignment', name=assignment.name))
 
 @student.route('/<assignment_name:name>/group/respond/', methods=['POST'])
 @login_required
@@ -206,5 +206,5 @@ def group_respond(name):
             else:
                 group.decline(current_user)
         except BadRequest as e:
-            flash(e.description, 'warning')
-    return redirect(url_for('.assignment', offering=assignment.course.offering, name=assignment))
+            flash(e.description, 'danger')
+    return redirect(url_for('.assignment', name=assignment.name))

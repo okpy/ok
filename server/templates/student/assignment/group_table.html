@@ -14,7 +14,7 @@
           <td><span>{{ "Member" if member.status == "active" else "Invited" }} </span> </td>
           <td>
             {% if member.status == 'active' and can_remove %}
-              {% call forms.render_form(csrf_form, action_url='group/remove/', class_='') %}
+              {% call forms.render_form(csrf_form, action_url=url_for('.group_remove', name=assignment.name), class_='') %}
               <div class="">
 
                 {% if member.user == current_user %}
@@ -36,7 +36,7 @@
             {% elif member.status == 'pending'  %}
 
                   {% if member.user ==  current_user %}
-                    {% call forms.render_form(csrf_form, action_url='group/respond/', class_='') %}
+                    {% call forms.render_form(csrf_form, action_url=url_for('.group_respond', name=assignment.name), class_='') %}
                       <input class="hidden" class="user-identifier" name="user-identifier" type="hidden" value="yourself">
                       <input class="hidden" class="form-info" name="email" type="hidden" value="{{ member.user.email }}">
                       <input class="hidden" class="form-action" name="action" type="hidden" value="accept">
@@ -47,7 +47,7 @@
                     <br> <br>
                 {% endif %}
 
-                  {% call forms.render_form(csrf_form, action_url='group/respond/', class_='') %}
+                  {% call forms.render_form(csrf_form, action_url=url_for('.group_respond', name=assignment.name), class_='') %}
                     {% if member.user ==  current_user %}
                         <input class="hidden" class="user-identifier" name="user-identifier" type="hidden" value="yourself">
                         <input class="hidden" class="form-user" name="email" type="hidden" value="{{ member.user.email }}">
@@ -81,7 +81,7 @@
 </table>
 {% if can_invite %}
 <div class="row">
-  {% call forms.render_form(csrf_form, action_url='group/invite/', class_='form') %}
+  {% call forms.render_form(csrf_form, action_url=url_for('.group_invite', name=assignment.name), class_='form') %}
     <div class="col-md-9 col-xs-8">
       <input class="invite-input" required id="email" name="email" placeholder="test@example.com" type="email" value="">
     </div>
