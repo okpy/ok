@@ -5,7 +5,7 @@ from sqlalchemy.orm import aliased, backref
 import pytz
 from werkzeug.exceptions import BadRequest
 
-from flask.ext.login import UserMixin, AnonymousUserMixin
+from flask.ext.login import UserMixin
 from flask.ext.cache import Cache
 cache = Cache()
 
