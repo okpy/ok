@@ -15,7 +15,7 @@
         {% for subm in subms %}
         <tr>
           <td>
-            {% call forms.render_form(flag_form, action_url=url_for('.flag', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id), class_='form-inline') %}
+            {% call forms.render_form(flag_form, action_url=url_for('.flag', name=subm.assignment.name, bid=subm.id), class_='form-inline') %}
               {% if not subm.flagged %}
                 <input type="hidden" name="flag">
               {% endif %}
@@ -33,7 +33,7 @@
             {% endcall %}
           </td>
           <td>
-            <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}">
+            <a href="{{ url_for('.code', name=subm.assignment.name, bid=subm.id, submit=subm.submit)}}">
               {{ utils.local_time(subm.created, course) }}
             </a>
           </td>
@@ -43,7 +43,7 @@
             </span>
           </td>
           <td>
-              <a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}" class="no-dash button-small">
+              <a href="{{ url_for('.code', name=subm.assignment.name, bid=subm.id, submit=subm.submit)}}" class="no-dash button-small">
                 View Code
               </a>
           </td>
@@ -76,7 +76,7 @@
         {% for backup in backups %}
         <tr>
           <td>
-            <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}">
+            <a href="{{ url_for('.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit)}}">
               {{ utils.local_time(backup.created, course) }}
             </a>
           </td>
@@ -86,7 +86,7 @@
             </span>
           </td>
           <td>
-              <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}" class="no-dash button-small">
+              <a href="{{ url_for('.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit)}}" class="no-dash button-small">
                 View Code
               </a>
           </td>
@@ -112,7 +112,7 @@
       {% for subm in subms %}
 
       <div class="cell col-xs-12">
-        <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}">{{ utils.local_time(subm.created, course) }}      </a></div>
+        <div class="cell-title"><a href="{{ url_for('.code', name=subm.assignment.name, bid=subm.id, submit=subm.submit)}}">{{ utils.local_time(subm.created, course) }}      </a></div>
         <div class="cell-text"><span>Submitter:  {{ subm.submitter.email }}</span></div>
         <div class="cell-status">
           <span>
@@ -130,7 +130,7 @@
 
           <br>
 
-        <a href="{{url_for('.code', course=course.offering, assign=subm.assignment.offering_name(), bid=subm.id, submit=subm.submit)}}" class="dashed">
+        <a href="{{url_for('.code', name=subm.assignment.name, bid=subm.id, submit=subm.submit)}}" class="dashed">
             View Code
         </a>
 
@@ -156,10 +156,10 @@
       {% for backup in backups %}
 
       <div class="cell col-xs-12">
-        <div class="cell-title"><a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}">{{ utils.local_time(backup.created, course) }}     </a></div>
+        <div class="cell-title"><a href="{{ url_for('.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit)}}">{{ utils.local_time(backup.created, course) }}     </a></div>
         <div class="cell-text"><span>Submitter:  {{ backup.submitter.email }}</span></div>
         <div class="cell-status">
-        <a href="{{ url_for('.code', course=course.offering, assign=backup.assignment.offering_name(), bid=backup.id, submit=backup.submit)}}" class="dashed">
+        <a href="{{ url_for('.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit)}}" class="dashed">
             View Code
         </a>
 

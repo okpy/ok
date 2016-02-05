@@ -41,9 +41,9 @@
         <div class="subcontent heading">
           <div class="wrap">
             <div class="string-nav">
-              <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
-              <span><a href="{{ url_for(".course", course=course.offering) }}"> {{ course.offering }}</a></span> &raquo;
-              <span><a href="{{ url_for(".assignment", course=course.offering, assign=assignment.offering_name()) }}"> {{ assignment.display_name }}</a></span> &raquo;
+              <span><a href="{{ url_for('.index', auto_redir=False) }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name }}</a></span> &raquo;
+              <span><a href="{{ url_for('.assignment', name=assignment.name) }}"> {{ assignment.display_name }}</a></span> &raquo;
               {{ name }}
             </div>
             <h1>
@@ -66,12 +66,12 @@
 
             <ul class="pager">
               {% if paginate.has_prev %}
-                <li><a href="{{ url_for('.list_backups', course=course.offering, assign=assignment.offering_name(), page=paginate.prev_num, submit=submit)}}"><span aria-hidden="true">&larr;</span>Page {{ paginate.prev_num }}</a></li>
+                <li><a href="{{ url_for('.list_backups', name=assignment.name, page=paginate.prev_num, submit=submit)}}"><span aria-hidden="true">&larr;</span>Page {{ paginate.prev_num }}</a></li>
               {% else %}
                 <li class="disabled"><a href="#"><span aria-hidden="true">&larr;</span>Previous</a></li>
               {% endif %}
               {% if paginate.has_next %}
-                <li><a href="{{ url_for('.list_backups', course=course.offering, assign=assignment.offering_name(), page=paginate.next_num, submit=submit)}}"><span aria-hidden="true">&rarr;</span> Page {{ paginate.next_num }}</a></li>
+                <li><a href="{{ url_for('.list_backups', name=assignment.name, page=paginate.next_num, submit=submit)}}"><span aria-hidden="true">&rarr;</span> Page {{ paginate.next_num }}</a></li>
               {% else %}
                 <li class="disabled"><a href="#"><span aria-hidden="true">&rarr;</span> Next </a></li>
               {% endif %}
