@@ -2,6 +2,7 @@ from .helpers import OkTestCase
 
 class TestAuth(OkTestCase):
     email = 'martymcfly@aol.com'
+    staff_email = 'okstaff@okpy.org'
 
     def test_login(self):
         """GET /login/ should redirect to Google OAuth."""

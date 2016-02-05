@@ -1,3 +1,4 @@
+{% cache 60*30, 'index' %}
 <html>
   <head>
     <title>Ok | CS61A</title>
@@ -49,3 +50,4 @@
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 </html>
+{% endcache %}

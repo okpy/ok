@@ -39,6 +39,14 @@ class OkTestCase(TestCase):
             max_group_size=4)
         db.session.add(self.assignment)
 
+        self.staff = User(email='okstaff@okpy.org', is_admin=True)
+        participant = Enrollment(
+            user=self.staff,
+            course=self.course,
+            role='staff')
+        db.session.add(participant)
+
+
         def make_student(n):
             user = User(email='student{0}@aol.com'.format(n))
             participant = Enrollment(

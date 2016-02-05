@@ -65,9 +65,13 @@
         <div class="subcontent list">
           <div class="wrap">
             {% if use_diff %}
-              {{ diff.highlight_diffs(files_before, files_after) }}
+                {% cache 60*10, backup.id, 'diff-view' %}
+                    {{ diff.highlight_diffs(files_before, files_after) }}
+                {% endcache %}
             {% else %}
-              {{ diff.highlight_files(files_after) }}
+                {% cache 60*10, backup.id, 'code-view' %}
+                    {{ diff.highlight_files(files_after) }}
+                {% endcache %}
             {% endif %}
           </div>
         </div>
