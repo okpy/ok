@@ -20,13 +20,3 @@ class TestAuth(OkTestCase):
         app.config['TESTING_LOGIN'] = False
         response = app.test_client().get('/testing-login/')
         self.assert_404(response)
-
-    def test_restricted(self):
-        """User should see /student/ if logged in, but not if logged out."""
-        self.login(self.email)
-        response = self.client.get('/student/')
-        self.assert_200(response)
-
-        self.client.get('/logout/')
-        response = self.client.get('/student/')
-        self.assert_redirects(response, '/login/')
