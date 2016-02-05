@@ -61,7 +61,7 @@
               <div class="cell col-xs-12">
                 <div class="cell-title">
                   <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="due-text green">
-                    <time datetime="{{final_submission.created}}"></time>
+                    {{ utils.local_time(final_submission.created, course) }}
                   </a>
                 </div>
                 <div class="cell-text">
@@ -119,7 +119,6 @@
         <!-- start mobile version -->
         {{ table.render_subms_mobile(subms, course, flagged, tname="Recent Submissions") }}
         {{ table.render_backups_mobile(backups, course, tname="Recent Backups") }}
-
         <!-- end mobile version -->
       </section>
     </main>
