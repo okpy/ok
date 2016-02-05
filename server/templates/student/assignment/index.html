@@ -36,7 +36,7 @@
         <div class="subcontent heading">
           <div class="wrap">
             <div class="string-nav">
-              <span><a href="{{ url_for('.index', auto_redir=False) }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for('.index') }}">Courses</a></span> &raquo;
               <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name }}</a></span> &raquo;
               <span>{{ assignment.display_name }}</span>
             </div>

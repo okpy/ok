@@ -39,9 +39,8 @@ def get_assignment(name):
     check_enrollment(assignment.course)
     return assignment
 
-@cache.cached(5000)
 @student.route('/')
-def index(auto_redir=True):
+def index():
     if current_user.is_authenticated:
         enrollments = current_user.enrollments(VALID_ROLES)
         student_enrollments = [e for e in enrollments if e.role == STUDENT_ROLE]
@@ -53,9 +52,6 @@ def index(auto_redir=True):
             'all': all_courses,
             'num_enrolled': len(enrollments)
         }
-        # Make the choice for users in one course
-        if len(enrollments) == 1 and auto_redir:
-            return redirect(url_for(".course", course=enrollments[0].course.offering))
         return render_template('student/courses/index.html', **courses)
     else:
         return render_template('index.html')

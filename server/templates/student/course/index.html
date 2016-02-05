@@ -37,7 +37,7 @@
 
           <div class="wrap">
             <div class="string-nav">
-              <span><a href="{{ url_for('.index', auto_redir=False) }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for('student.index') }}">Courses</a></span> &raquo;
               <span>{{ course.display_name }}</span>
             </div>
             <h1>{{ course.display_name}}</h1>
