@@ -65,19 +65,17 @@ class Timezone(types.TypeDecorator):
         return pytz.timezone(value)
 
 
-class DictMixin(object):
-    """ For objects that may have to be serialized into a dictionary.
-    Must contain an integer ID property.
-    """
+class Model(db.Model):
+    """Timestamps all models, and serializes model objects."""
+    __abstract__ = True
+
+    created = db.Column(db.DateTime, server_default=db.func.now())
+
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-class TimestampMixin(object):
-    created = db.Column(db.DateTime, server_default=db.func.now())
-
-
-class User(db.Model, UserMixin, TimestampMixin):
+class User(Model, UserMixin):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String())
     email = db.Column(db.String(), unique=True, nullable=False, index=True)
@@ -109,7 +107,7 @@ class User(db.Model, UserMixin, TimestampMixin):
         return User.query.filter_by(email=email).one_or_none()
 
 
-class Course(db.Model, TimestampMixin, DictMixin):
+class Course(Model):
     id = db.Column(db.Integer(), primary_key=True)
     offering = db.Column(db.String(), unique=True)
     # offering - E.g., 'cal/cs61a/fa14
@@ -133,7 +131,7 @@ class Course(db.Model, TimestampMixin, DictMixin):
         ).count() > 0
 
 
-class Assignment(db.Model, TimestampMixin, DictMixin):
+class Assignment(Model):
     """Assignments are particular to courses and have unique names.
         name - cal/cs61a/fa14/proj1
         display_name - Hog
@@ -252,7 +250,7 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
             backup.flagged = False
 
 
-class Enrollment(db.Model, TimestampMixin):
+class Enrollment(Model):
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
@@ -326,7 +324,7 @@ class Enrollment(db.Model, TimestampMixin):
         db.session.add_all(new_records)
 
 
-class Message(db.Model, TimestampMixin, DictMixin):
+class Message(Model):
     id = db.Column(db.Integer(), primary_key=True)
     backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
     contents = db.Column(JSON)
@@ -335,7 +333,7 @@ class Message(db.Model, TimestampMixin, DictMixin):
     backup = db.relationship("Backup")
 
 
-class Backup(db.Model, TimestampMixin, DictMixin):
+class Backup(Model):
     id = db.Column(db.Integer(), primary_key=True)
 
     client_time = db.Column(db.DateTime())
@@ -385,7 +383,7 @@ class Backup(db.Model, TimestampMixin, DictMixin):
             ORDER BY date_trunc('hour', backup.created)""")).all()
 
 
-class GroupMember(db.Model, TimestampMixin):
+class GroupMember(Model):
     """A member of a group must accept the invite to join the group.
     Only members of a group can view each other's submissions.
     A user may only be invited or participate in a single group per assignment.
@@ -412,7 +410,7 @@ class GroupMember(db.Model, TimestampMixin):
         backref=backref('members', cascade="all, delete-orphan"))
 
 
-class Group(db.Model, TimestampMixin):
+class Group(Model):
     """A group is a collection of users who are either members or invited.
     Groups are created when a member not in a group invites another member.
     Invited members may accept or decline invitations. Active members may
@@ -577,7 +575,7 @@ class Group(db.Model, TimestampMixin):
         db.session.add(action)
 
 
-class GroupAction(db.Model, TimestampMixin):
+class GroupAction(Model):
     """A group event, for auditing purposes. All group activity is logged."""
     action_types = ['invite', 'accept', 'decline', 'remove']
 
