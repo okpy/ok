@@ -2,7 +2,7 @@ import datetime
 import json
 from server.models import db, Assignment, Backup, Course, User
 
-from .helpers import OkTestCase
+from tests import OkTestCase
 
 class TestAuth(OkTestCase):
     def _test_backup(self, submit):
