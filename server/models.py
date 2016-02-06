@@ -76,7 +76,7 @@ class Model(db.Model):
 
 
 class User(Model, UserMixin):
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.String())
     email = db.Column(db.String(), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
@@ -108,7 +108,7 @@ class User(Model, UserMixin):
 
 
 class Course(Model):
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     offering = db.Column(db.String(), unique=True)
     # offering - E.g., 'cal/cs61a/fa14
     institution = db.Column(db.String())  # E.g., 'UC Berkeley'
@@ -140,7 +140,7 @@ class Assignment(Model):
         url - cs61a.org/proj/hog/hog.zip
     """
 
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.String(), index=True, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
@@ -251,15 +251,18 @@ class Assignment(Model):
 
 
 class Enrollment(Model):
-    id = db.Column(db.Integer(), primary_key=True)
+    __tablename__ = 'enrollment'
+    __table_args__ = (
+        PrimaryKeyConstraint('user_id', 'course_id'),
+    )
+
     user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
-    course_id = db.Column(db.ForeignKey("course.id"), index=True,
-                          nullable=False)
+    course_id = db.Column(db.ForeignKey("course.id"),
+        index=True, nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
 
     user = db.relationship("User", backref="participations")
-    course = db.relationship("Course", backref="participants")
-    notes = db.Column(db.String()) # For Section Info etc.
+    course = db.relationship("Course", backref="participations")
 
     def has_role(self, course, role):
         if self.course != course:
@@ -325,7 +328,7 @@ class Enrollment(Model):
 
 
 class Message(Model):
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
     contents = db.Column(JSON)
     kind = db.Column(db.String(), index=True)
@@ -334,7 +337,7 @@ class Message(Model):
 
 
 class Backup(Model):
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
 
     client_time = db.Column(db.DateTime())
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
@@ -393,7 +396,7 @@ class GroupMember(Model):
     """
     __tablename__ = 'group_member'
     __table_args__ = (
-        PrimaryKeyConstraint('user_id', 'assignment_id', name='pk_GroupMember'),
+        PrimaryKeyConstraint('user_id', 'assignment_id'),
     )
     status_values = ['pending', 'active']
 
@@ -418,7 +421,7 @@ class Group(Model):
     A group must have at least 2 participants.
     Degenerate groups are deleted.
     """
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
 
     assignment = db.relationship("Assignment")
@@ -579,7 +582,7 @@ class GroupAction(Model):
     """A group event, for auditing purposes. All group activity is logged."""
     action_types = ['invite', 'accept', 'decline', 'remove']
 
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     action_type = db.Column(db.Enum(*action_types, name='action_type'), nullable=False)
     # user who initiated request
     user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
