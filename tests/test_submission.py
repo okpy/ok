@@ -3,7 +3,7 @@ from werkzeug.exceptions import BadRequest
 
 from server.models import db, Backup, Group, Message
 
-from .helpers import OkTestCase
+from tests import OkTestCase
 
 class TestSubmission(OkTestCase):
     """Tests flagging submissions and final submissions."""
