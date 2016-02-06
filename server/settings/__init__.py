@@ -20,3 +20,4 @@ class LocalConfig(Config):
     SECRET_KEY = 'Testing*ok*server*'
     RESTFUL_JSON = {'indent': 4}
     TESTING_LOGIN = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
