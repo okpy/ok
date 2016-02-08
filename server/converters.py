@@ -1,6 +1,6 @@
 from werkzeug.routing import BaseConverter, ValidationError
 
-from server import utils
+from server import constants, utils
 
 class BoolConverter(BaseConverter):
     def __init__(self, url_map, false_value, true_value):
@@ -35,16 +35,12 @@ def restricted_name_part(exceptions):
     return ''.join('(?!{}/)'.format(w) for w in exceptions) + name_part
 
 class OfferingConverter(BaseConverter):
-    regex = restricted_name_part([
-        'login',
-        'logout',
-        'testing-login',
-    ]) + '/' + name_part + '/' + name_part
+    regex = restricted_name_part(constants.FORBIDDEN_ROUTE_NAMES) + \
+        '/' + name_part + '/' + name_part
 
 class AssignmentNameConverter(BaseConverter):
-    regex = OfferingConverter.regex + '/' + restricted_name_part([
-        'enrollment',
-    ])
+    regex = OfferingConverter.regex + '/' + \
+        restricted_name_part(constants.FORBIDDEN_ASSIGNMENT_NAMES)
 
 def init_app(app):
     app.url_map.converters['bool'] = BoolConverter
