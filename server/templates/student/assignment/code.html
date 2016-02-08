@@ -44,9 +44,9 @@
         <div class="subcontent heading">
           <div class="wrap">
             <div class="string-nav">
-              <span><a href="{{ url_for(".index", auto_redir=False) }}">Courses</a></span> &raquo;
-              <span><a href="{{ url_for(".course", course=course.offering) }}"> {{ course.offering }}</a></span> &raquo;
-              <span><a href="{{ url_for(".assignment", course=course.offering, assign=assignment.offering_name()) }}"> {{ assignment.display_name }}</a></span> &raquo;
+              <span><a href="{{ url_for('.index') }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name }}</a></span> &raquo;
+              <span><a href="{{ url_for('.assignment', name=assignment.name) }}"> {{ assignment.display_name }}</a></span> &raquo;
               <span> {{backup_type}} {{ utils.encode_id(backup.id) }} </span>
             </div>
             <h3 class="text-center">Received on {{ utils.local_time(backup.created, course) }} from {{ backup.submitter.email }}</h3>
@@ -57,7 +57,7 @@
         <div class="subcontent list">
             <div class="wrap">
                 <!-- Action bar -->
-                <a href="{{ url_for('.code', course=course.offering, assign=assignment.offering_name(), bid=backup.id, submit=backup.submit, diff=None if use_diff else 1) }}" class="no-dash button-small">
+                <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit, diff=None if use_diff else 1) }}" class="no-dash button-small">
                   <i class="fa fa-file-code-o"> </i> View {{ 'Code' if use_diff else 'Diff' }}
                 </a>
             </div>
@@ -65,9 +65,13 @@
         <div class="subcontent list">
           <div class="wrap">
             {% if use_diff %}
-              {{ diff.highlight_diffs(files_before, files_after) }}
+                {% cache 60*10, backup.id, 'diff-view' %}
+                    {{ diff.highlight_diffs(files_before, files_after) }}
+                {% endcache %}
             {% else %}
-              {{ diff.highlight_files(files_after) }}
+                {% cache 60*10, backup.id, 'code-view' %}
+                    {{ diff.highlight_files(files_after) }}
+                {% endcache %}
             {% endif %}
           </div>
         </div>

@@ -14,7 +14,7 @@
         <tr>
           <td>
             <span>
-              <a class="dashed"  href="{{ url_for('.assignment', course=course.offering, assign=assign.offering_name())}}">
+              <a class="dashed"  href="{{ url_for('.assignment', name=assign.name)}}">
                   {{assign.display_name}}
               </a>
             </span>
@@ -142,7 +142,7 @@
       {% for assign, subm_time, group in assignments %}
       <div class="cell col-xs-12">
         <div class="cell-title">
-          <a class="dashed" href="{{ url_for('.assignment', course=course.offering, assign=assign.offering_name())}}">
+          <a class="dashed" href="{{ url_for('.assignment', name=assign.name)}}">
               {{assign.display_name}} &raquo;
           </a>
         </div>

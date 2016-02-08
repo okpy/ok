@@ -13,3 +13,12 @@ TIMEZONE = 'America/Los_Angeles'
 
 APP_URL = 'https://okpy.org/'
 AUTOGRADER_URL = 'http://autograder.cs61a.org:5000'
+
+FORBIDDEN_ROUTE_NAMES = [
+    'admin',
+    'api',
+    'login',
+    'logout',
+    'testing-login',
+]
+FORBIDDEN_ASSIGNMENT_NAMES = []
