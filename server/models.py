@@ -54,7 +54,7 @@ class JSON(types.TypeDecorator):
 
 
 class Timezone(types.TypeDecorator):
-    impl = types.String
+    impl = types.String(255)
 
     def process_bind_param(self, value, dialect):
         # Python -> SQL
@@ -69,7 +69,7 @@ class Model(db.Model):
     """Timestamps all models, and serializes model objects."""
     __abstract__ = True
 
-    created = db.Column(db.DateTime, server_default=db.func.now())
+    created = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -77,13 +77,14 @@ class Model(db.Model):
 
 class User(Model, UserMixin):
     id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String())
-    email = db.Column(db.String(), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(255, collation='utf8_bin'),
+        unique=True, nullable=False, index=True)
+    alt_email = db.Column(db.String(255))
     is_admin = db.Column(db.Boolean(), default=False)
-    sid = db.Column(db.String())  # SID or Login
-    secondary = db.Column(db.String())  # Other usernames
-    alt_email = db.Column(db.String())
-    active = db.Column(db.Boolean(), default=True)
+    name = db.Column(db.String(255))
+    sid = db.Column(db.String(255))  # SID or Login
+    secondary = db.Column(db.String(255))  # Other usernames
+    notes = db.Column(db.Text)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -109,13 +110,13 @@ class User(Model, UserMixin):
 
 class Course(Model):
     id = db.Column(db.BigInteger, primary_key=True)
-    offering = db.Column(db.String(), unique=True)
-    # offering - E.g., 'cal/cs61a/fa14
-    institution = db.Column(db.String())  # E.g., 'UC Berkeley'
-    display_name = db.Column(db.String())
+    # offering - E.g., 'cal/cs61a/fa14'
+    offering = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    institution = db.Column(db.String(255), nullable=False)  # E.g., 'UC Berkeley'
+    display_name = db.Column(db.String(255), nullable=False)
     creator = db.Column(db.ForeignKey("user.id"))
-    active = db.Column(db.Boolean(), default=True)
-    timezone = db.Column(Timezone, default=pytz.timezone('US/Pacific'))
+    active = db.Column(db.Boolean(), nullable=False, default=True)
+    timezone = db.Column(Timezone, nullable=False, default=pytz.timezone('US/Pacific'))
 
     def __repr__(self):
         return '<Course %r>' % self.offering
@@ -131,125 +132,6 @@ class Course(Model):
         ).count() > 0
 
 
-class Assignment(Model):
-    """Assignments are particular to courses and have unique names.
-        name - cal/cs61a/fa14/proj1
-        display_name - Hog
-        due_date - DEADLINE (Publically displayed)
-        lock_date - DEADLINE+1 (Hard Deadline for submissions)
-        url - cs61a.org/proj/hog/hog.zip
-    """
-
-    id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(), index=True, unique=True)
-    course_id = db.Column(db.ForeignKey("course.id"), index=True,
-                          nullable=False)
-    display_name = db.Column(db.String(), nullable=False)
-    due_date = db.Column(db.DateTime, nullable=False)
-    lock_date = db.Column(db.DateTime, nullable=False)
-    creator = db.Column(db.ForeignKey("user.id"))
-    url = db.Column(db.String())
-    max_group_size = db.Column(db.Integer(), default=1)
-    revisions = db.Column(db.Boolean(), default=False)
-    autograding_key = db.Column(db.String())
-    files = db.Column(JSON)  # JSON object mapping filenames to contents
-    course = db.relationship("Course", backref="assignments")
-
-    @hybrid_property
-    def active(self):
-        return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
-
-    @staticmethod
-    def by_name(name):
-        """Return assignment object when given a name."""
-        return Assignment.query.filter_by(name=name).one_or_none()
-
-
-    def active_user_ids(self, user_id):
-        """Return a set of the ids of all users that are active in the same group
-        that our user is active in. If the user is not in a group, return just
-        that user's id (i.e. as if they were in a 1-person group).
-        """
-        user_member = aliased(GroupMember)
-        members = GroupMember.query.join(
-            user_member, GroupMember.group_id == user_member.group_id
-        ).filter(
-            user_member.user_id == user_id,
-            user_member.assignment_id == self.id,
-            user_member.status == 'active',
-            GroupMember.status == 'active'
-        ).all()
-        if not members:
-            return {user_id}
-        else:
-            return {member.user_id for member in members}
-
-    def backups(self, user_ids):
-        """Return a query for the backups that the list of users has for this
-        assignment.
-        """
-        return Backup.query.filter(
-            Backup.submitter_id.in_(user_ids),
-            Backup.assignment_id == self.id,
-            Backup.submit == False
-        ).order_by(Backup.client_time.desc())
-
-    def submissions(self, user_ids):
-        """Return a query for the submissions that the list of users has for this
-        assignment.
-        """
-        return Backup.query.filter(
-            Backup.submitter_id.in_(user_ids),
-            Backup.assignment_id == self.id,
-            Backup.submit == True
-        ).order_by(Backup.created.desc())
-
-    def final_submission(self, user_ids):
-        """Return a final submission for a user, or None."""
-        return Backup.query.filter(
-            Backup.submitter_id.in_(user_ids),
-            Backup.assignment_id == self.id,
-            Backup.submit == True
-        ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
-
-    @transaction
-    def flag(self, backup_id, member_ids):
-        """Flag a submission. First unflags any submissions by one of
-        MEMBER_IDS, which is a list of group member user IDs.
-        """
-        self._unflag_all(member_ids)
-        backup = Backup.query.filter(
-            Backup.id == backup_id,
-            Backup.submitter_id.in_(member_ids),
-            Backup.flagged == False
-        ).one_or_none()
-        if not backup:
-            raise BadRequest('Could not find backup')
-        backup.flagged = True
-
-    @transaction
-    def unflag(self, backup_id, member_ids):
-        """Unflag a submission."""
-        backup = Backup.query.filter(
-            Backup.id == backup_id,
-            Backup.submitter_id.in_(member_ids),
-            Backup.flagged == True
-        ).one_or_none()
-        if not backup:
-            raise BadRequest('Could not find backup')
-        backup.flagged = False
-
-    def _unflag_all(self, member_ids):
-        """Unflag all submissions by members of MEMBER_IDS."""
-        # There should only ever be one flagged submission
-        backup = Backup.query.filter(
-            Backup.submitter_id.in_(member_ids),
-            Backup.flagged == True
-        ).one_or_none()
-        if backup:
-            backup.flagged = False
-
-
 class Enrollment(Model):
     __tablename__ = 'enrollment'
     __table_args__ = (
@@ -260,6 +142,8 @@ class Enrollment(Model):
     course_id = db.Column(db.ForeignKey("course.id"),
         index=True, nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
+    class_account = db.Column(db.String(255))
+    section = db.Column(db.String(255))
 
     user = db.relationship("User", backref="participations")
     course = db.relationship("Course", backref="participations")
@@ -327,11 +211,130 @@ class Enrollment(Model):
         db.session.add_all(new_records)
 
 
+class Assignment(Model):
+    """Assignments are particular to courses and have unique names.
+        name - cal/cs61a/fa14/proj1
+        display_name - Hog
+        due_date - DEADLINE (Publically displayed)
+        lock_date - DEADLINE+1 (Hard Deadline for submissions)
+        url - cs61a.org/proj/hog/hog.zip
+    """
+
+    id = db.Column(db.BigInteger, primary_key=True)
+    name = db.Column(db.String(255), index=True, nullable=False, unique=True)
+    course_id = db.Column(db.ForeignKey("course.id"), index=True,
+                          nullable=False)
+    display_name = db.Column(db.String(255), nullable=False)
+    due_date = db.Column(db.DateTime, nullable=False)
+    lock_date = db.Column(db.DateTime, nullable=False)
+    creator_id = db.Column(db.ForeignKey("user.id"))
+    url = db.Column(db.Text)
+    max_group_size = db.Column(db.Integer(), nullable=False, default=1)
+    revisions_allowed = db.Column(db.Boolean(), nullable=False, default=False)
+    autograding_key = db.Column(db.String(255))
+    files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
+    course = db.relationship("Course", backref="assignments")
+
+    @hybrid_property
+    def active(self):
+        return dt.utcnow() <= self.lock_date
+
+    @staticmethod
+    def by_name(name):
+        """Return assignment object when given a name."""
+        return Assignment.query.filter_by(name=name).one_or_none()
+
+
+    def active_user_ids(self, user_id):
+        """Return a set of the ids of all users that are active in the same group
+        that our user is active in. If the user is not in a group, return just
+        that user's id (i.e. as if they were in a 1-person group).
+        """
+        user_member = aliased(GroupMember)
+        members = GroupMember.query.join(
+            user_member, GroupMember.group_id == user_member.group_id
+        ).filter(
+            user_member.user_id == user_id,
+            user_member.assignment_id == self.id,
+            user_member.status == 'active',
+            GroupMember.status == 'active'
+        ).all()
+        if not members:
+            return {user_id}
+        else:
+            return {member.user_id for member in members}
+
+    def backups(self, user_ids):
+        """Return a query for the backups that the list of users has for this
+        assignment.
+        """
+        return Backup.query.filter(
+            Backup.submitter_id.in_(user_ids),
+            Backup.assignment_id == self.id,
+            Backup.submit == False
+        ).order_by(Backup.created.desc())
+
+    def submissions(self, user_ids):
+        """Return a query for the submissions that the list of users has for this
+        assignment.
+        """
+        return Backup.query.filter(
+            Backup.submitter_id.in_(user_ids),
+            Backup.assignment_id == self.id,
+            Backup.submit == True
+        ).order_by(Backup.created.desc())
+
+    def final_submission(self, user_ids):
+        """Return a final submission for a user, or None."""
+        return Backup.query.filter(
+            Backup.submitter_id.in_(user_ids),
+            Backup.assignment_id == self.id,
+            Backup.submit == True
+        ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
+
+    @transaction
+    def flag(self, backup_id, member_ids):
+        """Flag a submission. First unflags any submissions by one of
+        MEMBER_IDS, which is a list of group member user IDs.
+        """
+        self._unflag_all(member_ids)
+        backup = Backup.query.filter(
+            Backup.id == backup_id,
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == False
+        ).one_or_none()
+        if not backup:
+            raise BadRequest('Could not find backup')
+        backup.flagged = True
+
+    @transaction
+    def unflag(self, backup_id, member_ids):
+        """Unflag a submission."""
+        backup = Backup.query.filter(
+            Backup.id == backup_id,
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == True
+        ).one_or_none()
+        if not backup:
+            raise BadRequest('Could not find backup')
+        backup.flagged = False
+
+    def _unflag_all(self, member_ids):
+        """Unflag all submissions by members of MEMBER_IDS."""
+        # There should only ever be one flagged submission
+        backup = Backup.query.filter(
+            Backup.submitter_id.in_(member_ids),
+            Backup.flagged == True
+        ).one_or_none()
+        if backup:
+            backup.flagged = False
+
+
 class Message(Model):
     id = db.Column(db.BigInteger, primary_key=True)
-    backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
-    contents = db.Column(JSON)
-    kind = db.Column(db.String(), index=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+    contents = db.Column(JsonBlob, nullable=False)
+    kind = db.Column(db.String(255), nullable=False, index=True)
 
     backup = db.relationship("Backup")
 
@@ -339,11 +342,10 @@ class Message(Model):
 class Backup(Model):
     id = db.Column(db.BigInteger, primary_key=True)
 
-    client_time = db.Column(db.DateTime())
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submit = db.Column(db.Boolean(), default=False)
-    flagged = db.Column(db.Boolean(), default=False)
+    submit = db.Column(db.Boolean(), nullable=False, default=False)
+    flagged = db.Column(db.Boolean(), nullable=False, default=False)
 
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
@@ -404,7 +406,7 @@ class GroupMember(Model):
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     group_id = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
 
-    status = db.Column(db.Enum(*status_values, name="status"), index=True)
+    status = db.Column(db.Enum(*status_values, name="status"), nullable=False, index=True)
     updated = db.Column(db.DateTime, onupdate=db.func.now())
 
     user = db.relationship("User")
@@ -589,5 +591,5 @@ class GroupAction(Model):
     # user whose status was affected
     target_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     # see Group.serialize for format
-    group_before = db.Column(JSON)
-    group_after = db.Column(JSON)
+    group_before = db.Column(Json, nullable=False)
+    group_after = db.Column(Json, nullable=False)
