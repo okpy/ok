@@ -114,6 +114,13 @@ def createdb():
     """
     db.create_all()
 
+@manager.command
+def dropdb():
+    """ Creates a database with all of the tables defined in
+        your SQLAlchemy models
+    """
+    if env == "dev":
+        db.drop_all()
 
 @manager.command
 def resetdb():
@@ -123,9 +130,9 @@ def resetdb():
     """
     if env == "dev":
         db.drop_all()
+        print("Dropped")
         db.create_all()
         seed()
-        print("Dropped")
 
 
 if __name__ == "__main__":
