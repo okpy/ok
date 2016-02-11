@@ -148,18 +148,19 @@ class Course(Model):
 class Enrollment(Model):
     __tablename__ = 'enrollment'
     __table_args__ = (
-        PrimaryKeyConstraint('user_id', 'course_id'),
+        # PrimaryKeyConstraint('user_id', 'course_id'),
     )
 
-    user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
-    course_id = db.Column(db.ForeignKey("course.id"),
+    id = db.Column(db.BigInteger, primary_key=True)
+    user_id = db.Column(db.BigInteger, index=True, nullable=False)
+    course_id = db.Column(db.BigInteger,
         index=True, nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
     class_account = db.Column(db.String(255))
     section = db.Column(db.String(255))
 
-    user = db.relationship("User", backref="participations")
-    course = db.relationship("Course", backref="participations")
+    # user = db.relationship("User", backref="participations")
+    # course = db.relationship("Course", backref="participations")
 
     def has_role(self, course, role):
         if self.course != course:
@@ -348,24 +349,24 @@ class Message(Model):
     __table_args__ = {'mysql_row_format': 'COMPRESSED'}
 
     id = db.Column(db.BigInteger, primary_key=True)
-    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+    backup_id = db.Column(db.BigInteger, nullable=False, index=True)
     contents = db.Column(JsonBlob, nullable=False)
     kind = db.Column(db.String(255), nullable=False, index=True)
 
-    backup = db.relationship("Backup")
+    # backup = db.relationship("Backup")
 
 
 class Backup(Model):
     id = db.Column(db.BigInteger, primary_key=True)
 
-    submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
-    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    submitter_id = db.Column(db.BigInteger, nullable=False)
+    assignment_id = db.Column(db.BigInteger, nullable=False)
     submit = db.Column(db.Boolean(), nullable=False, default=False)
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
 
-    submitter = db.relationship("User")
-    assignment = db.relationship("Assignment")
-    messages = db.relationship("Message")
+    # submitter = db.relationship("User")
+    # assignment = db.relationship("Assignment")
+    # messages = db.relationship("Message")
 
     db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
@@ -404,6 +405,16 @@ class Backup(Model):
             ORDER BY date_trunc('hour', backup.created)""")).all()
 
 
+class Submission(Model):
+    id = db.Column(db.BigInteger, primary_key=True)
+    backup = db.Column(db.BigInteger, nullable=False)
+
+
+class FinalSubmission(Model):
+    id = db.Column(db.BigInteger, primary_key=True)
+    submission = db.Column(db.BigInteger, nullable=False)
+
+
 class GroupMember(Model):
     """A member of a group must accept the invite to join the group.
     Only members of a group can view each other's submissions.
@@ -414,21 +425,22 @@ class GroupMember(Model):
     """
     __tablename__ = 'group_member'
     __table_args__ = (
-        PrimaryKeyConstraint('user_id', 'assignment_id'),
+        # PrimaryKeyConstraint('user_id', 'assignment_id'),
     )
     status_values = ['pending', 'active']
 
-    user_id = db.Column(db.ForeignKey("user.id"), nullable=False, index=True)
-    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    group_id = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
+    id = db.Column(db.BigInteger, primary_key=True)
+    user_id = db.Column(db.BigInteger, nullable=False, index=True)
+    assignment_id = db.Column(db.BigInteger, nullable=False)
+    group_id = db.Column(db.BigInteger, nullable=False, index=True)
 
     status = db.Column(db.Enum(*status_values, name="status"), nullable=False, index=True)
     updated = db.Column(db.DateTime, onupdate=db.func.now())
 
-    user = db.relationship("User")
-    assignment = db.relationship("Assignment")
-    group = db.relationship("Group",
-        backref=backref('members', cascade="all, delete-orphan"))
+    # user = db.relationship("User")
+    # assignment = db.relationship("Assignment")
+    # group = db.relationship("Group",
+        # backref=backref('members', cascade="all, delete-orphan"))
 
 
 class Group(Model):
@@ -440,9 +452,10 @@ class Group(Model):
     Degenerate groups are deleted.
     """
     id = db.Column(db.BigInteger, primary_key=True)
-    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    # assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    assignment_id = db.Column(db.BigInteger, nullable=False)
 
-    assignment = db.relationship("Assignment")
+    # assignment = db.relationship("Assignment")
 
     def size(self, status=None):
         return GroupMember.query.filter_by(group=self).count()
