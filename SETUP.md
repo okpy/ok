@@ -9,7 +9,13 @@ $ virtualenv env
 $ source env/bin/activate
 $ pip install -r requirements.txt
 
-DB Setup:
+Database Setup:
+
+$ brew install mysql  # or similar for your machine
+$ mysql.server start
+$ mysql -u root < setup.sql
+
+Create a seed database:
 
 $ ./manage.py createdb
 $ ./manage.py seed
