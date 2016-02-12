@@ -51,14 +51,14 @@ def invite_email(member, recipient, assignment):
                link_text=link_text, link=link)
 
 def send_email(to, subject, body, template='email/notification.html',
-               link_text="Sign in"):
+        link=None, link_text="Sign in"):
     """ Send an email using sendgrid.
     Usage: send_email('student@okpy.org', 'Hey from OK', 'hi')
     """
-
+    if not link:
+        link = url_for('student.index', _external=True)
     html = render_template(template, subject=subject, body=body,
-       link=url_for('student.index', _external=True), link_text=link_text)
-
+       link=link, link_text=link_text)
     message = sendgrid.Mail(
         to=to,
         from_name="Okpy.org",
