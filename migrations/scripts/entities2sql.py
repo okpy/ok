@@ -98,18 +98,23 @@ def format_value(value):
 def write_sql(row_iter, table_name):
     filename = 'gs://ok-migration/tables/{}.sql'.format(table_name)
     columns = next(row_iter)
+    insert_start = 'INSERT INTO `{}` ({}) VALUES\n'.format(table_name, ', '.join(columns))
     with gsutil_open_write(filename) as f:
-        first = True
+        current_rows = 0
         f.write('SET foreign_key_checks = 0;\n')
         f.write('TRUNCATE `{}`;\n'.format(table_name))
         f.write('SET foreign_key_checks = 1;\n')
-        f.write('INSERT INTO `{}` ({}) VALUES\n'.format(table_name, ', '.join(columns)))
+        f.write(insert_start)
         for row in row_iter:
-            if not first:
+            if current_rows >= 1000:
+                f.write(';\n')
+                f.write(insert_start)
+                current_rows = 0
+            elif current_rows > 0:
                 f.write(',')
-            first = False
             values = [format_value(value) for value in row]
             f.write('({})\n'.format(', '.join(values)))
+            current_rows += 1
         f.write(';\n')
 
 # Blacklisted users that will be deleted.
