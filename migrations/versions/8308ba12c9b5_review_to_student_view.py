@@ -18,8 +18,27 @@ from sqlalchemy.dialects import mysql
 import textwrap
 
 def upgrade():
-    # set backup and submission flags based on submission relations
     conn = op.get_bind()
+
+    update_submit = textwrap.dedent("""\
+    UPDATE backup AS b
+    JOIN submission AS s ON b.id = s.backup_id
+    LEFT JOIN final_submission AS fs ON s.id = fs.submission_id
+    SET submit = 1, flagged = (fs.id IS NOT NULL)
+    """)
+    conn.execute(sa.text(update_submit))
+
+    delete_degenerate_groups = textwrap.dedent("""\
+    DELETE g, group_member
+    FROM `group` AS g JOIN group_member JOIN (
+        SELECT g.id AS group_id, max(group_member.id) AS group_member_id
+        FROM `group` AS g JOIN group_member ON g.id = group_member.group_id
+        GROUP BY g.id
+        HAVING count(group_member.id) = 1
+    ) AS r
+    WHERE g.id = r.group_id AND group_member.id = r.group_member_id
+    """)
+    conn.execute(sa.text(delete_degenerate_groups))
 
     op.create_foreign_key(op.f('fk_backup_assignment_id_assignment'), 'backup', 'assignment', ['assignment_id'], ['id'])
     op.create_foreign_key(op.f('fk_backup_submitter_id_user'), 'backup', 'user', ['submitter_id'], ['id'])
@@ -30,18 +49,6 @@ def upgrade():
     op.create_foreign_key(op.f('fk_group_member_group_id_group'), 'group_member', 'group', ['group_id'], ['id'])
     op.create_foreign_key(op.f('fk_group_member_user_id_user'), 'group_member', 'user', ['user_id'], ['id'])
     op.create_foreign_key(op.f('fk_message_backup_id_backup'), 'message', 'backup', ['backup_id'], ['id'])
-
-    delete_degenrate_groups = textwrap.dedent("""\
-    DELETE g, group_member
-    FROM `group` AS g JOIN group_member JOIN (
-        SELECT g.id AS group_id, max(group_member.id) AS group_member_id
-        FROM `group` AS g JOIN group_member ON g.id = group_member.group_id
-        GROUP BY g.id
-        HAVING count(group_member.id) = 1
-    ) AS r
-    WHERE g.id = r.group_id AND group_member.id = r.group_member_id
-    """)
-    conn.execute(sa.text(delete_degenrate_groups))
 
     op.create_primary_key(
         'pk_enrollment', 'user_enrollment',
