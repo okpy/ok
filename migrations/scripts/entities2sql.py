@@ -78,6 +78,14 @@ def entities(kind):
                 entity_proto = entity_pb.EntityProto(contents=record)
                 yield datastore.Entity.FromPb(entity_proto)
 
+def json_escape(s):
+    def escape(c):
+        if c == "'" or c == '\\':
+            return '\\' + c
+        else:
+            return c
+    return ''.join([escape(c) for c in s])
+
 def quote(s):
     return "'{}'".format(s)
 
@@ -221,7 +229,7 @@ def messages():
             entity['messages.kind'],
             entity['messages.contents'])
         for created, kind, contents in message_data:
-            yield created, entity.key().id(), kind, contents
+            yield created, entity.key().id(), kind, json_escape(contents)
 
 def backups():
     yield ('id', 'created', 'submitter_id', 'assignment_id', 'submit', 'flagged')
