@@ -1,26 +1,16 @@
 import os
 import logging
-
-from hashids import Hashids
-from werkzeug.routing import BaseConverter, ValidationError
 from urllib.parse import urlparse, urljoin
 
-from server.extensions import cache
 from flask import render_template, url_for
-
-import sendgrid
+from hashids import Hashids
 from premailer import transform
+import sendgrid
+from werkzeug.routing import BaseConverter, ValidationError
+
+from server.extensions import cache
 
 sg = sendgrid.SendGridClient(os.getenv('SENDGRID_API_KEY'), None, raise_errors=True)
-
-# To deal with circular imports
-class ModelProxy(object):
-    def __getattribute__(self, key):
-        import server.models as models
-        return models.__getattribute__(key)
-
-ModelProxy = ModelProxy()
-
 
 # ID hashing configuration.
 # DO NOT CHANGE ONCE THE APP IS PUBLICLY AVAILABLE. You will break every
@@ -56,9 +46,6 @@ class HashidConverter(BaseConverter):
     def to_url(self, value):
         return encode_id(value)
 
-
-
-
 def is_safe_redirect_url(request, target):
   host_url = urlparse(request.host_url)
   redirect_url = urlparse(urljoin(request.host_url, target))
@@ -68,17 +55,6 @@ def is_safe_redirect_url(request, target):
 def group_action_email(members, subject, text):
     emails = [m.user.email for m in members]
     return send_email(emails, subject, text)
-
-def flag_change_email(member_ids, assign):
-    emails = [ModelProxy.User.query.get(m).email for m in member_ids]
-    subject = "{} submission has changed".format(assign.display_name)
-    text = "The {} submission that is flagged for grading has been updated".format(assign.display_name)
-
-    link_text = "View Flagged Submission"
-    link = "http://okpy.org/" + url_for('student.assignment',
-        course=assign.course.offering, assign=assign.offering_name())
-
-    return send_email(emails, subject, text, link_text=link_text, link=link)
 
 def invite_email(member, recipient, assignment):
     subject = "{} group invitation".format(assignment.display_name)
