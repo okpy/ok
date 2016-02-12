@@ -31,6 +31,10 @@ GoogleAppEngineCloudStorageClient==1.9.22.1
 # Timezones
 pytz
 
+# Emailing
+sendgrid==1.5.20
+premailer==2.9.7
+
 # Other
 psycopg2==2.6.1
 itsdangerous==0.24
