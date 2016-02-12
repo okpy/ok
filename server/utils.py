@@ -60,21 +60,21 @@ def invite_email(member, recipient, assignment):
     subject = "{} group invitation".format(assignment.display_name)
     text = "{} has invited you to join their group".format(member.email)
     link_text = "Respond to the invitation"
-    link = "http://okpy.org/" + url_for('student.assignment',
-        course=assignment.course.offering, assign=assignment.offering_name())
+    link = url_for('student.assignment',
+        course=assignment.course.offering, assign=assignment.offering_name(), _external=True)
     template = 'email/invite.html'
 
     send_email(recipient.email, subject, text,template,
                link_text=link_text, link=link)
 
 def send_email(to, subject, body, template='email/notification.html',
-                        link="http://okpy.org", link_text="Sign into okpy.org"):
+               link_text="Sign in"):
     """ Send an email using sendgrid.
     Usage: send_email('student@okpy.org', 'Hey from OK', 'hi')
     """
 
     html = render_template(template, subject=subject, body=body,
-                           link=link, link_text=link_text)
+       link=url_for('student.index', _external=True), link_text=link_text)
 
     message = sendgrid.Mail(
         to=to,
