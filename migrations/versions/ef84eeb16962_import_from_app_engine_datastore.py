@@ -41,7 +41,7 @@ def upgrade():
     op.create_table('final_submission',
     sa.Column('created', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('submission', sa.BigInteger(), nullable=False),
+    sa.Column('submission_id', sa.BigInteger(), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_final_submission'))
     )
     op.create_table('group',
@@ -77,7 +77,7 @@ def upgrade():
     op.create_table('submission',
     sa.Column('created', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('backup', sa.BigInteger(), nullable=False),
+    sa.Column('backup_id', sa.BigInteger(), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_submission'))
     )
     op.create_table('user',
