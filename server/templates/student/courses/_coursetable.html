@@ -18,7 +18,7 @@
                 {% if admin %}
                 <a href="{{ url_for('admin.course', cid=course.id) }}">{{course.display_name}}</a>
                 {% else %}
-                <a href="{{ url_for('student.course', course=course.offering) }}">{{course.display_name}}</a>
+                <a href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name}}</a>
                 {% endif %}
               </span>
             </div>
@@ -68,7 +68,7 @@
           {% if admin %}
             <a href="{{ url_for('admin.course', cid=course.id) }}">{{course.display_name}}</a>
           {% else %}
-            <a href="{{ url_for('student.course', course=course.offering) }}">{{course.display_name}}</a>
+            <a href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name}}</a>
           {% endif %}
         </div>
         <div class="cell-text"><span>{{course.offering}} @ {{course.institution}}</span></div>

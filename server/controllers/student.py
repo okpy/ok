@@ -15,53 +15,52 @@ from server.utils import is_safe_redirect_url, group_action_email, \
 
 student = Blueprint('student', __name__)
 
-def get_course(func):
-    """ A decorator for routes to ensure that user is enrolled in the course.
-    A user is enrolled if they are participating in the course
-    with any role. Gets the course offering from the route's COURSE argument.
-    Then binds the actual course object to the course keyword argument.
+def check_enrollment(course):
+    enrolled = current_user.is_enrolled(course.id)
+    if not enrolled and not current_user.is_admin:
+        flash("You have not been added to this course on OK", "warning")
 
-    Usage:
-    @get_course # Get the course  from the cid param of the routes
-    def my_route(course): return course.id
+def get_course(offering):
+    """Get a course with the given name. If the user is not enrolled, flash
+    a warning message.
     """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        course = Course.by_name(kwargs['course'])
-        if not course:
-            print("Course not found", kwargs['course'])
-            return abort(404)
-        kwargs['course'] = course
-        enrolled = current_user.is_enrolled(course.id)
-        if not enrolled and not current_user.is_admin:
-            flash("You have not been added to this course on OK", "warning")
-        return func(*args, **kwargs)
-    return wrapper
+    course = Course.by_name(offering)
+    if not course:
+        abort(404)
+    check_enrollment(course)
+    return course
 
+def get_assignment(name):
+    """Get an assignment with the given name. If the user is not enrolled, flash
+    a warning message.
+    """
+    assignment = Assignment.by_name(name)
+    if not assignment:
+        abort(404)
+    check_enrollment(assignment.course)
+    return assignment
 
-@student.route("/")
+@student.route('/')
+def index():
+    if current_user.is_authenticated:
+        enrollments = current_user.enrollments(VALID_ROLES)
+        student_enrollments = [e for e in enrollments if e.role == STUDENT_ROLE]
+        all_courses = Course.query.all()
+        courses = {
+            'instructor': [e.course for e in enrollments if e.role in STAFF_ROLES],
+            'current': [e.course for e in student_enrollments if e.course.active],
+            'past': [e.course for e in student_enrollments if not e.course.active],
+            'all': all_courses,
+            'num_enrolled': len(enrollments)
+        }
+        return render_template('student/courses/index.html', **courses)
+    else:
+        return render_template('index.html')
+
+@student.route('/<offering:offering>/')
 @login_required
-def index(auto_redir=True):
-    enrollments = current_user.enrollments(VALID_ROLES)
-    student_enrollments = [e for e in enrollments if e.role == STUDENT_ROLE]
-    all_courses = Course.query.all()
-    courses = {
-        'instructor': [e.course for e in enrollments if e.role in STAFF_ROLES],
-        'current': [e.course for e in student_enrollments if e.course.active],
-        'past': [e.course for e in student_enrollments if not e.course.active],
-        'all': all_courses,
-        'num_enrolled': len(enrollments)
-    }
-    # Make the choice for users in one course
-    if len(enrollments) == 1 and auto_redir:
-        return redirect(url_for(".course", course=enrollments[0].course.offering))
-    return render_template('student/courses/index.html', **courses)
-
-
-@student.route("/<path:course>/")
-@login_required
-@get_course
-def course(course):
+def course(offering):
+    course = get_course(offering)
     def assignment_info(assignment):
         # TODO does this make O(n) db queries?
         # TODO need group info too
@@ -78,23 +77,10 @@ def course(course):
     return render_template('student/course/index.html', course=course,
                            **assignments)
 
-
-@student.route("/<path:course>/assignments/")
+@student.route('/<assignment_name:name>/')
 @login_required
-def assignments(course):
-    return redirect(url_for(".course", course=course))
-
-# CLEANUP : Really long route, used variable to keep lines under 80 chars.
-ASSIGNMENT_DETAIL = "/<path:course>/assignments/<string:assign>/"
-
-@student.route(ASSIGNMENT_DETAIL)
-@login_required
-@get_course
-def assignment(course, assign):
-    assign = Assignment.by_name(assign, course.offering)
-    if not assign:
-        return abort(404)
-
+def assignment(name):
+    assign = get_assignment(name)
     user_ids = assign.active_user_ids(current_user.id)
     fs = assign.final_submission(user_ids)
     group = Group.lookup(current_user, assign)
@@ -105,7 +91,7 @@ def assignment(course, assign):
         can_invite = len(group.members) < assign.max_group_size
 
     data = {
-        'course': course,
+        'course': assign.course,
         'assignment': assign,
         'backups' : assign.backups(user_ids).limit(5).all(),
         'subms' : assign.submissions(user_ids).limit(5).all(),
@@ -118,13 +104,10 @@ def assignment(course, assign):
     }
     return render_template('student/assignment/index.html', **data)
 
-@student.route(ASSIGNMENT_DETAIL + "<bool(backups, submissions):submit>/")
+@student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/')
 @login_required
-@get_course
-def list_backups(course, assign, submit):
-    assign = Assignment.by_name(assign, course.offering)
-    if not assign:
-        abort(404)
+def list_backups(name, submit):
+    assign = get_assignment(name)
     page = request.args.get('page', 1, type=int)
     user_ids = assign.active_user_ids(current_user.id)
     csrf_form = CSRFForm()
@@ -134,54 +117,44 @@ def list_backups(course, assign, submit):
     else:
         backups = assign.backups(user_ids)
     paginate = backups.paginate(page=page, per_page=10)
-    return render_template('student/assignment/list.html', course=course,
+    return render_template('student/assignment/list.html', course=assign.course,
             assignment=assign, paginate=paginate, submit=submit, csrf_form=csrf_form)
 
-@student.route(ASSIGNMENT_DETAIL + "<bool(backups, submissions):submit>/<hashid:bid>/")
+@student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/')
 @login_required
-@get_course
-def code(course, assign, submit, bid):
-    assign = Assignment.by_name(assign, course.offering)
-    if not assign:
-        abort(404)
+def code(name, submit, bid):
+    assign = get_assignment(name)
     user_ids = assign.active_user_ids(current_user.id)
     backup = Backup.query.get(bid)
-    if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, course)):
+    if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, assign.course)):
         abort(404)
     use_diff = request.args.get('diff', False)
     return render_template('student/assignment/code.html',
-        course=course, assignment=assign, backup=backup, use_diff=use_diff,
-        files_before=assign.files(), files_after=backup.files())
+        course=assign.course, assignment=assign, backup=backup, use_diff=use_diff,
+        files_before=assign.files, files_after=backup.files())
 
-@student.route(ASSIGNMENT_DETAIL + "submissions/<hashid:bid>/flag/", methods=['POST'])
+@student.route('/<assignment_name:name>/submissions/<hashid:bid>/flag/', methods=['POST'])
 @login_required
-@get_course
-def flag(course, assign, bid):
-    assign = Assignment.by_name(assign, course.offering)
-    if assign:
-        course = assign.course
-        user_ids = assign.active_user_ids(current_user.id)
-        flag = 'flag' in request.form
-        next_url = request.form['next']
-        if flag:
-            assign.flag(bid, user_ids)
-        else:
-            assign.unflag(bid, user_ids)
-        if is_safe_redirect_url(request, next_url):
-            return redirect(next_url)
-        else:
-            flash("Not a valid redirect", "danger")
-            abort(400)
+def flag(name, bid):
+    assign = get_assignment(name)
+    course = assign.course
+    user_ids = assign.active_user_ids(current_user.id)
+    flag = 'flag' in request.form
+    next_url = request.form['next']
+    if flag:
+        assign.flag(bid, user_ids)
     else:
-        abort(404)
+        assign.unflag(bid, user_ids)
+    if is_safe_redirect_url(request, next_url):
+        return redirect(next_url)
+    else:
+        flash("Not a valid redirect", "danger")
+        abort(400)
 
-@student.route(ASSIGNMENT_DETAIL + "group/invite/", methods=['POST'])
+@student.route('/<assignment_name:name>/group/invite/', methods=['POST'])
 @login_required
-@get_course
-def group_invite(course, assign):
-    assignment = Assignment.by_name(assign, course.offering)
-    if not assignment:
-        abort(404)
+def group_invite(name):
+    assignment = get_assignment(name)
     email = request.form['email']
     invitee = User.lookup(email)
     if not invitee:
@@ -194,17 +167,13 @@ def group_invite(course, assign):
             flash(success, "success")
         except BadRequest as e:
             flash(e.description, 'danger')
-    return redirect(url_for('.assignment', course=course.offering, assign=assign))
+    return redirect(url_for('.assignment', name=assignment.name))
 
 
-@student.route(ASSIGNMENT_DETAIL + "group/remove/", methods=['POST'])
+@student.route('/<assignment_name:name>/group/remove/', methods=['POST'])
 @login_required
-@get_course
-def group_remove(course, assign):
-    assignment = Assignment.by_name(assign, course.offering)
-    if not assignment:
-        abort(404)
-
+def group_remove(name):
+    assignment = get_assignment(name)
     target = User.lookup(request.form['email'])
     group = Group.lookup(current_user, assignment)
     if not target:
@@ -220,16 +189,12 @@ def group_remove(course, assign):
             res = send_email(members, subject, body)
         except BadRequest as e:
             flash(e.description, 'danger')
-    return redirect(url_for('.assignment', course=course.offering, assign=assign))
+    return redirect(url_for('.assignment', name=assignment.name))
 
-@student.route(ASSIGNMENT_DETAIL + "group/respond/", methods=['POST'])
+@student.route('/<assignment_name:name>/group/respond/', methods=['POST'])
 @login_required
-@get_course
-def group_respond(course, assign):
-    assignment = Assignment.by_name(assign, course.offering)
-    if not assignment:
-        abort(404)
-
+def group_respond(name):
+    assignment = get_assignment(name)
     action = request.form.get('action', None)
     if not action or action not in ['accept', 'decline']:
         abort(400)
@@ -250,6 +215,5 @@ def group_respond(course, assign):
                 send_email(members, subject, subject)
 
         except BadRequest as e:
-            flash(e.description, 'warning')
-
-    return redirect(url_for('.assignment', course=course.offering, assign=assign))
+            flash(e.description, 'danger')
+    return redirect(url_for('.assignment', name=assignment.name))

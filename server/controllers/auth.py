@@ -4,9 +4,11 @@ There are two ways to authenticate a request:
 * Send a Google access token as the access_token query parameter
 """
 from flask import abort, Blueprint, current_app, flash, redirect, \
-    render_template, request, session, url_for
+    render_template, request, session, url_for, make_response
 from flask_oauthlib.client import OAuth
 from flask.ext.login import LoginManager, login_user, logout_user, login_required
+
+import pickle
 
 from server.models import db, User
 
@@ -27,6 +29,25 @@ google_auth = oauth.remote_app(
     access_token_url='https://accounts.google.com/o/oauth2/token',
     authorize_url='https://accounts.google.com/o/oauth2/auth',
 )
+
+oauth_client = OAuth()
+
+client_auth = oauth_client.remote_app(
+    'google',
+    consumer_key='931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com',
+    consumer_secret='zGY9okExIBnompFTWcBmOZo4', # not actually a secret, from ok-client.
+    request_token_params={
+        'scope': 'email',
+        'access_type':'offline',
+        'approval_prompt':'force'
+    },
+    base_url='https://www.googleapis.com/oauth2/v1/',
+    request_token_url=None,
+    access_token_method='POST',
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+)
+
 
 @auth.record
 def record_params(setup_state):
@@ -80,9 +101,8 @@ def unauthorized():
 
 def authorize_user(user):
     login_user(user)
-    flash("Logged in successfully.", "success")
     after_login = session.pop('after_login', None)
-    return redirect(after_login or url_for("student.index"))
+    return redirect(after_login or url_for('student.index'))
 
 def use_testing_login():
     """
@@ -99,6 +119,35 @@ def login():
     """
     return google_auth.authorize(callback=url_for('.authorized', _external=True))
 
+@auth.route("/login/refresh")
+def login_refresh():
+    """
+    Provides a user with .ok_refresh token after logging in with Google
+    """
+    return client_auth.authorize(callback=url_for('.refresh_token', _external=True))
+
+
+@auth.route('/login/refresh/authorized/')
+@client_auth.authorized_handler
+def refresh_token(resp):
+    if resp is None or 'access_token' not in resp:
+        error = 'Access denied: reason=%s error=%s' % (
+            request.args['error_reason'],
+            request.args['error_description']
+        )
+        flash(error, "error")
+        return redirect(url_for("main.home"))
+
+    refresh_file = {'access_token': resp['access_token'],
+     'refresh_token': resp['refresh_token'],
+     'expires_at': resp['expires_in']}
+    response = make_response(pickle.dumps(refresh_file))
+    response.headers['Content-Disposition'] = (
+        'attachment; filename=ok_refresh')
+    response.headers['Content-Type'] = 'application/octet-stream'
+    return response
+
+
 @auth.route('/login/authorized/')
 @google_auth.authorized_handler
 def authorized(resp):
@@ -109,7 +158,7 @@ def authorized(resp):
         )
         flash(error, "error")
         # TODO Error Page
-        return redirect(url_for("main.home"))
+        return redirect(url_for('student.index'))
     access_token = resp['access_token']
     user = user_from_access_token(access_token)
     session['google_token'] = (access_token, '')  # (access_token, secret)
@@ -135,5 +184,4 @@ def testing_authorized():
 def logout():
     logout_user()
     session.pop('google_token', None)
-    flash("You have been logged out.", "success")
-    return redirect(url_for("main.home"))
+    return redirect(url_for('student.index'))

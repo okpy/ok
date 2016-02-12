@@ -2,6 +2,7 @@ from .helpers import OkTestCase
 
 class TestAuth(OkTestCase):
     email = 'martymcfly@aol.com'
+    staff_email = 'okstaff@okpy.org'
 
     def test_login(self):
         """GET /login/ should redirect to Google OAuth."""
@@ -22,11 +23,15 @@ class TestAuth(OkTestCase):
         self.assert_404(response)
 
     def test_restricted(self):
-        """User should see /student/ if logged in, but not if logged out."""
-        self.login(self.email)
-        response = self.client.get('/student/')
+        """User should see courses on / if logged in, but not if logged out."""
+        # Load Landing Page
+        response = self.client.get('/')
         self.assert_200(response)
+        self.assert_template_used('index.html')
+        assert self.email not in str(response.data)
 
-        self.client.get('/logout/')
-        response = self.client.get('/student/')
-        self.assert_redirects(response, '/login/')
+        self.login(self.email)
+        response = self.client.get('/')
+        self.assert_200(response)
+        assert self.email in str(response.data)
+        assert 'Courses | Ok' in str(response.data)

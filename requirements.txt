@@ -42,6 +42,7 @@ cssmin==0.2.0
 jsmin==2.2.0
 hashids==1.1.0
 pygments==2.1
+humanize==0.5.1
 
 # Testing
 pytest==2.8.5

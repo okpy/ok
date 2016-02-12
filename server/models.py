@@ -1,7 +1,8 @@
 from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy import PrimaryKeyConstraint, MetaData
+from sqlalchemy import PrimaryKeyConstraint, MetaData, types
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
+import pytz
 from werkzeug.exceptions import BadRequest
 
 from flask.ext.login import UserMixin, AnonymousUserMixin
@@ -38,6 +39,30 @@ def transaction(f):
             db.session.rollback()
             raise
     return wrapper
+
+
+class JSON(types.TypeDecorator):
+    impl = types.Text
+
+    def process_bind_param(self, value, dialect):
+        # Python -> SQL
+        return json.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        # SQL -> Python
+        return json.loads(value)
+
+
+class Timezone(types.TypeDecorator):
+    impl = types.String
+
+    def process_bind_param(self, value, dialect):
+        # Python -> SQL
+        return value.zone
+
+    def process_result_value(self, value, dialect):
+        # SQL -> Python
+        return pytz.timezone(value)
 
 
 class DictMixin(object):
@@ -92,6 +117,7 @@ class Course(db.Model, TimestampMixin, DictMixin):
     display_name = db.Column(db.String())
     creator = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), default=True)
+    timezone = db.Column(Timezone, default=pytz.timezone('US/Pacific'))
 
     def __repr__(self):
         return '<Course %r>' % self.offering
@@ -128,27 +154,16 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
     max_group_size = db.Column(db.Integer(), default=1)
     revisions = db.Column(db.Boolean(), default=False)
     autograding_key = db.Column(db.String())
-    raw_files = db.Column(db.Text())  # JSON object mapping filenames to contents
+    files = db.Column(JSON)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
     @hybrid_property
     def active(self):
         return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
-    def files(self):
-        """Return a dictionary of filenames to contents."""
-        if self.raw_files is None:
-            return {}
-        else:
-            return json.loads(str(self.raw_files))
-
     @staticmethod
-    def by_name(name, course_offering=None):
-        """ Return assignment object when given a name. If a course offering is
-        provided, the assignment name is prefixed by the course offering.
-        """
-        if course_offering:
-            name = course_offering + '/' + name
+    def by_name(name):
+        """Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
 
@@ -236,11 +251,6 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         if backup:
             backup.flagged = False
 
-    def offering_name(self):
-        """ Returns the assignment name without the course offering.
-        """
-        return self.name.replace(self.course.offering + '/', '')
-
 
 class Enrollment(db.Model, TimestampMixin):
     id = db.Column(db.Integer(), primary_key=True)
@@ -319,18 +329,10 @@ class Enrollment(db.Model, TimestampMixin):
 class Message(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
     backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
-    raw_contents = db.Column(db.String())
+    contents = db.Column(JSON)
     kind = db.Column(db.String(), index=True)
 
     backup = db.relationship("Backup")
-
-    @hybrid_property
-    def contents(self):
-        return json.loads(str(self.raw_contents))
-
-    @contents.setter
-    def contents(self, value):
-        self.raw_contents = str(json.dumps(value))
 
 
 class Backup(db.Model, TimestampMixin, DictMixin):
@@ -539,7 +541,7 @@ class Group(db.Model, TimestampMixin):
             db.session.delete(self)
 
     def serialize(self):
-        """Turn the group into a string, which is a JSON object with:
+        """Turn the group into a JSON object with:
         - id: the group id
         - assignment_id: the assignment id
         - members: a list of objects, with keys
@@ -547,14 +549,14 @@ class Group(db.Model, TimestampMixin):
             - status: the user's status ("pending" or "active")
         """
         members = GroupMember.query.filter_by(group_id=self.id).all()
-        return json.dumps({
+        return {
             'id': self.id,
             'assignment_id': self.assignment_id,
             'members': [{
                 'user_id': member.user_id,
                 'status': member.status
             } for member in members]
-        })
+        }
 
     @contextlib.contextmanager
     def _log(self, action_type, user_id, target_id):
@@ -586,5 +588,5 @@ class GroupAction(db.Model, TimestampMixin):
     # user whose status was affected
     target_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     # see Group.serialize for format
-    group_before = db.Column(db.String())
-    group_after = db.Column(db.String())
+    group_before = db.Column(JSON)
+    group_after = db.Column(JSON)

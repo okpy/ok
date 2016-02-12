@@ -2,7 +2,6 @@
 
 import os
 from datetime import datetime, timedelta
-import json
 
 from flask.ext.script import Manager, Server
 from flask.ext.script.commands import ShowUrls, Clean
@@ -38,7 +37,7 @@ def make_backup(user, assign, time, messages, submit=True):
                            submitter=user,
                            assignment=assign, submit=submit)
     messages = [Message(kind=k, backup=backup.id,
-                raw_contents=json.dumps(m)) for k, m in messages.items()]
+                contents=m) for k, m in messages.items()]
     db.session.add_all(messages)
     db.session.commit()
     backup.messages = messages
@@ -50,9 +49,9 @@ def seed():
     """
     staff_member = User(email='okstaff@okpy.org')
     db.session.add(staff_member)
-    courses = [Course(offering="cs61a/test16", display_name="CS61A (Test)",
+    courses = [Course(offering="cal/cs61a/test16", display_name="CS61A (Test)",
                       institution="UC Berkeley"),
-               Course(offering="ds8/test16", display_name="DS8 (Test)",
+               Course(offering="cal/ds8/test16", display_name="DS8 (Test)",
                       institution="UC Berkeley")]
     db.session.add_all(courses)
     future = datetime.now() + timedelta(days=1)
@@ -65,13 +64,13 @@ def seed():
     modified_file = open('tests/files/after.py').read()
 
     files = {'difflib.py': original_file}
-    assign = Assignment(name="cs61a/test16/test", creator=staff_member.id,
-                        course_id=courses[0].id, display_name="test",
+    assign = Assignment(name="cal/cs61a/test16/test", creator=staff_member.id,
+                        course_id=courses[0].id, display_name="Test",
                         due_date=future, lock_date=future)
     db.session.add(assign)
-    assign2 = Assignment(name="ds8/test16/test", creator=staff_member.id,
-                        course_id=courses[1].id, display_name="test",
-                        due_date=future, lock_date=future, max_group_size=2, raw_files = json.dumps(files))
+    assign2 = Assignment(name="cal/ds8/test16/test", creator=staff_member.id,
+                        course_id=courses[1].id, display_name="Test",
+                        due_date=future, lock_date=future, max_group_size=2, files=files)
     db.session.add(assign2)
     db.session.commit()
 

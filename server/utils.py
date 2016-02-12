@@ -23,34 +23,18 @@ def encode_id(id_number):
 def decode_id(value):
     numbers = hashids.decode(value)
     if len(numbers) != 1:
-        raise ValidationError('Could not decode hash {} into ID'.format(value))
+        raise ValueError('Could not decode hash {} into ID'.format(value))
     return numbers[0]
 
-class BoolConverter(BaseConverter):
-    def __init__(self, url_map, false_value, true_value):
-        super(BoolConverter, self).__init__(url_map)
-        self.false_value = false_value
-        self.true_value = true_value
-        self.regex = '(?:{0}|{1})'.format(false_value, true_value)
-
-    def to_python(self, value):
-        return value == self.true_value
-
-    def to_url(self, value):
-        return self.true_value if value else self.false_value
-
-class HashidConverter(BaseConverter):
-    def to_python(self, value):
-        return decode_id(value)
-
-    def to_url(self, value):
-        return encode_id(value)
+def local_time(dt, course):
+    """Format a time string in a course's locale."""
+    return course.timezone.localize(dt).strftime('%a %m/%d %H:%M %p')
 
 def is_safe_redirect_url(request, target):
-  host_url = urlparse(request.host_url)
-  redirect_url = urlparse(urljoin(request.host_url, target))
-  return redirect_url.scheme in ('http', 'https') and \
-    host_url.netloc == redirect_url.netloc
+    host_url = urlparse(request.host_url)
+    redirect_url = urlparse(urljoin(request.host_url, target))
+    return redirect_url.scheme in ('http', 'https') and \
+        host_url.netloc == redirect_url.netloc
 
 def group_action_email(members, subject, text):
     emails = [m.user.email for m in members]
@@ -60,8 +44,7 @@ def invite_email(member, recipient, assignment):
     subject = "{} group invitation".format(assignment.display_name)
     text = "{} has invited you to join their group".format(member.email)
     link_text = "Respond to the invitation"
-    link = url_for('student.assignment',
-        course=assignment.course.offering, assign=assignment.offering_name(), _external=True)
+    link = url_for('student.assignment', name=assignment.name, _external=True)
     template = 'email/invite.html'
 
     send_email(recipient.email, subject, text,template,
