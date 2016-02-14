@@ -1,6 +1,7 @@
 import datetime
 import json
 from server.models import db, Assignment, Backup, Course, User, Version
+from server.utils import encode_id
 
 from .helpers import OkTestCase
 
@@ -57,9 +58,9 @@ class TestAuth(OkTestCase):
         self.assert_200(response)
         assert response.json['data'] == {
             'email': email,
-            'key': backup.id,
-            'course': course.id,
-            'assignment': assignment.id
+            'key': encode_id(backup.id),
+            'course': course.offering,
+            'assignment': assignment.name
         }
 
         assert backup.assignment == assignment

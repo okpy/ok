@@ -231,13 +231,21 @@ class MessageSchema(APISchema):
         'created': fields.DateTime(dt_format='rfc822')
     }
 
+class CourseSchema(APISchema):
+    get_fields = {
+        'id': fields.Integer,
+        'offering': fields.String,
+        'display_name': fields.String,
+        'active': fields.Boolean,
+    }
+
 
 class BackupSchema(APISchema):
 
     get_fields = {
         'id': fields.Integer,
-        'submitter': fields.Integer,
-        'assignment': fields.Integer,
+        'submitter': fields.String,
+        'assignment': fields.String,
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'client_time': fields.DateTime(dt_format='rfc822'),
         'created': fields.DateTime(dt_format='rfc822')
@@ -246,8 +254,8 @@ class BackupSchema(APISchema):
     post_fields = {
         'email': fields.String,
         'key': fields.String,
-        'course': fields.String,
-        'assign': fields.String,
+        'course': fields.Nested(CourseSchema.get_fields),
+        'assignment': fields.String,
     }
 
     def __init__(self):
@@ -267,14 +275,6 @@ class BackupSchema(APISchema):
         backup = make_backup(user, assignment_id, messages, submit)
         return backup
 
-
-class CourseSchema(APISchema):
-    get_fields = {
-        'id': fields.Integer,
-        'offering': fields.String,
-        'display_name': fields.String,
-        'active': fields.Boolean,
-    }
 
 
 class ParticipationSchema(APISchema):
@@ -322,15 +322,16 @@ class Backup(Resource):
             restful.abort(403)
         return backup
 
+    @marshal_with(schema.post_fields)
     def post(self, user, key=None):
         if key is not None:
             restful.abort(405)
         backup = self.schema.store_backup(user)
         return {
             'email': current_user.email,
-            'key': backup.id,
-            'course': backup.assignment.course_id,
-            'assignment': backup.assignment_id
+            'key': encode_id(backup.id),
+            'course': backup.assignment.course,
+            'assignment': backup.assignment.name
         }
 
 
@@ -378,5 +379,5 @@ class Version(PublicResource):
 api.add_resource(v3Info, '/v3/')
 
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<int:key>/')
-api.add_resource(Enrollment, '/v3/enrollment/<string:email>')
+api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')
