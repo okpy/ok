@@ -1,4 +1,3 @@
-
 """
 API.py - /api/{version}/endpoints
 
@@ -77,10 +76,14 @@ def envelope_api(data, code, headers=None):
         code is the HTTP status code as an int
         message will always be sucess since the request did not fail.
     """
+    message = 'success'
+    if 'message' in data:
+        message = data['message']
+        del data['message']
     data = {
         'data': data,
         'code': code,
-        'message': 'success'
+        'message': message
     }
     return output_json(data, code, headers)
 
@@ -103,10 +106,9 @@ def authenticate(func):
 def check_version(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        supplied = request.args.get('client_version', '')
-        current_version, download_link = 'v1.5.0', 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.0/ok'
-        # TODO Actual Version Check
-        # Ok Client will still get updates from the ok-server
+        supplied = request.args.get('client_version')
+        client = request.args.get('client_name', 'ok') # ok-client doesn't send this right now
+        current_version, download_link = get_current_version(client)
         if not supplied or supplied == current_version:
             return func(*args, **kwargs)
 
@@ -133,13 +135,22 @@ def name_to_assign_id(name):
     if assgn:
         return assgn.id
 
+@cache.memoize(1000)
+def get_current_version(name):
+    version = models.Version.query.filter_by(name=name).one_or_none()
+    if version:
+        return version.current_version, version.download_link
+    return None, None
+
 class Resource(restful.Resource):
     version = 'v3'
     method_decorators = [authenticate, check_version]
     # applies to all inherited resources
 
+    def __repr__(self):
+        return "<Resource {}>".format(self.__class__.__name__)
+
     def make_response(self, data, *args, **kwargs):
-        data = {'data': data}
         return super().make_response(data, *args, **kwargs)
 
     def can(object, user, course, action):
@@ -151,14 +162,12 @@ class Resource(restful.Resource):
 class PublicResource(Resource):
     method_decorators = []
 
-
 class v3Info(PublicResource):
     def get(self):
         return {
             'version': API_VERSION,
             'url': '/api/{}/'.format(API_VERSION),
-            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki',
-            'test': name_to_assign_id('ds8/test12/test')
+            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
         }
 
 #  Fewer methods/APIs as V1 since the frontend will not use the API
@@ -262,7 +271,7 @@ class BackupSchema(APISchema):
 class CourseSchema(APISchema):
     get_fields = {
         'id': fields.Integer,
-        'name': fields.String,
+        'offering': fields.String,
         'display_name': fields.String,
         'active': fields.Boolean,
     }
@@ -279,6 +288,18 @@ class EnrollmentSchema(APISchema):
 
     get_fields = {
         'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
+    }
+
+class VersionSchema(APISchema):
+
+    version_fields = {
+        'name': fields.String(),
+        'current_version': fields.String(),
+        'download_link': fields.String(),
+    }
+
+    get_fields = {
+        'results': fields.List(fields.Nested(version_fields))
     }
 
 
@@ -313,23 +334,49 @@ class Backup(Resource):
         }
 
 
-class Enrollment(PublicResource):
-    """ View what courses students are enrolled in.
-        Authenticated. Permissions: >= User
+class Enrollment(Resource):
+    """ View what courses an email is enrolled in.
+        Authenticated. Permissions: >= User or admins.
         Used by: Ok Client Auth
     """
     model = models.Enrollment
     schema = EnrollmentSchema()
 
     @marshal_with(schema.get_fields)
-    def get(self, email):
-        course = request.args.get('course', '')  # TODO use reqparse
-        user = models.User.lookup(email)
-        if course and user:
+    def get(self, user, email):
+        target = models.User.lookup(email)
+        if not self.can('view', target, user):
+            restful.abort(403)
+        if target:
             return {'courses': user.participations}
         return {'courses': []}
 
-api.add_resource(v3Info, '/v3')
+    @staticmethod
+    def can(action, resource, requester):
+        if requester.is_admin:
+            return True
+        return resource == requester
+
+class Version(PublicResource):
+    """ Current version of a client
+    Permissions: World Readable
+    Used by: Ok Client Auth
+    """
+    model = models.Version
+    schema = VersionSchema()
+
+    @marshal_with(schema.get_fields)
+    @cache.memoize(600)
+    def get(self, name=None):
+        if name:
+            versions = self.model.query.filter_by(name=name).all()
+        else:
+            versions = self.model.query.all()
+        return {'results': versions}
+
+
+api.add_resource(v3Info, '/v3/')
 
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<int:key>/')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>')
+api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')

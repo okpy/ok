@@ -32,7 +32,11 @@
           <div class="stripe"></div>
           <div class="stripe"></div>
         </div>
-        <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
+        {% if config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
+            <a href="{{ url_for('auth.testing_login') }}" class="btn pill">Login</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
+        {% endif %}
 
       </div>
     </header>
@@ -42,7 +46,13 @@
         {% include 'alerts.html' %}
         <h1 class="title">Automate grading. Personalize feedback.</h1>
         <p>Ok autogrades coding assignments and facilitates code submission, review, composition, and analytics for advanced diagnoses for your class.</p>
-        <a href="{{ url_for('auth.login') }}" class="button">Login with Google</a>
+
+        {% if config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
+            <a href="{{ url_for('auth.testing_login') }}" class="button">Testing Login</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="button">Login with Google</a>
+        {% endif %}
+
       </div>
     </div>
   </body>

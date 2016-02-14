@@ -590,3 +590,9 @@ class GroupAction(db.Model, TimestampMixin):
     # see Group.serialize for format
     group_before = db.Column(JSON)
     group_after = db.Column(JSON)
+
+class Version(db.Model, TimestampMixin, DictMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(), nullable=False) # i.e "ok"
+    current_version = db.Column(db.String(), nullable=False)
+    download_link = db.Column(db.String())

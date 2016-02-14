@@ -8,7 +8,21 @@
             Login for Testing
         </div>
         <div class="login-box-body">
-            <p class="login-box-msg">Impersonate a user</p>
+            {% for user in ['okstaff@okpy.org', 'student0@okpy.org'] %}
+            <form action="{{ callback }}" method="post">
+                <div class="form-group has-feedback">
+                    <input type="hidden" value="{{user}}" class="form-control" name="email" placeholder="Email">
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In As {{user}}</button>
+                </div>
+            </form>
+            {% endfor %}
+        </div>
+
+        <div class="login-box-body">
+
+        <p class="login-box-msg">Impersonate a user</p>
 
             <form action="{{ callback }}" method="post">
                 <div class="form-group has-feedback">
@@ -16,7 +30,6 @@
                 </div>
                 <div class="row">
                     <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button>
-                </div>
                 </div>
             </form>
         </div>
