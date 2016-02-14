@@ -16,22 +16,20 @@ API.py - /api/{version}/endpoints
     api.add_resource(UserAPI, '/v3/user')
 """
 
-from flask import Blueprint, jsonify, request
-
-import flask_restful as restful
-from flask_restful import reqparse, fields, marshal_with
-
 import datetime
 import json
-
-from flask_restful.representations.json import output_json
-
 from functools import wraps
 
+from flask import Blueprint, jsonify, request
 from flask.ext.login import current_user
+import flask_restful as restful
+from flask_restful import reqparse, fields, marshal_with
+from flask_restful.representations.json import output_json
 
 from server.extensions import cache
+from server.utils import encode_id
 import server.models as models
+
 
 
 endpoints = Blueprint('api', __name__)
