@@ -8,7 +8,7 @@ from flask.ext.script.commands import ShowUrls, Clean
 from flask.ext.migrate import Migrate, MigrateCommand
 from server import create_app
 from server.models import db, User, Course, Assignment, Enrollment, \
-    Backup, Message, Group
+    Backup, Message, Group, Version
 
 # default to dev config because no one should use this in
 # production anyway.
@@ -56,6 +56,14 @@ def seed():
     db.session.add_all(courses)
     future = datetime.now() + timedelta(days=1)
     db.session.commit()
+
+    # Add client version info.
+    okversion = Version(name="ok", current_version="v1.5.0",
+        download_link="https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.0/ok")
+    db.session.add(okversion)
+    okversion = Version(name="ok2", current_version="v1.5.0",
+        download_link="https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.0/ok")
+    db.session.add(okversion)
 
     students = [User(email='student{}@okpy.org'.format(i)) for i in range(60)]
     db.session.add_all(students)

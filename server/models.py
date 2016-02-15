@@ -372,7 +372,10 @@ class Backup(db.Model, TimestampMixin, DictMixin):
             backup_id=self.id,
             kind='file_contents').first()
         if message:
-            return message.contents
+            contents = dict(message.contents)
+            # submit is not a real file, but the client sends it anyway
+            contents.pop('submit', None)
+            return contents
         else:
             return {}
 
@@ -590,3 +593,10 @@ class GroupAction(db.Model, TimestampMixin):
     # see Group.serialize for format
     group_before = db.Column(JSON)
     group_after = db.Column(JSON)
+
+class Version(db.Model, TimestampMixin, DictMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    # software name e.g. 'ok'
+    name = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    current_version = db.Column(db.String(255), nullable=False)
+    download_link = db.Column(db.Text())
