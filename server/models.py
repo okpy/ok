@@ -91,7 +91,8 @@ class Model(db.Model):
 class User(Model, UserMixin):
     id = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.String(255))
-    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(255, collation='utf8_bin'),
+        unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
     sid = db.Column(db.String(255))  # SID or Login
     alt_email = db.Column(db.String(255))
