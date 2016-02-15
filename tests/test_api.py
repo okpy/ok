@@ -59,7 +59,12 @@ class TestAuth(OkTestCase):
         assert response.json['data'] == {
             'email': email,
             'key': encode_id(backup.id),
-            'course': course.offering,
+            'course': {
+                'id': course.id,
+                'offering': course.offering,
+                'display_name': course.display_name,
+                'active': course.active
+            },
             'assignment': assignment.name
         }
 
