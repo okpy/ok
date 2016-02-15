@@ -33,9 +33,7 @@ def make_shell_context():
     return dict(app=app, db=db, User=User)
 
 def make_backup(user, assign, time, messages, submit=True):
-    backup = Backup(client_time=time,
-                           submitter=user,
-                           assignment=assign, submit=submit)
+    backup = Backup(submitter=user, assignment=assign, submit=submit)
     messages = [Message(kind=k, backup=backup.id,
                 contents=m) for k, m in messages.items()]
     db.session.add_all(messages)

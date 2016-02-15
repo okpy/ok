@@ -194,7 +194,7 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
             Backup.submitter_id.in_(user_ids),
             Backup.assignment_id == self.id,
             Backup.submit == False
-        ).order_by(Backup.client_time.desc())
+        ).order_by(Backup.created.desc())
 
     def submissions(self, user_ids):
         """Return a query for the submissions that the list of users has for this
@@ -338,7 +338,6 @@ class Message(db.Model, TimestampMixin, DictMixin):
 class Backup(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
 
-    client_time = db.Column(db.DateTime())
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), default=False)
