@@ -1,5 +1,6 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
+from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
 import pytz
@@ -41,7 +42,7 @@ def transaction(f):
     return wrapper
 
 
-class JSON(types.TypeDecorator):
+class Json(types.TypeDecorator):
     impl = types.Text
 
     def process_bind_param(self, value, dialect):
@@ -51,6 +52,18 @@ class JSON(types.TypeDecorator):
     def process_result_value(self, value, dialect):
         # SQL -> Python
         return json.loads(value)
+
+
+class JsonBlob(types.TypeDecorator):
+    impl = mysql.MEDIUMBLOB
+
+    def process_bind_param(self, value, dialect):
+        # Python -> SQL
+        return json.dumps(value).encode('utf-8')
+
+    def process_result_value(self, value, dialect):
+        # SQL -> Python
+        return json.loads(value.decode('utf-8'))
 
 
 class Timezone(types.TypeDecorator):
@@ -152,7 +165,7 @@ class Assignment(Model):
     max_group_size = db.Column(db.Integer(), default=1)
     revisions = db.Column(db.Boolean(), default=False)
     autograding_key = db.Column(db.String(255))
-    files = db.Column(JSON)  # JSON object mapping filenames to contents
+    files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
     @hybrid_property
@@ -329,9 +342,12 @@ class Enrollment(Model):
 
 
 class Message(Model):
+    __tablename__ = 'message'
+    __table_args__ = {'mysql_row_format': 'COMPRESSED'}
+
     id = db.Column(db.Integer(), primary_key=True)
     backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
-    contents = db.Column(JSON)
+    contents = db.Column(JsonBlob)
     kind = db.Column(db.String(255), index=True)
 
     backup = db.relationship("Backup")
@@ -592,8 +608,8 @@ class GroupAction(Model):
     # user whose status was affected
     target_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     # see Group.serialize for format
-    group_before = db.Column(JSON)
-    group_after = db.Column(JSON)
+    group_before = db.Column(Json)
+    group_after = db.Column(Json)
 
 class Version(Model):
     id = db.Column(db.Integer(), primary_key=True)
