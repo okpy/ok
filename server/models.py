@@ -415,7 +415,7 @@ class GroupMember(Model):
     """
     __tablename__ = 'group_member'
     __table_args__ = (
-        PrimaryKeyConstraint('user_id', 'assignment_id', name='pk_GroupMember'),
+        PrimaryKeyConstraint('user_id', 'assignment_id'),
     )
     status_values = ['pending', 'active']
 
