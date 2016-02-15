@@ -29,7 +29,10 @@ class OkTestCase(TestCase):
         * An assignment (self.assignment) in that course
         * 5 users (self.user1, self.user2, etc.) enrolled as students
         """
-        self.course = Course(offering='cal/cs61a/sp16')
+        self.course = Course(
+            offering='cal/cs61a/sp16',
+            institution='UC Berkeley',
+            display_name='CS 61A')
         self.assignment = Assignment(
             name='cal/cs61a/sp16/proj1',
             course=self.course,

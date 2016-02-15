@@ -122,12 +122,12 @@ class User(Model, UserMixin):
 class Course(Model):
     id = db.Column(db.BigInteger, primary_key=True)
     # offering - E.g., 'cal/cs61a/fa14'
-    offering = db.Column(db.String(255), unique=True)
-    institution = db.Column(db.String(255))  # E.g., 'UC Berkeley'
-    display_name = db.Column(db.String(255))
+    offering = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    institution = db.Column(db.String(255), nullable=False)  # E.g., 'UC Berkeley'
+    display_name = db.Column(db.String(255), nullable=False)
     creator = db.Column(db.ForeignKey("user.id"))
-    active = db.Column(db.Boolean(), default=True)
-    timezone = db.Column(Timezone, default=pytz.timezone('US/Pacific'))
+    active = db.Column(db.Boolean(), nullable=False, default=True)
+    timezone = db.Column(Timezone, nullable=False, default=pytz.timezone('US/Pacific'))
 
     def __repr__(self):
         return '<Course %r>' % self.offering
@@ -153,7 +153,7 @@ class Assignment(Model):
     """
 
     id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(255), index=True, unique=True)
+    name = db.Column(db.String(255), index=True, nullable=False, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     display_name = db.Column(db.String(255), nullable=False)
@@ -161,8 +161,8 @@ class Assignment(Model):
     lock_date = db.Column(db.DateTime, nullable=False)
     creator = db.Column(db.ForeignKey("user.id"))
     url = db.Column(db.Text)
-    max_group_size = db.Column(db.Integer(), default=1)
-    revisions = db.Column(db.Boolean(), default=False)
+    max_group_size = db.Column(db.Integer(), nullable=False, default=1)
+    revisions = db.Column(db.Boolean(), nullable=False, default=False)
     autograding_key = db.Column(db.String(255))
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
@@ -346,9 +346,9 @@ class Message(Model):
     __table_args__ = {'mysql_row_format': 'COMPRESSED'}
 
     id = db.Column(db.BigInteger, primary_key=True)
-    backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
-    contents = db.Column(JsonBlob)
-    kind = db.Column(db.String(255), index=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+    contents = db.Column(JsonBlob, nullable=False)
+    kind = db.Column(db.String(255), nullable=False, index=True)
 
     backup = db.relationship("Backup")
 
@@ -358,8 +358,8 @@ class Backup(Model):
 
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submit = db.Column(db.Boolean(), default=False)
-    flagged = db.Column(db.Boolean(), default=False)
+    submit = db.Column(db.Boolean(), nullable=False, default=False)
+    flagged = db.Column(db.Boolean(), nullable=False, default=False)
 
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
@@ -423,7 +423,7 @@ class GroupMember(Model):
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     group_id = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
 
-    status = db.Column(db.Enum(*status_values, name="status"), index=True)
+    status = db.Column(db.Enum(*status_values, name="status"), nullable=False, index=True)
     updated = db.Column(db.DateTime, onupdate=db.func.now())
 
     user = db.relationship("User")
@@ -608,8 +608,8 @@ class GroupAction(Model):
     # user whose status was affected
     target_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     # see Group.serialize for format
-    group_before = db.Column(Json)
-    group_after = db.Column(Json)
+    group_before = db.Column(Json, nullable=False)
+    group_after = db.Column(Json, nullable=False)
 
 class Version(Model):
     id = db.Column(db.Integer(), primary_key=True)

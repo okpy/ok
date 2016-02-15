@@ -11,7 +11,10 @@ class TestAuth(OkTestCase):
         self.login(email)
         user = User.lookup(email)
 
-        course = Course(offering='cal/cs61a/sp16')
+        course = Course(
+            offering='cal/cs61a/sp16',
+            institution='UC Berkeley',
+            display_name='CS 61A')
         assignment = Assignment(
             name='cal/cs61a/sp16/proj1',
             course=course,
