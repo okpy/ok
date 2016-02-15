@@ -54,7 +54,7 @@ class JSON(types.TypeDecorator):
 
 
 class Timezone(types.TypeDecorator):
-    impl = types.String
+    impl = types.String(255)
 
     def process_bind_param(self, value, dialect):
         # Python -> SQL
@@ -77,12 +77,12 @@ class Model(db.Model):
 
 class User(Model, UserMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String())
-    email = db.Column(db.String(), unique=True, nullable=False, index=True)
+    name = db.Column(db.String(255))
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
-    sid = db.Column(db.String())  # SID or Login
-    secondary = db.Column(db.String())  # Other usernames
-    alt_email = db.Column(db.String())
+    sid = db.Column(db.String(255))  # SID or Login
+    secondary = db.Column(db.String(255))  # Other usernames
+    alt_email = db.Column(db.String(255))
     active = db.Column(db.Boolean(), default=True)
 
     def __repr__(self):
@@ -109,10 +109,10 @@ class User(Model, UserMixin):
 
 class Course(Model):
     id = db.Column(db.Integer(), primary_key=True)
-    offering = db.Column(db.String(), unique=True)
-    # offering - E.g., 'cal/cs61a/fa14
-    institution = db.Column(db.String())  # E.g., 'UC Berkeley'
-    display_name = db.Column(db.String())
+    # offering - E.g., 'cal/cs61a/fa14'
+    offering = db.Column(db.String(255), unique=True)
+    institution = db.Column(db.String(255))  # E.g., 'UC Berkeley'
+    display_name = db.Column(db.String(255))
     creator = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), default=True)
     timezone = db.Column(Timezone, default=pytz.timezone('US/Pacific'))
@@ -141,17 +141,17 @@ class Assignment(Model):
     """
 
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(), index=True, unique=True)
+    name = db.Column(db.String(255), index=True, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
-    display_name = db.Column(db.String(), nullable=False)
+    display_name = db.Column(db.String(255), nullable=False)
     due_date = db.Column(db.DateTime, nullable=False)
     lock_date = db.Column(db.DateTime, nullable=False)
     creator = db.Column(db.ForeignKey("user.id"))
-    url = db.Column(db.String())
+    url = db.Column(db.Text)
     max_group_size = db.Column(db.Integer(), default=1)
     revisions = db.Column(db.Boolean(), default=False)
-    autograding_key = db.Column(db.String())
+    autograding_key = db.Column(db.String(255))
     files = db.Column(JSON)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
@@ -328,7 +328,7 @@ class Message(Model):
     id = db.Column(db.Integer(), primary_key=True)
     backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
     contents = db.Column(JSON)
-    kind = db.Column(db.String(), index=True)
+    kind = db.Column(db.String(255), index=True)
 
     backup = db.relationship("Backup")
 
