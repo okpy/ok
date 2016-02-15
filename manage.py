@@ -34,12 +34,9 @@ def make_shell_context():
 
 def make_backup(user, assign, time, messages, submit=True):
     backup = Backup(submitter=user, assignment=assign, submit=submit)
-    messages = [Message(kind=k, backup=backup.id,
-                contents=m) for k, m in messages.items()]
-    db.session.add_all(messages)
-    db.session.commit()
-    backup.messages = messages
+    backup.messages = [Message(kind=k, contents=m) for k, m in messages.items()]
     db.session.add(backup)
+    db.session.commit()
 
 @manager.command
 def seed():
