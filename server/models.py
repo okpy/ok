@@ -94,9 +94,7 @@ class User(Model, UserMixin):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
     sid = db.Column(db.String(255))  # SID or Login
-    secondary = db.Column(db.String(255))  # Other usernames
     alt_email = db.Column(db.String(255))
-    active = db.Column(db.Boolean(), default=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -273,10 +271,11 @@ class Enrollment(Model):
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
+    class_account = db.Column(db.String(255))
+    section = db.Column(db.String(255))
 
     user = db.relationship("User", backref="participations")
-    course = db.relationship("Course", backref="participants")
-    notes = db.Column(db.String()) # For Section Info etc.
+    course = db.relationship("Course", backref="participations")
 
     def has_role(self, course, role):
         if self.course != course:
