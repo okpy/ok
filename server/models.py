@@ -596,6 +596,7 @@ class GroupAction(db.Model, TimestampMixin):
 
 class Version(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(), nullable=False) # i.e "ok"
-    current_version = db.Column(db.String(), nullable=False)
-    download_link = db.Column(db.String())
+    # software name e.g. 'ok'
+    name = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    current_version = db.Column(db.String(255), nullable=False)
+    download_link = db.Column(db.Text())
