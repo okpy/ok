@@ -251,7 +251,11 @@ class Assignment(Model):
 
 
 class Enrollment(Model):
-    id = db.Column(db.Integer(), primary_key=True)
+    __tablename__ = 'enrollment'
+    __table_args__ = (
+        PrimaryKeyConstraint('user_id', 'course_id'),
+    )
+
     user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
