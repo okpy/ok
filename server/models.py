@@ -125,7 +125,7 @@ class Course(Model):
     offering = db.Column(db.String(255), nullable=False, unique=True, index=True)
     institution = db.Column(db.String(255), nullable=False)  # E.g., 'UC Berkeley'
     display_name = db.Column(db.String(255), nullable=False)
-    creator = db.Column(db.ForeignKey("user.id"))
+    creator_id = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), nullable=False, default=True)
     timezone = db.Column(Timezone, nullable=False, default=pytz.timezone('US/Pacific'))
 
@@ -159,10 +159,10 @@ class Assignment(Model):
     display_name = db.Column(db.String(255), nullable=False)
     due_date = db.Column(db.DateTime, nullable=False)
     lock_date = db.Column(db.DateTime, nullable=False)
-    creator = db.Column(db.ForeignKey("user.id"))
+    creator_id = db.Column(db.ForeignKey("user.id"))
     url = db.Column(db.Text)
     max_group_size = db.Column(db.Integer(), nullable=False, default=1)
-    revisions = db.Column(db.Boolean(), nullable=False, default=False)
+    revisions_allowed = db.Column(db.Boolean(), nullable=False, default=False)
     autograding_key = db.Column(db.String(255))
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")

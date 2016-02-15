@@ -95,7 +95,7 @@ def new_assignment(cid):
     # TODO  Form Creation
     form = forms.AssignmentForm()
     if form.validate_on_submit():
-        model = Assignment(course_id=cid, creator=current_user.id)
+        model = Assignment(course_id=cid, creator_id=current_user.id)
         form.populate_obj(model)
         # TODO CONVERT TO UTC from PST.
         db.session.add(model)

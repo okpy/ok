@@ -70,11 +70,11 @@ def seed():
     modified_file = open('tests/files/after.py').read()
 
     files = {'difflib.py': original_file}
-    assign = Assignment(name="cal/cs61a/test16/test", creator=staff_member.id,
+    assign = Assignment(name="cal/cs61a/test16/test", creator_id=staff_member.id,
                         course_id=courses[0].id, display_name="Test",
                         due_date=future, lock_date=future)
     db.session.add(assign)
-    assign2 = Assignment(name="cal/ds8/test16/test", creator=staff_member.id,
+    assign2 = Assignment(name="cal/ds8/test16/test", creator_id=staff_member.id,
                         course_id=courses[1].id, display_name="Test",
                         due_date=future, lock_date=future, max_group_size=2, files=files)
     db.session.add(assign2)
