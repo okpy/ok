@@ -34,10 +34,8 @@
 
 {% macro highlight_diffs(files_before, files_after) %}
   {% for filename in files_before.keys().__or__(files_after.keys()) | sort %}
-    {% if filename != 'submit' %}
     {{ highlight_diff(filename,
       files_before.get(filename, ''), files_after.get(filename, '')) }}
-    {% endif %}
   {% endfor %}
 {% endmacro %}
 
@@ -54,8 +52,6 @@
 
 {% macro highlight_files(files) %}
   {% for filename, source in files | dictsort %}
-    {% if filename != 'submit' %}
-      {{ highlight_file(filename, source) }}
-    {% endif %}
+    {{ highlight_file(filename, source) }}
   {% endfor %}
 {% endmacro %}

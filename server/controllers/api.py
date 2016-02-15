@@ -31,7 +31,6 @@ from server.utils import encode_id
 import server.models as models
 
 
-
 endpoints = Blueprint('api', __name__)
 endpoints.config = {}
 

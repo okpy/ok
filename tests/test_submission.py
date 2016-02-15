@@ -97,3 +97,24 @@ class TestSubmission(OkTestCase):
         group.accept(self.user1)
         assert not submission.flagged
 
+    def test_files(self):
+         backup = Backup(
+            client_time=datetime.datetime.now(),
+            submitter_id=self.user1.id,
+            assignment=self.assignment,
+            submit=True)
+        message = Message(
+            kind='file_contents',
+            backup=backup,
+            contents={
+                'hog.py': 'def foo():\n    return',
+                'submit': True
+            }
+        db.session.add(message)
+        db.session.add(backup)
+        db.session.commit()
+
+        # submit should not show up
+        assert backup.files() == {
+            'hog.py': 'def foo():\n    return'
+        }

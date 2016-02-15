@@ -372,7 +372,10 @@ class Backup(db.Model, TimestampMixin, DictMixin):
             backup_id=self.id,
             kind='file_contents').first()
         if message:
-            return message.contents
+            contents = dict(message.contents)
+            # submit is not a real file, but the client sends it anyway
+            contents.pop('submit', None)
+            return contents
         else:
             return {}
 
