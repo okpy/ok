@@ -1,4 +1,6 @@
 import datetime
+import os
+
 from flask.ext.testing import TestCase
 
 from server import create_app
@@ -6,7 +8,11 @@ from server.models import db, Assignment, Course, Enrollment, User
 
 class OkTestCase(TestCase):
     def create_app(self):
-        return create_app('server.settings.test.TestConfig')
+        env = os.environ.get('SERVER_ENV', 'test')
+        if env != "sqlite" and env != 'test':
+            env = 'test' # Support running tests in sqlite mode
+        config = 'server.settings.{0}.{1}Config'.format(env, env.capitalize())
+        return create_app(config)
 
     def setUp(self):
         db.create_all()

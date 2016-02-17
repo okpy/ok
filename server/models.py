@@ -1,6 +1,7 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
 from sqlalchemy.dialects import mysql
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
 import pytz
@@ -53,6 +54,9 @@ class Json(types.TypeDecorator):
         # SQL -> Python
         return json.loads(value)
 
+@compiles(mysql.MEDIUMBLOB, 'sqlite')
+def ok_blob(element, compiler, **kw):
+    return "BLOB"
 
 class JsonBlob(types.TypeDecorator):
     impl = mysql.MEDIUMBLOB
@@ -89,13 +93,10 @@ class Model(db.Model):
 
 
 class User(Model, UserMixin):
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
-    email = db.Column(db.String(255, collation='utf8_bin'),
-        unique=True, nullable=False, index=True)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
-    sid = db.Column(db.String(255))  # SID or Login
-    alt_email = db.Column(db.String(255))
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -120,7 +121,7 @@ class User(Model, UserMixin):
 
 
 class Course(Model):
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     # offering - E.g., 'cal/cs61a/fa14'
     offering = db.Column(db.String(255), nullable=False, unique=True, index=True)
     institution = db.Column(db.String(255), nullable=False)  # E.g., 'UC Berkeley'
@@ -152,7 +153,7 @@ class Assignment(Model):
         url - cs61a.org/proj/hog/hog.zip
     """
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
@@ -272,6 +273,7 @@ class Enrollment(Model):
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
+    sid = db.Column(db.String(255))
     class_account = db.Column(db.String(255))
     section = db.Column(db.String(255))
 
@@ -345,7 +347,7 @@ class Message(Model):
     __tablename__ = 'message'
     __table_args__ = {'mysql_row_format': 'COMPRESSED'}
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
     contents = db.Column(JsonBlob, nullable=False)
     kind = db.Column(db.String(255), nullable=False, index=True)
@@ -354,12 +356,13 @@ class Message(Model):
 
 
 class Backup(Model):
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
 
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), nullable=False, default=False)
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
+    v2id = db.Column(db.BigInteger)
 
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
@@ -440,7 +443,7 @@ class Group(Model):
     A group must have at least 2 participants.
     Degenerate groups are deleted.
     """
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
 
     assignment = db.relationship("Assignment")
@@ -601,7 +604,7 @@ class GroupAction(Model):
     """A group event, for auditing purposes. All group activity is logged."""
     action_types = ['invite', 'accept', 'decline', 'remove']
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     action_type = db.Column(db.Enum(*action_types, name='action_type'), nullable=False)
     # user who initiated request
     user_id = db.Column(db.ForeignKey("user.id"), nullable=False)

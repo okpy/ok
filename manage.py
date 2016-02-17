@@ -44,6 +44,8 @@ def seed():
     """
     staff_member = User(email='okstaff@okpy.org')
     db.session.add(staff_member)
+    db.session.commit()
+
     courses = [Course(offering="cal/cs61a/test16", display_name="CS61A (Test)",
                       institution="UC Berkeley"),
                Course(offering="cal/ds8/test16", display_name="DS8 (Test)",
