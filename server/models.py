@@ -1,5 +1,7 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
+from sqlalchemy.dialects import mysql
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
 import pytz
@@ -52,6 +54,9 @@ class JSON(types.TypeDecorator):
         # SQL -> Python
         return json.loads(value)
 
+@compiles(mysql.MEDIUMBLOB, 'sqlite')
+def ok_blob(element, compiler, **kw):
+    return "BLOB"
 
 class Timezone(types.TypeDecorator):
     impl = types.String
@@ -73,19 +78,11 @@ class DictMixin(object):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-class TimestampMixin(object):
-    created = db.Column(db.DateTime, server_default=db.func.now())
-
-
-class User(db.Model, UserMixin, TimestampMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String())
-    email = db.Column(db.String(), unique=True, nullable=False, index=True)
+class User(Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
-    sid = db.Column(db.String())  # SID or Login
-    secondary = db.Column(db.String())  # Other usernames
-    alt_email = db.Column(db.String())
-    active = db.Column(db.Boolean(), default=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -109,15 +106,15 @@ class User(db.Model, UserMixin, TimestampMixin):
         return User.query.filter_by(email=email).one_or_none()
 
 
-class Course(db.Model, TimestampMixin, DictMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    offering = db.Column(db.String(), unique=True)
-    # offering - E.g., 'cal/cs61a/fa14
-    institution = db.Column(db.String())  # E.g., 'UC Berkeley'
-    display_name = db.Column(db.String())
-    creator = db.Column(db.ForeignKey("user.id"))
-    active = db.Column(db.Boolean(), default=True)
-    timezone = db.Column(Timezone, default=pytz.timezone('US/Pacific'))
+class Course(Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # offering - E.g., 'cal/cs61a/fa14'
+    offering = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    institution = db.Column(db.String(255), nullable=False)  # E.g., 'UC Berkeley'
+    display_name = db.Column(db.String(255), nullable=False)
+    creator_id = db.Column(db.ForeignKey("user.id"))
+    active = db.Column(db.Boolean(), nullable=False, default=True)
+    timezone = db.Column(Timezone, nullable=False, default=pytz.timezone('US/Pacific'))
 
     def __repr__(self):
         return '<Course %r>' % self.offering
@@ -141,9 +138,8 @@ class Assignment(db.Model, TimestampMixin, DictMixin):
         lock_date - DEADLINE+1 (Hard Deadline for submissions)
         url - cs61a.org/proj/hog/hog.zip
     """
-
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(), index=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), index=True, nullable=False, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     display_name = db.Column(db.String(), nullable=False)
@@ -258,6 +254,9 @@ class Enrollment(db.Model, TimestampMixin):
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
+    sid = db.Column(db.String(255))
+    class_account = db.Column(db.String(255))
+    section = db.Column(db.String(255))
 
     user = db.relationship("User", backref="participations")
     course = db.relationship("Course", backref="participants")
@@ -326,24 +325,26 @@ class Enrollment(db.Model, TimestampMixin):
         db.session.add_all(new_records)
 
 
-class Message(db.Model, TimestampMixin, DictMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
-    contents = db.Column(JSON)
-    kind = db.Column(db.String(), index=True)
+class Message(Model):
+    __tablename__ = 'message'
+    __table_args__ = {'mysql_row_format': 'COMPRESSED'}
+
+    id = db.Column(db.Integer, primary_key=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+    contents = db.Column(JsonBlob, nullable=False)
+    kind = db.Column(db.String(255), nullable=False, index=True)
 
     backup = db.relationship("Backup")
 
 
-class Backup(db.Model, TimestampMixin, DictMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-
+class Backup(Model):
+    id = db.Column(db.Integer, primary_key=True)
     client_time = db.Column(db.DateTime())
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submit = db.Column(db.Boolean(), default=False)
-    flagged = db.Column(db.Boolean(), default=False)
-
+    submit = db.Column(db.Boolean(), nullable=False, default=False)
+    flagged = db.Column(db.Boolean(), nullable=False, default=False)
+    v2id = db.Column(db.BigInteger)
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
@@ -423,7 +424,7 @@ class Group(db.Model, TimestampMixin):
     A group must have at least 2 participants.
     Degenerate groups are deleted.
     """
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
 
     assignment = db.relationship("Assignment")
@@ -584,7 +585,7 @@ class GroupAction(db.Model, TimestampMixin):
     """A group event, for auditing purposes. All group activity is logged."""
     action_types = ['invite', 'accept', 'decline', 'remove']
 
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     action_type = db.Column(db.Enum(*action_types, name='action_type'), nullable=False)
     # user who initiated request
     user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
