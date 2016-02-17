@@ -7,7 +7,7 @@ import subprocess
 
 from server import highlight
 
-from tests import OkTestCase
+from .helpers import OkTestCase
 
 _striptags_re = re.compile(r'(<!--.*?-->|<[^>]*>)')
 

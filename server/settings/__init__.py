@@ -1,21 +1,22 @@
-class LocalConfig:
+import os
+
+try:
+    import secret_keys as keys
+except ImportError:
+    keys = None
+
+class Config:
     SECRET_KEY = 'samplekey'
-
-    DEBUG = True
-    ASSETS_DEBUG = True
-    TESTING_LOGIN = True
-    DEBUG_TB_INTERCEPT_REDIRECTS = False
-
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://okdev:okdev@db/okdev'
-
-    CACHE_TYPE = 'redis'
-    CACHE_REDIS_URL = 'redis://redis:6379/0'
-    CACHE_KEY_PREFIX = 'ok-server'
-
-    RQ_LOW_URL = 'redis://redis:6379/1'
-
     GOOGLE = {
-        'consumer_key': '',
-        'consumer_secret': '',
+        'consumer_key': os.getenv('GOOGLE_ID', ''),
+        'consumer_secret': os.getenv('GOOGLE_SECRET', '')
     }
+    TESTING = False
+    CACHE_KEY_PREFIX = 'ok-cache'
+    SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
+
+class LocalConfig(Config):
+    DEBUG = True
+    SECRET_KEY = 'Testing*ok*server*'
+    RESTFUL_JSON = {'indent': 4}
+    TESTING_LOGIN = True
