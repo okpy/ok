@@ -16,7 +16,7 @@ before_script:
   - mysql -e 'create user okdev;'
   - mysql -e 'create database IF NOT EXISTS oktest;'
   - mysql -e "CREATE USER 'okdev'@'localhost' IDENTIFIED BY '';"
-  - mysql -e "GRANT ALL PRIVILEGES ON * . * TO 'okdev'@'localhost'; FLUSH PRIVILEGES;"
+  - mysql -u root -e "GRANT ALL PRIVILEGES ON oktest . * TO 'okdev'@'localhost'; FLUSH PRIVILEGES;"
 script:
 - make test
 after_success:

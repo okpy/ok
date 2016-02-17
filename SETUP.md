@@ -11,6 +11,14 @@ $ pip install -r requirements.txt
 
 DB Setup:
 
+$ mysql - u root
+> create user okdev;
+> create database IF NOT EXISTS oktest;
+> create database IF NOT EXISTS okdev;
+> CREATE USER 'okdev'@'localhost' IDENTIFIED BY '';
+> GRANT ALL PRIVILEGES ON oktest . * TO 'okdev'@'localhost'; FLUSH PRIVILEGES;
+> GRANT ALL PRIVILEGES ON okdev . * TO 'okdev'@'localhost'; FLUSH PRIVILEGES;
+
 $ ./manage.py createdb
 $ ./manage.py seed
 
