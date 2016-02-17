@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 from datetime import datetime, timedelta
@@ -19,7 +19,7 @@ migrate = Migrate(app, db)
 manager = Manager(app)
 
 
-manager.add_command("server", Server())
+manager.add_command("server", Server(host='0.0.0.0'))
 manager.add_command("show-urls", ShowUrls())
 manager.add_command("clean", Clean())
 manager.add_command('db', MigrateCommand)
@@ -126,8 +126,9 @@ def resetdb():
         DO NOT USE IN PRODUCTION.
     """
     if env == "dev":
+        print("Dropping database...")
         db.drop_all()
-        print("Dropped")
+        print("Seeding database..")
         db.create_all()
         seed()
 
