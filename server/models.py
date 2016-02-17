@@ -94,7 +94,6 @@ class User(Model, UserMixin):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
     sid = db.Column(db.String(255))  # SID or Login
-    alt_email = db.Column(db.String(255))
 
     def __repr__(self):
         return '<User %r>' % self.email
