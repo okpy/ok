@@ -1,25 +1,20 @@
-language: python
-env:
-- SERVER_ENV=sqlite
-python:
-- '3.3'
-- '3.4'
-- '3.5'
+sudo: required
+dist: trusty
+language: generic
 services:
-  - redis-server
-install:
-- pip install pip --upgrade
-- pip install -r requirements.txt
-- pip install python-coveralls
+  - docker
+env:
+  DOCKER_COMPOSE_VERSION: 1.5.2
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
 script:
-- make test
-after_success:
-- coveralls
-sudo: false
+  - make test
 cache:
   directories:
-  - "$HOME/.cache/pip"
-  - lib/python3.5/site-packages
+    - /var/lib/docker
 notifications:
   slack:
     secure: mGqCgRCFMB89AKsYVOZI79sifCFOLaQkuY3rvFKMitpD1GYQQpkBbZ9Z1SWi0VQV63oOKTQBrPCeDSwhZMaJA/dCZZIuz6e9nkVyJJUIrqAuH9PjgQr6FM4FkKzVLpHdPnXIikAvUAKiPRzzj8z4KO1EohBRR/xb2/4TpoWrkSA=
