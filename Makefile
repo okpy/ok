@@ -24,4 +24,4 @@ lint:
 	flake8 --exclude=env .
 
 test:
-	docker-compose -f docker-compose.yml -f docker-compose.test.yml run --rm web
+	py.test --cov-report term-missing --cov=server tests/

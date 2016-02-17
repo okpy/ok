@@ -1,12 +1,11 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
-from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
 import pytz
 from werkzeug.exceptions import BadRequest
 
-from flask.ext.login import UserMixin
+from flask.ext.login import UserMixin, AnonymousUserMixin
 from flask.ext.cache import Cache
 cache = Cache()
 
@@ -42,7 +41,7 @@ def transaction(f):
     return wrapper
 
 
-class Json(types.TypeDecorator):
+class JSON(types.TypeDecorator):
     impl = types.Text
 
     def process_bind_param(self, value, dialect):
@@ -54,20 +53,8 @@ class Json(types.TypeDecorator):
         return json.loads(value)
 
 
-class JsonBlob(types.TypeDecorator):
-    impl = mysql.MEDIUMBLOB
-
-    def process_bind_param(self, value, dialect):
-        # Python -> SQL
-        return json.dumps(value).encode('utf-8')
-
-    def process_result_value(self, value, dialect):
-        # SQL -> Python
-        return json.loads(value.decode('utf-8'))
-
-
 class Timezone(types.TypeDecorator):
-    impl = types.String(255)
+    impl = types.String
 
     def process_bind_param(self, value, dialect):
         # Python -> SQL
@@ -78,24 +65,27 @@ class Timezone(types.TypeDecorator):
         return pytz.timezone(value)
 
 
-class Model(db.Model):
-    """Timestamps all models, and serializes model objects."""
-    __abstract__ = True
-
-    created = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
-
+class DictMixin(object):
+    """ For objects that may have to be serialized into a dictionary.
+    Must contain an integer ID property.
+    """
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-class User(Model, UserMixin):
-    id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(255))
-    email = db.Column(db.String(255, collation='utf8_bin'),
-        unique=True, nullable=False, index=True)
+class TimestampMixin(object):
+    created = db.Column(db.DateTime, server_default=db.func.now())
+
+
+class User(db.Model, UserMixin, TimestampMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String())
+    email = db.Column(db.String(), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
-    sid = db.Column(db.String(255))  # SID or Login
-    alt_email = db.Column(db.String(255))
+    sid = db.Column(db.String())  # SID or Login
+    secondary = db.Column(db.String())  # Other usernames
+    alt_email = db.Column(db.String())
+    active = db.Column(db.Boolean(), default=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -119,15 +109,15 @@ class User(Model, UserMixin):
         return User.query.filter_by(email=email).one_or_none()
 
 
-class Course(Model):
-    id = db.Column(db.BigInteger, primary_key=True)
-    # offering - E.g., 'cal/cs61a/fa14'
-    offering = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    institution = db.Column(db.String(255), nullable=False)  # E.g., 'UC Berkeley'
-    display_name = db.Column(db.String(255), nullable=False)
-    creator_id = db.Column(db.ForeignKey("user.id"))
-    active = db.Column(db.Boolean(), nullable=False, default=True)
-    timezone = db.Column(Timezone, nullable=False, default=pytz.timezone('US/Pacific'))
+class Course(db.Model, TimestampMixin, DictMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    offering = db.Column(db.String(), unique=True)
+    # offering - E.g., 'cal/cs61a/fa14
+    institution = db.Column(db.String())  # E.g., 'UC Berkeley'
+    display_name = db.Column(db.String())
+    creator = db.Column(db.ForeignKey("user.id"))
+    active = db.Column(db.Boolean(), default=True)
+    timezone = db.Column(Timezone, default=pytz.timezone('US/Pacific'))
 
     def __repr__(self):
         return '<Course %r>' % self.offering
@@ -143,7 +133,7 @@ class Course(Model):
         ).count() > 0
 
 
-class Assignment(Model):
+class Assignment(db.Model, TimestampMixin, DictMixin):
     """Assignments are particular to courses and have unique names.
         name - cal/cs61a/fa14/proj1
         display_name - Hog
@@ -152,24 +142,24 @@ class Assignment(Model):
         url - cs61a.org/proj/hog/hog.zip
     """
 
-    id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(255), index=True, nullable=False, unique=True)
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(), index=True, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
-    display_name = db.Column(db.String(255), nullable=False)
+    display_name = db.Column(db.String(), nullable=False)
     due_date = db.Column(db.DateTime, nullable=False)
     lock_date = db.Column(db.DateTime, nullable=False)
-    creator_id = db.Column(db.ForeignKey("user.id"))
-    url = db.Column(db.Text)
-    max_group_size = db.Column(db.Integer(), nullable=False, default=1)
-    revisions_allowed = db.Column(db.Boolean(), nullable=False, default=False)
-    autograding_key = db.Column(db.String(255))
-    files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
+    creator = db.Column(db.ForeignKey("user.id"))
+    url = db.Column(db.String())
+    max_group_size = db.Column(db.Integer(), default=1)
+    revisions = db.Column(db.Boolean(), default=False)
+    autograding_key = db.Column(db.String())
+    files = db.Column(JSON)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
     @hybrid_property
     def active(self):
-        return dt.utcnow() <= self.lock_date
+        return dt.utcnow() < self.lock_date  # TODO : Ensure all times are UTC
 
     @staticmethod
     def by_name(name):
@@ -204,7 +194,7 @@ class Assignment(Model):
             Backup.submitter_id.in_(user_ids),
             Backup.assignment_id == self.id,
             Backup.submit == False
-        ).order_by(Backup.created.desc())
+        ).order_by(Backup.client_time.desc())
 
     def submissions(self, user_ids):
         """Return a query for the submissions that the list of users has for this
@@ -262,21 +252,16 @@ class Assignment(Model):
             backup.flagged = False
 
 
-class Enrollment(Model):
-    __tablename__ = 'enrollment'
-    __table_args__ = (
-        PrimaryKeyConstraint('user_id', 'course_id'),
-    )
-
+class Enrollment(db.Model, TimestampMixin):
+    id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
-    class_account = db.Column(db.String(255))
-    section = db.Column(db.String(255))
 
     user = db.relationship("User", backref="participations")
-    course = db.relationship("Course", backref="participations")
+    course = db.relationship("Course", backref="participants")
+    notes = db.Column(db.String()) # For Section Info etc.
 
     def has_role(self, course, role):
         if self.course != course:
@@ -341,25 +326,23 @@ class Enrollment(Model):
         db.session.add_all(new_records)
 
 
-class Message(Model):
-    __tablename__ = 'message'
-    __table_args__ = {'mysql_row_format': 'COMPRESSED'}
-
-    id = db.Column(db.BigInteger, primary_key=True)
-    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
-    contents = db.Column(JsonBlob, nullable=False)
-    kind = db.Column(db.String(255), nullable=False, index=True)
+class Message(db.Model, TimestampMixin, DictMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), index=True)
+    contents = db.Column(JSON)
+    kind = db.Column(db.String(), index=True)
 
     backup = db.relationship("Backup")
 
 
-class Backup(Model):
-    id = db.Column(db.BigInteger, primary_key=True)
+class Backup(db.Model, TimestampMixin, DictMixin):
+    id = db.Column(db.Integer(), primary_key=True)
 
+    client_time = db.Column(db.DateTime())
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submit = db.Column(db.Boolean(), nullable=False, default=False)
-    flagged = db.Column(db.Boolean(), nullable=False, default=False)
+    submit = db.Column(db.Boolean(), default=False)
+    flagged = db.Column(db.Boolean(), default=False)
 
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
@@ -405,7 +388,7 @@ class Backup(Model):
             ORDER BY date_trunc('hour', backup.created)""")).all()
 
 
-class GroupMember(Model):
+class GroupMember(db.Model, TimestampMixin):
     """A member of a group must accept the invite to join the group.
     Only members of a group can view each other's submissions.
     A user may only be invited or participate in a single group per assignment.
@@ -415,7 +398,7 @@ class GroupMember(Model):
     """
     __tablename__ = 'group_member'
     __table_args__ = (
-        PrimaryKeyConstraint('user_id', 'assignment_id'),
+        PrimaryKeyConstraint('user_id', 'assignment_id', name='pk_GroupMember'),
     )
     status_values = ['pending', 'active']
 
@@ -423,7 +406,7 @@ class GroupMember(Model):
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     group_id = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
 
-    status = db.Column(db.Enum(*status_values, name="status"), nullable=False, index=True)
+    status = db.Column(db.Enum(*status_values, name="status"), index=True)
     updated = db.Column(db.DateTime, onupdate=db.func.now())
 
     user = db.relationship("User")
@@ -432,7 +415,7 @@ class GroupMember(Model):
         backref=backref('members', cascade="all, delete-orphan"))
 
 
-class Group(Model):
+class Group(db.Model, TimestampMixin):
     """A group is a collection of users who are either members or invited.
     Groups are created when a member not in a group invites another member.
     Invited members may accept or decline invitations. Active members may
@@ -440,7 +423,7 @@ class Group(Model):
     A group must have at least 2 participants.
     Degenerate groups are deleted.
     """
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
 
     assignment = db.relationship("Assignment")
@@ -597,21 +580,21 @@ class Group(Model):
         db.session.add(action)
 
 
-class GroupAction(Model):
+class GroupAction(db.Model, TimestampMixin):
     """A group event, for auditing purposes. All group activity is logged."""
     action_types = ['invite', 'accept', 'decline', 'remove']
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     action_type = db.Column(db.Enum(*action_types, name='action_type'), nullable=False)
     # user who initiated request
     user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     # user whose status was affected
     target_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     # see Group.serialize for format
-    group_before = db.Column(Json, nullable=False)
-    group_after = db.Column(Json, nullable=False)
+    group_before = db.Column(JSON)
+    group_after = db.Column(JSON)
 
-class Version(Model):
+class Version(db.Model, TimestampMixin, DictMixin):
     id = db.Column(db.Integer(), primary_key=True)
     # software name e.g. 'ok'
     name = db.Column(db.String(255), nullable=False, unique=True, index=True)

@@ -180,10 +180,22 @@ def make_backup(user, assignment_id, messages, submit):
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
     """
-    backup = models.Backup(submitter=user,
+
+    analytics = messages.get('analytics')
+
+    if analytics:
+        # message_date = analytics.get('time', None)
+        client_time = datetime.datetime.now()
+        # TODO client_time = parse_date(message_date)
+    else:
+        client_time = datetime.datetime.now()
+
+    backup = models.Backup(client_time=client_time, submitter=user,
                            assignment_id=assignment_id, submit=submit)
-    backup.messages = [models.Message(kind=k, contents=m)
-        for k, m in messages.items()]
+    messages = [models.Message(kind=k, backup=backup,
+                contents=m) for k, m in messages.items()]
+    backup.messages = messages
+    models.db.session.add_all(messages)
     models.db.session.add(backup)
     models.db.session.commit()
     return backup
@@ -232,6 +244,7 @@ class BackupSchema(APISchema):
         'submitter': fields.String,
         'assignment': fields.String,
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
+        'client_time': fields.DateTime(dt_format='rfc822'),
         'created': fields.DateTime(dt_format='rfc822')
     }
 
