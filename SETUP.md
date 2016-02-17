@@ -11,7 +11,7 @@ $ pip install -r requirements.txt
 
 DB Setup:
 
-$ mysql - u root
+$ mysql -u root
 > create user okdev;
 > create database IF NOT EXISTS oktest;
 > create database IF NOT EXISTS okdev;
