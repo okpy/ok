@@ -93,7 +93,6 @@ class User(Model, UserMixin):
     name = db.Column(db.String(255))
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
-    sid = db.Column(db.String(255))  # SID or Login
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -270,6 +269,7 @@ class Enrollment(Model):
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
+    sid = db.Column(db.String(255))
     class_account = db.Column(db.String(255))
     section = db.Column(db.String(255))
 
