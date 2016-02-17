@@ -1,13 +1,12 @@
 language: python
 env:
-- SERVER_ENV=test
+- SERVER_ENV=sqlite
 python:
 - '3.3'
 - '3.4'
 - '3.5'
 services:
   - redis-server
-  - mysql
 install:
 - pip install pip --upgrade
 - pip install -r requirements.txt

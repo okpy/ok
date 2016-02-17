@@ -1,6 +1,7 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
 from sqlalchemy.dialects import mysql
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
 import pytz
@@ -53,6 +54,9 @@ class Json(types.TypeDecorator):
         # SQL -> Python
         return json.loads(value)
 
+@compiles(mysql.MEDIUMBLOB, 'sqlite')
+def ok_blob(element, compiler, **kw):
+    return "BLOB"
 
 class JsonBlob(types.TypeDecorator):
     impl = mysql.MEDIUMBLOB
