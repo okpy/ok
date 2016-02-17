@@ -3,7 +3,7 @@ from werkzeug.exceptions import BadRequest
 
 from server.models import db, Assignment, Group, GroupAction, User
 
-from tests import OkTestCase
+from .helpers import OkTestCase
 
 class TestGroup(OkTestCase):
     def setUp(self):

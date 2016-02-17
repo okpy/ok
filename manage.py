@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import os
 from datetime import datetime, timedelta
@@ -19,7 +19,7 @@ migrate = Migrate(app, db)
 manager = Manager(app)
 
 
-manager.add_command("server", Server(host='0.0.0.0'))
+manager.add_command("server", Server())
 manager.add_command("show-urls", ShowUrls())
 manager.add_command("clean", Clean())
 manager.add_command('db', MigrateCommand)
@@ -33,10 +33,15 @@ def make_shell_context():
     return dict(app=app, db=db, User=User)
 
 def make_backup(user, assign, time, messages, submit=True):
-    backup = Backup(submitter=user, assignment=assign, submit=submit)
-    backup.messages = [Message(kind=k, contents=m) for k, m in messages.items()]
-    db.session.add(backup)
+    backup = Backup(client_time=time,
+                           submitter=user,
+                           assignment=assign, submit=submit)
+    messages = [Message(kind=k, backup=backup.id,
+                contents=m) for k, m in messages.items()]
+    db.session.add_all(messages)
     db.session.commit()
+    backup.messages = messages
+    db.session.add(backup)
 
 @manager.command
 def seed():
@@ -69,11 +74,11 @@ def seed():
     modified_file = open('tests/files/after.py').read()
 
     files = {'difflib.py': original_file}
-    assign = Assignment(name="cal/cs61a/test16/test", creator_id=staff_member.id,
+    assign = Assignment(name="cal/cs61a/test16/test", creator=staff_member.id,
                         course_id=courses[0].id, display_name="Test",
                         due_date=future, lock_date=future)
     db.session.add(assign)
-    assign2 = Assignment(name="cal/ds8/test16/test", creator_id=staff_member.id,
+    assign2 = Assignment(name="cal/ds8/test16/test", creator=staff_member.id,
                         course_id=courses[1].id, display_name="Test",
                         due_date=future, lock_date=future, max_group_size=2, files=files)
     db.session.add(assign2)
@@ -111,13 +116,6 @@ def createdb():
     """
     db.create_all()
 
-@manager.command
-def dropdb():
-    """ Creates a database with all of the tables defined in
-        your SQLAlchemy models
-    """
-    if env == "dev":
-        db.drop_all()
 
 @manager.command
 def resetdb():
@@ -126,11 +124,10 @@ def resetdb():
         DO NOT USE IN PRODUCTION.
     """
     if env == "dev":
-        print("Dropping database...")
         db.drop_all()
-        print("Seeding database..")
         db.create_all()
         seed()
+        print("Dropped")
 
 
 if __name__ == "__main__":

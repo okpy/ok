@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 import datetime
-import os
-
 from flask.ext.testing import TestCase
 
 from server import create_app
@@ -9,11 +6,7 @@ from server.models import db, Assignment, Course, Enrollment, User
 
 class OkTestCase(TestCase):
     def create_app(self):
-        env = os.environ.get('SERVER_ENV', 'test')
-        if env != "sqlite" and env != 'test':
-            env = 'test' # Support running tests in sqlite mode
-        config = 'server.settings.{0}.{1}Config'.format(env, env.capitalize())
-        return create_app(config)
+        return create_app('server.settings.test.TestConfig')
 
     def setUp(self):
         db.create_all()
@@ -36,10 +29,7 @@ class OkTestCase(TestCase):
         * An assignment (self.assignment) in that course
         * 5 users (self.user1, self.user2, etc.) enrolled as students
         """
-        self.course = Course(
-            offering='cal/cs61a/sp16',
-            institution='UC Berkeley',
-            display_name='CS 61A')
+        self.course = Course(offering='cal/cs61a/sp16')
         self.assignment = Assignment(
             name='cal/cs61a/sp16/proj1',
             course=self.course,
@@ -48,6 +38,14 @@ class OkTestCase(TestCase):
             lock_date=datetime.datetime.now() + datetime.timedelta(days=1),
             max_group_size=4)
         db.session.add(self.assignment)
+
+        self.staff = User(email='okstaff@okpy.org', is_admin=True)
+        participant = Enrollment(
+            user=self.staff,
+            course=self.course,
+            role='staff')
+        db.session.add(participant)
+
 
         def make_student(n):
             user = User(email='student{0}@aol.com'.format(n))
