@@ -91,8 +91,7 @@ class Model(db.Model):
 class User(Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
-    email = db.Column(db.String(255, collation='utf8_bin'),
-        unique=True, nullable=False, index=True)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
     sid = db.Column(db.String(255))  # SID or Login
     alt_email = db.Column(db.String(255))
@@ -360,6 +359,7 @@ class Backup(Model):
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), nullable=False, default=False)
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
+    v2id = db.Column(db.BigInteger)
 
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
