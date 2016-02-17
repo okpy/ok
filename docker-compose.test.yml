@@ -1,0 +1,3 @@
+web:
+  restart: 'no'
+  command: py.test --cov-report term-missing --cov=server tests/
