@@ -1,4 +1,6 @@
 import datetime
+import os
+
 from flask.ext.testing import TestCase
 
 from server import create_app
