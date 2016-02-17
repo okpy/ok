@@ -3,7 +3,7 @@ from werkzeug.exceptions import BadRequest
 
 from server.models import db, Backup, Group, Message
 
-from .helpers import OkTestCase
+from tests import OkTestCase
 
 class TestSubmission(OkTestCase):
     """Tests flagging submissions and final submissions."""
@@ -20,8 +20,7 @@ class TestSubmission(OkTestCase):
         for _ in range(20):
             for user_id in self.active_user_ids:
                 time -= datetime.timedelta(minutes=15)
-                backup = Backup(client_time=time,
-                    submitter_id=user_id,
+                backup = Backup(submitter_id=user_id,
                     assignment=self.assignment, submit=True)
                 messages = [Message(kind=k, backup=backup,
                     contents=m) for k, m in message_dict.items()]
@@ -99,7 +98,6 @@ class TestSubmission(OkTestCase):
 
     def test_files(self):
         backup = Backup(
-            client_time=datetime.datetime.now(),
             submitter_id=self.user1.id,
             assignment=self.assignment,
             submit=True)

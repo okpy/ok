@@ -3,7 +3,7 @@ import json
 from server.models import db, Assignment, Backup, Course, User, Version
 from server.utils import encode_id
 
-from .helpers import OkTestCase
+from tests import OkTestCase
 
 class TestAuth(OkTestCase):
     def _test_backup(self, submit):
@@ -11,7 +11,10 @@ class TestAuth(OkTestCase):
         self.login(email)
         user = User.lookup(email)
 
-        course = Course(offering='cal/cs61a/sp16')
+        course = Course(
+            offering='cal/cs61a/sp16',
+            institution='UC Berkeley',
+            display_name='CS 61A')
         assignment = Assignment(
             name='cal/cs61a/sp16/proj1',
             course=course,

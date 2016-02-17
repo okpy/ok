@@ -1,0 +1,22 @@
+web:
+  build: .
+  restart: always
+  command: /bin/bash -c "./manage.py resetdb && ./manage.py server"
+  ports:
+    - "80:5000"
+  volumes:
+    - .:/code
+  links:
+    - db
+    - redis
+db:
+  image: mysql:5.6
+  restart: always
+  environment:
+    MYSQL_USER: 'okdev'
+    MYSQL_PASSWORD: 'okdev'
+    MYSQL_DATABASE: 'okdev'
+    MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+redis:
+  image: redis
+  restart: always

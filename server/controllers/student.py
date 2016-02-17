@@ -66,7 +66,7 @@ def course(offering):
         # TODO need group info too
         user_ids = assignment.active_user_ids(current_user.id)
         final_submission = assignment.final_submission(user_ids)
-        submission_time = final_submission and final_submission.client_time
+        submission_time = final_submission and final_submission.created
         group = Group.lookup(current_user, assignment)
         return assignment, submission_time, group
 
