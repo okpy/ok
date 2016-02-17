@@ -55,3 +55,7 @@ terminal run
 Testing is easy:
 
     $ make test
+
+You can also run tests with sqlite:
+
+    $ SERVER_ENV=sqlite py.test tests/
