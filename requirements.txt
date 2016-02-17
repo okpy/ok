@@ -36,7 +36,6 @@ sendgrid==1.5.20
 premailer==2.9.7
 
 # Other
-psycopg2==2.6.1
 itsdangerous==0.24
 cssmin==0.2.0
 jsmin==2.2.0

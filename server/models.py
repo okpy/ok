@@ -114,7 +114,7 @@ class Course(db.Model, TimestampMixin, DictMixin):
     offering = db.Column(db.String(), unique=True)
     # offering - E.g., 'cal/cs61a/fa14
     institution = db.Column(db.String())  # E.g., 'UC Berkeley'
-    display_name = db.Column(db.String())
+    display_name = db.Column(db.String()) 
     creator = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), default=True)
     timezone = db.Column(Timezone, default=pytz.timezone('US/Pacific'))
@@ -125,6 +125,17 @@ class Course(db.Model, TimestampMixin, DictMixin):
     @staticmethod
     def by_name(name):
         return Course.query.filter_by(offering=name).one_or_none()
+
+    @property 
+    def display_name_with_semester(self):
+        year = self.offering[-2:len(self.offering)]
+        if "fa" in self.offering:
+            semester = "Fall"
+        elif "sp" in self.offering:
+            semester = "Spring"
+        else:
+            semester = "Summer"
+        return self.display_name + " (%s 20%s)" % (semester, year)
 
     def is_enrolled(self, user):
         return Enrollment.query.filter_by(

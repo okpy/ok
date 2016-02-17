@@ -62,7 +62,7 @@ class TestAuth(OkTestCase):
             'course': {
                 'id': course.id,
                 'offering': course.offering,
-                'display_name': course.display_name,
+                'display_name': course.display_name_with_semester,
                 'active': course.active
             },
             'assignment': assignment.name
