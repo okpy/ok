@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, flash, request, redirect, \
-    url_for, session,  current_app, abort
+    url_for, session,  current_app, abort, make_response
 from flask.ext.login import login_user, logout_user, login_required, \
     current_user
 from werkzeug.exceptions import BadRequest
@@ -132,6 +132,18 @@ def code(name, submit, bid):
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup, use_diff=use_diff,
         files_before=assign.files, files_after=backup.files())
+        
+@student.route('/download/<hashid:bid>/<file>')
+@login_required
+def download(bid, file):
+    backup = Backup.query.get(bid)
+    assign = backup.assignment
+    user_ids = assign.active_user_ids(current_user.id)
+    if not (backup.can_view(current_user, user_ids, assign.course)):
+        abort(404)
+    response = make_response(backup.files()[file])
+    response.headers["Content-Disposition"] = "attachment; filename=%s" % file
+    return response
 
 @student.route('/<assignment_name:name>/submissions/<hashid:bid>/flag/', methods=['POST'])
 @login_required
