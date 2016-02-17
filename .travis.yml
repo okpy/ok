@@ -5,10 +5,18 @@ python:
 - '3.3'
 - '3.4'
 - '3.5'
+services:
+  - redis-server
+  - mysql
 install:
 - pip install pip --upgrade
 - pip install -r requirements.txt
 - pip install python-coveralls
+before_script:
+  - mysql -e 'create user okdev;'
+  - mysql -e 'create database IF NOT EXISTS oktest;'
+  - mysql -e "CREATE USER 'okdev'@'localhost' IDENTIFIED BY '';"
+  - mysql -e "GRANT ALL PRIVILEGES ON * . * TO 'okdev'@'localhost'; FLUSH PRIVILEGES;"
 script:
 - make test
 after_success:
