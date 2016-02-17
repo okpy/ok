@@ -128,7 +128,7 @@ def resetdb():
     if env == "dev":
         print("Dropping database...")
         db.drop_all()
-        print("Seeding database..")
+        print("Seeding database...")
         db.create_all()
         seed()
 
