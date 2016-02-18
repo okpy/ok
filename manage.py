@@ -79,7 +79,13 @@ def seed():
     db.session.add(assign2)
     db.session.commit()
 
-    messages = {'file_contents': {'difflib.py': modified_file}, 'analytics': {}}
+    messages = {
+        'file_contents': {
+            'difflib.py': modified_file,
+            'moby_dick': 'Call me Ishmael.'
+        },
+        'analytics': {}
+    }
     for i in range(20):
         for submit in (False, True):
             time = datetime.now()-timedelta(days=i)

@@ -88,3 +88,15 @@ class TestHighlight(OkTestCase):
     def test_highlight_diff(self):
         for a, b in itertools.combinations(self.files.values(), 2):
             self._test_highlight_diff('test.py', a, b)
+
+    def test_no_highlight(self):
+        filename = 'data'
+        source = 'It was the best of times, it was the worst of times, ...'
+
+        source_lines = source.splitlines(keepends=True)
+        highlighted = list(highlight.highlight_file(filename, source))
+
+        for i, highlighted_line in highlighted:
+            assert source_lines[i - 1] == highlighted_line
+
+        assert source_lines == [line for _, line in highlighted]
