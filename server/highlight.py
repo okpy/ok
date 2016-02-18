@@ -7,9 +7,13 @@ import pygments.formatters
 
 def highlight(filename, source):
     """Highlights an input string into a list of HTML strings, one per line."""
-    return pygments.highlight(source,
-        pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False),
-        pygments.formatters.HtmlFormatter(nowrap=True)).splitlines(keepends=True)
+    try:
+        highlighted = pygments.highlight(source,
+            pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False),
+            pygments.formatters.HtmlFormatter(nowrap=True))
+    except pygments.util.ClassNotFound:
+        highlighted = source
+    return highlighted.splitlines(keepends=True)
 
 def highlight_file(filename, source):
     """Given a source file, generate a sequence of (line index, HTML) pairs."""
