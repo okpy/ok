@@ -141,7 +141,11 @@ def download(name, submit, bid, file):
     user_ids = assign.active_user_ids(current_user.id)
     if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, assign.course)):
         abort(404)
-    response = make_response(backup.files()[file])
+    try:
+        contents = backup.files()[file]
+    except KeyError:
+        abort(404)
+    response = make_response(contents)
     response.headers["Content-Disposition"] = "attachment; filename=%s" % file
     return response
 
