@@ -1,4 +1,4 @@
-from .helpers import OkTestCase
+from tests import OkTestCase
 
 class TestMain(OkTestCase):
     def test_home(self):

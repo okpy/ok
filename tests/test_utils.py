@@ -1,6 +1,6 @@
 from server import utils
 
-from .helpers import OkTestCase
+from tests import OkTestCase
 
 class TestUtils(OkTestCase):
     def test_hashids(self):
