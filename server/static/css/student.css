@@ -503,6 +503,17 @@ header .logo {
   border-width: 0 0 1px 0;
 }
 
+.source-file-name {
+  padding-top: 4px;
+  float: left;
+}
+
+.source-file-download {
+  float: right;
+  font-family: 'Lato', sans-serif;
+  font-weight: 400;
+}
+
 table.highlight {
   background-color: #fff;
   border-collapse: separate;

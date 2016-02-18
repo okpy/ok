@@ -66,11 +66,11 @@
           <div class="wrap">
             {% if use_diff %}
                 {% cache 60*10, backup.id, 'diff-view' %}
-                    {{ diff.highlight_diffs(files_before, files_after) }}
+                    {{ diff.highlight_diffs(files_before, files_after, backup) }}
                 {% endcache %}
             {% else %}
                 {% cache 60*10, backup.id, 'code-view' %}
-                    {{ diff.highlight_files(files_after) }}
+                    {{ diff.highlight_files(files_after, backup) }}
                 {% endcache %}
             {% endif %}
           </div>
