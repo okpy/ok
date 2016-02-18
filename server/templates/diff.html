@@ -7,11 +7,19 @@
   <td class="highlight-source">{{ line | safe }}</td>
 {% endmacro %}
 
-{% macro source_file(filename) %}
+{% macro source_file(filename, backup) %}
   <div class="source-file table-responsive">
     <table class="highlight">
       <thead>
-        <tr><th class="source-file-header" colspan=3>{{ filename }}</td></tr>
+        <tr>
+            <th class="source-file-header" colspan=3>
+                <div class="source-file-name">{{ filename }}</div>
+                <a href="{{ url_for('.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
+                class="no-dash button-small source-file-download">
+                    <i class="fa fa-download"> </i> Download
+                </a>
+            </th>
+        </tr>
       </thead>
       <tbody>
         {{ caller() }}
@@ -20,8 +28,8 @@
   </div>
 {% endmacro %}
 
-{% macro highlight_diff(filename, a, b) %}
-  {% call source_file(filename) %}
+{% macro highlight_diff(filename, a, b, backup) %}
+  {% call source_file(filename, backup) %}
     {% for tag, i, j, line in highlight.highlight_diff(filename, a, b) %}
       <tr class="highlight-{{ tag }}">
         {{ line_number(i) }}
@@ -32,15 +40,15 @@
   {% endcall %}
 {% endmacro %}
 
-{% macro highlight_diffs(files_before, files_after) %}
+{% macro highlight_diffs(files_before, files_after, backup) %}
   {% for filename in files_before.keys().__or__(files_after.keys()) | sort %}
     {{ highlight_diff(filename,
-      files_before.get(filename, ''), files_after.get(filename, '')) }}
+      files_before.get(filename, ''), files_after.get(filename, ''), backup) }}
   {% endfor %}
 {% endmacro %}
 
-{% macro highlight_file(filename, source) %}
-  {% call source_file(filename) %}
+{% macro highlight_file(filename, source, backup) %}
+  {% call source_file(filename, backup) %}
     {% for i, line in highlight.highlight_file(filename, source) %}
       <tr>
         {{ line_number(i) }}
@@ -50,8 +58,8 @@
   {% endcall %}
 {% endmacro %}
 
-{% macro highlight_files(files) %}
+{% macro highlight_files(files, backup) %}
   {% for filename, source in files | dictsort %}
-    {{ highlight_file(filename, source) }}
+    {{ highlight_file(filename, source, backup) }}
   {% endfor %}
 {% endmacro %}

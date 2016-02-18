@@ -1,4 +1,4 @@
-from .helpers import OkTestCase
+from tests import OkTestCase
 
 from server.models import db, User
 

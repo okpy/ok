@@ -1,5 +1,8 @@
 Flask==0.10.1
 
+# Database
+pymysql
+
 # Caching
 redis==2.10.5
 
@@ -24,10 +27,6 @@ Flask-RESTful==0.3.5
 Flask-Testing==0.4.2
 Flask-RQ==0.2
 
-# Google
-google-api-python-client==1.4.2
-GoogleAppEngineCloudStorageClient==1.9.22.1
-
 # Timezones
 pytz
 
@@ -35,7 +34,7 @@ pytz
 sendgrid==1.5.20
 premailer==2.9.7
 
-# Other
+# Front end
 itsdangerous==0.24
 cssmin==0.2.0
 jsmin==2.2.0

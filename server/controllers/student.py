@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, flash, request, redirect, \
-    url_for, session,  current_app, abort
+    url_for, session,  current_app, abort, make_response
 from flask.ext.login import login_user, logout_user, login_required, \
     current_user
 from werkzeug.exceptions import BadRequest
@@ -66,7 +66,7 @@ def course(offering):
         # TODO need group info too
         user_ids = assignment.active_user_ids(current_user.id)
         final_submission = assignment.final_submission(user_ids)
-        submission_time = final_submission and final_submission.client_time
+        submission_time = final_submission and final_submission.created
         group = Group.lookup(current_user, assignment)
         return assignment, submission_time, group
 
@@ -132,6 +132,18 @@ def code(name, submit, bid):
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup, use_diff=use_diff,
         files_before=assign.files, files_after=backup.files())
+        
+@student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<file>')
+@login_required
+def download(name, submit, bid, file):
+    backup = Backup.query.get(bid)
+    assign = get_assignment(name)
+    user_ids = assign.active_user_ids(current_user.id)
+    if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, assign.course)):
+        abort(404)
+    response = make_response(backup.files()[file])
+    response.headers["Content-Disposition"] = "attachment; filename=%s" % file
+    return response
 
 @student.route('/<assignment_name:name>/submissions/<hashid:bid>/flag/', methods=['POST'])
 @login_required
