@@ -129,9 +129,9 @@ class Course(db.Model, TimestampMixin, DictMixin):
     @property 
     def display_name_with_semester(self):
         year = self.offering[-2:len(self.offering)]
-        if "fa" in self.offering:
+        if "fa" in self.offering[-4:len(self.offering)]:
             semester = "Fall"
-        elif "sp" in self.offering:
+        elif "sp" in self.offering[-4:len(self.offering)]:
             semester = "Spring"
         else:
             semester = "Summer"
