@@ -13,7 +13,8 @@ class TestDownload(OkTestCase):
         
         self.backup = Backup(
             submitter=self.user,
-            assignment=self.assignment)
+            assignment=self.assignment,
+            submit=True)
             
         self.message = Message(
             backup=self.backup,
@@ -32,7 +33,8 @@ class TestDownload(OkTestCase):
         contents = "x = 4"
         self._add_file(filename, contents)
         encoded_id = utils.encode_id(self.backup.id)
-        url = "/{}/{}/{}/{}".format(self.assignment.name, self.backup.submit, encoded_id, filename)
+        submit_str = "submissions" if self.backup.submit else "backups"
+        url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_200(response)
         self.assertEqual(contents, response.data.decode('UTF-8'))
@@ -42,7 +44,8 @@ class TestDownload(OkTestCase):
         contents = "⚡️ 🔥 💥 ❄️"
         self._add_file(filename, contents)
         encoded_id = utils.encode_id(self.backup.id)
-        url = "/{}/{}/{}/{}".format(self.assignment.name, self.backup.submit, encoded_id, filename)
+        submit_str = "submissions" if self.backup.submit else "backups"
+        url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_200(response)
         self.assertEqual(contents, response.data.decode('UTF-8'))
@@ -53,6 +56,7 @@ class TestDownload(OkTestCase):
         self._add_file(filename, contents)
         self.login('student2@okpy.org')
         encoded_id = utils.encode_id(self.backup.id)
-        url = "/{}/{}/{}/{}".format(self.assignment.name, self.backup.submit, encoded_id, filename)
+        submit_str = "submissions" if self.backup.submit else "backups"
+        url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_404(response)
