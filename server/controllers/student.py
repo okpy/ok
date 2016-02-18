@@ -132,7 +132,7 @@ def code(name, submit, bid):
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup, use_diff=use_diff,
         files_before=assign.files, files_after=backup.files())
-        
+
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<file>')
 @login_required
 def download(name, submit, bid, file):
