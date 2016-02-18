@@ -128,11 +128,13 @@ def code(name, submit, bid):
     backup = Backup.query.get(bid)
     if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, assign.course)):
         abort(404)
-    use_diff = request.args.get('diff', False)
+    diff_type = request.args.get('diff', None)
+    if diff_type not in (None, 'short', 'full'):
+        return redirect(url_for('.code', name=name, submit=submit, bid=bid))
     return render_template('student/assignment/code.html',
-        course=assign.course, assignment=assign, backup=backup, use_diff=use_diff,
+        course=assign.course, assignment=assign, backup=backup, diff_type=diff_type,
         files_before=assign.files, files_after=backup.files())
-        
+
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<file>')
 @login_required
 def download(name, submit, bid, file):

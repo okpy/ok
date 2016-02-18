@@ -28,9 +28,9 @@
   </div>
 {% endmacro %}
 
-{% macro highlight_diff(filename, a, b, backup) %}
+{% macro highlight_diff(filename, a, b, backup, diff_type) %}
   {% call source_file(filename, backup) %}
-    {% for tag, i, j, line in highlight.highlight_diff(filename, a, b) %}
+    {% for tag, i, j, line in highlight.highlight_diff(filename, a, b, diff_type) %}
       <tr class="highlight-{{ tag }}">
         {{ line_number(i) }}
         {{ line_number(j) }}
@@ -40,10 +40,14 @@
   {% endcall %}
 {% endmacro %}
 
-{% macro highlight_diffs(files_before, files_after, backup) %}
+{% macro highlight_diffs(files_before, files_after, backup, diff_type) %}
   {% for filename in files_before.keys().__or__(files_after.keys()) | sort %}
     {{ highlight_diff(filename,
-      files_before.get(filename, ''), files_after.get(filename, ''), backup) }}
+      files_before.get(filename, ''),
+      files_after.get(filename, ''),
+      backup,
+      diff_type)
+    }}
   {% endfor %}
 {% endmacro %}
 
