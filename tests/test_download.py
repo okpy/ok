@@ -31,7 +31,8 @@ class TestDownload(OkTestCase):
         filename = "test.py"
         contents = "x = 4"
         self._add_file(filename, contents)
-        url = '/download/%s/%s' % (utils.encode_id(self.backup.id), filename)
+        encoded_id = utils.encode_id(self.backup.id)
+        url = "/{}/{}/{}/{}".format(self.assignment.name, self.backup.submit, encoded_id, filename)
         response = self.client.get(url)
         self.assert_200(response)
         self.assertEqual(contents, response.data.decode('UTF-8'))
@@ -40,7 +41,8 @@ class TestDownload(OkTestCase):
         filename = "test.py"
         contents = "⚡️ 🔥 💥 ❄️"
         self._add_file(filename, contents)
-        url = '/download/%s/%s' % (utils.encode_id(self.backup.id), filename)
+        encoded_id = utils.encode_id(self.backup.id)
+        url = "/{}/{}/{}/{}".format(self.assignment.name, self.backup.submit, encoded_id, filename)
         response = self.client.get(url)
         self.assert_200(response)
         self.assertEqual(contents, response.data.decode('UTF-8'))
@@ -50,6 +52,7 @@ class TestDownload(OkTestCase):
         contents = "x = 4"
         self._add_file(filename, contents)
         self.login('student2@okpy.org')
-        url = '/download/%s/%s' % (utils.encode_id(self.backup.id), filename)
+        encoded_id = utils.encode_id(self.backup.id)
+        url = "/{}/{}/{}/{}".format(self.assignment.name, self.backup.submit, encoded_id, filename)
         response = self.client.get(url)
         self.assert_404(response)
