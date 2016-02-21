@@ -19,13 +19,16 @@ def highlight_file(filename, source):
     """Given a source file, generate a sequence of (line index, HTML) pairs."""
     return zip(itertools.count(1), highlight(filename, source))
 
-def highlight_diff(filename, a, b):
+def highlight_diff(filename, a, b, diff_type='short'):
     """Given two input strings, generate a sequence of 4-tuples. The elements
     of each tuple are:
         * 'delete', 'insert', 'equal', or 'header' (the tag)
         * the line number of the first file (or None)
         * the line number of the second file (or None)
         * the rendered HTML string of the line
+
+    DIFF_TYPE is either 'short' (3 lines of context) or
+    'full' (all context lines).
     """
     highlighted_a = highlight(filename, a)
     highlighted_b = highlight(filename, b)
@@ -54,7 +57,13 @@ def highlight_diff(filename, a, b):
         return '{},{}'.format(beginning, length)
 
     matcher = difflib.SequenceMatcher(None, a.splitlines(), b.splitlines())
-    for group in matcher.get_grouped_opcodes():
+    if diff_type == 'short':
+        groups = matcher.get_grouped_opcodes()
+    elif diff_type == 'full':
+        groups = [matcher.get_opcodes()]
+    else:
+        raise ValueError('Unknown diff type {}'.format(diff_type))
+    for group in groups:
         first, last = group[0], group[-1]
         header = '@@ -{} +{} @@\n'.format(
             format_range_unified(first[1], last[2]),

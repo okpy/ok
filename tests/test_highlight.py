@@ -49,10 +49,10 @@ class TestHighlight(OkTestCase):
         # Check that removing tags gives the same file
         assert source_lines == [striptags(line) for _, line in highlighted]
 
-    def _test_highlight_diff(self, filename, a, b):
+    def _test_highlight_diff(self, filename, a, b, diff_type):
         a_lines = a.splitlines(keepends=True)
         b_lines = b.splitlines(keepends=True)
-        highlighted = list(highlight.highlight_diff(filename, a, b))
+        highlighted = list(highlight.highlight_diff(filename, a, b, diff_type))
 
         # Check format
         for tag, i, j, highlighted_line in highlighted:
@@ -86,8 +86,9 @@ class TestHighlight(OkTestCase):
             self._test_highlight_file(filename, source)
 
     def test_highlight_diff(self):
-        for a, b in itertools.combinations(self.files.values(), 2):
-            self._test_highlight_diff('test.py', a, b)
+        for diff_type in ('short', 'full'):
+            for a, b in itertools.combinations(self.files.values(), 2):
+                self._test_highlight_diff('test.py', a, b, diff_type)
 
     def test_no_highlight(self):
         filename = 'data'
