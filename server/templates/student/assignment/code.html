@@ -60,13 +60,15 @@
           </li>
         {% endmacro %}
 
-        <div class="subcontent">
-          <ul class="nav nav-tabs nav-justified">
-            {{ diff_tab(None, 'Files') }}
-            {{ diff_tab('short', 'Diff (short)') }}
-            {{ diff_tab('full', 'Diff (full)') }}
-          </ul>
-        </div>
+        {% if files_before %}
+          <div class="subcontent">
+            <ul class="nav nav-tabs nav-justified">
+              {{ diff_tab(None, 'Files') }}
+                {{ diff_tab('short', 'Diff (short)') }}
+                {{ diff_tab('full', 'Diff (full)') }}
+            </ul>
+          </div>
+        {% endif %}
 
         <div class="subcontent list">
           <div class="wrap">

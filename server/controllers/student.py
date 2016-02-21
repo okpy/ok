@@ -131,6 +131,8 @@ def code(name, submit, bid):
     diff_type = request.args.get('diff', None)
     if diff_type not in (None, 'short', 'full'):
         return redirect(url_for('.code', name=name, submit=submit, bid=bid))
+    if not assign.files and diff_type:
+        return abort(404)
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup, diff_type=diff_type,
         files_before=assign.files, files_after=backup.files())
