@@ -2,6 +2,8 @@
 
 from flask import Flask
 from flask.ext.rq import RQ
+from flask.ext.misaka import markdown
+
 from flask_wtf.csrf import CsrfProtect
 import humanize
 
@@ -71,6 +73,11 @@ def create_app(object_name):
         'humanize': humanize,
         'utils': utils
     })
+
+    app.jinja_env.filters.update({
+        'markdown': markdown
+    })
+
 
     # register our blueprints
     # OAuth should not need CSRF protection

@@ -9,6 +9,8 @@ from werkzeug.exceptions import BadRequest
 
 from flask.ext.login import UserMixin
 from flask.ext.cache import Cache
+from flask.ext.misaka import markdown
+
 cache = Cache()
 
 import functools
@@ -620,3 +622,34 @@ class Version(Model):
     name = db.Column(db.String(255), nullable=False, unique=True, index=True)
     current_version = db.Column(db.String(255), nullable=False)
     download_link = db.Column(db.Text())
+
+
+class Comment(Model):
+    """ Composition comments. Line is the line # on the Diff.
+    Submission_line is the closest line on the submitted file.
+    """
+    id = db.Column(db.Integer(), primary_key=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    author_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+
+    filename = db.Column(db.String(), nullable=False)
+    line = db.Column(db.Integer(), nullable=False) # Line of the original file
+
+    message = db.Column(db.Text())  # Markdown
+
+    @property
+    def formatted(self):
+        return markdown(self.message)
+
+class Score(Model):
+    id = db.Column(db.Integer, primary_key=True)
+    grader_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+
+    kind = db.Column(db.String(255), nullable=False)
+    score = db.Column(db.Float, nullable=False)
+    message = db.Column(db.Text)
+    public = db.Column(db.Boolean, default=True)
+
+    backup = db.relationship("Backup")
