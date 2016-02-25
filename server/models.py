@@ -121,7 +121,6 @@ class User(Model, UserMixin):
         """Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
 
-
 class Course(Model):
     id = db.Column(db.Integer, primary_key=True)
     # offering - E.g., 'cal/cs61a/fa14'
@@ -148,7 +147,7 @@ class Course(Model):
             semester = "Spring"
         else:
             semester = "Summer"
-        return self.display_name + " ({0} 20{1})".format(semester, year);
+        return self.display_name + " ({0} 20{1})".format(semester, year)
 
     def is_enrolled(self, user):
         return Enrollment.query.filter_by(

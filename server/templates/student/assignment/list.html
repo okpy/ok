@@ -42,7 +42,7 @@
           <div class="wrap">
             <div class="string-nav">
               <span><a href="{{ url_for('.index') }}">Courses</a></span> &raquo;
-              <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name }}</a></span> &raquo;
+              <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name_with_semester }}</a></span> &raquo;
               <span><a href="{{ url_for('.assignment', name=assignment.name) }}"> {{ assignment.display_name }}</a></span> &raquo;
               {{ name }}
             </div>
