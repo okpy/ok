@@ -60,6 +60,10 @@ class Json(types.TypeDecorator):
 def ok_blob(element, compiler, **kw):
     return "BLOB"
 
+@compiles(mysql.MEDIUMTEXT, 'sqlite')
+def ok_text(element, compiler, **kw):
+    return "TEXT"
+
 class JsonBlob(types.TypeDecorator):
     impl = mysql.MEDIUMBLOB
 
@@ -643,10 +647,10 @@ class Comment(Model):
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
     author_id = db.Column(db.ForeignKey("user.id"), nullable=False)
 
-    filename = db.Column(db.String(), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
     line = db.Column(db.Integer(), nullable=False) # Line of the original file
 
-    message = db.Column(db.Text())  # Markdown
+    message = db.Column(mysql.MEDIUMTEXT)  # Markdown
 
     @property
     def formatted(self):
@@ -660,7 +664,7 @@ class Score(Model):
 
     kind = db.Column(db.String(255), nullable=False)
     score = db.Column(db.Float, nullable=False)
-    message = db.Column(db.Text)
+    message = db.Column(mysql.MEDIUMTEXT)
     public = db.Column(db.Boolean, default=True)
 
     backup = db.relationship("Backup")
