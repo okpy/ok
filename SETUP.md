@@ -1,6 +1,37 @@
-# Mac OS X
+# Development Environment
 
-## Setup
+## Database setup
+
+Ensure that SQLite 3 is installed. To set up the database:
+
+    $ ./manage.py createdb
+
+To "seed" the database with example data:
+
+    $ ./manage.py seed
+
+To both recreate the database and reseed it with the example data:
+
+    $ ./manage.py resetdb
+
+## Running the server
+
+To run the server (point your browser to http://localhost:5000):
+
+    $ ./manage.py server
+
+## Testing
+
+Run tests via
+
+    $ make test
+
+# Test Environment Setup (Docker)
+
+This section is optional. It shows how to get the Docker test environment
+(which Travis uses) running locally.
+
+## Mac OS X
 
 Make sure [Homebrew](http://brew.sh/) is installed.
 
@@ -31,7 +62,7 @@ Install `docker-osx-dev`:
 This will add an entry in `/etc/hosts` so you don't have to type in the Docker
 machine IP every time.
 
-## Development
+### Development
 
 To start the Docker machine, run
 
@@ -50,12 +81,8 @@ terminal run
 
     $ docker-osx-dev
 
-## Testing
+### Testing
 
-Testing is easy:
+The command that Travis uses is
 
-    $ make test
-
-You can also run tests with sqlite:
-
-    $ SERVER_ENV=sqlite py.test tests/
+    $ make docker-test

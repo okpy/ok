@@ -11,7 +11,7 @@ before_install:
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
 script:
-  - make test
+  - make docker-test
 cache:
   directories:
     - /var/lib/docker

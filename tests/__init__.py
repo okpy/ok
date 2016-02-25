@@ -8,11 +8,7 @@ from server.models import db, Assignment, Course, Enrollment, User
 
 class OkTestCase(TestCase):
     def create_app(self):
-        env = os.environ.get('SERVER_ENV', 'test')
-        if env != "sqlite" and env != 'test':
-            env = 'test' # Support running tests in sqlite mode
-        config = 'server.settings.{0}.{1}Config'.format(env, env.capitalize())
-        return create_app(config)
+        return create_app('settings/dev.py')
 
     def setUp(self):
         db.create_all()

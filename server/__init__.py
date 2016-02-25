@@ -1,4 +1,4 @@
-#! ../env/bin/python
+import os
 
 from flask import Flask
 from flask.ext.rq import RQ
@@ -24,19 +24,21 @@ from server.extensions import (
 
 
 
-def create_app(object_name):
-    """
-    An flask application factory, as explained here:
-    http://flask.pocoo.org/docs/patterns/appfactories/
-
-    Arguments:
-        object_name: the python path of the config object,
-                     e.g. appname.settings.ProdConfig
+def create_app(default_config_path=None):
+    """Create and return a Flask application. Reads a config file path from the
+    OK_SERVER_CONFIG environment variable. If it is not set, reads from
+    default_config_path instead. This is so we can default to a development
+    environment locally, but the app will fail in production if there is no
+    config file rather than dangerously defaulting to a development environment.
     """
 
     app = Flask(__name__)
 
-    app.config.from_object(object_name)
+    config_path = os.getenv('OK_SERVER_CONFIG', default_config_path)
+    if config_path is None:
+        raise ValueError('No configuration file found. '
+            'Check that the OK_SERVER_CONFIG environment variable is set.')
+    app.config.from_pyfile(config_path)
 
     # initialize redis task queues
     RQ(app)

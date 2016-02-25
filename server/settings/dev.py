@@ -1,4 +1,15 @@
-from server.settings import LocalConfig
+ENV = 'dev'
+SECRET_KEY = 'samplekey'
+CACHE_TYPE = 'simple'
 
-class DevConfig(LocalConfig):
-    ENV = 'dev'
+DEBUG = True
+ASSETS_DEBUG = True
+TESTING_LOGIN = True
+DEBUG_TB_INTERCEPT_REDIRECTS = False
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_DATABASE_URI = 'sqlite:///../oksqlite.db'
+
+CACHE_TYPE = 'simple'
+
+GOOGLE_CONSUMER_KEY = ''
