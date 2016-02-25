@@ -138,14 +138,14 @@ class Course(Model):
 
     @property 
     def display_name_with_semester(self):
-        year = self.offering[-2:len(self.offering)]
-        if "fa" in self.offering[-4:len(self.offering)]:
+        year = self.offering[-2:]
+        if "fa" in self.offering[-4:]:
             semester = "Fall"
-        elif "sp" in self.offering[-4:len(self.offering)]:
+        elif "sp" in self.offering[-4:]:
             semester = "Spring"
         else:
             semester = "Summer"
-        return self.display_name + " (%s 20%s)" % (semester, year)
+        return self.display_name + " ({0} 20{1})".format(semester, year);
 
     def is_enrolled(self, user):
         return Enrollment.query.filter_by(
