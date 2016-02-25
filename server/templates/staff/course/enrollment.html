@@ -1,12 +1,12 @@
 {% extends "staff/base.html" %}
 {% import 'staff/_formhelpers.html' as forms %}
 
-{% block title %} Ok - {{ current_course.display_name }} Enrollment{% endblock %}
+{% block title %} Ok - {{ current_course.display_name_with_semester }} Enrollment{% endblock %}
 
 {% block main %}
   <section class="content-header">
       <h1>
-        {{ current_course.display_name }} Enrollment
+        {{ current_course.display_name_with_semester }} Enrollment
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">

@@ -16,9 +16,9 @@
             <div class="due">
               <span>
                 {% if admin %}
-                <a href="{{ url_for('admin.course', cid=course.id) }}">{{course.display_name}}</a>
+                <a href="{{ url_for('admin.course', cid=course.id) }}">{{course.display_name_with_semester}}</a>
                 {% else %}
-                <a href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name}}</a>
+                <a href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name_with_semester}}</a>
                 {% endif %}
               </span>
             </div>
@@ -66,9 +66,9 @@
       <div class="cell col-xs-12">
         <div class="cell-title">
           {% if admin %}
-            <a href="{{ url_for('admin.course', cid=course.id) }}">{{course.display_name}}</a>
+            <a href="{{ url_for('admin.course', cid=course.id) }}">{{course.display_name_with_semester}}</a>
           {% else %}
-            <a href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name}}</a>
+            <a href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name_with_semester}}</a>
           {% endif %}
         </div>
         <div class="cell-text"><span>{{course.offering}} @ {{course.institution}}</span></div>
