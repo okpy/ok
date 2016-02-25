@@ -53,26 +53,32 @@
           </div>
           {% include 'alerts.html' %}
         </div>
-        <!-- start desktop/tablet version -->
-        <div class="subcontent list">
-            <div class="wrap">
-                <!-- Action bar -->
-                <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit, diff=None if use_diff else 1) }}" class="no-dash button-small">
-                  <i class="fa fa-file-code-o"> </i> View {{ 'Code' if use_diff else 'Diff' }}
-                </a>
-            </div>
-        </div>
+
+        {% macro diff_tab(target_diff_type, text) %}
+          <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+            <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit, diff=target_diff_type) }}">{{ text }}</a>
+          </li>
+        {% endmacro %}
+
+        {% if files_before %}
+          <div class="subcontent">
+            <ul class="nav nav-tabs nav-justified">
+              {{ diff_tab(None, 'Files') }}
+                {{ diff_tab('short', 'Diff (short)') }}
+                {{ diff_tab('full', 'Diff (full)') }}
+            </ul>
+          </div>
+        {% endif %}
+
         <div class="subcontent list">
           <div class="wrap">
-            {% if use_diff %}
-                {% cache 60*10, backup.id, 'diff-view' %}
-                    {{ diff.highlight_diffs(files_before, files_after, backup) }}
-                {% endcache %}
-            {% else %}
-                {% cache 60*10, backup.id, 'code-view' %}
-                    {{ diff.highlight_files(files_after, backup) }}
-                {% endcache %}
-            {% endif %}
+            {% cache 60*10, 'code-view', backup.id|string, diff_type|string %}
+              {% if diff_type %}
+                {{ diff.highlight_diffs(files_before, files_after, backup, diff_type) }}
+              {% else %}
+                {{ diff.highlight_files(files_after, backup) }}
+              {% endif %}
+            {% endcache %}
           </div>
         </div>
       </section>
