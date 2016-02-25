@@ -139,6 +139,17 @@ class Course(Model):
     def by_name(name):
         return Course.query.filter_by(offering=name).one_or_none()
 
+    @property
+    def display_name_with_semester(self):
+        year = self.offering[-2:]
+        if "fa" in self.offering[-4:]:
+            semester = "Fall"
+        elif "sp" in self.offering[-4:]:
+            semester = "Spring"
+        else:
+            semester = "Summer"
+        return self.display_name + " ({0} 20{1})".format(semester, year);
+
     def is_enrolled(self, user):
         return Enrollment.query.filter_by(
             user=user,
@@ -369,6 +380,7 @@ class Backup(Model):
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
+    scores = db.relationship("Score")
 
     db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
