@@ -46,9 +46,9 @@ def seed():
     db.session.add(staff_member)
     db.session.commit()
 
-    courses = [Course(offering="cal/cs61a/test16", display_name="CS61A (Test)",
+    courses = [Course(offering="cal/cs61a/test16", display_name="CS61AT",
                       institution="UC Berkeley"),
-               Course(offering="cal/ds8/test16", display_name="DS8 (Test)",
+               Course(offering="cal/ds8/test16", display_name="DS8T",
                       institution="UC Berkeley")]
     db.session.add_all(courses)
     future = datetime.now() + timedelta(days=1)
@@ -70,11 +70,11 @@ def seed():
 
     files = {'difflib.py': original_file}
     assign = Assignment(name="cal/cs61a/test16/test", creator_id=staff_member.id,
-                        course_id=courses[0].id, display_name="Test",
+                        course_id=courses[0].id, display_name="Project 1",
                         due_date=future, lock_date=future)
     db.session.add(assign)
     assign2 = Assignment(name="cal/ds8/test16/test", creator_id=staff_member.id,
-                        course_id=courses[1].id, display_name="Test",
+                        course_id=courses[1].id, display_name="Project 1",
                         due_date=future, lock_date=future, max_group_size=2, files=files)
     db.session.add(assign2)
     db.session.commit()
