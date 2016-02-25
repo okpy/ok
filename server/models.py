@@ -145,7 +145,7 @@ class Course(Model):
             semester = "Spring"
         else:
             semester = "Summer"
-        return self.display_name + " ({0} 20{1})".format(semester, year);
+        return self.display_name + " ({0} 20{1})".format(semester, year)
 
     def is_enrolled(self, user):
         return Enrollment.query.filter_by(
