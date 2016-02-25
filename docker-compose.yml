@@ -18,5 +18,5 @@ db:
     MYSQL_DATABASE: 'okdev'
     MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
 redis:
-  image: redis
+  image: redis:alpine
   restart: always

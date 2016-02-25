@@ -9,11 +9,11 @@ class LocalConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://okdev:okdev@db/okdev'
 
-    CACHE_TYPE = 'redis'
-    CACHE_REDIS_URL = 'redis://redis:6379/0'
+    CACHE_TYPE = 'simple'
+    # CACHE_REDIS_URL = 'redis://redis:6379/0'
     CACHE_KEY_PREFIX = 'ok-server'
 
-    RQ_LOW_URL = 'redis://redis:6379/1'
+    # RQ_LOW_URL = 'redis://redis:6379/1'
 
     GOOGLE = {
         'consumer_key': '',
