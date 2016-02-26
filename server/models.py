@@ -9,6 +9,8 @@ from werkzeug.exceptions import BadRequest
 
 from flask.ext.login import UserMixin
 from flask.ext.cache import Cache
+from flask.ext.misaka import markdown
+
 cache = Cache()
 
 import functools
@@ -57,6 +59,10 @@ class Json(types.TypeDecorator):
 @compiles(mysql.MEDIUMBLOB, 'sqlite')
 def ok_blob(element, compiler, **kw):
     return "BLOB"
+
+@compiles(mysql.MEDIUMTEXT, 'sqlite')
+def ok_text(element, compiler, **kw):
+    return "TEXT"
 
 class JsonBlob(types.TypeDecorator):
     impl = mysql.MEDIUMBLOB
@@ -136,7 +142,7 @@ class Course(Model):
     def by_name(name):
         return Course.query.filter_by(offering=name).one_or_none()
 
-    @property 
+    @property
     def display_name_with_semester(self):
         year = self.offering[-2:]
         if "fa" in self.offering[-4:]:
@@ -377,6 +383,7 @@ class Backup(Model):
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
+    scores = db.relationship("Score")
 
     db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
@@ -630,3 +637,34 @@ class Version(Model):
     name = db.Column(db.String(255), nullable=False, unique=True, index=True)
     current_version = db.Column(db.String(255), nullable=False)
     download_link = db.Column(db.Text())
+
+
+class Comment(Model):
+    """ Composition comments. Line is the line # on the Diff.
+    Submission_line is the closest line on the submitted file.
+    """
+    id = db.Column(db.Integer(), primary_key=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    author_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+
+    filename = db.Column(db.String(255), nullable=False)
+    line = db.Column(db.Integer(), nullable=False) # Line of the original file
+
+    message = db.Column(mysql.MEDIUMTEXT)  # Markdown
+
+    @property
+    def formatted(self):
+        return markdown(self.message)
+
+class Score(Model):
+    id = db.Column(db.Integer, primary_key=True)
+    grader_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+
+    kind = db.Column(db.String(255), nullable=False)
+    score = db.Column(db.Float, nullable=False)
+    message = db.Column(mysql.MEDIUMTEXT)
+    public = db.Column(db.Boolean, default=True)
+
+    backup = db.relationship("Backup")
