@@ -10,10 +10,7 @@ from server import create_app
 from server.models import db, User, Course, Assignment, Enrollment, \
     Backup, Message, Group, Version
 
-# default to dev config because no one should use this in
-# production anyway.
-env = os.environ.get('SERVER_ENV', 'dev')
-app = create_app('server.settings.{0}.{1}Config'.format(env, env.capitalize()))
+app = create_app('settings/dev.py')
 
 migrate = Migrate(app, db)
 manager = Manager(app)
@@ -122,7 +119,7 @@ def dropdb():
     """ Creates a database with all of the tables defined in
         your SQLAlchemy models
     """
-    if env == "dev":
+    if app.config['ENV'] == "dev":
         db.drop_all()
 
 @manager.command
@@ -131,7 +128,7 @@ def resetdb():
         your SQLAlchemy models.
         DO NOT USE IN PRODUCTION.
     """
-    if env == "dev":
+    if app.config['ENV'] == "dev":
         print("Dropping database...")
         db.drop_all()
         print("Seeding database...")
