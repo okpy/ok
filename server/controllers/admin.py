@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, render_template, flash, redirect, url_for, abort, request
 
 from flask.ext.login import login_required, current_user
@@ -123,6 +125,17 @@ def assignment(cid, aid):
 
     if assgn.course != current_course:
         return abort(401)
+
+    assgn.name = form.name._value()
+    assgn.display_name = form.display_name._value()
+    assgn.due_date = datetime.strptime(form.due_date._value(), '%Y-%m-%d %H:%M:%S')       
+    assgn.lock_date = datetime.strptime(form.lock_date._value(), '%Y-%m-%d %H:%M:%S')           
+    assgn.max_group_size = form.max_group_size._value()              
+    assgn.url = form.url._value()
+    assgn.revisions = form.revisions._value()           
+    assgn.autograding_key = form.autograding_key._value()
+
+    db.session.commit()
 
     return render_template('staff/course/assignment.html', assignment=assgn,
                            form=form, courses=courses,
