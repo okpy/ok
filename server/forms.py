@@ -77,11 +77,13 @@ class EnrollmentForm(BaseForm):
     sid = StringField(u'SID', validators=[validators.optional()])
     secondary = StringField(u'Secondary Auth (e.g Username)',
                             validators=[validators.optional()])
+    section = StringField(u'Section',
+                            validators=[validators.optional()])
     role = SelectField(u'Role',
                        choices=[(r, r.capitalize()) for r in VALID_ROLES])
 
 class BatchEnrollmentForm(BaseForm):
-    csv = TextAreaField(u'Email, Name, SID, Course Login, Notes')
+    csv = TextAreaField(u'Email, Name, SID, Course Login, Section')
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()
