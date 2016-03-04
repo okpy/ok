@@ -119,23 +119,16 @@ def assignment(cid, aid):
     # Convert TZ to Pacific
     assgn.due_date = convert_to_pacific(assgn.due_date)
     assgn.lock_date = convert_to_pacific(assgn.lock_date)
-    form = forms.AssignmentForm(obj=assgn)
+    form = forms.AssignmentUpdateForm(obj=assgn)
 
     # TODO : Actually save updates.
 
     if assgn.course != current_course:
         return abort(401)
 
-    assgn.name = form.name._value()
-    assgn.display_name = form.display_name._value()
-    assgn.due_date = datetime.strptime(form.due_date._value(), '%Y-%m-%d %H:%M:%S')       
-    assgn.lock_date = datetime.strptime(form.lock_date._value(), '%Y-%m-%d %H:%M:%S')           
-    assgn.max_group_size = form.max_group_size._value()              
-    assgn.url = form.url._value()
-    assgn.revisions = form.revisions._value()           
-    assgn.autograding_key = form.autograding_key._value()
-
-    db.session.commit()
+    if form.validate_on_submit():
+        form.populate_obj(assgn)
+        db.session.commit()
 
     return render_template('staff/course/assignment.html', assignment=assgn,
                            form=form, courses=courses,
