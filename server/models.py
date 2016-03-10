@@ -327,7 +327,7 @@ class Enrollment(Model):
     @staticmethod
     @transaction
     def enroll_from_csv(cid, form):
-        enrollment_info = [];
+        enrollment_info = []
         rows = form.csv.data.splitlines()
         entries = list(csv.reader(rows))
         new_users = []
