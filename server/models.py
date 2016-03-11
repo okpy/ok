@@ -316,46 +316,65 @@ class Enrollment(Model):
             db.session.add(usr)
         db.session.commit()
         role = form.role.data
-        Enrollment.create(cid, [usr.id], role)
+        info = {
+            'id': usr.id,
+            'sid': form.sid.data,
+            'class_account': form.secondary.data,
+            'section': form.section.data
+        }
+        Enrollment.create(cid, [info], role)
 
     @staticmethod
     @transaction
     def enroll_from_csv(cid, form):
-        new_users, existing_uids = [], []
+        enrollment_info = []
         rows = form.csv.data.splitlines()
         entries = list(csv.reader(rows))
+        new_users = []
+        existing_user_count = 0
         for usr in entries:
-            email, name, sid, login, notes = usr
+            email, name, sid, login, section = usr
             usr_obj = User.lookup(email)
+            user_info = {
+                "sid": sid,
+                "class_account": login,
+                "section": section
+            }
             if not usr_obj:
-                usr_obj = User(email=email, name=name, sid=sid, secondary=login)
+                usr_obj = User(email=email, name=name)
                 new_users.append(usr_obj)
             else:
                 usr_obj.name = name
-                usr_obj.sid = sid
-                usr_obj.secondary = login
-                usr_obj.notes = notes
-                existing_uids.append(usr_obj.id)
+                existing_user_count += 1
+            user_info['id'] = usr_obj
+            enrollment_info.append(user_info)
 
         db.session.add_all(new_users)
         db.session.commit()
-        user_ids = [u.id for u in new_users] + existing_uids
-        Enrollment.create(cid, user_ids, STUDENT_ROLE)
-        return len(new_users), len(existing_uids)
+        for info in enrollment_info:
+            info['id'] = info['id'].id
+        Enrollment.create(cid, enrollment_info, STUDENT_ROLE)
+        return len(new_users), existing_user_count
 
 
     @staticmethod
     @transaction
-    def create(cid, usr_ids=[], role=STUDENT_ROLE):
+    def create(cid, enrollment_info=[], role=STUDENT_ROLE):
         new_records = []
-        for usr_id in usr_ids:
+        for info in enrollment_info:
+            usr_id, sid = info['id'], info['sid']
+            class_account, section = info['class_account'], info['section']
             record = Enrollment.query.filter_by(user_id=usr_id,
                                                    course_id=cid).one_or_none()
-            if record:
-                record.role = role
-            else:
-                record = Enrollment(course_id=cid, user_id=usr_id, role=role)
+            if not record:
+                record = Enrollment(course_id=cid, user_id=usr_id)
                 new_records.append(record)
+                
+            record.role = role
+            record.sid = sid
+            record.class_account = class_account
+            record.section = section
+            
         db.session.add_all(new_records)
 
 
