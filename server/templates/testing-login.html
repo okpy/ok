@@ -8,22 +8,17 @@
             Login for Testing
         </div>
         <div class="login-box-body">
-            {% for user in ['okstaff@okpy.org', 'student0@okpy.org'] %}
+            <p class="login-box-msg">Impersonate a random user</p>
             <form action="{{ callback }}" method="post">
-                <div class="form-group has-feedback">
-                    <input type="hidden" value="{{user}}" class="form-control" name="email" placeholder="Email">
-                </div>
+                <input type="hidden" value="{{ random_user }}" class="form-control" name="email" placeholder="Email">
                 <div class="row">
-                    <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In As {{user}}</button>
+                    <button type="submit" class="btn btn-primary btn-block btn-flat">Sign in as {{random_user}}</button>
                 </div>
             </form>
-            {% endfor %}
         </div>
 
         <div class="login-box-body">
-
-        <p class="login-box-msg">Impersonate a user</p>
-
+            <p class="login-box-msg">Impersonate a specific user</p>
             <form action="{{ callback }}" method="post">
                 <div class="form-group has-feedback">
                     <input type="text" class="form-control" name="email" placeholder="Email">
