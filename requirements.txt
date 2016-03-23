@@ -49,3 +49,4 @@ pytest-cov==2.2.0
 mccabe==0.3.1
 flake8==2.5.1
 pylint==1.5.2
+names==0.3.0
