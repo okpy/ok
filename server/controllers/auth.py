@@ -9,8 +9,8 @@ from flask_oauthlib.client import OAuth
 from flask.ext.login import LoginManager, login_user, logout_user, login_required
 
 import pickle
-import random
 
+from server import utils
 from server.models import db, User
 
 auth = Blueprint('auth', __name__)
@@ -172,14 +172,10 @@ def authorized(resp):
 def testing_login():
     if not use_testing_login():
         abort(404)
-    num_users = User.query.count()
-    if num_users:
-        random_user = User.query.offset(random.randrange(num_users)).first().email
-    else:
-        random_user = ''
     return render_template('testing-login.html',
         callback=url_for(".testing_authorized"),
-        random_user=random_user)
+        random_admin=utils.random_row(User.query.filter_by(is_admin=True)),
+        random_user=utils.random_row(User.query))
 
 @auth.route('/testing-login/authorized/', methods=['POST'])
 def testing_authorized():

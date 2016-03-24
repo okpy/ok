@@ -1,5 +1,6 @@
 import os
 import logging
+import random
 from urllib.parse import urlparse, urljoin
 
 from flask import render_template, url_for
@@ -35,6 +36,12 @@ def is_safe_redirect_url(request, target):
     redirect_url = urlparse(urljoin(request.host_url, target))
     return redirect_url.scheme in ('http', 'https') and \
         host_url.netloc == redirect_url.netloc
+
+def random_row(query):
+    count = query.count()
+    if not count:
+        return None
+    return query.offset(random.randrange(count)).first()
 
 def group_action_email(members, subject, text):
     emails = [m.user.email for m in members]
