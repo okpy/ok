@@ -77,7 +77,7 @@ def gen_assignment(course):
             str(random.randrange(15)).zfill(2))
     name = course.offering + '/' + display_name.lower().replace(' ', '')
 
-    last_night = datetime.datetime.now().replace(
+    last_night = datetime.datetime.utcnow().replace(
         hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(seconds=1)
     due_date = last_night + datetime.timedelta(
         days=random.randrange(-100, 100))
