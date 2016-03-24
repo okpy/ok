@@ -50,3 +50,5 @@ mccabe==0.3.1
 flake8==2.5.1
 pylint==1.5.2
 names==0.3.0
+# until version 1.0.6 is on pypi
+git+git://github.com/neta79/loremipsum.git@py3_unicode_fix
