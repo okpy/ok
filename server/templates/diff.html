@@ -3,67 +3,31 @@
   <td class="line-number" data-line-number="{{ '' if i is none else i }}"></td>
 {% endmacro %}
 
-{% macro source_line(line) %}
-  <td class="highlight-source">{{ line | safe }}</td>
-{% endmacro %}
-
-{% macro source_file(filename, backup) %}
+{% macro source_file(backup, filename, lines) %}
   <div class="source-file table-responsive">
     <table class="highlight">
       <thead>
         <tr>
-            <th class="source-file-header" colspan=3>
-                <div class="source-file-name">{{ filename }}</div>
-                <a href="{{ url_for('.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
-                class="no-dash button-small source-file-download">
-                    <i class="fa fa-download"> </i> Download
-                </a>
-            </th>
+          <th class="source-file-header" colspan=3>
+              <div class="source-file-name">{{ filename }}</div>
+              <a href="{{ url_for('.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
+              class="no-dash button-small source-file-download">
+                  <i class="fa fa-download"></i> Download
+              </a>
+          </th>
         </tr>
       </thead>
       <tbody>
-        {{ caller() }}
+        {% for line in lines %}
+          <tr class="highlight-{{ line.tag }}">
+            {% if line.is_diff %}
+              {{ line_number(line.line_before) }}
+            {% endif %}
+            {{ line_number(line.line_after) }}
+            <td class="highlight-source">{{ line.contents | safe }}</td>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
-{% endmacro %}
-
-{% macro highlight_diff(filename, a, b, backup, diff_type) %}
-  {% call source_file(filename, backup) %}
-    {% for tag, i, j, line in highlight.highlight_diff(filename, a, b, diff_type) %}
-      <tr class="highlight-{{ tag }}">
-        {{ line_number(i) }}
-        {{ line_number(j) }}
-        {{ source_line(line) }}
-      </tr>
-    {% endfor %}
-  {% endcall %}
-{% endmacro %}
-
-{% macro highlight_diffs(files_before, files_after, backup, diff_type) %}
-  {% for filename in files_before.keys().__or__(files_after.keys()) | sort %}
-    {{ highlight_diff(filename,
-      files_before.get(filename, ''),
-      files_after.get(filename, ''),
-      backup,
-      diff_type)
-    }}
-  {% endfor %}
-{% endmacro %}
-
-{% macro highlight_file(filename, source, backup) %}
-  {% call source_file(filename, backup) %}
-    {% for i, line in highlight.highlight_file(filename, source) %}
-      <tr>
-        {{ line_number(i) }}
-        {{ source_line(line) }}
-      </tr>
-    {% endfor %}
-  {% endcall %}
-{% endmacro %}
-
-{% macro highlight_files(files, backup) %}
-  {% for filename, source in files | dictsort %}
-    {{ highlight_file(filename, source, backup) }}
-  {% endfor %}
 {% endmacro %}

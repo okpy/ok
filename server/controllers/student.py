@@ -6,6 +6,7 @@ from werkzeug.exceptions import BadRequest
 
 import functools
 
+from server import highlight
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 from server.forms import CSRFForm
@@ -135,7 +136,7 @@ def code(name, submit, bid):
         return abort(404)
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup, diff_type=diff_type,
-        files_before=assign.files, files_after=backup.files())
+        files=highlight.diff_files(assign.files, backup.files(), diff_type))
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<file>')
 @login_required

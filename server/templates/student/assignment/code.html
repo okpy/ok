@@ -60,25 +60,21 @@
           </li>
         {% endmacro %}
 
-        {% if files_before %}
+        {% if assignment.files %}
           <div class="subcontent">
             <ul class="nav nav-tabs nav-justified">
               {{ diff_tab(None, 'Files') }}
-                {{ diff_tab('short', 'Diff (short)') }}
-                {{ diff_tab('full', 'Diff (full)') }}
+              {{ diff_tab('short', 'Diff (short)') }}
+              {{ diff_tab('full', 'Diff (full)') }}
             </ul>
           </div>
         {% endif %}
 
         <div class="subcontent list">
           <div class="wrap">
-            {% cache 60*10, 'code-view', backup.id|string, diff_type|string %}
-              {% if diff_type %}
-                {{ diff.highlight_diffs(files_before, files_after, backup, diff_type) }}
-              {% else %}
-                {{ diff.highlight_files(files_after, backup) }}
-              {% endif %}
-            {% endcache %}
+            {% for filename, lines in files | dictsort %}
+              {{ diff.source_file(backup, filename, lines) }}
+            {% endfor %}
           </div>
         </div>
       </section>

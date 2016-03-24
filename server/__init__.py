@@ -71,7 +71,6 @@ def create_app(default_config_path=None):
 
     # custom Jinja rendering
     app.jinja_env.globals.update({
-        'highlight': highlight,
         'humanize': humanize,
         'utils': utils
     })
