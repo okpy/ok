@@ -124,12 +124,15 @@ def gen_backup(user, assignment):
         },
         'analytics': {}
     }
+    submit = gen_bool(0.1)
+    if submit:
+        messages['file_contents']['submit'] = ''
     backup = Backup(
         created=assignment.due_date -
             datetime.timedelta(seconds=random.randrange(-100000, 100)),
         submitter_id=user.id,
         assignment_id=assignment.id,
-        submit=gen_bool(0.1))
+        submit=submit)
     backup.messages = [Message(kind=k, contents=m) for k, m in messages.items()]
     return backup
 
