@@ -369,12 +369,12 @@ class Enrollment(Model):
             if not record:
                 record = Enrollment(course_id=cid, user_id=usr_id)
                 new_records.append(record)
-                
+
             record.role = role
             record.sid = sid
             record.class_account = class_account
             record.section = section
-            
+
         db.session.add_all(new_records)
 
 
