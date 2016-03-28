@@ -248,3 +248,31 @@ def group_respond(name):
         except BadRequest as e:
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
+
+@student.route('/comments/', methods=['POST'])
+@login_required
+def new_comment():
+    comment = models.Comment(
+        backup_id=utils.decode_id(request.form['backup_id']),
+        author_id=current_user.id,
+        filename=request.form['filename'],
+        line=request.form.get('line', type=int),
+        message=request.form['message'])
+    db.session.add(comment)
+    db.session.commit()
+    return render_template('student/assignment/comment.html', comment=comment)
+
+@student.route('/comments/<hashid:comment_id>', methods=['PUT', 'DELETE'])
+@login_required
+def edit_comment(comment_id):
+    comment = models.Comment.query.get(comment_id)
+    if not comment or comment.author != current_user:
+        abort(404)
+    if request.method == 'DELETE':
+        db.session.delete(comment)
+        db.session.commit()
+        return ('', 204)
+    else:
+        comment.message = request.form['message']
+        db.session.commit()
+        return render_template('student/assignment/comment.html', comment=comment)
