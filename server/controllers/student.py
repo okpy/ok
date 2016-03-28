@@ -4,9 +4,10 @@ from flask.ext.login import login_user, logout_user, login_required, \
     current_user
 from werkzeug.exceptions import BadRequest
 
+import collections
 import functools
 
-from server import highlight
+from server import highlight, models, utils
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 from server.forms import CSRFForm
@@ -134,9 +135,18 @@ def code(name, submit, bid):
         return redirect(url_for('.code', name=name, submit=submit, bid=bid))
     if not assign.files and diff_type:
         return abort(404)
+    # sort comments by (filename, line)
+    comments = collections.defaultdict(list)
+    for comment in backup.comments:
+        comments[(comment.filename, comment.line)].append(comment)
+    # highlight files and add comments
+    files = highlight.diff_files(assign.files, backup.files(), diff_type)
+    for filename, lines in files.items():
+        for line in lines:
+            line.comments = comments[(filename, line.line_after)]
     return render_template('student/assignment/code.html',
-        course=assign.course, assignment=assign, backup=backup, diff_type=diff_type,
-        files=highlight.diff_files(assign.files, backup.files(), diff_type))
+        course=assign.course, assignment=assign, backup=backup,
+        files=files, diff_type=diff_type)
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<file>')
 @login_required

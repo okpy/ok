@@ -3,13 +3,34 @@
   <td class="line-number" data-line-number="{{ '' if i is none else i }}"></td>
 {% endmacro %}
 
+{% macro render_comment(comment) %}
+  <div class="comment"
+    data-id="{{ utils.encode_id(comment.id) }}"
+    data-message="{{ comment.message }}">
+    <div class="comment-header clearfix">
+      <div class="comment-author">
+        {{ comment.author.email }} commented {{ humanize.naturaltime(comment.created) }}
+      </div>
+      {% if comment.author == current_user %}
+      <div class="comment-actions">
+        <button class="btn btn-link comment-action comment-edit"><i class="fa fa-pencil"></i></button>
+        <button class="btn btn-link comment-action comment-delete"><i class="fa fa-times"></i></button>
+      </div>
+      {% endif %}
+    </div>
+    <div class="comment-body markdown-body">{{ comment.message | markdown }}</div>
+  </div>
+{% endmacro %}
+
 {% macro source_file(backup, filename, lines) %}
-  <div class="source-file table-responsive">
+  <div class="source-file table-responsive"
+    data-backup-id={{ utils.encode_id(backup.id) }}
+    data-filename={{ filename }}>
     <table class="highlight">
       <thead>
         <tr>
           <th class="source-file-header" colspan=3>
-              <div class="source-file-name">{{ filename }}</div>
+              <div class="source-file-name fixed-width-font">{{ filename }}</div>
               <a href="{{ url_for('.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
               class="no-dash button-small source-file-download">
                   <i class="fa fa-download"></i> Download
@@ -19,13 +40,27 @@
       </thead>
       <tbody>
         {% for line in lines %}
-          <tr class="highlight-{{ line.tag }}">
+          <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
             {% if line.is_diff %}
               {{ line_number(line.line_before) }}
             {% endif %}
             {{ line_number(line.line_after) }}
-            <td class="highlight-source">{{ line.contents | safe }}</td>
+            <td>
+              {% if line.line_after %}
+                <span class="comment-add"><i class="fa fa-plus"></i></span>
+              {% endif %}
+              <span class="highlight-source">{{ line.contents | safe }}</span>
+            </td>
           </tr>
+          {% if line.comments %}
+            <tr data-line={{ line.line_after }}>
+              <td class="comment-container" colspan=3>
+                {% for comment in line.comments %}
+                  {{ render_comment(comment) }}
+                {% endfor %}
+              </td>
+            </tr>
+          {% endif %}
         {% endfor %}
       </tbody>
     </table>

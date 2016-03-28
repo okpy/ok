@@ -403,6 +403,7 @@ class Backup(Model):
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
     scores = db.relationship("Score")
+    comments = db.relationship("Comment", order_by="Comment.created")
 
     db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
     db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
@@ -663,6 +664,7 @@ class Comment(Model):
     Submission_line is the closest line on the submitted file.
     """
     id = db.Column(db.Integer(), primary_key=True)
+    updated = db.Column(db.DateTime, onupdate=db.func.now())
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
     author_id = db.Column(db.ForeignKey("user.id"), nullable=False)
 
@@ -670,6 +672,9 @@ class Comment(Model):
     line = db.Column(db.Integer(), nullable=False) # Line of the original file
 
     message = db.Column(mysql.MEDIUMTEXT)  # Markdown
+
+    backup = db.relationship("Backup")
+    author = db.relationship("User")
 
     @property
     def formatted(self):
