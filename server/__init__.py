@@ -5,7 +5,6 @@ from flask.ext.rq import RQ
 from flask.ext.misaka import markdown
 
 from flask_wtf.csrf import CsrfProtect
-import humanize
 
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
@@ -71,7 +70,6 @@ def create_app(default_config_path=None):
 
     # custom Jinja rendering
     app.jinja_env.globals.update({
-        'humanize': humanize,
         'utils': utils
     })
 

@@ -9,7 +9,7 @@
     data-message="{{ comment.message }}">
     <div class="comment-header clearfix">
       <div class="comment-author">
-        {{ comment.author.email }} commented {{ humanize.naturaltime(comment.created) }}
+        {{ comment.author.email }} commented {{ utils.natural_time(comment.created) }}
       </div>
       {% if comment.author == current_user %}
       <div class="comment-actions">
