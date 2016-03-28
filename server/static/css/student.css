@@ -650,6 +650,61 @@ table.highlight tr:last-child td.comment-container {
   padding: 15px;
 }
 
+/* Editor */
+.comment-editor-header {
+  background: #f7f7f7;
+  border-radius: 3px 3px 0 0;
+}
+
+.comment-editor .nav {
+  padding: 6px 10px 0;
+}
+
+.comment-editor-disabled {
+  opacity: 0.75;
+}
+
+.comment-editor-disabled .btn {
+  cursor: default;
+  pointer-events: none;
+}
+
+.comment-write {
+  margin: 10px;
+}
+
+.comment-preview {
+  margin: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.comment-editor textarea {
+  width: 100%;
+  min-height: 100px;
+  max-height: 500px;
+  padding: 10px;
+  resize: vertical;
+
+  color: #333;
+  background-color: #fafafa;
+  background-position: right 8px center;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
+}
+
+.comment-editor textarea:focus {
+  background-color: #fff;
+  border-color: #51a7e8;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.075), 0 0 5px rgba(81,167,232,0.5);
+}
+
+.comment-editor-actions {
+  float: right;
+  margin: 0 10px 10px 0;
+}
+
 /* Markdown */
 .markdown-body > *:first-child {
   margin-top: 0 !important;

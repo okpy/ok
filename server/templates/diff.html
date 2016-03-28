@@ -22,6 +22,27 @@
   </div>
 {% endmacro %}
 
+{% macro editor_template() %}
+  <div class="comment comment-editor clearfix">
+    <ul class="comment-editor-header nav nav-tabs">
+      <li class="tabnav-tab active"><a class="btn-link comment-write-tab" data-toggle="tab">Write</a></li>
+      <li class="tabnav-tab"><a class="btn-link comment-preview-tab" data-toggle="tab">Preview</a></li>
+    </ul>
+    <div class="tab-content">
+      <div class="comment-write tab-pane active">
+        <textarea placeholder="Leave a comment"></textarea>
+      </div>
+      <div class="comment-preview tab-pane">
+        <div class="comment-body markdown-body"></div>
+      </div>
+    </div>
+    <div class="comment-editor-actions">
+      <button class="btn btn-default comment-cancel">Cancel</button>
+      <button class="btn btn-success comment-save">Save</button>
+    </div>
+  </div>
+{% endmacro %}
+
 {% macro source_file(backup, filename, lines) %}
   <div class="source-file table-responsive"
     data-backup-id={{ utils.encode_id(backup.id) }}
