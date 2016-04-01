@@ -16,7 +16,6 @@ def convert_to_pacific(date):
     # TODO Move to UTILS
     return date.replace(tzinfo=pytz.utc)
 
-
 def is_staff(course_arg=None):
     """ A decorator for routes to ensure that user is a member of
     the course staff.
@@ -29,8 +28,10 @@ def is_staff(course_arg=None):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if current_user.is_authenticated:
+                if current_user.is_admin:
+                    return func(*args, **kwargs)
                 roles = current_user.enrollments(roles=STAFF_ROLES)
-                if len(roles) > 0 or current_user.is_admin:
+                if len(roles) > 0:
                     if course_arg:
                         course = kwargs[course_arg]
                         if course in [r.course.id for r in roles]:
@@ -45,12 +46,16 @@ def is_staff(course_arg=None):
 
 def get_courses(cid=None):
     #  TODO : The decorator could add these to the routes
-    enrollments = current_user.enrollments(roles=STAFF_ROLES)
-    courses = [e.course for e in enrollments]
-    matching_courses = [c for c in courses if c.id == cid]
+    if current_user.is_authenticated and current_user.is_admin:
+        courses = Course.query.all()
+    else:
+        enrollments = current_user.enrollments(roles=STAFF_ROLES)
+        courses = [e.course for e in enrollments]
     if not cid:
         return courses, []
-    elif len(matching_courses) == 0:
+
+    matching_courses = [c for c in courses if c.id == cid]
+    if len(matching_courses) == 0:
         abort(401)  # TODO to actual error page
     current_course = matching_courses[0]
     return courses, current_course
