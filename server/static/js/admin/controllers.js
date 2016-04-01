@@ -526,22 +526,26 @@ app.controller("SubmissionListCtrl", ['$scope', '$stateParams', '$window', 'Sear
       }
       return false;
     }
-    $scope.mergeFS = function (submissions) {
-      // Make a FS behave more like a Submission.
 
+    $scope.normalizeSubmissions = function (submissions) {
+      // The template (submission.list.html) expects everything to be a submission,
+      // so we disguise backups and final submissions as submissions.
       for (var subNum=0; subNum < submissions.length; subNum++) {
         var submission = submissions[subNum];
-        if (submission.submission) {
+        if (submission.submission) {  // make a final submission look like a submission
           submission['fsid'] = submission['id'];
           for (var attr in submission.submission) {
             if (attr != "id") {
               submission[attr] = submission['submission'][attr];
             }
           }
+        } else if (!submission.backup) {  // make a backup look like a submission
+          submission.backup = submission;
         }
       }
       return submissions;
     }
+
     $scope.pageChanged = function() {
       $scope.getPage($scope.currentPage);
     }

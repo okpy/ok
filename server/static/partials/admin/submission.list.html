@@ -56,7 +56,7 @@
           <th style="width: 30%">Actions</th>
       </tr>
 
-        <tr ng-repeat="submission in mergeFS(submissions)" ts-repeat>
+        <tr ng-repeat="submission in normalizeSubmissions(submissions)" ts-repeat>
           <td>
               <a ui-sref='course.assignment.edit({courseId: course.id, assignmentId:submission.assignment.id})'>{{submission.assignment.display_name}} </a>
           </td>
