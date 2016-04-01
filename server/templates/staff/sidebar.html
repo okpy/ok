@@ -23,7 +23,7 @@
             {% for course in courses %}
               <li class="treeview  {% if (request.endpoint == "admin.index" and loop.length == 1) %}active default{% endif %} {% if request.view_args['cid'] == course.id %} active{% endif %}" >
                 <a href="#">
-                  <i class="fa fa-university"></i> <span>{{ course.display_name_with_semester }} - {{ course.offering }}</span>
+                  <i class="fa fa-university"></i> <span>{{ course.display_name_with_semester }}</span>
                   <i class="fa fa-angle-left pull-right"></i>
                 </a>
 
