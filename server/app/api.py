@@ -41,7 +41,7 @@ from app.constants import STUDENT_ROLE, STAFF_ROLE, API_PREFIX, AUTOGRADER_URL, 
 from app import models, app, analytics, utils
 from app.needs import Need
 from app.utils import paginate, filter_query, create_zip, add_to_zip, start_zip, finish_zip
-from app.utils import scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag
+from app.utils import scores_to_gcs, subms_to_gcs, make_zip_filename, submit_to_ag, make_csv_filename
 from app.utils import add_to_grading_queues, parse_date, assign_submission, assign_staff_to_queues
 from app.utils import merge_user, backup_group_file, add_to_file_contents
 from app.utils import autograde_final_subs, autograde_subms, promote_student_backups
@@ -848,8 +848,9 @@ class AssignmentAPI(APIResource):
         need = Need('staff')
         if not obj.can(user, need, obj):
             raise need.exception()
-
         deferred.defer(scores_to_gcs, obj, user)
+
+        return {'filename': make_csv_filename(obj, 'scores')}
 
     def autograde(self, obj, user, data):
         need = Need('grade')

@@ -13,6 +13,8 @@ from os import path
 from app import constants
 import requests
 import pytz
+import httplib2
+from googleapiclient import discovery
 
 try:
     from cStringIO import StringIO
@@ -25,11 +27,19 @@ from flask import jsonify, request, Response, json
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext import deferred
+from oauth2client.appengine import AppAssertionCredentials
 import cloudstorage as gcs
 
 from app import app
 from app.constants import GRADES_BUCKET, AUTOGRADER_URL, STUDENT_ROLE, TIMEZONE
 from app.exceptions import BadValueError
+
+
+# Construct a Resource for interacting with the 
+# Google Cloudstorage JSON API.
+credentials = AppAssertionCredentials(scope='https://www.googleapis.com/auth/devstorage.full_control')
+http = credentials.authorize(httplib2.Http(memcache))
+service = discovery.build('storage', 'v1', http=http)
 
 # TODO Looks like this can be removed just by relocating parse_date
 # To deal with circular imports
@@ -133,6 +143,7 @@ def add_to_zip(zipfile, files, dir=''):
         # does not encode the contents.
         zipfile.writestr(path.join(dir, filename), unicode(contents).encode('utf-8'))
     return zipfile
+
 
 def paginate(entries, page, num_per_page):
     """
@@ -534,10 +545,23 @@ def make_csv_filename(assignment, infotype):
 def scores_to_gcs(assignment, user):
     """ Writes all final submission scores
     for the given assignment to GCS csv file. """
-    csv_filename = '/{}/{}'.format(GRADES_BUCKET, make_csv_filename(assignment, 'scores'))
+    obj_name = make_csv_filename(assignment, 'scores')
+    csv_filename = '/{}/{}'.format(GRADES_BUCKET, obj_name)
     with contextlib.closing(create_gcs_file(csv_filename, 'text/csv')) as f:
         write_scores_to_csv(f, assignment, user)
     logging.info("Exported scores to " + csv_filename)
+    give_file_access(obj_name, user)
+
+def give_file_access(obj_name, user):
+    """Gives USER owner access over object OBJ_NAME."""
+    email = user.email[0]
+    req = service.objectAccessControls().insert(
+        bucket=GRADES_BUCKET,
+        object=obj_name,
+        body={'entity': 'user-' + email, 'role': 'OWNER', 'email': email})
+    # Some error handling ?
+    resp = req.execute(http=http)
+    logging.info(resp)
 
 def add_subm_to_zip(subm, zipfile, submission):
     """ Adds submission contents to a zipfile in-place, returns zipfile """
