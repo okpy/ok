@@ -5,7 +5,7 @@ from functools import wraps
 import pytz
 import csv
 
-from server.models import User, Course, Assignment, Enrollment, db
+from server.models import User, Course, Assignment, Enrollment, Version, db
 from server.constants import STAFF_ROLES, VALID_ROLES, STUDENT_ROLE
 import server.forms as forms
 
@@ -70,6 +70,26 @@ def index():
     return render_template('staff/index.html', courses=courses)
 
 
+@admin.route("/client/<name>", methods=['GET', 'POST'])
+@is_staff()
+def client_version(name):
+    version = Version.query.filter_by(name=name).one()
+
+    form = forms.VersionForm(obj=version)
+    if form.validate_on_submit():
+        model = version
+        form.populate_obj(model)
+
+        db.session.add(model)
+        db.session.commit()
+
+        flash(name + " version updated successfully.", "success")
+        return redirect(url_for(".client_version", name=name))
+
+    return render_template('staff/client_version.html',
+                            version=version, form=form)
+
+
 @admin.route("/course/<int:cid>")
 @is_staff(course_arg='cid')
 def course(cid):
@@ -132,6 +152,7 @@ def assignment(cid, aid):
     return render_template('staff/course/assignment.html', assignment=assgn,
                            form=form, courses=courses,
                            current_course=current_course)
+
 
 @admin.route("/course/<int:cid>/enrollment", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
