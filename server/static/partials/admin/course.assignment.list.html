@@ -59,7 +59,7 @@
           <a ui-sref="course.assignment.queue.list({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-flat btn-md"><i class="fa fa-tasks"></i> Queues</a>
           <a ng-show="assignment.autograding_enabled" class="btn btn-primary btn-flat btn-md" ng-click="autograde(assignment)"><i class="fa fa-flash"></i> Autograde</a>
           <a ng-hide="assignment.autograding_enabled" class="btn btn-primary btn-flat btn-md disabled"><i class="fa fa-flash"></i> Disabled </a>
-          <a ng-click="downloadScores(assignment)" ng-disabled="!assignment.autograding_enabled" class="btn btn-primary btn-flat btn-md"><i class="fa fa-download"></i></a>
+          <a ng-click="downloadScores(assignment)" class="btn btn-primary btn-flat btn-md"><i class="fa fa-download"></i></a>
         </div>
 
           </tr>
