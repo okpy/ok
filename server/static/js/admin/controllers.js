@@ -56,6 +56,23 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$window", "$stateParams", "As
   }
   ]);
 
+app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $state, $stateParams, Assignment, Course) {
+
+    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.assignment = Assignment.get({
+        id: $stateParams.assignmentId
+    }, function (response) {
+    }, function(err) {
+        report_error($window, err);
+    });
+
+    $scope.forceSubmit = function () {
+      $window.swal('submitted', 'success');
+    }
+
+  }
+  ]);
 
 app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
@@ -663,7 +680,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
     $scope.courses = Course.query({});
   }]);
 
-  app.controller("CourseAssignmentListCtrl", ['$scope', '$window', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+app.controller("CourseAssignmentListCtrl", ['$scope', '$window', '$http', 'Assignment', 'Course', '$stateParams', '$window',
     function($scope, $window, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.reloadView = function() {

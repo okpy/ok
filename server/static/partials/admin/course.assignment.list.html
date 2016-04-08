@@ -56,7 +56,9 @@
         <td>
           <span class="badge bg-info">{{assignment.name}}</span>
         </td>
-          <!-- Future Progress Bar -->
+        <td>
+          <a ui-sref='course.assignment.submit({courseId: course.id, assignmentId:assignment.id})'> Overide Submit </a>
+        </td>
         <td>
           <a ui-sref='course.submissions.query({courseId:course.id, query: "-assignment \""+assignment.display_name+"\""})' class="btn btn-primary btn-sm"><i class="fa fa-code"></i></a>
         </td>

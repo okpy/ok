@@ -1,0 +1,22 @@
+<div>
+  <h2>Assignment: {{assignment.display_name}}</h2>
+
+  <div class="box">
+  <tabset justified="true">
+    <tab heading="Submit">
+      <div class='tab-wrapper'>
+        <h3>Submit</h3>
+        <form action="/api/v1/assignment/5761440929546240/manual_submit">
+          Submit As (email) :<br>
+          <input type="text" name="submitter"><br>
+          Token:<br>
+          <input type="text" name="token"><br>
+          Files:<br>
+          <input type="file" name="messages" multiple>
+        </form>
+        <a href="" onclick="forceSubmit()"> Submit </a>
+      </div>
+    </tab>
+  </tabset>
+  </div>
+</div>
