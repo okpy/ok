@@ -936,7 +936,11 @@ class AssignmentAPI(APIResource):
             server_time=server_time)
         submission.put()
 
-        final = submission.mark_as_final(force=True)
+        old_final = submission.get_final()
+        if old_final:
+            old_final.key.delete()
+
+        final = submission.mark_as_final()
 
         if obj.autograding_enabled and data['token']:
             ag_results = autograde_subms(

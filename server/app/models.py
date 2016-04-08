@@ -740,12 +740,12 @@ class Submission(Base):
                 FinalSubmission.submitter==submitter).get()
         return final
 
-    def mark_as_final(self, force=False):
+    def mark_as_final(self):
         """Create or update a final submission."""
         final = self.get_final()
         assignment = self.assignment.get()
         backup = self.backup.get()
-        if final and not force:
+        if final:
             if assignment.revision:
                 # Follow resubmssion procedure
                 final.revision = self.key
