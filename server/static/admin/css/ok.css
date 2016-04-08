@@ -10,6 +10,21 @@
     background: #ffffff;
 }
 
+#dropzone { margin-bottom: 3rem; }
+
+.dropzone { border: none !important; }
+.dropzone-border { border: 2px dashed #0087F7; border-radius: 5px; background: white; padding: 10px;}
+.dropzone .dz-message { font-weight: 400; font-size: 1.1em; text-align: center; margin: 2em 0;}
+.dropzone .dz-message .note { font-size: 0.9em; font-weight: 200; display: block; margin-top: 1.4rem; }
+.dropzone.dz-clickable {
+    cursor: pointer;
+}
+.dropzone .dz-filename {
+  margin-top: 40px;
+}
+.dropzone .dz-preview .dz-error-message {
+    top: 150px!important;
+}
 
 .login-box {
     max-width: 65%;

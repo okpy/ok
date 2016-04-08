@@ -806,9 +806,8 @@ class AssignmentAPI(APIResource):
         'manual_submit': {
             'methods': set(['POST']),
             'web_args': {
-                'file': Arg(str, multiple=True, required=True),
-                'submitter': KeyArg('User', required=True),
-                'token': Arg(str, required=True)
+                'submitter': Arg(str, required=True),
+                'token': Arg(str)
             }
         }
     }
@@ -913,31 +912,45 @@ class AssignmentAPI(APIResource):
 
         # to avoid handling late submissions, make the submission time one
         # second before due date
-        server_time = obj.due_date - datetime.delta(seconds=1)
-        submitter = data['submitter']
-        files = data['files']
+        server_time = obj.due_date - datetime.timedelta(seconds=1)
+        submitter = models.User.lookup(data['submitter'])
+
+        if not submitter:
+            raise BadValueError('User does not exist')
+
+        files = {f.filename: f.getvalue() for f in request.files.values()}
+
         files['submit'] = True  # add a phony file
+
         file_contents_message = models.Message(kind='file_contents', contents=files)
 
         backup = models.Backup(
-            submitter=submitter,
-            assignment=assignment.key,
+            submitter=submitter.key,
+            assignment=obj.key,
             messages=[file_contents_message],
             server_time=server_time)
         backup.put()
 
         submission = models.Submission(
-            backup=backup.submit,
+            backup=backup.key,
             server_time=server_time)
         submission.put()
 
-        submission.mark_as_final()
-        return autograde_subms(
-            obj,
-            user,
-            {'token': data['token']},
-            [submission.id()],
-            priority="high")
+        final = submission.mark_as_final(force=True)
+
+        if obj.autograding_enabled and data['token']:
+            ag_results = autograde_subms(
+                obj,
+                user,
+                {'token': data['token']},
+                [submission.key.id()],
+                priority="high")
+        else:
+            ag_results = False
+        return {
+            'autograder': ag_results,
+            'final': final.get(),
+        }
 
 
 class SubmitNDBImplementation(object):
