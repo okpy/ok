@@ -59,7 +59,9 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$window", "$stateParams", "As
 app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
 
-    $scope.newSubmission = {}
+    $scope.newSubmission = {
+      'ag_toggle': true
+    }
 
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.assignment = Assignment.get({
@@ -103,8 +105,10 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
           this.on("successmultiple", function(files, response) {
             // Gets triggered when the files have successfully been sent.
             // Redirect user or notify of success.
+            var data = response.data;
+
             $window.swal({ title: "Success",
-             text: "Backup ID: " + response.data.final.submission.backup.id,
+             text: "Backup ID: " + data.final.submission.backup.id + ". Autograding:" + Boolean(data.autograder),
              type: "success",
              showCancelButton: true,
              confirmButtonText: "View Code",
@@ -113,9 +117,11 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
              closeOnCancel: true},
               function(isConfirm){
                 if (isConfirm) {
-                  $state.transitionTo("submission.final", { finalId: response.data.final.id});
+                  $state.transitionTo("submission.final", { finalId: data.final.id});
                 } else {
-                  $scope.newSubmission = {}
+                  $scope.newSubmission = {
+                    'ag_toggle': true
+                  }
                   myDropzone.removeAllFiles(true);
                 }
               });

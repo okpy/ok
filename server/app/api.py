@@ -807,6 +807,7 @@ class AssignmentAPI(APIResource):
             'methods': set(['POST']),
             'web_args': {
                 'submitter': Arg(str, required=True),
+                'autograde': Arg(int, required=True),
                 'token': Arg(str)
             }
         }
@@ -910,6 +911,7 @@ class AssignmentAPI(APIResource):
         if not obj.can(user, need, obj):
             raise need.exception()
 
+
         # to avoid handling late submissions, make the submission time one
         # second before due date
         server_time = obj.due_date - datetime.timedelta(seconds=1)
@@ -918,7 +920,8 @@ class AssignmentAPI(APIResource):
         if not submitter:
             raise BadValueError('User does not exist')
 
-        files = {f.filename: f.getvalue() for f in request.files.values()}
+        files = {f.filename: f.getvalue().decode('latin-1')
+                        for f in request.files.values()}
 
         files['submit'] = True  # add a phony file
 
@@ -942,7 +945,7 @@ class AssignmentAPI(APIResource):
 
         final = submission.mark_as_final()
 
-        if obj.autograding_enabled and data['token']:
+        if obj.autograding_enabled and data['token'] and data['autograde']:
             ag_results = autograde_subms(
                 obj,
                 user,
