@@ -920,7 +920,7 @@ class AssignmentAPI(APIResource):
         if not submitter:
             raise BadValueError('User does not exist')
 
-        files = {f.filename: f.getvalue().decode('latin-1')
+        files = {f.filename:f.getvalue().decode('latin-1')
                         for f in request.files.values()}
 
         files['submit'] = True  # add a phony file
@@ -946,11 +946,13 @@ class AssignmentAPI(APIResource):
         final = submission.mark_as_final()
 
         if obj.autograding_enabled and data['token'] and data['autograde']:
+            subm_ids = {submission.key.id(): backup.key.id()}
+
             ag_results = autograde_subms(
                 obj,
                 user,
                 {'token': data['token']},
-                [submission.key.id()],
+                subm_ids,
                 priority="high")
         else:
             ag_results = False
