@@ -69,6 +69,7 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
     }, function (response) {
       $scope.newSubmission['autograde'] = response.autograding_enabled;
 
+      $('form.dropzone').attr('action', '/api/v1/assignment/' + $scope.assignment.id + '/manual_submit');
 
       return new $window.Dropzone('form.dropzone', {
         autoProcessQueue: false,
@@ -76,7 +77,6 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
         parallelUploads: 100,
         addRemoveLinks: true,
         url: '/api/v1/assignment/' + $scope.assignment.id + '/manual_submit',
-
         maxFiles: 100,
         clickable:'#dropzoneClickable',
         previewsContainer: '#dropzonePreview',
@@ -93,7 +93,6 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
             e.stopPropagation();
             myDropzone.processQueue();
           });
-          $(this.element).attr('action', '/api/v1/assignment/' + $scope.assignment.id + '/manual_submit');
 
           // Listen to the sendingmultiple event. In this case, it's the sendingmultiple event instead
           // of the sending event because uploadMultiple is set to true.
