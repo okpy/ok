@@ -81,6 +81,7 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
         clickable:'#dropzoneClickable',
         previewsContainer: '#dropzonePreview',
         dictDefaultMessage: 'Drop files here or click to upload',
+        dictFallbackMessage: 'This browser is not supported. Try Chrome or Firefox',
 
         // The setting up of the dropzone
         init: function() {
