@@ -56,6 +56,108 @@ app.controller("AssignmentDetailCtrl", ["$scope", "$window", "$stateParams", "As
   }
   ]);
 
+app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
+  function ($scope, $window, $state, $stateParams, Assignment, Course) {
+
+    $scope.newSubmission = {
+      'ag_toggle': true
+    }
+
+    $scope.course = Course.get({id: $stateParams.courseId});
+    $scope.assignment = Assignment.get({
+        id: $stateParams.assignmentId
+    }, function (response) {
+      $scope.newSubmission['autograde'] = response.autograding_enabled;
+
+      $('form.dropzone').attr('action', '/api/v1/assignment/' + $scope.assignment.id + '/manual_submit');
+
+      return new $window.Dropzone('form.dropzone', {
+        autoProcessQueue: false,
+        uploadMultiple: true,
+        parallelUploads: 100,
+        addRemoveLinks: true,
+        url: '/api/v1/assignment/' + $scope.assignment.id + '/manual_submit',
+        maxFiles: 100,
+        clickable:'#dropzoneClickable',
+        previewsContainer: '#dropzonePreview',
+        dictDefaultMessage: 'Drop files here or click to upload',
+        dictFallbackMessage: 'This browser is not supported. Try Chrome or Firefox',
+
+        // The setting up of the dropzone
+        init: function() {
+          var myDropzone = this;
+
+          // First change the button to actually tell Dropzone to process the queue.
+          this.element.querySelector("button[type=submit]").addEventListener("click", function(e) {
+            // Make sure that the form isn't actually being sent.
+            e.preventDefault();
+            e.stopPropagation();
+            myDropzone.processQueue();
+          });
+
+          // Listen to the sendingmultiple event. In this case, it's the sendingmultiple event instead
+          // of the sending event because uploadMultiple is set to true.
+          this.on("sendingmultiple", function() {
+            // Gets triggered when the form is actually being sent.
+            // Hide the success button or the complete form.
+          });
+
+          this.on("successmultiple", function(files, response) {
+            // Gets triggered when the files have successfully been sent.
+            // Redirect user or notify of success.
+            var data = response.data;
+
+            $window.swal({ title: "Success",
+             text: "Backup ID: " + data.final.submission.backup.id + ". Autograding:" + Boolean(data.autograder),
+             type: "success",
+             showCancelButton: true,
+             confirmButtonText: "View Code",
+             cancelButtonText: "Done",
+             closeOnConfirm: true,
+             closeOnCancel: true},
+              function(isConfirm){
+                if (isConfirm) {
+                  $state.transitionTo("submission.final", { finalId: data.final.id});
+                } else {
+                  $scope.newSubmission = {
+                    'ag_toggle': true
+                  }
+                  myDropzone.removeAllFiles(true);
+                }
+              });
+
+
+          });
+          this.on("errormultiple", function(files, response) {
+            // Gets triggered when there was an error sending the files.
+            // Maybe show form again, and notify user of error
+            $window.swal("Uh-oh!", response.message, 'error');
+            for (var i = 0, l = files.length, file; i < l; i++){
+                file = files[i];
+                file.status = Dropzone.QUEUED;
+                file.upload.progress = 0;
+                file.upload.bytesSent = 0;
+                $(file.previewElement).find('.dz-error-message').hide();
+                $(file.previewElement).find('.dz-error-mark').hide();
+            }
+
+          });
+        }
+      });
+
+    }, function(err) {
+        report_error($window, err);
+    });
+
+
+    $scope.forceSubmit = function () {
+      console.log($scope.newSubmission);
+      console.log($scope.formsubmit);
+      $window.swal('submitted', 'success');
+    }
+
+  }
+  ]);
 
 app.controller("AssignmentCreateCtrl", ["$scope", "$window", "$state", "$stateParams", "Assignment", "Course",
   function ($scope, $window, $state, $stateParams, Assignment, Course) {
@@ -663,7 +765,7 @@ app.controller("CourseListCtrl", ['$scope', 'Course',
     $scope.courses = Course.query({});
   }]);
 
-  app.controller("CourseAssignmentListCtrl", ['$scope', '$window', '$http', 'Assignment', 'Course', '$stateParams', '$window',
+app.controller("CourseAssignmentListCtrl", ['$scope', '$window', '$http', 'Assignment', 'Course', '$stateParams', '$window',
     function($scope, $window, $http, Assignment, Course, $stateParams, $window) {
     $scope.course = Course.get({id: $stateParams.courseId});
     $scope.reloadView = function() {

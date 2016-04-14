@@ -193,6 +193,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       controller: "AssignmentEditCtrl"
     }
 
+    var courseAssignmentSubmit = {
+      name: 'course.assignment.submit',
+      url: '/submit/:assignmentId',
+      templateUrl: '/static/partials/admin/assignment.submit.html',
+      controller: "AssignmentSubmitCtrl"
+    }
+
     var courseAssignmentQueueBase = {
         name: 'course.assignment.queue',
         abstract: true,
@@ -378,6 +385,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(courseAssignmentList).
       state(courseAssignmentCreate).
       state(courseAssignmentEdit).
+      state(courseAssignmentSubmit).
       state(courseAssignmentQueueBase).
       state(courseAssignmentQueueList).
       state(courseAssignmentQueueGenerate).

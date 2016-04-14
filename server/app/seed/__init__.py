@@ -72,7 +72,8 @@ def seed():
             course=course.key,
             creator=creator.key,
             max_group_size=4,
-            due_date=date)
+            due_date=date,
+            lock_date=date)
 
     def make_hw_assignment(course, creator, name):
         date = (datetime.datetime.now() + datetime.timedelta(days=2))
@@ -88,7 +89,8 @@ def seed():
             course=course.key,
             creator=creator.key,
             max_group_size=4,
-            due_date=date)
+            due_date=date,
+            lock_date=date)
 
     def make_group(assign, members):
         return models.Group(
@@ -227,7 +229,7 @@ def seed():
 
     # Start putting things in the DB.
     c = admin_user # bad variable name in use by many parts of this script
-    
+
     course = make_seed_course(admin_user)
     course.put()
 
@@ -351,7 +353,7 @@ def seed():
         # subm.put()
         # subms.append(subm)
 
-        # Create some Backups 
+        # Create some Backups
         for s in students:
             for i in range(3):
                 make_seed_backup(assign, s)

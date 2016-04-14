@@ -28,13 +28,8 @@
       <th ts-criteria="due_date" ts-default>Due Date</th>
       <th ts-criteria="lock_date">Lock Date</th>
       <!-- Future Progress Bar -->
-      <th style="width: 15%">Endpoint</th>
-      <th>Submissions</th>
-      <th>Scores</th>
-      <th>Edit</th>
-      <th>Delete</th>
-      <th>Autograde</th>
-      <th>Queues</th>
+      <th style="width: 13%">Endpoint</th>
+      <th style="width: 45%">Actions</th>
     </tr>
 
       <tr ng-repeat="assignment in assignments" ts-repeat>
@@ -56,30 +51,17 @@
         <td>
           <span class="badge bg-info">{{assignment.name}}</span>
         </td>
-          <!-- Future Progress Bar -->
         <td>
-          <a ui-sref='course.submissions.query({courseId:course.id, query: "-assignment \""+assignment.display_name+"\""})' class="btn btn-primary btn-sm"><i class="fa fa-code"></i></a>
-        </td>
-        <td>
-          <a ng-click="downloadScores(assignment)" class="btn btn-primary btn-sm"><i class="fa fa-download"></i></a>
-        </td>
-        <td>
-          <a ui-sref="course.assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
-        </td>
-        <td>
-          <a ng-click="delete(assignment)" class="btn btn-danger btn-sm"><i class="fa fa-trash-o"></i></a>
-        </td>
+        <div class="btn-group">
+          <a ui-sref='course.submissions.query({courseId:course.id, query: "-assignment \""+assignment.display_name+"\""})' class="btn btn-primary btn-flat btn-md"><i class="fa fa-search"></i> Search</a>
+          <a ui-sref="course.assignment.edit({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-flat btn-md"><i class="fa fa-edit"></i> Edit</a>
+          <a ui-sref='course.assignment.submit({courseId: course.id, assignmentId:assignment.id})' class="btn btn-primary btn-flat btn-md"><i class="fa fa-plus"></i> Submit</a>
+          <a ui-sref="course.assignment.queue.list({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-flat btn-md"><i class="fa fa-tasks"></i> Queues</a>
+          <a ng-show="assignment.autograding_enabled" class="btn btn-primary btn-flat btn-md" ng-click="autograde(assignment)"><i class="fa fa-flash"></i> Autograde</a>
+          <a ng-hide="assignment.autograding_enabled" class="btn btn-primary btn-flat btn-md disabled"><i class="fa fa-flash"></i> Disabled </a>
+          <a ng-click="downloadScores(assignment)" class="btn btn-primary btn-flat btn-md"><i class="fa fa-download"></i></a>
+        </div>
 
-        <!-- Autograding enabled -->
-        <td ng-show="assignment.autograding_enabled">
-            <a class="btn btn-primary btn-sm" ng-click="autograde(assignment)"><i class="fa fa-flash"></i> Grade All Final Submissions</a>
-        </td>
-        <td ng-hide="assignment.autograding_enabled">
-            <a class="btn btn-primary btn-sm disabled"><i class="fa fa-flash"></i> Disabled </a>
-        </td>
-        <td>
-            <a ui-sref="course.assignment.queue.list({courseId: course.id, assignmentId:assignment.id})" class="btn btn-primary btn-sm"><i class="fa fa-tasks"></i></a>
-        </td>
           </tr>
         </tbody>
       </table>

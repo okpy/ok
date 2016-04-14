@@ -90,6 +90,12 @@ indexes:
   - name: server_time
     direction: desc
 
+- kind: FinalSubmissionv2
+  properties:
+  - name: submitter
+  - name: server_time
+    direction: desc
+
 - kind: Groupv2
   properties:
   - name: assignment
@@ -291,10 +297,3 @@ indexes:
   properties:
   - name: email
   - name: status
-
-- kind: FinalSubmissionv2
-  properties:
-  - name: submitter
-  - name: server_time
-    direction: desc
-

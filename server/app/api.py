@@ -802,6 +802,14 @@ class AssignmentAPI(APIResource):
             'methods': set(['GET']),
         },
         'statistics': {
+        },
+        'manual_submit': {
+            'methods': set(['POST']),
+            'web_args': {
+                'submitter': Arg(str, required=True),
+                'autograde': Arg(int, required=True),
+                'token': Arg(str)
+            }
         }
     }
 
@@ -896,6 +904,61 @@ class AssignmentAPI(APIResource):
         return {
             'finalsubmissions': FSub.query(FSub.assignment==obj.key).count(),
             'submissions': Sub.query(Sub.assignment==obj.key).count()
+        }
+
+    def manual_submit(self, obj, user, data):
+        need = Need('staff')
+        if not obj.can(user, need, obj):
+            raise need.exception()
+
+
+        # to avoid handling late submissions, make the submission time one
+        # second before due date
+        server_time = obj.due_date - datetime.timedelta(seconds=1)
+        submitter = models.User.lookup(data['submitter'])
+
+        if not submitter:
+            raise BadValueError('User does not exist')
+
+        files = {f.filename:f.getvalue().decode('latin-1')
+                        for f in request.files.values()}
+
+        files['submit'] = True  # add a phony file
+
+        file_contents_message = models.Message(kind='file_contents', contents=files)
+
+        backup = models.Backup(
+            submitter=submitter.key,
+            assignment=obj.key,
+            messages=[file_contents_message],
+            server_time=server_time)
+        backup.put()
+
+        submission = models.Submission(
+            backup=backup.key,
+            server_time=server_time)
+        submission.put()
+
+        old_final = submission.get_final()
+        if old_final:
+            old_final.key.delete()
+
+        final = submission.mark_as_final()
+
+        if obj.autograding_enabled and data['token'] and data['autograde']:
+            subm_ids = {submission.key.id(): backup.key.id()}
+
+            ag_results = autograde_subms(
+                obj,
+                user,
+                {'token': data['token']},
+                subm_ids,
+                priority="high")
+        else:
+            ag_results = False
+        return {
+            'autograder': ag_results,
+            'final': final.get(),
         }
 
 
