@@ -505,6 +505,10 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       $scope.diff = Submission.diff({id: $scope.backupId});
       $scope.compScore = null;
       $scope.compMessage = null;
+     $scope.otherScore = null;
+     $scope.otherTag = 'Total';
+     $scope.otherMessage = null;
+
       var scores = response.submission.score;
 
       if (scores.length > 0) {
@@ -519,6 +523,7 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
     }, function(err) {
          report_error($window, err);
      });
+
     $scope.storage = $sessionStorage
     $scope.hideEmpty = false;
     $scope.toggleBlank = function () {
@@ -532,22 +537,22 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       var submDict = queue['submissions']
       for (var key in submDict) {
        submissions.push(submDict[key]['id']);
-     }
-     var currSubm = submissions.indexOf(parseInt($stateParams.finalId));
+      }
+      var currSubm = submissions.indexOf(parseInt($stateParams.finalId));
 
-     $scope.allSubmissions = submissions;
-     $scope.currentPage = currSubm;
-     $scope.totalItems = submissions.length;
-     if (currSubm > 0) {
-      $scope.prevId = submissions[currSubm-1];
+      $scope.allSubmissions = submissions;
+      $scope.currentPage = currSubm;
+      $scope.totalItems = submissions.length;
+      if (currSubm > 0) {
+        $scope.prevId = submissions[currSubm-1];
+      }
+      if (currSubm > -1 && currSubm < submissions.length - 1) {
+        $scope.nextId = submissions[currSubm+1];
+      }
     }
-    if (currSubm > -1 && currSubm < submissions.length - 1) {
-      $scope.nextId = submissions[currSubm+1];
-    }
-  }
 
 
-  $scope.submitGrade = function() {
+  $scope.submitCompGrade = function() {
     Submission.addScore({
       id: $scope.backupId,
       submission: $scope.submission.id,
@@ -558,8 +563,25 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       $scope.goTo($scope.nextId)
     }, function(err) {
          report_error($window, err);
-     });
+    });
   }
+
+  $scope.submitOtherGrade = function() {
+    Submission.addScore({
+      id: $scope.backupId,
+      submission: $scope.submission.id,
+      score: $scope.otherScore,
+      message: $scope.otherMessage,
+      key: $scope.otherTag
+    }, function (resp) {
+       $window.swal({ title: "Submitted", type: 'success',  text: "Grade uploaded! You can view your changes now", timer: 2500});
+       $state.go($state.current, {}, {reload: true}); //second parameter is for $stateParams
+    }, function(err) {
+       report_error($window, err);
+    });
+  }
+
+
 
     // Goes to the next submission
     $scope.goTo = function (finalSubm) {

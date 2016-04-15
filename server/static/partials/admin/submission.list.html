@@ -89,6 +89,7 @@
             </td>
             <td>
               <div class="btn-group">
+                  <a ng-show="submission.fsid" ui-sref='submission.final({finalId:submission.fsid})' type="button" class="btn btn-flat btn-info">Adjust Score</a>
                   <a ui-sref='submission.detail({submissionId:submission.backup.id})' type="button" class="btn btn-flat btn-info">View</a>
                   <a href='/api/v1/submission/{{submission.backup.id}}/download' type="button" class="btn btn-flat btn-info">Download</a>
                   <button ng-disabled="!submission.assignment.autograding_enabled && !submission.fsid" ng-click='autogradeSubm(submission)' type="button" class="btn btn-flat btn-info">Autograde</a>
