@@ -1,0 +1,34 @@
+<div>
+  <section class="content-header" ng-hide="dashboard">
+    <ol class="breadcrumb">
+      <li><a ui-sref="admin"><i class="fa fa-dashboard"></i> OK Dashboard </a></li>
+    </ol>
+  </section>
+
+
+  <section>
+    <div class="row">
+      <div class="col-md-2">
+      </div>
+      <div class="col-md-8">
+        <h2>Merge Users</h2>
+        <div class="box" >
+          <div class="box-body">
+            <form ng-submit="mergeUsers()">
+            <div class="form-group">
+              <label>Primary email</label>
+              <input ng-model="emails.primary" type="text" name="submitter" class="form-control input-lg" placeholder="student@cs61a.org">
+            </div>
+            <div class="form-group">
+              <label>Secondary email</label>
+              <input ng-model="emails.secondary" type="text" name="submitter" class="form-control input-lg" placeholder="student@cs61a.org">
+            </div>
+            <button ng-disabled="submitting" type="submit" class="btn btn-block btn-primary btn-lg">Merge Users</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+</div>
