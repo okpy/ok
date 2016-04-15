@@ -62,7 +62,7 @@
             <h3 class="box-title">Grading</h3>
           </div><!-- /.box-header -->
           <div class="box-body">
-            <form role="form" ng-submit="submitGrade()">
+            <form role="form" ng-hide="!prevId && !nextId" ng-submit="submitCompGrade()">
               <!-- select -->
               <div class="form-group">
                 <label>Composition Grade</label>
@@ -75,6 +75,29 @@
               <div class="form-group">
                 <label>Message</label>
                 <textarea class="form-control" rows="3" required name="compMessage" ng-model="compMessage" placeholder="Your Comments/Feedback."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+
+            <form ng-show="!prevId && !nextId" role="form" ng-submit="submitOtherGrade()">
+              <!-- select -->
+              <div class="form-group">
+                <label>Manual Grading</label>
+                <select class="form-control" required name="otherTag" ng-model="otherTag">
+                  <option value="Total" selected="selected">Total Score</option>
+                  <option value="composition">Composition</option>
+                  <option value="Partner A">Partner A</option>
+                  <option value="Partner B">Partner B</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Score</label>
+                <input type="number" class="form-control" name="otherScore" ng-model="otherScore" min="0" max="100">
+              </div>
+              <div class="form-group">
+                <label>Message</label>
+                <textarea class="form-control" rows="3" required name="otherMessage" ng-model="otherMessage" placeholder="Score Comments."></textarea>
               </div>
 
               <button type="submit" class="btn btn-primary">Submit</button>
