@@ -68,6 +68,7 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
         id: $stateParams.assignmentId
     }, function (response) {
       $scope.newSubmission['autograde'] = response.autograding_enabled;
+      $scope.newSubmission['type'] = 'Upload';
 
       $('form.dropzone').attr('action', '/api/v1/assignment/' + $scope.assignment.id + '/manual_submit');
 
@@ -87,12 +88,48 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
         init: function() {
           var myDropzone = this;
 
+          function onSuccess(response) {
+            var data = response.data;
+            $window.swal({ title: "Success",
+              text: "Backup ID: " + data.final.submission.backup.id + ". Autograding:" + Boolean(data.autograder),
+              type: "success",
+              showCancelButton: true,
+              confirmButtonText: "View Code",
+              cancelButtonText: "Done",
+              closeOnConfirm: true,
+              closeOnCancel: true},
+               function(isConfirm){
+                 if (isConfirm) {
+                   $state.transitionTo("submission.final", { finalId: data.final.id});
+                 } else {
+                   $scope.newSubmission = {
+                     'ag_toggle': true
+                   }
+                   myDropzone.removeAllFiles(true);
+                 }
+               });
+          }
+
           // First change the button to actually tell Dropzone to process the queue.
           this.element.querySelector("button[type=submit]").addEventListener("click", function(e) {
             // Make sure that the form isn't actually being sent.
             e.preventDefault();
             e.stopPropagation();
-            myDropzone.processQueue();
+            if ($scope.newSubmission['type'] == 'Upload') {
+                myDropzone.processQueue();
+            } else {
+                var url = $('form.dropzone').attr('action')
+                $.post(url, {
+                    submitter: $scope.newSubmission['submitter'],
+                    autograde: $scope.newSubmission['autograde'] ? 1 : 0,
+                    backup_id: $scope.newSubmission['backup_id'],
+                    token: $scope.newSubmission['token']
+                })
+                .done(onSuccess)
+                .fail(function(xhr) {
+                    $window.swal("Uh-oh!", xhr.responseJSON.message, 'error');
+                });
+            }
           });
 
           // Listen to the sendingmultiple event. In this case, it's the sendingmultiple event instead
@@ -105,28 +142,7 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
           this.on("successmultiple", function(files, response) {
             // Gets triggered when the files have successfully been sent.
             // Redirect user or notify of success.
-            var data = response.data;
-
-            $window.swal({ title: "Success",
-             text: "Backup ID: " + data.final.submission.backup.id + ". Autograding:" + Boolean(data.autograder),
-             type: "success",
-             showCancelButton: true,
-             confirmButtonText: "View Code",
-             cancelButtonText: "Done",
-             closeOnConfirm: true,
-             closeOnCancel: true},
-              function(isConfirm){
-                if (isConfirm) {
-                  $state.transitionTo("submission.final", { finalId: data.final.id});
-                } else {
-                  $scope.newSubmission = {
-                    'ag_toggle': true
-                  }
-                  myDropzone.removeAllFiles(true);
-                }
-              });
-
-
+            onSuccess(response);
           });
           this.on("errormultiple", function(files, response) {
             // Gets triggered when there was an error sending the files.

@@ -807,6 +807,7 @@ class AssignmentAPI(APIResource):
             'methods': set(['POST']),
             'web_args': {
                 'submitter': Arg(str, required=True),
+                'backup_id': Arg(str),
                 'autograde': Arg(int, required=True),
                 'token': Arg(str)
             }
@@ -920,17 +921,23 @@ class AssignmentAPI(APIResource):
         if not submitter:
             raise BadValueError('User does not exist')
 
-        files = {f.filename:f.getvalue().decode('latin-1')
-                        for f in request.files.values()}
-
-        files['submit'] = True  # add a phony file
-
-        file_contents_message = models.Message(kind='file_contents', contents=files)
+        backup_id = data.get('backup_id', None)
+        if backup_id:
+            # copy from other backup
+            old_backup = ndb.Key(models.Backup._get_kind(), int(backup_id))
+            if not old_backup:
+                raise BadValueError('Backup does not exist')
+            messages = old_backup.messages
+        else:
+            files = {f.filename:f.getvalue().decode('latin-1')
+                for f in request.files.values()}
+            files['submit'] = True  # add a phony file
+            messages = [models.Message(kind='file_contents', contents=files)]
 
         backup = models.Backup(
             submitter=submitter.key,
             assignment=obj.key,
-            messages=[file_contents_message],
+            messages=messages,
             server_time=server_time)
         backup.put()
 

@@ -42,9 +42,16 @@
                 type="text" name="token" class="form-control input-lg" autocomplete="on" placeholder="ya29.foobar">
               </div>
             </div>
-
-            <div class="form-group dropzone-files">
+            <div class="form-group">
               <label>Files</label>
+              <select name="type" type="select" class="form-control" ng-model="newSubmission.type" ng-options="option for option in ['Upload', 'Copy From Existing Backup']">
+              </select>
+            </div>
+            <div ng-show="newSubmission.type != 'Upload'" class="form-group">
+              <label>Backup ID</label>
+              <input type="text" name="backup_id" class="form-control input-lg" ng-model="newSubmission.backup_id" placeholder="31415...">
+            </div>
+            <div ng-show="newSubmission.type == 'Upload'" class="form-group dropzone-files">
               <div id="dropzoneClickable" class="dropzone-border dz-default dz-message">
                 <div class="dz-message needsclick">
                   <span class="dz-title"> Drop files here or click to upload.</span><br>
