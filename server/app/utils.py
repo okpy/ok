@@ -400,8 +400,10 @@ def merge_user(user_key, dup_user_key):
     E = ModelProxy.Participant
     enrolls = E.query(E.user == dup_user_key).fetch()
     for enroll in enrolls:
-        # enroll.status = 'inactive'
-        enroll.put_async()
+        existing = E.query(E.user == user_key, E.course == enroll.course).get()
+        if not existing:
+            enroll.user = user_key
+            enroll.put_async()
 
     # Re-submit submissions
     S = ModelProxy.Submission
