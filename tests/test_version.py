@@ -26,13 +26,9 @@ class TestVersion(OkTestCase):
             "current_version": "v1.6.0",
             "download_link": "https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok"
         }
-        update_form = VersionForm(obj=old)
-        update_form.current_version = data['current_version']
-        update_form.download_link = data['download_link']
         
         response = self.client.post('/admin/client/ok-client',
-                        data=data, follow_redirects=True,
-                        headers=[('Content-Type', 'application/x-www-form-urlencoded')])
+                        data=data, follow_redirects=True)
         
         assert response.status_code == 200
         
