@@ -1600,3 +1600,25 @@ app.controller("QueueDetailCtrl", ["$scope", "Queue", "$window", "Submission", "
 
 
   }]);
+
+app.controller("MergeCtrl", ["$scope", "$window", "$http",
+    function ($scope, $window, $http) {
+    $scope.emails = {}
+
+    $scope.mergeUsers = function () {
+        $scope.submitting = true;
+        $http.post('/api/v1/user/' + $scope.emails.primary + '/merge_user', {
+            other_email: $scope.emails.secondary
+        }).success(function(data) {
+            $scope.submitting = false;
+            $scope.$apply();
+            $window.swal('Success',
+                'All backups for ' + $scope.emails.secondary +
+                ' have been copied to ' + $scope.emails.primary, 'success');
+        }).error(function(data) {
+            $scope.submitting = false;
+            $scope.$apply();
+            $window.swal("Uh-oh!", data.message, 'error');
+        });
+    };
+}]);

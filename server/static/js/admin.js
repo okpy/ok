@@ -362,6 +362,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
       templateUrl: '/static/partials/admin/userqueue.list.html',
     }
 
+    var merge = {
+      name: 'merge',
+      url: '/merge',
+      templateUrl: '/static/partials/admin/merge.html',
+      controller: "MergeCtrl"
+    }
+
     var loginLanding = {
       name: 'loginLanding',
       url: '/loginLanding',
@@ -408,6 +415,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
       state(queueList).
       state(queueDetail).
       state(userQueueList).
+      state(merge).
       state(loginLanding)
       ;
   }]);
