@@ -77,10 +77,9 @@ def client_version(name):
 
     form = forms.VersionForm(obj=version)
     if form.validate_on_submit():
-        model = version
-        form.populate_obj(model)
+        form.populate_obj(version)
 
-        db.session.add(model)
+        db.session.add(version)
         db.session.commit()
 
         flash(name + " version updated successfully.", "success")
