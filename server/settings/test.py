@@ -1,19 +1,18 @@
 ENV = 'test'
 SECRET_KEY = 'samplekey'
+CACHE_TYPE = 'simple'
 
 DEBUG = True
-TESTING = True
 ASSETS_DEBUG = True
 TESTING_LOGIN = True
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://okdev:okdev@db/okdev'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///../oksqlite.db'
+WTF_CSRF_CHECK_DEFAULT = False
+WTF_CSRF_ENABLED = False
 
-CACHE_TYPE = 'redis'
-CACHE_REDIS_URL = 'redis://redis:6379/0'
-CACHE_KEY_PREFIX = 'ok-server'
-
-RQ_LOW_URL = 'redis://redis:6379/1'
+CACHE_TYPE = 'simple'
 
 GOOGLE_CONSUMER_KEY = ''
+

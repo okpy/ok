@@ -82,6 +82,14 @@ class EnrollmentForm(BaseForm):
     role = SelectField(u'Role',
                        choices=[(r, r.capitalize()) for r in VALID_ROLES])
 
+
+class VersionForm(BaseForm):
+    current_version = EmailField(u'Current Version',
+                        validators=[validators.required()])
+    download_link = StringField(u'Download Link',
+                        validators=[validators.required(), validators.url()])
+
+
 class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField(u'Email, Name, SID, Course Login, Section')
 
