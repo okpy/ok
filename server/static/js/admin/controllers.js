@@ -102,9 +102,6 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
                  if (isConfirm) {
                    $state.transitionTo("submission.final", { finalId: data.final.id});
                  } else {
-                   $scope.newSubmission = {
-                     'ag_toggle': true
-                   }
                    myDropzone.removeAllFiles(true);
                  }
                });
