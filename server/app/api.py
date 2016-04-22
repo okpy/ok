@@ -808,6 +808,7 @@ class AssignmentAPI(APIResource):
             'web_args': {
                 'submitter': Arg(str, required=True),
                 'backup_id': Arg(str),
+                'early': Arg(str),
                 'autograde': Arg(int, required=True),
                 'token': Arg(str)
             }
@@ -916,6 +917,8 @@ class AssignmentAPI(APIResource):
         # to avoid handling late submissions, make the submission time one
         # second before due date
         server_time = obj.due_date - datetime.timedelta(seconds=1)
+        if data.get('early'):
+            server_time -= datetime.timedelta(days=1)
         submitter = models.User.lookup(data['submitter'])
 
         if not submitter:

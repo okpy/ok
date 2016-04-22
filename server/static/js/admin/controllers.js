@@ -121,6 +121,7 @@ app.controller("AssignmentSubmitCtrl", ["$scope", "$window", "$state", "$statePa
                 var url = $('form.dropzone').attr('action')
                 $.post(url, {
                     submitter: $scope.newSubmission['submitter'],
+                    early: $scope.newSubmission['early'] ? 'on' : '',
                     autograde: $scope.newSubmission['autograde'] ? 1 : 0,
                     backup_id: $scope.newSubmission['backup_id'],
                     token: $scope.newSubmission['token']

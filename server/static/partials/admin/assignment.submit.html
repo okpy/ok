@@ -25,6 +25,12 @@
               <label>Submit As User</label>
               <input ng-model="newSubmission.submitter" type="text" name="submitter" class="form-control input-lg" placeholder="student@cs61a.org">
             </div>
+            <div class="checkbox form-group">
+              <label>
+                <input ng-model="newSubmission.early" type="checkbox" name="early">
+                <b>Submit One Day Early</b>
+              </label>
+            </div>
             <div ng-hide="!assignment.autograding_enabled">
               <div class="form-group">
                 <label>Autograde</label>
