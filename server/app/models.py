@@ -244,9 +244,12 @@ class User(Base):
             Submission.assignment == assignment
         ).order(-Backup.server_time)
 
-    def get_submissions(self, assignment, num_submissions=10):
+    def get_submissions(self, assignment, num_submissions=10, before=None):
         group = self.get_group(assignment)
-        return self.submissions(group, assignment).fetch(num_submissions)
+        query = self.submissions(group, assignment)
+        if before:
+            query = query.filter(Backup.server_time <= before)
+        return query.fetch(num_submissions)
 
     def group(self, assignment_key):
         """Return a query that fetches the group for this user for an assignment."""
