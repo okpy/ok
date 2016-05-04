@@ -927,7 +927,7 @@ class AssignmentAPI(APIResource):
         backup_id = data.get('backup_id', None)
         if backup_id:
             # copy from other backup
-            old_backup = ndb.Key(models.Backup._get_kind(), int(backup_id))
+            old_backup = ndb.Key(models.Backup._get_kind(), int(backup_id)).get()
             if not old_backup:
                 raise BadValueError('Backup does not exist')
             messages = old_backup.messages
