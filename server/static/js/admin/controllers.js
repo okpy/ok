@@ -520,7 +520,7 @@ app.controller("FinalSubmissionCtrl", ['$scope', '$location', '$stateParams', '$
       $scope.compScore = null;
       $scope.compMessage = null;
      $scope.otherScore = null;
-     $scope.otherTag = 'Total';
+     $scope.otherTag = 'Regrade';
      $scope.otherMessage = null;
 
       var scores = response.submission.score;
