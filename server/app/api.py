@@ -534,14 +534,8 @@ class UserAPI(APIResource):
             'methods': set(['GET']),
             'web_args': {
                 'assignment': KeyArg('Assignment', required=True),
+                'before': DateTimeArg(),
                 'quantity': Arg(int, default=10)
-            }
-        },
-        'timed_submission': {
-            'methods': set(['GET']),
-            'web_args': {
-                'assignment': KeyArg('Assignment', required=True),
-                'before': DateTimeArg()
             }
         },
         'merge_user': {
@@ -688,7 +682,8 @@ class UserAPI(APIResource):
         return obj.get_backups(data['assignment'], data['quantity'])
 
     def get_submissions(self, obj, user, data):
-        return obj.get_submissions(data['assignment'], data['quantity'])
+        return obj.get_submissions(data['assignment'],
+            num_submissions=data['quantity'], before=data.get('before'))
 
     def merge_user(self, obj, user, data):
         """
