@@ -69,6 +69,7 @@
             <td>
               <span class="badge bg-green" ng-if="isSubmit(submission)">--submit</span>
                 <span ng-if="submission.score.length == 0" class="badge">No Scores</span>
+                <span ng-if="submission.revision" class="badge bg-yellow">Composition Revised</span>
                 <span ng-repeat="score in submission.score" ng-click="showScore(score)" class="badge bg-blue">
                     <span class="score-blurb">
                         <label>Tag</label>
