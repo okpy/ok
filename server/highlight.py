@@ -5,6 +5,16 @@ import pygments
 import pygments.lexers
 import pygments.formatters
 
+class Line:
+    def __init__(self, is_diff=True, tag=None,
+            line_before=None, line_after=None, contents='', comments=()):
+        self.is_diff = is_diff
+        self.tag = tag
+        self.line_before = line_before
+        self.line_after = line_after
+        self.contents = contents
+        self.comments = comments
+
 def highlight(filename, source):
     """Highlights an input string into a list of HTML strings, one per line."""
     try:
@@ -17,7 +27,8 @@ def highlight(filename, source):
 
 def highlight_file(filename, source):
     """Given a source file, generate a sequence of (line index, HTML) pairs."""
-    return zip(itertools.count(1), highlight(filename, source))
+    for i, contents in zip(itertools.count(1), highlight(filename, source)):
+        yield Line(is_diff=False, tag='equal', line_after=i, contents=contents)
 
 def highlight_diff(filename, a, b, diff_type='short'):
     """Given two input strings, generate a sequence of 4-tuples. The elements
@@ -35,15 +46,25 @@ def highlight_diff(filename, a, b, diff_type='short'):
 
     def delete(i1, i2):
         for i in range(i1, i2):
-            yield 'delete', i + 1, None, '-' + highlighted_a[i]
+            yield Line(
+                tag='delete',
+                line_before=i + 1,
+                contents='-' + highlighted_a[i])
 
     def insert(i1, i2):
         for j in range(j1, j2):
-            yield 'insert', None, j + 1, '+' + highlighted_b[j]
+            yield Line(
+                tag='insert',
+                line_after=j + 1,
+                contents='+' + highlighted_b[j])
 
     def equal(i1, i2, j1, j2):
         for i, j in zip(range(i1, i2), range(j1, j2)):
-            yield 'equal', i + 1, j + 1, ' ' + highlighted_b[j]
+            yield Line(
+                tag='equal',
+                line_before=i + 1,
+                line_after=j + 1,
+                contents=' ' + highlighted_b[j])
 
     def format_range_unified(start, stop):
         """Convert range to the "ed" format. From difflib.py"""
@@ -68,7 +89,7 @@ def highlight_diff(filename, a, b, diff_type='short'):
         header = '@@ -{} +{} @@\n'.format(
             format_range_unified(first[1], last[2]),
             format_range_unified(first[3], last[4]))
-        yield 'header', None, None, header
+        yield Line(tag='header', contents=header)
         for tag, i1, i2, j1, j2 in group:
             if tag == 'replace':
                 yield from delete(i1, i2)
@@ -79,3 +100,18 @@ def highlight_diff(filename, a, b, diff_type='short'):
                 yield from insert(j1, j2)
             elif tag == 'equal':
                 yield from equal(i1, i2, j1, j2)
+
+def diff_files(files_before, files_after, diff_type):
+    if diff_type:
+        files = {}
+        for filename in files_before.keys() | files_after.keys():
+            lines = highlight_diff(
+                filename,
+                files_before.get(filename, ''),
+                files_after.get(filename, ''),
+                diff_type)
+            files[filename] = list(lines)
+    else:
+        files = {filename: list(highlight_file(filename, source))
+            for filename, source in files_after.items()}
+    return files

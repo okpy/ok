@@ -4,10 +4,11 @@ import functools
 import random
 import string
 
+import loremipsum
 import names
 
 from server.models import db, User, Course, Assignment, Enrollment, \
-    Backup, Message, Group, Version
+    Backup, Message, Group, Comment, Version
 
 original_file = open('tests/files/fizzbuzz_before.py').read()
 modified_file = open('tests/files/fizzbuzz_after.py').read()
@@ -29,8 +30,12 @@ def gen_bool(p=0.5):
 def gen_maybe(value, p=0.5):
     return value if gen_bool(p) else None
 
-def gen_list(gen, n):
-    return [gen() for _ in range(n)]
+def gen_list(gen, n, nonempty=False):
+    if nonempty:
+        length = random.randrange(1, n)
+    else:
+        length = random.randrange(n)
+    return [gen() for _ in range(length)]
 
 def gen_unique(gen, n, attr):
     generated = collections.OrderedDict()
@@ -38,6 +43,37 @@ def gen_unique(gen, n, attr):
         v = gen()
         generated[getattr(v, attr)] = v
     return generated.values()
+
+def gen_markdown():
+    def gen_text():
+        def alter(w):
+            if gen_bool(0.9):
+                return w
+            return random.choice(['`{}`', '_{}_', '*{}*']).format(w)
+        return ' '.join(alter(w) for w in loremipsum.get_sentence().split())
+
+    def gen_header():
+        return '{} {}'.format(
+            '#' * random.randrange(1, 7),
+            loremipsum.get_sentence())
+
+    def gen_code():
+        return '```{}```'.format(
+            '\n'.join(gen_list(loremipsum.get_sentence, 4)))
+
+    def gen_bullets():
+        return '\n'.join('* ' + s for s in gen_list(loremipsum.get_sentence, 4))
+
+    def gen_block():
+        gen = weighted_choice([
+            (gen_text, 7),
+            (gen_header, 1),
+            (gen_code, 1),
+            (gen_bullets, 1)
+        ])
+        return gen()
+
+    return '\n\n'.join(gen_list(gen_block, 4, nonempty=True))
 
 def gen_user():
     real_name = names.get_full_name()
@@ -94,7 +130,7 @@ def gen_assignment(course):
         lock_date=lock_date,
         max_group_size=random.randrange(1, 3),
         revisions_allowed=gen_bool(0.3),
-        files={'difflib.py': original_file})
+        files={'fizzbuzz.py': original_file})
 
 def gen_enrollment(user, course):
     role = weighted_choice([
@@ -119,7 +155,7 @@ def gen_enrollment(user, course):
 def gen_backup(user, assignment):
     messages = {
         'file_contents': {
-            'difflib.py': modified_file,
+            'fizzbuzz.py': modified_file,
             'moby_dick': 'Call me Ishmael.'
         },
         'analytics': {}
@@ -135,6 +171,20 @@ def gen_backup(user, assignment):
         submit=submit)
     backup.messages = [Message(kind=k, contents=m) for k, m in messages.items()]
     return backup
+
+def gen_comment(backup):
+    created = datetime.datetime.now() - datetime.timedelta(minutes=random.randrange(100))
+    files = backup.files()
+    filename = random.choice(list(files))
+    length = len(files[filename].splitlines())
+    line = random.randrange(length) + 1
+    return Comment(
+        created=created,
+        backup_id=backup.id,
+        author_id=backup.submitter.id,
+        filename=filename,
+        line=line,
+        message=gen_markdown())
 
 def seed_users():
     print('Seeding users...')
@@ -168,8 +218,7 @@ def seed_backups():
     for user in User.query.all():
         print('Seeding backups for user {}...'.format(user.email))
         for assignment in Assignment.query.all():
-            length = random.randrange(30)
-            backups = gen_list(functools.partial(gen_backup, user, assignment), length)
+            backups = gen_list(functools.partial(gen_backup, user, assignment), 30)
             db.session.add_all(backups)
         db.session.commit()
 
@@ -178,6 +227,12 @@ def seed_versions():
     url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok'
     ok = Version(name='ok-client', current_version='v1.5.4', download_link=url)
     db.session.add(ok)
+
+def seed_comments():
+    print('Seeding comments...')
+    for backup in Backup.query.filter_by(submit=True).all():
+        comments = gen_list(functools.partial(gen_comment, backup), 6)
+        db.session.add_all(comments)
     db.session.commit()
 
 def seed():
@@ -187,8 +242,8 @@ def seed():
     seed_assignments()
     seed_enrollments()
     seed_backups()
+    seed_comments()
     # TODO: groups
     # TODO: submission flagging
-    # TODO: comments
     # TODO: scores
     seed_versions()

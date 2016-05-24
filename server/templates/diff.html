@@ -3,67 +3,87 @@
   <td class="line-number" data-line-number="{{ '' if i is none else i }}"></td>
 {% endmacro %}
 
-{% macro source_line(line) %}
-  <td class="highlight-source">{{ line | safe }}</td>
-{% endmacro %}
-
-{% macro source_file(filename, backup) %}
-  <div class="source-file table-responsive">
-    <table class="highlight">
-      <thead>
-        <tr>
-            <th class="source-file-header" colspan=3>
-                <div class="source-file-name">{{ filename }}</div>
-                <a href="{{ url_for('.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
-                class="no-dash button-small source-file-download">
-                    <i class="fa fa-download"> </i> Download
-                </a>
-            </th>
-        </tr>
-      </thead>
-      <tbody>
-        {{ caller() }}
-      </tbody>
-    </table>
+{% macro render_comment(comment) %}
+  <div class="comment"
+    data-id="{{ utils.encode_id(comment.id) }}"
+    data-message="{{ comment.message }}">
+    <div class="comment-header clearfix">
+      <div class="comment-author">
+        {{ comment.author.email }} commented {{ utils.natural_time(comment.created) }}
+      </div>
+      {% if comment.author == current_user %}
+      <div class="comment-actions">
+        <button class="btn btn-link comment-action comment-edit"><i class="fa fa-pencil"></i></button>
+        <button class="btn btn-link comment-action comment-delete"><i class="fa fa-times"></i></button>
+      </div>
+      {% endif %}
+    </div>
+    <div class="comment-body markdown-body">{{ comment.message | markdown }}</div>
   </div>
 {% endmacro %}
 
-{% macro highlight_diff(filename, a, b, backup, diff_type) %}
-  {% call source_file(filename, backup) %}
-    {% for tag, i, j, line in highlight.highlight_diff(filename, a, b, diff_type) %}
-      <tr class="highlight-{{ tag }}">
-        {{ line_number(i) }}
-        {{ line_number(j) }}
-        {{ source_line(line) }}
-      </tr>
-    {% endfor %}
-  {% endcall %}
+{% macro editor_template() %}
+  <div class="comment comment-editor clearfix">
+    <ul class="comment-editor-header nav nav-tabs">
+      <li class="tabnav-tab active"><a class="btn-link comment-write-tab" data-toggle="tab">Write</a></li>
+      <li class="tabnav-tab"><a class="btn-link comment-preview-tab" data-toggle="tab">Preview</a></li>
+    </ul>
+    <div class="tab-content">
+      <div class="comment-write tab-pane active">
+        <textarea placeholder="Leave a comment"></textarea>
+      </div>
+      <div class="comment-preview tab-pane">
+        <div class="comment-body markdown-body"></div>
+      </div>
+    </div>
+    <div class="comment-editor-actions">
+      <button class="btn btn-default comment-cancel">Cancel</button>
+      <button class="btn btn-success comment-save">Save</button>
+    </div>
+  </div>
 {% endmacro %}
 
-{% macro highlight_diffs(files_before, files_after, backup, diff_type) %}
-  {% for filename in files_before.keys().__or__(files_after.keys()) | sort %}
-    {{ highlight_diff(filename,
-      files_before.get(filename, ''),
-      files_after.get(filename, ''),
-      backup,
-      diff_type)
-    }}
-  {% endfor %}
-{% endmacro %}
-
-{% macro highlight_file(filename, source, backup) %}
-  {% call source_file(filename, backup) %}
-    {% for i, line in highlight.highlight_file(filename, source) %}
-      <tr>
-        {{ line_number(i) }}
-        {{ source_line(line) }}
-      </tr>
-    {% endfor %}
-  {% endcall %}
-{% endmacro %}
-
-{% macro highlight_files(files, backup) %}
-  {% for filename, source in files | dictsort %}
-    {{ highlight_file(filename, source, backup) }}
-  {% endfor %}
+{% macro source_file(backup, filename, lines) %}
+  <div class="source-file table-responsive"
+    data-backup-id={{ utils.encode_id(backup.id) }}
+    data-filename={{ filename }}>
+    <table class="highlight">
+      <thead>
+        <tr>
+          <th class="source-file-header" colspan=3>
+              <div class="source-file-name fixed-width-font">{{ filename }}</div>
+              <a href="{{ url_for('.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
+              class="no-dash button-small source-file-download">
+                  <i class="fa fa-download"></i> Download
+              </a>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+          <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
+            {% if line.is_diff %}
+              {{ line_number(line.line_before) }}
+            {% endif %}
+            {{ line_number(line.line_after) }}
+            <td>
+              {% if line.line_after %}
+                <span class="comment-add"><i class="fa fa-plus"></i></span>
+              {% endif %}
+              <span class="highlight-source">{{ line.contents | safe }}</span>
+            </td>
+          </tr>
+          {% if line.comments %}
+            <tr data-line={{ line.line_after }}>
+              <td class="comment-container" colspan=3>
+                {% for comment in line.comments %}
+                  {{ render_comment(comment) }}
+                {% endfor %}
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 {% endmacro %}

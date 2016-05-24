@@ -1,10 +1,12 @@
-import os
+import datetime
 import logging
+import os
 import random
 from urllib.parse import urlparse, urljoin
 
 from flask import render_template, url_for
 from hashids import Hashids
+import humanize
 from premailer import transform
 import sendgrid
 from werkzeug.routing import BaseConverter, ValidationError
@@ -30,6 +32,10 @@ def decode_id(value):
 def local_time(dt, course):
     """Format a time string in a course's locale."""
     return course.timezone.localize(dt).strftime('%a %m/%d %H:%M %p')
+
+def natural_time(dt):
+    """Format a human-readable time difference (e.g. "6 days ago")"""
+    return humanize.naturaltime(datetime.datetime.utcnow() - dt)
 
 def is_safe_redirect_url(request, target):
     host_url = urlparse(request.host_url)
