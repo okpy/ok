@@ -222,6 +222,12 @@ def seed_backups():
             db.session.add_all(backups)
         db.session.commit()
 
+def seed_versions():
+    print('Seeding version...')
+    url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok'
+    ok = Version(name='ok-client', current_version='v1.5.4', download_link=url)
+    db.session.add(ok)
+
 def seed_comments():
     print('Seeding comments...')
     for backup in Backup.query.filter_by(submit=True).all():
@@ -240,4 +246,4 @@ def seed():
     # TODO: groups
     # TODO: submission flagging
     # TODO: scores
-    # TODO: versions
+    seed_versions()
