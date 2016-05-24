@@ -17,6 +17,7 @@ AUTOGRADER_URL = 'http://autograder.cs61a.org:5000'
 FORBIDDEN_ROUTE_NAMES = [
     'admin',
     'api',
+    'comments',
     'login',
     'logout',
     'testing-login',

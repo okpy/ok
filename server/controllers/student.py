@@ -4,8 +4,10 @@ from flask.ext.login import login_user, logout_user, login_required, \
     current_user
 from werkzeug.exceptions import BadRequest
 
+import collections
 import functools
 
+from server import highlight, models, utils
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 from server.forms import CSRFForm
@@ -133,9 +135,18 @@ def code(name, submit, bid):
         return redirect(url_for('.code', name=name, submit=submit, bid=bid))
     if not assign.files and diff_type:
         return abort(404)
+    # sort comments by (filename, line)
+    comments = collections.defaultdict(list)
+    for comment in backup.comments:
+        comments[(comment.filename, comment.line)].append(comment)
+    # highlight files and add comments
+    files = highlight.diff_files(assign.files, backup.files(), diff_type)
+    for filename, lines in files.items():
+        for line in lines:
+            line.comments = comments[(filename, line.line_after)]
     return render_template('student/assignment/code.html',
-        course=assign.course, assignment=assign, backup=backup, diff_type=diff_type,
-        files_before=assign.files, files_after=backup.files())
+        course=assign.course, assignment=assign, backup=backup,
+        files=files, diff_type=diff_type)
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<file>')
 @login_required
@@ -237,3 +248,31 @@ def group_respond(name):
         except BadRequest as e:
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
+
+@student.route('/comments/', methods=['POST'])
+@login_required
+def new_comment():
+    comment = models.Comment(
+        backup_id=utils.decode_id(request.form['backup_id']),
+        author_id=current_user.id,
+        filename=request.form['filename'],
+        line=request.form.get('line', type=int),
+        message=request.form['message'])
+    db.session.add(comment)
+    db.session.commit()
+    return render_template('student/assignment/comment.html', comment=comment)
+
+@student.route('/comments/<hashid:comment_id>', methods=['PUT', 'DELETE'])
+@login_required
+def edit_comment(comment_id):
+    comment = models.Comment.query.get(comment_id)
+    if not comment or comment.author != current_user:
+        abort(404)
+    if request.method == 'DELETE':
+        db.session.delete(comment)
+        db.session.commit()
+        return ('', 204)
+    else:
+        comment.message = request.form['message']
+        db.session.commit()
+        return render_template('student/assignment/comment.html', comment=comment)

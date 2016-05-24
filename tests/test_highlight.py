@@ -43,11 +43,11 @@ class TestHighlight(OkTestCase):
         highlighted = list(highlight.highlight_file(filename, source))
 
         # Check format
-        for i, highlighted_line in highlighted:
-            assert source_lines[i - 1] == striptags(highlighted_line)
+        for line in highlighted:
+            assert source_lines[line.line_after - 1] == striptags(line.contents)
 
         # Check that removing tags gives the same file
-        assert source_lines == [striptags(line) for _, line in highlighted]
+        assert source_lines == [striptags(line.contents) for line in highlighted]
 
     def _test_highlight_diff(self, filename, a, b, diff_type):
         a_lines = a.splitlines(keepends=True)
@@ -55,30 +55,30 @@ class TestHighlight(OkTestCase):
         highlighted = list(highlight.highlight_diff(filename, a, b, diff_type))
 
         # Check format
-        for tag, i, j, highlighted_line in highlighted:
-            stripped = striptags(highlighted_line)
+        for line in highlighted:
+            stripped = striptags(line.contents)
             start = stripped[0]
-            line = stripped[1:]
-            if tag == 'header':
-                assert i is None
-                assert j is None
-            elif tag == 'delete':
+            source = stripped[1:]
+            if line.tag == 'header':
+                assert line.line_before is None
+                assert line.line_after is None
+            elif line.tag == 'delete':
                 assert start == '-'
-                assert a_lines[i - 1] == line
-                assert j is None
-            elif tag == 'insert':
+                assert a_lines[line.line_before - 1] == source
+                assert line.line_after is None
+            elif line.tag == 'insert':
                 assert start == '+'
-                assert i is None
-                assert b_lines[j - 1] == line
-            elif tag == 'equal':
+                assert line.line_before is None
+                assert b_lines[line.line_after - 1] == source
+            elif line.tag == 'equal':
                 assert start == ' '
-                assert a_lines[i - 1] == line
-                assert b_lines[j - 1] == line
+                assert a_lines[line.line_before - 1] == source
+                assert b_lines[line.line_after - 1] == source
             else:
                 raise AssertionError('Unknown tag {}'.format(tag))
 
         # Check that removing tags gives a patch that can be applied
-        patch = ''.join(striptags(line) for _, _, _, line in highlighted)
+        patch = ''.join(striptags(line.contents) for line in highlighted)
         assert b_lines == apply_patch(patch, a).splitlines(keepends=True)
 
     def test_highlight_file(self):
@@ -97,7 +97,7 @@ class TestHighlight(OkTestCase):
         source_lines = source.splitlines(keepends=True)
         highlighted = list(highlight.highlight_file(filename, source))
 
-        for i, highlighted_line in highlighted:
-            assert source_lines[i - 1] == highlighted_line
+        for line in highlighted:
+            assert source_lines[line.line_after - 1] == striptags(line.contents)
 
-        assert source_lines == [line for _, line in highlighted]
+        assert source_lines == [line.contents for line in highlighted]

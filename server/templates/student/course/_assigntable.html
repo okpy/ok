@@ -54,13 +54,13 @@
             {% if assign.active %}
             <div class="due-dot green"></div>
             <div class="due">
-              <span class="due-text green">{{ humanize.naturaltime(assign.due_date) }}</span>
+              <span class="due-text green">{{ utils.natural_time(assign.due_date) }}</span>
               <span class="due-date">{{ utils.local_time(assign.due_date, course) }}</span>
             </div>
             {% else %}
             <div class="due-dot red"></div>
             <div class="due">
-              <span class="due-text red">{{ humanize.naturaltime(assign.due_date) }}</span>
+              <span class="due-text red">{{ utils.natural_time(assign.due_date) }}</span>
               <span class="due-date">{{ utils.local_time(assign.due_date, course) }}</span>
             </div>
 
@@ -161,11 +161,11 @@
         <div class="cell-status">
           {% if assign.active %}
           <span class="due-dot green"></div>
-            <span class="green">{{ humanize.naturaltime(assign.due_date) }}</span>
+            <span class="green">{{ utils.natural_time(assign.due_date) }}</span>
             <span>{{ utils.local_time(assign.due_date, course) }}</span>
           {% else %}
           <span class="due-dot red"></div>
-            <span class=" red">{{ humanize.naturaltime(assign.due_date) }}</span>
+            <span class=" red">{{ utils.natural_time(assign.due_date) }}</span>
             <span>{{ utils.local_time(assign.due_date, course) }}</span>
           {% endif %}
         </div>

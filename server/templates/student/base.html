@@ -34,6 +34,9 @@
       {% endblock %}
 
       <script src="{{ url_for('static', filename='lib/modernizr/modernizr.js') }}"></script>
+      <script type="text/javascript">
+        var csrf_token = "{{ csrf_token() }}";
+      </script>
 
     </head>
 
