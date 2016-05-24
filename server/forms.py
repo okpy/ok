@@ -69,6 +69,10 @@ class AssignmentForm(BaseForm):
             return False
         return True
 
+class AssignmentUpdateForm(AssignmentForm):
+    def validate(self):
+        return super(AssignmentForm, self).validate()
+
 
 class EnrollmentForm(BaseForm):
     name = StringField(u'Name', validators=[validators.optional()])

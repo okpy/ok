@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, render_template, flash, redirect, url_for, abort, request
 
 from flask.ext.login import login_required, current_user
@@ -141,12 +143,16 @@ def assignment(cid, aid):
     # Convert TZ to Pacific
     assgn.due_date = convert_to_pacific(assgn.due_date)
     assgn.lock_date = convert_to_pacific(assgn.lock_date)
-    form = forms.AssignmentForm(obj=assgn)
+    form = forms.AssignmentUpdateForm(obj=assgn)
 
     # TODO : Actually save updates.
 
     if assgn.course != current_course:
         return abort(401)
+
+    if form.validate_on_submit():
+        form.populate_obj(assgn)
+        db.session.commit()
 
     return render_template('staff/course/assignment.html', assignment=assgn,
                            form=form, courses=courses,
