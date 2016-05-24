@@ -2,28 +2,29 @@
 
 {% block title %}Login for Testing{% endblock %}
 
+{% macro testing_login_button(user, type) %}
+    {% if user %}
+        <div class="login-box-body">
+            <p class="login-box-msg">Impersonate a random {{ type }}</p>
+            <form action="{{ callback }}" method="post">
+                <input type="hidden" value="{{ user.email }}" class="form-control" name="email" placeholder="Email">
+                <div class="row">
+                    <button type="submit" class="btn btn-primary btn-block btn-flat">Sign in as {{ user.email }}</button>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+{% endmacro %}
+
 {% block body %}
     <div class="login-box">
         <div class="login-logo">
             Login for Testing
         </div>
+        {{ testing_login_button(random_user, 'user') }}
+        {{ testing_login_button(random_admin, 'admin') }}
         <div class="login-box-body">
-            {% for user in ['okstaff@okpy.org', 'student0@okpy.org'] %}
-            <form action="{{ callback }}" method="post">
-                <div class="form-group has-feedback">
-                    <input type="hidden" value="{{user}}" class="form-control" name="email" placeholder="Email">
-                </div>
-                <div class="row">
-                    <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In As {{user}}</button>
-                </div>
-            </form>
-            {% endfor %}
-        </div>
-
-        <div class="login-box-body">
-
-        <p class="login-box-msg">Impersonate a user</p>
-
+            <p class="login-box-msg">Impersonate a specific user</p>
             <form action="{{ callback }}" method="post">
                 <div class="form-group has-feedback">
                     <input type="text" class="form-control" name="email" placeholder="Email">

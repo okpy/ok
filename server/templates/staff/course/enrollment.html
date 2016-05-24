@@ -63,17 +63,17 @@
                     <th>Secondary ID</th>
                     <th>Role</th>
                     <th>Enrolled At</th>
-                    <th>Notes</th>
+                    <th>Section</th>
                   </tr>
                 {%- for item in enrollments.items %}
                 <tr>
                   <td>{{ item.user.email }}</td>
                   <td>{{ item.user.name }}</td>
-                  <td>{{ item.user.sid }}</td>
-                  <td>{{ item.user.secondary }}</td>
+                  <td>{{ item.sid }}</td>
+                  <td>{{ item.class_account }}</td>
                   <td><span class="label label-success">{{item.role}}</span></td>
                   <td>{{item.created}}</td>
-                  <td>{{item.user.notes}}</td>
+                  <td>{{item.section}}</td>
                 </tr>
                 {% endfor %}
               </tbody></table>
@@ -165,6 +165,7 @@
                   {{ forms.render_field(single_form.email, label_visible=true, placeholder='test@test.com') }}
                   {{ forms.render_field(single_form.sid, label_visible=true, placeholder='1234567', type='text') }}
                   {{ forms.render_field(single_form.secondary, label_visible=true, placeholder='cs61a-abc', type='text') }}
+                  {{ forms.render_field(single_form.section, label_visible=true, placeholder='', type='text') }}
                   {{ forms.render_field(single_form.role, label_visible=true) }}
               {% endcall %}
           </div>

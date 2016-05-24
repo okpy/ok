@@ -7,7 +7,7 @@ from functools import wraps
 import pytz
 import csv
 
-from server.models import User, Course, Assignment, Enrollment, db
+from server.models import User, Course, Assignment, Enrollment, Version, db
 from server.constants import STAFF_ROLES, VALID_ROLES, STUDENT_ROLE
 import server.forms as forms
 
@@ -17,7 +17,6 @@ admin = Blueprint('admin', __name__)
 def convert_to_pacific(date):
     # TODO Move to UTILS
     return date.replace(tzinfo=pytz.utc)
-
 
 def is_staff(course_arg=None):
     """ A decorator for routes to ensure that user is a member of
@@ -31,8 +30,10 @@ def is_staff(course_arg=None):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if current_user.is_authenticated:
+                if current_user.is_admin:
+                    return func(*args, **kwargs)
                 roles = current_user.enrollments(roles=STAFF_ROLES)
-                if len(roles) > 0 or current_user.is_admin:
+                if len(roles) > 0:
                     if course_arg:
                         course = kwargs[course_arg]
                         if course in [r.course.id for r in roles]:
@@ -47,12 +48,16 @@ def is_staff(course_arg=None):
 
 def get_courses(cid=None):
     #  TODO : The decorator could add these to the routes
-    enrollments = current_user.enrollments(roles=STAFF_ROLES)
-    courses = [e.course for e in enrollments]
-    matching_courses = [c for c in courses if c.id == cid]
+    if current_user.is_authenticated and current_user.is_admin:
+        courses = Course.query.all()
+    else:
+        enrollments = current_user.enrollments(roles=STAFF_ROLES)
+        courses = [e.course for e in enrollments]
     if not cid:
         return courses, []
-    elif len(matching_courses) == 0:
+
+    matching_courses = [c for c in courses if c.id == cid]
+    if len(matching_courses) == 0:
         abort(401)  # TODO to actual error page
     current_course = matching_courses[0]
     return courses, current_course
@@ -65,6 +70,25 @@ def index():
     if courses:
         return redirect(url_for(".course_assignments", cid=courses[0].id))
     return render_template('staff/index.html', courses=courses)
+
+
+@admin.route("/client/<name>", methods=['GET', 'POST'])
+@is_staff()
+def client_version(name):
+    version = Version.query.filter_by(name=name).one()
+
+    form = forms.VersionForm(obj=version)
+    if form.validate_on_submit():
+        form.populate_obj(version)
+
+        db.session.add(version)
+        db.session.commit()
+
+        flash(name + " version updated successfully.", "success")
+        return redirect(url_for(".client_version", name=name))
+
+    return render_template('staff/client_version.html',
+                            version=version, form=form)
 
 
 @admin.route("/course/<int:cid>")
@@ -133,6 +157,7 @@ def assignment(cid, aid):
     return render_template('staff/course/assignment.html', assignment=assgn,
                            form=form, courses=courses,
                            current_course=current_course)
+
 
 @admin.route("/course/<int:cid>/enrollment", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')

@@ -8,7 +8,7 @@ from server.models import db, Assignment, Course, Enrollment, User
 
 class OkTestCase(TestCase):
     def create_app(self):
-        return create_app('settings/dev.py')
+        return create_app('settings/test.py')
 
     def setUp(self):
         db.create_all()
