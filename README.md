@@ -16,76 +16,43 @@ Installation
 
 To install:
 * Clone this repo
-* Install [Google App Engine SDK for Python](https://developers.google.com/appengine/downloads) and add it to your `$PATH`. You can do `brew install google-app-engine` on a mac.
-* `export GAE_SDK=<location of unzipped GAE SDK>`
-  - For brew, this location should be in /usr/local/Cellar/google-app-engine/1.9.X/share/google-app-engine.
-  - Some files that should be present when running `ls $GAE_SDK` are `dev_appserver.py` and `api_server.py`.
 * Install `virtualenv`. You can do `brew install virtualenv` on a mac or `pip install virtualenv` or `apt-get install python-virtualenv`
   - If brew cannot find `virtualenv`, use `brew install pyenv-virtualenv`.
-* Run `./install.py`. If you are running into trouble on this step, delete the `env` directory and rerun `./install.py`.
-  - If install returns an Error and brew is installed, fix all issues under `brew doctor`.
-
-Common Bugs
--------------
-  Before installation, ensure that:
-  * Ok directory's absolute path does *not* have spaces.
-    - From your Ok directory, run `pwd` to see its full path.
-    - In effect, the *installation* will not work in Google Drive or iCloud; the server may be subsequently run in the cloud.
-
-
-Testing the Installation
-------------------------
-* Run `./run_tests`. For a successful installation, all tests should pass.
-* To test *and* see coverage, run `./run_coverage`.
-* To test only a subset of tests, run `FLASK_CONF=TEST python server/apptest.py --quiet --dir [DIRECTORY HERE]`.
+* Create a virtualenv with `virtualenv -p python3 env`
+* Activate the virtualenv with `source env/bin/activate`
 
 Local Server
 ------------
 To run the server locally:
 
 ```bash
-$ source activate_server.sh
-$ cd server
-$ bower install  # to install frontend CSS/JS libraries
-$ ./start_server
+$ source env/bin/activate
+$ pip install -r requirements.txt  # to install libraries
+$ ./manage.py createdb
+$ ./manage.py seed
+$ ./manage.py server
 ```
 
 The server will listen on http://localhost:8080.
 
+Command Line Manager
+------------------------
+* To view available commands run `./manage.py` once the virtualenv is activated.
+
+Common Bugs
+-------------
+
 Deploying
 ---------
-To deploy the current branch:
-
-```bash
-$ bower install
-$ gcloud auth login
-$ appcfg.py update
-```
-
-To deploy the current branch to staging
-```bash
-$ git checkout staging
-$ git merge <your branch>
-$ git push origin staging
-$ head server/app.yaml # Make sure version is staging
-$ appcfg.py update server --version staging # Be sure to deploy to staging
-```
+TBD
 
 Customizing seed content
 -------------------
-`app/seed/__init__.py` intializes the local dev appserver with sample content (Users, Assignments, a Course etc). You can customize it by changing the file and restarting the dev server.
+`server/generate.py` intializes the local server with sample content (Users, Assignments, a Course etc). You can customize it by changing the file and running `./manage.py resetdb`.
 
 Server Development
 ------------------
-
-The server is developed in Python 2.7+ using the Google App Engine framework.
-
-To start making changes to the server, first change to its virtual environment.
-
-``source activate-server.sh``
-
-In most environments, your prompt will change to start with ``(server)``.
-To exit this environment, type ``deactivate``.
+The server is developed in Python 3.4+ using Flask.
 
 Core Features
 -------------
@@ -124,6 +91,6 @@ Some useful things for developers to know:
 1. Testing with ok-client
    - To test with ok-client, please follow the instructions for the ok-client repo [here](https://github.com/Cal-CS-61A-Staff/ok-client).
    - Once you are inside the virtual environment for ok-client, you can make a new binary by using the command `ok-publish`.
-   - To run the server, run the shell script in `server/start_server`
+   - Start the local ok server.
    - When running the ok binary, add the flags `--insecure --server localhost:<port>` to point it to the running ok-server
    - To find demo assignments that you can use the binary with, look in [ok-client/demo](https://github.com/Cal-CS-61A-Staff/ok-client/tree/master/demo)
