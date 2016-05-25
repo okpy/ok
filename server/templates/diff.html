@@ -11,7 +11,7 @@
       <div class="comment-author">
         {{ comment.author.email }} commented {{ utils.natural_time(comment.created) }}
       </div>
-      {% if comment.author == current_user %}
+      {% if comment.author == current_user or current_user.is_admin %}
       <div class="comment-actions">
         <button class="btn btn-link comment-action comment-edit"><i class="fa fa-pencil"></i></button>
         <button class="btn btn-link comment-action comment-delete"><i class="fa fa-times"></i></button>

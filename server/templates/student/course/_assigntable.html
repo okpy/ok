@@ -160,17 +160,18 @@
         <!-- <div class="cell-text"><span>Score: 6/7</span></div> -->
         <div class="cell-status">
           {% if assign.active %}
-          <span class="due-dot green"></div>
-            <span class="green">{{ utils.natural_time(assign.due_date) }}</span>
-            <span>{{ utils.local_time(assign.due_date, course) }}</span>
-          {% else %}
-          <span class="due-dot red"></div>
-            <span class=" red">{{ utils.natural_time(assign.due_date) }}</span>
-            <span>{{ utils.local_time(assign.due_date, course) }}</span>
-          {% endif %}
+          <span class="due-dot green">
         </div>
-      </div>
-      {% endfor %}
+        <span class="green">{{ utils.natural_time(assign.due_date) }}</span>
+        <span>{{ utils.local_time(assign.due_date, course) }}</span>
+          {% else %}
+          <span class="due-dot red">
+         </div>
+        <span class=" red">{{ utils.natural_time(assign.due_date) }}</span>
+        <span>{{ utils.local_time(assign.due_date, course) }}</span>
+          {% endif %}
+    </div>
+    {% endfor %}
   </div>
 </div>
 
