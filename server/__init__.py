@@ -1,9 +1,10 @@
 import os
 
+from markdown import markdown
 from flask import Flask
-from flask.ext.rq import RQ
-from flask.ext.misaka import markdown
+from flask import Markup
 
+from flask.ext.rq import RQ
 from flask_wtf.csrf import CsrfProtect
 
 from webassets.loaders import PythonLoader as PythonAssetsLoader
@@ -22,8 +23,6 @@ from server.extensions import (
     assets_env,
     debug_toolbar
 )
-
-
 
 def create_app(default_config_path=None):
     """Create and return a Flask application. Reads a config file path from the
@@ -74,9 +73,8 @@ def create_app(default_config_path=None):
     })
 
     app.jinja_env.filters.update({
-        'markdown': markdown
+        'markdown': lambda data: Markup(markdown(data))
     })
-
 
     # register our blueprints
     # OAuth should not need CSRF protection

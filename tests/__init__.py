@@ -44,7 +44,6 @@ class OkTestCase(TestCase):
             lock_date=datetime.datetime.now() + datetime.timedelta(days=1),
             max_group_size=4)
         db.session.add(self.assignment)
-
         def make_student(n):
             user = User(email='student{0}@aol.com'.format(n))
             participant = Enrollment(

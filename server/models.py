@@ -1,25 +1,26 @@
+from werkzeug.exceptions import BadRequest
+
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.login import UserMixin
+from flask.ext.cache import Cache
+
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
-import pytz
-from werkzeug.exceptions import BadRequest
-
-from flask.ext.login import UserMixin
-from flask.ext.cache import Cache
-from flask.ext.misaka import markdown
-
-cache = Cache()
 
 import functools
 import contextlib
 import csv
-import json
 from datetime import datetime as dt
+import json
+from markdown import markdown
+import pytz
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
+
+cache = Cache()
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
