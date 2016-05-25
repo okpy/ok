@@ -11,7 +11,7 @@ from flask.ext.login import LoginManager, login_user, logout_user, login_require
 import pickle
 
 from server import utils
-from server.models import db, User
+from server.models import db, User, Enrollment
 
 auth = Blueprint('auth', __name__)
 
@@ -172,9 +172,12 @@ def authorized(resp):
 def testing_login():
     if not use_testing_login():
         abort(404)
+
+    random_staff = utils.random_row(Enrollment.query.filter_by(role='staff'))
     return render_template('testing-login.html',
         callback=url_for(".testing_authorized"),
         random_admin=utils.random_row(User.query.filter_by(is_admin=True)),
+        random_staff=random_staff.user,
         random_user=utils.random_row(User.query))
 
 @auth.route('/testing-login/authorized/', methods=['POST'])
