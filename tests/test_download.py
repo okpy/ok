@@ -60,3 +60,15 @@ class TestDownload(OkTestCase):
         url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_404(response)
+
+    def test_staff(self):
+        filename = "test.py"
+        contents = "x = 4"
+        self._add_file(filename, contents)
+        self.login(self.staff1.email)
+
+        encoded_id = utils.encode_id(self.backup.id)
+        submit_str = "submissions" if self.backup.submit else "backups"
+        url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
+        response = self.client.get(url)
+        self.assert_200(response)

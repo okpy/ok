@@ -126,9 +126,9 @@ def list_backups(name, submit):
 @login_required
 def code(name, submit, bid):
     assign = get_assignment(name)
-    user_ids = assign.active_user_ids(current_user.id)
     backup = Backup.query.get(bid)
-    if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, assign.course)):
+    if not (backup and backup.submit == submit and
+                Backup.can(backup, current_user, "view")):
         abort(404)
     diff_type = request.args.get('diff', None)
     if diff_type not in (None, 'short', 'full'):
@@ -153,8 +153,8 @@ def code(name, submit, bid):
 def download(name, submit, bid, file):
     backup = Backup.query.get(bid)
     assign = get_assignment(name)
-    user_ids = assign.active_user_ids(current_user.id)
-    if not (backup and backup.submit == submit and backup.can_view(current_user, user_ids, assign.course)):
+    if not (backup and backup.submit == submit and
+                Backup.can(backup, current_user, "view")):
         abort(404)
     try:
         contents = backup.files()[file]

@@ -116,3 +116,25 @@ class TestSubmission(OkTestCase):
         assert backup.files() == {
             'hog.py': 'def foo():\n    return'
         }
+
+    def test_backup_owners(self):
+        backup = Backup(
+            submitter_id=self.user1.id,
+            assignment=self.assignment,
+            submit=True)
+        backup2 = Backup(
+            submitter_id=self.user2.id,
+            assignment=self.assignment,
+            submit=True)
+        db.session.add(backup)
+        db.session.add(backup2)
+        db.session.commit()
+        assert backup2.owners() == {self.user2.id}
+
+        Group.invite(self.user1, self.user2, self.assignment)
+        Group.invite(self.user1, self.user3, self.assignment)
+        group = Group.lookup(self.user1, self.assignment)
+        group.accept(self.user2)
+
+        assert backup.owners() == {self.user1.id, self.user2.id}
+        assert backup2.owners() == {self.user1.id, self.user2.id}

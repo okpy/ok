@@ -94,6 +94,12 @@ class Model(db.Model):
 
     created = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
 
+    @classmethod
+    def can(cls, obj, user, action):
+        if user.is_admin:
+            return True
+        return False
+
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
@@ -410,18 +416,21 @@ class Backup(Model):
     db.Index('idx_submittedBacks', 'assignment', 'submit')
     db.Index('idx_flaggedBacks', 'assignment', 'flagged')
 
-    def can_view(self, user, member_ids, course):
+    @classmethod
+    def can(cls, obj, user, action):
         if user.is_admin:
             return True
-        if user.id == self.submitter_id:
-            return True
+        if action == "create":
+            return user.is_authenticated()
+        if action == "view":
+            # Only allow group members to view
+            if user.id in obj.owners():
+                return True
+        return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
 
-        # Allow group members to view
-        if self.submitter_id in member_ids:
-            return True
-
-        # Allow staff members to view
-        return user.is_enrolled(course.id, STAFF_ROLES)
+    def owners(self):
+        """ Returns a set of user ids in the same group as the submitter."""
+        return self.assignment.active_user_ids(self.submitter_id)
 
     def files(self):
         """Return a dictionary of filenames to contents."""
@@ -692,3 +701,13 @@ class Score(Model):
     public = db.Column(db.Boolean, default=True)
 
     backup = db.relationship("Backup")
+    assignment = db.relationship("Assignment")
+
+    @classmethod
+    def can(self, obj, user, action):
+        if user.is_admin:
+            return True
+        course = obj.assignment.course
+        if action == "get":
+            return obj.backup.can_view(user, course)
+        return user.is_admin or user.is_enrolled(course.id, STAFF_ROLES)

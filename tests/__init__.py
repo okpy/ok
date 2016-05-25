@@ -30,6 +30,7 @@ class OkTestCase(TestCase):
         * A course (self.course)
         * An assignment (self.assignment) in that course
         * 5 users (self.user1, self.user2, etc.) enrolled as students
+        * 2 staff members (self.staff1, self.staff2) as TAs
         """
         self.course = Course(
             offering='cal/cs61a/sp16',
@@ -52,9 +53,22 @@ class OkTestCase(TestCase):
             db.session.add(participant)
             return user
 
+        def make_staff(n, role='staff'):
+            user = User(email='staff{0}@bitdiddle.net'.format(n))
+            participant = Enrollment(
+                user=user,
+                course=self.course,
+                role=role)
+            db.session.add(participant)
+            return user
+
         self.user1 = make_student(1)
         self.user2 = make_student(2)
         self.user3 = make_student(3)
         self.user4 = make_student(4)
         self.user5 = make_student(5)
+
+        self.staff1 = make_staff(1)
+        self.staff2 = make_staff(2)
+
         db.session.commit()
