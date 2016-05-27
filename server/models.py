@@ -204,7 +204,6 @@ class Assignment(Model):
         """Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
-
     def active_user_ids(self, user_id):
         """Return a set of the ids of all users that are active in the same group
         that our user is active in. If the user is not in a group, return just
@@ -367,7 +366,6 @@ class Enrollment(Model):
         Enrollment.create(cid, enrollment_info, STUDENT_ROLE)
         return len(new_users), existing_user_count
 
-
     @staticmethod
     @transaction
     def create(cid, enrollment_info=[], role=STUDENT_ROLE):
@@ -376,7 +374,7 @@ class Enrollment(Model):
             usr_id, sid = info['id'], info['sid']
             class_account, section = info['class_account'], info['section']
             record = Enrollment.query.filter_by(user_id=usr_id,
-                                                   course_id=cid).one_or_none()
+                                                course_id=cid).one_or_none()
             if not record:
                 record = Enrollment(course_id=cid, user_id=usr_id)
                 new_records.append(record)
@@ -394,7 +392,8 @@ class Message(Model):
     __table_args__ = {'mysql_row_format': 'COMPRESSED'}
 
     id = db.Column(db.Integer, primary_key=True)
-    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False,
+                          index=True)
     contents = db.Column(JsonBlob, nullable=False)
     kind = db.Column(db.String(255), nullable=False, index=True)
 
@@ -482,8 +481,8 @@ class GroupMember(Model):
 
     user = db.relationship("User")
     assignment = db.relationship("Assignment")
-    group = db.relationship("Group",
-        backref=backref('members', cascade="all, delete-orphan"))
+    group = db.relationship("Group", backref=backref('members',
+                                                     cascade="all, delete-orphan"))
 
 
 class Group(Model):
@@ -683,7 +682,7 @@ class Comment(Model):
     author_id = db.Column(db.ForeignKey("user.id"), nullable=False)
 
     filename = db.Column(db.String(255), nullable=False)
-    line = db.Column(db.Integer(), nullable=False) # Line of the original file
+    line = db.Column(db.Integer(), nullable=False)  # Line of the original file
 
     message = db.Column(mysql.MEDIUMTEXT)  # Markdown
 
