@@ -55,9 +55,8 @@ def index():
             'all': all_courses,
             'num_enrolled': len(enrollments)
         }
-        displayed_courses = courses['current'] + courses['instructor'] + courses['past']
+        displayed_courses = courses['current'] + courses['past']
         courses['all'] = [c for c in all_courses if c not in displayed_courses]
-
         return render_template('student/courses/index.html', **courses)
     else:
         return render_template('index.html')

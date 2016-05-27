@@ -128,6 +128,10 @@ class User(Model, UserMixin):
         return self.name or self.email
 
     @staticmethod
+    def get_by_id(uid):
+        return User.query.filter_by(id=uid).one_or_none()
+
+    @staticmethod
     def lookup(email):
         """Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
