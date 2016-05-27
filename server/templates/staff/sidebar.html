@@ -12,12 +12,9 @@
         <li {% if request.endpoint == "admin.grading" %} class="active" {% endif %} >
           <a href="{{ url_for('.index') }}">
             <i class="fa fa-inbox"></i> <span>Grading</span> </i>
-            <span class="label label-primary pull-right">4</span>
+            <span class="label label-primary pull-right">0</span>
           </a>
-
         </li>
-
-
 
         <li class="header">Courses</li>
             {% for course in courses %}
@@ -43,6 +40,11 @@
                   <li>
                     <a href="{{ url_for('.enrollment', cid=course.id) }}">
                       <i class="fa fa-circle-o {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == course.id) %}text-yellow{% endif %}"></i> Enrollment
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('student.course', offering=course.offering) }}">
+                      <i class="fa fa-circle-o"></i> Student View
                     </a>
                   </li>
                 </ul>
@@ -75,16 +77,17 @@
         {% endif %}
 
 
-        <li class="header">Account</li>
-        <li><a href="https://cal-cs-61a-staff.github.io/ok/">
-            <i class="fa fa-book"></i> <span>Documentation</span></a>
-        </li>
+        <li class="header">Ok Information</li>
         <li><a href="{{ url_for('.client_version', name='ok-client') }}">
             <i class="fa fa-desktop"></i> <span>ok-client Version</span></a>
+        </li>
+        <li><a href="https://cal-cs-61a-staff.github.io/ok/">
+            <i class="fa fa-book"></i> <span>Documentation</span></a>
         </li>
         <li><a href="{{ url_for('student.index' )}}">
             <i class="fa fa-graduation-cap"></i> <span>Student Dashboard</span></a>
         </li>
+        <li class="header">Account</li>
         <li><a href="{{ url_for('auth.logout' )}}">
             <i class="fa fa-sign-out"></i> <span>Logout</span></a>
         </li>

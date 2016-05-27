@@ -665,7 +665,7 @@ class Version(Model):
     id = db.Column(db.Integer(), primary_key=True)
     # software name e.g. 'ok'
     name = db.Column(db.String(255), nullable=False, unique=True, index=True)
-    current_version = db.Column(db.String(255), nullable=False)
+    current_version = db.Column(db.String(255))
     download_link = db.Column(db.Text())
 
 

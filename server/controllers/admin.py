@@ -75,8 +75,9 @@ def index():
 @admin.route("/client/<name>", methods=['GET', 'POST'])
 @is_staff()
 def client_version(name):
-    version = Version.query.filter_by(name=name).one()
-
+    version = Version.query.filter_by(name=name).one_or_none()
+    if not version:
+        version = Version(name=name)
     form = forms.VersionForm(obj=version)
     if form.validate_on_submit():
         form.populate_obj(version)
