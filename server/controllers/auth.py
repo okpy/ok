@@ -86,7 +86,7 @@ login_manager = LoginManager()
 
 @login_manager.user_loader
 def load_user(userid):
-    return User.query.get(userid)
+    return User.get_by_id(userid)
 
 @login_manager.request_loader
 def load_user_from_request(request):
