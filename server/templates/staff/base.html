@@ -35,7 +35,7 @@
       <script src="{{ url_for('static', filename='lib/modernizr/modernizr.js') }}"></script>
 
     </head>
-    <body class="skin-yellow layout-fixed">
+    <body class="skin-black-light layout-fixed">
 
       <div class="wrapper">
         <header class="main-header">
@@ -64,12 +64,13 @@
       </div>
 
       <footer class="main-footer">
-          <div class="pull-right hidden-xs">
-            <b>Ok Server v3.X.X</b> <a href="http://github.com/Cal-CS-61A-Staff">Documentation</a>
-          </div>
           <strong> {{ current_user.email }}  </strong>
+          <div class="pull-right hidden-xs">
+            <b>Ok Server v3</b> <a href="http://github.com/Cal-CS-61A-Staff">Documentation</a>
+          </div>
         </footer>
       </div>
+
       {% assets "common_js" %}
           <script type="text/javascript" src="{{ ASSET_URL }}"></script>
       {% endassets %}
