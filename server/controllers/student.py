@@ -97,11 +97,11 @@ def assignment(name):
     data = {
         'course': assign.course,
         'assignment': assign,
-        'backups' : assign.backups(user_ids).limit(5).all(),
-        'subms' : assign.submissions(user_ids).limit(5).all(),
-        'final_submission' : fs,
-        'flagged' : fs and fs.flagged,
-        'group' : group,
+        'backups': assign.backups(user_ids).limit(5).all(),
+        'subms': assign.submissions(user_ids).limit(5).all(),
+        'final_submission': fs,
+        'flagged': fs and fs.flagged,
+        'group': group,
         'can_invite': can_invite,
         'can_remove': can_remove,
         'csrf_form': CSRFForm()
@@ -130,7 +130,7 @@ def code(name, submit, bid):
     assign = get_assignment(name)
     backup = Backup.query.get(bid)
     if not (backup and backup.submit == submit and
-                Backup.can(backup, current_user, "view")):
+            Backup.can(backup, current_user, "view")):
         abort(404)
     diff_type = request.args.get('diff', None)
     if diff_type not in (None, 'short', 'full'):
@@ -154,9 +154,8 @@ def code(name, submit, bid):
 @login_required
 def download(name, submit, bid, file):
     backup = Backup.query.get(bid)
-    assign = get_assignment(name)
     if not (backup and backup.submit == submit and
-                Backup.can(backup, current_user, "view")):
+            Backup.can(backup, current_user, "view")):
         abort(404)
     try:
         contents = backup.files()[file]
@@ -170,7 +169,6 @@ def download(name, submit, bid, file):
 @login_required
 def flag(name, bid):
     assign = get_assignment(name)
-    course = assign.course
     user_ids = assign.active_user_ids(current_user.id)
     flag = 'flag' in request.form
     next_url = request.form['next']

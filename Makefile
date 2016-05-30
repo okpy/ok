@@ -21,7 +21,7 @@ clean:
 	python manage.py clean
 
 lint:
-	flake8 --exclude=env .
+	flake8 --exclude=env,tests .
 
 test:
 	py.test --cov-report term-missing --cov=server tests/

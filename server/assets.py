@@ -5,6 +5,7 @@ common_css = Bundle(
         'css/helper.css',
         'css/main.css',
         'css/highlight.css',
+        'css/code.css',
         filters='cssmin',
     ),
     'lib/bootstrap/css/bootstrap.min.css',

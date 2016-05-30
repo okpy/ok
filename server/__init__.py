@@ -9,7 +9,8 @@ from flask_wtf.csrf import CsrfProtect
 
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
-from server import assets, converters, highlight, utils
+from server import assets, converters, utils
+from server.forms import CSRFForm
 from server.models import db
 from server.controllers.admin import admin
 from server.controllers.api import endpoints as api
@@ -36,7 +37,7 @@ def create_app(default_config_path=None):
 
     config_path = os.getenv('OK_SERVER_CONFIG', default_config_path)
     if config_path is None:
-        raise ValueError('No configuration file found. '
+        raise ValueError('No configuration file found'
             'Check that the OK_SERVER_CONFIG environment variable is set.')
     app.config.from_pyfile(config_path)
 
@@ -70,7 +71,8 @@ def create_app(default_config_path=None):
     # custom Jinja rendering
     app.jinja_env.globals.update({
         'utils': utils,
-        'debug': app.debug
+        'debug': app.debug,
+        'CSRFForm': CSRFForm
     })
 
     app.jinja_env.filters.update({

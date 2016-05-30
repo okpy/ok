@@ -12,6 +12,12 @@ Documentation
 ----------------
 Changes that improve the documentation are welcomed!
 
+Style Guide
+----------------
+Refer to [The Elements of Python Style](https://github.com/amontalenti/elements-of-python-style)
+
+The `make lint` command will check for common style issues.
+
 Branch Name Convention
 --------------------
 To add features to ok, please do the following:
@@ -29,7 +35,6 @@ Submitting Changes
 ----------------------
 - Make a pull request, which will get code-reviewed and merged.
 - Your pull request should include tests for the features developed.
-
 
 Additional Resources
 ------------------------

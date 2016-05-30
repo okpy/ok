@@ -16,7 +16,6 @@ API.py - /api/{version}/endpoints
     api.add_resource(UserAPI, '/v3/user')
 """
 
-import datetime
 import json
 from functools import wraps
 
@@ -27,7 +26,7 @@ from flask_restful import reqparse, fields, marshal_with
 from flask_restful.representations.json import output_json
 
 from server.extensions import cache
-from server.utils import encode_id
+from server.utils import encode_id, decode_id
 import server.models as models
 
 
@@ -89,6 +88,7 @@ def authenticate(func):
     """ Provide user object to API methods. Passes USER as a keyword argument
         to all protected API Methods.
     """
+    # TODO: Require API token for all requests to API.
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Public methods do not need authentication
@@ -104,7 +104,8 @@ def check_version(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         supplied = request.args.get('client_version')
-        client = request.args.get('client_name', 'ok') # ok-client doesn't send this right now
+        # ok-client doesn't send client_name right now
+        client = request.args.get('client_name', 'ok')
         current_version, download_link = get_current_version(client)
         if not supplied or supplied == current_version:
             return func(*args, **kwargs)
@@ -183,10 +184,25 @@ def make_backup(user, assignment_id, messages, submit):
     backup = models.Backup(submitter=user,
                            assignment_id=assignment_id, submit=submit)
     backup.messages = [models.Message(kind=k, contents=m)
-        for k, m in messages.items()]
+                       for k, m in messages.items()]
     models.db.session.add(backup)
     models.db.session.commit()
     return backup
+
+def make_score(user, backup, score, message, kind):
+    if not models.Backup.can(backup, user, 'grade'):
+        return
+    existing = models.Score.query.filter_by(backup=backup, kind=kind).first()
+    if existing:
+        existing.public = False
+        existing.archived = True
+
+    score = models.Score(grader_id=user.id, assignment=backup.assignment,
+                         backup=backup, score=score, message=message,
+                         kind=kind)
+    models.db.session.add(score)
+    models.db.session.commit()
+    return score
 
 
 class APISchema():
@@ -253,12 +269,10 @@ class BackupSchema(APISchema):
 
     def store_backup(self, user):
         args = self.parse_args()
-        # TODO Assignment Memcache.
         assignment_id = name_to_assign_id(args['assignment'])
         messages, submit = args['messages'], args['submit']
         backup = make_backup(user, assignment_id, messages, submit)
         return backup
-
 
 
 class ParticipationSchema(APISchema):
@@ -285,6 +299,34 @@ class VersionSchema(APISchema):
     get_fields = {
         'results': fields.List(fields.Nested(version_fields))
     }
+
+class ScoreSchema(APISchema):
+
+    post_fields = {
+        'success': fields.Boolean,
+        'message': fields.String
+    }
+
+    def __init__(self):
+        APISchema.__init__(self)
+        self.parser.add_argument('bid', type=str, required=True,
+                                 help='ID of submission')
+        self.parser.add_argument('kind', type=str, required=True,
+                                 help='Kind of score')
+        self.parser.add_argument('score', type=float, required=True,
+                                 help='Score')
+        self.parser.add_argument('message', type=str, required=True,
+                                 help='Score details')
+
+    def add_score(self, user):
+        args = self.parse_args()
+        backup = models.Backup.query.get(decode_id(args['bid']))
+        kind = args['kind'].lower().strip()
+        score, message = args['score'], args['message']
+        score = make_score(user, backup, score, message, kind)
+        if score:
+            return {'success': True, 'message': 'OK'}
+        return {'success': False, 'message': "Permission error"}
 
 
 # TODO: should be two classes, one for /backups/ and one for /backups/<int:key>/
@@ -342,6 +384,26 @@ class Enrollment(Resource):
             return True
         return resource == requester
 
+class Score(Resource):
+    """ Score creation.
+        Authenticated. Permissions: >= Staff
+        Used by: Autograder.
+    """
+    schema = ScoreSchema()
+    model = models.Score
+
+    @marshal_with(schema.post_fields)
+    def post(self, user):
+        # TODO: Ensure user is autograder.
+        score = self.schema.add_score(user)
+        if not score:
+            restful.abort(401)
+        return {
+            'email': current_user.email,
+            'success': True
+        }
+
+
 class Version(PublicResource):
     """ Current version of a client
     Permissions: World Readable
@@ -364,4 +426,5 @@ api.add_resource(v3Info, '/v3/')
 
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<int:key>/')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
+api.add_resource(Score, '/v3/score/')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')

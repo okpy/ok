@@ -23,7 +23,12 @@
         <header>
           <div class="header-bg">
             <div class="right col-md-5 col-sm-3">
-                <a href="{{ url_for('auth.logout') }}" class="header-text"><span>Logout</span></a>
+                <form method="POST" action="{{ url_for('auth.logout' )}}" role="form" class="pull-right">
+            <div style="display:none;"><input id="csrf_token" name="csrf_token" type="hidden" value="{{ csrf_token() }}"></div>
+              <button class="plain-btn" type="submit">
+                     <a class="header-text"><span>Logout</span></a>
+              </button>
+        </form>
                 <div class="header-text user-profile hidden-sm hidden-xs">
                   <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
                   <i class="fa fa-user"></i>

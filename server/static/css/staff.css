@@ -1,3 +1,11 @@
- .skin-yellow .sidebar-menu>li.default>a {
+.sidebar-menu>li.default>a {
       border-left-color: transparent;
+}
+
+.subcontent {
+    padding: 1em;
+}
+
+.list th, .list td {
+    padding: 1em;
 }

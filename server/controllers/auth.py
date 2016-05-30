@@ -140,8 +140,8 @@ def refresh_token(resp):
         return redirect(url_for("main.home"))
 
     refresh_file = {'access_token': resp['access_token'],
-     'refresh_token': resp['refresh_token'],
-     'expires_at': resp['expires_in']}
+                    'refresh_token': resp['refresh_token'],
+                    'expires_at': resp['expires_in']}
     response = make_response(pickle.dumps(refresh_file))
     response.headers['Content-Disposition'] = (
         'attachment; filename=ok_refresh')
@@ -174,10 +174,12 @@ def testing_login():
         abort(404)
 
     random_staff = utils.random_row(Enrollment.query.filter_by(role='staff'))
+    if random_staff:
+        random_staff = random_staff.user
     return render_template('testing-login.html',
         callback=url_for(".testing_authorized"),
         random_admin=utils.random_row(User.query.filter_by(is_admin=True)),
-        random_staff=random_staff.user,
+        random_staff=random_staff,
         random_user=utils.random_row(User.query))
 
 @auth.route('/testing-login/authorized/', methods=['POST'])
@@ -187,7 +189,7 @@ def testing_authorized():
     user = user_from_email(request.form['email'])
     return authorize_user(user)
 
-@auth.route("/logout/")
+@auth.route("/logout/", methods=['POST'])
 def logout():
     logout_user()
     session.pop('google_token', None)

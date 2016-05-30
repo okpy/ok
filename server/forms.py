@@ -1,14 +1,13 @@
 from flask_wtf import Form
-from wtforms import StringField, DateTimeField, BooleanField, IntegerField, \
-    SelectField, TextAreaField, SubmitField, HiddenField, validators
-
-from wtforms.widgets.core import HTMLString, html_params, escape
+from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
+                     SelectField, TextAreaField, DecimalField, HiddenField,
+                     validators)
 from wtforms.fields.html5 import EmailField
 
 import datetime as dt
 # from wtforms.ext.sqlalchemy.orm import model_form
 from .models import Assignment
-from server.constants import VALID_ROLES
+from server.constants import VALID_ROLES, GRADE_TAGS
 
 import pytz
 import csv
@@ -82,16 +81,16 @@ class EnrollmentForm(BaseForm):
     secondary = StringField(u'Secondary Auth (e.g Username)',
                             validators=[validators.optional()])
     section = StringField(u'Section',
-                            validators=[validators.optional()])
+                          validators=[validators.optional()])
     role = SelectField(u'Role',
                        choices=[(r, r.capitalize()) for r in VALID_ROLES])
 
 
 class VersionForm(BaseForm):
     current_version = EmailField(u'Current Version',
-                        validators=[validators.required()])
+                                 validators=[validators.required()])
     download_link = StringField(u'Download Link',
-                        validators=[validators.required(), validators.url()])
+                                validators=[validators.required(), validators.url()])
 
 
 class BatchEnrollmentForm(BaseForm):
@@ -128,3 +127,16 @@ class BatchEnrollmentForm(BaseForm):
 
 class CSRFForm(BaseForm):
     pass
+
+class GradeForm(BaseForm):
+    score = DecimalField('Score', validators=[validators.required()])
+    message = TextAreaField('Message', validators=[validators.required()])
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
+                       validators=[validators.required()])
+
+class CompositionScoreForm(GradeForm):
+    score = SelectField('Composition Score',
+                        choices=[('0', '0'), ('1', '1'), ('2', '2')],
+                        validators=[validators.required()])
+    kind = HiddenField('Score', default="composition",
+                       validators=[validators.required()])

@@ -1,0 +1,139 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+{% import 'staff/_helpers.html' as helpers %}
+
+{% block title %} Grading Queue {% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        Grading Queue
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for(".grading_tasks") }}"><i class="fa fa-inbox"></i> Your Grading Queue </a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible">
+                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                  {{message}}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Default box -->
+    <div class="row">
+        <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-aqua"><i class="fa fa-inbox"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Total Tasks</span>
+              <span class="info-box-number">{{ queue.total }}</span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+        </div>
+        <!-- /.col -->
+        <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-green"><i class="fa fa-files-o"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Remaining</span>
+              <span class="info-box-number"> {{ remaining }}</span>
+              <div class="progress">
+                 <div class="progress-bar bg-green" style="width: {{ percent_left }}%"></div>
+              </div>
+               <span class="progress-description">
+                   {% if remaining == 0 %}
+                    All done!
+                   {% else %}
+                    Only {{ remaining }} to go!
+                   {% endif %}
+              </span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+        </div>
+        <!-- /.col -->
+  </div>
+
+<!-- Content Box -->
+<div class="box">
+    <form action="" method="GET">
+        <div class="box-header">
+            <h3 class="box-title"><span>Queue</span></h3>
+            <ul class="pagination pagination-sm no-margin pull-right">
+                {{ helpers.paginate(queue, request.endpoint, page) }}
+            </ul>
+
+        </div>
+    </form>
+
+    <!-- /.box-header -->
+    <div class="box-body table-responsive no-padding">
+        <table class="table table-hover">
+            <tbody>
+                <tr>
+                    <th>Assignment</th>
+                    <th>Asignee</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                {%- for item in queue.items %}
+                <tr>
+                    {% if item.kind == 'composition' %}
+                        {% set grading_view = '.composition'  %}
+                    {% else %}
+                        {% set grading_view = '.grading' %}
+                    {% endif %}
+                    <td> {{ item.assignment.name }} </td>
+                    <td>  {{ item.grader.email }} </td>
+                    {% if item.score_id %}
+                        <td> <span class="label label-success"> Complete - {{ item.score.score }} </span>
+                    {% else %}
+                        <td> <span class="label label-warning"> Incomplete </span> </td>
+                    {% endif %}
+                    <td>
+                    {% if item.score_id %}
+                    <a href="{{ url_for(grading_view, bid=item.backup.id, diff='short') }}" class="btn btn-block btn-info btn-flat">
+                        Regrade
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for(grading_view, bid=item.backup.id, diff='short') }}" class="btn btn-block btn-primary btn-flat">
+                        Grade
+                    </a>
+                    {% endif %}
+
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody></table>
+        </div>
+
+        <!-- /.box-body -->
+        <div class="box-footer">
+            <div class="pull-left">
+                <h5 class="box-title"><span> Total: {{ queue.total }} </span></h3>
+            </div>
+
+            <ul class="pagination pagination-sm no-margin pull-right">
+                {{ helpers.paginate(queue, request.endpoint, page) }}
+            </ul>
+        </div>
+    </div>
+    <!-- /.box -->
+  <!-- </section> do not close the content section -->
+
+  <!-- </body> do not close body in template-->
+{% endblock %}

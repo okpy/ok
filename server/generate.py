@@ -7,28 +7,32 @@ import string
 import loremipsum
 import names
 
-from server.models import db, User, Course, Assignment, Enrollment, \
-    Backup, Message, Group, Comment, Version
+from server.models import (db, User, Course, Assignment, Enrollment,
+                           Backup, Message, Comment, Version, Score,
+                           GradingTask)
 
 original_file = open('tests/files/fizzbuzz_before.py').read()
 modified_file = open('tests/files/fizzbuzz_after.py').read()
 
+
 def weighted_choice(choices):
     # http://stackoverflow.com/a/3679747
-   total = sum(w for c, w in choices)
-   r = random.uniform(0, total)
-   upto = 0
-   for c, w in choices:
-      if upto + w >= r:
-         return c
-      upto += w
-   assert False, "Shouldn't get here"
+    total = sum(w for c, w in choices)
+    r = random.uniform(0, total)
+    upto = 0
+    for c, w in choices:
+        if upto + w >= r:
+            return c
+        upto += w
+    assert False, "Shouldn't get here"
 
 def gen_bool(p=0.5):
     return random.random() < p
 
+
 def gen_maybe(value, p=0.5):
     return value if gen_bool(p) else None
+
 
 def gen_list(gen, n, nonempty=False):
     if nonempty:
@@ -37,12 +41,14 @@ def gen_list(gen, n, nonempty=False):
         length = random.randrange(n)
     return [gen() for _ in range(length)]
 
+
 def gen_unique(gen, n, attr):
     generated = collections.OrderedDict()
     while len(generated) < n:
         v = gen()
         generated[getattr(v, attr)] = v
     return generated.values()
+
 
 def gen_markdown():
     def gen_text():
@@ -75,6 +81,7 @@ def gen_markdown():
 
     return '\n\n'.join(gen_list(gen_block, 4, nonempty=True))
 
+
 def gen_user():
     real_name = names.get_full_name()
     first_name, last_name = real_name.lower().split(' ')
@@ -87,6 +94,7 @@ def gen_user():
             random.randrange(10) if gen_bool() else '',
             random.choice(['berkeley.edu', 'gmail.com'])),
         is_admin=gen_bool(0.05))
+
 
 def gen_course():
     return Course(
@@ -101,6 +109,7 @@ def gen_course():
             random.randrange(100),
             random.choice(['', 'A'])),
         active=gen_bool(0.3))
+
 
 def gen_assignment(course):
     if gen_bool(0.5):
@@ -132,11 +141,12 @@ def gen_assignment(course):
         revisions_allowed=gen_bool(0.3),
         files={'fizzbuzz.py': original_file})
 
+
 def gen_enrollment(user, course):
     role = weighted_choice([
-        ('student', 800),
-        ('grader', 25),
-        ('staff', 25),
+        ('student', 100),
+        ('grader', 2),
+        ('staff', 20),
         ('instructor', 2),
     ])
     sid = ''.join(random.choice(string.digits) for _ in range(8))
@@ -152,6 +162,7 @@ def gen_enrollment(user, course):
         class_account=gen_maybe(class_account, 0.4),
         section=gen_maybe(section, 0.4))
 
+
 def gen_backup(user, assignment):
     messages = {
         'file_contents': {
@@ -165,12 +176,13 @@ def gen_backup(user, assignment):
         messages['file_contents']['submit'] = ''
     backup = Backup(
         created=assignment.due_date -
-            datetime.timedelta(seconds=random.randrange(-100000, 100)),
+        datetime.timedelta(seconds=random.randrange(-100000, 100)),
         submitter_id=user.id,
         assignment_id=assignment.id,
         submit=submit)
     backup.messages = [Message(kind=k, contents=m) for k, m in messages.items()]
     return backup
+
 
 def gen_comment(backup):
     created = datetime.datetime.now() - datetime.timedelta(minutes=random.randrange(100))
@@ -186,6 +198,33 @@ def gen_comment(backup):
         line=line,
         message=gen_markdown())
 
+def gen_score(backup, admin, kind="autograder"):
+    created = datetime.datetime.now() - datetime.timedelta(minutes=random.randrange(100))
+    if kind == "composition":
+        score = random.randrange(2)
+    else:
+        score = random.uniform(0, 100)
+
+    return Score(
+        created=created,
+        backup_id=backup.id,
+        assignment_id=backup.assignment.id,
+        grader_id=admin.id,
+        kind=kind,
+        score=score,
+        message=loremipsum.get_sentence())
+
+
+def gen_queue(backup, grader):
+    created = datetime.datetime.now() - datetime.timedelta(minutes=random.randrange(100))
+    return GradingTask(
+        created=created,
+        backup=backup,
+        assignment=backup.assignment,
+        course=backup.assignment.course,
+        grader=grader
+    )
+
 def seed_users():
     print('Seeding users...')
     users = gen_unique(gen_user, 30, 'email')
@@ -194,16 +233,19 @@ def seed_users():
 
 def seed_courses():
     print('Seeding courses...')
-    courses = gen_unique(gen_course, 3, 'offering')
+    courses = gen_unique(gen_course, 4, 'offering')
     db.session.add_all(courses)
     db.session.commit()
+
 
 def seed_assignments():
     print('Seeding assignments...')
     for course in Course.query.all():
-        assignments = gen_unique(functools.partial(gen_assignment, course), 5, 'name')
+        assignments = gen_unique(functools.partial(
+            gen_assignment, course), 5, 'name')
         db.session.add_all(assignments)
     db.session.commit()
+
 
 def seed_enrollments():
     print('Seeding enrollments...')
@@ -214,13 +256,16 @@ def seed_enrollments():
             db.session.add(gen_enrollment(user, course))
     db.session.commit()
 
+
 def seed_backups():
     for user in User.query.all():
         print('Seeding backups for user {}...'.format(user.email))
         for assignment in Assignment.query.all():
-            backups = gen_list(functools.partial(gen_backup, user, assignment), 30)
+            backups = gen_list(functools.partial(
+                gen_backup, user, assignment), 30)
             db.session.add_all(backups)
         db.session.commit()
+
 
 def seed_versions():
     print('Seeding version...')
@@ -228,11 +273,35 @@ def seed_versions():
     ok = Version(name='ok-client', current_version='v1.5.4', download_link=url)
     db.session.add(ok)
 
+
 def seed_comments():
     print('Seeding comments...')
     for backup in Backup.query.filter_by(submit=True).all():
         comments = gen_list(functools.partial(gen_comment, backup), 6)
         db.session.add_all(comments)
+    db.session.commit()
+
+def seed_scores():
+    print('Seeding scores...')
+    admin = User.query.filter_by(is_admin=True).first()
+    for backup in Backup.query.filter_by(submit=True).all():
+        if random.choice([True, False]):
+            score = gen_score(backup, admin)
+            db.session.add(score)
+    db.session.commit()
+
+def seed_queues():
+    print('Seeding queues...')
+    for assign in Assignment.query.filter(Assignment.id % 2 == 0):
+        graders = assign.course.staff()
+        if not graders:
+            print("No staff for ", assign.course)
+            continue
+        query = Backup.query.filter_by(submit=True, assignment=assign)
+        for backup in query.all():
+            grader = random.choice(graders)
+            task = gen_queue(backup, grader)
+            db.session.add(task)
     db.session.commit()
 
 def seed():
@@ -245,5 +314,6 @@ def seed():
     seed_comments()
     # TODO: groups
     # TODO: submission flagging
-    # TODO: scores
+    seed_queues()
+    seed_scores()
     seed_versions()

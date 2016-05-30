@@ -30,3 +30,19 @@ td.slim-cell {
 .text-center {
     text-align: center;
 }
+
+.plain-btn {
+    background-color: Transparent;
+    background-repeat:no-repeat;
+    border: none;
+    cursor:pointer;
+    overflow: hidden;
+    outline:none;
+}
+
+.inline {
+    display: inline;
+}
+.pace {
+    display: none;
+}

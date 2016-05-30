@@ -1,15 +1,17 @@
-from datetime import datetime
-
-from flask import Blueprint, render_template, flash, redirect, url_for, abort, request
-
-from flask.ext.login import login_required, current_user
+import collections
 from functools import wraps
-import pytz
-import csv
 
-from server.models import User, Course, Assignment, Enrollment, Version, db
-from server.constants import STAFF_ROLES, VALID_ROLES, STUDENT_ROLE
+from flask import (Blueprint, render_template, flash, redirect,
+                   url_for, abort, request)
+
+from flask.ext.login import current_user
+import pytz
+
+from server.models import (User, Course, Assignment, Enrollment, Version,
+                           GradingTask, Backup, Score, db)
+from server.constants import STAFF_ROLES, STUDENT_ROLE
 import server.forms as forms
+import server.highlight as highlight
 
 admin = Blueprint('admin', __name__)
 
@@ -17,6 +19,7 @@ admin = Blueprint('admin', __name__)
 def convert_to_pacific(date):
     # TODO Move to UTILS
     return date.replace(tzinfo=pytz.utc)
+
 
 def is_staff(course_arg=None):
     """ A decorator for routes to ensure that user is a member of
@@ -71,6 +74,120 @@ def index():
         return redirect(url_for(".course_assignments", cid=courses[0].id))
     return render_template('staff/index.html', courses=courses)
 
+@admin.route('/grading')
+@is_staff()
+def grading_tasks(username=None):
+    courses, current_course = get_courses()
+    page = request.args.get('page', 1, type=int)
+    queue = (GradingTask.query
+                        .filter_by(grader=current_user)
+                        .options(db.joinedload('assignment'))
+                        .order_by(GradingTask.score_id.desc())
+                        .order_by(GradingTask.created.desc())
+                        .paginate(page=page, per_page=20))
+    remaining = (GradingTask.query
+                            .filter_by(grader=current_user, score_id=None)
+                            .count())
+    percent_left = (1-(remaining/max(1, queue.total))) * 100
+    return render_template('staff/grading/queue.html', courses=courses,
+                           queue=queue, remaining=remaining,
+                           percent_left=percent_left)
+
+def grading_view(backup, form=None):
+    """ General purpose grading view. Used by routes."""
+    courses, current_course = get_courses()
+    assign = backup.assignment
+    diff_type = request.args.get('diff', None)
+    if diff_type not in (None, 'short', 'full'):
+        diff_type = None
+    if not assign.files and diff_type:
+        diff_type = None
+
+    # sort comments by (filename, line)
+    comments = collections.defaultdict(list)
+    for comment in backup.comments:
+        comments[(comment.filename, comment.line)].append(comment)
+
+    # highlight files and add comments
+    files = highlight.diff_files(assign.files, backup.files(), diff_type)
+    for filename, lines in files.items():
+        for line in lines:
+            line.comments = comments[(filename, line.line_after)]
+
+    group = [User.query.get(o) for o in backup.owners()]
+    scores = [s for s in backup.scores if not s.archived]
+    task = backup.grading_tasks
+    if task:
+        # Choose the first grading_task
+        task = task[0]
+
+    return render_template(
+        'staff/grading/code.html', courses=courses, assignment=assign,
+        backup=backup, group=group, scores=scores, files=files,
+        diff_type=diff_type, task=task, form=form
+    )
+
+@admin.route('/grading/<hashid:bid>')
+@is_staff()
+def grading(bid):
+    backup = Backup.query.get(bid)
+    if not (backup and Backup.can(backup, current_user, "grade")):
+        abort(404)
+    form = forms.GradeForm()
+    return grading_view(backup, form=form)
+
+@admin.route('/composition/<hashid:bid>')
+@is_staff()
+def composition(bid):
+    backup = Backup.query.get(bid)
+    if not (backup and Backup.can(backup, current_user, "grade")):
+        abort(404)
+    form = forms.CompositionScoreForm()
+    existing = Score.query.filter_by(backup=backup, kind="composition").first()
+    if existing:
+        form.kind.data = "composition"
+        form.message.data = existing.message
+        form.score.data = existing.score
+    return grading_view(backup, form=form)
+
+@admin.route('/grading/<hashid:bid>/grade', methods=['POST'])
+@is_staff()
+def grade(bid):
+    """ Used as a form submission endpoint. """
+    backup = Backup.query.get(bid)
+    if not backup:
+        abort(404)
+    if not Backup.can(backup, current_user, 'grade'):
+        flash("You do not have permission to score this assignment.", "warning")
+        abort(401)
+
+    form = forms.GradeForm()
+    score_kind = form.kind.data.strip().lower()
+    if score_kind == "composition":
+        form = forms.CompositionScoreForm()
+
+    if not form.validate_on_submit():
+        return grading_view(backup, form=form)
+
+    # Archive old scores with the same kind
+    existing = Score.query.filter_by(backup=backup, kind=score_kind).first()
+    if existing:
+        existing.public = False
+        existing.archived = True
+
+    model = Score(backup=backup, grader=current_user,
+                  assignment_id=backup.assignment_id)
+    form.populate_obj(model)
+    db.session.add(model)
+    db.session.commit()
+
+    if request.args.get('queue'):
+        # TODO: Find next submission in queue and redirect to that.
+        pass
+    flash("Added {} score.".format(model.kind), "success")
+    route = ".composition" if score_kind == "composition" else ".grading"
+    return redirect(url_for(route, bid=backup.id))
+
 
 @admin.route("/client/<name>", methods=['GET', 'POST'])
 @is_staff()
@@ -89,15 +206,15 @@ def client_version(name):
         return redirect(url_for(".client_version", name=name))
 
     return render_template('staff/client_version.html',
-                            version=version, form=form)
+                           version=version, form=form)
 
 
 @admin.route("/course/<int:cid>")
 @is_staff(course_arg='cid')
 def course(cid):
     return redirect(url_for(".course_assignments", cid=cid))
-    #courses, current_course = get_courses(cid)
-    #return render_template('staff/course/index.html',
+    # courses, current_course = get_courses(cid)
+    # return render_template('staff/course/index.html',
     #                       courses=courses, current_course=current_course)
 
 
@@ -119,12 +236,10 @@ def course_assignments(cid):
 @is_staff(course_arg='cid')
 def new_assignment(cid):
     courses, current_course = get_courses(cid)
-    # TODO  Form Creation
     form = forms.AssignmentForm()
     if form.validate_on_submit():
         model = Assignment(course_id=cid, creator_id=current_user.id)
         form.populate_obj(model)
-        # TODO CONVERT TO UTC from PST.
         db.session.add(model)
         db.session.commit()
 
@@ -146,8 +261,6 @@ def assignment(cid, aid):
     assgn.lock_date = convert_to_pacific(assgn.lock_date)
     form = forms.AssignmentUpdateForm(obj=assgn)
 
-    # TODO : Actually save updates.
-
     if assgn.course != current_course:
         return abort(401)
 
@@ -168,7 +281,8 @@ def enrollment(cid):
     if single_form.validate_on_submit():
         email, role = single_form.email.data, single_form.role.data
         Enrollment.enroll_from_form(cid, single_form)
-        flash("Added {email} as {role}".format(email=email, role=role), "success")
+        flash("Added {email} as {role}".format(
+            email=email, role=role), "success")
 
     query = request.args.get('query', '').strip()
     page = request.args.get('page', 1, type=int)
@@ -178,15 +292,19 @@ def enrollment(cid):
         find_student = User.query.filter_by(email=query)
         student = find_student.first()
         if student:
-            students = Enrollment.query.filter_by(course_id=cid, role=STUDENT_ROLE,
-                user_id=student.id).paginate(page=page, per_page=1)
+            students = (Enrollment.query
+                        .filter_by(course_id=cid, role=STUDENT_ROLE,
+                                   user_id=student.id)
+                        .paginate(page=page, per_page=1))
         else:
             flash("No student found with email {}".format(query), "warning")
     if not students:
-        students = Enrollment.query.filter_by(course_id=cid,
-                role=STUDENT_ROLE).paginate(page=page, per_page=5)
+        students = (Enrollment.query
+                    .filter_by(course_id=cid, role=STUDENT_ROLE)
+                    .paginate(page=page, per_page=5))
+
     staff = Enrollment.query.filter(Enrollment.course_id == cid,
-            Enrollment.role.in_(STAFF_ROLES)).all()
+                                    Enrollment.role.in_(STAFF_ROLES)).all()
 
     return render_template('staff/course/enrollment.html',
                            enrollments=students, staff=staff, query=query,

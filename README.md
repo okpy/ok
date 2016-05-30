@@ -74,6 +74,13 @@ Projects using ok.py
 Developer Guidelines
 --------------------
 
+See CONTRIBUTING.md
+
+Python Style Guide
+-------------------
+Refer to [The Elements of Python Style](https://github.com/amontalenti/elements-of-python-style)
+
+
 To add features to ok, please do the following:
 
 - Follow the Installation instructions in order to install the ok server.

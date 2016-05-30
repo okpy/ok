@@ -127,6 +127,9 @@ class User(Model, UserMixin):
     def identifier(self):
         return self.name or self.email
 
+    def num_grading_tasks(self):
+        return GradingTask.query.filter_by(grader=self, score_id=None).count()
+
     @staticmethod
     def get_by_id(uid):
         return User.query.filter_by(id=uid).one_or_none()
@@ -170,6 +173,11 @@ class Course(Model):
             course=self
         ).count() > 0
 
+    def staff(self):
+        return [e.user for e in Enrollment.query.filter(
+            Enrollment.role.in_(STAFF_ROLES),
+            Enrollment.course == self
+        ).all()]
 
 class Assignment(Model):
     """Assignments are particular to courses and have unique names.
@@ -298,7 +306,8 @@ class Enrollment(Model):
     user_id = db.Column(db.ForeignKey("user.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
-    role = db.Column(db.Enum(*VALID_ROLES, name='role'), default=STUDENT_ROLE, nullable=False)
+    role = db.Column(db.Enum(*VALID_ROLES, name='role'),
+                     default=STUDENT_ROLE, nullable=False)
     sid = db.Column(db.String(255))
     class_account = db.Column(db.String(255))
     section = db.Column(db.String(255))
@@ -678,7 +687,7 @@ class Comment(Model):
     """
     id = db.Column(db.Integer(), primary_key=True)
     updated = db.Column(db.DateTime, onupdate=db.func.now())
-    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    backup_id = db.Column(db.ForeignKey("backup.id"), index=True, nullable=False)
     author_id = db.Column(db.ForeignKey("user.id"), nullable=False)
 
     filename = db.Column(db.String(255), nullable=False)
@@ -703,8 +712,10 @@ class Score(Model):
     score = db.Column(db.Float, nullable=False)
     message = db.Column(mysql.MEDIUMTEXT)
     public = db.Column(db.Boolean, default=True)
+    archived = db.Column(db.Boolean, default=False)
 
     backup = db.relationship("Backup")
+    grader = db.relationship("User")
     assignment = db.relationship("Assignment")
 
     @classmethod
@@ -714,4 +725,27 @@ class Score(Model):
         course = obj.assignment.course
         if action == "get":
             return obj.backup.can_view(user, course)
-        return user.is_admin or user.is_enrolled(course.id, STAFF_ROLES)
+        return user.is_enrolled(course.id, STAFF_ROLES)
+
+class GradingTask(Model):
+    """Each task represent a single submission assigned to a grader."""
+    id = db.Column(db.Integer(), primary_key=True)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), index=True,
+                              nullable=False)
+    kind = db.Column(db.String(), default="composition")
+    backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    course_id = db.Column(db.ForeignKey("course.id"))
+    grader_id = db.Column(db.ForeignKey("user.id"), index=True)
+    score_id = db.Column(db.ForeignKey("score.id"))
+
+    # TODO: Not sure if this will be useful.
+
+    backup = db.relationship("Backup", backref="grading_tasks")
+    assignment = db.relationship("Assignment")
+    grader = db.relationship("User")
+    course = db.relationship("Course")
+
+    @hybrid_property
+    def is_complete(self):
+        return self.score_id is not None
+        # return self.kind in [s.tag for s in self.backup.scores]

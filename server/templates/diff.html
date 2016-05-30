@@ -6,7 +6,8 @@
 {% macro render_comment(comment) %}
   <div class="comment"
     data-id="{{ utils.encode_id(comment.id) }}"
-    data-message="{{ comment.message }}">
+    data-message="{{ comment.message }}"
+    data-no-instant>
     <div class="comment-header clearfix">
       <div class="comment-author">
         {{ comment.author.email }} commented {{ utils.natural_time(comment.created) }}
@@ -52,8 +53,8 @@
         <tr>
           <th class="source-file-header" colspan=3>
               <div class="source-file-name fixed-width-font">{{ filename }}</div>
-              <a href="{{ url_for('.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
-              class="no-dash button-small source-file-download">
+              <a href="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
+              class="no-dash dl-button source-file-download">
                   <i class="fa fa-download"></i> Download
               </a>
           </th>

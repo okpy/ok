@@ -16,14 +16,16 @@ WTForms>=2.0,<3.0
 # Flask Extensions
 Flask-Assets==0.11
 Flask-Cache==0.13.1
-Flask-DebugToolbar==0.10.0
 Flask-Login==0.3.2
 Flask-OAuthlib==0.9.2
 Flask-WTF==0.12
 Flask-RESTful==0.3.5
-Flask-Script==2.0.5
 Flask-Testing==0.4.2
 Flask-RQ==0.2
+
+# Development
+Flask-DebugToolbar==0.10.0
+Flask-Script==2.0.5
 
 # Flask DB Extensions
 Flask-SQLAlchemy==2.1
