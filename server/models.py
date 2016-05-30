@@ -2,7 +2,6 @@ from werkzeug.exceptions import BadRequest
 
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import UserMixin
-from flask.ext.cache import Cache
 
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
 from sqlalchemy.dialects import mysql
@@ -19,8 +18,8 @@ from markdown import markdown
 import pytz
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
-
-cache = Cache()
+from server.extensions import cache
+from server.utils import encode_id
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -101,6 +100,13 @@ class Model(db.Model):
             return True
         return False
 
+    @hybrid_property
+    def export(self):
+        """ CSV export data. """
+        if not hasattr(self, 'export_items'):
+            return {}
+        return {k: v for k, v in self.as_dict().items() if k in self.export_items}
+
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
@@ -132,7 +138,14 @@ class User(Model, UserMixin):
 
     @staticmethod
     def get_by_id(uid):
-        return User.query.filter_by(id=uid).one_or_none()
+        return User.query.get(uid)
+
+    @staticmethod
+    @cache.memoize(1000)
+    def email_by_id(uid):
+        user = User.query.get(uid)
+        if user:
+            return user.email
 
     @staticmethod
     def lookup(email):
@@ -202,6 +215,26 @@ class Assignment(Model):
     autograding_key = db.Column(db.String(255))
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
+
+    @classmethod
+    def can(cls, obj, user, action):
+        if user.is_admin:
+            return True
+        if action == "view":
+            return user.is_authenticated()
+        return user.is_enrolled(obj.course.id, STAFF_ROLES)
+
+    @staticmethod
+    @cache.memoize(1000)
+    def assignment_stats(assign_id):
+        assignment = Assignment.query.get(assign_id)
+        base_query = Backup.query.filter_by(assignment=assignment)
+        stats = {
+            'submissions': base_query.filter_by(submit=True).count(),
+            'backups': base_query.count(),
+            'groups': Group.query.filter_by(assignment=assignment).count()
+        }
+        return stats
 
     @hybrid_property
     def active(self):
@@ -296,7 +329,6 @@ class Assignment(Model):
         if backup:
             backup.flagged = False
 
-
 class Enrollment(Model):
     __tablename__ = 'enrollment'
     __table_args__ = (
@@ -314,6 +346,8 @@ class Enrollment(Model):
 
     user = db.relationship("User", backref="participations")
     course = db.relationship("Course", backref="participations")
+
+    export_items = ('sid', 'class_account', 'section')
 
     def has_role(self, course, role):
         if self.course != course:
@@ -418,6 +452,8 @@ class Backup(Model):
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
     v2id = db.Column(db.BigInteger)
 
+    extension = db.Column(db.Boolean(), default=False)
+
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
@@ -441,9 +477,28 @@ class Backup(Model):
                 return True
         return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
 
+    @hybrid_property
+    def is_late(self):
+        """ Check for manual extension before checking due date.
+        """
+        if self.extension:
+            return False
+        return self.created > self.assignment.due_date
+
     def owners(self):
-        """ Returns a set of user ids in the same group as the submitter."""
+        """ Retrurn a set of user ids in the same group as the submitter."""
         return self.assignment.active_user_ids(self.submitter_id)
+
+    def enrollment_info(self):
+        """ Return enrollment info of users in this group.
+        """
+        owners = self.owners()
+        course_id = self.assignment.course_id
+        submitters = (Enrollment.query.options(db.joinedload(Enrollment.user))
+                                .filter(Enrollment.user_id.in_(owners))
+                                .filter(Enrollment.course_id == course_id)
+                                .all())
+        return submitters
 
     def files(self):
         """Return a dictionary of filenames to contents."""
@@ -717,6 +772,22 @@ class Score(Model):
     backup = db.relationship("Backup")
     grader = db.relationship("User")
     assignment = db.relationship("Assignment")
+
+    export_items = ('assignment_id', 'kind', 'score', 'message',
+                    'backup_id', 'grader')
+
+    @hybrid_property
+    def export(self):
+        """ CSV export data. Overrides Model.export """
+        data = self.as_dict()
+        data['backup_id'] = encode_id(self.backup_id)
+        data['grader'] = User.email_by_id(self.grader_id)
+        return {k: v for k, v in data.items() if k in self.export_items}
+
+    @hybrid_property
+    def students(self):
+        """ The users to which this score applies. """
+        return [User.query.get(owner) for owner in self.backup.owners()]
 
     @classmethod
     def can(self, obj, user, action):

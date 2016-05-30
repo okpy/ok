@@ -32,7 +32,7 @@
 
                 <div class="info-box-content">
                   <span class="info-box-text">Submissions</span>
-                  <span class="info-box-number">TBD</span>
+                  <span class="info-box-number"> {{ stats['submissions'] }}</span>
                 </div>
                 <!-- /.info-box-content -->
               </div>
@@ -45,7 +45,7 @@
 
                 <div class="info-box-content">
                   <span class="info-box-text">Backups</span>
-                  <span class="info-box-number">TBD</span>
+                  <span class="info-box-number"> {{ stats['backups'] }} </span>
                 </div>
                 <!-- /.info-box-content -->
               </div>
@@ -59,7 +59,7 @@
                   <div class="col-md-12">
                     <div class="box">
                       <div class="box-header with-border">
-                        <h3 class="box-title">Statistics</h3>
+                        <h3 class="box-title">Info</h3>
                         <div class="box-tools pull-right">
                           <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
                           </button>
@@ -69,36 +69,23 @@
                       <div class="box-body">
                         <!-- .row --->
                         <div class="row">
-                          <div class="col-sm-3 col-xs-6">
+                          <div class="col-sm-4 col-xs-4">
                             <div class="description-block border-right">
-                              <h5 class="description-header">TBD</h5>
-                              <span class="description-text">Submissions</span>
+                              <h5 class="description-header"> {{ assignment.due_date }} </h5>
+                              <span class="description-text">Due Date</span>
                             </div>
-                            <!-- /.description-block -->
                           </div>
-                          <!-- /.col -->
-                          <div class="col-sm-3 col-xs-6">
+                          <div class="col-sm-4 col-xs-4">
                             <div class="description-block border-right">
-                              <h5 class="description-header">TBD</h5>
-                              <span class="description-text">Backups</span>
+                                <h5 class="description-header"> {{ assignment.lock_date }} </h5>
+                                <span class="description-text">Lock Date</span>
                             </div>
-                            <!-- /.description-block -->
                           </div>
-                          <!-- /.col -->
-                          <div class="col-sm-3 col-xs-6">
-                            <div class="description-block border-right">
-                              <h5 class="description-header">TBD</h5>
-                              <span class="description-text">Students with Submissions</span>
-                            </div>
-                            <!-- /.description-block -->
-                          </div>
-                          <!-- /.col -->
-                          <div class="col-sm-3 col-xs-6">
+                          <div class="col-sm-4 col-xs-4">
                             <div class="description-block">
-                              <h5 class="description-header">TBD</h5>
+                              <h5 class="description-header">{{ stats['groups'] }}</h5>
                               <span class="description-text">Groups</span>
                             </div>
-                            <!-- /.description-block -->
                           </div>
                         </div>
                         <!-- /.row -->
@@ -107,14 +94,30 @@
                       </div>
                       <!-- ./box-body -->
                       <div class="box-footer">
-                        <div class="row margin">
-                          <p>Search Submissions</p>
-                            <div class="input-group margin">
-                              <input type="text" placeholder="Student Email" class="form-control disabled">
-                              <span class="input-group-btn">
-                                <button type="button" class="btn btn-info btn-flat disabled">Search</button>
-                              </span>
+                        <div class="row">
+                            <div class="col-sm-4 col-xs-1">
+                                &nbsp;
                             </div>
+                            <div class="col-sm-4 col-xs-4">
+                                <div class="btn-group">
+                                  <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
+                                        <i class="fa fa-download"></i> Download Scores
+                                  </a>
+                                  <button type="button" class="btn btn-info btn-flat"><i class="fa fa-search"></i> Search </button>
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-xs-1">
+                                &nbsp;
+                            </div>
+
+                            <!-- <div class="col-sm-8 col-xs-8">
+                                <div class="input-group margin">
+                                  <input type="text" placeholder="Student Email" class="form-control disabled">
+                                  <span class="input-group-btn">
+                                    <button type="button" class="btn btn-info btn-flat disabled">Search</button>
+                                  </span>
+                                </div>
+                            </div> -->
                         </div>
                       </div>
                       <!-- /.box-footer -->

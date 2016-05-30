@@ -9,11 +9,11 @@ from hashids import Hashids
 import humanize
 from premailer import transform
 import sendgrid
-from werkzeug.routing import BaseConverter, ValidationError
 
 from server.extensions import cache
 
 sg = sendgrid.SendGridClient(os.getenv('SENDGRID_API_KEY'), None, raise_errors=True)
+logger = logging.getLogger(__name__)
 
 # ID hashing configuration.
 # DO NOT CHANGE ONCE THE APP IS PUBLICLY AVAILABLE. You will break every
@@ -60,7 +60,7 @@ def invite_email(member, recipient, assignment):
     link = url_for('student.assignment', name=assignment.name, _external=True)
     template = 'email/invite.html'
 
-    send_email(recipient.email, subject, text,template,
+    send_email(recipient.email, subject, text, template,
                link_text=link_text, link=link)
 
 def send_email(to, subject, body, template='email/notification.html',
@@ -71,7 +71,7 @@ def send_email(to, subject, body, template='email/notification.html',
     if not link:
         link = url_for('student.index', _external=True)
     html = render_template(template, subject=subject, body=body,
-       link=link, link_text=link_text)
+        link=link, link_text=link_text)
     message = sendgrid.Mail(
         to=to,
         from_name="Okpy.org",
@@ -83,6 +83,7 @@ def send_email(to, subject, body, template='email/notification.html',
     try:
         status, msg = sg.send(message)
         return status
-    except (sendgrid.SendGridClientError, sendgrid.SendGridServerError, TypeError) as e:
-        logging.error("Could not send email", exc_info=True)
+    except (sendgrid.SendGridClientError, sendgrid.SendGridServerError,
+            TypeError):
+        logger.error("Could not send email", exc_info=True)
         return
