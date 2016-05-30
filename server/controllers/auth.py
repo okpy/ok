@@ -12,6 +12,7 @@ import pickle
 
 from server import utils
 from server.models import db, User, Enrollment
+from server.extensions import csrf
 
 auth = Blueprint('auth', __name__)
 
@@ -190,7 +191,10 @@ def testing_authorized():
     return authorize_user(user)
 
 @auth.route("/logout/", methods=['POST'])
+@login_required
 def logout():
+    # Only CSRF protect this route.
+    csrf.protect()
     logout_user()
     session.pop('google_token', None)
     return redirect(url_for('student.index'))

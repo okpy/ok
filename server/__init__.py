@@ -22,7 +22,8 @@ from server.constants import API_PREFIX
 from server.extensions import (
     cache,
     assets_env,
-    debug_toolbar
+    debug_toolbar,
+    csrf
 )
 
 def create_app(default_config_path=None):
@@ -48,7 +49,6 @@ def create_app(default_config_path=None):
     cache.init_app(app)
 
     # Protect All Routes from csrf
-    csrf = CsrfProtect()
     csrf.init_app(app)
 
     # initialize the debug tool bar
@@ -82,6 +82,7 @@ def create_app(default_config_path=None):
     # register our blueprints
     # OAuth should not need CSRF protection
     csrf.exempt(auth)
+
     app.register_blueprint(auth)
 
     app.register_blueprint(admin, url_prefix='/admin')

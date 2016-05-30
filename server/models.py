@@ -94,6 +94,13 @@ class Model(db.Model):
 
     created = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
 
+    def __repr__(self):
+        if hasattr(self, 'id'):
+            key_val = self.id
+        else:
+            key_val = self.__mapper__.primary_key._list[0].name
+        return '<{} %r>'.format(self.__class__.__name__, key_val)
+
     @classmethod
     def can(cls, obj, user, action):
         if user.is_admin:
@@ -118,7 +125,7 @@ class User(Model, UserMixin):
     is_admin = db.Column(db.Boolean(), default=False)
 
     def __repr__(self):
-        return '<User %r>' % self.email
+        return '<User {}>'.format(self.email)
 
     def enrollments(self, roles=[STUDENT_ROLE]):
         query = (Enrollment.query.options(db.joinedload('course'))
@@ -126,6 +133,7 @@ class User(Model, UserMixin):
                            .filter(Enrollment.role.in_(roles)))
         return query.all()
 
+    @cache.memoize(120)
     def is_enrolled(self, course_id, roles=VALID_ROLES):
         for enroll in self.participations:
             if enroll.course_id == course_id and enroll.role in roles:
@@ -144,7 +152,7 @@ class User(Model, UserMixin):
         return User.query.get(uid)
 
     @staticmethod
-    @cache.memoize(120)
+    @cache.memoize(240)
     def email_by_id(uid):
         user = User.query.get(uid)
         if user:
@@ -432,6 +440,7 @@ class Enrollment(Model):
 
         db.session.add_all(new_records)
 
+        cache.delete_memoized(User.is_enrolled)
 
 class Message(Model):
     __tablename__ = 'message'
@@ -453,7 +462,6 @@ class Backup(Model):
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), nullable=False, default=False)
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
-    v2id = db.Column(db.BigInteger)
 
     extension = db.Column(db.Boolean(), default=False)
 
@@ -463,10 +471,10 @@ class Backup(Model):
     scores = db.relationship("Score")
     comments = db.relationship("Comment", order_by="Comment.created")
 
-    db.Index('idx_usrBackups', 'assignment', 'submitter', 'submit', 'flagged')
-    db.Index('idx_usrFlagged', 'assignment', 'submitter', 'flagged')
-    db.Index('idx_submittedBacks', 'assignment', 'submit')
-    db.Index('idx_flaggedBacks', 'assignment', 'flagged')
+    db.Index('idx_usrBackups', 'submitter_id', 'assignment_id', 'submit', 'flagged')
+    db.Index('idx_usrFlagged', 'submitter_id', 'assignment_id', 'flagged')
+    db.Index('idx_submittedBacks', 'assignment_id', 'submit')
+    db.Index('idx_flaggedBacks', 'assignment_id', 'flagged')
 
     @classmethod
     def can(cls, obj, user, action):
@@ -489,7 +497,7 @@ class Backup(Model):
         return self.created > self.assignment.due_date
 
     def owners(self):
-        """ Retrurn a set of user ids in the same group as the submitter."""
+        """ Return a set of user ids in the same group as the submitter."""
         return self.assignment.active_user_ids(self.submitter_id)
 
     def enrollment_info(self):
@@ -517,8 +525,9 @@ class Backup(Model):
             return {}
 
     @staticmethod
+    @cache.memoize(120)
     def statistics(self):
-        db.session.query(Backup).from_statement(
+        return db.session.query(Backup).from_statement(
             db.text("""SELECT date_trunc('hour', backup.created), count(backup.id)  FROM backup
             WHERE backup.created >= NOW() - '1 day'::INTERVAL
             GROUP BY date_trunc('hour', backup.created)
