@@ -12,6 +12,7 @@ import pytz
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
 from server.constants import STAFF_ROLES, STUDENT_ROLE
+from server.extensions import cache
 import server.forms as forms
 import server.highlight as highlight
 
@@ -22,7 +23,6 @@ admin = Blueprint('admin', __name__)
 def convert_to_pacific(date):
     # TODO Move to UTILS
     return date.replace(tzinfo=pytz.utc)
-
 
 def is_staff(course_arg=None):
     """ A decorator for routes to ensure that user is a member of
@@ -183,6 +183,8 @@ def grade(bid):
     form.populate_obj(model)
     db.session.add(model)
     db.session.commit()
+
+    cache.delete_memoized(User.num_grading_tasks, repr(current_user))
 
     if request.args.get('queue'):
         # TODO: Find next submission in queue and redirect to that.

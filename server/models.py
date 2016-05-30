@@ -120,9 +120,11 @@ class User(Model, UserMixin):
     def __repr__(self):
         return '<User %r>' % self.email
 
-    # TODO: Cache enrollment queries
     def enrollments(self, roles=[STUDENT_ROLE]):
-        return [e for e in self.participations if e.role in roles]
+        query = (Enrollment.query.options(db.joinedload('course'))
+                           .filter(Enrollment.user_id == self.id)
+                           .filter(Enrollment.role.in_(roles)))
+        return query.all()
 
     def is_enrolled(self, course_id, roles=VALID_ROLES):
         for enroll in self.participations:
@@ -133,6 +135,7 @@ class User(Model, UserMixin):
     def identifier(self):
         return self.name or self.email
 
+    @cache.memoize(120)
     def num_grading_tasks(self):
         return GradingTask.query.filter_by(grader=self, score_id=None).count()
 
@@ -141,7 +144,7 @@ class User(Model, UserMixin):
         return User.query.get(uid)
 
     @staticmethod
-    @cache.memoize(1000)
+    @cache.memoize(120)
     def email_by_id(uid):
         user = User.query.get(uid)
         if user:
@@ -225,7 +228,7 @@ class Assignment(Model):
         return user.is_enrolled(obj.course.id, STAFF_ROLES)
 
     @staticmethod
-    @cache.memoize(1000)
+    @cache.memoize(120)
     def assignment_stats(assign_id):
         assignment = Assignment.query.get(assign_id)
         base_query = Backup.query.filter_by(assignment=assignment)
