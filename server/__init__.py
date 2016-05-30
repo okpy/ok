@@ -4,7 +4,7 @@ from markdown import markdown
 from flask import Flask
 from flask import Markup
 
-from flask.ext.rq import RQ
+from flask_rq import RQ
 from flask_wtf.csrf import CsrfProtect
 
 from webassets.loaders import PythonLoader as PythonAssetsLoader

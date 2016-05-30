@@ -1,6 +1,6 @@
-from flask.ext.cache import Cache
+from flask_cache import Cache
 from flask_wtf.csrf import CsrfProtect
-from flask.ext.debugtoolbar import DebugToolbarExtension
+from flask_debugtoolbar import DebugToolbarExtension
 from flask_assets import Environment
 
 # Setup flask cache

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, flash, request, redirect, \
     url_for, session,  current_app, abort, make_response
-from flask.ext.login import login_user, logout_user, login_required, \
+from flask_login import login_user, logout_user, login_required, \
     current_user
 from werkzeug.exceptions import BadRequest
 

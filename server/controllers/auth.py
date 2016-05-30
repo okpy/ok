@@ -6,7 +6,7 @@ There are two ways to authenticate a request:
 from flask import abort, Blueprint, current_app, flash, redirect, \
     render_template, request, session, url_for, make_response
 from flask_oauthlib.client import OAuth
-from flask.ext.login import LoginManager, login_user, logout_user, login_required
+from flask_login import LoginManager, login_user, logout_user, login_required
 
 import pickle
 

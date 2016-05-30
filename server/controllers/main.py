@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 from server.extensions import cache
-from flask.ext.rq import get_queue
-from flask.ext.login import current_user
+from flask_rq import get_queue
+from flask_login import current_user
 
 main = Blueprint('main', __name__)
 

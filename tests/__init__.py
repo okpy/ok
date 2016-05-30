@@ -1,7 +1,7 @@
 import datetime
 import os
 
-from flask.ext.testing import TestCase
+from flask_testing import TestCase
 
 from server import create_app
 from server.models import db, Assignment, Course, Enrollment, User

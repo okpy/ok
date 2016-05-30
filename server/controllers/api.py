@@ -20,7 +20,7 @@ import json
 from functools import wraps
 
 from flask import Blueprint, jsonify, request
-from flask.ext.login import current_user
+from flask_login import current_user
 import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
 from flask_restful.representations.json import output_json

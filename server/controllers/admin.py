@@ -6,7 +6,7 @@ from io import StringIO
 from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
 
-from flask.ext.login import current_user
+from flask_login import current_user
 import pytz
 
 from server.models import (User, Course, Assignment, Enrollment, Version,

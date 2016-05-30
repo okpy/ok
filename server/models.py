@@ -1,7 +1,7 @@
 from werkzeug.exceptions import BadRequest
 
-from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.login import UserMixin
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 from sqlalchemy import PrimaryKeyConstraint, MetaData, types
 from sqlalchemy.dialects import mysql
