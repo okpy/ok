@@ -35,6 +35,9 @@ pytz
 sendgrid==1.5.20
 premailer==2.11.0
 
+# Autograder Interface
+requests
+
 # Front end
 itsdangerous==0.24
 cssmin==0.2.0

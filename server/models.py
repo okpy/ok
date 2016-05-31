@@ -240,16 +240,37 @@ class Assignment(Model):
         return user.is_enrolled(obj.course.id, STAFF_ROLES)
 
     @staticmethod
-    @cache.memoize(120)
+    @cache.memoize(900)
     def assignment_stats(assign_id):
         assignment = Assignment.query.get(assign_id)
         base_query = Backup.query.filter_by(assignment=assignment)
         stats = {
             'submissions': base_query.filter_by(submit=True).count(),
             'backups': base_query.count(),
-            'groups': Group.query.filter_by(assignment=assignment).count()
+            'groups': Group.query.filter_by(assignment=assignment).count(),
         }
+        # This is query intesive, maybe save for detailed stats?
+        # students, submissions, not_started = assignment.course_submissions()
+        # stats.update({
+        #     'students_submitted': len(students),
+        #     'students_nosubmit': len(not_started)
+        # })
         return stats
+
+    def course_submissions(self):
+        seen = set()
+        students, submissions, no_submissions = set(), set(), set()
+        for student in self.course.participations:
+            if student.role == STUDENT_ROLE and student.user_id not in seen:
+                group = self.active_user_ids(student.user_id)
+                fs = self.final_submission(group)
+                seen |= group # Perform union of two sets
+                if fs:
+                    students |= group
+                    submissions.add(fs.id)
+                else:
+                    no_submissions |= group
+        return students, submissions, no_submissions
 
     @hybrid_property
     def active(self):
@@ -491,6 +512,10 @@ class Backup(Model):
             if user.id in obj.owners():
                 return True
         return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
+
+    @hybrid_property
+    def hashid(self):
+        return encode_id(self.id)
 
     @hybrid_property
     def is_late(self):

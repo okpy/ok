@@ -28,8 +28,12 @@
         {% if (field.type != 'HiddenField' and field.type !='CSRFTokenField') and label_visible %}
             <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
         {% endif %}
+       {% if field.description %}
+            <p class="help-block">{{ field.description }}</p>
+        {% endif %}
+
         {{ field(class_=class_, **kwargs) }}
-        {% if field.errors %}
+         {% if field.errors %}
             {% for e in field.errors %}
                 <p class="help-block">{{ e }}</p>
             {% endfor %}
@@ -47,10 +51,17 @@
         {{ macros.render_checkbox_field(form.remember_me) }}
  #}
 {% macro render_checkbox_field(field) -%}
-    <div class="checkbox">
-        <label>
-            {{ field(type='checkbox', **kwargs) }} {{ field.label }}
-        </label>
+    <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+          <label for="{{ field.id }}" class="control-label">{{ field.label }}: {{ field(type='checkbox', **kwargs) }}</label>
+
+        <div class="checkbox">
+
+        </div>
+
+       {% if field.description %}
+            <p class="help-block">{{ field.description }}</p>
+        {% endif %}
+
     </div>
 {%- endmacro %}
 

@@ -13,7 +13,7 @@ GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
 
 APP_URL = 'https://okpy.org/'
-AUTOGRADER_URL = 'http://autograder.cs61a.org:5000'
+AUTOGRADER_URL = 'https://autograder.cs61a.org'
 
 FORBIDDEN_ROUTE_NAMES = [
     'admin',

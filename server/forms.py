@@ -157,3 +157,11 @@ class CreateTaskForm(BaseForm):
     staff = MultiCheckboxField('Assigned Staff', choices=[],
                     validators=[validators.required()])
 
+class AutogradeForm(BaseForm):
+    description = """Paste into terminal to get token: cd ~/.config/ok;python3 -c "import pickle; print(pickle.load(open('auth_refresh', 'rb'))['access_token'])"; cd -; """
+    token = StringField('Access Token', description=description,
+                        validators=[validators.optional()])
+    autograder_id = StringField('Autograder Assignment ID',
+                                 validators=[validators.required()])
+    autopromote = BooleanField('Backup Autopromotion',
+                                description="If an enrolled student does not have a submission, this will grade their latest submission before the deadline")

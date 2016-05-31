@@ -9,6 +9,7 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
 from flask_login import current_user
 import pytz
 
+from server.controllers.auth import google_oauth_token
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
 from server.constants import STAFF_ROLES, STUDENT_ROLE
@@ -353,18 +354,7 @@ def assign_grading(cid, aid):
                 selected_users.append(user)
 
         # Available backups:
-        students, backups, no_submissions = set(), set(), set()
-        for student in current_course.participations:
-            if student.role == STUDENT_ROLE and student.user_id not in students:
-                group = assign.active_user_ids(student.user_id)
-                fs = assign.final_submission(group)
-                students |= group # Perform union of two sets
-                if fs:
-                    backups.add(fs.id)
-                    # TODO FEATURE: Perform check for existing scores with tag
-                    # to only grade ungraded submissions.
-                else:
-                    no_submissions |= group
+        students, backups, no_submissions = assign.course_submissions()
 
         chunks = utils.chunks(list(backups), len(selected_users))
         tasks = []
@@ -390,7 +380,30 @@ def assign_grading(cid, aid):
                            current_course=current_course, assignment=assign,
                            form=form)
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/autograde",
+            methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def autograde(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+    auth_token = google_oauth_token()
+    form = forms.AutogradeForm()
+    if form.validate_on_submit():
 
+        flash('Sent to autograder', 'success')
+
+    if not form.token.data and auth_token:
+        del form.token # Remove the token field
+
+    if not form.token.data and assign.autograding_key:
+        form.autograding_key.data = assign.autograding_key
+
+    return render_template('staff/grading/autograde.html',
+                           current_course=current_course,
+                           assignment=assign, form=form)
 
 @admin.route("/course/<int:cid>/enrollment", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
