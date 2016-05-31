@@ -100,7 +100,7 @@ def chunks(l, n):
     >>> [len(i) for i in five_chunks] == [11, 11, 11, 11, 11]
     """
     if n == 0:
-        yield l
+        return
     new_n = int(1.0 * len(l) / n + 0.5)
     for i in range(0, n-1):
         yield l[i * new_n : i * new_n + new_n]
