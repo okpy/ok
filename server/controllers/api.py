@@ -151,7 +151,7 @@ class Resource(restful.Resource):
     def make_response(self, data, *args, **kwargs):
         return super().make_response(data, *args, **kwargs)
 
-    def can(object, user, course, action):
+    def can(self, user, course, action):
         if user.is_admin:
             return True
         return False

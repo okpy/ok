@@ -23,13 +23,12 @@
     Example usage:
         {{ macros.render_field(form.email, placeholder='Input email', type='email') }}
 #}
-{% macro render_field(field, label_visible=true) -%}
-
+{% macro render_field(field, label_visible=true, class_='form-control') -%}
     <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
         {% if (field.type != 'HiddenField' and field.type !='CSRFTokenField') and label_visible %}
             <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
         {% endif %}
-        {{ field(class_='form-control', **kwargs) }}
+        {{ field(class_=class_, **kwargs) }}
         {% if field.errors %}
             {% for e in field.errors %}
                 <p class="help-block">{{ e }}</p>

@@ -293,14 +293,14 @@ def seed_scores():
 def seed_queues():
     print('Seeding queues...')
     for assign in Assignment.query.filter(Assignment.id % 2 == 0):
-        graders = assign.course.staff()
+        graders = assign.course.get_staff()
         if not graders:
             print("No staff for ", assign.course)
             continue
         query = Backup.query.filter_by(submit=True, assignment=assign)
         for backup in query.all():
             grader = random.choice(graders)
-            task = gen_queue(backup, grader)
+            task = gen_queue(backup, grader.user)
             db.session.add(task)
     db.session.commit()
 

@@ -1,0 +1,54 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} Ok - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ assignment.display_name }}
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li class="active"><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }}</a></li>
+      </ol>
+  </section>
+
+  <!-- Don't close the content section -->
+  <section class="content">
+      {% include 'alerts.html' %}
+
+        <!-- Default box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Assign {{ assignment.display_name }} Grading</h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                <i class="fa fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="box-body">
+              <!-- form goes here -->
+              {% call forms.render_form(form, action_url="", action_text='Assign Grading Tasks',
+                                          class_='form') %}
+                  {{ forms.render_field(form.staff, label_visible=true, class_="checkbox-list") }}
+              {% endcall %}
+          </div>
+          <!-- /.box-body -->
+          <!-- /.box-footer-->
+        </div>
+        <!-- /.box -->
+
+
+
+
+  <!-- </body> do not close body in template-->
+{% endblock %}

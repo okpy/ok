@@ -87,3 +87,22 @@ def send_email(to, subject, body, template='email/notification.html',
             TypeError):
         logger.error("Could not send email", exc_info=True)
         return
+
+def chunks(l, n):
+    """ Yield N successive chunks from L. Used for evenly distributing
+    grading tasks.
+
+    Source: http://stackoverflow.com/a/2130042/411514
+
+    >>> three_chunks = chunks(range(56), 3)
+    >>> [len(i) for i in three_chunks] == [19, 19, 18]
+    >>> five_chunks = chunks(range(55), 5)
+    >>> [len(i) for i in five_chunks] == [11, 11, 11, 11, 11]
+    """
+    if n == 0:
+        yield l
+    new_n = int(1.0 * len(l) / n + 0.5)
+    for i in range(0, n-1):
+        yield l[i * new_n : i * new_n + new_n]
+    yield l[n * new_n - new_n:]
+

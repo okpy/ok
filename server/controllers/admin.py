@@ -15,6 +15,7 @@ from server.constants import STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 import server.forms as forms
 import server.highlight as highlight
+import server.utils as utils
 
 
 admin = Blueprint('admin', __name__)
@@ -321,6 +322,74 @@ def export_scores(cid, aid):
     # return render_template('staff/index.html', data=list(generate_csv()))
     return Response(stream_with_context(generate_csv()), mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/queues",
+            methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def assign_grading(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.CreateTaskForm()
+    course_staff = sorted(current_course.get_staff(), key=lambda x: x.role)
+    details = lambda e: "{} - ({})".format(e.user.email, e.role)
+    form.staff.choices = [(utils.encode_id(e.user_id), details(e))
+                                for e in course_staff]
+    if not form.staff.data:
+        # Select all by default
+        form.staff.default = [u[0] for u in form.staff.choices]
+        form.process()
+
+
+    if form.validate_on_submit():
+        # TODO: Use worker job for this (this is query intensive)
+        selected_users = []
+        for hash_id in form.staff.data:
+            user = User.get_by_id(utils.decode_id(hash_id))
+            if user and user.is_enrolled(cid, roles=STAFF_ROLES):
+                selected_users.append(user)
+
+        # Available backups:
+        students, backups, no_submissions = set(), set(), set()
+        for student in current_course.participations:
+            if student.role == STUDENT_ROLE and student.user_id not in students:
+                group = assign.active_user_ids(student.user_id)
+                fs = assign.final_submission(group)
+                students |= group # Perform union of two sets
+                if fs:
+                    backups.add(fs.id)
+                    # TODO FEATURE: Perform check for existing scores with tag
+                    # to only grade ungraded submissions.
+                else:
+                    no_submissions |= group
+
+        chunks = utils.chunks(list(backups), len(selected_users))
+        tasks = []
+        for assigned_backups, grader in zip(chunks, selected_users):
+            for backup_id in assigned_backups:
+                task = GradingTask(kind=form.kind.data, backup_id=backup_id,
+                                   course_id=cid, assignment_id=aid,
+                                   grader=grader)
+                tasks.append(task)
+                cache.delete_memoized(User.num_grading_tasks, grader)
+
+        db.session.add_all(tasks)
+        db.session.commit()
+
+        num_with_submissions = len(students) - len(no_submissions)
+        flash(("Created {} tasks ({} students) for {} staff."
+               .format(len(tasks), num_with_submissions, len(selected_users))),
+              "success")
+        return redirect(url_for('.assignment', cid=cid, aid=aid))
+
+    # Return template with options for who has to grade.
+    return render_template('staff/grading/assign_tasks.html',
+                           current_course=current_course, assignment=assign,
+                           form=form)
+
 
 
 @admin.route("/course/<int:cid>/enrollment", methods=['GET', 'POST'])

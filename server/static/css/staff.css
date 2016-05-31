@@ -9,3 +9,9 @@
 .list th, .list td {
     padding: 1em;
 }
+
+.checkbox-list {
+    height: 100%;
+    border: none;
+    list-style: none;
+}

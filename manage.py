@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-
-import os
-from datetime import datetime, timedelta
-
 from flask_script import Manager, Server
 from flask_script.commands import ShowUrls, Clean
 from flask_migrate import Migrate, MigrateCommand
+
 from server import create_app, generate
 from server.models import db, User
 

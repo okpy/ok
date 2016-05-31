@@ -1,3 +1,4 @@
+# TODO: Split models into distinct .py files
 from werkzeug.exceptions import BadRequest
 
 from flask_sqlalchemy import SQLAlchemy
@@ -99,7 +100,7 @@ class Model(db.Model):
             key_val = self.id
         else:
             key_val = self.__mapper__.primary_key._list[0].name
-        return '<{} %r>'.format(self.__class__.__name__, key_val)
+        return '<{} {}>'.format(self.__class__.__name__, key_val)
 
     @classmethod
     def can(cls, obj, user, action):
@@ -149,6 +150,7 @@ class User(Model, UserMixin):
 
     @staticmethod
     def get_by_id(uid):
+        """ Performs .query.get; potentially can be cached. """
         return User.query.get(uid)
 
     @staticmethod
@@ -197,11 +199,13 @@ class Course(Model):
             course=self
         ).count() > 0
 
-    def staff(self):
-        return [e.user for e in Enrollment.query.filter(
-            Enrollment.role.in_(STAFF_ROLES),
-            Enrollment.course == self
-        ).all()]
+    def get_staff(self):
+        return [e for e in Enrollment.query
+            .options(db.joinedload('user'))
+            .filter(
+                Enrollment.role.in_(STAFF_ROLES),
+                Enrollment.course == self
+            ).all()]
 
 class Assignment(Model):
     """Assignments are particular to courses and have unique names.
@@ -802,7 +806,7 @@ class Score(Model):
         return [User.query.get(owner) for owner in self.backup.owners()]
 
     @classmethod
-    def can(self, obj, user, action):
+    def can(cls, obj, user, action):
         if user.is_admin:
             return True
         course = obj.assignment.course
@@ -820,8 +824,6 @@ class GradingTask(Model):
     course_id = db.Column(db.ForeignKey("course.id"))
     grader_id = db.Column(db.ForeignKey("user.id"), index=True)
     score_id = db.Column(db.ForeignKey("score.id"))
-
-    # TODO: Not sure if this will be useful.
 
     backup = db.relationship("Backup", backref="grading_tasks")
     assignment = db.relationship("Assignment")

@@ -1,7 +1,7 @@
 from flask_wtf import Form
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
-                     validators)
+                     SelectMultipleField, widgets, validators)
 from wtforms.fields.html5 import EmailField
 
 import datetime as dt
@@ -19,10 +19,20 @@ def strip_whitespace(value):
     else:
         return value
 
-
 def convert_to_utc(date):
     # TODO Not sure if 100% TZ aware. Unit test.
     return pytz.utc.localize(date)
+
+class MultiCheckboxField(SelectMultipleField):
+    """
+    A multiple-select, except displays a list of checkboxes.
+
+    Iterating the field will produce subfields, allowing custom rendering of
+    the enclosed checkbox fields.
+    """
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
+
 
 class BaseForm(Form):
     class Meta:
@@ -104,7 +114,7 @@ class BatchEnrollmentForm(BaseForm):
         try:
             rows = self.csv.data.splitlines()
             self.csv.parsed = list(csv.reader(rows))
-        except csv.error as e:
+        except csv.Error as e:
             logging.error(e)
             self.csv.errors.append(['The CSV could not be parsed'])
             return False
@@ -140,3 +150,10 @@ class CompositionScoreForm(GradeForm):
                         validators=[validators.required()])
     kind = HiddenField('Score', default="composition",
                        validators=[validators.required()])
+
+class CreateTaskForm(BaseForm):
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
+                       validators=[validators.required()], default="composition")
+    staff = MultiCheckboxField('Assigned Staff', choices=[],
+                    validators=[validators.required()])
+
