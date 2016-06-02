@@ -9,6 +9,7 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
 from flask_login import current_user
 import pytz
 
+from server.autograder import submit_single, autograde_assignment
 from server.controllers.auth import google_oauth_token
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
@@ -392,14 +393,25 @@ def autograde(cid, aid):
     auth_token = google_oauth_token()
     form = forms.AutogradeForm()
     if form.validate_on_submit():
+        if hasattr(form, 'token') and form.token.data:
+            token = form.token.data
+        else:
+            token = auth_token
+        autopromotion = form.autopromote.data
 
-        flash('Sent to autograder', 'success')
+        try:
+            res = autograde_assignment(assign, form.autograder_id.data,
+                                       token, autopromotion=autopromotion)
+            flash('Submitted to the autograder', 'success')
+        except ValueError as e:
+            flash(str(e), 'error')
+
 
     if not form.token.data and auth_token:
         del form.token # Remove the token field
 
     if not form.token.data and assign.autograding_key:
-        form.autograding_key.data = assign.autograding_key
+        form.autograder_id.data = assign.autograding_key
 
     return render_template('staff/grading/autograde.html',
                            current_course=current_course,

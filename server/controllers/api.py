@@ -28,7 +28,7 @@ from flask_restful.representations.json import output_json
 from server.extensions import cache
 from server.utils import encode_id, decode_id
 import server.models as models
-
+from server.constants import STAFF_ROLES
 
 endpoints = Blueprint('api', __name__)
 endpoints.config = {}
@@ -39,6 +39,7 @@ def record_params(setup_state):
     server/__init__.py """
     app = setup_state.app
     endpoints.config['tz'] = app.config.get('TIMEZONE', 'utc')  # sample config
+    endpoints.config['debug'] = app.debug
 
 
 api = restful.Api(endpoints, catch_all_404s=True)
@@ -61,6 +62,12 @@ def json_field(field):
         return field
     return json.dumps(field)
 
+class HashIDField(fields.Raw):
+    def format(self, value):
+        if type(value) == int:
+            return encode_id(value)
+        else:
+            return decode_id(value)
 
 @api.representation('application/json')
 def envelope_api(data, code, headers=None):
@@ -212,7 +219,7 @@ class APISchema():
     """
     get_fields = {
         'id': fields.Integer,
-        'created': fields.DateTime(dt_format='rfc822')
+        'created': fields.DateTime(dt_format='iso8601')
     }
 
     def __init__(self):
@@ -228,8 +235,8 @@ class MessageSchema(APISchema):
     """
     get_fields = {
         'kind': fields.String,
-        'contents': fields.String,
-        'created': fields.DateTime(dt_format='rfc822')
+        'contents': fields.Raw,
+        'created': fields.DateTime(dt_format='iso8601')
     }
 
 class CourseSchema(APISchema):
@@ -240,15 +247,27 @@ class CourseSchema(APISchema):
         'active': fields.Boolean,
     }
 
+class UserSchema(APISchema):
+    get_fields = {
+        'id': HashIDField,
+        'email': fields.String,
+    }
+
+class AssignmentSchema(APISchema):
+    get_fields = {
+        'course': fields.Nested(CourseSchema.get_fields),
+        'name': fields.String,
+    }
 
 class BackupSchema(APISchema):
-
     get_fields = {
-        'id': fields.Integer,
-        'submitter': fields.String,
-        'assignment': fields.String,
+        'id': HashIDField, # Use Hash ID
+        'submitter': fields.Nested(UserSchema.get_fields),
+        'assignment': fields.Nested(AssignmentSchema.get_fields),
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
-        'created': fields.DateTime(dt_format='rfc822')
+        'created': fields.DateTime(dt_format='iso8601'),
+        'is_late': fields.Boolean,
+        'group': fields.List(fields.Nested(UserSchema.get_fields)),
     }
 
     post_fields = {
@@ -342,10 +361,16 @@ class Backup(Resource):
     def get(self, user, key=None):
         if key is None:
             restful.abort(405)
-        backup = self.model.query.filter_by(id=key).first()
-        # TODO CHECK
-        if backup.user != user or not user.is_admin:
-            restful.abort(403)
+        bid = decode_id(key)
+        backup = self.model.query.filter_by(id=bid).first()
+        if not backup:
+            if user.is_admin:
+                return restful.abort(404)
+            return restful.abort(403)
+        # TODO: Check if user is researcher. If so, anonmyize submitter info.
+        if not self.model.can(backup, user, 'view'):
+            return restful.abort(403)
+        backup.group = [models.User.get_by_id(uid) for uid in backup.owners()]
         return backup
 
     @marshal_with(schema.post_fields)
@@ -424,7 +449,7 @@ class Version(PublicResource):
 
 api.add_resource(v3Info, '/v3/')
 
-api.add_resource(Backup, '/v3/backups/', '/v3/backups/<int:key>/')
+api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
 api.add_resource(Score, '/v3/score/')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')

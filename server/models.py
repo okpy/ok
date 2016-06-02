@@ -507,6 +507,8 @@ class Backup(Model):
             return True
         if action == "create":
             return user.is_authenticated()
+        if not obj:
+            return False
         if action == "view":
             # Only allow group members to view
             if user.id in obj.owners():
@@ -524,6 +526,10 @@ class Backup(Model):
         if self.extension:
             return False
         return self.created > self.assignment.due_date
+
+    # @hybrid_property
+    # def group(self):
+    #     return Group.lookup(self.submitter, self.assignment)
 
     def owners(self):
         """ Return a set of user ids in the same group as the submitter."""

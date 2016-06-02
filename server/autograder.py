@@ -5,6 +5,7 @@ in a sandboxed environment.
 """
 
 from flask import session, url_for
+import json
 import requests
 
 import server.constants as constants
@@ -12,8 +13,14 @@ from server.models import db, User, Assignment, Backup, Course, Enrollment
 from server.extensions import cache
 import server.utils as utils
 
+def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
+    """ Autograde all enrolled students for this assignment.
+    If ag_assign_key is 'test', the autograder will respond with 'OK' but not grade.
 
-def autograde_assignment(assignment, key, token, autopromotion=True):
+    @assignment: Assignment object.
+    @ag_assign_key: Autograder ID (from Autograder Dashboard)
+    @token: OK Access Token (from auth)
+    """
     students, submissions, no_submissions = assignment.course_submissions()
 
     backups_to_grade = [utils.encode_id(bid) for bid in submissions]
@@ -28,11 +35,13 @@ def autograde_assignment(assignment, key, token, autopromotion=True):
                     seen |= found_backup.owners()
                     backups_to_grade.append(utils.encode_id(found_backup.id))
 
+
     data = {
         'subm_ids': backups_to_grade,
-        'assignment': key,
+        'assignment': ag_assign_key,
         'access_token': token,
-        'priority': 'normal',
+        'priority': 'default',
+        'backup_url': url_for('api.backup', external=True),
         'ok-server-version': 'v3',
         'testing': token == 'testing',
     }
@@ -48,17 +57,19 @@ def autograde_assignment(assignment, key, token, autopromotion=True):
       raise ValueError(error_message)
 
 
-
-def submit_single(assignment, backup):
+def submit_single(backup):
     email = backup.submitter.email
+    assignment = backup.assignment
     file_contents = [b for b in backup.messages if b.kind == 'file_contents']
     if not file_contents:
         raise ValueError("No files to grade")
+    if not assignment.autograding_key:
+        raise ValueError("Not setup for autograding")
 
     data = {
         'assignment': assignment.autograding_key,
-        'file_contents': file_contents[0],
-        'submitter': email
+        'file_contents': file_contents[0].contents,
+        'submitter': email,
         'emails': [User.email_by_id(oid) for oid in backup.owners()]
     }
 
@@ -67,7 +78,7 @@ def submit_single(assignment, backup):
 
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-    r = requests.post(AUTOGRADER_URL+'/api/file/grade/continous',
+    r = requests.post(constants.AUTOGRADER_URL+'/api/file/grade/continous',
         data=json.dumps(data), headers=headers)
 
     if r.status_code == requests.codes.ok:
