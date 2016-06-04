@@ -3,16 +3,20 @@ There are two ways to authenticate a request:
 * Present the session cookie returned after logging in
 * Send a Google access token as the access_token query parameter
 """
-from flask import abort, Blueprint, current_app, flash, redirect, \
-    render_template, request, session, url_for, make_response
+from flask import (abort, Blueprint, current_app, flash, redirect,
+    render_template, request, session, url_for, make_response)
 from flask_oauthlib.client import OAuth
-from flask_login import LoginManager, login_user, logout_user, login_required
+from flask_login import (LoginManager, login_user, logout_user, login_required,
+    current_user)
 
 import pickle
+import logging
 
 from server import utils
 from server.models import db, User, Enrollment
 from server.extensions import csrf
+
+logger = logging.getLogger(__name__)
 
 auth = Blueprint('auth', __name__)
 
@@ -166,6 +170,22 @@ def authorized(resp):
     session['google_token'] = (access_token, '')  # (access_token, secret)
     return authorize_user(user)
 
+
+
+@auth.route('/sudo/<email>')
+@login_required
+def sudo_login(email):
+    logger.info("Sudo attempt to %s from %s", email, current_user)
+    if not current_user.is_admin:
+        logger.info("Unauthorized sudo %s", current_user)
+        return abort(403, 'Unauthorized to sudo')
+    user = User.lookup(email)
+    if not user:
+        return abort(404, "User does not exist")
+    print("setting user to", current_user.email)
+    session['sudo-user'] = current_user.email
+    return authorize_user(user)
+
 # Backdoor log in if you want to impersonate a user.
 # Will not give you a Google auth token.
 # Requires that TESTING_LOGIN = True in the config and we must not be running in prod.
@@ -190,11 +210,22 @@ def testing_authorized():
     user = user_from_email(request.form['email'])
     return authorize_user(user)
 
+@auth.route('/testing-login/logout/', methods=['POST'])
+def testing_logout():
+    if not use_testing_login():
+        abort(404)
+    logout_user()
+    session.pop('google_token', None)
+    session.pop('sudo-user', None)
+    return redirect(url_for('student.index'))
+
 @auth.route("/logout/", methods=['POST'])
 @login_required
 def logout():
     # Only CSRF protect this route.
     csrf.protect()
+
     logout_user()
     session.pop('google_token', None)
+    session.pop('sudo-user', None)
     return redirect(url_for('student.index'))

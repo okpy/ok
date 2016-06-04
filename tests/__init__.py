@@ -24,6 +24,12 @@ class OkTestCase(TestCase):
         }, follow_redirects=True)
         self.assert_200(response)
 
+    def logout(self):
+        """Logout in testing mode."""
+        response = self.client.post('/testing-login/logout/', follow_redirects=True)
+        self.assert_200(response)
+        self.assert_template_used('index.html')
+
     def setup_course(self):
         """Creates:
 
@@ -31,6 +37,7 @@ class OkTestCase(TestCase):
         * An assignment (self.assignment) in that course
         * 5 users (self.user1, self.user2, etc.) enrolled as students
         * 2 staff members (self.staff1, self.staff2) as TAs
+        * 1 Admin (okadmin@okpy.org)
         """
         self.course = Course(
             offering='cal/cs61a/sp16',
@@ -44,6 +51,7 @@ class OkTestCase(TestCase):
             lock_date=datetime.datetime.now() + datetime.timedelta(days=1),
             max_group_size=4)
         db.session.add(self.assignment)
+
         def make_student(n):
             user = User(email='student{0}@aol.com'.format(n))
             participant = Enrollment(
@@ -69,5 +77,8 @@ class OkTestCase(TestCase):
 
         self.staff1 = make_staff(1)
         self.staff2 = make_staff(2)
+
+        self.admin = User(email='okadmin@okpy.org', is_admin=True)
+        db.session.add(self.admin)
 
         db.session.commit()
