@@ -5,7 +5,7 @@ There are two ways to authenticate a request:
 """
 from flask import (abort, Blueprint, current_app, flash, redirect,
     render_template, request, session, url_for, make_response)
-from flask_oauthlib.client import OAuth
+from flask_oauthlib.client import OAuth, OAuthException
 from flask_login import (LoginManager, login_user, logout_user, login_required,
     current_user)
 
@@ -22,12 +22,21 @@ auth = Blueprint('auth', __name__)
 
 auth.config = {}
 
+@auth.record
+def record_params(setup_state):
+    """ Load used app configs into local config on registration from
+    server/__init__.py """
+    app = setup_state.app
+    oauth.init_app(app)
+
 oauth = OAuth()
 google_auth = oauth.remote_app(
     'google',
     app_key='GOOGLE',
     request_token_params={
-        'scope': 'email'
+        'scope': 'email',
+        'access_type': 'online',
+        'approval_prompt':'auto'
     },
     base_url='https://www.googleapis.com/oauth2/v1/',
     request_token_url=None,
@@ -38,6 +47,8 @@ google_auth = oauth.remote_app(
 
 oauth_client = OAuth()
 
+# For more info on why the client_secret is embeddable
+# https://developers.google.com/identity/protocols/OAuth2#webserver
 client_auth = oauth_client.remote_app(
     'google',
     consumer_key='931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com',
@@ -54,13 +65,6 @@ client_auth = oauth_client.remote_app(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
 )
 
-
-@auth.record
-def record_params(setup_state):
-    """ Load used app configs into local config on registration from
-    server/__init__.py """
-    app = setup_state.app
-    oauth.init_app(app)
 
 @google_auth.tokengetter
 def google_oauth_token(token=None):
@@ -137,9 +141,9 @@ def login_refresh():
 @client_auth.authorized_handler
 def refresh_token(resp):
     if resp is None or 'access_token' not in resp:
-        error = 'Access denied: reason=%s error=%s' % (
-            request.args['error_reason'],
-            request.args['error_description']
+        error = "Access denied: reason={} error={}".format(
+            request.args.get('error_reason'),
+            request.args.get('error_description')
         )
         flash(error, "error")
         return redirect(url_for("main.home"))
@@ -155,16 +159,17 @@ def refresh_token(resp):
 
 
 @auth.route('/login/authorized/')
-@google_auth.authorized_handler
-def authorized(resp):
-    if resp is None or 'access_token' not in resp:
-        error = 'Access denied: reason=%s error=%s' % (
+def authorized():
+    resp = google_auth.authorized_response()
+    if resp is None:
+        error = "Access denied: reason={} error={}".format(
             request.args['error_reason'],
             request.args['error_description']
         )
         flash(error, "error")
         # TODO Error Page
-        return redirect(url_for('student.index'))
+        return redirect(url_for('main.home'))
+
     access_token = resp['access_token']
     user = user_from_access_token(access_token)
     session['google_token'] = (access_token, '')  # (access_token, secret)

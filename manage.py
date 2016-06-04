@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
+import os
+
 from flask_script import Manager, Server
 from flask_script.commands import ShowUrls, Clean
 from flask_migrate import Migrate, MigrateCommand
 
 from server import create_app, generate
-from server.models import db, User
+from server.models import db, User, Course
 
-app = create_app('settings/dev.py')
+# default to dev config
+env = os.environ.get('OK_ENV', 'dev')
+app = create_app('settings/%s.py' % env)
 
 migrate = Migrate(app, db)
 manager = Manager(app)
@@ -35,6 +39,19 @@ def createdb():
         your SQLAlchemy models
     """
     db.create_all()
+    admin = User(email="sumukh@berkeley.edu", is_admin=True)
+    db.session.add(admin)
+    admin = User(email="brian.hou@berkeley.edu", is_admin=True)
+    db.session.add(admin)
+    db.session.commit()
+    course = Course(
+            offering='cal/cs61a/sp16',
+            institution='UC Berkeley',
+            display_name='CS 61A',
+            active=True)
+    db.session.add(course)
+    db.session.commit()
+
 
 @manager.command
 def dropdb():

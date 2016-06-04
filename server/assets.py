@@ -30,7 +30,7 @@ adminlte_css = Bundle(
     'lib/admin/css/AdminLTE.min.css',
     'lib/admin/css/skins/skin-black-light.min.css',
     'lib/admin/plugins/pace/pace.min.css',
-    filters='jsmin',
+    filters='cssmin',
     output='public/css/adminlte.css'
 )
 
