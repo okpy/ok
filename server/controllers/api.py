@@ -188,8 +188,8 @@ def make_backup(user, assignment, messages, submit):
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
     """
-    backup = models.Backup(submitter=user,
-                           assignment_id=assignment_id, submit=submit)
+    backup = models.Backup(submitter=user, assignment=assignment,
+                           submit=submit)
     backup.messages = [models.Message(kind=k, contents=m)
                        for k, m in messages.items()]
     models.db.session.add(backup)
@@ -292,10 +292,11 @@ class BackupSchema(APISchema):
         assignment = models.Assignment.query.get(assignment_id)
         if not assignment:
             raise ValueError('Assignment does not exist')
-        lock_flag = dt.datetime.now() > assignment.lock_date
+        lock_flag = not assignment.active
+
         # Do not allow submissions after the lock date
         elgible_submit = args['submit'] and not lock_flag
-        backup = make_backup(user, assignment_id, args['messages'], elgible_submit)
+        backup = make_backup(user, assignment, args['messages'], elgible_submit)
         if args['submit'] and lock_flag:
             raise ValueError('Late Submission')
         if elgible_submit and assignment.autograding_key:
@@ -391,10 +392,8 @@ class Backup(Resource):
             backup = self.schema.store_backup(user)
         except ValueError as e:
             data = {'backup': True}
-
             if 'late' in str(e).lower():
                 data['late'] = True
-
             return restful.abort(403, message=str(e), data=data)
 
         assignment = backup.assignment

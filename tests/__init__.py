@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import os
 
 from flask_testing import TestCase
@@ -47,8 +47,8 @@ class OkTestCase(TestCase):
             name='cal/cs61a/sp16/proj1',
             course=self.course,
             display_name='Hog',
-            due_date=datetime.datetime.now(),
-            lock_date=datetime.datetime.now() + datetime.timedelta(days=1),
+            due_date=dt.datetime.now(),
+            lock_date=dt.datetime.now() + dt.timedelta(days=1),
             max_group_size=4)
         db.session.add(self.assignment)
 

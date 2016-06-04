@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import json
 from server.models import db, Assignment, Backup, Course, User, Version
 from server.utils import encode_id
@@ -6,28 +6,23 @@ from server.utils import encode_id
 from tests import OkTestCase
 
 class TestAuth(OkTestCase):
-    def _test_backup(self, submit):
-        email = 'student@okpy.org'
+    def _test_backup(self, submit, delay=10, success=True):
+        self.setup_course()
+
+        email = self.user1.email
         self.login(email)
         user = User.lookup(email)
 
-        course = Course(
-            offering='cal/cs61a/sp16',
-            institution='UC Berkeley',
-            display_name='CS 61A')
-        assignment = Assignment(
-            name='cal/cs61a/sp16/proj1',
-            course=course,
-            display_name='Hog',
-            due_date=datetime.datetime.now(),
-            lock_date=datetime.datetime.now() + datetime.timedelta(days=1),
-            max_group_size=4)
-        db.session.add(assignment)
-        db.session.commit()
+        course = self.course
+        assignment = self.assignment
+        # Offset the due date & lock_dates
+        assignment.due_date = assignment.due_date + dt.timedelta(hours=delay)
+        assignment.lock_date = assignment.lock_date + dt.timedelta(days=delay)
 
         okversion = Version(name="ok", current_version="v1.5.0",
             download_link="http://localhost/ok")
         db.session.add(okversion)
+        db.session.commit()
 
         data = {
             'assignment': assignment.name,
@@ -58,18 +53,31 @@ class TestAuth(OkTestCase):
         backup = Backup.query.filter(Backup.submitter_id == user.id).first()
         assert backup is not None
 
-        self.assert_200(response)
-        assert response.json['data'] == {
-            'email': email,
-            'key': encode_id(backup.id),
-            'course': {
-                'id': course.id,
-                'offering': course.offering,
-                'display_name': course.display_name,
-                'active': course.active
-            },
-            'assignment': assignment.name
-        }
+        if success or not submit:
+            assert response.json['data'] == {
+                'email': email,
+                'key': encode_id(backup.id),
+                'course': {
+                    'id': course.id,
+                    'offering': course.offering,
+                    'display_name': course.display_name,
+                    'active': course.active
+                },
+                'assignment': assignment.name
+            }
+            self.assert_200(response)
+
+        if not success:
+            print(response.data)
+            self.assert_403(response)
+            submit = False
+            assert response.json['data'] == {
+                'data': {
+                    'backup': True,
+                    'late': True
+                }
+            }
+
 
         assert backup.assignment == assignment
         assert backup.submitter_id == user.id
@@ -79,8 +87,14 @@ class TestAuth(OkTestCase):
     def test_backup(self):
         self._test_backup(False)
 
+    def test_backup_after_deadline(self):
+        self._test_backup(False, delay=-1)
+
     def test_submit(self):
         self._test_backup(True)
+
+    def test_submit_after_deadline(self):
+        self._test_backup(True, delay=-1, success=False)
 
     def test_api(self):
         response = self.client.get('/api/v3/')
