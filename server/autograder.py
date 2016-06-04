@@ -13,6 +13,20 @@ from server.models import db, User, Assignment, Backup, Course, Enrollment
 from server.extensions import cache
 import server.utils as utils
 
+def send_autograder(endpoint, data):
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+
+    r = requests.post(constants.AUTOGRADER_URL+endpoint,
+                  data=json.dumps(data), headers=headers)
+
+    if r.status_code == requests.codes.ok:
+      return {'status': True, 'message': 'OK' }
+    else:
+      error_message = 'The autograder rejected your request. {}'.format(r.text)
+      raise ValueError(error_message)
+
+
+
 def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
     """ Autograde all enrolled students for this assignment.
     If ag_assign_key is 'test', the autograder will respond with 'OK' but not grade.
@@ -41,23 +55,29 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
         'assignment': ag_assign_key,
         'access_token': token,
         'priority': 'default',
-        'backup_url': url_for('api.backup', external=True),
+        'backup_url': url_for('api.backup', _external=True),
         'ok-server-version': 'v3',
         'testing': token == 'testing',
     }
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    return send_autograder('/api/ok/v3/grade/batch', data)
 
-    r = requests.post(constants.AUTOGRADER_URL+'/api/ok/v3/grade/batch',
-                  data=json.dumps(data), headers=headers)
+def grade_single(backup, ag_assign_key, token):
 
-    if r.status_code == requests.codes.ok:
-      return {'status': True, 'message': 'OK' }
-    else:
-      error_message = 'The autograder rejected your request. {}'.format(r.text)
-      raise ValueError(error_message)
+    data = {
+        'subm_ids': [utils.encode_id(backup.id)],
+        'assignment': ag_assign_key,
+        'access_token': token,
+        'priority': 'default',
+        'backup_url': url_for('api.backup', _external=True),
+        'ok-server-version': 'v3',
+        'testing': token == 'testing',
+    }
+    return send_autograder('/api/ok/v3/grade/batch', data)
 
 
-def submit_single(backup):
+def submit_continous(backup):
+    """ Intended for continous grading (email with results on submit)
+    """
     email = backup.submitter.email
     assignment = backup.assignment
     file_contents = [b for b in backup.messages if b.kind == 'file_contents']

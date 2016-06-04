@@ -19,7 +19,7 @@ API.py - /api/{version}/endpoints
 import json
 from functools import wraps
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, url_for
 from flask_login import current_user
 import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
@@ -178,12 +178,12 @@ class v3Info(PublicResource):
 #  Fewer methods/APIs as V1 since the frontend will not use the API
 #  TODO Permsisions for API actions
 
-def make_backup(user, assignment_id, messages, submit):
+def make_backup(user, assignment, messages, submit):
     """
     Create backup with message objects.
 
     :param user: (object) caller
-    :param assignment_id: (int) Assignment ID
+    :param assignment: (object) Assignment
     :param messages: Data content of backup/submission
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
@@ -289,9 +289,19 @@ class BackupSchema(APISchema):
     def store_backup(self, user):
         args = self.parse_args()
         assignment_id = name_to_assign_id(args['assignment'])
-        messages, submit = args['messages'], args['submit']
-        backup = make_backup(user, assignment_id, messages, submit)
+        assignment = models.Assignment.query.get(assignment_id)
+        if not assignment:
+            raise ValueError('Assignment does not exist')
+        lock_flag = dt.datetime.now() > assignment.lock_date
+        # Do not allow submissions after the lock date
+        elgible_submit = args['submit'] and not lock_flag
+        backup = make_backup(user, assignment_id, args['messages'], elgible_submit)
+        if args['submit'] and lock_flag:
+            raise ValueError('Late Submission')
+        if elgible_submit and assignment.autograding_key:
+            autograder.submit_continous(backup)
         return backup
+
 
 
 class ParticipationSchema(APISchema):
@@ -377,12 +387,24 @@ class Backup(Resource):
     def post(self, user, key=None):
         if key is not None:
             restful.abort(405)
-        backup = self.schema.store_backup(user)
+        try:
+            backup = self.schema.store_backup(user)
+        except ValueError as e:
+            data = {'backup': True}
+
+            if 'late' in str(e).lower():
+                data['late'] = True
+
+            return restful.abort(403, message=str(e), data=data)
+
+        assignment = backup.assignment
         return {
             'email': current_user.email,
             'key': encode_id(backup.id),
-            'course': backup.assignment.course,
-            'assignment': backup.assignment.name
+            'url': url_for('student.code', name=assignment.name, submit=backup.submit,
+                           bid=encode_id(backup.id), _external=True),
+            'course': assignment.course,
+            'assignment': assignment.name
         }
 
 

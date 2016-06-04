@@ -94,18 +94,20 @@
                       </div>
                       <!-- ./box-body -->
                       <div class="box-footer">
-                        <div class="row">
-                            <div class="col-md-4 col-md-offset-4"">
-                                <div class="btn-group">
+                        <div class="pull-left">
                                   <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
                                         <i class="fa fa-download"></i> Download Scores
+                                  </a>
+
+                        </div>
+                        <div class="pull-right">
+                                  <a href="{{ url_for('.autograde', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
+                                        <i class="fa fa-send"></i> Autograde
                                   </a>
                                   <a href="{{ url_for('.assign_grading', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
                                         <i class="fa fa-inbox"></i> Assign Grading
                                   </a>
-<!--                                   <button type="button" class="btn btn-info btn-flat"><i class="fa fa-search"></i> Search </button>
- -->                                </div>
-                            </div>
+                        </div>
 
 <!--                        <div class="col-md-6 col-xs-12">
                                 <div class="input-group margin">
@@ -115,7 +117,7 @@
                                   </span>
                                 </div>
                             </div>
- -->                        </div>
+ -->
                       </div>
                       <!-- /.box-footer -->
                     </div>

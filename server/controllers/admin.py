@@ -9,7 +9,7 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
 from flask_login import current_user
 import pytz
 
-from server.autograder import submit_single, autograde_assignment
+from server.autograder import grade_single, autograde_assignment
 from server.controllers.auth import google_oauth_token
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
@@ -397,8 +397,8 @@ def autograde(cid, aid):
             token = form.token.data
         else:
             token = auth_token
-        autopromotion = form.autopromote.data
 
+        autopromotion = form.autopromote.data
         try:
             res = autograde_assignment(assign, form.autograder_id.data,
                                        token, autopromotion=autopromotion)
