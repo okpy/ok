@@ -159,8 +159,13 @@ def refresh_token(resp):
 
 
 @auth.route('/login/authorized/')
-def authorized():
-    resp = google_auth.authorized_response()
+@google_auth.authorized_handler
+def authorized(resp):
+    if isinstance(resp, OAuthException):
+        error = "{} - {}".format(e.data['error'], e.data['error_description'])
+        flash(error, "error")
+        # TODO Error Page
+        return redirect(url_for('main.home'))
     if resp is None:
         error = "Access denied: reason={} error={}".format(
             request.args['error_reason'],
