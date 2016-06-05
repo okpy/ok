@@ -17,7 +17,7 @@ def send_autograder(endpoint, data):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
     r = requests.post(constants.AUTOGRADER_URL+endpoint,
-                  data=json.dumps(data), headers=headers)
+                  data=json.dumps(data), headers=headers, timeout=5)
 
     if r.status_code == requests.codes.ok:
       return {'status': True, 'message': 'OK' }
@@ -99,7 +99,7 @@ def submit_continous(backup):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
     r = requests.post(constants.AUTOGRADER_URL+'/api/file/grade/continous',
-        data=json.dumps(data), headers=headers)
+        data=json.dumps(data), headers=headers, timeout=4)
 
     if r.status_code == requests.codes.ok:
         return {'status': "pending"}
