@@ -415,7 +415,7 @@ def autograde(cid, aid):
 
 
     if not form.token.data and auth_token:
-        del form.token # Remove the token field
+        form.token.data = auth_token
 
     if not form.autograder_id.data and assign.autograding_key:
         form.autograder_id.data = assign.autograding_key
