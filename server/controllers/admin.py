@@ -413,11 +413,13 @@ def autograde(cid, aid):
             flash(str(e), 'error')
 
 
+
     if not form.token.data and auth_token:
         del form.token # Remove the token field
 
     if not form.autograder_id.data and assign.autograding_key:
         form.autograder_id.data = assign.autograding_key
+
 
     return render_template('staff/grading/autograde.html',
                            current_course=current_course,
