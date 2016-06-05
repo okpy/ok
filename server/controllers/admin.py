@@ -200,6 +200,8 @@ def grade(bid):
 @admin.route("/client/<name>", methods=['GET', 'POST'])
 @is_staff()
 def client_version(name):
+    courses, current_course = get_courses()
+
     version = Version.query.filter_by(name=name).one_or_none()
     if not version:
         version = Version(name=name)
@@ -209,11 +211,13 @@ def client_version(name):
 
         db.session.add(version)
         db.session.commit()
+        cache.delete_memoized('get_current_version', name)
 
         flash(name + " version updated successfully.", "success")
         return redirect(url_for(".client_version", name=name))
 
     return render_template('staff/client_version.html',
+                           courses=courses, current_course=current_course,
                            version=version, form=form)
 
 
@@ -250,6 +254,7 @@ def new_assignment(cid):
         form.populate_obj(model)
         db.session.add(model)
         db.session.commit()
+        cache.delete_memoized('name_to_assign_id')
 
         flash("Assignment created successfully.", "success")
         return redirect(url_for(".course_assignments", cid=cid))
@@ -276,6 +281,7 @@ def assignment(cid, aid):
 
     if form.validate_on_submit():
         form.populate_obj(assgn)
+        cache.delete_memoized('name_to_assign_id')
         db.session.commit()
 
     return render_template('staff/course/assignment.html', assignment=assgn,

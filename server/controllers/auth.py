@@ -162,7 +162,7 @@ def refresh_token(resp):
 @google_auth.authorized_handler
 def authorized(resp):
     if isinstance(resp, OAuthException):
-        error = "{} - {}".format(e.data['error'], e.data['error_description'])
+        error = "{} - {}".format(resp.data['error'], resp.data['error_description'])
         flash(error, "error")
         # TODO Error Page
         return redirect(url_for('main.home'))

@@ -112,7 +112,7 @@ def check_version(func):
     def wrapper(*args, **kwargs):
         supplied = request.args.get('client_version')
         # ok-client doesn't send client_name right now
-        client = request.args.get('client_name', 'ok')
+        client = request.args.get('client_name', 'ok-client')
         current_version, download_link = get_current_version(client)
         if not supplied or supplied == current_version:
             return func(*args, **kwargs)

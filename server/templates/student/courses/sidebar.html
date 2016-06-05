@@ -25,7 +25,15 @@
         <i class="fa fa-eye viewing"></i>
       {% endif %}
     </li>
-    </a>
+    {% if current_user.is_admin %}
+
+    <li class="top-level">
+      <i class="fa fa-list"></i>
+      <div class="list-item">
+        <a href="{{ url_for('admin.index' )}}"> Admin Dashboard </a>
+      </div>
+    </li>
+    {% endif %}
     <li class="top-level">
         <i class="fa fa-sign-out"></i>
         <div class="list-item">
