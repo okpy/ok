@@ -35,8 +35,6 @@ google_auth = oauth.remote_app(
     app_key='GOOGLE',
     request_token_params={
         'scope': 'email',
-        'access_type': 'online',
-        'approval_prompt':'auto'
     },
     base_url='https://www.googleapis.com/oauth2/v1/',
     request_token_url=None,

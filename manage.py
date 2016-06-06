@@ -7,6 +7,7 @@ from flask_migrate import Migrate, MigrateCommand
 
 from server import create_app, generate
 from server.models import db, User, Course
+from server.extensions import cache
 
 # default to dev config
 env = os.environ.get('OK_ENV', 'dev')
@@ -34,6 +35,13 @@ def make_shell_context():
 @manager.command
 def seed():
     generate.seed()
+
+
+@manager.command
+def cacheflush():
+    with app.app_context():
+        cache.clear()
+        print("Flushed")
 
 @manager.command
 def createdb():
