@@ -14,7 +14,14 @@ TESTING_LOGIN = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_URL', 'sqlite:///../oksqlite.db')
+
+db_url = os.getenv('DATABASE_URL')
+if db_url:
+    db_url = db_url.replace('mysql://', 'mysql+pymysql://')
+else:
+    db_url = os.getenv('SQLALCHEMY_URL', 'sqlite:///../oksqlite.db')
+
+SQLALCHEMY_DATABASE_URI = db_url
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 

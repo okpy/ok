@@ -16,9 +16,6 @@ app = create_app('settings/%s.py' % env)
 migrate = Migrate(app, db)
 manager = Manager(app)
 
-if os.getenv('SENTRY_DSN'):
-    sentry = Sentry(app)
-
 manager.add_command("server", Server(host='0.0.0.0'))
 manager.add_command("show-urls", ShowUrls())
 manager.add_command("clean", Clean())
