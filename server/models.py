@@ -850,7 +850,7 @@ class GradingTask(Model):
     id = db.Column(db.Integer(), primary_key=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), index=True,
                               nullable=False)
-    kind = db.Column(db.String(), default="composition")
+    kind = db.Column(db.String(255), default="composition")
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"))
     grader_id = db.Column(db.ForeignKey("user.id"), index=True)
