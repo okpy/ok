@@ -113,7 +113,7 @@ def check_version(func):
         supplied = request.args.get('client_version')
         # ok-client doesn't send client_name right now
         client = request.args.get('client_name', 'ok-client')
-        current_version, download_link = get_current_version(client)
+        current_version, download_link = models.Version.get_current_version(client)
         if not supplied or supplied == current_version:
             return func(*args, **kwargs)
 
@@ -134,18 +134,7 @@ def check_version(func):
         return response
     return wrapper
 
-@cache.memoize(1000)
-def name_to_assign_id(name):
-    assgn = models.Assignment.query.filter_by(name=name).one_or_none()
-    if assgn:
-        return assgn.id
 
-@cache.memoize(1000)
-def get_current_version(name):
-    version = models.Version.query.filter_by(name=name).one_or_none()
-    if version:
-        return version.current_version, version.download_link
-    return None, None
 
 class Resource(restful.Resource):
     version = 'v3'
@@ -178,17 +167,17 @@ class v3Info(PublicResource):
 #  Fewer methods/APIs as V1 since the frontend will not use the API
 #  TODO Permsisions for API actions
 
-def make_backup(user, assignment, messages, submit):
+def make_backup(user, assignment_id, messages, submit):
     """
     Create backup with message objects.
 
     :param user: (object) caller
-    :param assignment: (object) Assignment
+    :param assignment: (int) Assignment ID
     :param messages: Data content of backup/submission
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
     """
-    backup = models.Backup(submitter=user, assignment=assignment,
+    backup = models.Backup(submitter=user, assignment_id=assignment_id,
                            submit=submit)
     backup.messages = [models.Message(kind=k, contents=m)
                        for k, m in messages.items()]
@@ -288,18 +277,18 @@ class BackupSchema(APISchema):
 
     def store_backup(self, user):
         args = self.parse_args()
-        assignment_id = name_to_assign_id(args['assignment'])
-        assignment = models.Assignment.query.get(assignment_id)
+        assignment = models.Assignment.name_to_assign_info(args['assignment'])
+
         if not assignment:
             raise ValueError('Assignment does not exist')
-        lock_flag = not assignment.active
+        lock_flag = not assignment['active']
 
         # Do not allow submissions after the lock date
         elgible_submit = args['submit'] and not lock_flag
-        backup = make_backup(user, assignment, args['messages'], elgible_submit)
+        backup = make_backup(user, assignment['id'], args['messages'], elgible_submit)
         if args['submit'] and lock_flag:
             raise ValueError('Late Submission')
-        if elgible_submit and assignment.autograding_key:
+        if elgible_submit and assignment['autograding_key']:
             autograder.submit_continous(backup)
         return backup
 

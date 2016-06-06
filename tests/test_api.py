@@ -19,7 +19,7 @@ class TestAuth(OkTestCase):
         assignment.due_date = assignment.due_date + dt.timedelta(hours=delay)
         assignment.lock_date = assignment.lock_date + dt.timedelta(days=delay)
 
-        okversion = Version(name="ok", current_version="v1.5.0",
+        okversion = Version(name="ok-client", current_version="v1.5.0",
             download_link="http://localhost/ok")
         db.session.add(okversion)
         db.session.commit()

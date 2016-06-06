@@ -231,6 +231,10 @@ class Assignment(Model):
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
+    @hybrid_property
+    def active(self):
+        return dt.utcnow() <= self.lock_date
+
     @classmethod
     def can(cls, obj, user, action):
         if user.is_admin:
@@ -257,6 +261,20 @@ class Assignment(Model):
         # })
         return stats
 
+    @staticmethod
+    @cache.memoize(1000)
+    def name_to_assign_info(name):
+        assign = Assignment.query.filter_by(name=name).one_or_none()
+        if assign:
+            info = assign.as_dict()
+            info['active'] = assign.active
+            return info
+
+    @staticmethod
+    def by_name(name):
+        """Return assignment object when given a name."""
+        return Assignment.query.filter_by(name=name).one_or_none()
+
     def course_submissions(self):
         seen = set()
         students, submissions, no_submissions = set(), set(), set()
@@ -272,14 +290,6 @@ class Assignment(Model):
                     no_submissions |= group
         return students, submissions, no_submissions
 
-    @hybrid_property
-    def active(self):
-        return dt.utcnow() <= self.lock_date
-
-    @staticmethod
-    def by_name(name):
-        """Return assignment object when given a name."""
-        return Assignment.query.filter_by(name=name).one_or_none()
 
     def active_user_ids(self, user_id):
         """Return a set of the ids of all users that are active in the same group
@@ -782,6 +792,13 @@ class Version(Model):
     current_version = db.Column(db.String(255))
     download_link = db.Column(db.Text())
 
+    @staticmethod
+    @cache.memoize(1000)
+    def get_current_version(name):
+        version = Version.query.filter_by(name=name).one_or_none()
+        if version:
+            return version.current_version, version.download_link
+        return None, None
 
 class Comment(Model):
     """ Composition comments. Line is the line # on the Diff.

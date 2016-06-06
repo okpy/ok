@@ -211,7 +211,7 @@ def client_version(name):
 
         db.session.add(version)
         db.session.commit()
-        cache.delete_memoized('get_current_version', name)
+        cache.delete_memoized(Version.get_current_version, name)
 
         flash(name + " version updated successfully.", "success")
         return redirect(url_for(".client_version", name=name))
@@ -254,7 +254,7 @@ def new_assignment(cid):
         form.populate_obj(model)
         db.session.add(model)
         db.session.commit()
-        cache.delete_memoized('name_to_assign_id')
+        cache.delete_memoized(Assignment.name_to_assign_info)
 
         flash("Assignment created successfully.", "success")
         return redirect(url_for(".course_assignments", cid=cid))
@@ -281,7 +281,7 @@ def assignment(cid, aid):
 
     if form.validate_on_submit():
         form.populate_obj(assgn)
-        cache.delete_memoized('name_to_assign_id')
+        cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
 
     return render_template('staff/course/assignment.html', assignment=assgn,
