@@ -29,6 +29,7 @@ from server.extensions import cache
 from server.utils import encode_id, decode_id
 import server.models as models
 from server.constants import STAFF_ROLES
+from server.autograder import submit_continous
 
 endpoints = Blueprint('api', __name__)
 endpoints.config = {}
@@ -289,7 +290,7 @@ class BackupSchema(APISchema):
         if args['submit'] and lock_flag:
             raise ValueError('Late Submission')
         if elgible_submit and assignment['autograding_key']:
-            autograder.submit_continous(backup)
+            submit_continous(backup)
         return backup
 
 

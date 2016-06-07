@@ -180,7 +180,7 @@ def authorized(resp):
 
 
 
-@auth.route('/sudo/<email>')
+@auth.route('/sudo/<email>/')
 @login_required
 def sudo_login(email):
     logger.info("Sudo attempt to %s from %s", email, current_user)
