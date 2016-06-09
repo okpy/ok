@@ -144,7 +144,7 @@ def refresh_token(resp):
             request.args.get('error_description')
         )
         flash(error, "error")
-        return redirect(url_for("main.home"))
+        return redirect("/")
 
     refresh_file = {'access_token': resp['access_token'],
                     'refresh_token': resp['refresh_token'],
@@ -163,7 +163,7 @@ def authorized(resp):
         error = "{} - {}".format(resp.data['error'], resp.data['error_description'])
         flash(error, "error")
         # TODO Error Page
-        return redirect(url_for('main.home'))
+        return redirect("/")
     if resp is None:
         error = "Access denied: reason={} error={}".format(
             request.args['error_reason'],
@@ -171,7 +171,7 @@ def authorized(resp):
         )
         flash(error, "error")
         # TODO Error Page
-        return redirect(url_for('main.home'))
+        return redirect("/")
 
     access_token = resp['access_token']
     user = user_from_access_token(access_token)
