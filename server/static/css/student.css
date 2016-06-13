@@ -483,6 +483,9 @@ header .logo {
   padding:2em 1.5em 0.5em 1.5em;
 }
 
+.other-courses {
+}
+
 /* Small devices (tablets, 768px and up) */
 @media (min-width: 768px) {
   .subcontent {

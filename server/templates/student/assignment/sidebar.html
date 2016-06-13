@@ -30,7 +30,7 @@
     <li class="top-level">
         <i class="fa fa-sign-out"></i>
         <div class="list-item">
-            <form method="POST" action="{{ url_for('auth.logout' )}}" role="form" class="form-inline">
+            <form method="POST" action="{{ url_for('auth.logout' )}}" role="form" class="form-inline" id="logout-form">
                 <div style="display:none;"><input id="csrf_token" name="csrf_token" type="hidden" value="{{ csrf_token() }}"></div>
                   <button class="plain-btn" type="submit">
                          Logout<span></span>

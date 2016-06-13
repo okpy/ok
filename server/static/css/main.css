@@ -22,6 +22,13 @@ pre code  {
     margin-top: -1em;
 }
 
+.inline {
+    display: inline;
+}
+.pace {
+    display: none;
+}
+
 td.slim-cell {
   padding-top: 0em;
   padding-bottom: 0em;
@@ -40,9 +47,76 @@ td.slim-cell {
     outline:none;
 }
 
-.inline {
-    display: inline;
+/* Blank State from Code Pen */
+.blank-state {
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -moz-box-shadow: 0 3px 4px -3px rgba(102, 102, 102, 0.25);
+  -webkit-box-shadow: 0 3px 4px -3px rgba(102, 102, 102, 0.25);
+  box-shadow: 0 3px 4px -3px rgba(102, 102, 102, 0.25);
+  position: relative;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  padding: 40px 20px;
+  font-size: 100%;
+  color: #737373;
+  text-align: center;
+  border: 1px solid #ddd;
+  background-color: #fefefe;
 }
-.pace {
-    display: none;
+.blank-state h1, .blank-state p {
+  font-weight: 300;
+}
+.blank-state p {
+  margin-bottom: 15px;
+}
+.blank-state.blank-state-lg {
+  padding: 90px 45px;
+  font-size: 150%;
+}
+.blank-state.blank-state-sm {
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px 10px;
+  font-size: 85%;
+}
+
+.loading-block {
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  postion: relative;
+  max-width: 300px;
+  height: 3px;
+  margin-bottom: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: rgba(0, 168, 255, 0.15);
+}
+
+.loading-block .status-bar {
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  postion: relative;
+  width: 0;
+  height: 3px;
+  background-color: #00a8ff;
+}
+
+.blank-state-icon {
+    max-width: 120px;
+}
+
+/* Small devices (tablets, 768px and up) */
+@media (max-width: 768px) {
+  .blank-state.blank-state-lg {
+      width: 95%;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 20px 10px;
+      font-size: 150%;
+  }
 }

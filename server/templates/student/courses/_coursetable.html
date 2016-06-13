@@ -1,6 +1,29 @@
-{% macro render_courses(courses, tname="Courses", admin=False, empty=False) %}
+{% macro render_no_courses_found(selector, descriptor="courses") %}
+    <div class='blank-state blank-state-lg'>
+        <div class='blank-state-icon-overlay'>
+          <img src="/static/img/logo.svg" class="blank-state-icon" alt="Ok Logo">
+        </div>
+        <div class='loading-block loading-block-error'>
+          <div class='status-bar'></div>
+        </div>
+
+      <h3 class='text-primary'> {{ descriptor }} </h3>
+      <small>It looks like {{ current_user.email }} is {{ descriptor.lower() }} in any course.
+           Contact your course staff if you believe this is an error. <br>
+           Click <a onclick='document.getElementById("logout-form").submit();'>here</a> to login with another email.</small>
+      <br>
+      <br>
+      <button class='btn btn-default' onclick="showElem('{{ selector }}')">
+        <i class='blank-icon-sm fa fa-ellipsis-h'></i>
+        &nbsp;View Other Courses
+      </button>
+    </div>
+{% endmacro %}
+
+
+{% macro render_courses(courses, tname="Courses", admin=False, empty=False, class_="") %}
   {% if courses %}
-  <div class="subcontent list hidden-xs hidden-sm">
+  <div class="subcontent list hidden-xs hidden-sm {{ class_ }}">
     <div class="wrap">
       <h2>{{ tname }}</h2>
       <table>
@@ -50,15 +73,15 @@
   {% elif empty %}
   <div class="subcontent list hidden-xs hidden-sm">
     <div class="wrap">
-      <h2>No {{ tname }}</h2>
+    {{ render_no_courses_found(".other-courses-desktop", descriptor="Not enrolled as a student") }}
     </div>
   </div>
   {% endif %}
 {% endmacro %}
 
-{% macro render_courses_mobile(courses, tname="Courses", admin=False, empty=False) %}
+{% macro render_courses_mobile(courses, tname="Courses", admin=False, empty=False, class_="") %}
   {% if courses %}
-  <div class="subcontent list hidden-md hidden-lg">
+  <div class="subcontent list hidden-md hidden-lg {{ class_ }}">
     <div class="wrap">
       <h2>{{ tname }}</h2>
       {% for course in courses %}
@@ -88,7 +111,7 @@
   {% elif empty %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
-      <h2>No {{ tname }}</h2>
+    {{ render_no_courses_found(".other-courses-mobile", descriptor="Not enrolled as a student") }}
     </div>
   </div>
   {% endif %}
