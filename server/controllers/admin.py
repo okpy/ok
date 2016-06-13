@@ -9,7 +9,7 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
 from flask_login import current_user
 import pytz
 
-from server.autograder import grade_single, autograde_assignment
+from server.autograder import autograde_assignment
 from server.controllers.auth import google_oauth_token
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
@@ -238,7 +238,6 @@ def course_assignments(cid):
     active_asgns = [a for a in assgns if a.active]
     due_asgns = [a for a in assgns if not a.active]
     # TODO CLEANUP : Better way to send this data to the template.
-
     return render_template('staff/course/assignments.html',
                            courses=courses, current_course=current_course,
                            active_asgns=active_asgns, due_assgns=due_asgns)
@@ -269,7 +268,7 @@ def new_assignment(cid):
 def assignment(cid, aid):
     courses, current_course = get_courses(cid)
     assgn = Assignment.query.filter_by(id=aid, course_id=cid).one()
-    # Convert TZ to Pacific
+    # Convert TZ to Pacific, TODO: Convert to course time.
     assgn.due_date = convert_to_pacific(assgn.due_date)
     assgn.lock_date = convert_to_pacific(assgn.lock_date)
     form = forms.AssignmentUpdateForm(obj=assgn)
@@ -283,6 +282,7 @@ def assignment(cid, aid):
         form.populate_obj(assgn)
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
+        flash("Assignment edited successfully.", "success")
 
     return render_template('staff/course/assignment.html', assignment=assgn,
                            form=form, courses=courses, stats=stats,
@@ -332,7 +332,7 @@ def export_scores(cid, aid):
                     headers={'Content-Disposition': disposition})
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/queues",
-            methods=["GET", "POST"])
+             methods=["GET", "POST"])
 @is_staff(course_arg='cid')
 def assign_grading(cid, aid):
     courses, current_course = get_courses(cid)
@@ -345,12 +345,11 @@ def assign_grading(cid, aid):
     course_staff = sorted(current_course.get_staff(), key=lambda x: x.role)
     details = lambda e: "{} - ({})".format(e.user.email, e.role)
     form.staff.choices = [(utils.encode_id(e.user_id), details(e))
-                                for e in course_staff]
+                          for e in course_staff]
     if not form.staff.data:
         # Select all by default
         form.staff.default = [u[0] for u in form.staff.choices]
         form.process()
-
 
     if form.validate_on_submit():
         # TODO: Use worker job for this (this is query intensive)
@@ -388,7 +387,7 @@ def assign_grading(cid, aid):
                            form=form)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/autograde",
-            methods=["GET", "POST"])
+             methods=["GET", "POST"])
 @is_staff(course_arg='cid')
 def autograde(cid, aid):
     courses, current_course = get_courses(cid)
@@ -406,20 +405,17 @@ def autograde(cid, aid):
 
         autopromotion = form.autopromote.data
         try:
-            res = autograde_assignment(assign, form.autograder_id.data,
-                                       token, autopromotion=autopromotion)
+            autograde_assignment(assign, form.autograder_id.data,
+                                 token, autopromotion=autopromotion)
             flash('Submitted to the autograder', 'success')
         except ValueError as e:
             flash(str(e), 'error')
-
-
 
     if not form.token.data and auth_token:
         form.token.data = auth_token[0]
 
     if not form.autograder_id.data and assign.autograding_key:
         form.autograder_id.data = assign.autograding_key
-
 
     return render_template('staff/grading/autograde.html',
                            current_course=current_course,
