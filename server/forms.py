@@ -43,6 +43,7 @@ class BaseForm(Form):
 class AssignmentForm(BaseForm):
     def __init__(self, course, obj=None, **kwargs):
         self.course = course
+        self.obj = obj
         super(AssignmentForm, self).__init__(obj=obj, **kwargs)
         if obj:
             if obj.due_date == self.due_date.data:
@@ -52,7 +53,8 @@ class AssignmentForm(BaseForm):
 
     display_name = StringField(u'Display Name',
                                validators=[validators.required()])
-    name = StringField(u'Offering', validators=[validators.required()])
+    name = StringField(u'Offering (example: cal/cs61a/sp16/lab01)',
+                       validators=[validators.required()])
     due_date = DateTimeField(u'Due Date (Course Time)',
                              default=dt.datetime.now,
                              validators=[validators.required()])
@@ -80,6 +82,11 @@ class AssignmentForm(BaseForm):
         if not check_validate:
             return False
 
+        # Ensure the name has the right format:
+        if not self.name.data.startswith(self.course.offering):
+            self.name.errors.append('The name should be of the form {}/<name>'.format(self.course.offering))
+            return False
+
         # If the name is changed, ensure assignment offering is unique
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn:
@@ -89,7 +96,20 @@ class AssignmentForm(BaseForm):
 
 class AssignmentUpdateForm(AssignmentForm):
     def validate(self):
-        return super(AssignmentForm, self).validate()
+        # if our validators do not pass
+        if not super(AssignmentForm, self).validate():
+            return False
+
+        # Ensure the name has the right format:
+        if not self.name.data.startswith(self.course.offering):
+            self.name.errors.append('The name should be of the form {}/<name>'.format(self.course.offering))
+            return False
+
+        assgn = Assignment.query.filter_by(name=self.name.data).first()
+        if assgn and (self.obj and assgn.id != self.obj.id):
+            self.name.errors.append('That offering already exists.')
+            return False
+        return True
 
 class AssignmentTemplateForm(BaseForm):
     template_files = FileField('Template Files', [FileRequired()])

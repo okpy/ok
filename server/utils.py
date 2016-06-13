@@ -62,9 +62,7 @@ def server_time_obj(time, course):
 def natural_time(date):
     """Format a human-readable time difference (e.g. "6 days ago")"""
     if date.tzinfo:
-        date.astimezone(pytz.utc)
-        date.replace(tzinfo=None)
-
+        date = date.astimezone(pytz.utc).replace(tzinfo=None)
     now = dt.datetime.utcnow()
     return humanize.naturaltime(now - date)
 
