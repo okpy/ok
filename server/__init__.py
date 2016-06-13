@@ -16,7 +16,6 @@ from server.controllers.admin import admin
 from server.controllers.api import endpoints as api
 from server.controllers.auth import auth, login_manager
 from server.controllers.student import student
-
 from server.constants import API_PREFIX
 
 from server.extensions import (

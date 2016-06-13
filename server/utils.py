@@ -12,7 +12,8 @@ import sendgrid
 
 from server.extensions import cache
 
-sg = sendgrid.SendGridClient(os.getenv('SENDGRID_API_KEY'), None, raise_errors=True)
+sg = sendgrid.SendGridClient(
+    os.getenv('SENDGRID_API_KEY'), None, raise_errors=True)
 logger = logging.getLogger(__name__)
 
 # ID hashing configuration.
@@ -20,8 +21,10 @@ logger = logging.getLogger(__name__)
 # link with an ID in it.
 hashids = Hashids(min_length=6)
 
+
 def encode_id(id_number):
     return hashids.encode(id_number)
+
 
 def decode_id(value):
     numbers = hashids.decode(value)
@@ -29,13 +32,16 @@ def decode_id(value):
         raise ValueError('Could not decode hash {} into ID'.format(value))
     return numbers[0]
 
+
 def local_time(dt, course):
     """Format a time string in a course's locale."""
     return course.timezone.localize(dt).strftime('%a %m/%d %H:%M %p')
 
+
 def natural_time(dt):
     """Format a human-readable time difference (e.g. "6 days ago")"""
     return humanize.naturaltime(datetime.datetime.utcnow() - dt)
+
 
 def is_safe_redirect_url(request, target):
     host_url = urlparse(request.host_url)
@@ -43,15 +49,18 @@ def is_safe_redirect_url(request, target):
     return redirect_url.scheme in ('http', 'https') and \
         host_url.netloc == redirect_url.netloc
 
+
 def random_row(query):
     count = query.count()
     if not count:
         return None
     return query.offset(random.randrange(count)).first()
 
+
 def group_action_email(members, subject, text):
     emails = [m.user.email for m in members]
     return send_email(emails, subject, text)
+
 
 def invite_email(member, recipient, assignment):
     subject = "{} group invitation".format(assignment.display_name)
@@ -63,15 +72,16 @@ def invite_email(member, recipient, assignment):
     send_email(recipient.email, subject, text, template,
                link_text=link_text, link=link)
 
+
 def send_email(to, subject, body, template='email/notification.html',
-        link=None, link_text="Sign in"):
+               link=None, link_text="Sign in"):
     """ Send an email using sendgrid.
     Usage: send_email('student@okpy.org', 'Hey from OK', 'hi')
     """
     if not link:
         link = url_for('student.index', _external=True)
     html = render_template(template, subject=subject, body=body,
-        link=link, link_text=link_text)
+                           link=link, link_text=link_text)
     message = sendgrid.Mail(
         to=to,
         from_name="Okpy.org",
@@ -102,7 +112,6 @@ def chunks(l, n):
     if n == 0:
         return
     new_n = int(1.0 * len(l) / n + 0.5)
-    for i in range(0, n-1):
-        yield l[i * new_n : i * new_n + new_n]
+    for i in range(0, n - 1):
+        yield l[i * new_n: i * new_n + new_n]
     yield l[n * new_n - new_n:]
-

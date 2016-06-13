@@ -200,12 +200,12 @@ class Course(Model):
         ).count() > 0
 
     def get_staff(self):
-        return [e for e in Enrollment.query
-            .options(db.joinedload('user'))
-            .filter(
-                Enrollment.role.in_(STAFF_ROLES),
-                Enrollment.course == self
-            ).all()]
+        return [e for e in (Enrollment.query
+                            .options(db.joinedload('user'))
+                            .filter(Enrollment.role.in_(STAFF_ROLES),
+                                    Enrollment.course == self)
+                            .all()
+                            )]
 
 class Assignment(Model):
     """Assignments are particular to courses and have unique names.
@@ -214,6 +214,7 @@ class Assignment(Model):
         due_date - DEADLINE (Publically displayed)
         lock_date - DEADLINE+1 (Hard Deadline for submissions)
         url - cs61a.org/proj/hog/hog.zip
+        flagged - User has indicated this one should be graded and not others
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -282,14 +283,13 @@ class Assignment(Model):
             if student.role == STUDENT_ROLE and student.user_id not in seen:
                 group = self.active_user_ids(student.user_id)
                 fs = self.final_submission(group)
-                seen |= group # Perform union of two sets
+                seen |= group  # Perform union of two sets
                 if fs:
                     students |= group
                     submissions.add(fs.id)
                 else:
                     no_submissions |= group
         return students, submissions, no_submissions
-
 
     def active_user_ids(self, user_id):
         """Return a set of the ids of all users that are active in the same group
@@ -573,7 +573,7 @@ class Backup(Model):
     @cache.memoize(120)
     def statistics(self):
         return db.session.query(Backup).from_statement(
-            db.text("""SELECT date_trunc('hour', backup.created), count(backup.id)  FROM backup
+            db.text("""SELECT date_trunc('hour', backup.created), count(backup.id) FROM backup
             WHERE backup.created >= NOW() - '1 day'::INTERVAL
             GROUP BY date_trunc('hour', backup.created)
             ORDER BY date_trunc('hour', backup.created)""")).all()
