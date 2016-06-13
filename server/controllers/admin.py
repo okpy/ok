@@ -43,6 +43,8 @@ def is_staff(course_arg=None):
                             return func(*args, **kwargs)
                     else:
                         return func(*args, **kwargs)
+            else:
+                return redirect(url_for("student.index"))
             flash("You are not on the course staff", "error")
             return redirect(url_for("student.index"))
         return wrapper
