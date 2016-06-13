@@ -4,27 +4,27 @@ This module interfaces the OK Server with Autopy. The actual autograding happens
 in a sandboxed environment.
 """
 
-from flask import session, url_for
+from flask import url_for
 import json
 import requests
 
 import server.constants as constants
-from server.models import db, User, Assignment, Backup, Course, Enrollment
-from server.extensions import cache
+from server.models import User
 import server.utils as utils
+
 
 def send_autograder(endpoint, data):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-    r = requests.post(constants.AUTOGRADER_URL+endpoint,
-                  data=json.dumps(data), headers=headers, timeout=5)
+    r = requests.post(constants.AUTOGRADER_URL + endpoint,
+                      data=json.dumps(data), headers=headers, timeout=5)
 
     if r.status_code == requests.codes.ok:
-      return {'status': True, 'message': 'OK' }
+        return {'status': True, 'message': 'OK'}
     else:
-      error_message = 'The autograder rejected your request. {}'.format(r.text)
-      raise ValueError(error_message)
-
+        error_message = 'The autograder rejected your request. {}'.format(
+            r.text)
+        raise ValueError(error_message)
 
 
 def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
@@ -49,7 +49,6 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
                     seen |= found_backup.owners()
                     backups_to_grade.append(utils.encode_id(found_backup.id))
 
-
     data = {
         'subm_ids': backups_to_grade,
         'assignment': ag_assign_key,
@@ -60,6 +59,7 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
         'testing': token == 'testing',
     }
     return send_autograder('/api/ok/v3/grade/batch', data)
+
 
 def grade_single(backup, ag_assign_key, token):
 
@@ -98,8 +98,8 @@ def submit_continous(backup):
 
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-    r = requests.post(constants.AUTOGRADER_URL+'/api/file/grade/continous',
-        data=json.dumps(data), headers=headers, timeout=4)
+    r = requests.post(constants.AUTOGRADER_URL + '/api/file/grade/continous',
+                      data=json.dumps(data), headers=headers, timeout=4)
 
     if r.status_code == requests.codes.ok:
         return {'status': "pending"}
