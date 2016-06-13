@@ -61,7 +61,7 @@ class AssignmentForm(BaseForm):
     lock_date = DateTimeField(u'Lock Date (Course Time)',
                               default=dt.datetime.now,
                               validators=[validators.required()])
-    max_group_size = IntegerField(u'Max Group Size', default=1,
+    max_group_size = IntegerField(u'Max Group Size',
                                   validators=[validators.required()])
     url = StringField(u'URL',
                       validators=[validators.optional(), validators.url()])
@@ -71,9 +71,11 @@ class AssignmentForm(BaseForm):
 
     def populate_obj(self, obj):
         """ Updates obj attributes based on form contents. """
+
         super(AssignmentForm, self).populate_obj(obj)
         obj.due_date = utils.server_time_obj(self.due_date.data, self.course)
         obj.lock_date = utils.server_time_obj(self.lock_date.data, self.course)
+
 
     def validate(self):
         check_validate = super(AssignmentForm, self).validate()

@@ -271,6 +271,7 @@ def assignment(cid, aid):
     if form.validate_on_submit():
         # populate_obj converts back to UTC
         form.populate_obj(assgn)
+        print(assgn.max_group_size, )
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
         flash("Assignment edited successfully.", "success")

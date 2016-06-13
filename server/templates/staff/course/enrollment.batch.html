@@ -50,7 +50,7 @@
             <p> Add new students to the course </p>
             {% call forms.render_form(batch_form, action_url=url_for('.batch_enroll', cid=current_course.id), action_text='Batch Enroll',
                                         class_='form') %}
-                {{ forms.render_field(batch_form.csv, label_visible=true, placeholder='Line Seperated CSV') }}
+                {{ forms.render_field(batch_form.csv, label_visible=true, placeholder='Line Separated CSV') }}
             {% endcall %}
 
           </div>
