@@ -131,6 +131,9 @@
           <div class="box-header with-border">
             <h3 class="box-title">Edit {{ assignment.display_name }} Assignment</h3>
             <div class="box-tools pull-right">
+               <a href="{{ url_for('.templates', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-default btn-flat">
+                 <i class="fa fa-copy"></i> Edit Assignment Template
+              </a>
               <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
                 <i class="fa fa-minus"></i>
               </button>
@@ -138,8 +141,7 @@
           </div>
           <div class="box-body">
               <!-- form goes here -->
-              {% call forms.render_form(form, action_url="", action_text='Edit Assignment',
-                                          class_='form') %}
+              {% call forms.render_form(form, action_url="", action_text='Update Assignment', class_='form') %}
                   {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', type='text') }}
                   {{ forms.render_field(form.name, label_visible=true, placeholder='cs61a/sp16/proj01', type='text') }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}

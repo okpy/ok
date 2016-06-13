@@ -40,8 +40,7 @@
 
           <div class="box">
             <div class="box-body">
-              {% call forms.render_form(form, action_url="", action_text='Create Assignment',
-                                          class_='form') %}
+              {% call forms.render_form(form, action_url="", action_text='Create Assignment', class_='form') %}
                   {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', type='text') }}
                   {{ forms.render_field(form.name, label_visible=true, placeholder='cs61a/sp16/proj01', type='text') }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}

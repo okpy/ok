@@ -1,0 +1,82 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} Ok - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ assignment.display_name }} Templates
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li class="active"><a href="#"><i class="fa fa-plus"></i> Assignment Template</a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+              {{message}}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <div class="row">
+        <div class="col-md-5 col-sm-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Update Templates</h3>
+                </div>
+                <div class="box-body">
+                    <p> To provide a diff of student submission to the original provided file(s), upload the starter files here (include only those that students submit) </p>
+                    {% call forms.render_form(form, action_url="", action_text='Update Template',
+                                                class_='form', enctype="multipart/form-data") %}
+                        {{ forms.render_field(form.template_files, label_visible=true, multiple="") }}
+                    {% endcall %}
+                </div>
+                <!-- /.box-body -->
+            <!-- /.box -->
+            </div>
+        <!-- /.col -->
+        </div>
+
+      <div class="col-md-7 col-sm-12">
+        {% for filename in assignment.files %}
+          <div class="box collapsed-box">
+            <div class="box-header with-border">
+                <h3 class="box-title">{{ filename }}</h3>
+                <div class="box-tools pull-right">
+                  <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                  </button>
+                </div>
+            </div>
+            <div class="box-body">
+              <pre>{{ assignment.files[filename] }}</pre>
+            </div>
+            <!-- /.box-body -->
+         </div>
+          <!-- /.box -->
+          {% endfor %}
+    <!-- /.col -->
+    </div>
+
+    <!-- /.row -->
+    </div>
+
+
+
+
+  <!-- </body> do not close body in template-->
+{% endblock %}

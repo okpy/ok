@@ -288,6 +288,34 @@ def assignment(cid, aid):
                            form=form, courses=courses, stats=stats,
                            current_course=current_course)
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/template",
+             methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def templates(cid, aid):
+    courses, current_course = get_courses(cid)
+    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one()
+
+    form = forms.AssignmentTemplateForm()
+
+    if assignment.course != current_course:
+        return abort(401)
+
+    if form.validate_on_submit():
+        files = request.files.getlist("template_files")
+        if files:
+            templates = {}
+            for template in files:
+                templates[template.filename] = str(template.read(), 'utf-8')
+            assignment.files = templates
+        cache.delete_memoized(Assignment.name_to_assign_info)
+        db.session.commit()
+        flash("Templates Uploaded", "success")
+
+    # TODO: Use same student facing code rendering/highlighting
+    return render_template('staff/course/assignment.template.html',
+                           assignment=assignment, form=form, courses=courses,
+                           current_course=current_course)
+
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
 @is_staff(course_arg='cid')
 def export_scores(cid, aid):

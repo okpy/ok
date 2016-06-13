@@ -1,8 +1,9 @@
 from flask_wtf import Form
+from flask_wtf.file import FileField, FileRequired
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
                      SelectMultipleField, widgets, validators)
-from wtforms.fields.html5 import EmailField
+from flask_wtf.html5 import EmailField
 
 import datetime as dt
 # from wtforms.ext.sqlalchemy.orm import model_form
@@ -82,6 +83,8 @@ class AssignmentUpdateForm(AssignmentForm):
     def validate(self):
         return super(AssignmentForm, self).validate()
 
+class AssignmentTemplateForm(BaseForm):
+    template_files = FileField('Template Files', [FileRequired()])
 
 class EnrollmentForm(BaseForm):
     name = StringField(u'Name', validators=[validators.optional()])
