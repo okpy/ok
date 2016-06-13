@@ -55,8 +55,8 @@
                 <tr>
                   <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=asgn.id) }}">{{ asgn.display_name }}</a></td>
                   <td>{{ asgn.name }}</td>
-                  <td>{{ asgn.due_date }}</td>
-                  <td>{{ asgn.lock_date }}</td>
+                  <td>{{ utils.local_time(asgn.due_date, current_course) }}</td>
+                  <td>{{ utils.local_time(asgn.lock_date, current_course) }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -90,8 +90,8 @@
                 <tr>
                   <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=asgn.id) }}">{{ asgn.display_name }}</a></td>
                   <td>{{ asgn.name }}</td>
-                  <td>{{ asgn.due_date }}</td>
-                  <td>{{ asgn.lock_date }}</td>
+                  <td>{{ utils.local_time(asgn.due_date, current_course) }}</td>
+                  <td>{{ utils.local_time(asgn.lock_date, current_course) }}</td>
                 </tr>
                 {% endfor %}
               </tbody>

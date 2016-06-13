@@ -88,13 +88,12 @@ class Timezone(types.TypeDecorator):
         # SQL -> Python
         return pytz.timezone(value)
 
-
 class Model(db.Model):
     """Timestamps all models, and serializes model objects."""
     __abstract__ = True
 
-    created = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
-
+    created = db.Column(db.DateTime(timezone=True),
+                        server_default=db.func.now(), nullable=False)
     def __repr__(self):
         if hasattr(self, 'id'):
             key_val = self.id
@@ -173,7 +172,7 @@ class Course(Model):
     display_name = db.Column(db.String(255), nullable=False)
     creator_id = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), nullable=False, default=True)
-    timezone = db.Column(Timezone, nullable=False, default=pytz.timezone('US/Pacific'))
+    timezone = db.Column(Timezone, nullable=False, default=pytz.timezone('America/Los_Angeles'))
 
     def __repr__(self):
         return '<Course %r>' % self.offering
@@ -222,8 +221,8 @@ class Assignment(Model):
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     display_name = db.Column(db.String(255), nullable=False)
-    due_date = db.Column(db.DateTime, nullable=False)
-    lock_date = db.Column(db.DateTime, nullable=False)
+    due_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    lock_date = db.Column(db.DateTime(timezone=True), nullable=False)
     creator_id = db.Column(db.ForeignKey("user.id"))
     url = db.Column(db.Text)
     max_group_size = db.Column(db.Integer(), nullable=False, default=1)
@@ -598,7 +597,7 @@ class GroupMember(Model):
     group_id = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
 
     status = db.Column(db.Enum(*status_values, name="status"), nullable=False, index=True)
-    updated = db.Column(db.DateTime, onupdate=db.func.now())
+    updated = db.Column(db.DateTime(timezone=True), onupdate=db.func.now())
 
     user = db.relationship("User")
     assignment = db.relationship("Assignment")
@@ -805,7 +804,7 @@ class Comment(Model):
     Submission_line is the closest line on the submitted file.
     """
     id = db.Column(db.Integer(), primary_key=True)
-    updated = db.Column(db.DateTime, onupdate=db.func.now())
+    updated = db.Column(db.DateTime(timezone=True), onupdate=db.func.now())
     backup_id = db.Column(db.ForeignKey("backup.id"), index=True, nullable=False)
     author_id = db.Column(db.ForeignKey("user.id"), nullable=False)
 

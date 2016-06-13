@@ -22,11 +22,6 @@ import server.utils as utils
 
 admin = Blueprint('admin', __name__)
 
-
-def convert_to_pacific(date):
-    # TODO Move to UTILS
-    return date.replace(tzinfo=pytz.utc)
-
 def is_staff(course_arg=None):
     """ A decorator for routes to ensure that user is a member of
     the course staff.
@@ -247,7 +242,7 @@ def course_assignments(cid):
 @is_staff(course_arg='cid')
 def new_assignment(cid):
     courses, current_course = get_courses(cid)
-    form = forms.AssignmentForm()
+    form = forms.AssignmentForm(course=current_course)
     if form.validate_on_submit():
         model = Assignment(course_id=cid, creator_id=current_user.id)
         form.populate_obj(model)
@@ -268,17 +263,14 @@ def new_assignment(cid):
 def assignment(cid, aid):
     courses, current_course = get_courses(cid)
     assgn = Assignment.query.filter_by(id=aid, course_id=cid).one()
-    # Convert TZ to Pacific, TODO: Convert to course time.
-    assgn.due_date = convert_to_pacific(assgn.due_date)
-    assgn.lock_date = convert_to_pacific(assgn.lock_date)
-    form = forms.AssignmentUpdateForm(obj=assgn)
-
-    stats = Assignment.assignment_stats(assgn.id)
-
     if assgn.course != current_course:
         return abort(401)
 
+    form = forms.AssignmentUpdateForm(obj=assgn, course=current_course)
+    stats = Assignment.assignment_stats(assgn.id)
+
     if form.validate_on_submit():
+        # populate_obj converts back to UTC
         form.populate_obj(assgn)
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()

@@ -6,6 +6,7 @@ import string
 
 import loremipsum
 import names
+import pytz
 
 from server.models import (db, User, Course, Assignment, Enrollment,
                            Backup, Message, Comment, Version, Score,
@@ -122,8 +123,12 @@ def gen_assignment(course):
             str(random.randrange(15)).zfill(2))
     name = course.offering + '/' + display_name.lower().replace(' ', '')
 
-    last_night = datetime.datetime.utcnow().replace(
-        hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(seconds=1)
+    last_night = (datetime.datetime.utcnow()
+                          .replace(hour=0, minute=0, second=0, microsecond=0)
+                  - datetime.timedelta(seconds=1))
+    last_night = (pytz.timezone("America/Los_Angeles")
+                      .localize(last_night)
+                      .astimezone(pytz.utc))
     due_date = last_night + datetime.timedelta(
         days=random.randrange(-100, 100))
     lock_date = due_date + random.choice([

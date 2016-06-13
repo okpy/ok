@@ -6,11 +6,11 @@ from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
 from flask_wtf.html5 import EmailField
 
 import datetime as dt
-# from wtforms.ext.sqlalchemy.orm import model_form
-from .models import Assignment
+
+from server import utils
+from server.models import Assignment
 from server.constants import VALID_ROLES, GRADE_TAGS
 
-import pytz
 import csv
 import logging
 
@@ -19,10 +19,6 @@ def strip_whitespace(value):
         return value.strip()
     else:
         return value
-
-def convert_to_utc(date):
-    # TODO Not sure if 100% TZ aware. Unit test.
-    return pytz.utc.localize(date)
 
 class MultiCheckboxField(SelectMultipleField):
     """
@@ -34,7 +30,6 @@ class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
-
 class BaseForm(Form):
     class Meta:
         def bind_field(self, form, unbound_field, options):
@@ -42,19 +37,26 @@ class BaseForm(Form):
             field_type = type(unbound_field)
             if field_type == StringField:
                 filters.append(strip_whitespace)
-            elif field_type == DateTimeField:
-                filters.append(convert_to_utc)
             return unbound_field.bind(form=form, filters=filters, **options)
 
 
 class AssignmentForm(BaseForm):
+    def __init__(self, course, obj=None, **kwargs):
+        self.course = course
+        super(AssignmentForm, self).__init__(obj=obj, **kwargs)
+        if obj:
+            if obj.due_date == self.due_date.data:
+                self.due_date.data = utils.local_time_obj(obj.due_date, course)
+            if obj.lock_date == self.lock_date.data:
+                self.lock_date.data = utils.local_time_obj(obj.lock_date, course)
+
     display_name = StringField(u'Display Name',
                                validators=[validators.required()])
     name = StringField(u'Offering', validators=[validators.required()])
-    due_date = DateTimeField(u'Due Date (Pacific Time)',
+    due_date = DateTimeField(u'Due Date (Course Time)',
                              default=dt.datetime.now,
                              validators=[validators.required()])
-    lock_date = DateTimeField(u'Lock Date (Pacific Time)',
+    lock_date = DateTimeField(u'Lock Date (Course Time)',
                               default=dt.datetime.now,
                               validators=[validators.required()])
     max_group_size = IntegerField(u'Max Group Size', default=1,
@@ -65,6 +67,12 @@ class AssignmentForm(BaseForm):
                              validators=[validators.optional()])
     autograding_key = StringField(u'Autograder Key', [validators.optional()])
 
+    def populate_obj(self, obj):
+        """ Updates obj attributes based on form contents. """
+        super(AssignmentForm, self).populate_obj(obj)
+        obj.due_date = utils.server_time_obj(self.due_date.data, self.course)
+        obj.lock_date = utils.server_time_obj(self.lock_date.data, self.course)
+
     def validate(self):
         check_validate = super(AssignmentForm, self).validate()
 
@@ -72,7 +80,7 @@ class AssignmentForm(BaseForm):
         if not check_validate:
             return False
 
-        # If the name is changed , ensure assignment offering is unique
+        # If the name is changed, ensure assignment offering is unique
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn:
             self.name.errors.append('That offering already exists')

@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import logging
 import os
 import random
@@ -8,6 +8,7 @@ from flask import render_template, url_for
 from hashids import Hashids
 import humanize
 from premailer import transform
+import pytz
 import sendgrid
 
 from server.extensions import cache
@@ -25,30 +26,53 @@ hashids = Hashids(min_length=6)
 def encode_id(id_number):
     return hashids.encode(id_number)
 
-
 def decode_id(value):
     numbers = hashids.decode(value)
     if len(numbers) != 1:
         raise ValueError('Could not decode hash {} into ID'.format(value))
     return numbers[0]
 
+# Timezones. Be cautious with using tzinfo argument. http://pytz.sourceforge.net/
+# "tzinfo argument of the standard datetime constructors ‘’does not work’’
+# with pytz for many timezones."
 
-def local_time(dt, course):
-    """Format a time string in a course's locale."""
-    return course.timezone.localize(dt).strftime('%a %m/%d %H:%M %p')
+def local_time(time, course):
+    """Format a time string in a course's locale.
+    """
+    if not time.tzinfo:
+        # Assume UTC
+        time = pytz.utc.localize(time)
+    return time.astimezone(course.timezone).strftime('%a %m/%d %-I:%M %p')
 
+def local_time_obj(time, course):
+    """Get a Datetime object in a course's locale from a TZ Aware DT object."""
+    if not time.tzinfo:
+        time = pytz.utc.localize(time)
+    return time.astimezone(course.timezone)
 
-def natural_time(dt):
+def server_time_obj(time, course):
+    """Convert a datetime object from a course's locale to a UTC
+    datetime object.
+    """
+    if not time.tzinfo:
+        time = course.timezone.localize(time)
+    # Store using UTC on the server side.
+    return time.astimezone(pytz.utc)
+
+def natural_time(date):
     """Format a human-readable time difference (e.g. "6 days ago")"""
-    return humanize.naturaltime(datetime.datetime.utcnow() - dt)
+    if date.tzinfo:
+        date.astimezone(pytz.utc)
+        date.replace(tzinfo=None)
 
+    now = dt.datetime.utcnow()
+    return humanize.naturaltime(now - date)
 
 def is_safe_redirect_url(request, target):
     host_url = urlparse(request.host_url)
     redirect_url = urlparse(urljoin(request.host_url, target))
     return redirect_url.scheme in ('http', 'https') and \
         host_url.netloc == redirect_url.netloc
-
 
 def random_row(query):
     count = query.count()

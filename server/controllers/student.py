@@ -64,7 +64,6 @@ def index():
 @student.route('/<offering:offering>/')
 @login_required
 def course(offering):
-    course = get_course(offering)
     def assignment_info(assignment):
         # TODO does this make O(n) db queries?
         # TODO need group info too
@@ -74,6 +73,7 @@ def course(offering):
         group = Group.lookup(current_user, assignment)
         return assignment, submission_time, group
 
+    course = get_course(offering)
     assignments = {
         'active': [assignment_info(a) for a in course.assignments if a.active],
         'inactive': [assignment_info(a) for a in course.assignments if not a.active]
@@ -172,10 +172,14 @@ def flag(name, bid):
     user_ids = assign.active_user_ids(current_user.id)
     flag = 'flag' in request.form
     next_url = request.form['next']
-    if flag:
+
+    if not assign.active:
+        flash('It is too late to change what submission is graded.', 'warning')
+    elif flag:
         assign.flag(bid, user_ids)
     else:
         assign.unflag(bid, user_ids)
+
     if is_safe_redirect_url(request, next_url):
         return redirect(next_url)
     else:
