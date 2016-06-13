@@ -45,7 +45,7 @@
               <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name_with_semester }}</a></span> &raquo;
               <span>{{ assignment.display_name }}</span>
             </div>
-            <h1>{{ assignment.display_name}}</h1>
+            <h1>{{ assignment.display_name}} <small> Due: {{  utils.local_time(assignment.due_date, course) }} </small></h1>
           </div>
           {% include 'alerts.html' %}
 
@@ -74,9 +74,9 @@
                 </div>
                 <div class="cell-text">
                   {% if final_submission.flagged %}
-                    <span>Flagged for Grading. This is the submission that will be graded. </span>
+                    <span>Flagged for Grading. This submission will be graded. </span>
                   {% else %}
-                    <span>Latest Submission. The newest submission will be graded. </span>
+                    <span><i class="fa fa-clock-o grey"></i> This is the most recent submission. Unless you flag another submission, the most recent submission will be graded </span>
                   {% endif %}
                 </div>
                 <div class="cell-status">
@@ -121,7 +121,7 @@
           </div>
         </div>
         <!-- start mobile version -->
-        {{ table.render_subms_mobile(subms, course, flagged, tname="Recent Submissions") }}
+        {{ table.render_subms_mobile(subms, course, flagged, csrf_form, tname="Recent Submissions") }}
         {{ table.render_backups_mobile(backups, course, tname="Recent Backups") }}
         <!-- end mobile version -->
       </section>

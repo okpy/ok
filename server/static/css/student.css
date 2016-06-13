@@ -479,6 +479,9 @@ header .logo {
     .cell-status + .cell-status {
       margin-top:0.25em;
     }
+  .cell-footer {
+      margin-top: 0.25em;
+  }
 .string-nav {
   padding:2em 1.5em 0.5em 1.5em;
 }

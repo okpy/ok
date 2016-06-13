@@ -116,26 +116,38 @@
         <div class="cell-text"><span>Submitter:  {{ subm.submitter.email }}</span></div>
         <div class="cell-status">
           <span>
-
           {% if subm.flagged %}
-            <i class="fa fa-flag green"></i> Flagged for grading
+          <i class="fa fa-flag green"></i> Flagged for Grading. This submission will be graded.
           {% elif not flagged and loop.index == 1 %}
 
-          <i class="fa fa-flag grey"></i> This is the most recent submission.
-          Unless you flag another submission, the most recent submission will be graded</span>
-          {% else %}
+              <i class="fa fa-clock-o grey"></i> This is the most recent submission.
+              Unless you flag another submission, the most recent submission will be graded</span>
+              {% else %}
             <div class="due-dot grey"></div> Not flagged for grading.
           {% endif %}
         </span>
 
-          <br>
-
-        <a href="{{url_for('.code', name=subm.assignment.name, bid=subm.id, submit=subm.submit)}}" class="dashed">
-            View Code
-        </a>
-
         </div>
-      </div>
+        <hr>
+        <div class="cell-footer">
+            <div class="pull-left">
+                <a href="{{url_for('.code', name=subm.assignment.name, bid=subm.id, submit=subm.submit)}}" class="dashed">
+                    View Code
+                </a>
+            </div>
+            <div class="pull-right">
+                {% call forms.render_form(flag_form, action_url=url_for('.flag', name=subm.assignment.name, bid=subm.id), class_='form-inline') %}
+                  {% if not subm.flagged %}
+                    <input type="hidden" name="flag">
+                  {% endif %}
+                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                  <button class="final-button" type="submit">
+                      <a class="dashed">{{ 'Remove Flag for Grading' if subm.flagged else 'Flag for Grading' }} </a>
+                  </button>
+                {% endcall %}
+            </div>
+        </div>
+    </div>
       {% endfor %}
     </div>
   </div>
