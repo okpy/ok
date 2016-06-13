@@ -7,7 +7,6 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
 
 from flask_login import current_user
-import pytz
 
 from server.autograder import autograde_assignment
 from server.controllers.auth import google_oauth_token

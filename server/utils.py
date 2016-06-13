@@ -63,6 +63,7 @@ def natural_time(date):
     """Format a human-readable time difference (e.g. "6 days ago")"""
     if date.tzinfo:
         date = date.astimezone(pytz.utc).replace(tzinfo=None)
+
     now = dt.datetime.utcnow()
     return humanize.naturaltime(now - date)
 

@@ -84,9 +84,8 @@ def create_app(default_config_path=None):
 
     app.register_blueprint(auth)
 
-    app.register_blueprint(admin, url_prefix='/admin')
-
     app.register_blueprint(student)
+    app.register_blueprint(admin, url_prefix='/admin')
 
     # API does not need CSRF protection
     csrf.exempt(api)

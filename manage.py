@@ -6,7 +6,7 @@ from flask_script.commands import ShowUrls, Clean
 from flask_migrate import Migrate, MigrateCommand
 
 from server import create_app, generate
-from server.models import db, User, Course
+from server.models import db, User, Course, Version
 from server.extensions import cache
 
 # default to dev config
@@ -33,7 +33,6 @@ def make_shell_context():
 def seed():
     generate.seed()
 
-
 @manager.command
 def cacheflush():
     with app.app_context():
@@ -58,6 +57,9 @@ def createdb():
             active=True)
     db.session.add(course)
     db.session.commit()
+    url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.5/ok'
+    ok = Version(name='ok-client', current_version='v1.5.5', download_link=url)
+    db.session.add(ok)
 
 
 @manager.command
