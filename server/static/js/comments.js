@@ -87,7 +87,7 @@ jQuery(document).ready(function($){
             }).done(function () {
                 comment.fadeOut(function () { removeComment(comment) });
             }).fail(function () {
-                swal('Oops, something went wrong. Try again?');
+                swal('Oops, something went wrong. Try again?', 'error');
             });
         });
     });
@@ -156,7 +156,7 @@ jQuery(document).ready(function($){
             comment.remove();
         }).fail(function () {
             editor.removeClass('comment-editor-disabled');
-            swal('Oops, something went wrong. Try again?');
+            swal('Oops, something went wrong. Try again?', 'error');
         })
     });
 });

@@ -168,7 +168,7 @@
       {% for backup in backups %}
 
       <div class="cell col-xs-12">
-        <div class="cell-title"><a href="{{ url_for('.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit)}}">{{ utils.local_time(backup.created, course) }}     </a></div>
+        <div class="cell-title"><a href="{{ url_for('.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit)}}"> {{ utils.local_time(backup.created, course) }} </a></div>
         <div class="cell-text"><span>Submitter:  {{ backup.submitter.email }}</span></div>
         <div class="cell-status">
         <a href="{{ url_for('.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit)}}" class="dashed">

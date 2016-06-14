@@ -268,6 +268,7 @@ class BackupSchema(APISchema):
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
+        'submit': fields.Boolean,
         'group': fields.List(fields.Nested(UserSchema.get_fields)),
     }
 
