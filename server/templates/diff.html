@@ -53,7 +53,7 @@
         <tr>
           <th class="source-file-header" colspan=3>
               <div class="source-file-name fixed-width-font">{{ filename }}</div>
-              <a href="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
+              <a data-no-instant href="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}"
               class="no-dash dl-button source-file-download">
                   <i class="fa fa-download"></i> Download
               </a>

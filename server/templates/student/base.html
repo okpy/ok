@@ -60,6 +60,9 @@
         {% if debug %}
           <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tota11y/0.1.5/tota11y.min.js"></script>
         {% endif %}
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/instantclick/3.0.1/instantclick.min.js"></script>
+         <script data-no-instant>InstantClick.init(50);</script>
+
         <!-- TODO: Exclude in debug -->
         <script src="https://cdn.ravenjs.com/2.1.0/raven.min.js"></script>
         <script type="text/javascript">Raven.config('https://60bdf8d6337a463b858a14b2221c080c@sentry.cs61a.org/3').install() </script>
