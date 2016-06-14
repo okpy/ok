@@ -43,16 +43,18 @@ class TestAuth(OkTestCase):
 
         def attempt_sudo(email, expected, success):
             with self.client as c:
-                response = c.get('/sudo/{}'.format(email))
+                response = c.get('/sudo/{}/'.format(email))
                 self.assertEqual(response.status_code, expected)
                 s_user = flask.session.get('sudo-user')
-                self.logout()
-                if expected == 302 and success:
+                if success:
                     assert s_user
                 else:
                     assert not s_user
 
+
         def attempt_suite(email, authorized=False):
+            """ Try accessing a variety of users undo sudo mode. """
+
             if authorized:
                 err_failure = 404
                 err_success = 302
@@ -66,17 +68,17 @@ class TestAuth(OkTestCase):
             # Normal sudo logins
             if email: self.login(email)
             attempt_sudo(self.user1.email, err_success, authorized)
-
-            if email: self.login(email)
-            attempt_sudo(self.user1.email, err_success, authorized)
+            self.logout()
 
             # Do not reveal existence of user unless admin
             if email: self.login(email)
-            attempt_sudo("non@exist.com", err_failure, authorized)
+            attempt_sudo("non@exist.com", err_failure, False)
+            self.logout()
 
             # Check attempt to login as staff
             if email: self.login(email)
             attempt_sudo(self.staff1.email, err_success, authorized)
+            self.logout()
 
 
         self.setup_course()

@@ -482,7 +482,6 @@ def enrollment(cid):
                            courses=courses,
                            current_course=current_course)
 
-
 @admin.route("/course/<int:cid>/enrollment/batch",
              methods=['GET', 'POST'])
 @is_staff(course_arg='cid')

@@ -47,7 +47,6 @@ api = restful.Api(endpoints, catch_all_404s=True)
 
 API_VERSION = 'v3'
 
-
 def json_field(field):
     """
     Parses field or list, or returns appropriate boolean value.
@@ -65,13 +64,11 @@ def json_field(field):
 
 
 class HashIDField(fields.Raw):
-
     def format(self, value):
         if type(value) == int:
             return encode_id(value)
         else:
             return decode_id(value)
-
 
 @api.representation('application/json')
 def envelope_api(data, code, headers=None):

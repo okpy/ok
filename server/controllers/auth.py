@@ -50,7 +50,7 @@ oauth_client = OAuth()
 client_auth = oauth_client.remote_app(
     'google',
     consumer_key='931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com',
-    consumer_secret='zGY9okExIBnompFTWcBmOZo4', # not actually a secret, from ok-client.
+    consumer_secret='zGY9okExIBnompFTWcBmOZo4',  # not actually a secret, from ok-client.
     request_token_params={
         'scope': 'email',
         'access_type':'offline',
@@ -190,7 +190,7 @@ def sudo_login(email):
     user = User.lookup(email)
     if not user:
         return abort(404, "User does not exist")
-    print("setting user to", current_user.email)
+    logger.info("Sudo Mode: %s from %s", email, current_user)
     session['sudo-user'] = current_user.email
     return authorize_user(user)
 
