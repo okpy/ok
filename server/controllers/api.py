@@ -28,11 +28,11 @@ from flask_restful.representations.json import output_json
 from server.extensions import cache
 from server.utils import encode_id, decode_id
 import server.models as models
-from server.constants import STAFF_ROLES
 from server.autograder import submit_continous
 
 endpoints = Blueprint('api', __name__)
 endpoints.config = {}
+
 
 @endpoints.record
 def record_params(setup_state):
@@ -63,12 +63,15 @@ def json_field(field):
         return field
     return json.dumps(field)
 
+
 class HashIDField(fields.Raw):
+
     def format(self, value):
         if type(value) == int:
             return encode_id(value)
         else:
             return decode_id(value)
+
 
 @api.representation('application/json')
 def envelope_api(data, code, headers=None):
@@ -114,7 +117,8 @@ def check_version(func):
         supplied = request.args.get('client_version')
         # ok-client doesn't send client_name right now
         client = request.args.get('client_name', 'ok-client')
-        current_version, download_link = models.Version.get_current_version(client)
+        current_version, download_link = models.Version.get_current_version(
+            client)
         if not supplied or supplied == current_version:
             return func(*args, **kwargs)
 
@@ -134,7 +138,6 @@ def check_version(func):
         response.status_code = 403
         return response
     return wrapper
-
 
 
 class Resource(restful.Resource):
@@ -157,7 +160,9 @@ class Resource(restful.Resource):
 class PublicResource(Resource):
     method_decorators = []
 
+
 class v3Info(PublicResource):
+
     def get(self):
         return {
             'version': API_VERSION,
@@ -167,6 +172,7 @@ class v3Info(PublicResource):
 
 #  Fewer methods/APIs as V1 since the frontend will not use the API
 #  TODO Permsisions for API actions
+
 
 def make_backup(user, assignment_id, messages, submit):
     """
@@ -185,6 +191,7 @@ def make_backup(user, assignment_id, messages, submit):
     models.db.session.add(backup)
     models.db.session.commit()
     return backup
+
 
 def make_score(user, backup, score, message, kind):
     if not models.Backup.can(backup, user, 'grade'):
@@ -229,6 +236,7 @@ class MessageSchema(APISchema):
         'created': fields.DateTime(dt_format='iso8601')
     }
 
+
 class CourseSchema(APISchema):
     get_fields = {
         'id': fields.Integer,
@@ -237,11 +245,13 @@ class CourseSchema(APISchema):
         'active': fields.Boolean,
     }
 
+
 class UserSchema(APISchema):
     get_fields = {
         'id': HashIDField,
         'email': fields.String,
     }
+
 
 class AssignmentSchema(APISchema):
     get_fields = {
@@ -249,9 +259,10 @@ class AssignmentSchema(APISchema):
         'name': fields.String,
     }
 
+
 class BackupSchema(APISchema):
     get_fields = {
-        'id': HashIDField, # Use Hash ID
+        'id': HashIDField,  # Use Hash ID
         'submitter': fields.Nested(UserSchema.get_fields),
         'assignment': fields.Nested(AssignmentSchema.get_fields),
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
@@ -286,13 +297,13 @@ class BackupSchema(APISchema):
 
         # Do not allow submissions after the lock date
         elgible_submit = args['submit'] and not lock_flag
-        backup = make_backup(user, assignment['id'], args['messages'], elgible_submit)
+        backup = make_backup(user, assignment['id'], args[
+                             'messages'], elgible_submit)
         if args['submit'] and lock_flag:
             raise ValueError('Late Submission')
         if elgible_submit and assignment['autograding_key']:
             submit_continous(backup)
         return backup
-
 
 
 class ParticipationSchema(APISchema):
@@ -302,11 +313,13 @@ class ParticipationSchema(APISchema):
         'course': fields.Nested(CourseSchema.get_fields),
     }
 
+
 class EnrollmentSchema(APISchema):
 
     get_fields = {
         'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
     }
+
 
 class VersionSchema(APISchema):
 
@@ -319,6 +332,7 @@ class VersionSchema(APISchema):
     get_fields = {
         'results': fields.List(fields.Nested(version_fields))
     }
+
 
 class ScoreSchema(APISchema):
 
@@ -419,6 +433,7 @@ class Enrollment(Resource):
         if requester.is_admin:
             return True
         return resource == requester
+
 
 class Score(Resource):
     """ Score creation.

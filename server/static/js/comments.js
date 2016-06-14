@@ -1,8 +1,8 @@
 jQuery(document).ready(function($){
     "use strict";
 
-    /* CSRF protection. The csrf_token variable is set in the
-     * 'student/base.html' template.
+    /* CSRF protection. The csrf_token variable should be set in the
+     * '<controller>/base.html' template.
      */
     $(document).ajaxSend(function(e, xhr, s) {
         if (s.type == 'POST' || s.type == 'PUT') {

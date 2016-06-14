@@ -18,7 +18,7 @@ import json
 from markdown import markdown
 import pytz
 
-from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES
+from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
 from server.utils import encode_id
 
@@ -94,6 +94,7 @@ class Model(db.Model):
 
     created = db.Column(db.DateTime(timezone=True),
                         server_default=db.func.now(), nullable=False)
+
     def __repr__(self):
         if hasattr(self, 'id'):
             key_val = self.id
@@ -172,7 +173,7 @@ class Course(Model):
     display_name = db.Column(db.String(255), nullable=False)
     creator_id = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), nullable=False, default=True)
-    timezone = db.Column(Timezone, nullable=False, default=pytz.timezone('America/Los_Angeles'))
+    timezone = db.Column(Timezone, nullable=False, default=pytz.timezone(TIMEZONE))
 
     def __repr__(self):
         return '<Course %r>' % self.offering
@@ -591,12 +592,12 @@ class GroupMember(Model):
         PrimaryKeyConstraint('user_id', 'assignment_id'),
     )
     status_values = ['pending', 'active']
+    status_enum = db.Enum(*status_values, name="status")
 
     user_id = db.Column(db.ForeignKey("user.id"), nullable=False, index=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     group_id = db.Column(db.ForeignKey("group.id"), nullable=False, index=True)
-
-    status = db.Column(db.Enum(*status_values, name="status"), nullable=False, index=True)
+    status = db.Column(status_enum, nullable=False, index=True)
     updated = db.Column(db.DateTime(timezone=True), onupdate=db.func.now())
 
     user = db.relationship("User")

@@ -1,11 +1,10 @@
 from flask import Blueprint, render_template, flash, request, redirect, \
-    url_for, session,  current_app, abort, make_response
-from flask_login import login_user, logout_user, login_required, \
+    url_for, abort, make_response
+from flask_login import login_required, \
     current_user
 from werkzeug.exceptions import BadRequest
 
 import collections
-import functools
 
 from server import highlight, models, utils
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE

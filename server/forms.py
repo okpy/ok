@@ -14,11 +14,13 @@ from server.constants import VALID_ROLES, GRADE_TAGS
 import csv
 import logging
 
+
 def strip_whitespace(value):
     if value and hasattr(value, "strip"):
         return value.strip()
     else:
         return value
+
 
 class MultiCheckboxField(SelectMultipleField):
     """
@@ -30,8 +32,11 @@ class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
+
 class BaseForm(Form):
+
     class Meta:
+
         def bind_field(self, form, unbound_field, options):
             filters = unbound_field.kwargs.get('filters', [])
             field_type = type(unbound_field)
@@ -41,6 +46,7 @@ class BaseForm(Form):
 
 
 class AssignmentForm(BaseForm):
+
     def __init__(self, course, obj=None, **kwargs):
         self.course = course
         self.obj = obj
@@ -49,7 +55,8 @@ class AssignmentForm(BaseForm):
             if obj.due_date == self.due_date.data:
                 self.due_date.data = utils.local_time_obj(obj.due_date, course)
             if obj.lock_date == self.lock_date.data:
-                self.lock_date.data = utils.local_time_obj(obj.lock_date, course)
+                self.lock_date.data = utils.local_time_obj(
+                    obj.lock_date, course)
 
     display_name = StringField(u'Display Name',
                                validators=[validators.required()])
@@ -62,7 +69,9 @@ class AssignmentForm(BaseForm):
                               default=dt.datetime.now,
                               validators=[validators.required()])
     max_group_size = IntegerField(u'Max Group Size',
-                                  validators=[validators.required()])
+                                  default=1,
+                                  validators=[validators.InputRequired(),
+                                              validators.number_range(min=1)])
     url = StringField(u'URL',
                       validators=[validators.optional(), validators.url()])
     revisions = BooleanField(u'Enable Revisions', default=False,
@@ -76,7 +85,6 @@ class AssignmentForm(BaseForm):
         obj.due_date = utils.server_time_obj(self.due_date.data, self.course)
         obj.lock_date = utils.server_time_obj(self.lock_date.data, self.course)
 
-
     def validate(self):
         check_validate = super(AssignmentForm, self).validate()
 
@@ -86,7 +94,8 @@ class AssignmentForm(BaseForm):
 
         # Ensure the name has the right format:
         if not self.name.data.startswith(self.course.offering):
-            self.name.errors.append('The name should be of the form {}/<name>'.format(self.course.offering))
+            self.name.errors.append(
+                'The name should be of the form {}/<name>'.format(self.course.offering))
             return False
 
         # If the name is changed, ensure assignment offering is unique
@@ -96,7 +105,9 @@ class AssignmentForm(BaseForm):
             return False
         return True
 
+
 class AssignmentUpdateForm(AssignmentForm):
+
     def validate(self):
         # if our validators do not pass
         if not super(AssignmentForm, self).validate():
@@ -104,17 +115,19 @@ class AssignmentUpdateForm(AssignmentForm):
 
         # Ensure the name has the right format:
         if not self.name.data.startswith(self.course.offering):
-            self.name.errors.append('The name should be of the form {}/<name>'.format(self.course.offering))
+            self.name.errors.append(('The name should be of the form {}/<name>'
+                                     .format(self.course.offering)))
             return False
-
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn and (self.obj and assgn.id != self.obj.id):
             self.name.errors.append('That offering already exists.')
             return False
         return True
 
+
 class AssignmentTemplateForm(BaseForm):
     template_files = FileField('Template Files', [FileRequired()])
+
 
 class EnrollmentForm(BaseForm):
     name = StringField(u'Name', validators=[validators.optional()])
@@ -168,14 +181,17 @@ class BatchEnrollmentForm(BaseForm):
                 return False
         return True
 
+
 class CSRFForm(BaseForm):
     pass
+
 
 class GradeForm(BaseForm):
     score = DecimalField('Score', validators=[validators.required()])
     message = TextAreaField('Message', validators=[validators.required()])
     kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
                        validators=[validators.required()])
+
 
 class CompositionScoreForm(GradeForm):
     score = SelectField('Composition Score',
@@ -184,17 +200,19 @@ class CompositionScoreForm(GradeForm):
     kind = HiddenField('Score', default="composition",
                        validators=[validators.required()])
 
+
 class CreateTaskForm(BaseForm):
     kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
                        validators=[validators.required()], default="composition")
     staff = MultiCheckboxField('Assigned Staff', choices=[],
-                    validators=[validators.required()])
+                               validators=[validators.required()])
+
 
 class AutogradeForm(BaseForm):
-    description = """Paste into terminal to get token: cd ~/.config/ok;python3 -c "import pickle; print(pickle.load(open('auth_refresh', 'rb'))['access_token'])"; cd -; """
+    description = """"Paste into terminal to get token: cd ~/.config/ok;python3 -c "import pickle; print(pickle.load(open('auth_refresh', 'rb'))['access_token'])"; cd -; """
     token = StringField('Access Token', description=description,
                         validators=[validators.optional()])
     autograder_id = StringField('Autograder Assignment ID',
-                                 validators=[validators.required()])
+                                validators=[validators.required()])
     autopromote = BooleanField('Backup Autopromotion',
-                                description="If an enrolled student does not have a submission, this will grade their latest submission before the deadline")
+                               description="If an enrolled student does not have a submission, this will grade their latest submission before the deadline")
