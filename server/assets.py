@@ -59,6 +59,7 @@ student_css = Bundle(
 
 student_js = Bundle(
     'js/student.js',
+    'js/comments.js',
     filters='jsmin',
     output='public/js/student.js'
 )
@@ -71,6 +72,7 @@ staff_css = Bundle(
 
 staff_js = Bundle(
     'js/staff.js',
+    'js/comments.js',
     filters='jsmin',
     output='public/js/staff.js'
 )
