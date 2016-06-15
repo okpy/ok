@@ -158,7 +158,7 @@ class PublicResource(Resource):
     method_decorators = []
 
 
-class v3Info(PublicResource):
+class V3Info(PublicResource):
 
     def get(self):
         return {
@@ -471,7 +471,7 @@ class Version(PublicResource):
         return {'results': versions}
 
 
-api.add_resource(v3Info, '/v3/')
+api.add_resource(V3Info, '/v3/')
 
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
