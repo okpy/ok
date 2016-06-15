@@ -128,7 +128,9 @@ class User(Model, UserMixin):
     def __repr__(self):
         return '<User {0}>'.format(self.email)
 
-    def enrollments(self, roles=[STUDENT_ROLE]):
+    def enrollments(self, roles=None):
+        if roles is None:
+            roles = [STUDENT_ROLE]
         query = (Enrollment.query.options(db.joinedload('course'))
                            .filter(Enrollment.user_id == self.id)
                            .filter(Enrollment.role.in_(roles)))
@@ -457,7 +459,9 @@ class Enrollment(Model):
 
     @staticmethod
     @transaction
-    def create(cid, enrollment_info=[], role=STUDENT_ROLE):
+    def create(cid, enrollment_info=None, role=STUDENT_ROLE):
+        if enrollment_info is None:
+            enrollment_info = []
         new_records = []
         for info in enrollment_info:
             usr_id, sid = info['id'], info['sid']
