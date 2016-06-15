@@ -12,7 +12,7 @@ from server.extensions import cache
 
 # default to dev config
 env = os.environ.get('OK_ENV', 'dev')
-app = create_app('settings/%s.py' % env)
+app = create_app('settings/{0!s}.py'.format(env))
 
 migrate = Migrate(app, db)
 manager = Manager(app)

@@ -178,7 +178,7 @@ class Course(Model):
     timezone = db.Column(Timezone, nullable=False, default=pytz.timezone(TIMEZONE))
 
     def __repr__(self):
-        return '<Course %r>' % self.offering
+        return '<Course {0!r}>'.format(self.offering)
 
     @staticmethod
     def by_name(name):

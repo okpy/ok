@@ -161,7 +161,7 @@ def download(name, submit, bid, file):
     except KeyError:
         abort(404)
     response = make_response(contents)
-    response.headers["Content-Disposition"] = "attachment; filename=%s" % file
+    response.headers["Content-Disposition"] = "attachment; filename={0!s}".format(file)
     return response
 
 @student.route('/<assignment_name:name>/submissions/<hashid:bid>/flag/', methods=['POST'])

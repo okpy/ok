@@ -728,9 +728,9 @@ def get_close_matches(word, possibilities, n=3, cutoff=0.6):
     """
 
     if not n >  0:
-        raise ValueError("n must be > 0: %r" % (n,))
+        raise ValueError("n must be > 0: {0!r}".format(n))
     if not 0.0 <= cutoff <= 1.0:
-        raise ValueError("cutoff must be in [0.0, 1.0]: %r" % (cutoff,))
+        raise ValueError("cutoff must be in [0.0, 1.0]: {0!r}".format(cutoff))
     result = []
     s = SequenceMatcher()
     s.set_seq2(word)
@@ -915,7 +915,7 @@ class Differ:
             elif tag == 'equal':
                 g = self._dump(' ', a, alo, ahi)
             else:
-                raise ValueError, 'unknown tag %r' % (tag,)
+                raise ValueError, 'unknown tag {0!r}'.format(tag)
 
             for line in g:
                 yield line
@@ -923,7 +923,7 @@ class Differ:
     def _dump(self, tag, x, lo, hi):
         """Generate comparison results for a same-tagged range."""
         for i in xrange(lo, hi):
-            yield '%s %s' % (tag, x[i])
+            yield '{0!s} {1!s}'.format(tag, x[i])
 
     def _plain_replace(self, a, alo, ahi, b, blo, bhi):
         assert alo < ahi and blo < bhi
@@ -1027,7 +1027,7 @@ class Differ:
                     atags += ' ' * la
                     btags += ' ' * lb
                 else:
-                    raise ValueError, 'unknown tag %r' % (tag,)
+                    raise ValueError, 'unknown tag {0!r}'.format(tag)
             for line in self._qformat(aelt, belt, atags, btags):
                 yield line
         else:
@@ -1078,11 +1078,11 @@ class Differ:
 
         yield "- " + aline
         if atags:
-            yield "? %s%s\n" % ("\t" * common, atags)
+            yield "? {0!s}{1!s}\n".format("\t" * common, atags)
 
         yield "+ " + bline
         if btags:
-            yield "? %s%s\n" % ("\t" * common, btags)
+            yield "? {0!s}{1!s}\n".format("\t" * common, btags)
 
 # With respect to junk, an earlier version of ndiff simply refused to
 # *start* a match with a junk element.  The result was cases like this:
@@ -1866,8 +1866,8 @@ class HtmlDiff(object):
         text -- line text to be marked up
         """
         try:
-            linenum = '%d' % linenum
-            id = ' id="%s%s"' % (self._prefix[side],linenum)
+            linenum = '{0:d}'.format(linenum)
+            id = ' id="{0!s}{1!s}"'.format(self._prefix[side], linenum)
         except TypeError:
             # handle blank lines where linenum is '>' or ''
             id = ''
@@ -1877,16 +1877,15 @@ class HtmlDiff(object):
         # make space non-breakable so they don't get compressed or line wrapped
         text = text.replace(' ','&nbsp;').rstrip()
 
-        return '<td class="diff_header"%s>%s</td><td nowrap="nowrap">%s</td>' \
-               % (id,linenum,text)
+        return '<td class="diff_header"{0!s}>{1!s}</td><td nowrap="nowrap">{2!s}</td>'.format(id, linenum, text)
 
     def _make_prefix(self):
         """Create unique anchor prefixes"""
 
         # Generate a unique anchor prefix so multiple tables
         # can exist on the same HTML page without conflicts.
-        fromprefix = "from%d_" % HtmlDiff._default_prefix
-        toprefix = "to%d_" % HtmlDiff._default_prefix
+        fromprefix = "from{0:d}_".format(HtmlDiff._default_prefix)
+        toprefix = "to{0:d}_".format(HtmlDiff._default_prefix)
         HtmlDiff._default_prefix += 1
         # store prefixes so line format method has access
         self._prefix = [fromprefix,toprefix]
@@ -1911,12 +1910,12 @@ class HtmlDiff(object):
                     # (the context lines) before the change for the previous
                     # link
                     i = max([0,i-numlines])
-                    next_id[i] = ' id="difflib_chg_%s_%d"' % (toprefix,num_chg)
+                    next_id[i] = ' id="difflib_chg_{0!s}_{1:d}"'.format(toprefix, num_chg)
                     # at the beginning of a change, drop a link to the next
                     # change
                     num_chg += 1
-                    next_href[last] = '<a href="#difflib_chg_%s_%d">n</a>' % (
-                         toprefix,num_chg)
+                    next_href[last] = '<a href="#difflib_chg_{0!s}_{1:d}">n</a>'.format(
+                         toprefix, num_chg)
             else:
                 in_change = False
         # check for cases where there is no content to avoid exceptions
@@ -1932,9 +1931,9 @@ class HtmlDiff(object):
                 fromlist = tolist = ['<td></td><td>&nbsp;Empty File&nbsp;</td>']
         # if not a change on first line, drop a link
         if not flaglist[0]:
-            next_href[0] = '<a href="#difflib_chg_%s_0">f</a>' % toprefix
+            next_href[0] = '<a href="#difflib_chg_{0!s}_0">f</a>'.format(toprefix)
         # redo the last link to link to the top
-        next_href[last] = '<a href="#difflib_chg_%s_top">t</a>' % (toprefix)
+        next_href[last] = '<a href="#difflib_chg_{0!s}_top">t</a>'.format((toprefix))
 
         return fromlist,tolist,flaglist,next_href,next_id
 
@@ -1996,11 +1995,11 @@ class HtmlDiff(object):
                 s.append( fmt % (next_id[i],next_href[i],fromlist[i],
                                            next_href[i],tolist[i]))
         if fromdesc or todesc:
-            header_row = '<thead><tr>%s%s%s%s</tr></thead>' % (
+            header_row = '<thead><tr>{0!s}{1!s}{2!s}{3!s}</tr></thead>'.format(
                 '<th class="diff_next"><br /></th>',
-                '<th colspan="2" class="diff_header">%s</th>' % fromdesc,
+                '<th colspan="2" class="diff_header">{0!s}</th>'.format(fromdesc),
                 '<th class="diff_next"><br /></th>',
-                '<th colspan="2" class="diff_header">%s</th>' % todesc)
+                '<th colspan="2" class="diff_header">{0!s}</th>'.format(todesc))
         else:
             header_row = ''
 
@@ -2042,8 +2041,7 @@ def restore(delta, which):
     try:
         tag = {1: "- ", 2: "+ "}[int(which)]
     except KeyError:
-        raise ValueError, ('unknown delta choice (must be 1 or 2): %r'
-                           % which)
+        raise ValueError, ('unknown delta choice (must be 1 or 2): {0!r}'.format(which))
     prefixes = ("  ", tag)
     for line in delta:
         if line[:2] in prefixes:

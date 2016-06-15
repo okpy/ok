@@ -8,7 +8,7 @@ from server import create_app, generate
 from server.models import db, User
 
 env = os.environ.get('OK_ENV', 'dev')
-app = create_app('settings/%s.py' % env)
+app = create_app('settings/{0!s}.py'.format(env))
 
 if os.getenv('SENTRY_DSN'):
     sentry = Sentry(app)
