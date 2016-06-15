@@ -22,7 +22,7 @@ def send_autograder(endpoint, data):
     if r.status_code == requests.codes.ok:
         return {'status': True, 'message': 'OK'}
     else:
-        error_message = 'The autograder rejected your request. {}'.format(
+        error_message = 'The autograder rejected your request. {0}'.format(
             r.text)
         raise ValueError(error_message)
 

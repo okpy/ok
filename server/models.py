@@ -100,7 +100,7 @@ class Model(db.Model):
             key_val = self.id
         else:
             key_val = self.__mapper__.primary_key._list[0].name
-        return '<{} {}>'.format(self.__class__.__name__, key_val)
+        return '<{0} {1}>'.format(self.__class__.__name__, key_val)
 
     @classmethod
     def can(cls, obj, user, action):
@@ -126,7 +126,7 @@ class User(Model, UserMixin):
     is_admin = db.Column(db.Boolean(), default=False)
 
     def __repr__(self):
-        return '<User {}>'.format(self.email)
+        return '<User {0}>'.format(self.email)
 
     def enrollments(self, roles=[STUDENT_ROLE]):
         query = (Enrollment.query.options(db.joinedload('course'))

@@ -34,7 +34,7 @@ class TestDownload(OkTestCase):
         self._add_file(filename, contents)
         encoded_id = utils.encode_id(self.backup.id)
         submit_str = "submissions" if self.backup.submit else "backups"
-        url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
+        url = "/{0}/{1}/{2}/download/{3}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_200(response)
         self.assertEqual(contents, response.data.decode('UTF-8'))
@@ -45,7 +45,7 @@ class TestDownload(OkTestCase):
         self._add_file(filename, contents)
         encoded_id = utils.encode_id(self.backup.id)
         submit_str = "submissions" if self.backup.submit else "backups"
-        url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
+        url = "/{0}/{1}/{2}/download/{3}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_200(response)
         self.assertEqual(contents, response.data.decode('UTF-8'))
@@ -57,7 +57,7 @@ class TestDownload(OkTestCase):
         self.login('student2@okpy.org')
         encoded_id = utils.encode_id(self.backup.id)
         submit_str = "submissions" if self.backup.submit else "backups"
-        url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
+        url = "/{0}/{1}/{2}/download/{3}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_404(response)
 
@@ -69,6 +69,6 @@ class TestDownload(OkTestCase):
 
         encoded_id = utils.encode_id(self.backup.id)
         submit_str = "submissions" if self.backup.submit else "backups"
-        url = "/{}/{}/{}/download/{}".format(self.assignment.name, submit_str, encoded_id, filename)
+        url = "/{0}/{1}/{2}/download/{3}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_200(response)

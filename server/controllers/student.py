@@ -192,11 +192,11 @@ def group_invite(name):
     email = request.form['email']
     invitee = User.lookup(email)
     if not invitee:
-        flash("{} is not enrolled".format(email), 'warning')
+        flash("{0} is not enrolled".format(email), 'warning')
     else:
         try:
             Group.invite(current_user, invitee, assignment)
-            success = "{} has been invited. They can accept the invite by logging into okpy.org".format(email)
+            success = "{0} has been invited. They can accept the invite by logging into okpy.org".format(email)
             invite_email(current_user, invitee, assignment)
             flash(success, "success")
         except BadRequest as e:
@@ -211,15 +211,15 @@ def group_remove(name):
     target = User.lookup(request.form['email'])
     group = Group.lookup(current_user, assignment)
     if not target:
-        flash("{} is not enrolled".format(request.form['email']), 'warning')
+        flash("{0} is not enrolled".format(request.form['email']), 'warning')
     elif not group:
         flash("You are not in a group", 'warning')
     else:
         try:
             members = [m.user.email for m in group.members]
             group.remove(current_user, target)
-            subject = "{} has been removed from your group".format(target.email)
-            body = "{} removed {} from the group.".format(current_user.email, target.email)
+            subject = "{0} has been removed from your group".format(target.email)
+            body = "{0} removed {1} from the group.".format(current_user.email, target.email)
             res = send_email(members, subject, body)
         except BadRequest as e:
             flash(e.description, 'danger')
@@ -239,13 +239,13 @@ def group_respond(name):
         try:
             if action == "accept":
                 group.accept(current_user)
-                subject = "{} has accepted your invitation".format(current_user.email)
-                body = "Your group now has {} members".format(len(group.members))
+                subject = "{0} has accepted your invitation".format(current_user.email)
+                body = "Your group now has {0} members".format(len(group.members))
                 group_action_email(group.members, subject, body)
             else:
                 members = [m.user.email for m in group.members]
                 group.decline(current_user)
-                subject = "{} has declined your invitation".format(current_user.email)
+                subject = "{0} has declined your invitation".format(current_user.email)
                 send_email(members, subject, subject)
 
         except BadRequest as e:

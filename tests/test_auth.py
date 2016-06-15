@@ -43,7 +43,7 @@ class TestAuth(OkTestCase):
 
         def attempt_sudo(email, expected, success):
             with self.client as c:
-                response = c.get('/sudo/{}/'.format(email))
+                response = c.get('/sudo/{0}/'.format(email))
                 self.assertEqual(response.status_code, expected)
                 s_user = flask.session.get('sudo-user')
                 if success:

@@ -1148,10 +1148,10 @@ def _format_range_unified(start, stop):
     beginning = start + 1     # lines start numbering with one
     length = stop - start
     if length == 1:
-        return '{}'.format(beginning)
+        return '{0}'.format(beginning)
     if not length:
         beginning -= 1        # empty ranges begin at line just before the range
-    return '{},{}'.format(beginning, length)
+    return '{0},{1}'.format(beginning, length)
 
 def unified_diff(a, b, fromfile='', tofile='', fromfiledate='',
                  tofiledate='', n=3, lineterm='\n'):
@@ -1198,15 +1198,15 @@ def unified_diff(a, b, fromfile='', tofile='', fromfiledate='',
     for group in SequenceMatcher(None,a,b).get_grouped_opcodes(n):
         if not started:
             started = True
-            fromdate = '\t{}'.format(fromfiledate) if fromfiledate else ''
-            todate = '\t{}'.format(tofiledate) if tofiledate else ''
-            yield '--- {}{}{}'.format(fromfile, fromdate, lineterm)
-            yield '+++ {}{}{}'.format(tofile, todate, lineterm)
+            fromdate = '\t{0}'.format(fromfiledate) if fromfiledate else ''
+            todate = '\t{0}'.format(tofiledate) if tofiledate else ''
+            yield '--- {0}{1}{2}'.format(fromfile, fromdate, lineterm)
+            yield '+++ {0}{1}{2}'.format(tofile, todate, lineterm)
 
         first, last = group[0], group[-1]
         file1_range = _format_range_unified(first[1], last[2])
         file2_range = _format_range_unified(first[3], last[4])
-        yield '@@ -{} +{} @@{}'.format(file1_range, file2_range, lineterm)
+        yield '@@ -{0} +{1} @@{2}'.format(file1_range, file2_range, lineterm)
 
         for tag, i1, i2, j1, j2 in group:
             if tag == 'equal':
@@ -1233,8 +1233,8 @@ def _format_range_context(start, stop):
     if not length:
         beginning -= 1        # empty ranges begin at line just before the range
     if length <= 1:
-        return '{}'.format(beginning)
-    return '{},{}'.format(beginning, beginning + length - 1)
+        return '{0}'.format(beginning)
+    return '{0},{1}'.format(beginning, beginning + length - 1)
 
 # See http://www.unix.org/single_unix_specification/
 def context_diff(a, b, fromfile='', tofile='',
@@ -1285,16 +1285,16 @@ def context_diff(a, b, fromfile='', tofile='',
     for group in SequenceMatcher(None,a,b).get_grouped_opcodes(n):
         if not started:
             started = True
-            fromdate = '\t{}'.format(fromfiledate) if fromfiledate else ''
-            todate = '\t{}'.format(tofiledate) if tofiledate else ''
-            yield '*** {}{}{}'.format(fromfile, fromdate, lineterm)
-            yield '--- {}{}{}'.format(tofile, todate, lineterm)
+            fromdate = '\t{0}'.format(fromfiledate) if fromfiledate else ''
+            todate = '\t{0}'.format(tofiledate) if tofiledate else ''
+            yield '*** {0}{1}{2}'.format(fromfile, fromdate, lineterm)
+            yield '--- {0}{1}{2}'.format(tofile, todate, lineterm)
 
         first, last = group[0], group[-1]
         yield '***************' + lineterm
 
         file1_range = _format_range_context(first[1], last[2])
-        yield '*** {} ****{}'.format(file1_range, lineterm)
+        yield '*** {0} ****{1}'.format(file1_range, lineterm)
 
         if any(tag in ('replace', 'delete') for tag, _, _, _, _ in group):
             for tag, i1, i2, _, _ in group:
@@ -1303,7 +1303,7 @@ def context_diff(a, b, fromfile='', tofile='',
                         yield prefix[tag] + line
 
         file2_range = _format_range_context(first[3], last[4])
-        yield '--- {} ----{}'.format(file2_range, lineterm)
+        yield '--- {0} ----{1}'.format(file2_range, lineterm)
 
         if any(tag in ('replace', 'insert') for tag, _, _, _, _ in group):
             for tag, _, _, j1, j2 in group:

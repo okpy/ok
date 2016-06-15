@@ -29,7 +29,7 @@ def encode_id(id_number):
 def decode_id(value):
     numbers = hashids.decode(value)
     if len(numbers) != 1:
-        raise ValueError('Could not decode hash {} into ID'.format(value))
+        raise ValueError('Could not decode hash {0} into ID'.format(value))
     return numbers[0]
 
 # Timezones. Be cautious with using tzinfo argument. http://pytz.sourceforge.net/
@@ -86,8 +86,8 @@ def group_action_email(members, subject, text):
 
 
 def invite_email(member, recipient, assignment):
-    subject = "{} group invitation".format(assignment.display_name)
-    text = "{} has invited you to join their group".format(member.email)
+    subject = "{0} group invitation".format(assignment.display_name)
+    text = "{0} has invited you to join their group".format(member.email)
     link_text = "Respond to the invitation"
     link = url_for('student.assignment', name=assignment.name, _external=True)
     template = 'email/invite.html'

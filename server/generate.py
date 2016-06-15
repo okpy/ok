@@ -60,12 +60,12 @@ def gen_markdown():
         return ' '.join(alter(w) for w in loremipsum.get_sentence().split())
 
     def gen_header():
-        return '{} {}'.format(
+        return '{0} {1}'.format(
             '#' * random.randrange(1, 7),
             loremipsum.get_sentence())
 
     def gen_code():
-        return '```{}```'.format(
+        return '```{0}```'.format(
             '\n'.join(gen_list(loremipsum.get_sentence, 4)))
 
     def gen_bullets():
@@ -88,7 +88,7 @@ def gen_user():
     first_name, last_name = real_name.lower().split(' ')
     return User(
         name=gen_maybe(real_name, 0.5),
-        email='{}{}{}{}@{}'.format(
+        email='{0}{1}{2}{3}@{4}'.format(
             random.choice([first_name, first_name[0]]),
             random.choice(string.ascii_lowercase) if gen_bool() else '',
             random.choice([last_name, last_name[0]]),
@@ -99,13 +99,13 @@ def gen_user():
 
 def gen_course():
     return Course(
-        offering='{}/{}/{}{}'.format(
+        offering='{0}/{1}/{2}{3}'.format(
             'cal',
             random.choice(['cs61a', 'ds88']),
             random.choice(['sp', 'su', 'fa']),
             str(random.randrange(100)).zfill(2)),
         institution='UC Berkeley',
-        display_name='{} {}{}'.format(
+        display_name='{0} {1}{2}'.format(
             random.choice(['CS', 'Data Science']),
             random.randrange(100),
             random.choice(['', 'A'])),
@@ -118,7 +118,7 @@ def gen_assignment(course):
             'Hog', 'Hog Contest', 'Maps', 'Ants', 'Scheme'
         ])
     else:
-        display_name = '{} {}'.format(
+        display_name = '{0} {1}'.format(
             random.choice(['Homework', 'Lab', 'Quiz']),
             str(random.randrange(15)).zfill(2))
     name = course.offering + '/' + display_name.lower().replace(' ', '')
@@ -155,7 +155,7 @@ def gen_enrollment(user, course):
         ('instructor', 2),
     ])
     sid = ''.join(random.choice(string.digits) for _ in range(8))
-    class_account = '{}-{}'.format(
+    class_account = '{0}-{1}'.format(
         course.offering.split('/')[1],
         ''.join(random.choice(string.ascii_lowercase) for _ in range(3)))
     section = random.randrange(30)
@@ -265,7 +265,7 @@ def seed_enrollments():
 
 def seed_backups():
     for user in User.query.all():
-        print('Seeding backups for user {}...'.format(user.email))
+        print('Seeding backups for user {0}...'.format(user.email))
         for assignment in Assignment.query.all():
             backups = gen_list(functools.partial(
                 gen_backup, user, assignment), 30)

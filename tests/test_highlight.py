@@ -27,7 +27,7 @@ def apply_patch(patch, source):
                 universal_newlines=True)
             outs, errs = proc.communicate(input=patch)
             if proc.returncode != 0:
-                raise AssertionError('patch failed: {}'.format(errs))
+                raise AssertionError('patch failed: {0}'.format(errs))
             return outfile.read()
 
 class TestHighlight(OkTestCase):
@@ -75,7 +75,7 @@ class TestHighlight(OkTestCase):
                 assert a_lines[line.line_before - 1] == source
                 assert b_lines[line.line_after - 1] == source
             else:
-                raise AssertionError('Unknown tag {}'.format(tag))
+                raise AssertionError('Unknown tag {0}'.format(tag))
 
         # Check that removing tags gives a patch that can be applied
         patch = ''.join(striptags(line.contents) for line in highlighted)

@@ -188,7 +188,7 @@ def grade(bid):
     if request.args.get('queue'):
         # TODO: Find next submission in queue and redirect to that.
         pass
-    flash("Added {} score.".format(model.kind), "success")
+    flash("Added {0} score.".format(model.kind), "success")
     route = ".composition" if score_kind == "composition" else ".grading"
     return redirect(url_for(route, bid=backup.id))
 
@@ -345,8 +345,8 @@ def export_scores(cid, aid):
                 csv_writer.writerow(data)
             yield csv_file.getvalue()
 
-    file_name = "{}.csv".format(assign.name.replace('/', '-'))
-    disposition = 'attachment; filename={}'.format(file_name)
+    file_name = "{0}.csv".format(assign.name.replace('/', '-'))
+    disposition = 'attachment; filename={0}'.format(file_name)
 
     # TODO: Remove. For local performance testing.
     # return render_template('staff/index.html', data=list(generate_csv()))
@@ -365,7 +365,7 @@ def assign_grading(cid, aid):
 
     form = forms.CreateTaskForm()
     course_staff = sorted(current_course.get_staff(), key=lambda x: x.role)
-    details = lambda e: "{} - ({})".format(e.user.email, e.role)
+    details = lambda e: "{0} - ({1})".format(e.user.email, e.role)
     form.staff.choices = [(utils.encode_id(e.user_id), details(e))
                           for e in course_staff]
     if not form.staff.data:
@@ -398,7 +398,7 @@ def assign_grading(cid, aid):
         db.session.commit()
 
         num_with_submissions = len(students) - len(no_submissions)
-        flash(("Created {} tasks ({} students) for {} staff."
+        flash(("Created {0} tasks ({1} students) for {2} staff."
                .format(len(tasks), num_with_submissions, len(selected_users))),
               "success")
         return redirect(url_for('.assignment', cid=cid, aid=aid))
@@ -467,7 +467,7 @@ def enrollment(cid):
                                    user_id=student.id)
                         .paginate(page=page, per_page=1))
         else:
-            flash("No student found with email {}".format(query), "warning")
+            flash("No student found with email {0}".format(query), "warning")
     if not students:
         students = (Enrollment.query
                     .filter_by(course_id=cid, role=STUDENT_ROLE)

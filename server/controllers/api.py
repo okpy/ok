@@ -143,7 +143,7 @@ class Resource(restful.Resource):
     # applies to all inherited resources
 
     def __repr__(self):
-        return "<Resource {}>".format(self.__class__.__name__)
+        return "<Resource {0}>".format(self.__class__.__name__)
 
     def make_response(self, data, *args, **kwargs):
         return super().make_response(data, *args, **kwargs)
@@ -163,7 +163,7 @@ class v3Info(PublicResource):
     def get(self):
         return {
             'version': API_VERSION,
-            'url': '/api/{}/'.format(API_VERSION),
+            'url': '/api/{0}/'.format(API_VERSION),
             'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
         }
 

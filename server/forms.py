@@ -95,7 +95,7 @@ class AssignmentForm(BaseForm):
         # Ensure the name has the right format:
         if not self.name.data.startswith(self.course.offering):
             self.name.errors.append(
-                'The name should be of the form {}/<name>'.format(self.course.offering))
+                'The name should be of the form {0}/<name>'.format(self.course.offering))
             return False
 
         # If the name is changed, ensure assignment offering is unique
@@ -115,7 +115,7 @@ class AssignmentUpdateForm(AssignmentForm):
 
         # Ensure the name has the right format:
         if not self.name.data.startswith(self.course.offering):
-            self.name.errors.append(('The name should be of the form {}/<name>'
+            self.name.errors.append(('The name should be of the form {0}/<name>'
                                      .format(self.course.offering)))
             return False
         assgn = Assignment.query.filter_by(name=self.name.data).first()
@@ -167,16 +167,16 @@ class BatchEnrollmentForm(BaseForm):
 
         for row in self.csv.parsed:
             if len(row) != 5:
-                err = "{} did not have 5 columns".format(row)
+                err = "{0} did not have 5 columns".format(row)
                 self.csv.errors.append(err)
                 return False
             if not row[0]:
-                err = "{} did not have an email".format(row)
+                err = "{0} did not have an email".format(row)
                 self.csv.errors.append(err)
                 return False
             elif "@" not in row[0]:
                 # TODO : Better email check.
-                err = "{} is not a valid email".format(row[0])
+                err = "{0} is not a valid email".format(row[0])
                 self.csv.errors.append(err)
                 return False
         return True

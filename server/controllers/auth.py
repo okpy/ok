@@ -139,7 +139,7 @@ def login_refresh():
 @client_auth.authorized_handler
 def refresh_token(resp):
     if resp is None or 'access_token' not in resp:
-        error = "Access denied: reason={} error={}".format(
+        error = "Access denied: reason={0} error={1}".format(
             request.args.get('error_reason'),
             request.args.get('error_description')
         )
@@ -160,12 +160,12 @@ def refresh_token(resp):
 @google_auth.authorized_handler
 def authorized(resp):
     if isinstance(resp, OAuthException):
-        error = "{} - {}".format(resp.data['error'], resp.data['error_description'])
+        error = "{0} - {1}".format(resp.data['error'], resp.data['error_description'])
         flash(error, "error")
         # TODO Error Page
         return redirect("/")
     if resp is None:
-        error = "Access denied: reason={} error={}".format(
+        error = "Access denied: reason={0} error={1}".format(
             request.args['error_reason'],
             request.args['error_description']
         )

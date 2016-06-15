@@ -32,7 +32,7 @@ def restricted_name_part(exceptions):
     exceptions list.
     """
     # (?!...) is a negative lookahead
-    return ''.join('(?!{}/)'.format(w) for w in exceptions) + name_part
+    return ''.join('(?!{0}/)'.format(w) for w in exceptions) + name_part
 
 class OfferingConverter(BaseConverter):
     regex = restricted_name_part(constants.FORBIDDEN_ROUTE_NAMES) + \
