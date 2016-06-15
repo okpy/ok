@@ -1,5 +1,7 @@
+import os
+
 ENV = 'dev'
-SECRET_KEY = 'samplekey'
+SECRET_KEY = os.getenv('OK_SESSION_KEY', 'changeinproductionkey')
 CACHE_TYPE = 'simple'
 
 DEBUG = True
