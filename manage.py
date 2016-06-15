@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import binascii
 
 from flask_script import Manager, Server
 from flask_script.commands import ShowUrls, Clean
@@ -83,6 +84,14 @@ def resetdb():
         db.create_all()
         seed()
 
+@manager.command
+def generate_session_key():
+    """ Helper for admins to generate random 24 character string. Used as the
+        secret key for sessions. Must be consistent (and secret) per environment.
+        Output: b'cd8c2471.................2416c0e030d09'
+        Copy the value in between the quotation marks to the settings file
+    """
+    return binascii.hexlify(os.urandom(24))
 
 if __name__ == "__main__":
     manager.run()
