@@ -173,6 +173,7 @@ class Course(Model):
     offering = db.Column(db.String(255), nullable=False, unique=True, index=True)
     institution = db.Column(db.String(255), nullable=False)  # E.g., 'UC Berkeley'
     display_name = db.Column(db.String(255), nullable=False)
+    website = db.Column(db.String(255))
     creator_id = db.Column(db.ForeignKey("user.id"))
     active = db.Column(db.Boolean(), nullable=False, default=True)
     timezone = db.Column(Timezone, nullable=False, default=pytz.timezone(TIMEZONE))
