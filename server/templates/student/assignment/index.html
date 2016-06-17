@@ -21,26 +21,11 @@
       {% include 'student/assignment/sidebar.html' %}
       <div class="col-md-2"></div>
       <section class="content nomapa col-md-10 col-xs-12">
-        <header>
-          <div class="header-bg">
-            <div class="right col-md-5">
-                <form method="POST" action="{{ url_for('auth.logout' )}}" role="form" class="pull-right">
-            <div style="display:none;"><input id="csrf_token" name="csrf_token" type="hidden" value="{{ csrf_token() }}"></div>
-              <button class="plain-btn" type="submit">
-                     <a class="header-text"><span>Logout</span></a>
-              </button>
-        </form>
-                <div class="header-text user-profile hidden-sm hidden-xs">
-                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
-                  <i class="fa fa-user"></i>
-                </div>
-              </div>
-          </div>
-        </header>
+        {% include 'student/header.html' %}
 
         <div class="subcontent heading">
           <div class="wrap">
-            <div class="string-nav">
+            <div class="string-nav" role="navigation" aria-label="page navigation">
               <span><a href="{{ url_for('.index') }}">Courses</a></span> &raquo;
               <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name_with_semester }}</a></span> &raquo;
               <span>{{ assignment.display_name }}</span>
