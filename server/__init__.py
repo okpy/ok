@@ -12,6 +12,7 @@ from webassets.loaders import PythonLoader as PythonAssetsLoader
 from server import assets, converters, utils
 from server.forms import CSRFForm
 from server.models import db
+from server.controllers.about import about
 from server.controllers.admin import admin
 from server.controllers.api import endpoints as api
 from server.controllers.auth import auth, login_manager
@@ -86,6 +87,7 @@ def create_app(default_config_path=None):
     app.register_blueprint(student)
 
     app.register_blueprint(admin, url_prefix='/admin')
+    app.register_blueprint(about, url_prefix='/about')
 
     # API does not need CSRF protection
     csrf.exempt(api)

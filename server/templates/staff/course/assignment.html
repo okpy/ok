@@ -98,14 +98,17 @@
                                   <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
                                         <i class="fa fa-download"></i> Download Scores
                                   </a>
-
-                        </div>
-                        <div class="pull-right">
                                   <a href="{{ url_for('.autograde', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
                                         <i class="fa fa-send"></i> Autograde
                                   </a>
+
+                        </div>
+                        <div class="pull-right">
+                                  <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
+                                        <i class="fa fa-inbox"></i> Grading Queues
+                                  </a>
                                   <a href="{{ url_for('.assign_grading', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
-                                        <i class="fa fa-inbox"></i> Assign Grading
+                                        <i class="fa fa-user-plus"></i> Assign Grading
                                   </a>
                         </div>
 

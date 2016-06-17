@@ -50,6 +50,10 @@ landing_css = Bundle(
     output='public/css/landing.css'
 )
 
+instant_js = Bundle(
+    'lib/instantclick/instantclick.min.js',
+    output='public/js/instantclick.min.js'
+)
 
 student_css = Bundle(
     'css/student.css',

@@ -26,11 +26,11 @@ WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 
 try:
-   os.environ["GOOGLE_ID"]
-   os.environ["GOOGLE_SECRET"]
+    os.environ["GOOGLE_ID"]
+    os.environ["GOOGLE_SECRET"]
 except KeyError:
-   print("Please set the google login variables. source secrets.sh")
-   sys.exit(1)
+    print("Please set the google login variables. source secrets.sh")
+    sys.exit(1)
 
 GOOGLE = {
     'consumer_key': os.environ.get('GOOGLE_ID'),

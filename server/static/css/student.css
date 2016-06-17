@@ -138,7 +138,7 @@ aside.sidebar::-webkit-scrollbar {
   aside .sidebar-title {
     text-transform:uppercase;
     text-align:center;
-    color:#999;
+    color:#717171;
     font-weight:700;
     font-size:0.7em;
     padding:1.5em 2em;
@@ -150,7 +150,7 @@ aside.sidebar::-webkit-scrollbar {
     left:auto;
     float:right;
     display:inline-block;
-    color:#ccc;
+    color:#767676;
   }
   .top-level + .top-level {
     border-top:none;
@@ -194,7 +194,7 @@ section {
       background-color:#eee;
       border-radius:1.5em;
       width:100%;
-      color:#999;
+      color:#717171;
       font-weight:700;
       font-size:0.9em;
       display:inline-block;
@@ -204,7 +204,7 @@ section {
     width:100%;
   }
   tr.header {
-    color:#ccc;
+    color:#767676;
   }
   tr {
     border-bottom:1px solid #eee;
@@ -216,7 +216,7 @@ section {
     height:8px;
     width:8px;
     border-radius:50%;
-    background-color:#999;
+    background-color:#717171;
     position:absolute;
     left:1em;
   }
@@ -228,7 +228,7 @@ section {
       padding-left:1em
     }
     .green {
-      color:#690;
+    color: #578300;    /* was #690; Changed for accesibility/contrast */
     }
     .yellow {
       color:#C90;
@@ -256,7 +256,7 @@ section {
       font-size:0.75em;
       font-weight:700;
       text-transform:uppercase;
-      color:#999;
+      color:#767676;
     }
   .list-item {
     padding-left:2em;
@@ -283,7 +283,7 @@ section {
   z-index: 1000;
 }
   .tip.grey {
-    background-color:#999;
+    background-color:#717171;
   }
   .tip span {
     text-align:center;
@@ -307,7 +307,7 @@ section {
     margin-left:-2.5px;
   }
     .tip.grey::before {
-      border-top:5px solid #999;
+      border-top:5px solid #717171;
     }
   .tip-trigger {
     cursor:pointer;
@@ -316,7 +316,7 @@ section {
     display:block;
   }
   .tip-trigger,.tip-trigger > span {
-    border-bottom:1px dashed #999;
+    border-bottom:1px dashed #717171;
   }
 
 .final-button {
@@ -330,7 +330,7 @@ section {
   color:#4A74A2;
 }
 .final-no {
-  color:#ccc;
+  color:#767676;
 }
 .landing .title {
   font-family:'Quicksand';
@@ -396,7 +396,7 @@ header .logo {
 
   .button-small {
     background-color:#eee;
-    color:#999;
+    color:#717171;
     border-radius:0.25em;
     display:inline-block;
     float:left;
@@ -411,7 +411,7 @@ header .logo {
     }
   .button-large {
     background-color:#eee;
-    color: #999;
+    color: #717171;
     border-radius: 2em;
     display: inline-block;
     float: left;

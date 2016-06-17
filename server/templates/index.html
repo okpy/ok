@@ -1,88 +1,72 @@
-{% cache 60*30, 'index' %}
 <html>
-  <head>
-    <title>Ok | CS61A</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+  <title>Ok | CS61A</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="apple-touch-icon" sizes="57x57" href="/static/img/favicon/apple-touch-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="/static/img/favicon/apple-touch-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="/static/img/favicon/apple-touch-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="/static/img/favicon/apple-touch-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="/static/img/favicon/apple-touch-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/static/img/favicon/apple-touch-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="/static/img/favicon/apple-touch-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/static/img/favicon/apple-touch-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favicon/apple-touch-icon-180x180.png">
-    <link rel="icon" type="image/png" href="/static/img/favicon/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="/static/img/favicon/favicon-194x194.png" sizes="194x194">
-    <link rel="icon" type="image/png" href="/static/img/favicon/favicon-96x96.png" sizes="96x96">
-    <link rel="icon" type="image/png" href="/static/img/favicon/android-chrome-192x192.png" sizes="192x192">
-    <link rel="icon" type="image/png" href="/static/img/favicon/favicon-16x16.png" sizes="16x16">
-    <link rel="manifest" href="/static/img/favicon/manifest.json">
-    <link rel="mask-icon" href="/static/img/favicon/safari-pinned-tab.svg" color="#346694">
-    <link rel="shortcut icon" href="/static/img/favicon/favicon.ico">
-    <meta name="apple-mobile-web-app-title" content="Ok">
-    <meta name="application-name" content="Ok">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="msapplication-TileImage" content="/static/img/favicon/mstile-144x144.png">
-    <meta name="msapplication-config" content="/static/img/favicon/browserconfig.xml">
-    <meta name="theme-color" content="#346694">
+  {% include 'icons.html' %}
 
-    {% assets "common_css" %}
-        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-    {% endassets %}
+  {% assets "common_css" %}
+  <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
 
-    {% assets "student_css" %}
-        <!-- third-party libraries -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-        <link href='https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700' rel='stylesheet' type='text/css'>
-        <!-- Ionicons -->
-        <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-    {% endassets %}
+  {% assets "student_css" %}
+  <!-- third-party libraries -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  <link href='https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700' rel='stylesheet' type='text/css'>
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+  <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
 
-    {% assets "landing_css" %}
-        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-    {% endassets %}
-  </head>
-  <body class="home">
-    <header>
-      <div class="left col-md-2">
-        <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo">
-      </div>
-      <div class="right col-md-2">
-        <div class="stripes">
-          <div class="stripe"></div>
-          <div class="stripe"></div>
-          <div class="stripe"></div>
+  {% assets "landing_css" %}
+  <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
+</head>
+<body class="home">
+
+  <div class="container fluid">
+
+      <header class="row">
+        <div class="left col-md-2">
+          <a href="{{ url_for('student.index') }}">
+            <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo">
+          </a>
         </div>
+        <div class="right col-md-2">
+<!--       <div class="stripes">
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+          </div>
+ -->
         {% if config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
-            <a href="{{ url_for('auth.testing_login') }}" class="btn pill">Login</a>
-        {% else %}
-            <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
-        {% endif %}
-
-      </div>
-    </header>
-    <div class="landing">
-      <div class="col-md-3"></div>
-      <div class="col-md-6">
+          <a href="{{ url_for('auth.testing_login') }}" class="btn pill">Login</a>
+          {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
+          {% endif %}
+        </div>
+      </header>
+    <div class="landing row">
+      <div class="col-md-10 col-md-offset-1">
         {% include 'alerts.html' %}
-        <h1 class="title">Automate grading. Personalize feedback.</h1>
-        <p>Ok autogrades coding assignments and facilitates code submission, review, composition, and analytics for advanced diagnoses for your class.</p>
+        <h1 class="title">Automate Grading & Personalize Feedback.</h1>
+
+        <p class="subtitle">Ok autogrades programming assignments, facilitates submission, <br> composition feedback, and analytics for your class.</p>
 
         {% if config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
-            <a href="{{ url_for('auth.testing_login') }}" class="button">Testing Login</a>
+        <a href="{{ url_for('auth.testing_login') }}" class="button">Testing Login</a>
         {% else %}
-            <a href="{{ url_for('auth.login') }}" class="button">Login with Google</a>
+        <a href="{{ url_for('auth.login') }}" class="button">Student Login</a>
         {% endif %}
-
       </div>
     </div>
-  </body>
-  {% assets "common_js" %}
-      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+    {% include 'footer.html' %}
+
+  </div>
+
+</body>
+{% assets "common_js" %}
+<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
 </html>
-{% endcache %}

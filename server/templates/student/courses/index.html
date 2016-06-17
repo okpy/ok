@@ -19,28 +19,9 @@
     <main>
       {% include 'student/courses/sidebar.html' %}
       <div class="col-md-2"></div>
-      <section class="content nomapa col-md-10 col-xs-12">
-        <header>
-          <div class="header-bg">
+      <section class="content nomapa col-md-10 col-xs-12" role="main">
 
-            <div class="right col-md-5">
-                <form method="POST" action="{{ url_for('auth.logout' )}}" role="form" class="pull-right">
-                    <div style="display:none;"><input id="csrf_token" name="csrf_token" type="hidden" value="{{ csrf_token() }}"></div>
-                      <button class="plain-btn" type="submit">
-                             <a class="header-text"><span>Logout</span></a>
-                      </button>
-                </form>
-
-                <div class="header-text user-profile hidden-sm hidden-xs">
-                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
-                  <i class="fa fa-user"></i>
-                </div>
-
-
-            </div>
-
-          </div>
-        </header>
+        {% include 'student/header.html' %}
 
         <div class="subcontent heading">
           <div class="wrap">
@@ -59,10 +40,10 @@
 
         <!-- end desktop/tablet version -->
         <!-- start mobile version -->
-        {{ table.render_courses_mobile(instructor, tname="Staff Dashboard") }}
+        {{ table.render_courses_mobile(instructor, tname="Staff Dashboard", admin=True) }}
         {{ table.render_courses_mobile(current, tname="Current Courses", empty=True) }}
         {{ table.render_courses_mobile(past, tname="Inactive Courses") }}
-        {{ table.render_courses_mobile(all, tname="Auditing Courses", class_="other-courses other-courses-mobile") }}
+        {{ table.render_courses_mobile(all, tname="Other Courses", class_="other-courses other-courses-mobile") }}
 
         <!-- end mobile version -->
       </section>

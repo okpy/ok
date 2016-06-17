@@ -1,5 +1,5 @@
 .container {
-    margin-top: 60px;
+  margin-top: 60px;
 }
 
 .block {
@@ -19,14 +19,14 @@ pre code  {
 }
 
 .top-align {
-    margin-top: -1em;
+  margin-top: -1em;
 }
 
 .inline {
-    display: inline;
+  display: inline;
 }
 .pace {
-    display: none;
+  display: none;
 }
 
 td.slim-cell {
@@ -35,16 +35,16 @@ td.slim-cell {
 }
 
 .text-center {
-    text-align: center;
+  text-align: center;
 }
 
 .plain-btn {
-    background-color: Transparent;
-    background-repeat:no-repeat;
-    border: none;
-    cursor:pointer;
-    overflow: hidden;
-    outline:none;
+  background-color: Transparent;
+  background-repeat:no-repeat;
+  border: none;
+  cursor:pointer;
+  overflow: hidden;
+  outline:none;
 }
 
 /* Blank State from Code Pen */
@@ -107,16 +107,16 @@ td.slim-cell {
 }
 
 .blank-state-icon {
-    max-width: 120px;
+  max-width: 120px;
 }
 
 /* Small devices (tablets, 768px and up) */
 @media (max-width: 768px) {
   .blank-state.blank-state-lg {
-      width: 95%;
-      margin-left: auto;
-      margin-right: auto;
-      padding: 20px 10px;
-      font-size: 150%;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px 10px;
+    font-size: 150%;
   }
 }

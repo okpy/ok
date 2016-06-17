@@ -81,15 +81,13 @@ def index():
 def grading_tasks(username=None):
     courses, current_course = get_courses()
     page = request.args.get('page', 1, type=int)
-    queue = (GradingTask.query
-                        .filter_by(grader=current_user)
-                        .options(db.joinedload('assignment'))
-                        .order_by(GradingTask.score_id.desc())
-                        .order_by(GradingTask.created.desc())
+    tasks_query = GradingTask.query.filter_by(grader=current_user)
+    queue = (tasks_query.options(db.joinedload('assignment'))
+                        .order_by(GradingTask.score_id.asc())
+                        .order_by(GradingTask.created.asc())
                         .paginate(page=page, per_page=20))
-    remaining = (GradingTask.query
-                            .filter_by(grader=current_user, score_id=None)
-                            .count())
+
+    remaining = tasks_query.filter_by(score_id=None).count()
     percent_left = (1-(remaining/max(1, queue.total))) * 100
     return render_template('staff/grading/queue.html', courses=courses,
                            queue=queue, remaining=remaining,
@@ -156,7 +154,7 @@ def composition(bid):
 @is_staff()
 def grade(bid):
     """ Used as a form submission endpoint. """
-    backup = Backup.query.get(bid)
+    backup = Backup.query.options(db.joinedload('assignment')).get(bid)
     if not backup:
         abort(404)
     if not Backup.can(backup, current_user, 'grade'):
@@ -165,7 +163,9 @@ def grade(bid):
 
     form = forms.GradeForm()
     score_kind = form.kind.data.strip().lower()
-    if score_kind == "composition":
+    is_composition = (score_kind == "composition")
+
+    if is_composition:
         form = forms.CompositionScoreForm()
 
     if not form.validate_on_submit():
@@ -177,20 +177,45 @@ def grade(bid):
         existing.public = False
         existing.archived = True
 
-    model = Score(backup=backup, grader=current_user,
+    score = Score(backup=backup, grader=current_user,
                   assignment_id=backup.assignment_id)
-    form.populate_obj(model)
-    db.session.add(model)
+    form.populate_obj(score)
+    db.session.add(score)
     db.session.commit()
 
-    cache.delete_memoized(User.num_grading_tasks, repr(current_user))
+    next_page = None
+    flash_msg = "Added {0} score of {1}.".format(score_kind, score.score)
 
-    if request.args.get('queue'):
-        # TODO: Find next submission in queue and redirect to that.
-        pass
-    flash("Added {0} score.".format(model.kind), "success")
-    route = ".composition" if score_kind == "composition" else ".grading"
-    return redirect(url_for(route, bid=backup.id))
+    # Find GradingTasks applicable to this score
+    tasks = backup.grading_tasks
+    for task in tasks:
+        task.score = score
+        cache.delete_memoized(User.num_grading_tasks, task.grader)
+
+    db.session.commit()
+
+    for task in tasks:
+        # Set next page
+        if task.grader == current_user:
+            next_task = task.get_next_task()
+            next_route = '.composition' if is_composition else '.grading'
+            # Handle case when the task is on the users queue
+            if next_task:
+                flash_msg += (" {0} more to go. Here's the next submission:"
+                              .format(task.remaining))
+                next_page = url_for(next_route, bid=next_task.backup_id)
+            else:
+                flash_msg += " All done with grading for {}".format(backup.assignment.name)
+                next_page = url_for('.grading_tasks')
+
+    cache.delete_memoized(User.num_grading_tasks, current_user)
+
+    flash(flash_msg, 'success')
+    if not next_page:
+        next_page = url_for('.assignment_queues', aid=backup.assignment_id,
+                            cid=backup.assignment.course_id)
+
+    return redirect(next_page)
 
 
 @admin.route("/client/<name>", methods=['GET', 'POST'])
@@ -243,6 +268,10 @@ def course_assignments(cid):
 @is_staff(course_arg='cid')
 def new_assignment(cid):
     courses, current_course = get_courses(cid)
+    if not Assignment.can(None, current_user, 'create'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
     form = forms.AssignmentForm(course=current_course)
     if form.validate_on_submit():
         model = Assignment(course_id=cid, creator_id=current_user.id)
@@ -257,28 +286,27 @@ def new_assignment(cid):
     return render_template('staff/course/assignment.new.html', form=form,
                            courses=courses, current_course=current_course)
 
-
 @admin.route("/course/<int:cid>/assignments/<int:aid>",
              methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
 def assignment(cid, aid):
     courses, current_course = get_courses(cid)
-    assgn = Assignment.query.filter_by(id=aid, course_id=cid).one()
-    if assgn.course != current_course:
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    if not Assignment.can(assign, current_user, 'edit'):
+        flash('Insufficient permissions', 'error')
         return abort(401)
 
-    form = forms.AssignmentUpdateForm(obj=assgn, course=current_course)
-    stats = Assignment.assignment_stats(assgn.id)
+    form = forms.AssignmentUpdateForm(obj=assign, course=current_course)
+    stats = Assignment.assignment_stats(assign.id)
 
     if form.validate_on_submit():
         # populate_obj converts back to UTC
-        form.populate_obj(assgn)
-        print(assgn.max_group_size, )
+        form.populate_obj(assign)
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
         flash("Assignment edited successfully.", "success")
 
-    return render_template('staff/course/assignment.html', assignment=assgn,
+    return render_template('staff/course/assignment.html', assignment=assign,
                            form=form, courses=courses, stats=stats,
                            current_course=current_course)
 
@@ -288,6 +316,9 @@ def assignment(cid, aid):
 def templates(cid, aid):
     courses, current_course = get_courses(cid)
     assignment = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    if not Assignment.can(assignment, current_user, 'edit'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
 
     form = forms.AssignmentTemplateForm()
 
@@ -353,7 +384,33 @@ def export_scores(cid, aid):
     return Response(stream_with_context(generate_csv()), mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
-@admin.route("/course/<int:cid>/assignments/<int:aid>/queues",
+@admin.route("/course/<int:cid>/assignments/<int:aid>/queues")
+@is_staff(course_arg='cid')
+def assignment_queues(cid, aid):
+    courses, current_course = get_courses(cid)
+    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    if not Assignment.can(assignment, current_user, 'grade'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
+    page = request.args.get('page', 1, type=int)
+    tasks_query = GradingTask.query.filter_by(assignment=assignment)
+    queue = (tasks_query.options(db.joinedload('assignment'))
+                        .order_by(GradingTask.score_id.asc())
+                        .order_by(GradingTask.created.asc())
+                        .paginate(page=page, per_page=20))
+
+    remaining = tasks_query.filter_by(score_id=None).count()
+    percent_left = (1-(remaining/max(1, queue.total))) * 100
+
+    return render_template('staff/grading/queue.html', courses=courses,
+                           current_course=current_course,
+                           assignment=assignment,
+                           queue=queue, remaining=remaining,
+                           percent_left=percent_left)
+
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/queues/new",
              methods=["GET", "POST"])
 @is_staff(course_arg='cid')
 def assign_grading(cid, aid):
@@ -383,6 +440,9 @@ def assign_grading(cid, aid):
 
         # Available backups:
         students, backups, no_submissions = assign.course_submissions()
+
+        # If only want to assign unassigned ones:
+        # unassigned_backups = [b for b in backups if not b.grading_tasks]
 
         chunks = utils.chunks(list(backups), len(selected_users))
         tasks = []

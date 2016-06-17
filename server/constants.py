@@ -16,6 +16,7 @@ APP_URL = 'https://okpy.org/'
 AUTOGRADER_URL = 'https://autograder.cs61a.org'
 
 FORBIDDEN_ROUTE_NAMES = [
+    'about',
     'admin',
     'api',
     'comments',

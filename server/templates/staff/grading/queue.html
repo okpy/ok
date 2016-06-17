@@ -6,26 +6,40 @@
 
 {% block main %}
   <section class="content-header">
-      <h1>
-        Grading Queue
-      </h1>
+      {% if assignment %}
+        <h1>
+          {{ assignment.display_name }} Grading Queue
+        </h1>
+      {% else %}
+        <h1>
+          Your Grading Queue
+        </h1>
+      {% endif %}
       <ol class="breadcrumb">
         <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li><a href="{{ url_for(".grading_tasks") }}"><i class="fa fa-inbox"></i> Your Grading Queue </a></li>
+        {% if assignment %}
+          <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+              <i class="fa fa-university"></i> {{ current_course.offering }}
+          </a></li>
+          <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+            <i class="fa fa-list"></i> Assignments</a>
+          </li>
+          <li class="active"><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}">
+            <i class="fa fa-book"></i> {{ assignment.display_name }}</a>
+          </li>
+          <li class="active"><a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}">
+              <i class="fa fa-inbox"></i> Grading Queue</a>
+          </li>
+
+        {% else %}
+          <li><a href="{{ url_for(".grading_tasks") }}"><i class="fa fa-inbox"></i>  Grading Queue </a></li>
+        {% endif %}
       </ol>
   </section>
 
   <section class="content">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible">
-                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                  {{message}}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+
+    {% include 'alerts.html' %}
 
     <!-- Default box -->
     <div class="row">
@@ -73,7 +87,7 @@
         <div class="box-header">
             <h3 class="box-title"><span>Queue</span></h3>
             <ul class="pagination pagination-sm no-margin pull-right">
-                {{ helpers.paginate(queue, request.endpoint, page) }}
+                {{ helpers.paginate(queue, request.endpoint, page, params=request.view_args) }}
             </ul>
 
         </div>
@@ -128,7 +142,7 @@
             </div>
 
             <ul class="pagination pagination-sm no-margin pull-right">
-                {{ helpers.paginate(queue, request.endpoint, page) }}
+                {{ helpers.paginate(queue, request.endpoint, page, params=request.view_args) }}
             </ul>
         </div>
     </div>
