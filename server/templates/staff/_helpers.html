@@ -1,12 +1,12 @@
-{% macro paginate(pg, url, page, params=[]) %}
+{% macro paginate(pg, url, page, params={}) %}
     {% if pg.has_prev %}
-    <li><a href="{{ url_for(url, page=pg.prev_num, *params) }}">«</a></li>
+    <li><a href="{{ url_for(url, page=pg.prev_num, **params) }}">«</a></li>
     {% endif %}
 
     {%- for page in pg.iter_pages() %}
         {% if page %}
             {% if page != pg.page %}
-            <li><a href="{{ url_for(url, page=page, *params) }}">{{ page }}</a></li>
+            <li><a href="{{ url_for(url, page=page, **params) }}">{{ page }}</a></li>
             {% else %}
             <li class="active"><a href="#">Page {{ pg.page }} of {{ pg.pages }}</a></li>
             {% endif %}
@@ -15,6 +15,6 @@
         {% endif %}
     {%- endfor %}
     {% if pg.has_next %}
-        <li><a href="{{ url_for(url, page=pg.next_num, *params) }}">»</a></li>
+        <li><a href="{{ url_for(url, page=pg.next_num, **params) }}">»</a></li>
     {% endif %}
 {% endmacro %}

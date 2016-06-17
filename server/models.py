@@ -244,6 +244,10 @@ class Assignment(Model):
             return True
         if action == "view":
             return user.is_authenticated()
+
+        is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
+        if not obj:
+            return action == "create" and is_staff
         return user.is_enrolled(obj.course.id, STAFF_ROLES)
 
     @staticmethod
@@ -881,8 +885,28 @@ class GradingTask(Model):
     assignment = db.relationship("Assignment")
     grader = db.relationship("User")
     course = db.relationship("Course")
+    score = db.relationship("Score")
 
     @hybrid_property
     def is_complete(self):
         return self.score_id is not None
+
+    @hybrid_property
+    def remaining(self):
+        ungraded = (GradingTask.query
+                              .filter_by(grader_id=self.grader_id,
+                                         assignment_id=self.assignment_id,
+                                         score_id=None)
+                              .count())
+        return ungraded
         # return self.kind in [s.tag for s in self.backup.scores]
+
+    def get_next_task(self):
+        ungraded = (GradingTask.query
+                              .filter_by(grader_id=self.grader_id,
+                                         assignment_id=self.assignment_id,
+                                         score_id=None)
+                              .order_by(GradingTask.created.asc())
+                              .first())
+        return ungraded
+

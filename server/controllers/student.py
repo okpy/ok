@@ -87,7 +87,7 @@ def assignment(name):
     user_ids = assign.active_user_ids(current_user.id)
     fs = assign.final_submission(user_ids)
     group = Group.lookup(current_user, assign)
-    can_invite = assign.max_group_size > 1
+    can_invite = assign.max_group_size > 1 and assign.active
     can_remove = group and group.has_status(current_user, 'active')
 
     if group:
