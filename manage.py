@@ -41,11 +41,7 @@ def cacheflush():
         print("Flushed")
 
 @manager.command
-def createdb():
-    """ Creates a database with all of the tables defined in
-        your SQLAlchemy models
-    """
-    db.create_all()
+def setup_default():
     admin = User(email="sumukh@berkeley.edu", is_admin=True)
     db.session.add(admin)
     admin = User(email="brian.hou@berkeley.edu", is_admin=True)
@@ -57,10 +53,19 @@ def createdb():
             display_name='CS 61A',
             active=True)
     db.session.add(course)
-    db.session.commit()
+
     url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.5/ok'
     ok = Version(name='ok-client', current_version='v1.5.5', download_link=url)
     db.session.add(ok)
+    db.session.commit()
+
+@manager.command
+def createdb():
+    """ Creates a database with all of the tables defined in
+        your SQLAlchemy models
+    """
+    db.create_all()
+    setup_default()
 
 
 @manager.command
@@ -68,7 +73,7 @@ def dropdb():
     """ Creates a database with all of the tables defined in
         your SQLAlchemy models
     """
-    if app.config['ENV'] == "dev":
+    if app.config['ENV'] != "prod":
         db.drop_all()
 
 @manager.command
@@ -77,11 +82,11 @@ def resetdb():
         your SQLAlchemy models.
         DO NOT USE IN PRODUCTION.
     """
-    if app.config['ENV'] == "dev":
+    if app.config['ENV'] != "prod":
         print("Dropping database...")
         db.drop_all()
         print("Seeding database...")
-        db.create_all()
+        createdb()
         seed()
 
 @manager.command
