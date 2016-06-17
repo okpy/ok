@@ -441,6 +441,9 @@ def assign_grading(cid, aid):
         # Available backups:
         students, backups, no_submissions = assign.course_submissions()
 
+        # If only want to assign unassigned ones:
+        # unassigned_backups = [b for b in backups if not b.grading_tasks]
+
         chunks = utils.chunks(list(backups), len(selected_users))
         tasks = []
         for assigned_backups, grader in zip(chunks, selected_users):
