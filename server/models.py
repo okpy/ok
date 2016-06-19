@@ -20,7 +20,7 @@ import pytz
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
-from server.utils import encode_id, local_time
+from server.utils import encode_id
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -237,14 +237,6 @@ class Assignment(Model):
     @hybrid_property
     def active(self):
         return dt.utcnow() <= self.lock_date
-
-    @hybrid_property
-    def due_time_local(self):
-        return local_time(self.due_date, self.course)
-
-    @hybrid_property
-    def lock_time_local(self):
-        return local_time(self.lock_date, self.course)
 
     @classmethod
     def can(cls, obj, user, action):
@@ -552,11 +544,6 @@ class Backup(Model):
         if self.extension:
             return False
         return self.created > self.assignment.due_date
-
-    @hybrid_property
-    def time_local(self):
-        return local_time(self.created, self.course)
-
 
     # @hybrid_property
     # def group(self):
