@@ -30,7 +30,7 @@
               <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name_with_semester }}</a></span> &raquo;
               <span>{{ assignment.display_name }}</span>
             </div>
-            <h1>{{ assignment.display_name}} <small> Due: {{  utils.local_time(assignment.due_date, course) }} </small></h1>
+            <h1>{{ assignment.display_name}} <small> Due: {{  assignment.due_time_local }} </small></h1>
           </div>
           {% include 'alerts.html' %}
 
@@ -51,7 +51,7 @@
               <div class="cell col-xs-12">
                 <div class="cell-title">
                   <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="due-text green">
-                    {{ utils.local_time(final_submission.created, course) }}
+                    {{ final_submission.local_time }}
                   </a>
                 </div>
                 <div class="cell-text">
