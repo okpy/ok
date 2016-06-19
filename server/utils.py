@@ -14,7 +14,7 @@ import sendgrid
 from server.extensions import cache
 
 sg = sendgrid.SendGridClient(
-    os.getenv('SENDGRID_API_KEY'), None, raise_errors=True)
+    os.getenv('SENDGRID_KEY'), None, raise_errors=True)
 logger = logging.getLogger(__name__)
 
 # ID hashing configuration.

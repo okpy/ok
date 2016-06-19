@@ -3,10 +3,8 @@ import os
 from markdown import markdown
 from flask import Flask
 from flask import Markup
-
 from flask_rq import RQ
 from flask_wtf.csrf import CsrfProtect
-
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 
 from server import assets, converters, utils
@@ -20,10 +18,11 @@ from server.controllers.student import student
 from server.constants import API_PREFIX
 
 from server.extensions import (
-    cache,
     assets_env,
+    cache,
+    csrf,
     debug_toolbar,
-    csrf
+    sentry
 )
 
 def create_app(default_config_path=None):
@@ -42,11 +41,16 @@ def create_app(default_config_path=None):
             'Check that the OK_SERVER_CONFIG environment variable is set.')
     app.config.from_pyfile(config_path)
 
-    # initialize redis task queues
-    RQ(app)
+    # Senty Error Reporting
+    sentry_dsn = os.getenv('SENTRY_DSN')
+    if sentry_dsn and not app.debug:
+        sentry.init_app(app, dsn=sentry_dsn)
 
     # initialize the cache
     cache.init_app(app)
+
+    # initialize redis task queues
+    RQ(app)
 
     # Protect All Routes from csrf
     csrf.init_app(app)
