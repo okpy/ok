@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: ok-web-rc
+spec:
+  replicas: 1
+  selector:
+    name: web
+    version: v3.0.0
+  template:
+    metadata:
+      labels:
+        name: web
+        version: v3.0.0
+        tier: frontend
+    spec:
+      containers:
+      - name: ok-v3-web
+        image: cs61a/ok-server:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: OK_ENV
+          value: prod
+        - name: GET_HOSTS_FROM
+          value: dns
+          # If your cluster config does not include a dns service, then to
+          # instead access environment variables to find service host
+          # info, comment out the 'value: dns' line above, and uncomment the
+          # line below.
+          # value: env
+        - name: REDIS_HOST
+          value: redis-master
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ok-secrets
+              key: key
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: ok-db
+              key: db
+        - name: GOOGLE_ID
+          valueFrom:
+            secretKeyRef:
+              name: ok-login
+              key: google-id
+        - name: GOOGLE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ok-login
+              key: google-secret
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: ok-services
+              key: sentry-dsn
+        - name: SENDGRID_USER
+          valueFrom:
+            secretKeyRef:
+              name: ok-services
+              key: sendgrid-user
+        - name: SENDGRID_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ok-services
+              key: sendgrid-key
+

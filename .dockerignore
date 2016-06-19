@@ -19,10 +19,6 @@ env
 secret_keys.py
 secret*
 
-server/settings/prod*.py
-server/settings/staging*.py
-
-
 # pip-related files
 *.egg-info
 dist

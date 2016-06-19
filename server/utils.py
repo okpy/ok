@@ -33,7 +33,7 @@ def decode_id(value):
     return numbers[0]
 
 # Timezones. Be cautious with using tzinfo argument. http://pytz.sourceforge.net/
-# "tzinfo argument of the standard datetime constructors ‘’does not work’’
+# "tzinfo argument of the standard datetime constructors 'does not work'
 # with pytz for many timezones."
 
 def local_time(time, course):
