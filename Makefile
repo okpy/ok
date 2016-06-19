@@ -18,7 +18,7 @@ deps:
 	pip install -r requirements.txt
 
 clean:
-	python manage.py clean
+	./manage.py clean
 
 lint:
 	flake8 --exclude=env,tests .

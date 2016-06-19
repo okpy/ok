@@ -1,3 +1,5 @@
 web:
   restart: 'no'
-  command: make test
+  command: py.test --cov-report term-missing --cov=server tests/
+  environment:
+    OK_ENV: 'test'

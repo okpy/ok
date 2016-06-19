@@ -43,7 +43,7 @@ sendgrid==1.5.20
 pynliner<1.0
 
 # Autograder Interface
-requests
+requests==2.10
 
 # Front end
 itsdangerous==0.24
