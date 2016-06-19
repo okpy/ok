@@ -7,7 +7,7 @@ from urllib.parse import urlparse, urljoin
 from flask import render_template, url_for
 from hashids import Hashids
 import humanize
-from premailer import transform
+from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
 
@@ -110,7 +110,7 @@ def send_email(to, subject, body, template='email/notification.html',
         from_name="Okpy.org",
         from_email="no-reply@okpy.org",
         subject=subject,
-        html=transform(html),
+        html=emailFormat(html),
         text=body)
 
     try:

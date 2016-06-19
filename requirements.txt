@@ -40,7 +40,7 @@ pytz
 
 # Emailing
 sendgrid==1.5.20
-premailer==2.11.0
+pynliner<1.0
 
 # Autograder Interface
 requests
