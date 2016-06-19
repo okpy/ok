@@ -17,6 +17,7 @@ env
 # Don't store secret keys in version control
 *secrets.json*
 secret_keys.py
+secret*
 
 server/settings/prod*.py
 server/settings/staging*.py
