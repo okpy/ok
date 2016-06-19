@@ -4,7 +4,7 @@ RUN mkdir /code/
 WORKDIR /code/
 
 ADD requirements.txt .
-RUN apk add --update git
+RUN apk add --update git patch
 RUN pip3 install -r requirements.txt
 
 ADD . .
