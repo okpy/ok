@@ -22,17 +22,7 @@
   </section>
 
   <section class="content">
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible">
-              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-              {{message}}
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
+    {% include 'alerts.html' %}
     <div class="row">
         <div class="col-md-5 col-sm-12">
             <div class="box">
@@ -40,7 +30,7 @@
                     <h3 class="box-title">Update Templates</h3>
                 </div>
                 <div class="box-body">
-                    <p> To provide a diff of student submission to the original provided file(s), upload the starter files here (include only those that students submit) </p>
+                    <p> Upload the starter files here (include only those that students submit) </p>
                     {% call forms.render_form(form, action_url="", action_text='Update Template',
                                                 class_='form', enctype="multipart/form-data") %}
                         {{ forms.render_field(form.template_files, label_visible=true, multiple="") }}
@@ -53,22 +43,36 @@
         </div>
 
       <div class="col-md-7 col-sm-12">
-        {% for filename in assignment.files %}
-          <div class="box collapsed-box">
-            <div class="box-header with-border">
-                <h3 class="box-title">{{ filename }}</h3>
-                <div class="box-tools pull-right">
-                  <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
-                  </button>
-                </div>
-            </div>
-            <div class="box-body">
-              <pre>{{ assignment.files[filename] }}</pre>
-            </div>
-            <!-- /.box-body -->
-         </div>
-          <!-- /.box -->
-          {% endfor %}
+        {% if assignment.files %}
+          {% for filename in assignment.files %}
+            <div class="box collapsed-box">
+              <div class="box-header with-border">
+                  <h3 class="box-title">{{ filename }}</h3>
+                  <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                    </button>
+                  </div>
+              </div>
+              <div class="box-body">
+                <pre>{{ assignment.files[filename] }}</pre>
+              </div>
+              <!-- /.box-body -->
+           </div>
+            <!-- /.box -->
+            {% endfor %}
+        {% else %}
+            <div class="box">
+              <div class="box-header with-border">
+                  <h3 class="box-title">No templates</h3>
+              </div>
+              <div class="box-body">
+                <p>Templates are used to render a diff (a visual representation) between the submission code and the starter code.<p>
+              </div>
+              <!-- /.box-body -->
+           </div>
+            <!-- /.box -->
+
+        {% endif %}
     <!-- /.col -->
     </div>
 
