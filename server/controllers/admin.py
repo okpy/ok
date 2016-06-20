@@ -10,6 +10,7 @@ from flask_login import current_user
 
 from server.autograder import autograde_assignment
 from server.controllers.auth import google_oauth_token
+import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
 from server.constants import STAFF_ROLES, STUDENT_ROLE
@@ -232,7 +233,9 @@ def client_version(name):
 
         db.session.add(version)
         db.session.commit()
+
         cache.delete_memoized(Version.get_current_version, name)
+        cache.delete_memoized(ok_api.Version.get)
 
         flash(name + " version updated successfully.", "success")
         return redirect(url_for(".client_version", name=name))
