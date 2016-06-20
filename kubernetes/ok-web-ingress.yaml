@@ -19,3 +19,7 @@ spec:
         backend:
           serviceName: ok-direct-service
           servicePort: 80
+      - path: /static/*
+        backend:
+          serviceName: ok-web-static-service
+          servicePort: 80
