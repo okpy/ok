@@ -1,5 +1,5 @@
 """ Do not put secrets in this file. This file is public.
-    For staging environment (Using Dokku)
+    Production config.
 """
 
 import os
@@ -8,35 +8,44 @@ import binascii
 
 default_secret = binascii.hexlify(os.urandom(24))
 
-ENV = 'staging'
+ENV = 'prod'
 PREFERRED_URL_SCHEME = 'https'
 
+if not os.getenv('SECRET_KEY'):
+    print("The secret key is not set!!")
+
 SECRET_KEY = os.getenv('SECRET_KEY', default_secret)
-CACHE_TYPE = 'simple'
 
 DEBUG = False
 ASSETS_DEBUG = False
 TESTING_LOGIN = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
-SQLALCHEMY_TRACK_MODIFICATIONS = False
-
 db_url = os.getenv('DATABASE_URL')
 if db_url:
     db_url = db_url.replace('mysql://', 'mysql+pymysql://')
 else:
-    db_url = os.getenv('SQLALCHEMY_URL', 'sqlite:///../oksqlite.db')
+    print("The database URL is not set!")
+    sys.exit(1)
 
 SQLALCHEMY_DATABASE_URI = db_url
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
+
+CACHE_TYPE = 'redis'
+CACHE_REDIS_HOST = os.getenv('REDIS_HOST', 'redis-master')
+CACHE_KEY_PREFIX = 'ok-web'
 
 try:
     os.environ["GOOGLE_ID"]
     os.environ["GOOGLE_SECRET"]
 except KeyError:
-    print("Please set the google login variables. source secrets.sh")
+    print("Please set the google login variables.")
     sys.exit(1)
+
+# Service Keys
 
 GOOGLE = {
     'consumer_key': os.environ.get('GOOGLE_ID'),

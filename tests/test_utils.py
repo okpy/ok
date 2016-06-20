@@ -1,5 +1,8 @@
 from server import utils
 
+import datetime as dt
+import pytz
+
 from tests import OkTestCase
 
 class TestUtils(OkTestCase):
@@ -23,4 +26,19 @@ class TestUtils(OkTestCase):
         assert [len(i) for i in five_chunks] == [11, 11, 11, 11, 11]
 
         assert [] == list(utils.chunks(list(range(21)), 0))
+
+    def test_time(self):
+        self.setup_course()
+        # UTC Time
+        time = dt.datetime(month=1, day=20, year=2016, hour=12, minute=1)
+        self.assertEquals(utils.local_time(time, self.course), 'Wed 01/20 04:01 AM')
+
+        # DT Aware
+        pacific = pytz.timezone('US/Pacific')
+        localized = pacific.localize(time)
+        self.assertEquals(utils.local_time(localized, self.course), 'Wed 01/20 12:01 PM')
+
+        eastern = pytz.timezone('US/Eastern')
+        localized = eastern.localize(time)
+        self.assertEquals(utils.local_time(localized, self.course), 'Wed 01/20 09:01 AM')
 

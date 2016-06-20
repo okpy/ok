@@ -14,7 +14,7 @@ import sendgrid
 from server.extensions import cache
 
 sg = sendgrid.SendGridClient(
-    os.getenv('SENDGRID_API_KEY'), None, raise_errors=True)
+    os.getenv('SENDGRID_KEY'), None, raise_errors=True)
 logger = logging.getLogger(__name__)
 
 # ID hashing configuration.
@@ -33,16 +33,18 @@ def decode_id(value):
     return numbers[0]
 
 # Timezones. Be cautious with using tzinfo argument. http://pytz.sourceforge.net/
-# "tzinfo argument of the standard datetime constructors ‘’does not work’’
+# "tzinfo argument of the standard datetime constructors 'does not work'
 # with pytz for many timezones."
 
 def local_time(time, course):
     """Format a time string in a course's locale.
+    Note that %-I does not perform as expected on Alpine Linux
     """
     if not time.tzinfo:
         # Assume UTC
         time = pytz.utc.localize(time)
-    return time.astimezone(course.timezone).strftime('%a %m/%d %-I:%M %p')
+    local = time.astimezone(pytz.timezone('America/Los_Angeles'))
+    return local.strftime('%a %m/%d %I:%M %p')
 
 def local_time_obj(time, course):
     """Get a Datetime object in a course's locale from a TZ Aware DT object."""
@@ -63,7 +65,6 @@ def natural_time(date):
     """Format a human-readable time difference (e.g. "6 days ago")"""
     if date.tzinfo:
         date = date.astimezone(pytz.utc).replace(tzinfo=None)
-
     now = dt.datetime.utcnow()
     return humanize.naturaltime(now - date)
 

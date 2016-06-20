@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ok-v3-ing
+spec:
+  backend:
+    serviceName: ok-direct-service
+    servicePort: 80
+  tls:
+  - secretName: ok-tls
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: ok-direct-service
+          servicePort: 80
+      - path: /*
+        backend:
+          serviceName: ok-direct-service
+          servicePort: 80
+      - path: /static/*
+        backend:
+          serviceName: ok-web-static-service
+          servicePort: 80
