@@ -3,20 +3,20 @@ kind: ReplicationController
 metadata:
   name: ok-web-rc
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     name: web
-    version: v3.0.0
+    version: v3.0.2
   template:
     metadata:
       labels:
         name: web
-        version: v3.0.0
+        version: v3.0.2
         tier: frontend
     spec:
       containers:
       - name: ok-v3-web
-        image: cs61a/ok-server:latest
+        image: cs61a/ok-server:v3
         ports:
         - containerPort: 5000
         env:
