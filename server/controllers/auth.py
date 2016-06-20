@@ -4,10 +4,10 @@ There are two ways to authenticate a request:
 * Send a Google access token as the access_token query parameter
 """
 from flask import (abort, Blueprint, current_app, flash, redirect,
-    render_template, request, session, url_for, make_response)
+                   render_template, request, session, url_for, make_response)
 from flask_oauthlib.client import OAuth, OAuthException
 from flask_login import (LoginManager, login_user, logout_user, login_required,
-    current_user)
+                         current_user)
 
 import pickle
 import logging
@@ -54,8 +54,8 @@ client_auth = oauth_client.remote_app(
     consumer_secret='zGY9okExIBnompFTWcBmOZo4',  # not actually a secret, from ok-client.
     request_token_params={
         'scope': 'email',
-        'access_type':'offline',
-        'approval_prompt':'force'
+        'access_type': 'offline',
+        'approval_prompt': 'force'
     },
     base_url='https://www.googleapis.com/oauth2/v1/',
     request_token_url=None,

@@ -11,7 +11,12 @@ Rolling updates the running service one pod at a time, allowing for zero downtim
 `docker push cs61a/ok-server:<version number>`
 
 - Tell Kubernetes to do a rolling update.
-`kubectl rolling-update ok-web-rc --image=cs61a/ok-server:<version number>`
+
+1. Delete the autoscaler (see section below)
+2. Run the rolling update:
+> `kubectl rolling-update ok-web-rc --image=cs61a/ok-server:<version number>`
+
+3. Recreate the autoscaler
 
 If that's too slow add `--update-period 15s`
 
@@ -22,6 +27,25 @@ In another shell:
 ### Notes for developers
 
 Using version numbers instead of the `latest` tag for docker makes it easier to rollback changes. Check the current tag version on [Docker Hub](https://hub.docker.com/r/cs61a/ok-server/)
+
+## Scaling
+
+### Pod Scaling
+
+Horizontal Pod Scaling is not compatible with rolling updates.
+Temporary solution is to delete the HPA and recreate it after the rolling update
+
+`kubectl get hpa` # Verify we current load status
+`kubectl delete hpa ok-web-rc`
+`kubectl autoscale rc ok-web-rc --min=5 --max=15 --cpu-percent=75`
+
+To manually scale replicas:
+`kubectl scale rc ok-web-rc --replicas=<count>`
+
+### Node Scaling
+
+Node scaling (the actual machines the cluster runs on) is set to autoscale through
+the Google Web Scaling through the instance group.
 
 ## Setup
 - Setup the k8s cluster using the web console or command line.

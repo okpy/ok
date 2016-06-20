@@ -60,7 +60,7 @@
         <li><a href="{{ url_for('.client_version', name='ok-client') }}">
             <i class="fa fa-desktop"></i> <span>ok-client Version</span></a>
         </li>
-        <li><a href="https://cal-cs-61a-staff.github.io/ok/">
+        <li><a href="https://okpy.github.io/documentation/">
             <i class="fa fa-book"></i> <span>Documentation</span></a>
         </li>
         <li><a href="{{ url_for('student.index' )}}">
@@ -83,19 +83,13 @@
         {% if current_user.is_admin %}
         <!-- Admin Links -->
         <li class="header">Admin</li>
-        <li><a href="https://cloud.console.google.com/">
+        <li><a href="https://console.cloud.google.com/home/dashboard?project=ok-server">
             <i class="fa fa-server"></i> <span>GCE Console</span></a>
         </li>
-        <li><a href="https://cloud.console.google.com/">
-            <i class="fa fa-download"></i> <span>Cloud Storage Bucket</span></a>
-        </li>
-        <li><a href="#">
+        <li><a href="https://metabase.cs61a.org">
             <i class="fa fa-database"></i> <span>Query Tool</span></a>
         </li>
-        <li><a href="#">
-            <i class="fa fa-dashboard"></i> <span>Statistics</span></a>
-        </li>
-        <li><a href="#">
+        <li><a href="https://console.cloud.google.com/home/dashboard?project=ok-server">
             <i class="fa fa-database"></i> <span>Logs</span></a>
         </li>
         {% endif %}
