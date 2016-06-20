@@ -2,6 +2,27 @@
 
 ## Deployment
 
+Rolling updates the running service one pod at a time, allowing for zero downtime updates.
+
+- Build a docker image for the latest version of ok.
+`docker build -t cs61a/ok-server:latest .`
+- Push the image to Docker Hub
+`docker push cs61a/ok-server:latest`
+`docker push cs61a/ok-server:<version number>`
+
+- Tell Kubernetes to do a rolling update.
+`kubectl rolling-update ok-web-rc --image=cs61a/ok-server:<version number>`
+
+If that's too slow add `--update-period 15s`
+
+- Check on the status of the rolling update
+In another shell:
+`watch kubectl get pods`
+
+### Notes for developers
+
+Using version numbers instead of the `latest` tag for docker makes it easier to rollback changes. Check the current tag version on [Docker Hub](https://hub.docker.com/r/cs61a/ok-server/)
+
 ## Setup
 - Setup the k8s cluster using the web console or command line.
 
@@ -61,5 +82,3 @@ The load balancer will spin up and get configured (takes a few minutes to pass h
 > Honestly both ubernetes-lite and ingress were developed in beta, in parallel, so I'm not surprised they don't play well together. We should definitely make this work.
 
 @k8s - Setup cloud CDN settings right from ingress
-
-
