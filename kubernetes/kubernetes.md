@@ -12,17 +12,19 @@ Rolling updates the running service one pod at a time, allowing for zero downtim
 
 - Tell Kubernetes to do a rolling update.
 
-1. Delete the autoscaler (see section below)
+1. Delete the autoscaler (`kubectl delete hpa ok-web-rc`)
 2. Run the rolling update:
 > `kubectl rolling-update ok-web-rc --image=cs61a/ok-server:<version number>`
-
-3. Recreate the autoscaler
-
 If that's too slow add `--update-period 15s`
 
-- Check on the status of the rolling update
+3. Check on the status of the rolling update
 In another shell:
 `watch kubectl get pods`
+
+
+4. Recreate the autoscaler
+`kubectl autoscale rc ok-web-rc --min=5 --max=15 --cpu-percent=75`
+
 
 ### Notes for developers
 
