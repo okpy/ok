@@ -4,12 +4,11 @@ There are two ways to authenticate a request:
 * Send a Google access token as the access_token query parameter
 """
 from flask import (abort, Blueprint, current_app, flash, redirect,
-                   render_template, request, session, url_for, make_response)
+                   render_template, request, session, url_for)
 from flask_oauthlib.client import OAuth, OAuthException
 from flask_login import (LoginManager, login_user, logout_user, login_required,
                          current_user)
 
-import pickle
 import logging
 
 from server import utils
@@ -43,27 +42,6 @@ google_auth = oauth.remote_app(
     access_token_url='https://accounts.google.com/o/oauth2/token',
     authorize_url='https://accounts.google.com/o/oauth2/auth',
 )
-
-oauth_client = OAuth()
-
-# For more info on why the client_secret is embeddable
-# https://developers.google.com/identity/protocols/OAuth2#webserver
-client_auth = oauth_client.remote_app(
-    'google',
-    consumer_key='931757735585-vb3p8g53a442iktc4nkv5q8cbjrtuonv.apps.googleusercontent.com',
-    consumer_secret='zGY9okExIBnompFTWcBmOZo4',  # not actually a secret, from ok-client.
-    request_token_params={
-        'scope': 'email',
-        'access_type': 'offline',
-        'approval_prompt': 'force'
-    },
-    base_url='https://www.googleapis.com/oauth2/v1/',
-    request_token_url=None,
-    access_token_method='POST',
-    access_token_url='https://accounts.google.com/o/oauth2/token',
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-)
-
 
 @google_auth.tokengetter
 def google_oauth_token(token=None):
@@ -128,35 +106,6 @@ def login():
     """
     return google_auth.authorize(callback=url_for('.authorized', _external=True))
 
-@auth.route("/login/refresh")
-def login_refresh():
-    """
-    Provides a user with .ok_refresh token after logging in with Google
-    """
-    return client_auth.authorize(callback=url_for('.refresh_token', _external=True))
-
-
-@auth.route('/login/refresh/authorized/')
-@client_auth.authorized_handler
-def refresh_token(resp):
-    if resp is None or 'access_token' not in resp:
-        error = "Access denied: reason={0} error={1}".format(
-            request.args.get('error_reason'),
-            request.args.get('error_description')
-        )
-        flash(error, "error")
-        return redirect("/")
-
-    refresh_file = {'access_token': resp['access_token'],
-                    'refresh_token': resp['refresh_token'],
-                    'expires_at': resp['expires_in']}
-    response = make_response(pickle.dumps(refresh_file))
-    response.headers['Content-Disposition'] = (
-        'attachment; filename=ok_refresh')
-    response.headers['Content-Type'] = 'application/octet-stream'
-    return response
-
-
 @auth.route('/login/authorized/')
 @google_auth.authorized_handler
 def authorized(resp):
@@ -178,7 +127,6 @@ def authorized(resp):
     user = user_from_access_token(access_token)
     session['google_token'] = (access_token, '')  # (access_token, secret)
     return authorize_user(user)
-
 
 
 @auth.route('/sudo/<email>/')
