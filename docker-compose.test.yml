@@ -1,5 +1,8 @@
 web:
+  build: .
   restart: 'no'
+  volumes:
+    - .:/code
   command: py.test --cov-report term-missing --cov=server tests/
   environment:
     OK_ENV: 'test'
