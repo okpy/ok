@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: ok-v3-web
-        image: cs61a/ok-server:v3.0.1
+        image: cs61a/ok-server:v3.0.2
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
@@ -66,4 +67,3 @@ spec:
             secretKeyRef:
               name: ok-services
               key: sendgrid-key
-
