@@ -244,10 +244,10 @@ class Assignment(Model):
             return True
         if action == "view":
             return user.is_authenticated()
-
-        is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
         if not obj:
-            return action == "create" and is_staff
+            if action == "create":
+                return user.enrollments(roles=STAFF_ROLES)
+            return False
         return user.is_enrolled(obj.course.id, STAFF_ROLES)
 
     @staticmethod
@@ -909,4 +909,3 @@ class GradingTask(Model):
                               .order_by(GradingTask.created.asc())
                               .first())
         return ungraded
-
