@@ -57,6 +57,12 @@
               <span class="due-text green">{{ utils.natural_time(assign.due_date) }}</span>
               <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
             </div>
+            {% elif subm_time %}
+            <div class="due-dot grey"></div>
+            <div class="due">
+              <span class="due-text grey">{{ utils.natural_time(assign.due_date) }}</span>
+              <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
+            </div>
             {% else %}
             <div class="due-dot red"></div>
             <div class="due">
@@ -163,6 +169,11 @@
           <span class="due-dot green">
         </div>
         <span class="green">Due: {{ utils.natural_time(assign.due_date) }}</span>
+        <span>({{ utils.local_time(assign.due_date, course) }})</span>
+          {% elif subm_time %}
+          <span class="due-dot grey">
+         </div>
+        <span class="grey">Due: {{ utils.natural_time(assign.due_date) }}</span>
         <span>({{ utils.local_time(assign.due_date, course) }})</span>
           {% else %}
           <span class="due-dot red">

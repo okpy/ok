@@ -38,6 +38,7 @@ server/static/public/css/*.css
 server/static/public/js/*.js
 
 .cache
+_cache/*
 
 # local development
 database.db

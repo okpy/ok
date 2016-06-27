@@ -21,6 +21,7 @@ deps:
 
 clean:
 	./manage.py clean
+	find . | grep -E "(__pycache__|\.pyc|\.DS_Store|\.pyo$\)" | xargs rm -rf
 
 lint:
 	flake8 --exclude=env,tests .
@@ -32,5 +33,5 @@ docker-test:
 	docker-compose -f docker-compose.yml -f docker-compose.test.yml run --rm web
 
 docker-build:
-	./manage.py clean
+	find . | grep -E "(__pycache__|\.pyc|\.DS_Store|\.pyo$\)" | xargs rm -rf
 	docker build -t cs61a/ok-server .

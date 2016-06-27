@@ -125,6 +125,8 @@ class User(Model, UserMixin):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     is_admin = db.Column(db.Boolean(), default=False)
 
+    export_items = ('name', 'email')
+
     def __repr__(self):
         return '<User {0}>'.format(self.email)
 
@@ -176,6 +178,16 @@ class Course(Model):
     website = db.Column(db.String(255))
     active = db.Column(db.Boolean(), nullable=False, default=True)
     timezone = db.Column(Timezone, nullable=False, default=pytz.timezone(TIMEZONE))
+
+    @classmethod
+    def can(cls, obj, user, action):
+        if user.is_admin:
+            return True
+        if not obj:
+            return False
+        if action == "view":
+            return user.is_authenticated()
+        return user.is_enrolled(obj.id, STAFF_ROLES)
 
     def __repr__(self):
         return '<Course {0!r}>'.format(self.offering)
@@ -244,10 +256,10 @@ class Assignment(Model):
             return True
         if action == "view":
             return user.is_authenticated()
-
-        is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
         if not obj:
-            return action == "create" and is_staff
+            if action == "create":
+                return user.enrollments(roles=STAFF_ROLES)
+            return False
         return user.is_enrolled(obj.course.id, STAFF_ROLES)
 
     @staticmethod
@@ -408,6 +420,12 @@ class Enrollment(Model):
 
     def is_staff(self, course):
         return self.course == course and self.role in STAFF_ROLES
+
+    @classmethod
+    def can(cls, obj, user, action):
+        if user.is_admin:
+            return True
+        return user.is_enrolled(obj.course.id, STAFF_ROLES)
 
     @staticmethod
     @transaction
@@ -909,4 +927,3 @@ class GradingTask(Model):
                               .order_by(GradingTask.created.asc())
                               .first())
         return ungraded
-
