@@ -189,7 +189,6 @@ class Course(Model):
             return user.is_authenticated()
         return user.is_enrolled(obj.id, STAFF_ROLES)
 
-
     def __repr__(self):
         return '<Course {0!r}>'.format(self.offering)
 

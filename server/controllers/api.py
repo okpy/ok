@@ -137,40 +137,6 @@ def check_version(func):
     return wrapper
 
 
-class Resource(restful.Resource):
-    version = 'v3'
-    method_decorators = [authenticate, check_version]
-    # applies to all inherited resources
-
-    def __repr__(self):
-        return "<Resource {0}>".format(self.__class__.__name__)
-
-    def make_response(self, data, *args, **kwargs):
-        return super().make_response(data, *args, **kwargs)
-
-    def can(self, user, course, action):
-        if user.is_admin:
-            return True
-        return False
-
-
-class PublicResource(Resource):
-    method_decorators = []
-
-
-class V3Info(PublicResource):
-
-    def get(self):
-        return {
-            'version': API_VERSION,
-            'url': '/api/{0}/'.format(API_VERSION),
-            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
-        }
-
-#  Fewer methods/APIs as V1 since the frontend will not use the API
-#  TODO Permsisions for API actions
-
-
 def make_backup(user, assignment_id, messages, submit):
     """
     Create backup with message objects.
@@ -221,7 +187,6 @@ class APISchema():
 
     def parse_args(self):
         return self.parser.parse_args()
-
 
 class MessageSchema(APISchema):
     """ Messages do not have their own API (currently).
@@ -360,6 +325,35 @@ class ScoreSchema(APISchema):
             return {'success': True, 'message': 'OK'}
         return {'success': False, 'message': "Permission error"}
 
+class Resource(restful.Resource):
+    version = 'v3'
+    method_decorators = [authenticate, check_version]
+    # applies to all inherited resources
+
+    def __repr__(self):
+        return "<Resource {0}>".format(self.__class__.__name__)
+
+    def make_response(self, data, *args, **kwargs):
+        return super().make_response(data, *args, **kwargs)
+
+    def can(self, user, course, action):
+        if user.is_admin:
+            return True
+        return False
+
+
+class PublicResource(Resource):
+    method_decorators = []
+
+
+class V3Info(PublicResource):
+    def get(self):
+        return {
+            'version': API_VERSION,
+            'url': '/api/{0}/'.format(API_VERSION),
+            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
+        }
+
 
 # TODO: should be two classes, one for /backups/ and one for /backups/<int:key>/
 class Backup(Resource):
@@ -432,7 +426,6 @@ class Enrollment(Resource):
             return True
         return resource == requester
 
-
 class Score(Resource):
     """ Score creation.
         Authenticated. Permissions: >= Staff
@@ -472,7 +465,6 @@ class Version(PublicResource):
 
 
 api.add_resource(V3Info, '/v3/')
-
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
 api.add_resource(Score, '/v3/score/')
