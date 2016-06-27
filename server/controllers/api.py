@@ -490,9 +490,8 @@ class Score(Resource):
 
     @marshal_with(schema.post_fields)
     def post(self, user):
-        # TODO: Ensure user is autograder.
         score = self.schema.add_score(user)
-        if not score:
+        if not score or not score['success']:
             restful.abort(401)
         return {
             'email': current_user.email,

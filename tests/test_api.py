@@ -150,3 +150,28 @@ class TestAuth(OkTestCase):
                 }
             ]
         }
+
+    def test_score_anon(self):
+        response = self.client.post('/api/v3/score/')
+        self.assert_401(response)
+        assert response.json['code'] == 401
+
+    def test_score_student(self):
+        self._test_backup(True)
+
+        email = self.user1.email
+        self.login(email)
+        user = User.lookup(email)
+
+        response = self.client.post('/api/v3/score/')
+        self.assert_400(response)
+        assert response.json['code'] == 400
+        backup = Backup.query.filter(Backup.submitter_id == user.id).first()
+
+        data = {'bid': encode_id(backup.id), 'kind': 'Total',
+                'score': 128.2, 'message': 'wow'}
+        response = self.client.post('/api/v3/score/', data=data)
+        self.assert_401(response)
+        assert response.json['code'] == 401
+
+
