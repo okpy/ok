@@ -218,9 +218,14 @@ def group_remove(name):
         try:
             members = [m.user.email for m in group.members]
             group.remove(current_user, target)
-            subject = "{0} has been removed from your group".format(target.email)
-            body = "{0} removed {1} from the group.".format(current_user.email, target.email)
-            res = send_email(members, subject, body)
+            subject = "{0} has been removed from your {1} group".format(target.email,
+                                                                        assignment.display_name)
+            if target.email == current_user.email:
+                descriptor = "themselves"
+            else:
+                descriptor = target.email
+            body = "{0} removed {1} from the group.".format(current_user.email, descriptor)
+            send_email(members, subject, body)
         except BadRequest as e:
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
@@ -230,23 +235,36 @@ def group_remove(name):
 def group_respond(name):
     assignment = get_assignment(name)
     action = request.form.get('action', None)
-    if not action or action not in ['accept', 'decline']:
+    target = request.form.get('email', None)
+    if not action or action not in ['accept', 'decline', 'revoke']:
         abort(400)
     group = Group.lookup(current_user, assignment)
     if not group:
         flash("You are not in a group")
     else:
         try:
+
             if action == "accept":
                 group.accept(current_user)
-                subject = "{0} has accepted your invitation".format(current_user.email)
-                body = "Your group now has {0} members".format(len(group.members))
+                subject = "{0} has accepted the invitation to join your group".format(current_user.email)
+                body = "Your group for {0} now has {1} members".format(assignment.display_name,
+                                                                       len(group.members))
                 group_action_email(group.members, subject, body)
-            else:
+            elif action == "decline":
                 members = [m.user.email for m in group.members]
                 group.decline(current_user)
-                subject = "{0} has declined your invitation".format(current_user.email)
-                send_email(members, subject, subject)
+                subject = "{0} declined an invite to join the group".format(current_user.email)
+                body = "{0} declined to join the group for {1}".format(current_user.email,
+                                                                       assignment.display_name)
+                send_email(members, subject, body)
+            elif action == "revoke":
+                members = [m.user.email for m in group.members]
+                group.decline(current_user)
+                subject = "{0} invitation for {1} revoked".format(assignment.display_name,
+                                                                  target)
+                body = "{0} has revoked the invitation for {1}".format(current_user.email,
+                                                                       target)
+                send_email(members, subject, body)
 
         except BadRequest as e:
             flash(e.description, 'danger')

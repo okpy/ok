@@ -54,14 +54,16 @@
                         <button class="button-small group-action tip-trigger"  type="submit" value="Decline">
                           <i class="fa fa-minus-circle "></i> Decline <div class="tip"> <span> Reject the invitation </span> </div>
                         </button>
+                        <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="decline">
+
                     {% else %}
                         <input class="hidden" class="form-user user-identifier" name="email" type="hidden" value="{{ member.user.email }}">
                         <button class="button-small group-action tip-trigger"  type="submit" value="Revoke">
                           <i class="fa fa-minus-circle "></i> Revoke <div class="tip"> <span> Undo the invitation. </span> </div>
                         </button>
+                        <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="revoke">
 
                     {% endif %}
-                        <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="decline">
 
 
                   {% endcall %}

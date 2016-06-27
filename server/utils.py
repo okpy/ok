@@ -116,6 +116,8 @@ def send_email(to, subject, body, template='email/notification.html',
         html=emailFormat(html),
         text=body)
 
+    print("Email to {0} Subj:{1} Body:{2}".format(to, subject, body))
+
     try:
         status, msg = sg.send(message)
         return status
