@@ -241,7 +241,11 @@ class BackupSchema(APISchema):
     }
 
     export_list = {
-        'backups': fields.List(fields.Nested(export_fields))
+        'backups': fields.List(fields.Nested(export_fields)),
+        'count': fields.Integer,
+        'limit': fields.Integer,
+        'offset': fields.Integer,
+        'has_more': fields.Boolean
     }
 
     post_fields = {
@@ -443,7 +447,15 @@ class ExportBackup(Resource):
          .limit(limit)
          .offset(offset))
 
-        return {'backups': backups.all()}
+        num_backups = backups.count()
+        has_more = ((num_backups - offset) - limit) > 0
+
+        data = {'backups': backups.all(),
+                'count': num_backups,
+                'limit': limit,
+                'offset': offset,
+                'has_more':  has_more}
+        return data
 
 class Enrollment(Resource):
     """ View what courses an email is enrolled in.

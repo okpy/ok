@@ -46,6 +46,8 @@ server/static/public/js/*.js
 _cache/
 .cache
 
+kubernetes/*
+
 # local development
 database.db
 *.db
