@@ -171,7 +171,6 @@ def make_score(user, backup, score, message, kind):
     models.db.session.commit()
     return score
 
-
 class APISchema():
     """ APISchema describes the input and output formats for
     resources. The parser deals with arguments to the API.
@@ -232,6 +231,17 @@ class BackupSchema(APISchema):
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
         'group': fields.List(fields.Nested(UserSchema.get_fields)),
+    }
+
+    export_fields = {
+        'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
+        'created': fields.DateTime(dt_format='iso8601'),
+        'is_late': fields.Boolean,
+        'submit': fields.Boolean,
+    }
+
+    export_list = {
+        'backups': fields.List(fields.Nested(export_fields))
     }
 
     post_fields = {
@@ -345,7 +355,6 @@ class Resource(restful.Resource):
 class PublicResource(Resource):
     method_decorators = []
 
-
 class V3Info(PublicResource):
     def get(self):
         return {
@@ -402,6 +411,39 @@ class Backup(Resource):
             'assignment': assignment.name
         }
 
+class ExportBackup(Resource):
+    """ Export backup retreival resource without submitter information.
+        Authenticated. Permissions: >= Staff
+        Used by: Export Scripts.
+    """
+    schema = BackupSchema()
+    model = models.Assignment
+
+    @marshal_with(schema.export_list)
+    def get(self, user, aid, email):
+        assign = (self.model.query.filter_by(id=aid)
+                      .one_or_none())
+        target = models.User.lookup(email)
+
+        limit = request.args.get('limit', 150)
+        offset = request.args.get('offset', 0)
+
+        if not assign or not target:
+            if user.is_admin:
+                return restful.abort(404)
+            return restful.abort(403)
+
+        if not self.model.can(assign, user, 'export'):
+            return restful.abort(403)
+
+        backups = (models.Backup.query.filter(
+            models.Backup.submitter_id == target.id,
+            models.Backup.assignment_id == assign.id,
+        ).order_by(models.Backup.created.desc())
+         .limit(limit)
+         .offset(offset))
+
+        return {'backups': backups.all()}
 
 class Enrollment(Resource):
     """ View what courses an email is enrolled in.
@@ -466,6 +508,7 @@ class Version(PublicResource):
 
 api.add_resource(V3Info, '/v3/')
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
+api.add_resource(ExportBackup, '/v3/assignment/<int:aid>/export/<string:email>')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
 api.add_resource(Score, '/v3/score/')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')
