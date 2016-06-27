@@ -61,7 +61,7 @@ def user_from_access_token(token):
     Get a User with the given Google access token, or create one if no User with
     this email is found. If the token is invalid, return None.
     """
-    if use_testing_login():
+    if use_testing_login() and token == "test":
         return user_from_email("okstaff@okpy.org")
     resp = google_auth.get('userinfo', token=(token, ''))
     if resp.status != 200:
@@ -76,6 +76,10 @@ def load_user(userid):
 
 @login_manager.request_loader
 def load_user_from_request(request):
+    """ For the API routes to allow login via access_token.
+    """
+    if request.blueprint != "api":
+        return None
     token = request.args.get('access_token', None)
     if token is None:
         return None
