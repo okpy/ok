@@ -561,3 +561,26 @@ def batch_enroll(cid):
                            batch_form=batch_form,
                            courses=courses,
                            current_course=current_course)
+
+@admin.route("/course/<int:cid>/enrollment/csv")
+@is_staff(course_arg='cid')
+def enrollment_csv(cid):
+    courses, current_course = get_courses(cid)
+
+    query = (Enrollment.query.options(db.joinedload('user'))
+                       .filter_by(course_id=cid, role=STUDENT_ROLE))
+
+    file_name = "{0}-roster.csv".format(current_course.offering.replace('/', '-'))
+    disposition = 'attachment; filename={0}'.format(file_name)
+    items = Enrollment.export_items + User.export_items
+
+    def row_to_csv(row):
+        return [row.export, row.user.export]
+
+    csv_generator = utils.generate_csv(query, items, row_to_csv)
+
+    # TODO: Remove. For local performance testing.
+    # return render_template('staff/index.html', data=list(csv_generator))
+    return Response(stream_with_context(csv_generator),
+                    mimetype='text/csv',
+                    headers={'Content-Disposition': disposition})

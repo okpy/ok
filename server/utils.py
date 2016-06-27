@@ -1,5 +1,7 @@
+import csv
 import datetime as dt
 import logging
+from io import StringIO
 import os
 import random
 from urllib.parse import urlparse, urljoin
@@ -139,3 +141,19 @@ def chunks(l, n):
     for i in range(0, n - 1):
         yield l[i * new_n: i * new_n + new_n]
     yield l[n * new_n - new_n:]
+
+def generate_csv(query, items, selector_fn):
+    """ Generate csv export of scores for assignment.
+        selector_fn: 1 arg function that returns a list of dictionaries
+    """
+    # Yield Column Info as first row
+    yield ','.join(items) + '\n'
+    for row in query:
+        csv_file = StringIO()
+        csv_writer = csv.DictWriter(csv_file, fieldnames=items)
+        export_values = selector_fn(row)
+        data = {}
+        for dict in export_values:
+            data.update(dict)
+        csv_writer.writerow(data)
+        yield csv_file.getvalue()
