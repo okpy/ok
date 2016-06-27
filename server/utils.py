@@ -120,7 +120,7 @@ def send_email(to, subject, body, template='email/notification.html',
         status, msg = sg.send(message)
         return status
     except (sendgrid.SendGridClientError, sendgrid.SendGridServerError,
-            TypeError):
+            TypeError, ValueError):
         logger.error("Could not send email", exc_info=True)
         return
 
