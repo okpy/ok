@@ -7,6 +7,8 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
 
 from flask_login import current_user
+import pygal
+from pygal.style import CleanStyle
 
 from server.autograder import autograde_assignment
 from server.controllers.auth import google_oauth_token
@@ -311,6 +313,28 @@ def assignment(cid, aid):
 
     return render_template('staff/course/assignment.html', assignment=assign,
                            form=form, courses=courses, stats=stats,
+                           current_course=current_course)
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/stats")
+@is_staff(course_arg='cid')
+def assignment_stats(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    if not Assignment.can(assign, current_user, 'edit'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+    stats = Assignment.assignment_stats(assign.id, detailed=True)
+
+    pie_chart = pygal.Pie(half_pie=True, disable_xml_declaration=True,
+                          style=CleanStyle,
+                          inner_radius=.5, legend_at_bottom=True)
+    pie_chart.title = 'Students submission status'
+    pie_chart.add('Students with Submissions', stats['students_submitted'])
+    pie_chart.add('Not Submitted', stats['students_nosubmit'])
+
+    return render_template('staff/course/assignment.stats.html',
+                           assignment=assign, subm_chart=pie_chart,
+                           courses=courses, stats=stats,
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/template",

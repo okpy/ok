@@ -26,33 +26,8 @@
       {% include 'alerts.html' %}
         <!-- Stats Row -->
         <div class="row">
-            <div class="col-md-3 col-sm-6 col-xs-6">
-              <div class="info-box">
-                <span class="info-box-icon bg-aqua"><i class="fa fa-users"></i></span>
 
-                <div class="info-box-content">
-                  <span class="info-box-text"># Submitted</span>
-                  <span class="info-box-number"> {{ stats['students_submitted'] }} Students </span>
-                </div>
-                <!-- /.info-box-content -->
-              </div>
-              <!-- /.info-box -->
-            </div>
-            <!-- /.col -->
-            <div class="col-md-3 col-sm-6 col-xs-6">
-              <div class="info-box">
-                <span class="info-box-icon bg-aqua"><i class="fa fa-user-times"></i></span>
-
-                <div class="info-box-content">
-                  <span class="info-box-text"># Not Started</span>
-                  <span class="info-box-number"> {{ stats['students_nosubmit'] }} Students </span>
-                </div>
-                <!-- /.info-box-content -->
-              </div>
-              <!-- /.info-box -->
-            </div>
-            <!-- /.col -->
-            <div class="col-md-3 col-sm-3 col-xs-6">
+            <div class="col-md-6 col-sm-6 col-xs-6">
               <div class="info-box">
                 <span class="info-box-icon bg-aqua"><i class="fa fa-inbox"></i></span>
 
@@ -65,7 +40,7 @@
               <!-- /.info-box -->
             </div>
             <!-- /.col -->
-            <div class="col-md-3 col-sm-3 col-xs-6">
+            <div class="col-md-6 col-sm-6 col-xs-6">
               <div class="info-box">
                 <span class="info-box-icon bg-yellow"><i class="fa fa-files-o"></i></span>
 
@@ -127,9 +102,11 @@
                                   <a href="{{ url_for('.autograde', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
                                         <i class="fa fa-send"></i> Autograde
                                   </a>
-
                         </div>
                         <div class="pull-right">
+                                  <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
+                                        <i class="fa fa-bar-chart-o"></i> Detailed Stats
+                                  </a>
                                   <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
                                         <i class="fa fa-inbox"></i> Grading Queues
                                   </a>

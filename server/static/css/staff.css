@@ -15,3 +15,8 @@
     border: none;
     list-style: none;
 }
+
+.pygal-chart {
+	max-height: 400px;
+	width: 100%;
+}

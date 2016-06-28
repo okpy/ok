@@ -264,7 +264,7 @@ class Assignment(Model):
 
     @staticmethod
     @cache.memoize(900)
-    def assignment_stats(assign_id):
+    def assignment_stats(assign_id, detailed=False):
         assignment = Assignment.query.get(assign_id)
         base_query = Backup.query.filter_by(assignment=assignment)
         stats = {
@@ -272,13 +272,25 @@ class Assignment(Model):
             'backups': base_query.count(),
             'groups': Group.query.filter_by(assignment=assignment).count(),
         }
-        # This is query intesive, maybe save for detailed stats?
-        students, submissions, not_started = assignment.course_submissions()
-        stats.update({
-            'students_submitted': len(students),
-            'students_submissions': len(submissions),
-            'students_nosubmit': len(not_started)
-        })
+        if detailed:
+            # This is query intesive, maybe save for detailed stats?
+            students, submissions, not_started = assignment.course_submissions()
+            # now = dt.utcnow()
+            # day_ago = now - timedelta(hours=48)
+
+            # subms_by_hour = (db.session.query(Backup.created)
+            #                    .filter(Backup.assignment_id == assign_id,
+            #                            Backup.submit == True,
+            #                            Backup.created >= day_ago,
+            #                            Backup.created <= now).all())
+            # hourly = collections.Counter([b[0].hour for b in subms_by_hour])
+
+            stats.update({
+                'students_submitted': len(students),
+                'students_submissions': len(submissions),
+                'students_nosubmit': len(not_started),
+                # 'hourly_subms': sorted(hourly.items())
+            })
         return stats
 
     @staticmethod
