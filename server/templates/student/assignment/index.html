@@ -1,5 +1,5 @@
 {% extends "student/base.html" %}
-{% import 'student/assignment/_tablehelper.html' as table %}
+{% import 'student/assignment/_tablehelper.html' as table with context %}
 {% import 'student/assignment/_formhelpers.html' as forms %}
 
 {% block title %} Assignment | Ok {% endblock %}
@@ -107,7 +107,7 @@
         </div>
         <!-- start mobile version -->
         {{ table.render_subms_mobile(subms, course, flagged, csrf_form, tname="Recent Submissions") }}
-        {{ table.render_backups_mobile(backups, course, tname="Recent Backups") }}
+        {{ table.render_backups_mobile(backups, course, tname="Recent Backups")  }}
         <!-- end mobile version -->
       </section>
     </main>

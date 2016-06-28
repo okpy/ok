@@ -114,7 +114,8 @@ def login():
 @google_auth.authorized_handler
 def authorized(resp):
     if isinstance(resp, OAuthException):
-        error = "{0} - {1}".format(resp.data['error'], resp.data['error_description'])
+        error = "{0} - {1}".format(resp.data.get('error', 'Unknown Error'),
+                                   resp.data.get('error_description', 'Unknown'))
         flash(error, "error")
         # TODO Error Page
         return redirect("/")
