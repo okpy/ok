@@ -273,11 +273,12 @@ class Assignment(Model):
             'groups': Group.query.filter_by(assignment=assignment).count(),
         }
         # This is query intesive, maybe save for detailed stats?
-        # students, submissions, not_started = assignment.course_submissions()
-        # stats.update({
-        #     'students_submitted': len(students),
-        #     'students_nosubmit': len(not_started)
-        # })
+        students, submissions, not_started = assignment.course_submissions()
+        stats.update({
+            'students_submitted': len(students),
+            'students_submissions': len(submissions),
+            'students_nosubmit': len(not_started)
+        })
         return stats
 
     @staticmethod
