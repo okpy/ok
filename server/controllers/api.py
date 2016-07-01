@@ -496,6 +496,9 @@ class ExportFinal(Resource):
 
         num_subms = len(output)
 
+        for backup in output:
+            backup.group = [models.User.get_by_id(uid) for uid in backup.owners()]
+
         data = {'backups': output,
                 'count': num_subms}
         return data
