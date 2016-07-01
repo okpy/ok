@@ -596,7 +596,7 @@ def enrollment_csv(cid):
 
     file_name = "{0}-roster.csv".format(current_course.offering.replace('/', '-'))
     disposition = 'attachment; filename={0}'.format(file_name)
-    items = Enrollment.export_items + User.export_items
+    items = User.export_items + Enrollment.export_items
 
     def row_to_csv(row):
         return [row.export, row.user.export]
