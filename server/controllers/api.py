@@ -248,6 +248,14 @@ class BackupSchema(APISchema):
         'has_more': fields.Boolean
     }
 
+    full_export_list = {
+        'backups': fields.List(fields.Nested(get_fields)),
+        'count': fields.Integer,
+        'limit': fields.Integer,
+        'offset': fields.Integer,
+        'has_more': fields.Boolean
+    }
+
     post_fields = {
         'email': fields.String,
         'key': fields.String,
@@ -457,6 +465,41 @@ class ExportBackup(Resource):
                 'has_more':  has_more}
         return data
 
+class ExportFinal(Resource):
+    """ Export backup retreival.
+        Authenticated. Permissions: >= Staff
+        Used by: Export Scripts.
+    """
+    schema = BackupSchema()
+    model = models.Assignment
+
+    @marshal_with(schema.full_export_list)
+    def get(self, user, aid):
+        assign = (self.model.query.filter_by(id=aid)
+                      .one_or_none())
+
+        if not assign:
+            if user.is_admin:
+                return restful.abort(404)
+            return restful.abort(403)
+
+        if not self.model.can(assign, user, 'export'):
+            return restful.abort(403)
+
+        students, subms, no_subms = assign.course_submissions()
+
+        output = []
+        subm_keys = sorted(list(subms))
+
+        for s_id in subm_keys:
+            output.append(models.Backup.query.get(s_id))
+
+        num_subms = len(output)
+
+        data = {'backups': output,
+                'count': num_subms}
+        return data
+
 class Enrollment(Resource):
     """ View what courses an email is enrolled in.
         Authenticated. Permissions: >= User or admins.
@@ -520,6 +563,7 @@ class Version(PublicResource):
 api.add_resource(V3Info, '/v3/')
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
 api.add_resource(ExportBackup, '/v3/assignment/<int:aid>/export/<string:email>')
+api.add_resource(ExportFinal, '/v3/assignment/<int:aid>/submissions/')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
 api.add_resource(Score, '/v3/score/')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')
