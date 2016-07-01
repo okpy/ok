@@ -1,5 +1,5 @@
 {% extends "student/base.html" %}
-{% import 'student/assignment/_tablehelper.html' as table %}
+{% import 'student/assignment/_tablehelper.html' as table with context %}
 
 {% set name = 'Submissions' if submit else 'Backups' %}
 
