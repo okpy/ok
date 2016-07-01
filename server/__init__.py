@@ -1,7 +1,7 @@
 import os
 
 from markdown import markdown
-from flask import Flask
+from flask import Flask, render_template, g, request
 from flask import Markup
 from flask_rq import RQ
 from flask_wtf.csrf import CsrfProtect
@@ -12,7 +12,8 @@ from server.forms import CSRFForm
 from server.models import db
 from server.controllers.about import about
 from server.controllers.admin import admin
-from server.controllers.api import endpoints as api
+from server.controllers.api import endpoints as api_endpoints
+from server.controllers.api import api  # Flask Restful API
 from server.controllers.auth import auth, login_manager
 from server.controllers.student import student
 from server.constants import API_PREFIX
@@ -45,6 +46,19 @@ def create_app(default_config_path=None):
     sentry_dsn = os.getenv('SENTRY_DSN')
     if sentry_dsn and not app.debug:
         sentry.init_app(app, dsn=sentry_dsn)
+
+        @app.errorhandler(500)
+        def internal_server_error(error):
+            return render_template('errors/500.html',
+                event_id=g.sentry_event_id,
+                public_dsn=sentry.client.get_public_dsn('https')
+            ), 500
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        if request.path.startswith("/api"):
+            return api.handle_error(error)
+        return render_template('errors/404.html'), 404
 
     # initialize the cache
     cache.init_app(app)
@@ -94,7 +108,7 @@ def create_app(default_config_path=None):
     app.register_blueprint(about, url_prefix='/about')
 
     # API does not need CSRF protection
-    csrf.exempt(api)
-    app.register_blueprint(api, url_prefix=API_PREFIX)
+    csrf.exempt(api_endpoints)
+    app.register_blueprint(api_endpoints, url_prefix=API_PREFIX)
 
     return app

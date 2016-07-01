@@ -43,7 +43,7 @@ def record_params(setup_state):
     endpoints.config['debug'] = app.debug
 
 
-api = restful.Api(endpoints, catch_all_404s=True)
+api = restful.Api(endpoints)
 
 API_VERSION = 'v3'
 
@@ -372,7 +372,8 @@ class V3Info(PublicResource):
         return {
             'version': API_VERSION,
             'url': '/api/{0}/'.format(API_VERSION),
-            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
+            'documentation': 'https://okpy.github.io/documentation',
+            'github': 'https://github.com/Cal-CS-61A-Staff/ok'
         }
 
 
