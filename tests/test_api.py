@@ -102,7 +102,8 @@ class TestAuth(OkTestCase):
         assert response.json['data'] == {
             'version': 'v3',
             'url': '/api/v3/',
-            'documentation': 'http://github.com/Cal-CS-61A-Staff/ok/wiki'
+            'documentation': 'https://okpy.github.io/documentation',
+            'github': 'https://github.com/Cal-CS-61A-Staff/ok'
         }
         assert response.json['message'] == 'success'
         assert response.json['code'] == 200
