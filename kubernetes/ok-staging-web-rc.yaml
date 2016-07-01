@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: ok-v3-staging
-        image: cs61a/ok-server:latest
+        image: cs61a/ok-server:v3.0.5
         imagePullPolicy: Always
         ports:
         - containerPort: 5000

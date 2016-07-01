@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import os
 import binascii
+import unittest
 
-from flask_script import Manager, Server
+from flask_script import Manager, Server, Command
 from flask_script.commands import ShowUrls, Clean
+
 from flask_migrate import Migrate, MigrateCommand
 
 from server import create_app, generate
@@ -17,11 +19,19 @@ app = create_app('settings/{0!s}.py'.format(env))
 migrate = Migrate(app, db)
 manager = Manager(app)
 
+class RunTests(Command):
+
+    def run(self):
+        test_loader = unittest.defaultTestLoader
+        test_runner = unittest.TextTestRunner()
+        test_suite = test_loader.discover('tests/')
+        test_runner.run(test_suite)
+
 manager.add_command("server", Server(host='0.0.0.0'))
 manager.add_command("show-urls", ShowUrls())
 manager.add_command("clean", Clean())
 manager.add_command('db', MigrateCommand)
-
+manager.add_command('test', RunTests())
 
 @manager.shell
 def make_shell_context():
