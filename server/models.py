@@ -252,14 +252,15 @@ class Assignment(Model):
 
     @classmethod
     def can(cls, obj, user, action):
+        if not obj:
+            if action == "create":
+                return (user.enrollments(roles=STAFF_ROLES) or
+                        user.is_admin)
+            return False
         if user.is_admin:
             return True
         if action == "view":
             return user.is_authenticated
-        if not obj:
-            if action == "create":
-                return user.enrollments(roles=STAFF_ROLES)
-            return False
         return user.is_enrolled(obj.course.id, STAFF_ROLES)
 
     @staticmethod
@@ -556,12 +557,12 @@ class Backup(Model):
 
     @classmethod
     def can(cls, obj, user, action):
-        if user.is_admin:
-            return True
         if action == "create":
             return user.is_authenticated
         if not obj:
             return False
+        if user.is_admin:
+            return True
         if action == "view":
             # Only allow group members to view
             if user.id in obj.owners():
@@ -862,10 +863,10 @@ class Comment(Model):
 
     @classmethod
     def can(cls, obj, user, action):
-        if user.is_admin:
-            return True
         if action == "create":
             return user.is_authenticated
+        if user.is_admin:
+            return True
         if not obj:
             return False
         if action == "view" and user.id in obj.backup.owners():

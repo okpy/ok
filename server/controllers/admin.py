@@ -297,6 +297,8 @@ def new_assignment(cid):
 def assignment(cid, aid):
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign:
+        return abort(404)
     if not Assignment.can(assign, current_user, 'edit'):
         flash('Insufficient permissions', 'error')
         return abort(401)
