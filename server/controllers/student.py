@@ -174,6 +174,10 @@ def flag(name, bid):
     flag = 'flag' in request.form
     next_url = request.form['next']
 
+    backup = models.Backup.query.get(bid)
+    if not Backup.can(backup, current_user, "view"):
+        abort(404)
+
     if not assign.active:
         flash('It is too late to change what submission is graded.', 'warning')
     elif flag:
@@ -279,6 +283,9 @@ def group_respond(name):
 @student.route('/comments/', methods=['POST'])
 @login_required
 def new_comment():
+    if not models.Comment.can(None, current_user, "create"):
+        abort(403)
+
     comment = models.Comment(
         backup_id=utils.decode_id(request.form['backup_id']),
         author_id=current_user.id,
@@ -293,8 +300,9 @@ def new_comment():
 @login_required
 def edit_comment(comment_id):
     comment = models.Comment.query.get(comment_id)
-    if not comment or comment.author != current_user:
-        abort(404)
+    if not models.Comment.can(comment, current_user, "edit"):
+        abort(403)
+
     if request.method == 'DELETE':
         db.session.delete(comment)
         db.session.commit()

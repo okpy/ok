@@ -860,6 +860,22 @@ class Comment(Model):
     backup = db.relationship("Backup")
     author = db.relationship("User")
 
+    @classmethod
+    def can(cls, obj, user, action):
+        if user.is_admin:
+            return True
+        if action == "create":
+            return user.is_authenticated
+        if not obj:
+            return False
+        if action == "view" and user.id in obj.backup.owners():
+            # Only allow group members to view
+            return True
+        if action == "edit" and user.id == obj.author_id:
+            # Only allow non-staff to delete their own comments
+            return True
+        return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
+
     @property
     def formatted(self):
         return markdown(self.message)
