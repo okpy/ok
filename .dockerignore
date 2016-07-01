@@ -30,6 +30,8 @@ dist
 # ok-related files
 *.ok_refresh
 *.ok_messages
+kubernetes/*
+
 
 *.coverage
 *.coveralls.yml
