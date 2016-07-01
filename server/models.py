@@ -186,7 +186,7 @@ class Course(Model):
         if not obj:
             return False
         if action == "view":
-            return user.is_authenticated()
+            return user.is_authenticated
         return user.is_enrolled(obj.id, STAFF_ROLES)
 
     def __repr__(self):
@@ -255,7 +255,7 @@ class Assignment(Model):
         if user.is_admin:
             return True
         if action == "view":
-            return user.is_authenticated()
+            return user.is_authenticated
         if not obj:
             if action == "create":
                 return user.enrollments(roles=STAFF_ROLES)
@@ -559,7 +559,7 @@ class Backup(Model):
         if user.is_admin:
             return True
         if action == "create":
-            return user.is_authenticated()
+            return user.is_authenticated
         if not obj:
             return False
         if action == "view":
