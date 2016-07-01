@@ -120,8 +120,10 @@ def list_backups(name, submit):
     else:
         backups = assign.backups(user_ids)
     paginate = backups.paginate(page=page, per_page=10)
+
     return render_template('student/assignment/list.html', course=assign.course,
-            assignment=assign, paginate=paginate, submit=submit, csrf_form=csrf_form)
+                           assignment=assign, paginate=paginate, submit=submit,
+                           csrf_form=csrf_form)
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/')
 @login_required
@@ -175,9 +177,13 @@ def flag(name, bid):
     if not assign.active:
         flash('It is too late to change what submission is graded.', 'warning')
     elif flag:
-        assign.flag(bid, user_ids)
+        result = assign.flag(bid, user_ids)
+        flash('Flagged submission {}. '.format(result.hashid) +
+              'This submission will be used for grading', 'success')
     else:
-        assign.unflag(bid, user_ids)
+        result = assign.unflag(bid, user_ids)
+        flash('Removed flag from {}. '.format(result.hashid) +
+              'The most recent submission will be used for grading.', 'success')
 
     if is_safe_redirect_url(request, next_url):
         return redirect(next_url)

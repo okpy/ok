@@ -7,20 +7,34 @@
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
-          <th class="col-md-1">Flagged</th>
+          <th>ID</th>
           <th>Time</th>
           <th>Submitter</th>
+          <th class="col-md-2">Flagged</th>
           <th>Code</th>
         </tr>
         {% for subm in subms %}
         <tr>
+          <td>
+            <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}">
+              Submission {{ subm.hashid }}
+            </a>
+          </td>
+          <td>
+            {{ utils.local_time(subm.created, course) }}
+          </td>
+          <td>
+            <span class="due-date">
+              {{ subm.submitter.email }}
+            </span>
+          </td>
           <td>
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=subm.id), class_='form-inline') %}
               {% if not subm.flagged %}
                 <input type="hidden" name="flag">
               {% endif %}
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="tip-trigger final-button" type="submit">
+              <button class="tip-trigger final-button button-small" type="submit">
                 <div class="tip">
                   {% if subm.flagged %}
                     <span>Flagged for grading (click to unflag)</span>
@@ -28,20 +42,13 @@
                     <span>Not flagged for grading (click to flag)</span>
                   {% endif %}
                 </div>
+
                 <i class="fa fa-flag final-{{ 'yes' if subm.flagged else 'no' }}"></i>
+                &nbsp; {{ 'Remove Flag' if subm.flagged else 'Flag for grading' }}
               </button>
             {% endcall %}
           </td>
-          <td>
-            <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}">
-              {{ utils.local_time(subm.created, course) }}
-            </a>
-          </td>
-          <td>
-            <span class="due-date">
-              {{ subm.submitter.email }}
-            </span>
-          </td>
+
           <td>
               <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" class="no-dash button-small">
                 View Code
@@ -62,28 +69,45 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_backups(backups, course, tname="Backups", empty=True) %}
+{% macro render_backups(backups, course, flagged, flag_form, tname="Backups", empty=True) %}
   {% if backups %}
   <div class="list hidden-xs hidden-sm">
     <div class="wrap">
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
+          <th>ID</th>
           <th>Time</th>
           <th>Creator</th>
+          <th class="col-md-2">Submit</th>
           <th>Code</th>
         </tr>
         {% for backup in backups %}
         <tr>
           <td>
             <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}">
-              {{ utils.local_time(backup.created, course) }}
+              Backup {{ backup.hashid }}
             </a>
+          </td>
+          <td>
+            {{ utils.local_time(backup.created, course) }}
           </td>
           <td>
             <span class="due-date">
               {{ backup.submitter.email }}
             </span>
+          </td>
+          <td>
+            {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}
+              <input type="hidden" name="flag">
+              <input type="hidden" name="next" value="{{ request.full_path }}">
+              <button class="tip-trigger final-button button-small" type="submit">
+                <div class="tip">
+                  <span>Convert to submission & <br> flag for grading (click to flag)</span>
+                </div>
+                Convert to submission
+              </button>
+            {% endcall %}
           </td>
           <td>
               <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" class="no-dash button-small">
@@ -104,7 +128,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_subms_mobile(subms, course, flagged, flag_form, tname="Backups", empty=True) %}
+{% macro render_subms_mobile(subms, course, flagged, flag_form, tname="Submissions", empty=True) %}
   {% if subms %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
@@ -160,7 +184,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_backups_mobile(backups, course, tname="Backups", empty=True) %}
+{% macro render_backups_mobile(backups, course, flagged, flag_form, tname="Backups", empty=True) %}
   {% if backups %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
@@ -171,12 +195,25 @@
         <div class="cell-title"><a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}"> {{ utils.local_time(backup.created, course) }} </a></div>
         <div class="cell-text"><span>Submitter:  {{ backup.submitter.email }}</span></div>
         <div class="cell-status">
-        <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" class="dashed">
-            View Code
-        </a>
-
+            <div class="pull-left">
+                <a href="{{url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" class="dashed">
+                    View Code
+                </a>
+            </div>
+            <div class="pull-right">
+                {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}
+                  <input type="hidden" name="flag">
+                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                  <button class="final-button" type="submit">
+                      <i class="fa fa-flag final-no"></i> <a class="dashed">Submit & Flag for Grading</a>
+                  </button>
+                {% endcall %}
+            </div>
         </div>
       </div>
+          <div class="cell-footer">
+        </div>
+
       {% endfor %}
     </div>
   </div>

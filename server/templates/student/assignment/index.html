@@ -65,11 +65,25 @@
                   {% endif %}
                 </div>
                 <div class="cell-status">
-                  <span>
-                  <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="dashed">
-                      View Code
-                  </a>
-                  </span>
+                  <div class="pull-left">
+                        <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="dashed">
+                          View Code
+                      </a>
+                  </div>
+                  <div class="pull-right">
+                    {% if final_submission.flagged %}
+
+                      {% call forms.render_form(csrf_form, action_url=url_for('.flag', name=assignment.name, bid=final_submission.id), class_='form-inline') %}
+                        {% if not final_submission.flagged %}
+                          <input type="hidden" name="flag">
+                        {% endif %}
+                        <input type="hidden" name="next" value="{{ request.full_path }}">
+                        <button class="final-button" type="submit">
+                            <a class="dashed">{{ 'Remove Flag' if final_submission.flagged else 'Flag for Grading' }} </a>
+                        </button>
+                      {% endcall %}
+                    {% endif %}
+                  </div>
                 </div>
               </div>
             {% else %}
@@ -96,7 +110,7 @@
             {% endif %}
           </div>
           <div class="col-md-12">
-            {{  table.render_backups(backups, course, tname="Recent Backups") }}
+            {{  table.render_backups(backups, course, flagged, csrf_form, tname="Recent Backups") }}
             {% if backups %}
             <a href="{{ url_for('.list_backups', name=assignment.name, submit=False) }}" class="no-dash button-large">
                 View More Backups
@@ -107,7 +121,7 @@
         </div>
         <!-- start mobile version -->
         {{ table.render_subms_mobile(subms, course, flagged, csrf_form, tname="Recent Submissions") }}
-        {{ table.render_backups_mobile(backups, course, tname="Recent Backups")  }}
+        {{ table.render_backups_mobile(backups, course, flagged, csrf_form, tname="Recent Backups")  }}
         <!-- end mobile version -->
       </section>
     </main>

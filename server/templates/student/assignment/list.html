@@ -46,8 +46,8 @@
               {{ table.render_subms(paginate.items, course, flagged, csrf_form, tname="Submissions") }}
               {{ table.render_subms_mobile(paginate.items, course, flagged, csrf_form, tname="Submissions") }}
             {% else %}
-              {{ table.render_backups(paginate.items, course, tname="Backups") }}
-              {{ table.render_backups_mobile(paginate.items, course, tname="Backups") }}
+              {{ table.render_backups(paginate.items, course, flagged, csrf_form, tname="Backups") }}
+              {{ table.render_backups_mobile(paginate.items, course, flagged, csrf_form, tname="Backups") }}
             {% endif %}
 
             <ul class="pager">

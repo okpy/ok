@@ -382,7 +382,10 @@ class Assignment(Model):
         ).one_or_none()
         if not backup:
             raise BadRequest('Could not find backup')
+        if not backup.submit:
+            backup.submit = True
         backup.flagged = True
+        return backup
 
     @transaction
     def unflag(self, backup_id, member_ids):
@@ -395,6 +398,7 @@ class Assignment(Model):
         if not backup:
             raise BadRequest('Could not find backup')
         backup.flagged = False
+        return backup
 
     def _unflag_all(self, member_ids):
         """Unflag all submissions by members of MEMBER_IDS."""
