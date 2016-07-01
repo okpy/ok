@@ -17,6 +17,7 @@
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
           <i class="fa fa-list"></i> Assignments</a>
         </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
         <li class="active"><a href="#"><i class="fa fa-plus"></i> Assignment Template</a></li>
       </ol>
   </section>

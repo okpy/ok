@@ -17,7 +17,8 @@
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
           <i class="fa fa-list"></i> Assignments</a>
         </li>
-        <li class="active"><a href="#"><i class="fa fa-plus"></i> Stats </a></li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li class="active"><a href="#"><i class="fa fa-bar-chart"></i> Stats </a></li>
       </ol>
   </section>
 
@@ -59,6 +60,16 @@
                       <!-- /.description-block -->
                     </div>
                   </div>
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <div class="description-block border-bottom">
+                        <h5 class="description-header">{{ stats['students_submissions'] }}</h5>
+                        <span class="description-text">Submissions to grade</span>
+                      </div>
+                      <!-- /.description-block -->
+                    </div>
+                  </div>
+
                   <div class="row">
                     <div class="col-sm-12">
                       <div class="description-block border-bottom">
