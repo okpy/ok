@@ -65,7 +65,8 @@
         </div>
       </section>
     </main>
-    <script type="text/template" id="editor-template">
+    <script type="text/template" data-no-instant id="editor-template">
+      <!-- Comment Box Template, IE does not support <template> -->
       {{ diff.editor_template() }}
     </script>
 {% endblock %}
