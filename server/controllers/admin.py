@@ -296,7 +296,7 @@ def new_assignment(cid):
 @is_staff(course_arg='cid')
 def assignment(cid, aid):
     courses, current_course = get_courses(cid)
-    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assign, current_user, 'edit'):
         flash('Insufficient permissions', 'error')
         return abort(401)
@@ -319,7 +319,7 @@ def assignment(cid, aid):
 @is_staff(course_arg='cid')
 def assignment_stats(cid, aid):
     courses, current_course = get_courses(cid)
-    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assign, current_user, 'edit'):
         flash('Insufficient permissions', 'error')
         return abort(401)
@@ -342,7 +342,7 @@ def assignment_stats(cid, aid):
 @is_staff(course_arg='cid')
 def templates(cid, aid):
     courses, current_course = get_courses(cid)
-    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assignment, current_user, 'edit'):
         flash('Insufficient permissions', 'error')
         return abort(401)
@@ -372,7 +372,7 @@ def templates(cid, aid):
 @is_staff(course_arg='cid')
 def export_scores(cid, aid):
     courses, current_course = get_courses(cid)
-    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assign, current_user, 'export'):
         flash('Insufficient permissions', 'error')
         return abort(401)
@@ -415,7 +415,7 @@ def export_scores(cid, aid):
 @is_staff(course_arg='cid')
 def assignment_queues(cid, aid):
     courses, current_course = get_courses(cid)
-    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assignment, current_user, 'grade'):
         flash('Insufficient permissions', 'error')
         return abort(401)
@@ -442,7 +442,7 @@ def assignment_queues(cid, aid):
 @is_staff(course_arg='cid')
 def assign_grading(cid, aid):
     courses, current_course = get_courses(cid)
-    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
@@ -500,7 +500,7 @@ def assign_grading(cid, aid):
 @is_staff(course_arg='cid')
 def autograde(cid, aid):
     courses, current_course = get_courses(cid)
-    assign = Assignment.query.filter_by(id=aid, course_id=cid).one()
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
