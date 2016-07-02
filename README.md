@@ -1,7 +1,7 @@
 ok.py
 =====
 
-The ok.py server performs and displays analysis of student progress
+The ok.py server collects submissions and displays analysis of student progress
 based on logging sent from client scripts.
 
 Contact us to use our hosted service (http://okpy.org) for your course.
@@ -10,6 +10,8 @@ The ok.py software was developed for CS 61A at UC Berkeley.
 
 [![Build Status](https://travis-ci.org/Cal-CS-61A-Staff/ok.svg?branch=master)](https://travis-ci.org/Cal-CS-61A-Staff/ok)
 [![Coverage Status](https://coveralls.io/repos/Cal-CS-61A-Staff/ok/badge.svg?branch=master&service=github)](https://coveralls.io/github/Cal-CS-61A-Staff/ok?branch=master)
+
+View Documentation at [OK Documentation](https://okpy.github.io/documentation)
 
 Installation
 -------------
@@ -33,18 +35,11 @@ $ ./manage.py seed
 $ ./manage.py server
 ```
 
-The server will listen on http://localhost:8080.
+The server will listen on http://localhost:5000.
 
 Command Line Manager
 ------------------------
 * To view available commands run `./manage.py` once the virtualenv is activated.
-
-Common Bugs
--------------
-
-Deploying
----------
-TBD
 
 Customizing seed content
 -------------------
@@ -68,30 +63,20 @@ Autograding
 
 Projects using ok.py
 --------------------
-
-[CS61A](http://cs61a.org) uses ok.py for all assignments.
+- [CS61A](http://cs61a.org) uses ok.py for all assignments.
+- 3 other UC Berkeley CS courses use ok.py
 
 Developer Guidelines
 --------------------
+See `documentation/CONTRIBUTING.md`
 
-See CONTRIBUTING.md
+Deploying
+---------
+See `kubernetes/kubernetes.md`
 
 Python Style Guide
 -------------------
 Refer to [The Elements of Python Style](https://github.com/amontalenti/elements-of-python-style)
-
-
-To add features to ok, please do the following:
-
-- Follow the Installation instructions in order to install the ok server.
-- Name your branch according to our convention of &lt;category&gt;/&lt;GithubUsername&gt;/&lt;branch name&gt;
-  * Category is one of the following things:
-    - 'enhancement': This is a new feature that is being added to ok.
-    - 'bug': This is when the purpose of the branch is to fix a bug in the current codebase.
-    - 'cleanup': This is when technical debt is being reduced (e.g. adding tests, improving code style, etc)
-  * GithubUsername is the username of one person who is the point of contact for the branch. The point of contact should be the first person that will field questions about the branch- there might be many other people working on it.
-  * branch name: A descriptive name for the branch
-- Make a pull request, which will get code-reviewed and merged.
 
 Some useful things for developers to know:
 

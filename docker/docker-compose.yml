@@ -1,11 +1,11 @@
 web:
-  build: .
+  build: ..
   restart: always
   command: /bin/bash -c "./manage.py resetdb && ./manage.py server"
   ports:
     - "80:5000"
   volumes:
-    - .:/code
+    - ..:/code
   links:
     - db
     - redis
