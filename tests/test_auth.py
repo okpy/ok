@@ -1,10 +1,15 @@
 import flask
+import urllib.request
 
 from tests import OkTestCase
 
 class TestAuth(OkTestCase):
     email = 'martymcfly@aol.com'
     staff_email = 'okstaff@okpy.org'
+
+    def test_ssl(self):
+        response = urllib.request.urlopen('https://accounts.google.com')
+        assert response.code == 200
 
     def test_login(self):
         """GET /login/ should redirect to Google OAuth."""
