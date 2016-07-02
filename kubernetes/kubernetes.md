@@ -106,7 +106,7 @@ The load balancer will spin up and get configured (takes a few minutes to pass h
 
 ## Future Work
 
-@okpy: Automate this deployment process (wercker?)
+@okpy: Automate this deployment process (circleCI?)
 @k8s Coming in v1.3 - Use Multi zone clusters (`ubernetes-lite`) when Ingress supports it. (See: https://github.com/kubernetes/contrib/pull/1133, https://github.com/kubernetes/contrib/issues/983)
 
 > Honestly both ubernetes-lite and ingress were developed in beta, in parallel, so I'm not surprised they don't play well together. We should definitely make this work.

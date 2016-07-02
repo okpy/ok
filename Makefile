@@ -21,7 +21,7 @@ deps:
 
 clean:
 	./manage.py clean
-	find . | grep -E "(__pycache__|\.pyc|\.DS_Store|\.pyo$\)" | xargs rm -rf
+	find . | grep -E "(__pycache__|\.pyc|\.DS_Store|\.db|\.pyo$\)" | xargs rm -rf
 
 lint:
 	flake8 --exclude=env,tests .
@@ -30,8 +30,8 @@ test:
 	py.test --cov-report term-missing --cov=server tests/
 
 docker-test:
-	docker-compose -f docker-compose.yml -f docker-compose.test.yml run --rm web
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.test.yml run --rm web
 
 docker-build:
-	find . | grep -E "(__pycache__|\.pyc|\.DS_Store|\.pyo$\)" | xargs rm -rf
+	find . | grep -E "(__pycache__|\.pyc|\.DS_Store|\.db|\.pyo$\)" | xargs rm -rf
 	docker build -t cs61a/ok-server .

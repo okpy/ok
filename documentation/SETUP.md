@@ -1,20 +1,5 @@
 # Development Environment
 
-Quick Setup (on OSX/Linux):
-
-```bash
-# Clone the repository and navigate into it
-# Install Python 3
-pip install virtualenv;
-virtualenv -p python3 env;
-source ./env/bin/activate;
-pip install -r requirements.txt;
-./manage.py createdb
-./manage.py seed
-./manage.py server
-# Go to localhost:5000 in your web browser
-```
-
 ## Database setup
 
 Ensure that SQLite 3 is installed. To set up the database:
