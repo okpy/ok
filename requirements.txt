@@ -68,4 +68,4 @@ pytest==2.9.1
 pytest-cov==2.2.1
 
 # until version 1.0.6 is on pypi
-https://github.com/neta79/loremipsum/archive/master.zip
+https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip
