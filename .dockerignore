@@ -47,8 +47,7 @@ server/static/public/js/*.js
 
 _cache/
 .cache
-
-kubernetes/*
+.wercker/*
 
 # local development
 database.db
