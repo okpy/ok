@@ -39,6 +39,8 @@ server/static/public/js/*.js
 
 .cache
 _cache/*
+.wercker/*
+
 
 # local development
 database.db
