@@ -36,16 +36,29 @@
         {{ table.render_courses(instructor, tname="Staff Dashboard", admin=True) }}
         {{ table.render_courses(current, tname="Enrolled Courses", empty=True) }}
         {{ table.render_courses(past, tname="Inactive Courses") }}
-        {{ table.render_courses(all, tname="Other Courses", class_="other-courses other-courses-desktop") }}
-
+        <!-- Other courses below -->
         <!-- end desktop/tablet version -->
+
         <!-- start mobile version -->
         {{ table.render_courses_mobile(instructor, tname="Staff Dashboard", admin=True) }}
         {{ table.render_courses_mobile(current, tname="Current Courses", empty=True) }}
         {{ table.render_courses_mobile(past, tname="Inactive Courses") }}
-        {{ table.render_courses_mobile(all, tname="Other Courses", class_="other-courses other-courses-mobile") }}
-
         <!-- end mobile version -->
+
+        {% if current %}
+        <div class="subcontent row list">
+          <button class="no-dash button-large" onclick="showElem('.other-courses')">
+            <i class="blank-icon-sm fa fa-ellipsis-h"></i>
+            &nbsp;View Other Courses
+          </button>
+        </div>
+        {% endif %}
+
+        {{ table.render_courses(all, tname="Other Courses (Not Enrolled)", class_="other-courses other-courses-desktop other-courses-hide") }}
+
+        {{ table.render_courses_mobile(all, tname="Other Courses", class_="other-courses other-courses-mobile other-courses-hide") }}
+
+        <!-- View Other Courses Button (already shown if no current courses) -->
       </section>
     </main>
 {% endblock %}

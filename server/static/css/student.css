@@ -420,6 +420,7 @@ header .logo {
     width: 100%;
     font-size: 0.9em;
     text-align: center;
+    border: none;
   }
     .button-large:hover {
       background-color:#666;
@@ -487,6 +488,10 @@ header .logo {
 }
 
 .other-courses {
+}
+
+.other-courses-hide {
+  display: none;
 }
 
 /* Small devices (tablets, 768px and up) */
