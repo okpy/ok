@@ -72,7 +72,11 @@ See `documentation/CONTRIBUTING.md`
 
 Deploying
 ---------
-See `kubernetes/kubernetes.md`
+[![Docker Repository on Quay](https://quay.io/repository/cs61a/ok-server/status "Docker Repository on Quay")](https://quay.io/repository/cs61a/ok-server)
+
+Docker + Kubernetes on Google Container Engine. See `kubernetes/kubernetes.md` for more info.
+
+The ok-server also supports deployments to Heroku or servers on any major hosting service.
 
 Python Style Guide
 -------------------
