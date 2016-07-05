@@ -114,7 +114,6 @@
               <div class="row">
                 <div class="col-xs-12">
                     {{ subm_chart.render() | safe }}
-
                 </div>
               </div>
 
@@ -127,16 +126,13 @@
         </div>
         <!-- /.col -->
       </div>
-
-
-
-
-
   <!-- </body> do not close body in template-->
 {% endblock %}
 
 {% block js %}
-    <script type="text/javascript" src="//kozea.github.com/pygal.js/javascripts/svg.jquery.js"></script>
-    <script type="text/javascript" src="//kozea.github.io/pygal.js/2.0.x/pygal-tooltips.min.js"></script>
+
+    {% assets "pygal_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
 
 {% endblock %}
