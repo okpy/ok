@@ -38,8 +38,6 @@ adminlte_js = Bundle(
     'lib/admin/js/app.min.js',
     'lib/admin/plugins/pace/pace.min.js',
     'lib/admin/plugins/fastclick/fastclick.min.js',
-    'lib/pygal/pygal-tooltips.min.js',
-    'lib/pygal/svg.jquery.js',
     output='public/js/adminlte.js'
 )
 
