@@ -45,7 +45,7 @@
         {{ table.render_courses_mobile(past, tname="Inactive Courses") }}
         <!-- end mobile version -->
 
-        {% if current %}
+        {% if current and all %}
         <div class="subcontent row list">
           <button class="no-dash button-large" onclick="showElem('.other-courses')">
             <i class="blank-icon-sm fa fa-ellipsis-h"></i>
@@ -58,7 +58,6 @@
 
         {{ table.render_courses_mobile(all, tname="Other Courses", class_="other-courses other-courses-mobile other-courses-hide") }}
 
-        <!-- View Other Courses Button (already shown if no current courses) -->
       </section>
     </main>
 {% endblock %}
