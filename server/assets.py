@@ -37,11 +37,14 @@ adminlte_css = Bundle(
 adminlte_js = Bundle(
     'lib/admin/js/app.min.js',
     'lib/admin/plugins/pace/pace.min.js',
-    'lib/admin/plugins/chartjs/Chart.min.js',
     'lib/admin/plugins/fastclick/fastclick.min.js',
-    'lib/admin/plugins/datatables/jquery.dataTables.min.js',
-    'lib/admin/plugins/datatables/dataTables.bootstrap.min.js',
     output='public/js/adminlte.js'
+)
+
+pygal_js = Bundle(
+    'lib/pygal/pygal-tooltips.min.js',
+    'lib/pygal/svg.jquery.js',
+    output='public/js/pygal.js'
 )
 
 landing_css = Bundle(

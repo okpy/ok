@@ -4,7 +4,7 @@ ENV = 'test'
 SECRET_KEY = os.getenv('OK_SESSION_KEY', 'testkey')
 
 DEBUG = True
-ASSETS_DEBUG = True
+ASSETS_DEBUG = False
 TESTING_LOGIN = True
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 

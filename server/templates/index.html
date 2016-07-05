@@ -54,10 +54,10 @@
 
         <p class="subtitle">Ok autogrades programming assignments, facilitates submission, <br> composition feedback, and analytics for your class.</p>
 
-        {% if config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
-        <a href="{{ url_for('auth.testing_login') }}" class="button">Testing Login</a>
+        {% if config['TESTING_LOGIN'] and (config['ENV'] == 'dev' or config['ENV'] == 'test') %}
+        <a href="{{ url_for('auth.testing_login') }}" id="testing-login" class="button">Testing Login</a>
         {% else %}
-        <a href="{{ url_for('auth.login') }}" class="button">Student Login</a>
+        <a href="{{ url_for('auth.login') }}" id="login" class="button">Student Login</a>
         {% endif %}
       </div>
     </div>
