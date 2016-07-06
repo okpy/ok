@@ -113,5 +113,5 @@ def diff_files(files_before, files_after, diff_type):
             files[filename] = list(lines)
     else:
         files = {filename: list(highlight_file(filename, source))
-            for filename, source in files_after.items()}
+                 for filename, source in files_after.items()}
     return files

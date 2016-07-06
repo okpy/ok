@@ -1,5 +1,11 @@
 from flask_assets import Bundle
 
+landing_css = Bundle(
+    'css/landing.css',
+    filters='cssmin',
+    output='public/css/landing.css'
+)
+
 common_css = Bundle(
     Bundle(
         'css/helper.css',
@@ -26,6 +32,37 @@ common_js = Bundle(
     output='public/js/common.js'
 )
 
+student_css = Bundle(
+    'css/student.css',
+    filters='cssmin',
+    output='public/css/student.css'
+)
+
+student_js = Bundle(
+    'js/student.js',
+    'js/comments.js',
+    filters='jsmin',
+    output='public/js/student.js'
+)
+
+instant_js = Bundle(
+    'lib/instantclick/instantclick.min.js',
+    output='public/js/instantclick.min.js'
+)
+
+staff_css = Bundle(
+    'css/staff.css',
+    filters='cssmin',
+    output='public/css/staff.css'
+)
+
+staff_js = Bundle(
+    'js/staff.js',
+    'js/comments.js',
+    filters='jsmin',
+    output='public/js/staff.js'
+)
+
 adminlte_css = Bundle(
     'lib/admin/css/AdminLTE.min.css',
     'lib/admin/css/skins/skin-black-light.min.css',
@@ -45,41 +82,4 @@ pygal_js = Bundle(
     'lib/pygal/pygal-tooltips.min.js',
     'lib/pygal/svg.jquery.js',
     output='public/js/pygal.js'
-)
-
-landing_css = Bundle(
-    'css/landing.css',
-    filters='cssmin',
-    output='public/css/landing.css'
-)
-
-instant_js = Bundle(
-    'lib/instantclick/instantclick.min.js',
-    output='public/js/instantclick.min.js'
-)
-
-student_css = Bundle(
-    'css/student.css',
-    filters='cssmin',
-    output='public/css/student.css'
-)
-
-student_js = Bundle(
-    'js/student.js',
-    'js/comments.js',
-    filters='jsmin',
-    output='public/js/student.js'
-)
-
-staff_css = Bundle(
-    'css/staff.css',
-    filters='cssmin',
-    output='public/css/staff.css'
-)
-
-staff_js = Bundle(
-    'js/staff.js',
-    'js/comments.js',
-    filters='jsmin',
-    output='public/js/staff.js'
 )
