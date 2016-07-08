@@ -438,8 +438,8 @@ class ExportBackup(Resource):
                       .one_or_none())
         target = models.User.lookup(email)
 
-        limit = request.args.get('limit', 150)
-        offset = request.args.get('offset', 0)
+        limit = request.args.get('limit', 150, type=int)
+        offset = request.args.get('offset', 0, type=int)
 
         if not assign or not target:
             if user.is_admin:
