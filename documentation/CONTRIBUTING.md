@@ -1,5 +1,9 @@
 # How to contribute to OK
 
+Recent activity:
+
+[![Throughput Graph](https://graphs.waffle.io/Cal-CS-61A-Staff/ok/throughput.svg)](https://waffle.io/Cal-CS-61A-Staff/ok/metrics/throughput)
+
 Installation
 --------------
 See `README.md`
