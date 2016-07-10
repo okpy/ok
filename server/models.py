@@ -11,6 +11,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
 
 import functools
+from collections import namedtuple
 import contextlib
 import csv
 from datetime import datetime as dt
@@ -145,11 +146,13 @@ class User(Model, UserMixin):
                 return enroll
         return False
 
+    @hybrid_property
     def identifier(self):
         return self.name or self.email
 
-    @cache.memoize(120)
+    @cache.memoize(3600)
     def num_grading_tasks(self):
+        # TODO: Pass in assignment_id (Useful for course dashboard)
         return GradingTask.query.filter_by(grader=self, score_id=None).count()
 
     @staticmethod
@@ -410,6 +413,7 @@ class Assignment(Model):
         ).one_or_none()
         if backup:
             backup.flagged = False
+
 
 class Enrollment(Model):
     __tablename__ = 'enrollment'
@@ -942,22 +946,65 @@ class GradingTask(Model):
     @hybrid_property
     def is_complete(self):
         return self.score_id is not None
+        # return self.kind in [s.tag for s in self.backup.scores]
+
+    @hybrid_property
+    def total_tasks(self):
+        tasks = (GradingTask.query
+                            .filter_by(grader_id=self.grader_id,
+                                       assignment_id=self.assignment_id)
+                            .count())
+        return tasks
+
+    @hybrid_property
+    def completed(self):
+        completed = (GradingTask.query
+                                .filter_by(grader_id=self.grader_id,
+                                           assignment_id=self.assignment_id)
+                                .filter(GradingTask.score_id)
+                                .count())
+        return completed
 
     @hybrid_property
     def remaining(self):
         ungraded = (GradingTask.query
-                              .filter_by(grader_id=self.grader_id,
-                                         assignment_id=self.assignment_id,
-                                         score_id=None)
-                              .count())
+                               .filter_by(grader_id=self.grader_id,
+                                          assignment_id=self.assignment_id,
+                                          score_id=None)
+                               .count())
         return ungraded
-        # return self.kind in [s.tag for s in self.backup.scores]
 
     def get_next_task(self):
         ungraded = (GradingTask.query
-                              .filter_by(grader_id=self.grader_id,
-                                         assignment_id=self.assignment_id,
-                                         score_id=None)
-                              .order_by(GradingTask.created.asc())
-                              .first())
+                               .filter_by(grader_id=self.grader_id,
+                                          assignment_id=self.assignment_id,
+                                          score_id=None)
+                               .order_by(GradingTask.created.asc())
+                               .first())
         return ungraded
+
+    @classmethod
+    def get_staff_tasks(cls, assignment_id):
+        """ Return list of namedtuple objects that represent queues.
+            Only uses 1 SQL Query.
+            Attributes:
+                - grader: User, assigned grader
+                - completed: int, completed tasks
+                - remaining: int, ungraded tasks
+        """
+        tasks = (db.session.query(cls,
+                                  db.func.count(cls.score_id),
+                                  db.func.count())
+                           .options(db.joinedload('grader'))
+                           .group_by(cls.grader_id)
+                           .filter_by(assignment_id=assignment_id)
+                           .all())
+        Queue = namedtuple('Queue', 'grader completed total')
+
+        queues = [Queue(grader=q[0].grader, completed=q[1],
+                        total=q[2]) for q in tasks]
+
+        # Sort by number of outstanding tasks
+        queues.sort(key=lambda q: q.total - q.completed, reverse=True)
+
+        return queues

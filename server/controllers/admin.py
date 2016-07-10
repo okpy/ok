@@ -15,7 +15,7 @@ from server.controllers.auth import google_oauth_token
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
-from server.constants import STAFF_ROLES, STUDENT_ROLE
+from server.constants import STAFF_ROLES, STUDENT_ROLE, GRADE_TAGS
 from server.extensions import cache
 import server.forms as forms
 import server.highlight as highlight
@@ -136,7 +136,16 @@ def grading(bid):
     backup = Backup.query.get(bid)
     if not (backup and Backup.can(backup, current_user, "grade")):
         abort(404)
+
     form = forms.GradeForm()
+    existing = Score.query.filter_by(backup=backup).first()
+
+    if existing and existing.kind in GRADE_TAGS:
+        form = forms.GradeForm(kind=existing.kind)
+        form.kind.data = existing.kind
+        form.message.data = existing.message
+        form.score.data = existing.score
+
     return grading_view(backup, form=form)
 
 @admin.route('/composition/<hashid:bid>')
@@ -167,6 +176,7 @@ def grade(bid):
     form = forms.GradeForm()
     score_kind = form.kind.data.strip().lower()
     is_composition = (score_kind == "composition")
+    # TODO: Form should include redirect url instead of guessing based off tag
 
     if is_composition:
         form = forms.CompositionScoreForm()
@@ -187,7 +197,7 @@ def grade(bid):
     db.session.commit()
 
     next_page = None
-    flash_msg = "Added {0} score of {1}.".format(score_kind, score.score)
+    flash_msg = "Added a {0} {1} score.".format(score.score, score_kind)
 
     # Find GradingTasks applicable to this score
     tasks = backup.grading_tasks
@@ -197,27 +207,29 @@ def grade(bid):
 
     db.session.commit()
 
-    for task in tasks:
-        # Set next page
-        if task.grader == current_user:
-            next_task = task.get_next_task()
-            next_route = '.composition' if is_composition else '.grading'
-            # Handle case when the task is on the users queue
-            if next_task:
-                flash_msg += (" {0} more to go. Here's the next submission:"
-                              .format(task.remaining))
-                next_page = url_for(next_route, bid=next_task.backup_id)
-            else:
-                flash_msg += " All done with grading for {}".format(backup.assignment.name)
-                next_page = url_for('.grading_tasks')
-
-    cache.delete_memoized(User.num_grading_tasks, current_user)
+    if len(tasks) == 1:
+        # Go to next task for the current task queue if possible.
+        task = tasks[0]
+        next_task = task.get_next_task()
+        next_route = '.composition' if is_composition else '.grading'
+        # Handle case when the task is on the users queue
+        if next_task:
+            flash_msg += (" There are {0} tasks left. Here's the next submission:"
+                          .format(task.remaining))
+            next_page = url_for(next_route, bid=next_task.backup_id)
+        else:
+            flash_msg += " All done with grading for {}".format(backup.assignment.name)
+            next_page = url_for('.grading_tasks')
+    else:
+        # TODO: Send task id or redirect_url in the grading form
+        # For now, default to grading tasks
+        next_page = url_for('.grading_tasks')
 
     flash(flash_msg, 'success')
+
     if not next_page:
         next_page = url_for('.assignment_queues', aid=backup.assignment_id,
                             cid=backup.assignment.course_id)
-
     return redirect(next_page)
 
 
@@ -413,9 +425,77 @@ def export_scores(cid, aid):
     return Response(stream_with_context(generate_csv()), mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
-@admin.route("/course/<int:cid>/assignments/<int:aid>/queues")
+@admin.route("/course/<int:cid>/assignments/<int:aid>/queues/")
 @is_staff(course_arg='cid')
 def assignment_queues(cid, aid):
+    courses, current_course = get_courses(cid)
+    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assignment, current_user, 'grade'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
+    queues = GradingTask.get_staff_tasks(assignment.id)
+
+    incomplete = [q.grader.email for q in queues if q.completed != q.total]
+    complete = [q.grader.email for q in queues if q.completed == q.total]
+
+    mailto_link = "mailto://{0}?subject={1}&body={2}&cc={3}".format(
+        current_user.email,
+        "{0} grading queue is not finished".format(assignment.display_name),
+        "Queue Link: {0}".format(url_for('admin.grading_tasks', _external=True)),
+        ','.join(incomplete)
+    )
+
+    remaining = len(incomplete)
+    percent_left = (1-(remaining/max(1, len(queues)))) * 100
+
+    if current_user.email in incomplete:
+        flash("Hmm... You aren't finished with your queue.", 'info')
+    elif current_user.email in complete:
+        flash("Nice! You are all done with your queue", 'success')
+    else:
+        flash("You don't have a queue for this assignment", 'info')
+
+
+    return render_template('staff/grading/overview.html', courses=courses,
+                           current_course=current_course,
+                           assignment=assignment, queues=queues,
+                           incomplete=incomplete, mailto=mailto_link,
+                           remaining=remaining, percent_left=percent_left)
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/queues/<int:uid>")
+@is_staff(course_arg='cid')
+def assignment_single_queue(cid, aid, uid):
+    courses, current_course = get_courses(cid)
+    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assignment, current_user, 'grade'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
+    assigned_grader = User.get_by_id(uid)
+    if not Assignment.can(assignment, assigned_grader, 'grade'):
+        return abort(404)
+
+    page = request.args.get('page', 1, type=int)
+    tasks_query = GradingTask.query.filter_by(assignment=assignment,
+                                              grader_id=uid)
+    queue = (tasks_query.options(db.joinedload('assignment'))
+                        .order_by(GradingTask.score_id.asc())
+                        .order_by(GradingTask.created.asc())
+                        .paginate(page=page, per_page=20))
+
+    remaining = tasks_query.filter_by(score_id=None).count()
+    percent_left = (1-(remaining/max(1, queue.total))) * 100
+
+    return render_template('staff/grading/queue.html', courses=courses,
+                           current_course=current_course,
+                           assignment=assignment, grader=assigned_grader,
+                           queue=queue, remaining=remaining,
+                           percent_left=percent_left)
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/queues/all")
+@is_staff(course_arg='cid')
+def assignment_all_queues(cid, aid):
     courses, current_course = get_courses(cid)
     assignment = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assignment, current_user, 'grade'):

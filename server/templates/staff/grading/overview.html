@@ -6,17 +6,13 @@
 
 {% block main %}
   <section class="content-header">
-      {% if assignment and grader %}
-        <h1>
-          {{ assignment.display_name }}  Queue <small>{{ grader.email }}</small>
-        </h1>
-      {% elif assignment %}
+      {% if assignment %}
         <h1>
           {{ assignment.display_name }} Grading Queue
         </h1>
       {% else %}
         <h1>
-          Your Grading Queue
+          Grading Queues
         </h1>
       {% endif %}
       <ol class="breadcrumb">
@@ -52,8 +48,8 @@
             <span class="info-box-icon bg-aqua"><i class="fa fa-inbox"></i></span>
 
             <div class="info-box-content">
-              <span class="info-box-text">Total Tasks</span>
-              <span class="info-box-number">{{ queue.total }}</span>
+              <span class="info-box-text">Total Queues</span>
+              <span class="info-box-number">{{ queues | length }}</span>
             </div>
             <!-- /.info-box-content -->
           </div>
@@ -62,19 +58,21 @@
         <!-- /.col -->
         <div class="col-md-6 col-sm-6 col-xs-12">
           <div class="info-box">
-            <span class="info-box-icon bg-green"><i class="fa fa-files-o"></i></span>
+            <span class="info-box-icon bg-green"><i class="fa  fa-users"></i></span>
 
             <div class="info-box-content">
-              <span class="info-box-text">Remaining</span>
+              <span class="info-box-text">Remaining queues</span>
               <span class="info-box-number"> {{ remaining }}</span>
               <div class="progress">
                  <div class="progress-bar bg-green" style="width: {{ percent_left }}%"></div>
               </div>
                <span class="progress-description">
                    {% if remaining == 0 %}
-                    All done!
+                    Everyone finished!
+                   {% elif percent_left > 50 %}
+                    {{ percent_left | round(2) }}% complete
                    {% else %}
-                    Only {{ remaining }} to go!
+                    {{ remaining }} staff members with incomplete queues
                    {% endif %}
               </span>
             </div>
@@ -83,19 +81,40 @@
           <!-- /.info-box -->
         </div>
         <!-- /.col -->
+
+  </div>
+
+  <!-- Content Box -->
+  <div class="box collapsed-box">
+      <div class="box-header">
+          <h3 class="box-title">
+              <span>Incomplete Queues</span>
+          </h3>
+
+          <div class="box-tools pull-right">
+              <a href="{{ mailto }}" class="btn btn-sm btn-flat btn-primary email-reminder">
+                Send Email Reminder
+              </a>
+              <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                  </button>
+        </div>
+      </div>
+      <div class="box-body">
+          <p> Users without finished queues:  </p>
+          <p>
+          {% for email in incomplete %}
+            {{ email }}{% if not loop.last %},{% endif %}
+          {% endfor %}
+          </p>
+      </div>
+
   </div>
 
 <!-- Content Box -->
 <div class="box">
-    <form action="" method="GET">
-        <div class="box-header">
-            <h3 class="box-title"><span>Queue</span></h3>
-            <ul class="pagination pagination-sm no-margin pull-right">
-                {{ helpers.paginate(queue, request.endpoint, page, params=request.view_args) }}
-            </ul>
-
-        </div>
-    </form>
+    <div class="box-header">
+        <h3 class="box-title"><span>Queue</span></h3>
+    </div>
 
     <!-- /.box-header -->
     <div class="box-body table-responsive no-padding">
@@ -105,35 +124,26 @@
                     <th>Assignment</th>
                     <th>Assignee</th>
                     <th>Status</th>
+                    <th>Tasks Completed</th>
+                    <th>Total Tasks</th>
                     <th>Action</th>
                 </tr>
-                {%- for item in queue.items %}
+                {%- for queue in queues %}
                 <tr>
-                    {% if item.kind == 'composition' %}
-                        {% set grading_view = '.composition'  %}
-                    {% else %}
-                        {% set grading_view = '.grading' %}
-                    {% endif %}
-                    <td> {{ item.assignment.name }} </td>
-                    <td>  {{ item.grader.email }} </td>
-                    {% if item.score_id %}
-                        <td> <span class="label label-success"> Complete - {{ item.score.score }} </span>
+                    <td> {{ assignment.name }} </td>
+                    <td title="{{ queue.grader.name }}">  {{ queue.grader.email }} </td>
+                    {% if queue.completed == queue.total %}
+                        <td> <span class="label label-success"> Complete </span>
                     {% else %}
                         <td> <span class="label label-warning"> Incomplete </span> </td>
                     {% endif %}
+                    <td> {{ queue.completed }}</td>
+                    <td> {{ queue.total }}</td>
                     <td>
-                    {% if item.score_id %}
-                    <a href="{{ url_for(grading_view, bid=item.backup.id, diff='short') }}" class="btn btn-block btn-info btn-flat">
-                        Regrade
+                    <a href="{{ url_for('.assignment_single_queue', cid=current_course.id, aid=assignment.id, uid=queue.grader.id)  }}" class="btn btn-block btn-primary btn-flat">
+                        Inspect Queue
                     </a>
-                    {% else %}
-                    <a href="{{ url_for(grading_view, bid=item.backup.id, diff='short') }}" class="btn btn-block btn-primary btn-flat">
-                        Grade
-                    </a>
-                    {% endif %}
-
                     </td>
-
                 </tr>
                 {% endfor %}
             </tbody></table>
@@ -142,12 +152,8 @@
         <!-- /.box-body -->
         <div class="box-footer">
             <div class="pull-left">
-                <h5 class="box-title"><span> Total: {{ queue.total }} </span></h3>
+                <h5 class="box-title"><span> Total: {{ queues | length }} </span></h3>
             </div>
-
-            <ul class="pagination pagination-sm no-margin pull-right">
-                {{ helpers.paginate(queue, request.endpoint, page, params=request.view_args) }}
-            </ul>
         </div>
     </div>
     <!-- /.box -->
