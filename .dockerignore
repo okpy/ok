@@ -36,6 +36,7 @@ kubernetes/*
 *.coverage
 *.coveralls.yml
 *coverage_report/*
+ghostdriver.log
 
 # static assets
 *.webassets-cache*

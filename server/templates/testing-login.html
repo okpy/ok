@@ -9,7 +9,7 @@
             <form action="{{ callback }}" method="post">
                 <input type="hidden" value="{{ user.email }}" class="form-control" name="email" placeholder="Email">
                 <div class="row">
-                    <button type="submit" class="btn btn-primary btn-block btn-flat">Sign in as {{ user.email }}</button>
+                    <button type="submit" id="{{type}}" class="btn btn-primary btn-block btn-flat">Sign in as {{ user.email }}</button>
                 </div>
             </form>
         </div>
@@ -21,8 +21,9 @@
         <div class="login-logo">
             Login for Testing
         </div>
-        {{ testing_login_button(random_user, 'user') }}
+        {{ testing_login_button(random_student, 'student') }}
         {{ testing_login_button(random_staff, 'staff') }}
+        {{ testing_login_button(random_user, 'user') }}
         {{ testing_login_button(random_admin, 'admin') }}
         <div class="login-box-body">
             <p class="login-box-msg">Impersonate a specific user</p>

@@ -425,7 +425,7 @@ def export_scores(cid, aid):
     return Response(stream_with_context(generate_csv()), mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
-@admin.route("/course/<int:cid>/assignments/<int:aid>/queues/")
+@admin.route("/course/<int:cid>/assignments/<int:aid>/queues")
 @is_staff(course_arg='cid')
 def assignment_queues(cid, aid):
     courses, current_course = get_courses(cid)
