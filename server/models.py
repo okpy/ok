@@ -743,7 +743,8 @@ class Group(Model):
             raise BadRequest('{0} is not invited to this group'.format(user.email))
         with self._log('accept', user.id, user.id):
             member.status = 'active'
-        self.assignment._unflag_all(self.assignment.active_user_ids(user.id))
+        for member in self.assignment.active_user_ids(user.id):
+            self.assignment._unflag_all([member])
 
     @transaction
     def decline(self, user):
