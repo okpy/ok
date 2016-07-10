@@ -24,6 +24,7 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 db_url = os.getenv('DATABASE_URL')
 if db_url:
     db_url = db_url.replace('mysql://', 'mysql+pymysql://')
+    db_url += "&sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
 else:
     print("The database URL is not set!")
     sys.exit(1)
