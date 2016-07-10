@@ -493,31 +493,6 @@ def assignment_single_queue(cid, aid, uid):
                            queue=queue, remaining=remaining,
                            percent_left=percent_left)
 
-@admin.route("/course/<int:cid>/assignments/<int:aid>/queues/all")
-@is_staff(course_arg='cid')
-def assignment_all_queues(cid, aid):
-    courses, current_course = get_courses(cid)
-    assignment = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
-    if not Assignment.can(assignment, current_user, 'grade'):
-        flash('Insufficient permissions', 'error')
-        return abort(401)
-
-    page = request.args.get('page', 1, type=int)
-    tasks_query = GradingTask.query.filter_by(assignment=assignment)
-    queue = (tasks_query.options(db.joinedload('assignment'))
-                        .order_by(GradingTask.score_id.asc())
-                        .order_by(GradingTask.created.asc())
-                        .paginate(page=page, per_page=20))
-
-    remaining = tasks_query.filter_by(score_id=None).count()
-    percent_left = (1-(remaining/max(1, queue.total))) * 100
-
-    return render_template('staff/grading/queue.html', courses=courses,
-                           current_course=current_course,
-                           assignment=assignment,
-                           queue=queue, remaining=remaining,
-                           percent_left=percent_left)
-
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/queues/new",
              methods=["GET", "POST"])
