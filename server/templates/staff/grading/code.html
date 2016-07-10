@@ -7,7 +7,7 @@
 {% block main %}
 <section class="content-header">
     <h1>
-        Grade {{ backup.assignment.name }} {{ "submission" if backup.is_submit else "backup" }}
+        Grade {{ backup.assignment.display_name }} {{ "submission" if backup.is_submit else "backup" }}
         {% if task %}
         <small> Assigned to {{ task.grader.email }} </small>
         {% else %}
@@ -125,8 +125,10 @@
             <!-- ./box-body -->
             <div class="box-footer">
                 <!-- Grade Box -->
-                {% call forms.render_form(form, action_url=url_for('.grade', bid=backup.id), action_text='Submit Score',
-                                            class_='form') %}
+
+                {% call forms.render_form(form, action_url=url_for('.grade', bid=backup.id),
+                                          action_text='Submit Score',
+                                          class_='form') %}
                     {{ forms.render_field(form.kind, label_visible=true) }}
                     {{ forms.render_field(form.message, label_visible=true, placeholder='Great work! Here are some suggestions ... ', type='text') }}
                     {{ forms.render_field(form.score, label_visible=true) }}

@@ -159,10 +159,14 @@ def testing_login():
     random_staff = utils.random_row(Enrollment.query.filter_by(role='staff'))
     if random_staff:
         random_staff = random_staff.user
+    random_student = utils.random_row(Enrollment.query.filter_by(role='student'))
+    if random_student:
+        random_student = random_student.user
     return render_template('testing-login.html',
         callback=url_for(".testing_authorized"),
         random_admin=utils.random_row(User.query.filter_by(is_admin=True)),
         random_staff=random_staff,
+        random_student=random_student,
         random_user=utils.random_row(User.query))
 
 @auth.route('/testing-login/authorized/', methods=['POST'])
