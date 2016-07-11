@@ -50,13 +50,19 @@
                   </div>
                 </span>
                 </td>
-                {% else %}
+                {% elif subm_time %}
                 <td class="tip-trigger"><span>Not released
                       <div class="tip">
                         <span>Not released or Ungraded</span>
                       </div>
                     </span>
                 </td>
+                {% else %}
+                <td class="tip-trigger"><span>No Submission
+                      <div class="tip">
+                        <span>No submission to grade</span>
+                      </div>
+                    </span>
                 </td>
                 {% endif %}
             {% endif %}
@@ -174,7 +180,17 @@
           <span>Did you run --submit<?</span> -->
           {% endif %}
         </div>
-        <!-- <div class="cell-text"><span>Score: 6/7</span></div> -->
+        {% if scores %}
+            {% set grades = fs.visible_grades %}
+            {% if grades %}
+            <div class="cell-text">
+                {% for grade in grades %}
+                            <span><b>{{grade.kind}}:</b> {{grade.score | round(2)}}</span>
+                {% endfor %}</div>
+            {% elif fs %}
+            <div class="cell-text"><span>Scores are not available</span></div>
+            {% endif %}
+        {% endif %}
         <div class="cell-status">
           {% if assign.active %}
           <span class="due-dot green">
