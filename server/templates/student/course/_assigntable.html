@@ -40,8 +40,9 @@
                 {% set grades = fs.visible_grades %}
                 {% if grades %}
                 <td class="tip-trigger">
-                    <span>{% for grade in grades %}
-                            {{ grade.kind.title() }}{% if not loop.last %}, {% endif %}
+                    <span>
+                    {% for grade in grades %}
+                        {{ grade.kind.title() }}{% if not loop.last %}, {% endif %}
                     {% endfor %}
                   <div class="tip group-members">
                   {% for grade in grades %}
@@ -51,14 +52,14 @@
                 </span>
                 </td>
                 {% elif subm_time %}
-                <td class="tip-trigger"><span>Not released
+                <td class="tip-trigger"><span class="no-dash">&mdash;
                       <div class="tip">
                         <span>Not released or Ungraded</span>
                       </div>
                     </span>
                 </td>
                 {% else %}
-                <td class="tip-trigger"><span>No Submission
+                <td class="tip-trigger"><span class="no-dash">&mdash;
                       <div class="tip">
                         <span>No submission to grade</span>
                       </div>
@@ -185,10 +186,10 @@
             {% if grades %}
             <div class="cell-text">
                 {% for grade in grades %}
-                            <span><b>{{grade.kind}}:</b> {{grade.score | round(2)}}</span>
+                        <span><b>{{grade.kind}}:</b> {{grade.score | round(2)}}</span>
                 {% endfor %}</div>
             {% elif fs %}
-            <div class="cell-text"><span>Scores are not available</span></div>
+            <div class="cell-text"><span>Scores are not available on OK</span></div>
             {% endif %}
         {% endif %}
         <div class="cell-status">
