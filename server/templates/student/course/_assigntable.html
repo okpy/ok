@@ -1,4 +1,4 @@
-{% macro render_assign(assignments, course, tname="Assignments", empty=False) %}
+{% macro render_assign(assignments, course, tname="Assignments", empty=False, scores=False) %}
   {% if assignments %}
   <div class="subcontent list hidden-xs hidden-sm">
     <div class="wrap">
@@ -7,10 +7,11 @@
         <tr class="header">
           <th>Name</th>
           <th>Status</th>
+          {% if scores %}<th>Scores</th> {% endif %}
           <th>Due Date</th>
           <th>Group</th>
         </tr>
-        {% for assign, subm_time, group in assignments %}
+        {% for assign, subm_time, group, fs in assignments %}
         <tr>
           <td>
             <span>
@@ -34,21 +35,31 @@
             </div>
 
             {% endif %}
-            <!-- Score - for later.
-            <td class="tip-trigger"><span>6/7
-              <div class="tip group-members">
-                <span><b>correctness:</b> 5/5</span>
-                <span><b>composition:</b> 1/2</span>
-              </div>
-            </span>
 
-            <td class="tip-trigger"><span>-
-                  <div class="tip">
-                    <span>Not released or Ungraded</span>
+            {% if scores %}
+                {% set grades = fs.visible_grades %}
+                {% if grades %}
+                <td class="tip-trigger">
+                    <span>{% for grade in grades %}
+                            {{ grade.kind.title() }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                  <div class="tip group-members">
+                  {% for grade in grades %}
+                    <span><b>{{grade.kind}}:</b> {{grade.score | round(2)}}</span>
+                  {% endfor %}
                   </div>
                 </span>
-            </td>
-          </td> -->
+                </td>
+                {% else %}
+                <td class="tip-trigger"><span>Not released
+                      <div class="tip">
+                        <span>Not released or Ungraded</span>
+                      </div>
+                    </span>
+                </td>
+                </td>
+                {% endif %}
+            {% endif %}
           </td>
           <td>
             {% if assign.active %}
@@ -140,12 +151,12 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_assign_mobile(assignments, course, tname="Assignments", admin=False, empty=False) %}
+{% macro render_assign_mobile(assignments, course, tname="Assignments", admin=False, empty=False, scores=False) %}
   {% if assignments %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
       <h2>{{ tname }}</h2>
-      {% for assign, subm_time, group in assignments %}
+      {% for assign, subm_time, group, fs in assignments %}
       <div class="cell col-xs-12">
         <div class="cell-title">
           <a class="dashed" href="{{ url_for('.assignment', name=assign.name)}}">
