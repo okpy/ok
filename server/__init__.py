@@ -1,7 +1,7 @@
 import os
 
 from markdown import markdown
-from flask import Flask, render_template, g, request
+from flask import Flask, render_template, g, request, jsonify
 from flask import Markup
 from flask_rq import RQ
 from flask_wtf.csrf import CsrfProtect
@@ -63,6 +63,17 @@ def create_app(default_config_path=None):
             return api.handle_error(error)
         return render_template('errors/404.html'), 404
 
+    if app.config.get('MAINTAINENCE'):
+        # Throw a 503 page during maintainence (http://is.gd/DksGDm).
+        @app.before_request
+        def check_for_maintenance():
+            if request.path.startswith('/api/'):
+                return jsonify({'code': 503,
+                                'message': "Maintainence - scheduled downtime",
+                                'data': {}}), 503
+            if not request.path.startswith('/static/'):
+                return render_template('errors/maintenance.html'), 503
+
     # initialize the cache
     cache.init_app(app)
 
@@ -104,9 +115,7 @@ def create_app(default_config_path=None):
     # OAuth should not need CSRF protection
     csrf.exempt(auth)
     app.register_blueprint(auth)
-
     app.register_blueprint(student)
-
     app.register_blueprint(admin, url_prefix='/admin')
     app.register_blueprint(about, url_prefix='/about')
 
