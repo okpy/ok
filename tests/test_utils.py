@@ -21,11 +21,16 @@ class TestUtils(OkTestCase):
         five_chunks = utils.chunks(range(55), 5)
         five_chunks = utils.chunks(list(range(55)), 5)
 
-        assert list(three_chunks) == [range(0, 19),
-                                      range(19, 38), range(38, 56)]
-        assert [len(i) for i in five_chunks] == [11, 11, 11, 11, 11]
+        self.assertEquals(list(three_chunks),
+                          [range(0, 19), range(19, 38), range(38, 56)])
+        self.assertEquals([len(i) for i in five_chunks],
+                          [11, 11, 11, 11, 11])
+        self.assertEquals([], list(utils.chunks(list(range(21)), 0)))
 
-        assert [] == list(utils.chunks(list(range(21)), 0))
+        self.assertEquals([len(x) for x in utils.chunks(range(45), 13)],
+                          [4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3])
+        self.assertEquals([len(x) for x in utils.chunks(range(253), 13)],
+                          [20, 19, 20, 19, 20, 19, 20, 19, 20, 19, 20, 19, 19])
 
     def test_time(self):
         self.setup_course()

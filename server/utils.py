@@ -1,6 +1,7 @@
 import csv
 import datetime as dt
 import logging
+import math
 from io import StringIO
 import os
 import random
@@ -125,22 +126,27 @@ def send_email(to, subject, body, template='email/notification.html',
         return
 
 def chunks(l, n):
-    """ Yield N successive chunks from L. Used for evenly distributing
-    grading tasks.
+    """ Divides L into N many chunks, each containing approximately the
+    same number of elements. Used for GradingTask distribution.
 
-    Source: http://stackoverflow.com/a/2130042/411514
+    Refrence: http://stackoverflow.com/a/9873935
 
-    >>> three_chunks = chunks(range(56), 3)
-    >>> [len(i) for i in three_chunks] == [19, 19, 18]
-    >>> five_chunks = chunks(range(55), 5)
-    >>> [len(i) for i in five_chunks] == [11, 11, 11, 11, 11]
+    >>> [len(x) for x in chunks(range(45), 13)]
+    [4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3]
+    >>> [len(x) for x in chunks(range(253), 13)]
+    [20, 19, 20, 19, 20, 19, 20, 19, 20, 19, 20, 19, 19]
+    >>> [len(i) for i in chunks(range(56), 3)]
+    [19, 19, 18]
+    >>> [len(i) for i in chunks(range(55), 5)]
+    [11, 11, 11, 11, 11]
     """
-    if n == 0:
-        return
-    new_n = int(1.0 * len(l) / n + 0.5)
-    for i in range(0, n - 1):
-        yield l[i * new_n: i * new_n + new_n]
-    yield l[n * new_n - new_n:]
+    length = len(l)
+    prev_index = 0
+    for i in range(1, n + 1):
+        index = math.ceil((i / n) * length)
+        yield l[prev_index:index]
+        prev_index = index
+
 
 def generate_csv(query, items, selector_fn):
     """ Generate csv export of scores for assignment.
