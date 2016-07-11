@@ -70,7 +70,7 @@ def course(offering):
         final_submission = assignment.final_submission(user_ids)
         submission_time = final_submission and final_submission.created
         group = Group.lookup(current_user, assignment)
-        return assignment, submission_time, group
+        return assignment, submission_time, group, final_submission
 
     course = get_course(offering)
     assignments = {

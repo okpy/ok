@@ -367,11 +367,14 @@ class Assignment(Model):
 
     def final_submission(self, user_ids):
         """Return a final submission for a user, or None."""
-        return Backup.query.filter(
-            Backup.submitter_id.in_(user_ids),
-            Backup.assignment_id == self.id,
-            Backup.submit == True
-        ).order_by(Backup.flagged.desc(), Backup.created.desc()).first()
+        return (Backup.query
+                      .options(db.joinedload(Backup.scores))
+                      .filter(Backup.submitter_id.in_(user_ids),
+                              Backup.assignment_id == self.id,
+                              Backup.submit == True)
+                      .order_by(Backup.flagged.desc(),
+                                Backup.created.desc())
+                      .first())
 
     @transaction
     def flag(self, backup_id, member_ids):
@@ -584,6 +587,13 @@ class Backup(Model):
         if self.extension:
             return False
         return self.created > self.assignment.due_date
+
+    @hybrid_property
+    def visible_grades(self):
+        """ Return public grades. "Autograder" kind are errors from the
+        autograder and should not be shown.
+        """
+        return [s for s in self.scores if s.kind == "composition" and s.public]
 
     # @hybrid_property
     # def group(self):

@@ -34,9 +34,11 @@
                 <input type="hidden" name="flag">
               {% endif %}
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="tip-trigger final-button button-small" type="submit">
+              <button class="tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
                 <div class="tip">
-                  {% if subm.flagged %}
+                  {% if not assignment.active %}
+                    <span>Cannot be changed after deadline</span>
+                  {% elif subm.flagged %}
                     <span>Flagged for grading (click to unflag)</span>
                   {% else %}
                     <span>Not flagged for grading (click to flag)</span>
@@ -101,11 +103,18 @@
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}
               <input type="hidden" name="flag">
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="tip-trigger final-button button-small" type="submit">
-                <div class="tip">
-                  <span>Convert to submission & <br> flag for grading (click to flag)</span>
-                </div>
-                Convert to submission
+              <button class="tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
+                  {% if not assignment.active %}
+                  <div class="tip">
+                    <span>Too late to convert submission</span>
+                  </div>
+                  {% else %}
+                  <div class="tip">
+                    <span>Convert to submission & <br> flag for grading (click to flag)</span>
+                  </div>
+                  {% endif %}
+                  Convert to submission
+
               </button>
             {% endcall %}
           </td>
