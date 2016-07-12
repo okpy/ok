@@ -33,7 +33,7 @@ Flask-RQ==0.2
 # Flask DB Extensions
 Flask-SQLAlchemy==2.1
 Flask-SQLAlchemy-Cache==0.1.5
-Flask-Migrate==1.8.0
+Flask-Migrate==1.8.1
 
 # Timezones
 pytz
