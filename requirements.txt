@@ -8,7 +8,7 @@ raven[flask]
 
 # Database
 pymysql==0.7.5
-sqlalchemy==1.0.13
+sqlalchemy==1.0.14
 
 # Caching
 redis==2.10.5
