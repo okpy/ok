@@ -39,7 +39,7 @@ Flask-Migrate==1.8.1
 pytz
 
 # Emailing
-sendgrid==3.0.6
+sendgrid==1.5.20
 pynliner<1.0
 
 # Autograder Interface
