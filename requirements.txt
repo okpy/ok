@@ -64,7 +64,7 @@ pylint>=1.5.2
 names==0.3.0
 
 # Testing
-pytest==2.9.1
+pytest==2.9.2
 pytest-cov==2.2.1
 selenium
 
