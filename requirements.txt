@@ -65,7 +65,7 @@ names==0.3.0
 
 # Testing
 pytest==2.9.2
-pytest-cov==2.2.1
+pytest-cov==2.3.0
 selenium
 
 # until version 1.0.6 is on pypi
