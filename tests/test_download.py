@@ -49,7 +49,18 @@ class TestDownload(OkTestCase):
         response = self.client.get(url)
         self.assert_200(response)
         self.assertEqual(contents, response.data.decode('UTF-8'))
-        
+
+    def test_folders(self):
+        filename = "tests/hof.py"
+        contents = "tests = {\nstatus: 'locked'\n}"
+        self._add_file(filename, contents)
+        encoded_id = utils.encode_id(self.backup.id)
+        submit_str = "submissions" if self.backup.submit else "backups"
+        url = "/{0}/{1}/{2}/download/{3}".format(self.assignment.name, submit_str, encoded_id, filename)
+        response = self.client.get(url)
+        self.assert_200(response)
+        self.assertEqual(contents, response.data.decode('UTF-8'))
+
     def test_wrong_student(self):
         filename = "test.py"
         contents = "x = 4"
