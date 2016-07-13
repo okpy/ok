@@ -53,7 +53,7 @@ if driver:
 
         def login(self, role="admin"):
             self.driver.get(self.get_server_url() + "/testing-login/")
-            self.driver.get_screenshot_as_file('login.png')
+            # self.driver.get_screenshot_as_file('login.png')
             self.assertIn('Login', self.driver.title)
 
             self.driver.find_element_by_id(role).click()
