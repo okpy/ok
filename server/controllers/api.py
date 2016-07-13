@@ -159,16 +159,13 @@ def make_backup(user, assignment_id, messages, submit):
 def make_score(user, backup, score, message, kind):
     if not models.Backup.can(backup, user, 'grade'):
         return
-    existing = models.Score.query.filter_by(backup=backup, kind=kind).first()
-    if existing:
-        existing.public = False
-        existing.archived = True
 
     score = models.Score(grader_id=user.id, assignment=backup.assignment,
                          backup=backup, score=score, message=message,
                          kind=kind)
     models.db.session.add(score)
     models.db.session.commit()
+    score.archive_duplicates()
     return score
 
 class APISchema():

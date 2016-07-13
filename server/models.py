@@ -937,6 +937,20 @@ class Score(Model):
             return obj.backup.can_view(user, course)
         return user.is_enrolled(course.id, STAFF_ROLES)
 
+    @transaction
+    def archive_duplicates(self):
+        """ Archive scores with of the same kind on the same backup.
+        TODO: Investigate doing automatically on create/save.
+        """
+        existing_scores = Score.query.filter_by(backup=self.backup,
+                                                kind=self.kind,
+                                                archived=False).all()
+        for old_score in existing_scores:
+            if old_score.id != self.id:  # Do not archive current score
+                old_score.public = False
+                old_score.archived = True
+
+
 class GradingTask(Model):
     """Each task represent a single submission assigned to a grader."""
     id = db.Column(db.Integer(), primary_key=True)

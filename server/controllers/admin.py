@@ -184,17 +184,14 @@ def grade(bid):
     if not form.validate_on_submit():
         return grading_view(backup, form=form)
 
-    # Archive old scores with the same kind
-    existing = Score.query.filter_by(backup=backup, kind=score_kind).first()
-    if existing:
-        existing.public = False
-        existing.archived = True
-
     score = Score(backup=backup, grader=current_user,
                   assignment_id=backup.assignment_id)
     form.populate_obj(score)
     db.session.add(score)
     db.session.commit()
+
+    # Archive old scores of the same kind
+    score.archive_duplicates()
 
     next_page = None
     flash_msg = "Added a {0} {1} score.".format(score.score, score_kind)
