@@ -151,7 +151,7 @@ def code(name, submit, bid):
         course=assign.course, assignment=assign, backup=backup,
         files=files, diff_type=diff_type)
 
-@student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<file>')
+@student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<path:file>')
 @login_required
 def download(name, submit, bid, file):
     backup = Backup.query.get(bid)
