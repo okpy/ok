@@ -379,7 +379,8 @@ class Assignment(Model):
     def revision(self, user_ids):
         """ Return the revision backup for a user, or None."""
         return (Backup.query.options(db.joinedload(Backup.scores))
-                      .filter(Backup.scores.any(kind="revision"),
+                      .filter(Backup.scores.any(kind="revision",
+                                                archived=False),
                               Backup.submitter_id.in_(user_ids),
                               Backup.assignment_id == self.id)
                       .order_by(Backup.created.desc())

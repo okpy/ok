@@ -318,6 +318,7 @@ def assignment(cid, aid):
     if form.validate_on_submit():
         # populate_obj converts back to UTC
         form.populate_obj(assign)
+        assign.creator_id = current_user.id
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
         flash("Assignment edited successfully.", "success")

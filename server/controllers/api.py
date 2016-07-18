@@ -434,7 +434,6 @@ class Revision(Resource):
     def post(self, user, key=None):
         if key is not None:
             restful.abort(405)
-
         try:
             backup = self.schema.store_backup(user)
         except ValueError as e:
@@ -446,8 +445,12 @@ class Revision(Resource):
         assignment = backup.assignment
         backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
                              bid=encode_id(backup.id), _external=True)
-        # Only accept revision if the user has a FS
+        # Only accept revision if the assignment has revisions enabled
+        if not assignment.revisions_allowed:
+            return restful.abort(403, message="Revisions are not enabled for this assignment",
+                                 data={'backup': True, 'late': True})
 
+        # Only accept revision if the user has a FS
         group = assignment.active_user_ids(user.id)
         fs = assignment.final_submission(group)
         if not fs:
@@ -459,8 +462,10 @@ class Revision(Resource):
             for score in previous_revision.scores:
                 if score.kind == "revision":
                     score.archive()
+        models.db.session.commit()
 
-        make_score(assignment.creator, backup, 2.0, backup_url, "revision")
+        assignment_creator = models.User.get_by_id(assignment.creator_id)
+        make_score(assignment_creator, backup, 0.0, backup_url, "revision")
 
         return {
             'email': current_user.email,
@@ -613,6 +618,7 @@ class Version(PublicResource):
 
 api.add_resource(V3Info, '/v3/')
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
+api.add_resource(Revision, '/v3/revision/')
 api.add_resource(ExportBackup, '/v3/assignment/<int:aid>/export/<string:email>')
 api.add_resource(ExportFinal, '/v3/assignment/<int:aid>/submissions/')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
