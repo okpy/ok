@@ -621,7 +621,7 @@ class ExportBackup(Resource):
                 'has_more':  has_more}
         return data
 
-class ExportFinal(Resource):
+class ExportSubmsissions(Resource):
     """ Export backup retreival.
         Authenticated. Permissions: >= Staff
         Used by: Export Scripts.
@@ -676,6 +676,36 @@ class ExportFinal(Resource):
                 'offset': offset,
                 'count': num_subms,
                 'has_more': has_more}
+
+
+class ExportFinal(Resource):
+    """ Export single backup retreival.
+        Authenticated. Permissions: Creator or Staff
+        Used by: Scripts
+    """
+    schema = BackupSchema()
+    model = models.Assignment
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, aid, email):
+        assign = (self.model.query.filter_by(id=aid)
+                      .one_or_none())
+
+        target = models.User.lookup(email)
+
+        if not assign or not target:
+            if user.is_admin:
+                return restful.abort(404)
+            return restful.abort(403)
+
+        group = assign.active_user_ids(target.id)
+        fs = assign.final_submission(group)
+        if not models.Backup.can(fs, user, 'view'):
+            return restful.abort(403)
+
+        fs.group = [models.User.get_by_id(uid) for uid in group]
+
+        return fs
 
 class Enrollment(Resource):
     """ View what courses an email is enrolled in.
@@ -891,7 +921,8 @@ ASSIGNMENT_BASE = '/v3/assignment/<assignment_name:name>'
 api.add_resource(Assignment, ASSIGNMENT_BASE)
 api.add_resource(Group, ASSIGNMENT_BASE + '/group/<string:email>')
 api.add_resource(ExportBackup, ASSIGNMENT_BASE + '/export/<string:email>')
-api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
+api.add_resource(ExportSubmsissions, ASSIGNMENT_BASE + '/submissions/')
+api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submission/<string:email>')
 
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
