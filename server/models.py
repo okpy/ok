@@ -376,6 +376,15 @@ class Assignment(Model):
                                 Backup.created.desc())
                       .first())
 
+    def revision(self, user_ids):
+        """ Return the revision backup for a user, or None."""
+        return (Backup.query.options(db.joinedload(Backup.scores))
+                      .filter(Backup.scores.any(kind="revision"),
+                              Backup.submitter_id.in_(user_ids),
+                              Backup.assignment_id == self.id)
+                      .order_by(Backup.created.desc())
+                      .first())
+
     @transaction
     def flag(self, backup_id, member_ids):
         """Flag a submission. First unflags any submissions by one of
@@ -594,6 +603,10 @@ class Backup(Model):
         autograder and should not be shown.
         """
         return [s for s in self.scores if s.kind == "composition" and s.public]
+
+    @hybrid_property
+    def is_revision(self):
+        return any(s for s in self.scores if s.kind == "revision")
 
     # @hybrid_property
     # def group(self):
@@ -937,6 +950,13 @@ class Score(Model):
             return obj.backup.can_view(user, course)
         return user.is_enrolled(course.id, STAFF_ROLES)
 
+    def archive(self, commit=True):
+        self.public = False
+        self.archived = True
+
+        if commit:
+            db.session.commit()
+
     @transaction
     def archive_duplicates(self):
         """ Archive scores with of the same kind on the same backup.
@@ -947,8 +967,8 @@ class Score(Model):
                                                 archived=False).all()
         for old_score in existing_scores:
             if old_score.id != self.id:  # Do not archive current score
-                old_score.public = False
-                old_score.archived = True
+                old_score.archive(commit=False)
+
 
 
 class GradingTask(Model):

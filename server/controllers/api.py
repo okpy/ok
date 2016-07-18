@@ -279,8 +279,8 @@ class BackupSchema(APISchema):
 
         # Do not allow submissions after the lock date
         elgible_submit = args['submit'] and not lock_flag
-        backup = make_backup(user, assignment['id'], args[
-                             'messages'], elgible_submit)
+        backup = make_backup(user, assignment['id'], args['messages'],
+                             elgible_submit)
         if args['submit'] and lock_flag:
             raise ValueError('Late Submission')
         if elgible_submit and assignment['autograding_key']:
@@ -376,7 +376,7 @@ class V3Info(PublicResource):
 
 # TODO: should be two classes, one for /backups/ and one for /backups/<int:key>/
 class Backup(Resource):
-    """ Submission retreival resource.
+    """ Submission creation/retrieval resource.
         Authenticated. Permissions: >= User/Staff
         Used by: Ok Client Submission/Exports.
     """
@@ -420,6 +420,56 @@ class Backup(Resource):
             'course': assignment.course,
             'assignment': assignment.name
         }
+
+
+class Revision(Resource):
+    """ Like Backup, but creates composition revisions backups after the deadline.
+        Authenticated. Permissions: >= User/Staff
+        Used by: Ok Client Submission/Exports.
+    """
+    schema = BackupSchema()
+    model = models.Backup
+
+    @marshal_with(schema.post_fields)
+    def post(self, user, key=None):
+        if key is not None:
+            restful.abort(405)
+
+        try:
+            backup = self.schema.store_backup(user)
+        except ValueError as e:
+            data = {'backup': True}
+            if 'late' in str(e).lower():
+                data['late'] = True
+            return restful.abort(403, message=str(e), data=data)
+
+        assignment = backup.assignment
+        backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
+                             bid=encode_id(backup.id), _external=True)
+        # Only accept revision if the user has a FS
+
+        group = assignment.active_user_ids(user.id)
+        fs = assignment.final_submission(group)
+        if not fs:
+            return restful.abort(403, message="No Submission to Revise", data={})
+
+        # Get previous revision, (There should only be one)
+        previous_revision = assignment.revision(group)
+        if previous_revision:
+            for score in previous_revision.scores:
+                if score.kind == "revision":
+                    score.archive()
+
+        make_score(assignment.creator, backup, 2.0, backup_url, "revision")
+
+        return {
+            'email': current_user.email,
+            'key': encode_id(backup.id),
+            'url': backup_url,
+            'course': assignment.course,
+            'assignment': assignment.name,
+        }
+
 
 class ExportBackup(Resource):
     """ Export backup retreival resource without submitter information.

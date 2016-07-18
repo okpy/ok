@@ -6,13 +6,13 @@ STAFF_ROLE = 'staff'
 INSTRUCTOR_ROLE = 'instructor'
 VALID_ROLES = [STUDENT_ROLE, GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
-GRADE_TAGS = ['composition', 'total', 'partner a', 'partner b', 'regrade']
+GRADE_TAGS = ['composition', 'total', 'partner a', 'partner b', 'regrade',
+              'revision']
 API_PREFIX = '/api'
 
 GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
 
-APP_URL = 'https://okpy.org/'
 AUTOGRADER_URL = 'https://autograder.cs61a.org'
 
 FORBIDDEN_ROUTE_NAMES = [
