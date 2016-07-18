@@ -93,6 +93,7 @@ def create_app(default_config_path=None):
     app.jinja_env.globals.update({
         'utils': utils,
         'debug': app.debug,
+        'instantclick': app.config.get('INSTANTCLICK', True),
         'CSRFForm': CSRFForm
     })
 
