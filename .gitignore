@@ -11,6 +11,7 @@
 venv
 env
 .env
+*.tags*
 
 # Don't store secret keys in version control
 *secrets.json*
