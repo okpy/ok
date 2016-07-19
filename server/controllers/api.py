@@ -443,8 +443,6 @@ class Revision(Resource):
             return restful.abort(403, message=str(e), data=data)
 
         assignment = backup.assignment
-        backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
-                             bid=encode_id(backup.id), _external=True)
 
         # Only accept revision if the assignment has revisions enabled
         if not assignment.revisions_allowed:
@@ -465,9 +463,15 @@ class Revision(Resource):
                 if score.kind == "revision":
                     score.archive()
         models.db.session.commit()
+        fs_url = url_for('student.code', name=assignment.name, submit=fs.submit,
+                         bid=encode_id(fs.id), _external=True)
 
         assignment_creator = models.User.get_by_id(assignment.creator_id)
-        make_score(assignment_creator, backup, 0.0, backup_url, "revision")
+
+        make_score(assignment_creator, backup, 0.0, "Revision for {}".format(fs_url),
+                   "revision")
+        backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
+                             bid=encode_id(backup.id), _external=True)
 
         return {
             'email': current_user.email,
