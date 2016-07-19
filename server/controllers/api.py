@@ -445,6 +445,7 @@ class Revision(Resource):
         assignment = backup.assignment
         backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
                              bid=encode_id(backup.id), _external=True)
+
         # Only accept revision if the assignment has revisions enabled
         if not assignment.revisions_allowed:
             return restful.abort(403, message="Revisions are not enabled for this assignment",
@@ -453,6 +454,7 @@ class Revision(Resource):
         # Only accept revision if the user has a FS
         group = assignment.active_user_ids(user.id)
         fs = assignment.final_submission(group)
+
         if not fs:
             return restful.abort(403, message="No Submission to Revise", data={})
 
