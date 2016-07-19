@@ -86,6 +86,8 @@ def assignment(name):
     assign = get_assignment(name)
     user_ids = assign.active_user_ids(current_user.id)
     fs = assign.final_submission(user_ids)
+    revision = assign.revision(user_ids)
+
     group = Group.lookup(current_user, assign)
     can_invite = assign.max_group_size > 1 and assign.active
     can_remove = group and group.has_status(current_user, 'active')
@@ -101,6 +103,7 @@ def assignment(name):
         'final_submission': fs,
         'flagged': fs and fs.flagged,
         'group': group,
+        'revision': revision,
         'can_invite': can_invite,
         'can_remove': can_remove,
         'csrf_form': CSRFForm()

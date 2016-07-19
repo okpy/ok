@@ -74,7 +74,12 @@
                   <div class="pull-left">
                         <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="dashed">
                           View Code
-                      </a>
+                        </a>
+                        {% if revison %}
+                          <a href="{{ url_for('.code', name=assignment.name, bid=revision.id, submit=revision.submit)}}" class="dashed">
+                            View Composition Revision
+                          </a>
+                        {% endif %}
                   </div>
                   <div class="pull-right">
                     {% if final_submission.flagged and assignment.active%}

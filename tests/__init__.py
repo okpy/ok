@@ -39,12 +39,17 @@ class OkTestCase(TestCase):
         * 2 staff members (self.staff1, self.staff2) as TAs
         * 1 Admin (okadmin@okpy.org)
         """
+        self.admin = User(email='okadmin@okpy.org', is_admin=True)
+        db.session.add(self.admin)
+        db.session.commit()
+
         self.course = Course(
             offering='cal/cs61a/sp16',
             institution='UC Berkeley',
             display_name='CS 61A')
         self.assignment = Assignment(
             name='cal/cs61a/sp16/proj1',
+            creator_id=self.admin.id,
             course=self.course,
             display_name='Hog',
             due_date=dt.datetime.now(),
@@ -77,8 +82,5 @@ class OkTestCase(TestCase):
 
         self.staff1 = make_staff(1)
         self.staff2 = make_staff(2)
-
-        self.admin = User(email='okadmin@okpy.org', is_admin=True)
-        db.session.add(self.admin)
 
         db.session.commit()

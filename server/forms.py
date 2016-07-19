@@ -74,8 +74,8 @@ class AssignmentForm(BaseForm):
                                               validators.number_range(min=1)])
     url = StringField(u'URL',
                       validators=[validators.optional(), validators.url()])
-    revisions = BooleanField(u'Enable Revisions', default=False,
-                             validators=[validators.optional()])
+    revisions_allowed = BooleanField(u'Enable Revisions', default=False,
+                                     validators=[validators.optional()])
     autograding_key = StringField(u'Autograder Key', [validators.optional()])
 
     def populate_obj(self, obj):
