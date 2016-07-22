@@ -1,7 +1,7 @@
 {% extends "student/base.html" %}
 {% import 'student/course/_assigntable.html' as table %}
 
-{% block title %} Courses | Ok {% endblock %}
+{% block title %} {{ course.display_name_with_semester }} | Ok {% endblock %}
 
 {% block header %}
 

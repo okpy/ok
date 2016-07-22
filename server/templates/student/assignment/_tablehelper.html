@@ -34,7 +34,7 @@
                 <input type="hidden" name="flag">
               {% endif %}
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
+              <button class="flag-button tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
                 <div class="tip">
                   {% if not assignment.active %}
                     <span>Cannot be changed after deadline</span>
@@ -52,7 +52,7 @@
           </td>
 
           <td>
-              <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" class="no-dash button-small">
+              <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" class="view-code no-dash button-small">
                 View Code
               </a>
           </td>
@@ -103,7 +103,7 @@
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}
               <input type="hidden" name="flag">
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
+              <button class="convert-button tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
                   {% if not assignment.active %}
                   <div class="tip">
                     <span>Too late to convert submission</span>
@@ -114,7 +114,6 @@
                   </div>
                   {% endif %}
                   Convert to submission
-
               </button>
             {% endcall %}
           </td>
