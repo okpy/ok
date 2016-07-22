@@ -68,7 +68,6 @@ class TestAuth(OkTestCase):
             self.assert_200(response)
 
         if not success:
-            print(response.data)
             self.assert_403(response)
             submit = False
             assert response.json['data'] == {
