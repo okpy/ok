@@ -1,4 +1,6 @@
 import json
+import os
+import signal
 
 import requests
 from flask_testing import LiveServerTestCase
@@ -54,6 +56,17 @@ if driver:
             # Default port is 5000
             app.config['LIVESERVER_PORT'] = 8943
             return app
+
+        def _terminate_live_server(self):
+            """ Properly handle termination for coverage reports.
+            Works on *nix systems (aka not windows).
+            https://github.com/jarus/flask-testing/issues/70 """
+            # Handle Windows
+            if os.name == "nt":
+                print("Coverage may not properly be reported on Windows")
+                return LiveServerTestCase._terminate_live_server(self)
+            os.kill(self._process.pid, signal.SIGINT)
+            self._process.join()
 
         def tearDown(self):
             OkTestCase.tearDown(self)
