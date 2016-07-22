@@ -52,10 +52,8 @@ if driver:
 
         def create_app(self):
             app = create_app('settings/test.py')
-            app.config['TESTING'] = True
-            app.config['DEBUG'] = False
             # Default port is 5000
-            # app.config['LIVESERVER_PORT'] = 8943
+            app.config['LIVESERVER_PORT'] = 8943
             return app
 
         def _terminate_live_server(self):
