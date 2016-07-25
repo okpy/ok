@@ -133,14 +133,18 @@ def list_backups(name, submit):
 def code(name, submit, bid):
     assign = get_assignment(name)
     backup = Backup.query.get(bid)
-    if not (backup and backup.submit == submit and
-            Backup.can(backup, current_user, "view")):
+
+    if not (backup and Backup.can(backup, current_user, "view")):
         abort(404)
+    if backup.submit != submit:
+        return redirect(url_for('.code', name=name, submit=backup.submit, bid=bid))
+
     diff_type = request.args.get('diff', None)
     if diff_type not in (None, 'short', 'full'):
         return redirect(url_for('.code', name=name, submit=submit, bid=bid))
     if not assign.files and diff_type:
         return abort(404)
+
     # sort comments by (filename, line)
     comments = collections.defaultdict(list)
     for comment in backup.comments:
@@ -158,9 +162,11 @@ def code(name, submit, bid):
 @login_required
 def download(name, submit, bid, file):
     backup = Backup.query.get(bid)
-    if not (backup and backup.submit == submit and
-            Backup.can(backup, current_user, "view")):
+    if not (backup and Backup.can(backup, current_user, "view")):
         abort(404)
+    if backup.submit != submit:
+        return redirect(url_for('.download', name=name, submit=backup.submit,
+                                bid=bid, file=file))
     try:
         contents = backup.files()[file]
     except KeyError:
