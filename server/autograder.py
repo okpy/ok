@@ -9,7 +9,7 @@ import json
 import requests
 
 import server.constants as constants
-from server.models import User
+from server.models import User, db
 import server.utils as utils
 
 
@@ -48,6 +48,8 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
                 if found_backup:
                     seen |= found_backup.owners()
                     backups_to_grade.append(utils.encode_id(found_backup.id))
+                    found_backup.submit = True
+        db.session.commit()
 
     data = {
         'subm_ids': backups_to_grade,
