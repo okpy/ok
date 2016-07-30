@@ -19,7 +19,7 @@ class HashidConverter(BaseConverter):
     def to_python(self, value):
         try:
             return utils.decode_id(value)
-        except TypeError as e:
+        except (TypeError, ValueError) as e:
             raise ValidationError(str(e))
 
     def to_url(self, value):
