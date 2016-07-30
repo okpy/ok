@@ -1,6 +1,11 @@
 import os
+import logging
 
 from markdown import markdown
+import redis
+from simplekv.memory.redisstore import RedisStore
+from simplekv.decorator import PrefixDecorator
+
 from flask import Flask, render_template, g, request
 from flask import Markup
 from flask_rq import RQ
@@ -24,7 +29,8 @@ from server.extensions import (
     cache,
     csrf,
     debug_toolbar,
-    sentry
+    sentry,
+    kv_session
 )
 
 def create_app(default_config_path=None):
@@ -43,10 +49,10 @@ def create_app(default_config_path=None):
             'Check that the OK_SERVER_CONFIG environment variable is set.')
     app.config.from_pyfile(config_path)
 
-    # Senty Error Reporting & Other Prod Changes
-    sentry_dsn = os.getenv('SENTRY_DSN')
-    if not app.debug:
+    if app.config.get('IS_PROD'):
         app.wsgi_app = ProxyFix(app.wsgi_app)
+        # Senty Error Reporting
+        sentry_dsn = os.getenv('SENTRY_DSN')
         if sentry_dsn:
             sentry.init_app(app, dsn=sentry_dsn)
 
@@ -57,11 +63,15 @@ def create_app(default_config_path=None):
                     public_dsn=sentry.client.get_public_dsn('https')
                 ), 500
 
-    @app.errorhandler(404)
-    def not_found_error(error):
-        if request.path.startswith("/api"):
-            return api.handle_error(error)
-        return render_template('errors/404.html'), 404
+        # Use server side sessions if possible
+        try:
+            redis_conn = redis.StrictRedis.from_url(app.config.get('CACHE_REDIS_HOST'))
+            redis_conn.ping()
+            store = RedisStore(redis_conn)
+            prefixed_store = PrefixDecorator('sessions_', store)
+            kv_session.init_app(app, prefixed_store)
+        except redis.exceptions.ConnectionError:
+            logging.error("Could not connect to redis", exc_info=True)
 
     # initialize the cache
     cache.init_app(app)
@@ -100,6 +110,12 @@ def create_app(default_config_path=None):
     app.jinja_env.filters.update({
         'markdown': lambda data: Markup(markdown(data))
     })
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        if request.path.startswith("/api"):
+            return api.handle_error(error)
+        return render_template('errors/404.html'), 404
 
     # register our blueprints
     # OAuth should not need CSRF protection

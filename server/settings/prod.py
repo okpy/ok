@@ -9,6 +9,8 @@ import binascii
 default_secret = binascii.hexlify(os.urandom(24))
 
 ENV = 'prod'
+IS_PROD = True
+
 PREFERRED_URL_SCHEME = 'https'
 
 if not os.getenv('SECRET_KEY'):

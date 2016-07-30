@@ -190,7 +190,6 @@ def testing_logout():
 def logout():
     # Only CSRF protect this route.
     csrf.protect()
-
     logout_user()
     session.pop('google_token', None)
     session.pop('sudo-user', None)

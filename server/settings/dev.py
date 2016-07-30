@@ -5,6 +5,8 @@ SECRET_KEY = os.getenv('OK_SESSION_KEY', 'changeinproductionkey')
 CACHE_TYPE = 'simple'
 
 DEBUG = True
+IS_PROD = False
+
 ASSETS_DEBUG = True
 TESTING_LOGIN = True
 DEBUG_TB_INTERCEPT_REDIRECTS = False

@@ -9,6 +9,8 @@ import binascii
 default_secret = binascii.hexlify(os.urandom(24))
 
 ENV = 'staging'
+IS_PROD = True
+
 PREFERRED_URL_SCHEME = 'https'
 
 SECRET_KEY = os.getenv('SECRET_KEY', default_secret)
