@@ -39,6 +39,9 @@ CACHE_TYPE = 'redis'
 CACHE_REDIS_HOST = os.getenv('REDIS_HOST', 'redis-master')
 CACHE_KEY_PREFIX = 'ok-web'
 
+RAVEN_IGNORE_EXCEPTIONS =['werkzeug.exceptions.Forbidden', 'werkzeug.exceptions.NotFound',
+                          'werkzeug.exceptions.Unauthorized']
+
 try:
     os.environ["GOOGLE_ID"]
     os.environ["GOOGLE_SECRET"]
