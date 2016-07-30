@@ -1,10 +1,11 @@
 """ Do not put secrets in this file. This file is public.
     For staging environment (Using Dokku)
 """
-
 import os
 import sys
 import binascii
+
+from server.settings import RAVEN_IGNORE_EXCEPTIONS
 
 default_secret = binascii.hexlify(os.urandom(24))
 

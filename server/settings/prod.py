@@ -1,10 +1,11 @@
 """ Do not put secrets in this file. This file is public.
     Production config.
 """
-
 import os
 import sys
 import binascii
+
+from server.settings import RAVEN_IGNORE_EXCEPTIONS
 
 default_secret = binascii.hexlify(os.urandom(24))
 
@@ -38,9 +39,6 @@ WTF_CSRF_ENABLED = True
 CACHE_TYPE = 'redis'
 CACHE_REDIS_HOST = os.getenv('REDIS_HOST', 'redis-master')
 CACHE_KEY_PREFIX = 'ok-web'
-
-RAVEN_IGNORE_EXCEPTIONS =['werkzeug.exceptions.Forbidden', 'werkzeug.exceptions.NotFound',
-                          'werkzeug.exceptions.Unauthorized']
 
 try:
     os.environ["GOOGLE_ID"]
