@@ -15,8 +15,6 @@ API.py - /api/{version}/endpoints
 
     api.add_resource(UserAPI, '/v3/user')
 """
-
-import json
 from functools import wraps
 
 from flask import Blueprint, jsonify, request, url_for
@@ -46,22 +44,6 @@ def record_params(setup_state):
 api = restful.Api(endpoints)
 
 API_VERSION = 'v3'
-
-def json_field(field):
-    """
-    Parses field or list, or returns appropriate boolean value.
-
-    :param field: (string)
-    :return: (string) parsed JSON
-    """
-    if not field[0] in ['{', '[']:
-        if field == 'false':
-            return False
-        elif field == 'true':
-            return True
-        return field
-    return json.dumps(field)
-
 
 class HashIDField(fields.Raw):
     def format(self, value):
