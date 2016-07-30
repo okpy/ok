@@ -169,6 +169,12 @@ if driver:
             self.assertTrue("student1@aol.com" not in self.driver.page_source)
             self.assertTrue("No Submission" in self.driver.page_source)
 
+        def test_student_invalid_hash(self):
+            self._seed_course()
+            self._login_as(email=self.user4.email)
+            self.driver.get("{}/cal/cs61a/sp16/proj1/xyz".format(self.get_server_url()))
+            self.assertIn('404', self.driver.title)
+
         def test_login_admin_reject(self):
             self._login(role="student")
             self.pageLoad(self.get_server_url() + "/admin/")
