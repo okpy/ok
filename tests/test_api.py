@@ -113,6 +113,20 @@ class TestAuth(OkTestCase):
         assert response.json['data'] == {}
         assert response.json['code'] == 404
 
+    def test_bad_hashid(self):
+        self.setup_course()
+
+        response = self.client.get('/api/v3/backups/xyzxyz/')
+        self.assert_401(response)
+        assert response.json['data'] == {}
+        assert response.json['code'] == 401
+
+        self.login(self.user1.email)
+        response = self.client.get('/api/v3/backups/xyzxyz/')
+        self.assert_404(response)
+        assert response.json['data'] == {}
+        assert response.json['code'] == 404
+
     def test_version_api(self):
         okversion = Version(name="ok", current_version="v1.5.0",
             download_link="http://localhost/ok")

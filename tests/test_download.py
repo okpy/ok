@@ -52,7 +52,6 @@ class TestDownload(OkTestCase):
         response = self.client.get(url)
         self.assert_404(response)
 
-
     def test_incorrect_submit_boolean(self):
         filename = "test.py"
         contents = "x = 4"

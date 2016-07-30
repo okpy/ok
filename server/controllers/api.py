@@ -336,7 +336,11 @@ class ScoreSchema(APISchema):
 
     def add_score(self, user):
         args = self.parse_args()
-        backup = models.Backup.query.get(decode_id(args['bid']))
+        try:
+            bid = decode_id(args['bid'])
+        except (ValueError, TypeError):
+            restful.abort(404)
+        backup = models.Backup.query.get(bid)
         kind = args['kind'].lower().strip()
         score, message = args['score'], args['message']
         score = make_score(user, backup, score, message, kind)
@@ -387,7 +391,11 @@ class Backup(Resource):
     def get(self, user, key=None):
         if key is None:
             restful.abort(405)
-        bid = decode_id(key)
+        try:
+            bid = decode_id(key)
+        except (ValueError, TypeError):
+            restful.abort(404)
+
         backup = self.model.query.filter_by(id=bid).first()
         if not backup:
             if user.is_admin:
