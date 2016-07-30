@@ -233,7 +233,7 @@ def gen_queue(backup, grader):
 def seed_users():
     print('Seeding users...')
     users = [User(email='okstaff@okpy.org', is_admin=True)]
-    users.extend(gen_unique(gen_user, 30, 'email'))
+    users.extend(gen_unique(gen_user, 15, 'email'))
     db.session.add_all(users)
     db.session.commit()
 
