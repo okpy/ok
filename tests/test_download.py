@@ -39,6 +39,20 @@ class TestDownload(OkTestCase):
         self.assert_200(response)
         self.assertEqual(contents, response.data.decode('UTF-8'))
 
+    def test_incorrect_hash(self):
+        filename = "test.py"
+        contents = "x = 4"
+        self._add_file(filename, contents)
+        encoded_id = utils.encode_id(self.backup.id)
+        submit_str = "submissions" if self.backup.submit else "backups"
+        url = "/{0}/{1}/{2}/download/{3}".format(self.assignment.name, submit_str, "xxxxx", filename)
+        response = self.client.get(url)
+        self.assert_404(response)
+        url = "/{0}/{1}/{2}/download/{3}".format(self.assignment.name, submit_str, "123", filename)
+        response = self.client.get(url)
+        self.assert_404(response)
+
+
     def test_incorrect_submit_boolean(self):
         filename = "test.py"
         contents = "x = 4"
