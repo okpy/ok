@@ -1,3 +1,7 @@
+""" Selenium driver for PhantomJS headless browser testing.
+Development: self.driver.get_screenshot_as_file('snap.png')
+Docs: http://selenium-python.readthedocs.io/getting-started.html
+"""
 import json
 import os
 import signal
