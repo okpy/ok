@@ -7,7 +7,7 @@ gunicorn
 raven[flask]
 
 # Database
-pymysql==0.7.5
+pymysql==0.7.6
 sqlalchemy==1.0.14
 
 # Caching
