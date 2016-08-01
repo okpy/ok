@@ -34,9 +34,6 @@ SQLALCHEMY_DATABASE_URI = db_url
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 
-RAVEN_IGNORE_EXCEPTIONS =['werkzeug.exceptions.Forbidden', 'werkzeug.exceptions.NotFound',
-                          'werkzeug.exceptions.Unauthorized']
-
 try:
     os.environ["GOOGLE_ID"]
     os.environ["GOOGLE_SECRET"]
