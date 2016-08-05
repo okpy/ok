@@ -24,6 +24,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
     echo "Watch with 'watch kubectl get pods'"
     kubectl set image deployment/ok-web-deployment ok-v3-deploy=cs61a/ok-server:$tag_name
+    kubectl rollout status deployment/ok-web-deployment
     kubectl get pods
     echo "Done"
 fi
