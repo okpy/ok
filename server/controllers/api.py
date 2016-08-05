@@ -497,14 +497,14 @@ class ExportBackup(Resource):
         if not self.model.can(assign, user, 'export'):
             return restful.abort(403)
 
-        backups = (models.Backup.query.filter(
+        base_query = (models.Backup.query.filter(
             models.Backup.submitter_id == target.id,
             models.Backup.assignment_id == assign.id,
-        ).order_by(models.Backup.created.desc())
-         .limit(limit)
-         .offset(offset))
+        ).order_by(models.Backup.created.desc()))
 
-        num_backups = backups.count()
+        backups = base_query.limit(limit).offset(offset)
+
+        num_backups = base_query.count()
         has_more = ((num_backups - offset) - limit) > 0
 
         data = {'backups': backups.all(),

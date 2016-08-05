@@ -188,6 +188,32 @@ class TestAuth(OkTestCase):
         self.assert_401(response)
         assert response.json['code'] == 401
 
+    def test_export_user(self):
+        self._test_backup(True)
+        student = User.lookup(self.user1.email)
+        self.login(self.staff1.email)
+
+        backup = Backup.query.filter(Backup.submitter_id == student.id).first()
+
+        endpoint = '/api/v3/assignment/{0}/export/{1}'.format(self.assignment.id,
+                                                          student.email)
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        backups = response.json['data']['backups']
+        self.assertEquals(len(backups), 1)
+        self.assertEquals(response.json['data']['count'], 1)
+        self.assertEquals(response.json['data']['limit'], 150)
+        self.assertEquals(response.json['data']['offset'], 0)
+        self.assertEquals(response.json['data']['has_more'], False)
+
+        response = self.client.get(endpoint + "?offset=20&limit=2")
+        self.assert_200(response)
+        backups = response.json['data']['backups']
+        self.assertEquals(len(backups), 0)
+        self.assertEquals(response.json['data']['count'], 1)
+        self.assertEquals(response.json['data']['limit'], 2)
+        self.assertEquals(response.json['data']['offset'], 20)
+        self.assertEquals(response.json['data']['has_more'], False)
 
     def test_score_staff(self):
         self._test_backup(True)
