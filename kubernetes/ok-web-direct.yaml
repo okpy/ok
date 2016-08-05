@@ -11,7 +11,7 @@ spec:
       protocol: TCP
       name: http
   selector:
-    name: web
+    name: deploy-web
 ---
 apiVersion: v1
 kind: Service
@@ -26,7 +26,7 @@ spec:
       protocol: TCP
       name: http
   selector:
-    name: web
+    name: deploy-web
 ---
 apiVersion: v1
 kind: Service
@@ -41,4 +41,19 @@ spec:
     protocol: TCP
     name: http
   selector:
-    name: web
+    name: deploy-web
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ok-web-deploy-service
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30305
+    targetPort: 5000
+    protocol: TCP
+    name: http
+  selector:
+    name: deploy-web

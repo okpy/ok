@@ -1,23 +1,29 @@
-apiVersion: v1
-kind: ReplicationController
+apiVersion: extensions/v1beta1
+kind: Deployment
 metadata:
-  name: ok-web-rc
+  name: ok-web-deployment
 spec:
   replicas: 4
-  selector:
-    name: web
-    version: v3.0.9
+  strategy:
+      type: RollingUpdate
+      rollingUpdate:
+          maxUnavailable: 50%
   template:
     metadata:
       labels:
-        name: web
-        version: v3.0.9
-        tier: frontend
+        name: deploy-web
     spec:
       containers:
-      - name: ok-v3-web
-        image: cs61a/ok-server:v3.0.9
+      - name: ok-v3-deploy
+        image: cs61a/ok:latest
         imagePullPolicy: Always
+        livenessProbe:
+          # an http probe
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
         ports:
         - containerPort: 5000
         env:

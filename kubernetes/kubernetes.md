@@ -12,23 +12,18 @@ Rolling updates the running service one pod at a time, allowing for zero downtim
 
 - Tell Kubernetes to do a rolling update.
 
-1. Delete the autoscaler (`kubectl delete hpa ok-web-rc`)
-2. Run the rolling update:
-> `kubectl rolling-update ok-web-rc --image=cs61a/ok-server:<version number>`
-If that's too slow add `--update-period 10s`
+1. Run the rolling update:
+> `kubectl set image deployment/ok-web-deployment ok-v3-deploy=cs61a/ok-server:<version number>`
 
-3. Check on the status of the rolling update
+2. Check on the status of the rolling update
+`kubectl rollout status deployment/ok-web-deployment`
 In another shell:
 `watch kubectl get pods`
 
-4. Recreate the autoscaler
-`kubectl autoscale rc ok-web-rc --min=5 --max=15 --cpu-percent=75`
+4. Create the autoscaler (if it doesn't exist)
+`kubectl autoscale deployment ok-web-deployment --min=4 --max=15 --cpu-percent=75`
 
-```
-kubectl delete hpa ok-web-rc
-kubectl rolling-update ok-web-rc --update-period 10s --image=cs61a/ok-server:<version>
-kubectl autoscale rc ok-web-rc --min=5 --max=15 --cpu-percent=75
-```
+The kubernetes documentations on deployments is useful. [Deployment Info](http://kubernetes.io/docs/user-guide/deployments/)
 
 ### Notes for developers
 
@@ -87,7 +82,7 @@ kubectl create -f kubernetes/redis-master-controller.yaml
 kubectl create -f kubernetes/redis-master-service.yaml
 kubectl create -f kubernetes/redis-secondary.yaml
 
-kubectl create -f kubernetes/ok-web-rc.yaml
+kubectl create -f kubernetes/ok-web-deployment.yaml
 kubectl create -f kubernetes/ok-web-direct.yaml
 
 # Open up the firewall for the ports configured above for the load balancer IP range.

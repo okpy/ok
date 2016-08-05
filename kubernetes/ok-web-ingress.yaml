@@ -13,13 +13,13 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: ok-direct-service
+          serviceName: ok-web-deploy-service
+          servicePort: 80
+      - path: /admin/
+        backend:
+          serviceName: ok-web-deploy-service
           servicePort: 80
       - path: /*
         backend:
-          serviceName: ok-direct-service
-          servicePort: 80
-      - path: /static/*
-        backend:
-          serviceName: ok-web-static-service
+          serviceName: ok-web-deploy-service
           servicePort: 80

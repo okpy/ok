@@ -23,9 +23,7 @@ echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     echo "Watch with 'watch kubectl get pods'"
-    kubectl delete hpa ok-web-rc
-    kubectl rolling-update ok-web-rc --update-period 10s --image=cs61a/ok-server:$tag_name
-    kubectl autoscale rc ok-web-rc --min=5 --max=15 --cpu-percent=75
+    kubectl set image deployment/ok-web-deployment ok-v3-deploy=cs61a/ok-server:$tag_name
+    kubectl get pods
     echo "Done"
 fi
-

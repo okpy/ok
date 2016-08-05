@@ -15,8 +15,15 @@ spec:
     spec:
       containers:
       - name: ok-v3-staging
-        image: cs61a/ok:latest
+        image: cs61a/ok
         imagePullPolicy: Always
+        livenessProbe:
+          # an http probe
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
         ports:
         - containerPort: 5000
         env:
