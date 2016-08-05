@@ -241,6 +241,7 @@ class Assignment(Model):
     display_name = db.Column(db.String(255), nullable=False)
     due_date = db.Column(db.DateTime(timezone=True), nullable=False)
     lock_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    visible = db.Column(db.Boolean(), default=True)
     creator_id = db.Column(db.ForeignKey("user.id"))
     url = db.Column(db.Text)
     max_group_size = db.Column(db.Integer(), nullable=False, default=1)

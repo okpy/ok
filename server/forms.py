@@ -58,25 +58,27 @@ class AssignmentForm(BaseForm):
                 self.lock_date.data = utils.local_time_obj(
                     obj.lock_date, course)
 
-    display_name = StringField(u'Display Name',
+    display_name = StringField('Display Name',
                                validators=[validators.required()])
-    name = StringField(u'Offering (example: cal/cs61a/sp16/lab01)',
+    name = StringField('Offering (example: cal/cs61a/sp16/lab01)',
                        validators=[validators.required()])
-    due_date = DateTimeField(u'Due Date (Course Time)',
+    due_date = DateTimeField('Due Date (Course Time)',
                              default=dt.datetime.now,
                              validators=[validators.required()])
-    lock_date = DateTimeField(u'Lock Date (Course Time)',
+    lock_date = DateTimeField('Lock Date (Course Time)',
                               default=dt.datetime.now,
                               validators=[validators.required()])
-    max_group_size = IntegerField(u'Max Group Size',
+    max_group_size = IntegerField('Max Group Size',
                                   default=1,
                                   validators=[validators.InputRequired(),
                                               validators.number_range(min=1)])
-    url = StringField(u'URL',
+    url = StringField('URL',
                       validators=[validators.optional(), validators.url()])
-    revisions_allowed = BooleanField(u'Enable Revisions', default=False,
+    revisions_allowed = BooleanField('Enable Revisions', default=False,
                                      validators=[validators.optional()])
-    autograding_key = StringField(u'Autograder Key', [validators.optional()])
+    visible = BooleanField('Visible On Student Dashboard', default=True)
+    autograding_key = StringField('Autograder Key',
+                                  validators=[validators.optional()])
 
     def populate_obj(self, obj):
         """ Updates obj attributes based on form contents. """
@@ -130,27 +132,27 @@ class AssignmentTemplateForm(BaseForm):
 
 
 class EnrollmentForm(BaseForm):
-    name = StringField(u'Name', validators=[validators.optional()])
-    email = EmailField(u'Email',
+    name = StringField('Name', validators=[validators.optional()])
+    email = EmailField('Email',
                        validators=[validators.required(), validators.email()])
-    sid = StringField(u'SID', validators=[validators.optional()])
-    secondary = StringField(u'Secondary Auth (e.g Username)',
+    sid = StringField('SID', validators=[validators.optional()])
+    secondary = StringField('Secondary Auth (e.g Username)',
                             validators=[validators.optional()])
-    section = StringField(u'Section',
+    section = StringField('Section',
                           validators=[validators.optional()])
-    role = SelectField(u'Role',
+    role = SelectField('Role',
                        choices=[(r, r.capitalize()) for r in VALID_ROLES])
 
 
 class VersionForm(BaseForm):
-    current_version = EmailField(u'Current Version',
+    current_version = EmailField('Current Version',
                                  validators=[validators.required()])
-    download_link = StringField(u'Download Link',
+    download_link = StringField('Download Link',
                                 validators=[validators.required(), validators.url()])
 
 
 class BatchEnrollmentForm(BaseForm):
-    csv = TextAreaField(u'Email, Name, SID, Course Login, Section')
+    csv = TextAreaField('Email, Name, SID, Course Login, Section')
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()

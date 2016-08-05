@@ -37,6 +37,7 @@
                 <tbody><tr>
                   <th>Name</th>
                   <th>Offering</th>
+                  <th>Visible</th>
                   <th>Due Date</th>
                   <th>Lock Date</th>
                 </tr>
@@ -45,6 +46,13 @@
                 <tr>
                   <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=asgn.id) }}">{{ asgn.display_name }}</a></td>
                   <td>{{ asgn.name }}</td>
+                  <td>
+                      {% if asgn.visible %}
+                        <span class="label label-success">Visible</span>
+                      {% else %}
+                        <span class="label label-warning">Hidden</span>
+                      {% endif %}
+                  </td>
                   <td>{{ utils.local_time(asgn.due_date, current_course) }}</td>
                   <td>{{ utils.local_time(asgn.lock_date, current_course) }}</td>
                 </tr>
@@ -71,7 +79,8 @@
             <table class="table table-striped">
                 <tbody><tr>
                   <th>Name</th>
-                  <th>ID</th>
+                  <th>Offering</th>
+                  <th>Visible</th>
                   <th>Due Date</th>
                   <th>Lock Date</th>
                 </tr>
@@ -80,6 +89,13 @@
                 <tr>
                   <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=asgn.id) }}">{{ asgn.display_name }}</a></td>
                   <td>{{ asgn.name }}</td>
+                  <td>
+                      {% if asgn.visible %}
+                        <span class="label label-success">Visible</span>
+                      {% else %}
+                        <span class="label label-warning">Hidden</span>
+                      {% endif %}
+                  </td>
                   <td>{{ utils.local_time(asgn.due_date, current_course) }}</td>
                   <td>{{ utils.local_time(asgn.lock_date, current_course) }}</td>
                 </tr>
