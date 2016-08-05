@@ -4,6 +4,7 @@ include = server/*
 omit =
     *static*
     *templates*
+    *settings*
     *generate.py
 
 [report]
