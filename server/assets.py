@@ -83,3 +83,17 @@ pygal_js = Bundle(
     'lib/pygal/svg.jquery.js',
     output='public/js/pygal.js'
 )
+
+upload_css = Bundle(
+    'lib/dropzone/dropzone.css',
+    'css/upload.css',
+    filters='cssmin',
+    output='public/js/upload.css'
+)
+
+upload_js = Bundle(
+    'lib/dropzone/dropzone.js',
+    'js/upload.js',
+    filters='jsmin',
+    output='public/js/upload.js'
+)

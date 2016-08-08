@@ -12,7 +12,6 @@ import server.constants as constants
 from server.models import User, db
 import server.utils as utils
 
-
 def send_autograder(endpoint, data):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
@@ -25,7 +24,6 @@ def send_autograder(endpoint, data):
         error_message = 'The autograder rejected your request. {0}'.format(
             r.text)
         raise ValueError(error_message)
-
 
 def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
     """ Autograde all enrolled students for this assignment.
@@ -62,7 +60,6 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
     }
     return send_autograder('/api/ok/v3/grade/batch', data)
 
-
 def grade_single(backup, ag_assign_key, token):
 
     data = {
@@ -75,7 +72,6 @@ def grade_single(backup, ag_assign_key, token):
         'testing': token == 'testing',
     }
     return send_autograder('/api/ok/v3/grade/batch', data)
-
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)

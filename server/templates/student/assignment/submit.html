@@ -1,0 +1,79 @@
+{% extends "student/base.html" %}
+{% import 'student/assignment/_formhelpers.html' as forms with context %}
+
+{% block title %} Submit Assignment | Ok {% endblock %}
+
+{% block header %}
+
+  <!-- <div class="left col-md-2">
+    <div class="stripes">
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+      <div class="stripe"></div>
+    </div>
+  </div> -->
+
+{% endblock %}
+
+{% block css %}
+{% endblock %}
+
+{% block body %}
+    <main>
+      {% include 'student/assignment/sidebar.html' %}
+      <div class="col-md-2"></div>
+      <section class="content nomapa col-md-10 col-xs-12">
+        {% include 'student/header.html' %}
+
+        <div class="subcontent heading">
+          <div class="wrap">
+            <div class="string-nav" role="navigation" aria-label="page navigation">
+              <span><a href="{{ url_for('.index') }}">Courses</a></span> &raquo;
+              <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name_with_semester }}</a></span> &raquo;
+              <span><a href="{{ url_for('.assignment', name=assignment.name) }}"> {{ assignment.display_name }}</a></span> &raquo;
+              <span>New Submission</span>
+            </div>
+          </div>
+          {% include 'alerts.html' %}
+        </div>
+
+        <div class="subcontent list row">
+            <div class="col-md-6 col-sm-12 col-md-offset-3"
+            {% if assignment.upload_info %}
+                <p> {{ assignment.upload_info }} </p>
+            {% elif assignment.files %}
+                <p> Suggested file upload: {% for f in assignment.files %} {{ f }} {% endfor %}</p>
+            {% else %}
+                <p> Only upload files that you have changed </p>
+            {% endif %}
+
+                  <div class="cell col-xs-12">
+                    <div class="cell-title">
+                      <a  class="due-text green">
+                        New {{ assignment.display_name }} Submission
+                      </a>
+                    </div>
+                    <div class="cell-text">
+                        <span><i class="fa fa-clock-o grey"></i> Due: {{  utils.local_time(assignment.due_date, course) }}  </span>
+                    </div>
+                    <div class="cell-text">
+                        {% call forms.render_form_full(form, action_url="", class_='form', enctype="multipart/form-data") %}
+                            {{ forms.render_field(form.upload_files, label_visible=true, multiple="") }}
+                            <br>
+                            {{ forms.render_checkbox_field(form.flag_submission, label_visible=true) }}
+                        {% endcall %}
+                    </div>
+                  </div>
+            </div>
+        </div>
+      </section>
+    </main>
+
+    {% assets "upload_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+    {% assets "upload_css" %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+    {% endassets %}
+
+{% endblock %}

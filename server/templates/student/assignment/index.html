@@ -110,6 +110,8 @@
       </div>
         <!-- start desktop/tablet version -->
         <div class="subcontent row hidden-xs hidden-sm">
+          <a href="{{url_for('.submit_assignment', name=assignment.name)}}" class="button-large"><i class="fa fa-inbox grey"></i> Create a new submission </a>
+
           <div class="col-md-12">
            <!-- TODO: Better link to view all backups -->
             {{ table.render_subms(subms, course, flagged, csrf_form, tname="Recent Submissions") }}

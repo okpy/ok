@@ -77,6 +77,10 @@ class AssignmentForm(BaseForm):
     revisions_allowed = BooleanField(u'Enable Revisions', default=False,
                                      validators=[validators.optional()])
     autograding_key = StringField(u'Autograder Key', [validators.optional()])
+    uploads_enabled = BooleanField(u'Enable Web Uploads', default=False,
+                                     validators=[validators.optional()])
+    upload_info = StringField(u'Upload Instructions',
+                                     validators=[validators.optional()])
 
     def populate_obj(self, obj):
         """ Updates obj attributes based on form contents. """
@@ -192,7 +196,6 @@ class GradeForm(BaseForm):
     kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
                        validators=[validators.required()])
 
-
 class CompositionScoreForm(GradeForm):
     score = SelectField('Composition Score',
                         choices=[('0', '0'), ('1', '1'), ('2', '2')],
@@ -217,3 +220,8 @@ class AutogradeForm(BaseForm):
                                 validators=[validators.required()])
     autopromote = BooleanField('Backup Autopromotion',
                                description="If an enrolled student does not have a submission, this will grade their latest submission before the deadline")
+
+class UploadSubmissionForm(BaseForm):
+    upload_files = FileField('Submission Files', [FileRequired()])
+    flag_submission = BooleanField('Flag this submission for grading',
+                                   default=False)
