@@ -74,9 +74,12 @@ def course(offering):
         return assignment, submission_time, group, final_submission
 
     course = get_course(offering)
+
     assignments = {
-        'active': [assignment_info(a) for a in course.assignments if a.active],
-        'inactive': [assignment_info(a) for a in course.assignments if not a.active]
+        'active': [assignment_info(a) for a in course.assignments
+                   if a.active and a.visible],
+        'inactive': [assignment_info(a) for a in course.assignments
+                     if not a.active and a.visible]
     }
     return render_template('student/course/index.html', course=course,
                            **assignments)
