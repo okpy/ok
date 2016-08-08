@@ -136,7 +136,7 @@ def submit_assignment(name):
             backup = make_backup(current_user, assign.id, messages, True)
             if form.flag_submission.data:
                 assign.flag(backup.id, user_ids)
-            flash("Uploaded submission {}".format(backup.hashid), 'success')
+            flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
             return redirect(url_for('.assignment', name=assign.name))
 
     return render_template('student/assignment/submit.html', assignment=assign,

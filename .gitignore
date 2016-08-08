@@ -36,8 +36,8 @@ ghostdriver.log
 server/static/vendor/*
 
 # generated static assets (assets.py)
-server/static/public/css/*.css
-server/static/public/js/*.js
+server/static/public/css/
+server/static/public/js/
 
 .cache
 _cache/*
