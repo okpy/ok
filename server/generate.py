@@ -16,7 +16,6 @@ from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 original_file = open('tests/files/fizzbuzz_before.py').read()
 modified_file = open('tests/files/fizzbuzz_after.py').read()
 
-
 def weighted_choice(choices):
     # http://stackoverflow.com/a/3679747
     total = sum(w for c, w in choices)

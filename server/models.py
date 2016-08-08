@@ -21,7 +21,7 @@ import pytz
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
-from server.utils import encode_id
+from server.utils import encode_id, chunks
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -1052,5 +1052,23 @@ class GradingTask(Model):
 
         # Sort by number of outstanding tasks
         queues.sort(key=lambda q: q.total - q.completed, reverse=True)
-
         return queues
+
+    @classmethod
+    @transaction
+    def create_staff_tasks(cls, backups, staff, assignment_id, course_id, kind,
+                           only_unassigned=False):
+        if only_unassigned:
+            # Filter out backups that have a GradingTasks
+            backups = [b for b in backups if not cls.query.filter_by(backup_id=b).count()]
+
+        paritions = chunks(list(backups), len(staff))
+        tasks = []
+        for assigned_backups, grader in zip(paritions, staff):
+            for backup_id in assigned_backups:
+                task = cls(kind=kind, backup_id=backup_id, course_id=course_id,
+                           assignment_id=assignment_id, grader=grader)
+                tasks.append(task)
+                cache.delete_memoized(User.num_grading_tasks, grader)
+        db.session.add_all(tasks)
+        return tasks
