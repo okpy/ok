@@ -1,13 +1,17 @@
+import csv
 import datetime
+from io import StringIO
+
 from werkzeug.exceptions import BadRequest
 
-from server.models import db, Backup, Group, Message, GradingTask
+from server.models import db, Backup, Group, Message, GradingTask, Score
 import server.utils as utils
+from server import generate
 
 from tests import OkTestCase
 
 class TestGrading(OkTestCase):
-    """Tests Grading/Queue Geneation."""
+    """Tests Grading/Queue Generation."""
     def setUp(self):
         super(TestGrading, self).setUp()
         self.setup_course()
@@ -75,3 +79,39 @@ class TestGrading(OkTestCase):
                                                self.assignment.course.id,
                                                "Composition", True)
         self.assertEquals(len(tasks), 0)
+
+    def test_score_export(self):
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/1/assignments/1/scores'
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        # No Scores
+        self.assertEquals(response.data, b'time,is_late,email,group,sid,class_account,section,assignment_id,kind,score,message,backup_id,grader\n')
+
+    def test_scores_with_generate(self, generate=False):
+        if generate:
+            db.drop_all()
+            db.create_all()
+            generate.seed()
+            self.login('okstaff@okpy.org')
+        else:
+            backup = Backup.query.filter_by(submitter_id=self.user1.id, submit=True).first()
+            score = Score(backup_id=backup.id, kind="Composition", score=2.0,
+                          message="Good work", assignment_id=self.assignment.id,
+                          grader=self.staff1)
+            db.session.add(score)
+            db.session.commit()
+            self.login(self.staff1.email)
+
+        endpoint = '/admin/course/1/assignments/1/scores'
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        csv_rows = list(csv.reader(StringIO(str(response.data, 'utf-8'))))
+
+        scores = Score.query.filter_by(assignment_id=1).all()
+
+        backup_creators = []
+        for s in scores:
+            backup_creators.extend(s.backup.owners())
+
+        self.assertEquals(len(backup_creators), len(csv_rows) - 1)
