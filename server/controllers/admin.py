@@ -507,6 +507,7 @@ def assign_grading(cid, aid):
     details = lambda e: "{0} - ({1})".format(e.user.email, e.role)
     form.staff.choices = [(utils.encode_id(e.user_id), details(e))
                           for e in course_staff]
+
     if not form.staff.data:
         # Select all by default
         form.staff.default = [u[0] for u in form.staff.choices]
@@ -523,21 +524,8 @@ def assign_grading(cid, aid):
         # Available backups:
         students, backups, no_submissions = assign.course_submissions()
 
-        # If only want to assign unassigned ones:
-        # unassigned_backups = [b for b in backups if not b.grading_tasks]
-
-        chunks = utils.chunks(list(backups), len(selected_users))
-        tasks = []
-        for assigned_backups, grader in zip(chunks, selected_users):
-            for backup_id in assigned_backups:
-                task = GradingTask(kind=form.kind.data, backup_id=backup_id,
-                                   course_id=cid, assignment_id=aid,
-                                   grader=grader)
-                tasks.append(task)
-                cache.delete_memoized(User.num_grading_tasks, grader)
-
-        db.session.add_all(tasks)
-        db.session.commit()
+        tasks = GradingTask.create_staff_tasks(backups, selected_users, aid, cid,
+                                               form.kind.data, form.only_unassigned.data)
 
         num_with_submissions = len(students) - len(no_submissions)
         flash(("Created {0} tasks ({1} students) for {2} staff."

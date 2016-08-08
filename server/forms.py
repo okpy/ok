@@ -206,7 +206,8 @@ class CreateTaskForm(BaseForm):
                        validators=[validators.required()], default="composition")
     staff = MultiCheckboxField('Assigned Staff', choices=[],
                                validators=[validators.required()])
-
+    only_unassigned = BooleanField('Ignore submissions that already have a grader',
+                                   default=False)
 
 class AutogradeForm(BaseForm):
     description = """"Paste into terminal to get token: cd ~/.config/ok;python3 -c "import pickle; print(pickle.load(open('auth_refresh', 'rb'))['access_token'])"; cd -; """

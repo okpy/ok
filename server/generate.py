@@ -8,13 +8,13 @@ import loremipsum
 import names
 import pytz
 
-from server.models import (db, User, Course, Assignment, Enrollment,
+from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
                            GradingTask)
+from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 
 original_file = open('tests/files/fizzbuzz_before.py').read()
 modified_file = open('tests/files/fizzbuzz_after.py').read()
-
 
 def weighted_choice(choices):
     # http://stackoverflow.com/a/3679747
@@ -30,10 +30,8 @@ def weighted_choice(choices):
 def gen_bool(p=0.5):
     return random.random() < p
 
-
 def gen_maybe(value, p=0.5):
     return value if gen_bool(p) else None
-
 
 def gen_list(gen, n, nonempty=False):
     if nonempty:
@@ -42,14 +40,12 @@ def gen_list(gen, n, nonempty=False):
         length = random.randrange(n)
     return [gen() for _ in range(length)]
 
-
 def gen_unique(gen, n, attr):
     generated = collections.OrderedDict()
     while len(generated) < n:
         v = gen()
         generated[getattr(v, attr)] = v
     return generated.values()
-
 
 def gen_markdown():
     def gen_text():
@@ -82,7 +78,6 @@ def gen_markdown():
 
     return '\n\n'.join(gen_list(gen_block, 4, nonempty=True))
 
-
 def gen_user():
     real_name = names.get_full_name()
     first_name, last_name = real_name.lower().split(' ')
@@ -95,7 +90,6 @@ def gen_user():
             random.randrange(10) if gen_bool() else '',
             random.choice(['berkeley.edu', 'gmail.com'])),
         is_admin=gen_bool(0.05))
-
 
 def gen_course():
     return Course(
@@ -110,7 +104,6 @@ def gen_course():
             random.randrange(100),
             random.choice(['', 'A'])),
         active=gen_bool(0.3))
-
 
 def gen_assignment(course):
     if gen_bool(0.5):
@@ -142,10 +135,9 @@ def gen_assignment(course):
         display_name=display_name,
         due_date=due_date,
         lock_date=lock_date,
-        max_group_size=random.randrange(1, 3),
+        max_group_size=weighted_choice([(1, 20), (2, 70), (3, 10)]),
         revisions_allowed=gen_bool(0.3),
         files={'fizzbuzz.py': original_file})
-
 
 def gen_enrollment(user, course):
     role = weighted_choice([
@@ -230,6 +222,13 @@ def gen_queue(backup, grader):
         grader=grader
     )
 
+def gen_invite(member, invitee, assignment, accept=False):
+    Group.invite(member, invitee, assignment)
+    group = Group.lookup(invitee, assignment)
+    if accept:
+        group.accept(invitee)
+    return group
+
 def seed_users():
     print('Seeding users...')
     users = [User(email='okstaff@okpy.org', is_admin=True)]
@@ -275,7 +274,7 @@ def seed_backups():
 
 def seed_versions():
     print('Seeding version...')
-    url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok'
+    url = 'https://github.com/Cal-CS-61A-Staff/ok-client0/releases/download/v1.5.4/ok'
     ok = Version(name='ok-client', current_version='v1.5.4', download_link=url)
     db.session.add(ok)
 
@@ -310,6 +309,38 @@ def seed_queues():
             db.session.add(task)
     db.session.commit()
 
+def seed_groups():
+    print('Seeding groups...')
+    for assign in Assignment.query.all():
+        if assign.max_group_size < 2 or not assign.active:
+            continue
+        enrollments = Enrollment.query.filter_by(course=assign.course,
+                                                 role=STUDENT_ROLE).all()
+        students = [s.user for s in enrollments]
+        while len(students) > 1:
+            member, invitee = random.sample(students, 2)
+            students.remove(member)
+            students.remove(invitee)
+            if gen_bool(0.8):  # Leave some users without any group activity
+                new_group = gen_invite(member, invitee, assign,
+                                       accept=gen_bool(0.8))
+                db.session.add(new_group)
+    db.session.commit()
+
+def seed_flags():
+    print('Seeding flags...')
+    for user in User.query.all():
+        seen_members = set()
+        for assignment in Assignment.query.all():
+            if user.id in seen_members:
+                continue
+            user_ids = assignment.active_user_ids(user.id)
+            seen_members |= user_ids
+            submissions = assignment.submissions(user_ids).all()
+            if submissions and gen_bool(0.8):
+                chosen = random.choice(submissions)
+                assignment.flag(chosen.id, user_ids)
+
 def seed():
     random.seed(0)
     seed_users()
@@ -318,8 +349,8 @@ def seed():
     seed_enrollments()
     seed_backups()
     seed_comments()
-    # TODO: groups
-    # TODO: submission flagging
+    seed_groups()
+    seed_flags()
     seed_queues()
     seed_scores()
     seed_versions()
