@@ -11,7 +11,7 @@ import pygal
 from pygal.style import CleanStyle
 
 from server.autograder import autograde_assignment
-from server.controllers.auth import google_oauth_token
+from server.controllers.auth import get_token_if_valid
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
@@ -548,7 +548,7 @@ def autograde(cid, aid):
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
-    auth_token = google_oauth_token()
+    auth_token = get_token_if_valid()
     form = forms.AutogradeForm()
     if form.validate_on_submit():
         if hasattr(form, 'token') and form.token.data:

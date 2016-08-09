@@ -9,6 +9,7 @@ from flask_oauthlib.client import OAuth, OAuthException
 from flask_login import (LoginManager, login_user, logout_user, login_required,
                          current_user)
 
+import datetime as dt
 import logging
 
 from server import utils
@@ -46,6 +47,16 @@ google_auth = oauth.remote_app(
 @google_auth.tokengetter
 def google_oauth_token(token=None):
     return session.get('google_token', None)
+
+def get_token_if_valid(treshold_min=2):
+    """ Get the current token if it will continue to be valid for the
+    next TRESHOLD_MIN minutes. Otherwise, return None.
+    """
+    future_usage = dt.datetime.now() + dt.timedelta(minutes=treshold_min)
+    expiry_time = session.get('token_expiry', None)
+    if expiry_time and expiry_time >= future_usage:
+        return session.get('google_token')
+    return None
 
 def user_from_email(email):
     """Get a User with the given email, or create one."""
@@ -130,6 +141,9 @@ def authorized(resp):
 
     access_token = resp['access_token']
     user = user_from_access_token(access_token)
+
+    expires_in = resp.get('expires_in', 0)
+    session['token_expiry'] = dt.datetime.now() + dt.timedelta(seconds=expires_in)
     session['google_token'] = (access_token, '')  # (access_token, secret)
     return authorize_user(user)
 
@@ -182,6 +196,7 @@ def testing_logout():
         abort(404)
     logout_user()
     session.pop('google_token', None)
+    session.pop('token_expiry', None)
     session.pop('sudo-user', None)
     return redirect(url_for('student.index'))
 
