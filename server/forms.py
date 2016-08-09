@@ -216,7 +216,7 @@ class CreateTaskForm(BaseForm):
                                    default=False)
 
 class AutogradeForm(BaseForm):
-    description = """"Paste into terminal to get token: cd ~/.config/ok;python3 -c "import pickle; print(pickle.load(open('auth_refresh', 'rb'))['access_token'])"; cd -; """
+    description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""
     token = StringField('Access Token', description=description,
                         validators=[validators.optional()])
     autograder_id = StringField('Autograder Assignment ID',
