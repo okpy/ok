@@ -133,9 +133,27 @@ def submit_assignment(name):
     if form.validate_on_submit():
         files = request.files.getlist("upload_files")
         if files:
+            templates = assign.files
             messages = {'file_contents': {}}
             for upload in files:
-                messages['file_contents'][upload.filename] = str(upload.read(), 'utf-8')
+                data = upload.read()
+                if len(data) > 2097152:
+                    # File is too large (over 2 MB)
+                    flash("{} is over the maximum file size limit of 2MB".format(upload.filename),
+                          'danger')
+                    return redirect(url_for('.submit_assignment', name=assign.name))
+                messages['file_contents'][upload.filename] = str(data, 'latin1')
+            if templates:
+                missing = []
+                for template in templates:
+                    if template not in messages['file_contents']:
+                        missing.append(template)
+                if missing:
+                    flash(("Missing files: {}. The following files are required: {}"
+                           .format(', '.join(missing), ', '.join([t for t in templates]))
+                           ), 'danger')
+                    return redirect(url_for('.submit_assignment', name=assign.name))
+
             backup = make_backup(current_user, assign.id, messages, True)
             if form.flag_submission.data:
                 assign.flag(backup.id, user_ids)

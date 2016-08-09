@@ -39,13 +39,17 @@
 
         <div class="subcontent list row">
             <div class="col-md-6 col-sm-12 col-md-offset-3"
+            <p class="upload-directions">
             {% if assignment.upload_info %}
-                <p> {{ assignment.upload_info }} </p>
-            {% elif assignment.files %}
-                <p> Suggested file upload: {% for f in assignment.files %} {{ f }} {% endfor %}</p>
-            {% else %}
-                <p> Only upload files that you have changed </p>
+             {{ assignment.upload_info }}
             {% endif %}
+
+            {% if assignment.files %}
+             Required Files: {% for f in assignment.files %} {{ f }} {% endfor %}
+            {% elif not assignment.upload_info  %}
+             Only upload files that you have changed.
+            {% endif %}
+            </p>
 
                   <div class="cell col-xs-12">
                     <div class="cell-title">
