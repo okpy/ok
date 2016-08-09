@@ -65,7 +65,7 @@ def setup_default():
     db.session.add(course)
 
     url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.5/ok'
-    ok = Version(name='ok-client', current_version='v1.5.5', download_link=url)
+    ok = Version(name='ok-client', current_version='v1.5.4', download_link=url)
     db.session.add(ok)
     db.session.commit()
 

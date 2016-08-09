@@ -1,73 +1,77 @@
 <div class="box">
-    <form action="" method="GET">
-        <div class="box-header">
-            <h3 class="box-title"><span> Students </span></h3>
-            <div class="box-tools">
-                <div class="input-group input-group-md" style="width: 200px;">
-                    {% if query %}
-                    <input type="text" name="query" class="form-control pull-right" value={{query}}>
-                    {% else %}
-                    <input type="text" name="query" class="form-control pull-right" placeholder="Search By User Email">
-                    {% endif %}
-                    <div class="input-group-btn">
-                        <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
-                    </div>
-                </div>
+    <div class="box-header">
+        <h3 class="box-title"><span> Students </span></h3>
+        <div class="box-tools">
+            <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                    <i class="fa fa-minus"></i>
+                </button>
             </div>
         </div>
-    </form>
+    </div>
 
     <!-- /.box-header -->
-    <div class="box-body table-responsive no-padding">
+    <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="student-list">
         <table class="table table-hover">
-            <tbody>
+            <thead>
+                <th class="sort" data-sort="email">User</th>
+                <th class="sort" data-sort="name">Name</th>
+                <th class="sort" data-sort="sid">SID</th>
+                <th class="sort" data-sort="secondary">Secondary ID</th>
+                <th class="sort" data-sort="role">Role</th>
+                <th class="sort" data-sort="timestamp">Enrolled At</th>
+                <th class="sort" data-sort="section">Section</th>
+            </thead>
+
+            <tbody class="list">
+                {%- for item in enrollments %}
                 <tr>
-                    <th>User</th>
-                    <th>Name</th>
-                    <th>SID</th>
-                    <th>Secondary ID</th>
-                    <th>Role</th>
-                    <th>Enrolled At</th>
-                    <th>Section</th>
-                </tr>
-                {%- for item in enrollments.items %}
-                <tr>
-                    <td>{{ item.user.email }}</td>
-                    <td>{{ item.user.name }}</td>
-                    <td>{{ item.sid }}</td>
-                    <td>{{ item.class_account }}</td>
-                    <td><span class="label label-success">{{item.role}}</span></td>
-                    <td>{{item.created}}</td>
-                    <td>{{item.section}}</td>
+                    <td class="email">{{ item.user.email }}</td>
+                    <td class="name">{{ item.user.name }}</td>
+                    <td class="sid">{{ item.sid }}</td>
+                    <td class="secondary">{{ item.class_account }}</td>
+                    <td class="role"><span class="label label-success">{{item.role}}</span></td>
+                    <td class="timestamp" data-timestamp="{{ item.created }}">{{ utils.local_time(item.created, current_course) }}</td>
+                    <td class="section">{{item.section}}</td>
                 </tr>
                 {% endfor %}
-            </tbody></table>
-        </div>
-        <!-- /.box-body -->
-        <div class="box-footer">
-            <div class="pull-left">
-            <h5 class="box-title"><span> Total: {{ enrollments.total }} </span></h5>
-            </div>
+                <!-- Include another header because list.js forces us to include this inside of the tbody -->
+                <div class="box-header">
+                    <span>
+                        <div class="pull-left">
+                            <ul class="pagination pagination-md no-margin pull-right"></ul>
+                        </div>
 
-                <ul class="pagination pagination-sm no-margin pull-right">
-                    {% if enrollments.has_prev %}
-                    <li><a href="{{ url_for(request.endpoint, cid=current_course.id, page=enrollments.prev_num) }}">«</a></li>
-                    {% endif %}
+                        <div class="pull-right">
+                            <div class="input-group input-group-md" style="width: 200px;">
+                                <input type="text" name="query" class="form-control pull-right search" placeholder="Search">
+                                <div class="input-group-btn">
+                                    <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </span>
+                </div>
 
-                    {%- for page in enrollments.iter_pages() %}
-                    {% if page %}
-                    {% if page != enrollments.page %}
-                    <li><a href="{{ url_for(request.endpoint, cid=current_course.id, page=page) }}">{{ page }}</a></li>
-                    {% else %}
-                    <li class="active"><a href="#">Page {{ enrollments.page }} of {{ enrollments.pages }}</a></li>
-                    {% endif %}
-                    {% else %}
-                    <li><span class=ellipsis>…</span></li>
-                    {% endif %}
-                    {%- endfor %}
-                    {% if enrollments.has_next %}
-                    <li><a href="{{ url_for(request.endpoint, cid=current_course.id, page=enrollments.next_num) }}">»</a></li>
-                    {% endif %}
-                </ul>
-            </div>
+            </tbody>
+        </table>
+    </div>
+    <!-- /.box-body -->
+    <div class="box-footer">
+        <div class="pull-left">
+        <h5 class="box-title"><span> Total: {{ enrollments | length }} </span></h5>
         </div>
+    </div>
+    <script>
+        var studentOptions = {
+          valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section', { attr: 'data-timestamp', name: 'timestamp' }],
+          plugins: [ListPagination({}), ListFuzzySearch({'searchClass': "search"})],
+          page: 20
+        };
+        var studentList = new List('student-list', studentOptions);
+        studentList.sort("timestamp", {order: "desc"})
+        document.getElementById('student-list').style.display = 'block';
+
+    </script>
+
+</div>

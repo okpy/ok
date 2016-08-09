@@ -11,7 +11,8 @@ import pytz
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
                            GradingTask)
-from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
+from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE
+from server.extensions import cache
 
 original_file = open('tests/files/fizzbuzz_before.py').read()
 modified_file = open('tests/files/fizzbuzz_after.py').read()
@@ -159,7 +160,6 @@ def gen_enrollment(user, course):
         class_account=gen_maybe(class_account, 0.4),
         section=gen_maybe(section, 0.4))
 
-
 def gen_backup(user, assignment):
     messages = {
         'file_contents': {
@@ -229,10 +229,9 @@ def gen_invite(member, invitee, assignment, accept=False):
         group.accept(invitee)
     return group
 
-def seed_users():
+def seed_users(num=25):
     print('Seeding users...')
-    users = [User(email='okstaff@okpy.org', is_admin=True)]
-    users.extend(gen_unique(gen_user, 15, 'email'))
+    users = gen_unique(gen_user, num, 'email')
     db.session.add_all(users)
     db.session.commit()
 
@@ -258,6 +257,8 @@ def seed_enrollments():
         for course in Course.query.all():
             if not gen_bool(0.9):
                 continue
+            if user.is_enrolled(course.id):
+                continue
             db.session.add(gen_enrollment(user, course))
     db.session.commit()
 
@@ -274,8 +275,8 @@ def seed_backups():
 
 def seed_versions():
     print('Seeding version...')
-    url = 'https://github.com/Cal-CS-61A-Staff/ok-client0/releases/download/v1.5.4/ok'
-    ok = Version(name='ok-client', current_version='v1.5.4', download_link=url)
+    url = 'https://github.com/Cal-CS-61A-Staff/ok-client0/releases/download/v1.5.5/ok'
+    ok = Version(name='ok-client', current_version='v1.5.5', download_link=url)
     db.session.add(ok)
 
 
@@ -342,6 +343,9 @@ def seed_flags():
                 assignment.flag(chosen.id, user_ids)
 
 def seed():
+    db.session.add(User(email='okstaff@okpy.org', is_admin=True))
+    db.session.commit()
+
     random.seed(0)
     seed_users()
     seed_courses()
@@ -353,4 +357,8 @@ def seed():
     seed_flags()
     seed_queues()
     seed_scores()
-    seed_versions()
+
+    # Large course test. Uncomment to test large number of enrollments
+    # cache.clear()
+    # seed_users(num=1500)
+    # seed_enrollments()
