@@ -218,7 +218,7 @@ if driver:
             self.assertTrue("Uploaded submission" in self.driver.page_source)
 
 
-        def test_web_submit_templates(self):
+        def test_web_submit_wrong_template(self):
             self._seed_course()
             self.assignment.uploads_enabled = True
             self.assignment.files = {'fizz.py': 'sample template\nfile'}
@@ -237,9 +237,13 @@ if driver:
             # Template did not match
             self.assertTrue("Missing file" in self.driver.page_source)
 
+        def test_web_submit_with_template(self):
+            self._seed_course()
+            self.assignment.uploads_enabled = True
             dir_path, file_name = os.path.split(os.path.abspath(__file__))
             self.assignment.files = {file_name: 'sample template\nfile'}
             models.db.session.commit()
+            self._login_as(email=self.user4.email)
 
             self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
             self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
