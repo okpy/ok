@@ -229,7 +229,7 @@ def gen_invite(member, invitee, assignment, accept=False):
         group.accept(invitee)
     return group
 
-def seed_users(num=15):
+def seed_users(num=25):
     print('Seeding users...')
     users = gen_unique(gen_user, num, 'email')
     db.session.add_all(users)
@@ -357,6 +357,6 @@ def seed():
     seed_scores()
 
     # Large course test. Uncomment to test large number of enrollments
-    cache.clear()
-    seed_users(num=1500)
-    seed_enrollments()
+    # cache.clear()
+    # seed_users(num=1500)
+    # seed_enrollments()
