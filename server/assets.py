@@ -66,7 +66,7 @@ staff_js = Bundle(
 list_js = Bundle(
     'lib/listjs/list.js',
     'lib/listjs/list.fuzzysearch.min.js',
-    'lib/listjs/list.pagination.min.js',
+    'lib/listjs/list.pagination.js',
     filters='jsmin',
     output='public/js/list.js'
 )

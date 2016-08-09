@@ -455,7 +455,6 @@ def assignment_queues(cid, aid):
     else:
         flash("You don't have a queue for this assignment", 'info')
 
-
     return render_template('staff/grading/overview.html', courses=courses,
                            current_course=current_course,
                            assignment=assignment, queues=queues,
@@ -585,30 +584,17 @@ def enrollment(cid):
         flash("Added {email} as {role}".format(
             email=email, role=role), "success")
 
-    query = request.args.get('query', '').strip()
-    page = request.args.get('page', 1, type=int)
+    students = (Enrollment.query.options(db.joinedload('user'))
+                .filter_by(course_id=cid, role=STUDENT_ROLE)
+                .order_by(Enrollment.created.desc())
+                .all())
 
-    students = None
-    if query:
-        find_student = User.query.filter_by(email=query)
-        student = find_student.first()
-        if student:
-            students = (Enrollment.query.options(db.joinedload('user'))
-                        .filter_by(course_id=cid, role=STUDENT_ROLE,
-                                   user_id=student.id)
-                        .paginate(page=page, per_page=1))
-        else:
-            flash("No student found with email {0}".format(query), "warning")
-    if not students:
-        students = (Enrollment.query.options(db.joinedload('user'))
-                    .filter_by(course_id=cid, role=STUDENT_ROLE)
-                    .paginate(page=page, per_page=25))
-
-    staff = Enrollment.query.filter(Enrollment.course_id == cid,
-                                    Enrollment.role.in_(STAFF_ROLES)).all()
+    staff = (Enrollment.query.options(db.joinedload('user'))
+             .filter(Enrollment.course_id == cid, Enrollment.role.in_(STAFF_ROLES))
+             .all())
 
     return render_template('staff/course/enrollment.html',
-                           enrollments=students, staff=staff, query=query,
+                           enrollments=students, staff=staff,
                            single_form=single_form,
                            courses=courses,
                            current_course=current_course)
@@ -647,8 +633,6 @@ def enrollment_csv(cid):
 
     csv_generator = utils.generate_csv(query, items, row_to_csv)
 
-    # TODO: Remove. For local performance testing.
-    # return render_template('staff/index.html', data=list(csv_generator))
     return Response(stream_with_context(csv_generator),
                     mimetype='text/csv',
                     headers={'Content-Disposition': disposition})

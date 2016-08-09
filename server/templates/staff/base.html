@@ -33,6 +33,9 @@
       {% block css %}
       {% endblock %}
 
+      {% block resources %}
+      {% endblock %}
+
       <script type="text/javascript">
         var csrf_token = "{{ csrf_token() }}";
       </script>
@@ -83,10 +86,6 @@
       {% endassets %}
 
       {% assets "adminlte_js" %}
-          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-      {% endassets %}
-
-      {% assets "list_js" %}
           <script type="text/javascript" src="{{ ASSET_URL }}"></script>
       {% endassets %}
 

@@ -357,6 +357,6 @@ def seed():
     seed_scores()
 
     # Large course test. Uncomment to test large number of enrollments
-    # cache.clear()
-    # seed_users(num=1500)
-    # seed_enrollments()
+    cache.clear()
+    seed_users(num=1500)
+    seed_enrollments()
