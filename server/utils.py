@@ -39,7 +39,7 @@ def decode_id(value):
 # "tzinfo argument of the standard datetime constructors 'does not work'
 # with pytz for many timezones."
 
-def local_time(time, course):
+def local_time(time, course, fmt='%a %m/%d %I:%M %p'):
     """Format a time string in a course's locale.
     Note that %-I does not perform as expected on Alpine Linux
     """
@@ -47,7 +47,7 @@ def local_time(time, course):
         # Assume UTC
         time = pytz.utc.localize(time)
     local = time.astimezone(pytz.timezone('America/Los_Angeles'))
-    return local.strftime('%a %m/%d %I:%M %p')
+    return local.strftime(fmt)
 
 def local_time_obj(time, course):
     """Get a Datetime object in a course's locale from a TZ Aware DT object."""
