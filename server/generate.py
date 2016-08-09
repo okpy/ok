@@ -11,7 +11,7 @@ import pytz
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
                            GradingTask)
-from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
+from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE
 from server.extensions import cache
 
 original_file = open('tests/files/fizzbuzz_before.py').read()
@@ -344,6 +344,8 @@ def seed_flags():
 
 def seed():
     db.session.add(User(email='okstaff@okpy.org', is_admin=True))
+    db.session.commit()
+
     random.seed(0)
     seed_users()
     seed_courses()
