@@ -23,21 +23,10 @@
 
   <section class="content">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible">
-              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-              {{message}}
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
+    {% include 'alerts.html' %}
     <div class="row">
       <div class="col-md-6">
-
         <!-- Default box -->
-
           <div class="box">
             <div class="box-body">
               {% call forms.render_form(form, action_url="", action_text='Create Assignment', class_='form') %}
@@ -47,8 +36,11 @@
                   {{ forms.render_field(form.due_date, label_visible=true, type='text') }}
                   {{ forms.render_field(form.lock_date, label_visible=true, type='text') }}
                   {{ forms.render_field(form.url, label_visible=true, placeholder='http://cs61a.org/proj/hog (Optional)', type='text') }}
+                  {{ forms.render_checkbox_field(form.visible, label_visible=true) }}
                   {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
                   {{ forms.render_checkbox_field(form.revisions_allowed, label_visible=true) }}
+                  {{ forms.render_checkbox_field(form.uploads_enabled, label_visible=true) }}
+                  {{ forms.render_field(form.upload_info, label_visible=true, placeholder='Upload the following files: test.py', type='text') }}
               {% endcall %}
             </div>
           </div>

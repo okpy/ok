@@ -25,6 +25,17 @@ In another shell:
 
 The kubernetes documentations on deployments is useful. [Deployment Info](http://kubernetes.io/docs/user-guide/deployments/)
 
+## Migrations
+
+1. Deploy the new branch/image into the staging environment.
+> `kubectl apply -f kubernetes/ok-staging-web-rc.yaml`
+
+2. Run a command in that pod
+> `kubectl get pod # to get the name of the staging pod`
+> `k exec -ti ok-staging-deployment-number-something -- ./manage.py db upgrade`
+
+3. Ship it to production.
+
 ### Notes for developers
 
 Using version numbers instead of the `latest` tag for docker makes it easier to rollback changes. Check the current tag version on [Docker Hub](https://hub.docker.com/r/cs61a/ok-server/)

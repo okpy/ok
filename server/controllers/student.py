@@ -7,9 +7,10 @@ from werkzeug.exceptions import BadRequest
 import collections
 
 from server import highlight, models, utils
+from server.controllers.api import make_backup
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
-from server.forms import CSRFForm
+from server.forms import CSRFForm, UploadSubmissionForm
 from server.models import User, Course, Assignment, Group, Backup, db
 from server.utils import is_safe_redirect_url, group_action_email, \
     invite_email, send_email
@@ -73,9 +74,12 @@ def course(offering):
         return assignment, submission_time, group, final_submission
 
     course = get_course(offering)
+
     assignments = {
-        'active': [assignment_info(a) for a in course.assignments if a.active],
-        'inactive': [assignment_info(a) for a in course.assignments if not a.active]
+        'active': [assignment_info(a) for a in course.assignments
+                   if a.active and a.visible],
+        'inactive': [assignment_info(a) for a in course.assignments
+                     if not a.active and a.visible]
     }
     return render_template('student/course/index.html', course=course,
                            **assignments)
@@ -109,6 +113,37 @@ def assignment(name):
         'csrf_form': CSRFForm()
     }
     return render_template('student/assignment/index.html', **data)
+
+@student.route('/<assignment_name:name>/submit', methods=['GET', 'POST'])
+@login_required
+def submit_assignment(name):
+    assign = get_assignment(name)
+    group = Group.lookup(current_user, assign)
+    user_ids = assign.active_user_ids(current_user.id)
+    fs = assign.final_submission(user_ids)
+
+    if not assign.uploads_enabled:
+        flash("This assignment cannot be submitted online", 'warning')
+        return redirect(url_for('.assignment', name=assign.name))
+    if not assign.active:
+        flash("It's too late to submit this assignment", 'warning')
+        return redirect(url_for('.assignment', name=assign.name))
+
+    form = UploadSubmissionForm()
+    if form.validate_on_submit():
+        files = request.files.getlist("upload_files")
+        if files:
+            messages = {'file_contents': {}}
+            for upload in files:
+                messages['file_contents'][upload.filename] = str(upload.read(), 'utf-8')
+            backup = make_backup(current_user, assign.id, messages, True)
+            if form.flag_submission.data:
+                assign.flag(backup.id, user_ids)
+            flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
+            return redirect(url_for('.assignment', name=assign.name))
+
+    return render_template('student/assignment/submit.html', assignment=assign,
+                           group=group, course=assign.course, form=form)
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/')
 @login_required

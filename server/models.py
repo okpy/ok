@@ -241,11 +241,15 @@ class Assignment(Model):
     display_name = db.Column(db.String(255), nullable=False)
     due_date = db.Column(db.DateTime(timezone=True), nullable=False)
     lock_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    visible = db.Column(db.Boolean(), default=True)
     creator_id = db.Column(db.ForeignKey("user.id"))
     url = db.Column(db.Text)
     max_group_size = db.Column(db.Integer(), nullable=False, default=1)
     revisions_allowed = db.Column(db.Boolean(), nullable=False, default=False)
     autograding_key = db.Column(db.String(255))
+    uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
+    upload_info = db.Column(db.Text)
+
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 

@@ -179,6 +179,44 @@ if driver:
             self.driver.get("{}/cal/cs61a/sp16/proj1/xyz".format(self.get_server_url()))
             self.assertIn('404', self.driver.title)
 
+        def test_web_submit_disabled(self):
+            self._seed_course()
+            self._login_as(email=self.user4.email)
+            self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.assertTrue("This assignment cannot be submitted online" in self.driver.page_source)
+
+        def test_web_submit_no_file(self):
+            self._seed_course()
+            self.assignment.uploads_enabled = True
+            self.assignment.upload_info = 'Upload all the files!'
+            models.db.session.commit()
+
+            self._login_as(email=self.user4.email)
+            self.pageLoad("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
+
+            # Test with no files
+            self.driver.find_element_by_id('new-submission').click()
+            self.assertTrue("New Submission" in self.driver.page_source)
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("This field is required" in self.driver.page_source)
+
+        def test_web_submit(self):
+            self._seed_course()
+            self.assignment.uploads_enabled = True
+            self.assignment.upload_info = 'Upload all the files!'
+            models.db.session.commit()
+
+            self._login_as(email=self.user4.email)
+            self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+
+            # Disable the multiple select, PhantomJS doesn't seem to support it
+            # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
+            self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
+            file_input = self.driver.find_element_by_id("file-select")
+            file_input.send_keys(os.path.abspath(__file__))
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("Uploaded submission" in self.driver.page_source)
+
         def test_login_admin_reject(self):
             self._login(role="student")
             self.pageLoad(self.get_server_url() + "/admin/")

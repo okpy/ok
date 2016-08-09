@@ -33,6 +33,7 @@ else:
 SQLALCHEMY_DATABASE_URI = db_url
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
+MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # Max Upload Size is 8MB
 
 try:
     os.environ["GOOGLE_ID"]
