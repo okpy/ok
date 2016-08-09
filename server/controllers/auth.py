@@ -46,14 +46,14 @@ google_auth = oauth.remote_app(
 
 @google_auth.tokengetter
 def google_oauth_token(token=None):
-    return session.get('google_token', None)
+    return session.get('google_token')
 
 def get_token_if_valid(treshold_min=2):
     """ Get the current token if it will continue to be valid for the
     next TRESHOLD_MIN minutes. Otherwise, return None.
     """
     future_usage = dt.datetime.now() + dt.timedelta(minutes=treshold_min)
-    expiry_time = session.get('token_expiry', None)
+    expiry_time = session.get('token_expiry')
     if expiry_time and expiry_time >= future_usage:
         return session.get('google_token')
     return None
@@ -91,7 +91,7 @@ def load_user_from_request(request):
     """
     if request.blueprint != "api":
         return None
-    token = request.args.get('access_token', None)
+    token = request.args.get('access_token')
     if token is None:
         return None
     return user_from_access_token(token)
