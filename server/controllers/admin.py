@@ -593,16 +593,16 @@ def enrollment(cid):
         find_student = User.query.filter_by(email=query)
         student = find_student.first()
         if student:
-            students = (Enrollment.query
+            students = (Enrollment.query.options(db.joinedload('user'))
                         .filter_by(course_id=cid, role=STUDENT_ROLE,
                                    user_id=student.id)
                         .paginate(page=page, per_page=1))
         else:
             flash("No student found with email {0}".format(query), "warning")
     if not students:
-        students = (Enrollment.query
+        students = (Enrollment.query.options(db.joinedload('user'))
                     .filter_by(course_id=cid, role=STUDENT_ROLE)
-                    .paginate(page=page, per_page=5))
+                    .paginate(page=page, per_page=25))
 
     staff = Enrollment.query.filter(Enrollment.course_id == cid,
                                     Enrollment.role.in_(STAFF_ROLES)).all()
