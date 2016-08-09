@@ -63,6 +63,14 @@ staff_js = Bundle(
     output='public/js/staff.js'
 )
 
+list_js = Bundle(
+    'lib/listjs/list.js',
+    'lib/listjs/list.fuzzysearch.min.js',
+    'lib/listjs/list.pagination.min.js',
+    filters='jsmin',
+    output='public/js/list.js'
+)
+
 adminlte_css = Bundle(
     'lib/admin/css/AdminLTE.min.css',
     'lib/admin/css/skins/skin-black-light.min.css',
