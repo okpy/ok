@@ -58,6 +58,5 @@ list_js = Bundle(
 
 pygal_js = Bundle(
     'lib/pygal/pygal-tooltips.min.js',
-    'lib/pygal/svg.jquery.js',
     output='public/js/pygal.js'
 )
