@@ -21,7 +21,6 @@ common_css = Bundle(
 )
 
 common_js = Bundle(
-    'lib/jquery/jquery.min.js',
     'lib/bootstrap/js/bootstrap.min.js',
     'lib/swal/sweetalert.min.js',
     'lib/markdown/markdown.js',
