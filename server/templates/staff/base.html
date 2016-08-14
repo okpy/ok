@@ -1,9 +1,8 @@
 {% extends "base.html" %}
 
 {% block css %}
-  {% assets "adminlte_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-  {% endassets %}
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/css/AdminLTE.min.css" />
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/css/skins/skin-black-light.min.css" />
 
   {% assets "staff_css" %}
     <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
@@ -11,11 +10,9 @@
 {% endblock %}
 
 {% block js %}
-  {% assets "staff_js" %}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/js/app.min.js"></script>
 
-  {% assets "adminlte_js" %}
+  {% assets "staff_js" %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 

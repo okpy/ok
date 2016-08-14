@@ -56,21 +56,6 @@ list_js = Bundle(
     output='public/js/list.js'
 )
 
-adminlte_css = Bundle(
-    'lib/admin/css/AdminLTE.min.css',
-    'lib/admin/css/skins/skin-black-light.min.css',
-    'lib/admin/plugins/pace/pace.min.css',
-    filters='cssmin',
-    output='public/css/adminlte.css'
-)
-
-adminlte_js = Bundle(
-    'lib/admin/js/app.min.js',
-    'lib/admin/plugins/pace/pace.min.js',
-    'lib/admin/plugins/fastclick/fastclick.min.js',
-    output='public/js/adminlte.js'
-)
-
 pygal_js = Bundle(
     'lib/pygal/pygal-tooltips.min.js',
     'lib/pygal/svg.jquery.js',
