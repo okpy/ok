@@ -7,22 +7,18 @@ landing_css = Bundle(
 )
 
 common_css = Bundle(
-    Bundle(
-        'css/helper.css',
-        'css/main.css',
-        'css/highlight.css',
-        'css/code.css',
-        filters='cssmin',
-    ),
+    'css/helper.css',
+    'css/main.css',
+    'css/highlight.css',
+    'css/code.css',
     'css/swal-theme.css',
+    filters='cssmin',
     output='public/css/common.css'
 )
 
 common_js = Bundle(
-    Bundle(
-        'js/main.js',
-        filters='jsmin'
-    ),
+    'js/main.js',
+    filters='jsmin',
     output='public/js/common.js'
 )
 
