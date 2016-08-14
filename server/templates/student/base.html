@@ -1,79 +1,41 @@
-<!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
-  <head>
-      <title>{% block title %}{% endblock %}</title>
-      <meta charset="utf-8">
+{% extends "base.html" %}
 
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+{% block css %}
+  {% assets "student_css" %}
+    <!-- third-party libraries -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700' rel='stylesheet' type='text/css'>
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
 
-      {% include 'icons.html' %}
+  {% assets "upload_css" %}
+    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
+{% endblock %}
 
-      {% block meta %}
-      {% endblock %}
+{% block js %}
+  {% assets "student_js" %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
 
+  {% assets "upload_js" %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
 
-      {% assets "common_css" %}
-          <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-      {% endassets %}
+  {% if debug %}
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tota11y/0.1.5/tota11y.min.js"></script>
+  {% else %}
+    <script src="https://cdn.ravenjs.com/2.1.0/raven.min.js"></script>
+    <script type="text/javascript">Raven.config('https://60bdf8d6337a463b858a14b2221c080c@sentry.cs61a.org/3').install() </script>
+  {% endif %}
 
-      {% assets "student_css" %}
-          <!-- third-party libraries -->
-          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-          <link href='https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700' rel='stylesheet' type='text/css'>
-          <!-- Ionicons -->
-          <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-          <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-      {% endassets %}
-
-      {% block css %}
-      {% endblock %}
-
-      <script type="text/javascript">
-        var csrf_token = "{{ csrf_token() }}";
-      </script>
-
-    </head>
-
-    <body>
-      {% block header %}
-      {% endblock %}
-
-      {% block body %}
-      {% endblock %}
-    </body>
-
-    {% assets "common_js" %}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% if instantclick %}
+    {% assets "instant_js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      <script data-no-instant>InstantClick.init(50);</script>
     {% endassets %}
-
-    {% assets "student_js" %}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
-
-    {% block js %}
-
-      {% if debug %}
-          <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tota11y/0.1.5/tota11y.min.js"></script>
-      {% else %}
-          <script src="https://cdn.ravenjs.com/2.1.0/raven.min.js"></script>
-          <script type="text/javascript">Raven.config('https://60bdf8d6337a463b858a14b2221c080c@sentry.cs61a.org/3').install() </script>
-      {% endif %}
-
-
-      {% assets "instant_js" %}
-        {% if instantclick %}
-            <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-            <script data-no-instant>InstantClick.init(50);</script>
-        {% else %}
-            <!-- InstantClick disabled -->
-        {% endif %}
-      {% endassets %}
-
-    {% endblock %}
-
-  </html>
+  {% endif %}
+{% endblock %}

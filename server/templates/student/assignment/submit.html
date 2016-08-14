@@ -15,9 +15,6 @@
 
 {% endblock %}
 
-{% block css %}
-{% endblock %}
-
 {% block body %}
     <main>
       {% include 'student/assignment/sidebar.html' %}
@@ -72,12 +69,4 @@
         </div>
       </section>
     </main>
-
-    {% assets "upload_js" %}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
-    {% assets "upload_css" %}
-        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-    {% endassets %}
-
 {% endblock %}

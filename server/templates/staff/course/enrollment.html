@@ -3,12 +3,6 @@
 
 {% block title %} Ok - {{ current_course.display_name_with_semester }} Enrollment{% endblock %}
 
-{% block resources %}
-    {% assets "list_js" %}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
-{% endblock %}
-
 {% block main %}
 <section class="content-header">
     <h1>

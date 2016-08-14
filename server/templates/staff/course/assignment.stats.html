@@ -128,11 +128,3 @@
       </div>
   <!-- </body> do not close body in template-->
 {% endblock %}
-
-{% block js %}
-
-    {% assets "pygal_js" %}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
-
-{% endblock %}
