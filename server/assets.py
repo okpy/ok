@@ -35,11 +35,6 @@ student_js = Bundle(
     output='public/js/student.js'
 )
 
-instant_js = Bundle(
-    'lib/instantclick/instantclick.min.js',
-    output='public/js/instantclick.min.js'
-)
-
 staff_css = Bundle(
     'css/staff.css',
     filters='cssmin',

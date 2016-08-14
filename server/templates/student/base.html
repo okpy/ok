@@ -27,9 +27,7 @@
   {% endif %}
 
   {% if instantclick %}
-    {% assets "instant_js" %}
-      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-      <script data-no-instant>InstantClick.init(50);</script>
-    {% endassets %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/instantclick/3.0.1/instantclick.min.js"></script>
+    <script data-no-instant>InstantClick.init(50);</script>
   {% endif %}
 {% endblock %}
