@@ -17,10 +17,10 @@
     </div>
     <div class="right col-md-2">
     {% if config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
-      <a href="{{ url_for('auth.testing_login') }}" class="btn pill">Login</a>
-      {% else %}
-      <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
-      {% endif %}
+      <a data-no-instant href="{{ url_for('auth.testing_login') }}" class="btn pill">Login</a>
+    {% else %}
+      <a data-no-instant href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
+    {% endif %}
     </div>
   </header>
   {% block content %}
