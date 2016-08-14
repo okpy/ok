@@ -59,7 +59,7 @@ def index():
         courses['all'] = [c for c in all_courses if c not in displayed_courses]
         return render_template('student/courses/index.html', **courses)
     else:
-        return render_template('index.html')
+        return render_template('about/index.html')
 
 @student.route('/<offering:offering>/')
 @login_required

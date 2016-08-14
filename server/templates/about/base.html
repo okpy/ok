@@ -1,0 +1,30 @@
+{% extends "student/base.html" %}
+
+{% block css %}
+  {{ super() }}
+  {% assets "landing_css" %}
+    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
+{% endblock %}
+
+{% block body %}
+<div class="home container fluid">
+  <header class="row">
+    <div class="left col-md-2">
+      <a href="{{ url_for('student.index') }}">
+        <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo">
+      </a>
+    </div>
+    <div class="right col-md-2">
+    {% if config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
+      <a href="{{ url_for('auth.testing_login') }}" class="btn pill">Login</a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
+      {% endif %}
+    </div>
+  </header>
+  {% block content %}
+  {% endblock content %}
+  {% include 'footer.html' %}
+</div>
+{% endblock %}

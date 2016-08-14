@@ -1,87 +1,29 @@
-<html>
-  <head>
-    <title>Ok | CS61A</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "about/base.html" %}
 
-    {% include 'icons.html' %}
+{% block content %}
+<div class="row">
+  <div class="landing privacy">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+      {% include 'alerts.html' %}
+      <h1 class="title">Privacy Policy</h1>
+      <blockquote>
+        <p><strong>Effective Date:&nbsp; July 2016</strong></p>
+      </blockquote>
+      <h2><a name="policy" id="policy"></a>Policy</h2>
+      <p>Okpy is committed to protecting the privacy and accuracy of your confidential information to the extent possible</p>
 
-    {% assets "common_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-    {% endassets %}
-
-    {% assets "student_css" %}
-    <!-- third-party libraries -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <link href='https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700' rel='stylesheet' type='text/css'>
-    <!-- Ionicons -->
-    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-    {% endassets %}
-
-    {% assets "landing_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-    {% endassets %}
-  </head>
-
-  <body class="home">
-    <div class="container">
-
-      <header>
-        <div class="left col-md-2">
-          <a href="{{ url_for('student.index') }}">
-            <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo">
-          </a>
-        </div>
-        <div class="right col-md-2">
-<!--       <div class="stripes">
-            <div class="stripe"></div>
-            <div class="stripe"></div>
-            <div class="stripe"></div>
-          </div>
- -->
-        {% if config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
-          <a href="{{ url_for('auth.testing_login') }}" class="btn pill">Login</a>
-          {% else %}
-          <a href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
-          {% endif %}
-        </div>
-      </header>
-      <div class="row">
-        <div class="landing privacy">
-          <div class="col-md-3"></div>
-          <div class="col-md-6">
-            {% include 'alerts.html' %}
-            <h1 class="title">Privacy Policy</h1>
-            <blockquote>
-              <p><strong>Effective Date:&nbsp; July 2016</strong></p>
-            </blockquote>
-            <h2><a name="policy" id="policy"></a>Policy</h2>
-            <p>Okpy is committed to protecting the privacy and accuracy of your confidential information to the extent possible</p>
-
-            <h2><a name="info" id="info"></a>Information collected</h2>
-            The OK client sends some information to the OK servers, including your code and autograder results. The OK servers store that information along with other information that course instructors ask us to store.
-            <br />
-            <br />
-            Our privacy policy: We don't and won't share or use your personal information outside of the context of operating the server, running the course, and figuring out how to teach more effectively. We may include aggregate statistics about student behavior in research publications.
-            <br />
-            <br />
-          </ul><h2><a name="additional" id="additional"></a>Additional Information</h2>
-          <p>Q: Why would we want to record your progress anyway? <br> A:There are lots of reasons that will hopefully make student's lives better in the long run.</p>
-          <br />- Students lose their code for a variety of reasons, and keeping back-ups will benefit those people a great deal.<br />- When students ask questions online or via email, having access to their current implementation can make assistance much more efficient.<br />- Ok has an easy to use&nbsp;submission process, which is more convenient than the old system.<br />- We hope to make sharing code and test results between partners as easy as possible.<br />- We hope to let you track your own progress over time and keep track of your work (with comments) after the semester ends.<br />- As we work to improve projects from semester to semester, it's helpful to know which questions are the most time consuming, which tests are the most confusing, which questions need better tests, and how students typically progress through the projects.<br />I hope that helps explain what's going on. If you're concerned about privacy, feel free to come talk to the course instructor or the staff. If you ever want to run ok without sending information, use the --local flag.
-          <hr>
-
-        </div>
-
-      </div>
-    </div>
-    {% include 'footer.html' %}
+      <h2><a name="info" id="info"></a>Information collected</h2>
+      The OK client sends some information to the OK servers, including your code and autograder results. The OK servers store that information along with other information that course instructors ask us to store.
+      <br />
+      <br />
+      Our privacy policy: We don't and won't share or use your personal information outside of the context of operating the server, running the course, and figuring out how to teach more effectively. We may include aggregate statistics about student behavior in research publications.
+      <br />
+      <br />
+    </ul><h2><a name="additional" id="additional"></a>Additional Information</h2>
+    <p>Q: Why would we want to record your progress anyway? <br> A:There are lots of reasons that will hopefully make student's lives better in the long run.</p>
+    <br />- Students lose their code for a variety of reasons, and keeping back-ups will benefit those people a great deal.<br />- When students ask questions online or via email, having access to their current implementation can make assistance much more efficient.<br />- Ok has an easy to use&nbsp;submission process, which is more convenient than the old system.<br />- We hope to make sharing code and test results between partners as easy as possible.<br />- We hope to let you track your own progress over time and keep track of your work (with comments) after the semester ends.<br />- As we work to improve projects from semester to semester, it's helpful to know which questions are the most time consuming, which tests are the most confusing, which questions need better tests, and how students typically progress through the projects.<br />I hope that helps explain what's going on. If you're concerned about privacy, feel free to come talk to the course instructor or the staff. If you ever want to run ok without sending information, use the --local flag.
+    <hr>
   </div>
-
-
-
-  </body>
-  {% assets "common_js" %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
-</html>
+</div>
+{% endblock content %}
