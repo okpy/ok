@@ -14,13 +14,11 @@ common_css = Bundle(
         'css/code.css',
         filters='cssmin',
     ),
-    'lib/swal/sweetalert.min.css',
     'css/swal-theme.css',
     output='public/css/common.css'
 )
 
 common_js = Bundle(
-    'lib/swal/sweetalert.min.js',
     'lib/markdown/markdown.js',
     Bundle(
         'js/main.js',
