@@ -5,9 +5,7 @@
     <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
   {% endassets %}
 
-  {% assets "upload_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-  {% endassets %}
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.css" />
 {% endblock %}
 
 {% block js %}
@@ -15,9 +13,7 @@
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
-  {% assets "upload_js" %}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.js"></script>
 
   {% if debug %}
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tota11y/0.1.5/tota11y.min.js"></script>
