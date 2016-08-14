@@ -19,7 +19,6 @@ common_css = Bundle(
 )
 
 common_js = Bundle(
-    'lib/markdown/markdown.js',
     Bundle(
         'js/main.js',
         filters='jsmin'
