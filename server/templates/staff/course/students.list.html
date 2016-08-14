@@ -63,6 +63,7 @@
         </div>
     </div>
     <script>
+      $(document).ready(function() {
         var studentOptions = {
           valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section', { attr: 'data-timestamp', name: 'timestamp' }],
           plugins: [ListPagination({}), ListFuzzySearch({'searchClass': "search"})],
@@ -71,7 +72,7 @@
         var studentList = new List('student-list', studentOptions);
         studentList.sort("timestamp", {order: "desc"})
         document.getElementById('student-list').style.display = 'block';
-
+      });
     </script>
 
 </div>

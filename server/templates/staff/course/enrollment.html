@@ -90,6 +90,7 @@
                                 <!-- /.box-body -->
                             </div>
                             <script>
+                              $(document).ready(function() {
                                 var staffOptions = {
                                   valueNames: [ 'email', 'name', 'secondary', 'role' ],
                                   plugins: [ListPagination({}), ListFuzzySearch({'searchClass': "search"})],
@@ -98,6 +99,7 @@
                                 var staffLit = new List('staff-list', staffOptions);
                                 // TODO: Use removeClass with polyfill
                                 document.getElementById('staff-list').style.display = 'block';
+                              });
                             </script>
                         </div>
                         <!-- Side Panel -->

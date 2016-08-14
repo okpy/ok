@@ -48,12 +48,9 @@ staff_js = Bundle(
     output='public/js/staff.js'
 )
 
-list_js = Bundle(
-    'lib/listjs/list.js',
+list_fuzzysearch_js = Bundle(
     'lib/listjs/list.fuzzysearch.min.js',
-    'lib/listjs/list.pagination.js',
-    filters='jsmin',
-    output='public/js/list.js'
+    output='public/js/list.fuzzysearch.js'
 )
 
 pygal_js = Bundle(
