@@ -89,18 +89,6 @@
 
                                 <!-- /.box-body -->
                             </div>
-                            <script>
-                              $(document).ready(function() {
-                                var staffOptions = {
-                                  valueNames: [ 'email', 'name', 'secondary', 'role' ],
-                                  plugins: [ListPagination({}), ListFuzzySearch({'searchClass': "search"})],
-                                  page: 20
-                                };
-                                var staffLit = new List('staff-list', staffOptions);
-                                // TODO: Use removeClass with polyfill
-                                document.getElementById('staff-list').style.display = 'block';
-                              });
-                            </script>
                         </div>
                         <!-- Side Panel -->
                         <div class="col-md-3 col-xs-12">
@@ -178,3 +166,28 @@
 
                 <!-- </body> do not close body in template-->
                 {% endblock %}
+
+{% block page_js %}
+<script>
+  $(document).ready(function() {
+    var studentOptions = {
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section', { attr: 'data-timestamp', name: 'timestamp' }],
+      plugins: [ListPagination()],
+      page: 20
+    };
+    var studentList = new List('student-list', studentOptions);
+    studentList.sort("timestamp", {order: "desc"})
+    document.getElementById('student-list').style.display = 'block';
+
+    var staffOptions = {
+      valueNames: [ 'email', 'name', 'secondary', 'role' ],
+      plugins: [ListPagination()],
+      page: 20
+    };
+    var staffLit = new List('staff-list', staffOptions);
+    // TODO: Use removeClass with polyfill
+    document.getElementById('staff-list').style.display = 'block';
+
+  });
+</script>
+{% endblock %}

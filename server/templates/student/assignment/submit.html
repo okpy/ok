@@ -3,6 +3,10 @@
 
 {% block title %} Submit Assignment | Ok {% endblock %}
 
+{% block page_css %}
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.css" />
+{% endblock %}
+
 {% block body %}
     <main>
       {% include 'student/assignment/sidebar.html' %}
@@ -57,4 +61,8 @@
         </div>
       </section>
     </main>
+{% endblock %}
+
+{% block page_js %}
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.js"></script>
 {% endblock %}

@@ -62,17 +62,5 @@
         <h5 class="box-title"><span> Total: {{ enrollments | length }} </span></h5>
         </div>
     </div>
-    <script>
-      $(document).ready(function() {
-        var studentOptions = {
-          valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section', { attr: 'data-timestamp', name: 'timestamp' }],
-          plugins: [ListPagination({}), ListFuzzySearch({'searchClass': "search"})],
-          page: 20
-        };
-        var studentList = new List('student-list', studentOptions);
-        studentList.sort("timestamp", {order: "desc"})
-        document.getElementById('student-list').style.display = 'block';
-      });
-    </script>
 
 </div>
