@@ -31,13 +31,9 @@ dist
 *coverage_report/*
 ghostdriver.log
 
-# static assets
-*.webassets-cache*
-server/static/vendor/*
-
 # generated static assets (assets.py)
-server/static/public/css/
-server/static/public/js/
+*.webassets-cache*
+server/static/public/
 
 .cache
 _cache/*

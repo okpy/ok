@@ -122,13 +122,13 @@ if driver:
             self.assertEqual(data['data']['version'], 'v3')
 
         def test_static_pages(self):
-            about_url = "{}/about/tos".format(self.get_server_url())
+            about_url = "{}/about/privacy/".format(self.get_server_url())
             self.pageLoad(about_url)
-            self.assertIn('Ok |', self.driver.title)
+            self.assertIn('Privacy Policy | Ok', self.driver.title)
 
         def test_phantom_web(self):
             self.pageLoad(self.get_server_url())
-            self.assertIn('Ok', self.driver.title)
+            self.assertEquals('Ok', self.driver.title)
             self.driver.find_element_by_id('testing-login').click()
             self.assertIn('Login', self.driver.title)
 
@@ -138,7 +138,7 @@ if driver:
             self.assertIn('Courses | Ok', self.driver.title)
 
             self.driver.find_element_by_id('logout').click()
-            self.assertIn('Ok |', self.driver.title)
+            self.assertEquals('Ok', self.driver.title)
 
         def test_student_view(self):
             self._seed_course()
