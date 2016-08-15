@@ -169,7 +169,6 @@
 
 {% block page_js %}
 <script>
-  $(document).ready(function() {
     var studentOptions = {
       valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section', { attr: 'data-timestamp', name: 'timestamp' }],
       plugins: [ListPagination()],
@@ -187,7 +186,5 @@
     var staffLit = new List('staff-list', staffOptions);
     // TODO: Use removeClass with polyfill
     document.getElementById('staff-list').style.display = 'block';
-
-  });
 </script>
 {% endblock %}
