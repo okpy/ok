@@ -44,6 +44,7 @@ staff_css = Bundle(
 staff_js = Bundle(
     'js/staff.js',
     'js/comments.js',
+    'lib/listjs/list.pagination.js',
     'lib/listjs/list.fuzzysearch.min.js',
     'lib/pygal/pygal-tooltips.min.js',
     filters='jsmin',
