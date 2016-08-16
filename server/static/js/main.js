@@ -20,5 +20,10 @@ if (typeof HTMLElement.prototype.removeClass !== "function") {
 }
 // initialize datepicker
 jQuery(document).ready(function($){
-  $('.datepicker').datetimepicker();
+  var now = new Date();
+  now.setHours(23,59,0,0);
+  console.log(now.toString());
+  var dt = $('.datepicker').datetimepicker({format:'YYYY-MM-DD hh:mm:ss',defaultDate:now});
+  console.log(dt);
+
 });
