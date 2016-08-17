@@ -138,7 +138,7 @@ Get the courses that a specific user is enrolled in. Used by ok-client to see if
 The access_token must belong to the email being requested or be an OK admin.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/enrollment/<string:email>`
+`GET https://ok.cs61a.org/api/v3/enrollment/<string:email>/`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -152,10 +152,115 @@ See example response.
 
 # Assignments
 
+## Assignment Info
+>><h4> Example Response </h4>
+> ```
+curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab01"
+{
+    "code": 200,
+    "data": {
+        "course": {
+            "active": true,
+            "display_name": "CS 61A",
+            "id": 1,
+            "offering": "cal/cs61a/sp16"
+        },
+        "display_name": "Lab 01",
+        "due_date": "2016-09-07T06:59:59",
+        "files": {
+            "fizzbuzz.py": "if ..."
+        },
+        "max_group_size": 2,
+        "name": "cal/cs61a/sp16/lab01",
+        "url": null
+    },
+    "message": "success"
+}
+```
+
+Get detailed assignment info.
+
+#### Permissions
+Requires an access token. The assignment is presented to all staff members of the course or admins but is only shown to other users if the staff marked the assignment as visible .
+
+#### HTTP Request
+`GET https://ok.cs61a.org/api/v3/assignment/<assignment_name:endpoint>``
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of staff member
+
+#### Response
+Name | Type | Description
+---------- | -------
+due_date | DateTime | UTC Time of deadline in iso8601 format.
+files | Dictionary | Template file names and contents
+name | String | Endpoint
+
+See example output for other fields.
+
+## Group Info
+>><h4> Example Response </h4>
+> ```
+curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab01/group/email@example.com"
+{
+    "code": 200,
+    "data": {
+        "assignment": {
+            "course": { ... },
+            "name": "cal/cs61a/sp16/lab01"
+        },
+        "members": [
+            {
+                "created": "2016-08-16T20:54:28",
+                "status": "active",
+                "updated": null,
+                "user": {
+                    "email": "email@example.com",
+                    "id": "mbk5ez"
+                }
+            },
+            {
+                "created": "2016-08-16T20:54:28",
+                "status": "pending",
+                "updated": null,
+                "user": {
+                    "email": "okstaff@okpy.org",
+                    "id": "nel5aK"
+                }
+            }
+        ]
+    },
+    "message": "success"
+}```
+
+Get detailed assignment info.
+
+#### Permissions
+Requires an access token. The group info is presented to all staff members of the course or admins. Otherwise, the access_token must belong to the user whose email is in the URL to get a response.
+
+#### HTTP Request
+`GET https://ok.cs61a.org/api/v3/assignment/<assignment_name:endpoint>/group/<string:email>`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of staff member
+
+#### Response
+Parameter | Type | Description
+---------- | ------- | -------
+members | List | List of members if available. If there is no group, this value is equal to `[]`
+assignment | Dictionary | The assignment name and the course info.
+
+See example output for fields.
+`member['status']` is either "pending" or "active"
+
 ## Export Backups
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/assignment/1/exportemail@berkeley.edu?access_token=test&limit=2&offset=17"
+curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab00/export/email@berkeley.edu?access_token=test&limit=2&offset=17"
 {
     "code": 200,
     "message": "success",
@@ -193,7 +298,7 @@ The access_token's user must have permission to view the backup. They must have
 at least staff level access to the assignment.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/assignment/<int:aid>/export/<string:email>`
+`GET https://ok.cs61a.org/api/v3/assignment/<assignment_name:endpoint>/export/<string:email>`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -214,7 +319,7 @@ offset | Integer | The value of the limit parameter
 ## Export Final Submissions
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/assignment/1/submissions?access_token=test"
+curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab00/submissions?access_token=test"
 {
 "message": "success",
 "data": {
@@ -255,7 +360,7 @@ Get all submissions for a course. This obtains all submissions for an assignment
 The access_token's user must have at least staff level access to the assignment.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/assignment/<int:aid>/submissions/`
+`GET https://ok.cs61a.org/api/v3/assignment/<assignment_name:endpoint>/submissions/`
 
 #### Query Parameters
 Parameter | Default | Description
