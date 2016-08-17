@@ -184,6 +184,7 @@ class CourseSchema(APISchema):
         'offering': fields.String,
         'display_name': fields.String,
         'active': fields.Boolean,
+        'timezone': fields.String
     }
 
 

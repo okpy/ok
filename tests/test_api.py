@@ -62,7 +62,8 @@ class TestAuth(OkTestCase):
                     'id': course.id,
                     'offering': course.offering,
                     'display_name': course.display_name,
-                    'active': course.active
+                    'active': course.active,
+                    'timezone': 'America/Los_Angeles'
                 },
                 'assignment': assignment.name
             }
