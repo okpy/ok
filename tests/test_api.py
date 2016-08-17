@@ -216,6 +216,24 @@ class TestAuth(OkTestCase):
         self.assertEquals(response.json['data']['offset'], 20)
         self.assertEquals(response.json['data']['has_more'], False)
 
+    def test_export_final(self):
+        self._test_backup(True)
+        student = User.lookup(self.user1.email)
+
+        backup = Backup.query.filter(Backup.submitter_id == student.id).first()
+        endpoint = '/api/v3/assignment/{0}/submissions/'.format(self.assignment.name)
+
+        response = self.client.get(endpoint)
+        self.assert_403(response)
+
+        self.login(self.staff1.email)
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        backups = response.json['data']['backups']
+        self.assertEquals(len(backups), 1)
+        self.assertEquals(response.json['data']['count'], 1)
+
+
     def test_assignment_api(self):
         self._test_backup(True)
         student = User.lookup(self.user1.email)
