@@ -207,10 +207,6 @@ curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab01/group/email@ex
 {
     "code": 200,
     "data": {
-        "assignment": {
-            "course": { ... },
-            "name": "cal/cs61a/sp16/lab01"
-        },
         "members": [
             {
                 "created": "2016-08-16T20:54:28",
@@ -252,7 +248,6 @@ access_token | None | (Required) Access Token of staff member
 Parameter | Type | Description
 ---------- | ------- | -------
 members | List | List of members if available. If there is no group, this value is equal to `[]`
-assignment | Dictionary | The assignment name and the course info.
 
 See example output for fields.
 `member['status']` is either "pending" or "active"
@@ -343,11 +338,7 @@ curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab00/submissions?ac
         "id": "lejRe2",
         "email": "email@berkeley.edu"
     },
-    "assignment": {
-        "name": "cal/cs61a/su16/sample",
-        "course": {"id": 1, "active": true, "display_name": "CS 61A", "offering": "cal/cs61a/su16"}
-    }
-}, ],
+    },],
 "count": 36,
 },
 "code": 200

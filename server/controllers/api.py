@@ -221,7 +221,6 @@ class GroupSchema(APISchema):
     }
     get_fields = {
         'members': fields.List(fields.Nested(member_fields)),
-        'assignment': fields.Nested(AssignmentSchema.simple_fields)
     }
 
 
@@ -664,7 +663,7 @@ class Group(Resource):
     def get(self, user, name, email):
         assign = models.Assignment.by_name(name)
         target = models.User.lookup(email)
-        default_value = {'assignment': assign, 'members': []}
+        default_value = {'members': []}
 
         if not assign:
             restful.abort(404)
