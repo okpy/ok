@@ -27,6 +27,7 @@ from server.extensions import cache
 from server.utils import encode_id, decode_id
 import server.models as models
 from server.autograder import submit_continous
+from server.constants import STAFF_ROLES
 
 endpoints = Blueprint('api', __name__)
 endpoints.config = {}
@@ -183,6 +184,7 @@ class CourseSchema(APISchema):
         'offering': fields.String,
         'display_name': fields.String,
         'active': fields.Boolean,
+        'timezone': fields.String
     }
 
 
@@ -195,8 +197,30 @@ class UserSchema(APISchema):
 
 class AssignmentSchema(APISchema):
     get_fields = {
+        'due_date': fields.DateTime(dt_format='iso8601'),
+        'display_name': fields.String,
+        'name': fields.String,
+        'max_group_size': fields.Integer,
+        'url': fields.String,
+        'course': fields.Nested(CourseSchema.get_fields),
+        'files': fields.Raw
+    }
+
+    simple_fields = {
         'course': fields.Nested(CourseSchema.get_fields),
         'name': fields.String,
+    }
+
+
+class GroupSchema(APISchema):
+    member_fields = {
+        'status': fields.String,
+        'user': fields.Nested(UserSchema.get_fields),
+        'updated': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601'),
+    }
+    get_fields = {
+        'members': fields.List(fields.Nested(member_fields)),
     }
 
 
@@ -204,7 +228,7 @@ class BackupSchema(APISchema):
     get_fields = {
         'id': HashIDField,  # Use Hash ID
         'submitter': fields.Nested(UserSchema.get_fields),
-        'assignment': fields.Nested(AssignmentSchema.get_fields),
+        'assignment': fields.Nested(AssignmentSchema.simple_fields),
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
@@ -436,7 +460,8 @@ class Revision(Resource):
 
         # Only accept revision if the assignment has revisions enabled
         if not assignment.revisions_allowed:
-            return restful.abort(403, message="Revisions are not enabled for this assignment",
+            return restful.abort(403,
+                                 message="Revisions are not enabled for this assignment",
                                  data={'backup': True, 'late': True})
 
         # Only accept revision if the user has a FS
@@ -481,9 +506,8 @@ class ExportBackup(Resource):
     model = models.Assignment
 
     @marshal_with(schema.export_list)
-    def get(self, user, aid, email):
-        assign = (self.model.query.filter_by(id=aid)
-                      .one_or_none())
+    def get(self, user, name, email):
+        assign = models.Assignment.by_name(name)
         target = models.User.lookup(email)
 
         limit = request.args.get('limit', 150, type=int)
@@ -523,9 +547,8 @@ class ExportFinal(Resource):
     model = models.Assignment
 
     @marshal_with(schema.full_export_list)
-    def get(self, user, aid):
-        assign = (self.model.query.filter_by(id=aid)
-                      .one_or_none())
+    def get(self, user, name):
+        assign = models.Assignment.by_name(name)
 
         if not assign:
             if user.is_admin:
@@ -611,12 +634,69 @@ class Version(PublicResource):
             versions = self.model.query.all()
         return {'results': versions}
 
+class Assignment(Resource):
+    """ Infromation about an assignment
+    Authenticated. Permissions: >= User
+    Used by: Collaboration/Scripts
+    """
+    model = models.Assignment
+    schema = AssignmentSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, name):
+        assign = self.model.by_name(name)
+        if not assign:
+            restful.abort(404)
+        elif not self.model.can(assign, user, 'view'):
+            restful.abort(403)
+        return assign
+
+class Group(Resource):
+    """ Infromation about a group member by email.
+    Authenticated. Permissions: >= User
+    Used by: Collaboration/Scripts
+    """
+    model = models.Group
+    schema = GroupSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, name, email):
+        assign = models.Assignment.by_name(name)
+        target = models.User.lookup(email)
+        default_value = {'members': []}
+
+        if not assign:
+            restful.abort(404)
+        elif not target and user.is_admin:
+            restful.abort(404)
+        elif not target:
+            restful.abort(403)
+
+        group = self.model.lookup(target, assign)
+        is_admin = user.is_admin
+        is_staff = user.is_enrolled(assign.course.id, STAFF_ROLES)
+        is_self = user.email.lower() == email.lower()
+
+        if is_self or is_staff or is_admin:
+            if group:
+                return group
+            else:
+                return default_value
+        restful.abort(403)
 
 api.add_resource(V3Info, '/v3/')
+
+# Submission endpoints
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
 api.add_resource(Revision, '/v3/revision/')
-api.add_resource(ExportBackup, '/v3/assignment/<int:aid>/export/<string:email>')
-api.add_resource(ExportFinal, '/v3/assignment/<int:aid>/submissions/')
+
+# Assignment Info
+ASSIGNMENT_BASE = '/v3/assignment/<assignment_name:name>'
+api.add_resource(Assignment, ASSIGNMENT_BASE)
+api.add_resource(Group, ASSIGNMENT_BASE + '/group/<string:email>')
+api.add_resource(ExportBackup, ASSIGNMENT_BASE + '/export/<string:email>')
+api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
+# Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
 api.add_resource(Score, '/v3/score/')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')

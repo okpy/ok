@@ -1,7 +1,6 @@
-from flask import Blueprint, render_template, flash, request, redirect, \
-    url_for, abort, make_response
-from flask_login import login_required, \
-    current_user
+from flask import (Blueprint, render_template, flash, request, redirect,
+                   url_for, abort, make_response)
+from flask_login import login_required, current_user
 from werkzeug.exceptions import BadRequest
 
 import collections
@@ -12,8 +11,8 @@ from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 from server.forms import CSRFForm, UploadSubmissionForm
 from server.models import User, Course, Assignment, Group, Backup, db
-from server.utils import is_safe_redirect_url, group_action_email, \
-    invite_email, send_email
+from server.utils import (is_safe_redirect_url, group_action_email,
+                          invite_email, send_email)
 
 student = Blueprint('student', __name__)
 

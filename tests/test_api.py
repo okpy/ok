@@ -1,6 +1,7 @@
 import datetime as dt
 import json
-from server.models import db, Assignment, Backup, Course, User, Version
+from server.models import (db, Assignment, Backup, Course, User,
+                           Version, Group)
 from server.utils import encode_id
 
 from tests import OkTestCase
@@ -61,7 +62,8 @@ class TestAuth(OkTestCase):
                     'id': course.id,
                     'offering': course.offering,
                     'display_name': course.display_name,
-                    'active': course.active
+                    'active': course.active,
+                    'timezone': 'America/Los_Angeles'
                 },
                 'assignment': assignment.name
             }
@@ -195,7 +197,7 @@ class TestAuth(OkTestCase):
 
         backup = Backup.query.filter(Backup.submitter_id == student.id).first()
 
-        endpoint = '/api/v3/assignment/{0}/export/{1}'.format(self.assignment.id,
+        endpoint = '/api/v3/assignment/{0}/export/{1}'.format(self.assignment.name,
                                                           student.email)
         response = self.client.get(endpoint)
         self.assert_200(response)
@@ -214,6 +216,101 @@ class TestAuth(OkTestCase):
         self.assertEquals(response.json['data']['limit'], 2)
         self.assertEquals(response.json['data']['offset'], 20)
         self.assertEquals(response.json['data']['has_more'], False)
+
+    def test_export_final(self):
+        self._test_backup(True)
+        student = User.lookup(self.user1.email)
+
+        backup = Backup.query.filter(Backup.submitter_id == student.id).first()
+        endpoint = '/api/v3/assignment/{0}/submissions/'.format(self.assignment.name)
+
+        response = self.client.get(endpoint)
+        self.assert_403(response)
+
+        self.login(self.staff1.email)
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        backups = response.json['data']['backups']
+        self.assertEquals(len(backups), 1)
+        self.assertEquals(response.json['data']['count'], 1)
+
+
+    def test_assignment_api(self):
+        self._test_backup(True)
+        student = User.lookup(self.user1.email)
+        endpoint = '/api/v3/assignment/{0}'.format(self.assignment.name)
+        # View a public assignment
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        # Change assignment to be hidden
+        self.assignment.visible = False
+        db.session.commit()
+        response = self.client.get(endpoint)
+        self.assert_403(response)
+
+        self.assignment.visible = True
+        db.session.commit()
+
+        self.login(self.staff1.email)
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        self.assertEquals(response.json['data']['name'], self.assignment.name)
+
+        # Hidden assignment, but should be visible to staff
+        self.assignment.visible = False
+        db.session.commit()
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+
+        self.login(self.user1.email)
+        self.assignment.visible = False
+        db.session.commit()
+        response = self.client.get(endpoint)
+        self.assert_403(response)
+
+
+    def test_group_api(self):
+        self._test_backup(True)
+        self.logout()
+
+        student = User.lookup(self.user1.email)
+
+        Group.invite(self.user1, self.user2, self.assignment)
+        group = Group.lookup(self.user1, self.assignment)
+        group.accept(self.user2)
+        base_api = '/api/v3/assignment/{0}/group/{1}'
+        endpoint = base_api.format(self.assignment.name, self.user1.email)
+
+        response = self.client.get(endpoint)
+        self.assert_401(response)
+
+        self.login(self.user1.email)
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        members = response.json['data']['members']
+        self.assertEquals(len(members), 2)
+        assert 'email' in members[0]['user']
+
+        self.login(self.staff1.email)
+        response = self.client.get(endpoint)
+
+        self.assert_200(response)
+        members = response.json['data']['members']
+        self.assertEquals(len(members), 2)
+        assert 'email' in  members[0]['user']
+
+        # Login as some random user
+        self.login(self.user3.email)
+        response = self.client.get(endpoint)
+        self.assert_403(response)
+
+        # Check for existence of email
+        response = self.client.get(base_api.format(self.assignment.name, 'oski61@example.com'))
+        self.assert_403(response)
+
+        self.login(self.admin.email)
+        response = self.client.get(base_api.format(self.assignment.name, 'oski61@example.com'))
+        self.assert_404(response)
 
     def test_score_staff(self):
         self._test_backup(True)

@@ -266,9 +266,10 @@ class Assignment(Model):
             return False
         if user.is_admin:
             return True
+        is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
         if action == "view":
-            return user.is_authenticated
-        return user.is_enrolled(obj.course.id, STAFF_ROLES)
+            return is_staff or obj.visible
+        return is_staff
 
     @staticmethod
     @cache.memoize(900)
