@@ -187,9 +187,29 @@ class CourseSchema(APISchema):
         'timezone': fields.String
     }
 
+class ParticipationSchema(APISchema):
+    get_fields = {
+        'course_id': fields.Integer,
+        'role': fields.String,
+        'course': fields.Nested(CourseSchema.get_fields),
+        'class_account': fields.String,
+        'section': fields.String,
+    }
+
+class EnrollmentSchema(APISchema):
+    get_fields = {
+        'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
+    }
 
 class UserSchema(APISchema):
     get_fields = {
+        'id': HashIDField,
+        'email': fields.String,
+        'name': fields.String,
+        'participations': fields.List(fields.Nested(ParticipationSchema.get_fields))
+    }
+
+    simple_fields = {
         'id': HashIDField,
         'email': fields.String,
     }
@@ -215,7 +235,7 @@ class AssignmentSchema(APISchema):
 class GroupSchema(APISchema):
     member_fields = {
         'status': fields.String,
-        'user': fields.Nested(UserSchema.get_fields),
+        'user': fields.Nested(UserSchema.simple_fields),
         'updated': fields.DateTime(dt_format='iso8601'),
         'created': fields.DateTime(dt_format='iso8601'),
     }
@@ -227,13 +247,13 @@ class GroupSchema(APISchema):
 class BackupSchema(APISchema):
     get_fields = {
         'id': HashIDField,  # Use Hash ID
-        'submitter': fields.Nested(UserSchema.get_fields),
+        'submitter': fields.Nested(UserSchema.simple_fields),
         'assignment': fields.Nested(AssignmentSchema.simple_fields),
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
-        'group': fields.List(fields.Nested(UserSchema.get_fields)),
+        'group': fields.List(fields.Nested(UserSchema.simple_fields)),
     }
 
     export_fields = {
@@ -292,21 +312,6 @@ class BackupSchema(APISchema):
         if elgible_submit and assignment['autograding_key']:
             submit_continous(backup)
         return backup
-
-
-class ParticipationSchema(APISchema):
-    get_fields = {
-        'course_id': fields.Integer,
-        'role': fields.String,
-        'course': fields.Nested(CourseSchema.get_fields),
-    }
-
-
-class EnrollmentSchema(APISchema):
-
-    get_fields = {
-        'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
-    }
 
 
 class VersionSchema(APISchema):
@@ -579,6 +584,9 @@ class Enrollment(Resource):
     """ View what courses an email is enrolled in.
         Authenticated. Permissions: >= User or admins.
         Used by: Ok Client Auth
+
+        TODO: Make ok-client use user API instead.
+        Display course level enrollment here.
     """
     model = models.Enrollment
     schema = EnrollmentSchema()
@@ -684,6 +692,35 @@ class Group(Resource):
                 return default_value
         restful.abort(403)
 
+class User(Resource):
+    """ Infromation about the current user.
+    Authenticated. Permissions: >= User
+    Only admins can view other users
+
+    Used by: External tools for auth info
+    """
+    model = models.User
+    schema = UserSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, email=None):
+        target = self.model.lookup(email)
+
+        if not email or email.lower() == user.email.lower():
+            # Get the current user
+            return user
+
+        if not target and user.is_admin:
+            restful.abort(404)
+        elif not target:
+            restful.abort(403)
+
+        if user.is_admin:
+            return target
+
+        restful.abort(403)
+
+# Endpoints
 api.add_resource(V3Info, '/v3/')
 
 # Submission endpoints
@@ -696,7 +733,11 @@ api.add_resource(Assignment, ASSIGNMENT_BASE)
 api.add_resource(Group, ASSIGNMENT_BASE + '/group/<string:email>')
 api.add_resource(ExportBackup, ASSIGNMENT_BASE + '/export/<string:email>')
 api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
+
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
 api.add_resource(Score, '/v3/score/')
+
+api.add_resource(User, '/v3/user/', '/v3/user/<string:email>')
+
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')
