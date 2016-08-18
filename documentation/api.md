@@ -118,6 +118,8 @@ curl "https://ok.cs61a.org/api/v3/enrollment/example@gmail.com?access_token=test
             {
                 "course_id": 2,
                 "role": "student",
+                "class_account": "cs61a-abc",
+                "section": "122",
                 "course": {
                     "active": true,
                     "offering": "ok/test/su16",
@@ -496,6 +498,55 @@ access_token | None | (Required) Access Token of submitter
 #### Response
 See example
 
+# Users
+
+## View a specific user
+
+>><h4> Example Response </h4>
+> ```
+curl "https://ok.cs61a.org/api/v3/user/?access_token=test"
+{
+    "data": {
+        "email": "dschmidt1@gmail.com",
+        "id": "penRe7",
+        "name": null,
+        "participations": [
+            {
+                "class_account": "cs61a-mbh",
+                "course": {
+                    "active": true,
+                    "display_name": "CS 61A",
+                    "id": 1,
+                    "offering": "cal/cs61a/sp16",
+                    "timezone": "America/Los_Angeles"
+                },
+                "course_id": 1,
+                "role": "student",
+                "section": "20"
+            }
+        ]
+    },
+    "code": 200,
+    "message": "success"
+}
+```
+
+View a specific user. If the email is not provided, the current users info will be provided. The SID is intentionally not provided.
+
+#### Permissions
+The access_token must be for the user whose info is being requested. To view other emails, it must be an admin level access token.
+
+#### HTTP Request
+`GET https://ok.cs61a.org/api/v3/user/` (Current User)
+`GET https://ok.cs61a.org/api/v3/user/<string:email>`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of submitter
+
+#### Response
+See example
 
 # Scores
 
