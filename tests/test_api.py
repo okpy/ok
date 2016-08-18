@@ -337,3 +337,53 @@ class TestAuth(OkTestCase):
         response = self.client.post('/api/v3/score/', data=data)
         self.assert_200(response)
         assert response.json['code'] == 200
+
+    def test_user_api(self):
+        self._test_backup(True)
+        self.logout()
+
+        student = User.lookup(self.user1.email)
+
+        def test_both_endpoints(user):
+            base_api = '/api/v3/user/{0}'
+            user1_endpoint = base_api.format(user.email)
+            current_user_endpoint = base_api.format('')
+
+            current = self.client.get(current_user_endpoint)
+            specific = self.client.get(user1_endpoint)
+
+            return current, specific
+
+        current, specific = test_both_endpoints(student)
+        self.assert_401(current)
+        self.assert_401(specific)
+
+        # Should be able to view self
+        self.login(self.user1.email)
+        current, specific = test_both_endpoints(student)
+        self.assert_200(current)
+        self.assert_200(specific)
+
+        members = current.json['data']['participations']
+        self.assertEquals(len(members), 1)
+        self.assertEquals(current.json['data'], specific.json['data'])
+
+        # Staff don't get permission
+        self.login(self.staff1.email)
+        current, specific = test_both_endpoints(student)
+        self.assert_200(current)
+        self.assert_403(specific)
+
+        # Login as some random user
+        self.login(self.user3.email)
+        current, specific = test_both_endpoints(student)
+        self.assert_200(current)
+        self.assert_403(specific)
+
+        # Admins should have acess
+        self.login(self.admin.email)
+        current, specific = test_both_endpoints(student)
+        self.assert_200(current)
+        self.assert_200(specific)
+        self.assertEquals(specific.json['data']['email'], student.email)
+
