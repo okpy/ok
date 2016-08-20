@@ -113,12 +113,10 @@ def check_scopes(func):
         resource = getattr(func, '__self__', None)
         if not resource:
             # Not protecting an API resource, unknown permissions
-            print("Not an api resource")
             return func(*args, **kwargs)
         resource_scopes = getattr(resource, 'required_scopes', {})
         # If unspecified, assume 'all' scope is neccesary
         needed_scopes = resource_scopes.get(func.__name__, ['all'])
-        print(needed_scopes, func.__self__, func.__name__)
 
         if user_scopes is None:
             # Not an OAuth Based Request

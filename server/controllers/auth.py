@@ -107,22 +107,16 @@ def load_user_from_request(request):
     """
     if request.blueprint != "api":
         return None
-
+    # Checks for bearer token in header authentication
+    oauth_token = check_oauth_token()
+    if oauth_token:
+        oauth_token.user.scopes = oauth_token.access_token.scopes
+        return oauth_token.user
+    # Fallback to Google Auth
     token = request.args.get('access_token')
     if token is None:
         return None
-
-    if token.startswith('ya29'):
-        google_auth = user_from_google_token(token)
-        if google_auth:
-            return google_auth
-        oauth_token = check_oauth_token()
-        if oauth_token:
-            return oauth_token
-    else:
-        google_auth = user_from_google_token(token)
-        if google_auth:
-            return google_auth
+    return user_from_google_token(token)
 
 @login_manager.unauthorized_handler
 def unauthorized():

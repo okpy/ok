@@ -20,20 +20,18 @@ def create_client(app):
         authorize_url='http://localhost:5000/oauth/authorize'
     )
 
-    def check_req(uri, headers, body):
-        """ Add access_token to the URL Request. """
-        if 'access_token' not in uri and session.get('dev_token'):
-            params = {'access_token': session.get('dev_token')[0]}
-            url_parts = list(urllib.parse.urlparse(uri))
-            query = dict(urllib.parse.parse_qsl(url_parts[4]))
-            query.update(params)
-
-            url_parts[4] = urllib.parse.urlencode(query)
-            uri = urllib.parse.urlunparse(url_parts)
-
-        print(uri, headers, body)
-        return uri, headers, body
-    remote.pre_request = check_req
+    # def check_req(uri, headers, body):
+    #     """ Add access_token to the URL Request. """
+    #     if 'access_token' not in uri and session.get('dev_token'):
+    #         params = {'access_token': session.get('dev_token')[0]}
+    #         url_parts = list(urllib.parse.urlparse(uri))
+    #         query = dict(urllib.parse.parse_qsl(url_parts[4]))
+    #         query.update(params)
+    #
+    #         url_parts[4] = urllib.parse.urlencode(query)
+    #         uri = urllib.parse.urlunparse(url_parts)
+    #     return uri, headers, body
+    # remote.pre_request = check_req
 
     @app.route('/')
     def index():
