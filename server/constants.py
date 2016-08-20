@@ -22,6 +22,7 @@ FORBIDDEN_ROUTE_NAMES = [
     'comments',
     'login',
     'logout',
+    'oauth',
     'testing-login',
 ]
 FORBIDDEN_ASSIGNMENT_NAMES = []

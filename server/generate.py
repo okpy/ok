@@ -10,7 +10,7 @@ import pytz
 
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
-                           GradingTask)
+                           GradingTask, Client, Token)
 from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE
 from server.extensions import cache
 
@@ -342,12 +342,27 @@ def seed_flags():
                 chosen = random.choice(submissions)
                 assignment.flag(chosen.id, user_ids)
 
+def seed_oauth():
+    print("Seeding OAuth")
+    client = Client(
+        name='dev', client_id='normal', client_secret='normal',
+        _redirect_uris=(
+            'http://127.0.0.1:8000/authorized '
+            'http://localhost:8000/authorized '
+        ), is_confidential=False,
+        description='Sample App for building OAuth',
+        _default_scopes='email'
+    )
+    db.session.add(client)
+    db.session.commit()
+
+
 def seed():
     db.session.add(User(email='okstaff@okpy.org', is_admin=True))
     db.session.commit()
 
     random.seed(0)
-    seed_users()
+    seed_users(num=5)
     seed_courses()
     seed_assignments()
     seed_enrollments()
@@ -357,6 +372,7 @@ def seed():
     seed_flags()
     seed_queues()
     seed_scores()
+    seed_oauth()
 
     # Large course test. Uncomment to test large number of enrollments
     # cache.clear()

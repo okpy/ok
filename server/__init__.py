@@ -16,6 +16,7 @@ from server.controllers.admin import admin
 from server.controllers.api import endpoints as api_endpoints
 from server.controllers.api import api  # Flask Restful API
 from server.controllers.auth import auth, login_manager
+from server.controllers.oauth import oauth
 from server.controllers.student import student
 from server.constants import API_PREFIX
 
@@ -24,6 +25,7 @@ from server.extensions import (
     cache,
     csrf,
     debug_toolbar,
+    oauth_provider,
     sentry
 )
 
@@ -78,6 +80,7 @@ def create_app(default_config_path=None):
     # initialize SQLAlchemy
     db.init_app(app)
 
+    # Flask-Login manager
     login_manager.init_app(app)
 
     # Import and register the different asset bundles
@@ -105,6 +108,9 @@ def create_app(default_config_path=None):
     # OAuth should not need CSRF protection
     csrf.exempt(auth)
     app.register_blueprint(auth)
+
+    csrf.exempt(oauth)
+    app.register_blueprint(oauth)
 
     app.register_blueprint(student)
 

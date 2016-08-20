@@ -4,8 +4,10 @@ There are two ways to authenticate a request:
 * Send a Google access token as the access_token query parameter
 """
 from flask import (abort, Blueprint, current_app, flash, redirect,
-                   render_template, request, session, url_for)
+                   render_template, request, session, url_for, jsonify)
 from flask_oauthlib.client import OAuth, OAuthException
+from flask_oauthlib.contrib.oauth2 import bind_sqlalchemy
+
 from flask_login import (LoginManager, login_user, logout_user, login_required,
                          current_user)
 
@@ -13,7 +15,7 @@ import datetime as dt
 import logging
 
 from server import utils
-from server.models import db, User, Enrollment
+from server.models import db, User, Enrollment, Client, Token, Grant
 from server.extensions import csrf
 
 logger = logging.getLogger(__name__)
@@ -48,6 +50,10 @@ google_auth = oauth.remote_app(
 def google_oauth_token(token=None):
     return session.get('google_token')
 
+###########
+# Helpers #
+###########
+
 def get_token_if_valid(treshold_min=2):
     """ Get the current token if it will continue to be valid for the
     next TRESHOLD_MIN minutes. Otherwise, return None.
@@ -67,7 +73,7 @@ def user_from_email(email):
         db.session.commit()
     return user
 
-def user_from_access_token(token):
+def user_from_google_token(token):
     """
     Get a User with the given Google access token, or create one if no User with
     this email is found. If the token is invalid, return None.
@@ -94,7 +100,7 @@ def load_user_from_request(request):
     token = request.args.get('access_token')
     if token is None:
         return None
-    return user_from_access_token(token)
+    return user_from_google_token(token)
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -119,6 +125,8 @@ def login():
     """
     Authenticates a user with an access token using Google APIs.
     """
+    if use_testing_login():
+        return redirect(url_for('.testing_login'))
     return google_auth.authorize(callback=url_for('.authorized', _external=True))
 
 @auth.route('/login/authorized/')
@@ -140,13 +148,16 @@ def authorized(resp):
         return redirect("/")
 
     access_token = resp['access_token']
-    user = user_from_access_token(access_token)
+    user = user_from_google_token(access_token)
 
     expires_in = resp.get('expires_in', 0)
     session['token_expiry'] = dt.datetime.now() + dt.timedelta(seconds=expires_in)
     session['google_token'] = (access_token, '')  # (access_token, secret)
     return authorize_user(user)
 
+################
+# Other Routes #
+################
 
 @auth.route('/sudo/<email>/')
 @login_required
