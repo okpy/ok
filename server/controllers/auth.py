@@ -88,6 +88,8 @@ def user_from_google_token(token):
     Get a User with the given Google access token, or create one if no User with
     this email is found. If the token is invalid, return None.
     """
+    if not token:
+        return None
     if use_testing_login() and token == "test":
         return user_from_email("okstaff@okpy.org")
     resp = google_auth.get('userinfo', token=(token, ''))
@@ -114,8 +116,6 @@ def load_user_from_request(request):
         return oauth_token.user
     # Fallback to Google Auth
     token = request.args.get('access_token')
-    if token is None:
-        return None
     return user_from_google_token(token)
 
 @login_manager.unauthorized_handler

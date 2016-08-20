@@ -117,7 +117,6 @@ def check_scopes(func):
         resource_scopes = getattr(resource, 'required_scopes', {})
         # If unspecified, assume 'all' scope is neccesary
         needed_scopes = resource_scopes.get(func.__name__, ['all'])
-
         if user_scopes is None:
             # Not an OAuth Based Request
             return func(*args, **kwargs)
