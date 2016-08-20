@@ -16,7 +16,7 @@ import logging
 
 from server import utils
 from server.models import db, User, Enrollment, Client, Token, Grant
-from server.extensions import csrf
+from server.extensions import csrf, oauth_provider
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +54,18 @@ def google_oauth_token(token=None):
 # Helpers #
 ###########
 
+def check_oauth_token(scopes=[]):
+    """ Check the request for OAuth creds.
+    Requires: Flask Request and access_token in request.args
+    Return Token or None
+    """
+    # Check with local OAuth Provider for user
+    valid, req = oauth_provider.verify_request(scopes)
+    if valid:
+        return req
+
 def get_token_if_valid(treshold_min=2):
-    """ Get the current token if it will continue to be valid for the
+    """ Get the current google token if it will continue to be valid for the
     next TRESHOLD_MIN minutes. Otherwise, return None.
     """
     future_usage = dt.datetime.now() + dt.timedelta(minutes=treshold_min)
@@ -97,10 +107,22 @@ def load_user_from_request(request):
     """
     if request.blueprint != "api":
         return None
+
     token = request.args.get('access_token')
     if token is None:
         return None
-    return user_from_google_token(token)
+
+    if token.startswith('ya29'):
+        google_auth = user_from_google_token(token)
+        if google_auth:
+            return google_auth
+        oauth_token = check_oauth_token()
+        if oauth_token:
+            return oauth_token
+    else:
+        google_auth = user_from_google_token(token)
+        if google_auth:
+            return google_auth
 
 @login_manager.unauthorized_handler
 def unauthorized():

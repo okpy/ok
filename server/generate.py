@@ -11,7 +11,7 @@ import pytz
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
                            GradingTask, Client, Token)
-from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE
+from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE, OAUTH_SCOPES
 from server.extensions import cache
 
 original_file = open('tests/files/fizzbuzz_before.py').read()
@@ -347,11 +347,11 @@ def seed_oauth():
     client = Client(
         name='dev', client_id='normal', client_secret='normal',
         _redirect_uris=(
-            'http://127.0.0.1:8000/authorized '
             'http://localhost:8000/authorized '
+            'http://127.0.0.1:8000/authorized '
         ), is_confidential=False,
         description='Sample App for building OAuth',
-        _default_scopes='email'
+        _default_scopes=' '.join(OAUTH_SCOPES)
     )
     db.session.add(client)
     db.session.commit()
@@ -362,7 +362,7 @@ def seed():
     db.session.commit()
 
     random.seed(0)
-    seed_users(num=5)
+    seed_users(num=15)
     seed_courses()
     seed_assignments()
     seed_enrollments()

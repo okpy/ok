@@ -17,11 +17,11 @@
     </div>
     <div class="right col-md-2 col-sm-2">
     {% if current_user.is_authenticated %}
-      <a data-no-instant href="{{ url_for('student.index')  }}" class="btn pill">{{current_user.email}}</a>
+      <a data-no-instant href="{{ url_for('student.index')  }}" class="btn hidden-xs landing-btn btn-block pill">{{current_user.email}}</a>
     {% elif config['TESTING_LOGIN'] and config['ENV'] == 'dev' %}
-      <a data-no-instant href="{{ url_for('auth.testing_login') }}" class="btn pill">Login</a>
+      <a data-no-instant href="{{ url_for('auth.testing_login') }}" class="btn landing-btn btn-block pill">Login</a>
     {% else %}
-      <a data-no-instant href="{{ url_for('auth.login') }}" class="btn pill">Login</a>
+      <a data-no-instant href="{{ url_for('auth.login') }}" class="btn landing-btn btn-block pill">Login</a>
     {% endif %}
     </div>
   </header>

@@ -9,6 +9,7 @@ STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 GRADE_TAGS = ['composition', 'total', 'partner a', 'partner b', 'regrade',
               'revision']
 API_PREFIX = '/api'
+OAUTH_SCOPES = ['all', 'email']
 
 GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
