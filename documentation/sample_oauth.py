@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """ This file is a sample implementation of OAuth with OK """
 import urllib.parse
 
