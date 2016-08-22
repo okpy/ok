@@ -97,7 +97,7 @@ def access_token():
     return None
 
 @oauth.route('/oauth/revoke', methods=['POST'])
-@oauth_provider.token_handler
+@oauth_provider.revoke_handler
 def revoke_token():
     return
 
