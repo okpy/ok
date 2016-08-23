@@ -253,6 +253,9 @@ class Assignment(Model):
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
+    UserAssignment = namedtuple('UserAssignment',
+                                ['assignment', 'subm_time', 'group', 'final_subm'])
+
     @hybrid_property
     def active(self):
         return dt.utcnow() <= self.lock_date
@@ -315,6 +318,14 @@ class Assignment(Model):
     def by_name(name):
         """Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
+
+    def user_status(self, user):
+        user_ids = self.active_user_ids(user.id)
+        final_submission = self.final_submission(user_ids)
+        submission_time = final_submission and final_submission.created
+        group = Group.lookup(user, self)
+        return self.UserAssignment(self, submission_time, group,
+                                   final_submission)
 
     def course_submissions(self):
         seen = set()

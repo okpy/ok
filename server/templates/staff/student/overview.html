@@ -1,0 +1,78 @@
+{% extends "staff/base.html" %}
+
+{% block title %}Ok - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ student.email }}
+        <small> {{ current_course.display_name }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li class="active"><a href="{{ url_for('.enrollment', cid=current_course.id) }}">
+            <i class="fa fa-list"></i> Enrollment</a>
+        </li>
+        <li class="active"><a href="#"><i class="fa fa-dashboard"></i> {{ student.email }} </a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+      {% include 'alerts.html' %}
+      <div class="row visible-sm visible-xs">
+        <div class="col-sm-12">
+          <div class="box box-widget widget-user-2">
+            <div class="widget-user-header bg-yellow">
+             <div class="widget-user-image">
+                <img class="img-circle bg-green">
+              </div>
+
+             <!-- /.widget-user-image -->
+              <h3 class="widget-user-username">{{ student.identifier }}</h3>
+              <h5 class="widget-user-desc"> {{ student.role | capitalize }}</h5>
+            </div>
+            <div class="box-footer no-padding">
+              <ul class="nav nav-stacked">
+                <li>
+                  <a href="#">Student ID <span class="pull-right badge bg-blue">{{ enrollment.sid }}</span></a></li>
+                <li>
+                  <a href="#">Course Account <span class="pull-right badge bg-aqua">
+                  {{ enrollment.class_account }}
+                </span></a></li>
+                <li>
+                  <a href="#">Role <span class="pull-right badge bg-red">
+                  {{ enrollment.role }}
+                </span></a></li>
+                <li>
+                  <a href="#">Enrolled At <span class="pull-right badge bg-green">
+                  {{ utils.local_time(enrollment.created, current_course) }}
+                </span></a></li>
+              </ul>
+            </div>
+          </div>
+          <!-- /.widget-user -->
+        </div>
+      </div>
+
+
+      <div class="row">
+        <div class="col-md-12">
+          {% with assignments=assignments['active'], title='Active' %}
+            {% include 'staff/student/assignment.list.html' %}
+          {% endwith %}
+
+          {% with assignments=assignments['inactive'], title='Inactive' %}
+            {% include 'staff/student/assignment.list.html' %}
+          {% endwith %}
+        </div>
+      </div>
+  </section>
+
+  <!-- </body> do not close body in template-->
+{% endblock %}
+
+{% block page_js %}
+{% endblock %}

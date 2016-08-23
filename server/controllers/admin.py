@@ -637,3 +637,55 @@ def enrollment_csv(cid):
     return Response(stream_with_context(csv_generator),
                     mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
+
+
+################
+# Student View #
+################
+
+@admin.route("/course/<int:cid>/<string:email>")
+@is_staff(course_arg='cid')
+def student_view(cid, email):
+    courses, current_course = get_courses(cid)
+    assignments = current_course.assignments
+
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+
+    enrollment = student.is_enrolled(cid)
+    if not enrollment:
+        flash("This email is not enrolled", 'warning')
+
+    assignments = {
+        'active': [a.user_status(student) for a in assignments
+                   if a.active],
+        'inactive': [a.user_status(student) for a in assignments
+                     if not a.active]
+    }
+
+    return render_template('staff/student/overview.html',
+                           courses=courses, current_course=current_course,
+                           student=student, enrollment=enrollment,
+                           assignments=assignments)
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>")
+@is_staff(course_arg='cid')
+def student_assignment_detail(cid, email, aid):
+    courses, current_course = get_courses(cid)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    assignment_stats = assign.user_status(student)
+
+    return render_template('staff/student/assignment.html',
+                           courses=courses, current_course=current_course,
+                           student=student, assignment=assign,
+                           history=assignment_stats)
