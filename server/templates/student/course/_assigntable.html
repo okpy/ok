@@ -5,11 +5,11 @@
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
-          <th>Name</th>
-          <th>Status</th>
-          {% if scores %}<th>Scores</th> {% endif %}
-          <th>Due Date</th>
-          <th>Group</th>
+          <th class="col-name">Name</th>
+          <th class="col-status">Status</th>
+          {% if scores %}<th class="col-scores">Scores</th> {% endif %}
+          <th class="col-due-date">Due Date</th>
+          <th class="col-group">Group</th>
         </tr>
         {% for assign, subm_time, group, fs in assignments %}
         <tr>

@@ -206,6 +206,12 @@ section {
   tr.header {
     color:#767676;
   }
+  th.col-offering, th.col-institution {
+    width:20%;
+  }
+  th.col-status, th.col-due-date, th.col-group {
+    width:25%;
+  }
   tr {
     border-bottom:1px solid #eee;
   }
