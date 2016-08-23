@@ -14,8 +14,8 @@ from server.models import (db, User, Course, Assignment, Enrollment, Group,
 from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE
 from server.extensions import cache
 
-original_file = open('tests/files/fizzbuzz_before.py').read()
-modified_file = open('tests/files/fizzbuzz_after.py').read()
+original_file = open('tests/files/fizzbuzz_before.py', encoding="utf8").read()
+modified_file = open('tests/files/fizzbuzz_after.py', encoding="utf8").read()
 
 def weighted_choice(choices):
     # http://stackoverflow.com/a/3679747
