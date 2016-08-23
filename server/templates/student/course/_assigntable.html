@@ -6,8 +6,8 @@
       <table>
         <tr class="header">
           <th class="col-name">Name</th>
-          <th class="col-status">Status</th>
           {% if scores %}<th class="col-scores">Scores</th> {% endif %}
+          <th class="col-status">Status</th>
           <th class="col-due-date">Due Date</th>
           <th class="col-group">Group</th>
         </tr>
@@ -20,22 +20,6 @@
               </a>
             </span>
           </td>
-          <td>
-            {% if subm_time %}
-            <div class="due-dot green"></div>
-            <div class="due">
-              <span class="due-text green">Submitted</span>
-              <span class="due-date">{{ utils.local_time(subm_time, course) }}</span>
-            </div>
-            {% else %}
-            <div class="due-dot grey"></div>
-            <div class="due">
-              <span class="due-text grey">No Submission</span>
-              <span class="due-text grey">Did you run <code>--submit</code>?</span>
-            </div>
-
-            {% endif %}
-
             {% if scores %}
                 {% set grades = fs.visible_grades %}
                 {% if grades %}
@@ -67,6 +51,20 @@
                 </td>
                 {% endif %}
             {% endif %}
+          <td>
+          {% if subm_time %}
+            <div class="due-dot green"></div>
+            <div class="due">
+              <span class="due-text green">Submitted</span>
+              <span class="due-date">{{ utils.local_time(subm_time, course) }}</span>
+            </div>
+            {% else %}
+            <div class="due-dot grey"></div>
+            <div class="due">
+              <span class="due-text grey">No Submission</span>
+              <span class="due-text grey">Did you run <code>--submit</code>?</span>
+            </div>
+          {% endif %}
           </td>
           <td>
             {% if assign.active %}
