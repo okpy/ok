@@ -9,7 +9,7 @@ import datetime as dt
 
 from server import utils
 from server.models import Assignment
-from server.constants import VALID_ROLES, GRADE_TAGS
+from server.constants import VALID_ROLES, GRADE_TAGS, STUDENT_ROLE
 
 import csv
 import logging
@@ -145,7 +145,7 @@ class EnrollmentForm(BaseForm):
                             validators=[validators.optional()])
     section = StringField('Section',
                           validators=[validators.optional()])
-    role = SelectField('Role',
+    role = SelectField('Role', default=STUDENT_ROLE,
                        choices=[(r, r.capitalize()) for r in VALID_ROLES])
 
 
@@ -158,6 +158,8 @@ class VersionForm(BaseForm):
 
 class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField('Email, Name, SID, Course Login, Section')
+    role = SelectField('Role', default=STUDENT_ROLE,
+                       choices=[(r, r.capitalize()) for r in VALID_ROLES])
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()

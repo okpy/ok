@@ -607,7 +607,8 @@ def batch_enroll(cid):
     batch_form = forms.BatchEnrollmentForm()
     if batch_form.validate_on_submit():
         new, updated = Enrollment.enroll_from_csv(cid, batch_form)
-        msg = "Added {new}, Updated {old} students".format(new=new, old=updated)
+        msg = ("Added {new}, Updated {old} {role} enrollments"
+               .format(new=new, role=batch_form.role.data, old=updated))
         flash(msg, "success")
         return redirect(url_for(".enrollment", cid=cid))
 

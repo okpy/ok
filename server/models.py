@@ -492,6 +492,7 @@ class Enrollment(Model):
     def enroll_from_csv(cid, form):
         enrollment_info = []
         rows = form.csv.data.splitlines()
+        role = form.role.data
         entries = list(csv.reader(rows))
         new_users = []
         existing_user_count = 0
@@ -516,7 +517,7 @@ class Enrollment(Model):
         db.session.commit()
         for info in enrollment_info:
             info['id'] = info['id'].id
-        Enrollment.create(cid, enrollment_info, STUDENT_ROLE)
+        Enrollment.create(cid, enrollment_info, role)
         return len(new_users), existing_user_count
 
     @staticmethod
