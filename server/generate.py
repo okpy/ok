@@ -11,8 +11,7 @@ import pytz
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
                            GradingTask)
-from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE
-from server.extensions import cache
+from server.constants import STUDENT_ROLE
 
 original_file = open('tests/files/fizzbuzz_before.py').read()
 modified_file = open('tests/files/fizzbuzz_after.py').read()
@@ -119,7 +118,7 @@ def gen_assignment(course):
 
     last_night = (datetime.datetime.utcnow()
                           .replace(hour=0, minute=0, second=0, microsecond=0)
-                  - datetime.timedelta(seconds=1))
+                          - datetime.timedelta(seconds=1))
     last_night = (pytz.timezone("America/Los_Angeles")
                       .localize(last_night)
                       .astimezone(pytz.utc))

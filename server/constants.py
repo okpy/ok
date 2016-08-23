@@ -10,6 +10,9 @@ GRADE_TAGS = ['composition', 'total', 'partner a', 'partner b', 'regrade',
               'revision']
 API_PREFIX = '/api'
 
+COURSE_ENDPOINT_FORMAT = '^\w+/\w+/\w+$'
+ASSIGNMENT_ENDPOINT_FORMAT = COURSE_ENDPOINT_FORMAT[:-1] + '/\w+$'
+
 GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
 

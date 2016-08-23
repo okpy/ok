@@ -15,7 +15,8 @@ from server.controllers.auth import get_token_if_valid
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, db)
-from server.constants import STAFF_ROLES, STUDENT_ROLE, GRADE_TAGS
+from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
+                              GRADE_TAGS)
 from server.extensions import cache
 import server.forms as forms
 import server.highlight as highlight
@@ -55,9 +56,9 @@ def is_staff(course_arg=None):
 
 
 def get_courses(cid=None):
-    #  TODO : The decorator could add these to the routes
     if current_user.is_authenticated and current_user.is_admin:
-        courses = Course.query.all()
+        courses = (Course.query.order_by(Course.created.desc())
+                         .all())
     else:
         enrollments = current_user.enrollments(roles=STAFF_ROLES)
         courses = [e.course for e in enrollments]
@@ -66,7 +67,7 @@ def get_courses(cid=None):
 
     matching_courses = [c for c in courses if c.id == cid]
     if len(matching_courses) == 0:
-        abort(401)  # TODO to actual error page
+        abort(401)
     current_course = matching_courses[0]
     return courses, current_course
 
@@ -255,6 +256,31 @@ def client_version(name):
                            courses=courses, current_course=current_course,
                            version=version, form=form)
 
+##########
+# Course #
+##########
+@admin.route("/course/new", methods=['GET', 'POST'])
+@is_staff()
+def create_course():
+    courses, current_course = get_courses()
+    form = forms.NewCourseForm()
+    if form.validate_on_submit():
+        new_course = Course()
+        form.timezone.data = utils.str_to_tz(form.timezone.data)
+        form.populate_obj(new_course)
+
+        # Add user as instructor, can be changed later
+        enroll = Enrollment(course=new_course, user_id=current_user.id,
+                            role=INSTRUCTOR_ROLE)
+        db.session.add(new_course)
+        db.session.add(enroll)
+
+        db.session.commit()
+
+        flash(new_course.offering + " created successfully.", "success")
+        return redirect(url_for(".course", cid=new_course.id))
+    return render_template('staff/course/course.new.html', form=form,
+                           courses=courses)
 
 @admin.route("/course/<int:cid>")
 @is_staff(course_arg='cid')
@@ -263,6 +289,21 @@ def course(cid):
     # courses, current_course = get_courses(cid)
     # return render_template('staff/course/index.html',
     #                       courses=courses, current_course=current_course)
+
+@admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def course_settings(cid):
+    courses, current_course = get_courses(cid)
+    form = forms.CourseUpdateForm(obj=current_course)
+    if form.validate_on_submit():
+        form.timezone.data = utils.str_to_tz(form.timezone.data)
+        form.populate_obj(current_course)
+        db.session.commit()
+
+        flash(current_course.offering + " edited successfully.", "success")
+        return redirect(url_for(".course", cid=current_course.id))
+    return render_template('staff/course/course.edit.html', form=form,
+                           courses=courses, current_course=current_course)
 
 
 @admin.route("/course/<int:cid>/assignments")

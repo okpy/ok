@@ -5,22 +5,22 @@ from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectMultipleField, widgets, validators)
 from flask_wtf.html5 import EmailField
 
+import pytz
 import datetime as dt
 
 from server import utils
-from server.models import Assignment
-from server.constants import VALID_ROLES, GRADE_TAGS
+from server.models import Assignment, Course
+from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
+                              TIMEZONE)
 
 import csv
 import logging
-
 
 def strip_whitespace(value):
     if value and hasattr(value, "strip"):
         return value.strip()
     else:
         return value
-
 
 class MultiCheckboxField(SelectMultipleField):
     """
@@ -228,3 +228,42 @@ class UploadSubmissionForm(BaseForm):
     upload_files = FileField('Submission Files', [FileRequired()])
     flag_submission = BooleanField('Flag this submission for grading',
                                    default=False)
+
+class NewCourseForm(BaseForm):
+    offering = StringField('Offering (example: cal/cs61a/sp16)',
+                           validators=[validators.required()])
+    institution = StringField('School (e.g. UC Berkeley)',
+                           validators=[validators.optional()])
+    display_name = StringField('Course Name (e.g CS61A)',
+                           validators=[validators.required()])
+    website = StringField('Course Website',
+                           validators=[validators.optional(), validators.url()])
+    active = BooleanField('Activate Course', default=True)
+    timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones],
+                           default=TIMEZONE)
+
+    def validate(self):
+        # if our validators do not pass
+        if not super(NewCourseForm, self).validate():
+            return False
+
+        # Ensure the name has the right format:
+        if not utils.is_valid_endpoint(self.offering.data, COURSE_ENDPOINT_FORMAT):
+            self.offering.errors.append(('The name should like univ/course101/semYY'))
+            return False
+
+        course = Course.query.filter_by(offering=self.offering.data).first()
+        if course:
+            self.offering.errors.append('That offering already exists.')
+            return False
+        return True
+
+class CourseUpdateForm(BaseForm):
+    institution = StringField('School (e.g. UC Berkeley)',
+                           validators=[validators.optional()])
+    display_name = StringField('Course Name (e.g CS61A)',
+                           validators=[validators.required()])
+    website = StringField('Course Website',
+                           validators=[validators.optional(), validators.url()])
+    active = BooleanField('Activate Course', default=True)
+    timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
