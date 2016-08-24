@@ -13,22 +13,24 @@
   </ol>
 </section>
 
-<section class="content">
-  {% include 'alerts.html' %}
-  <div class="col-md-12 col-xs-12">
-    <div class="box">
-      <div class="box-body">
-        {% call forms.render_form(form, action_url="", action_text='Create OAuth Client', class_='form') %}
-          {{ forms.render_field(form.name, label_visible=true, placeholder='Ok Client', type='text') }}
-          {{ forms.render_field(form.description, label_visible=true, placeholder='A client for OK', type='text') }}
-          {{ forms.render_field(form.client_id, label_visible=true, placeholder='ok-client', type='text') }}
-          {{ forms.render_field(form.client_secret, label_visible=true, placeholder='SECRET', type='text') }}
-          {{ forms.render_field(form.is_confidential, label_visible=true) }}
-          {{ forms.render_field(form.redirect_uris, label_visible=true) }}
-          {{ forms.render_field(form.default_scopes, label_visible=true) }}
-        {% endcall %}
+  <section class="content">
+    {% include 'alerts.html' %}
+      <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+              <div class="box-body">
+              {% call forms.render_form(form, action_url="", action_text='Create OAuth Client', class_='form') %}
+                {{ forms.render_field(form.name, label_visible=true, placeholder='Ok Client', type='text') }}
+                {{ forms.render_field(form.description, label_visible=true, placeholder='A client for OK', type='text') }}
+                {{ forms.render_field(form.client_id, label_visible=true, placeholder='ok-client', type='text') }}
+                {{ forms.render_field(form.client_secret, label_visible=true, placeholder='SECRET', type='text') }}
+                {{ forms.render_field(form.is_confidential, label_visible=true) }}
+                {{ forms.render_field(form.redirect_uris, label_visible=true) }}
+                {{ forms.render_field(form.default_scopes, label_visible=true) }}
+              {% endcall %}
+              </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 {% endblock %}
