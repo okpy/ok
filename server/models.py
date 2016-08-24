@@ -658,6 +658,16 @@ class Backup(Model):
         else:
             return {}
 
+    def analytics(self):
+        """Return a dictionary of filenames to contents."""
+        message = Message.query.filter_by(
+            backup_id=self.id,
+            kind='analytics').first()
+        if message:
+            return dict(message.contents)
+        else:
+            return {}
+
     @staticmethod
     @cache.memoize(120)
     def statistics(self):
@@ -740,6 +750,30 @@ class Group(Model):
 
     @staticmethod
     @transaction
+    def force_add(staff, sender, recipient, assignment):
+        """Used by staff to create groups users on behalf of users."""
+        group = Group.lookup(sender, assignment)
+        add_sender = group is None
+        if not group:
+            group = Group(assignment=assignment)
+            db.session.add(group)
+        with group._log('accept', staff.id, recipient.id):
+            if add_sender:
+                group._add_member(sender, 'active')
+            group._add_member(recipient, 'active')
+
+    @staticmethod
+    @transaction
+    def force_remove(staff, sender, target, assignment):
+        """Used by staff to remove users."""
+        group = Group.lookup(sender, assignment)
+        if not group:
+            raise BadRequest('No group to remove from')
+        with group._log('remove', staff.id, target.id):
+            group._remove_member(target)
+
+    @staticmethod
+    @transaction
     def invite(sender, recipient, assignment):
         """Invite a user to a group, creating a group if necessary."""
         if not assignment.active:
@@ -805,7 +839,7 @@ class Group(Model):
             assignment=self.assignment
         ).one_or_none()
         if member:
-            raise BadRequest('{0} is already in this group'.format(user.email))
+            raise BadRequest('{0} is already in a group'.format(user.email))
         member = GroupMember(
             user_id=user.id,
             group=self,
