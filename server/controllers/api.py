@@ -257,6 +257,7 @@ class BackupSchema(APISchema):
     }
 
     export_fields = {
+        'id': HashIDField,
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
