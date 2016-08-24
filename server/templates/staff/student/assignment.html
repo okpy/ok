@@ -41,12 +41,22 @@
                     </div>
                   </div>
                 </div>
-                {% if stats['current_q'] != 'Unknown' %}
+                {% if stats['current_q'] %}
                 <div class="row">
                   <div class="col-sm-12">
                     <div class="description-block border-bottom">
                       <h5 class="description-header">{{ stats['current_q'] }}</h5>
                       <span class="description-text">Current Question</span>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+                {% if stats['attempts'] %}
+                <div class="row">
+                  <div class="col-sm-12">
+                    <div class="description-block border-bottom">
+                      <h5 class="description-header">{{ stats['attempts'] }}</h5>
+                      <span class="description-text">Total Attempts</span>
                     </div>
                   </div>
                 </div>
@@ -224,7 +234,7 @@
                             {% if item.scores %}
                               {% for score in item.scores %}
                                 {% if not score.archived %}
-                                <a href="{{ url_for('.grading', bid=item.final_subm.id) }}">
+                                <a href="{{ url_for('.grading', bid=item.id) }}">
                                     <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span>
                                 </a>
                                 {% endif %}

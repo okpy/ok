@@ -695,7 +695,8 @@ def student_assignment_detail(cid, email, aid):
     stats = {
         'num_backups': assign.backups(user_ids).count(),
         'num_submissions': assign.submissions(user_ids).count(),
-        'current_q': 'Unknown',
+        'current_q': None,
+        'attempts': None,
         'latest': latest,
         'analytics': latest and latest.analytics()
     }
@@ -710,7 +711,9 @@ def student_assignment_detail(cid, email, aid):
     paginate = backups.paginate(page=page, per_page=15)
 
     if stats['analytics']:
-        stats['current_q'] = stats['analytics'].get('current')
+        stats['current_q'] = stats['analytics'].get('question')
+        stats['attempts'] = (stats['analytics'].get('history', {})
+                                               .get('all_attempts'))
 
     return render_template('staff/student/assignment.html',
                            courses=courses, current_course=current_course,
