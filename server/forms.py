@@ -2,7 +2,7 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
-                     SelectMultipleField, widgets, validators)
+                     SelectMultipleField, FieldList, widgets, validators)
 from flask_wtf.html5 import EmailField
 
 import datetime as dt
@@ -228,3 +228,25 @@ class UploadSubmissionForm(BaseForm):
     upload_files = FileField('Submission Files', [FileRequired()])
     flag_submission = BooleanField('Flag this submission for grading',
                                    default=False)
+
+class ClientForm(BaseForm):
+    name = StringField('Client Name', validators=[validators.required()])
+    description = StringField('Description', validators=[validators.optional()])
+
+    client_id = StringField('Client ID', validators=[validators.required()])
+    client_secret = StringField('Client Secret',
+        validators=[validators.required()])
+
+    is_confidential = SelectField(
+        'Confidentiality',
+        choices=[(True, 'confidential'), (False, 'public')],
+        default=True)
+
+    redirect_uris = FieldList(
+        StringField('Redirect URI',
+            validators=[validators.required(), validators.url()]))
+
+    default_scopes = SelectField(
+        'Scope',
+        choices=[('all', 'all'), ('email', 'email')],
+        default='all')

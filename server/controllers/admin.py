@@ -14,7 +14,7 @@ from server.autograder import autograde_assignment
 from server.controllers.auth import get_token_if_valid
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, db)
+                           GradingTask, Backup, Score, Client, db)
 from server.constants import STAFF_ROLES, STUDENT_ROLE, GRADE_TAGS
 from server.extensions import cache
 import server.forms as forms
@@ -230,7 +230,7 @@ def grade(bid):
     return redirect(next_page)
 
 
-@admin.route("/client/<name>", methods=['GET', 'POST'])
+@admin.route("/version/<name>", methods=['GET', 'POST'])
 @is_staff()
 def client_version(name):
     courses, current_course = get_courses()
@@ -636,3 +636,24 @@ def enrollment_csv(cid):
     return Response(stream_with_context(csv_generator),
                     mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
+
+@admin.route("/clients/new/", methods=['GET', 'POST'])
+@is_staff()
+def new_client():
+    form = forms.ClientForm()
+    if form.validate_on_submit():
+        client = Client(user=current_user)
+        form.populate_obj(client)
+        db.session.add(client)
+        db.session.commit()
+
+        flash(client.name + " OAuth client added.", "success")
+        return redirect(url_for(".clients"))
+
+    return render_template('staff/clients/new.html', form=form)
+
+@admin.route("/clients/")
+@is_staff()
+def clients():
+    clients = Client.query.all()
+    return render_template('staff/clients/index.html', clients=clients)
