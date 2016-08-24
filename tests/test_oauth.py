@@ -17,45 +17,45 @@ class TestOAuth(OkTestCase):
 
         self.oauth_client = Client(
             name='Testing Client', client_id='normal', client_secret='normal',
-            _redirect_uris=(
-                'http://127.0.0.1:8000/authorized'
-            ), is_confidential=False,
+            redirect_uris=['http://127.0.0.1:8000/authorized'],
+            is_confidential=False,
             description='Sample App for testing OAuth',
-            _default_scopes=scope
+            default_scopes=scope
         )
         db.session.add(self.oauth_client)
         db.session.commit()
 
         self.temp_grant = Grant(
             user_id=self.user1.id, client_id='normal',
-            code='12345', _scopes='email',
+            code='12345', scopes=['email'],
             expires=dt.datetime.utcnow() + dt.timedelta(seconds=100)
         )
         db.session.add(self.temp_grant)
 
         self.expired_token = Token(
             user_id=self.user1.id, client_id='normal',
+            scopes=[scope],
             access_token='expired', expires=dt.datetime.utcnow() - dt.timedelta(seconds=1)
         )
         db.session.add(self.expired_token)
 
         self.valid_token = Token(
             user_id=self.user1.id, client_id='normal',
-            _scopes=scope,
+            scopes=[scope],
             access_token='soo_valid', expires=dt.datetime.utcnow() + dt.timedelta(seconds=3600)
         )
         db.session.add(self.valid_token)
 
         self.valid_token_bad_scope = Token(
             user_id=self.user1.id, client_id='normal',
-            _scopes=scope[::-1],
+            scopes=['invalid'],
             access_token='soo_valid12', expires=dt.datetime.utcnow() + dt.timedelta(seconds=3600)
         )
         db.session.add(self.valid_token_bad_scope)
 
         self.valid_token_all_scope = Token(
             user_id=self.user1.id, client_id='normal',
-            _scopes='all',
+            scopes=['all'],
             access_token='soo_valid322', expires=dt.datetime.utcnow() + dt.timedelta(seconds=3600)
         )
         db.session.add(self.valid_token_all_scope)

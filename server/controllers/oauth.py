@@ -37,7 +37,7 @@ def save_grant(client_id, code, request, *args, **kwargs):
         client_id=client_id,
         code=code['code'],
         redirect_uri=request.redirect_uri,
-        _scopes=' '.join(request.scopes),
+        scopes=request.scopes,
         user=current_user,
         expires=expires
     )
@@ -67,7 +67,7 @@ def save_token(token, orequest, *args, **kwargs):
         access_token=token['access_token'],
         refresh_token=token['refresh_token'],
         token_type=token['token_type'],
-        _scopes=token['scope'],
+        scopes=token['scope'].split(),
         expires=expires,
         client_id=orequest.client.client_id,
         user_id=orequest.user.id,
