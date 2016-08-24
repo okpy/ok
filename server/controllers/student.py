@@ -67,20 +67,11 @@ def index():
 @student.route('/<offering:offering>/')
 @login_required
 def course(offering):
-    def assignment_info(assignment):
-        # TODO does this make O(n) db queries?
-        user_ids = assignment.active_user_ids(current_user.id)
-        final_submission = assignment.final_submission(user_ids)
-        submission_time = final_submission and final_submission.created
-        group = Group.lookup(current_user, assignment)
-        return assignment, submission_time, group, final_submission
-
     course = get_course(offering)
-
     assignments = {
-        'active': [assignment_info(a) for a in course.assignments
+        'active': [a.user_status(current_user) for a in course.assignments
                    if a.active and a.visible],
-        'inactive': [assignment_info(a) for a in course.assignments
+        'inactive': [a.user_status(current_user) for a in course.assignments
                      if not a.active and a.visible]
     }
     return render_template('student/course/index.html', course=course,

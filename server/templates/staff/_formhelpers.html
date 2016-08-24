@@ -107,3 +107,24 @@
         <button type="submit" class="{{ btn_class }}">{{ action_text }} </button>
     </form>
 {%- endmacro %}
+
+{% macro render_form_bare(form, action_url='', class_='', enctype="application/x-www-form-urlencoded") -%}
+
+    <form method="POST" action="{{ action_url }}" role="form" class="{{ class_ }}" enctype="{{ enctype }}">
+        {{ form.hidden_tag() if form.hidden_tag }}
+        {% if caller %}
+            {{ caller() }}
+        {% else %}
+            {% for f in form %}
+                {% if f.type == 'BooleanField' %}
+                    {{ render_checkbox_field(f) }}
+                {% elif f.type == 'RadioField' %}
+                    {{ render_radio_field(f) }}
+                {% else %}
+                    {{ render_field(f) }}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </form>
+{%- endmacro %}
+

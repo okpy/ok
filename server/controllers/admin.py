@@ -5,16 +5,18 @@ from io import StringIO
 
 from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
+from werkzeug.exceptions import BadRequest
 
 from flask_login import current_user
 import pygal
 from pygal.style import CleanStyle
 
-from server.autograder import autograde_assignment
+from server.autograder import autograde_assignment, submit_continous
 from server.controllers.auth import get_token_if_valid
+
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, db)
+                           GradingTask, Backup, Score, Group, db)
 from server.constants import STAFF_ROLES, STUDENT_ROLE, GRADE_TAGS
 from server.extensions import cache
 import server.forms as forms
@@ -637,3 +639,236 @@ def enrollment_csv(cid):
     return Response(stream_with_context(csv_generator),
                     mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
+
+
+################
+# Student View #
+################
+
+@admin.route("/course/<int:cid>/<string:email>")
+@is_staff(course_arg='cid')
+def student_view(cid, email):
+    courses, current_course = get_courses(cid)
+    assignments = current_course.assignments
+
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+
+    enrollment = student.is_enrolled(cid)
+    if not enrollment:
+        flash("This email is not enrolled", 'warning')
+
+    assignments = {
+        'active': [a.user_status(student) for a in assignments
+                   if a.active],
+        'inactive': [a.user_status(student) for a in assignments
+                     if not a.active]
+    }
+
+    return render_template('staff/student/overview.html',
+                           courses=courses, current_course=current_course,
+                           student=student, enrollment=enrollment,
+                           assignments=assignments)
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>")
+@is_staff(course_arg='cid')
+def student_assignment_detail(cid, email, aid):
+    courses, current_course = get_courses(cid)
+    page = request.args.get('page', 1, type=int)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    assignment_stats = assign.user_status(student)
+
+    user_ids = assign.active_user_ids(student.id)
+
+    latest = assignment_stats.final_subm or assign.backups(user_ids).first()
+
+    stats = {
+        'num_backups': assign.backups(user_ids).count(),
+        'num_submissions': assign.submissions(user_ids).count(),
+        'current_q': None,
+        'attempts': None,
+        'latest': latest,
+        'analytics': latest and latest.analytics()
+    }
+
+    backups = (Backup.query.options(db.joinedload('scores'),
+                                    db.joinedload('submitter'))
+                     .filter(Backup.submitter_id.in_(user_ids),
+                             Backup.assignment_id == assign.id)
+                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
+                               Backup.created.desc()))
+
+    paginate = backups.paginate(page=page, per_page=15)
+
+    if stats['analytics']:
+        stats['current_q'] = stats['analytics'].get('question')
+        stats['attempts'] = (stats['analytics'].get('history', {})
+                                               .get('all_attempts'))
+
+    return render_template('staff/student/assignment.html',
+                           courses=courses, current_course=current_course,
+                           student=student, assignment=assign,
+                           add_member_form=forms.StaffAddGroupFrom(),
+                           paginate=paginate,
+                           csrf_form=forms.CSRFForm(),
+                           upload_form=forms.UploadSubmissionForm(),
+                           stats=stats,
+                           assign_status=assignment_stats)
+
+########################
+# Student view actions #
+########################
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/add_member",
+             methods=["POST"])
+@is_staff(course_arg='cid')
+def staff_group_add(cid, email, aid):
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.StaffAddGroupFrom()
+    result_page = url_for('.student_assignment_detail', cid=cid,
+                          email=email, aid=aid)
+
+    student = User.lookup(email)
+    if not student:
+        return abort(404)
+
+    if form.validate_on_submit():
+        target = User.lookup(form.email.data)
+        if not target or not target.is_enrolled(cid):
+            flash("This user is not enrolled", 'warning')
+            return redirect(result_page)
+        try:
+            Group.force_add(current_user, student, target, assign)
+        except BadRequest as e:
+            flash("Error: {}".format(str(e.description)), 'error')
+            return redirect(result_page)
+
+    return redirect(result_page)
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/remove_member",
+             methods=["POST"])
+@is_staff(course_arg='cid')
+def staff_group_remove(cid, email, aid):
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+
+    result_page = url_for('.student_assignment_detail', cid=cid,
+                          email=email, aid=aid)
+
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        target = User.lookup(request.form['target'])
+        if not target:
+            flash('{} does not exist'.format(request.form['target']), 'error')
+            return redirect(result_page)
+        try:
+            Group.force_remove(current_user, student, target, assign)
+        except BadRequest as e:
+            flash("Error: {}".format(str(e.description)), 'error')
+    return redirect(result_page)
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/flag",
+             methods=["POST"])
+@is_staff(course_arg='cid')
+def staff_flag_backup(cid, email, aid):
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+    result_page = url_for('.student_assignment_detail', cid=cid,
+                          email=email, aid=aid)
+
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+    user_ids = assign.active_user_ids(student.id)
+
+    bid = request.form.get('bid')
+
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        backup = Backup.query.filter_by(id=utils.decode_id(bid),
+                                        assignment=assign).one_or_none()
+        if not backup:
+            flash('{} does not exist'.format(bid, 'error'))
+            return redirect(result_page)
+
+        if not backup.flagged:
+            result = assign.flag(backup.id, user_ids)
+            flash('Flagged backup {} for grading'.format(bid), 'success')
+        else:
+            result = assign.unflag(backup.id, user_ids)
+            flash('Removed grading flag on {}'.format(bid), 'success')
+
+    return redirect(result_page)
+
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/submit",
+             methods=["POST"])
+@is_staff(course_arg='cid')
+def staff_submit_backup(cid, email, aid):
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+    result_page = url_for('.student_assignment_detail', cid=cid,
+                          email=email, aid=aid)
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+    user_ids = assign.active_user_ids(student.id)
+    # TODO: DRY - Unify with student upload code - should just be a function
+    form = forms.UploadSubmissionForm()
+    if form.validate_on_submit():
+        files = request.files.getlist("upload_files")
+        if files:
+            templates = assign.files
+            messages = {'file_contents': {}}
+            for upload in files:
+                data = upload.read()
+                if len(data) > 2097152:
+                    # File is too large (over 2 MB)
+                    flash(("{} is over the maximum file size limit of 2MB"
+                           .format(upload.filename)),
+                          'danger')
+                    return redirect(result_page)
+                messages['file_contents'][upload.filename] = str(data, 'latin1')
+            if templates:
+                missing = []
+                for template in templates:
+                    if template not in messages['file_contents']:
+                        missing.append(template)
+                if missing:
+                    flash(("Missing files: {}. The following files are required: {}"
+                           .format(', '.join(missing), ', '.join([t for t in templates]))
+                           ), 'danger')
+                    return redirect(result_page)
+            # use student, not current_user
+            backup = ok_api.make_backup(student, assign.id, messages, True)
+            if form.flag_submission.data:
+                assign.flag(backup.id, user_ids)
+            if assign.autograding_key:
+                try:
+                    submit_continous(backup)
+                except ValueError as e:
+                    flash('Did not send to autograder: {}'.format(e), 'warning')
+
+            flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
+            return redirect(result_page)
