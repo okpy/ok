@@ -18,7 +18,4 @@ if (typeof HTMLElement.prototype.removeClass !== "function") {
         this.className = newClassName;
     }
 }
-// initialize datepicker
-jQuery(document).ready(function($){
-  var dt = $('.datepicker').datetimepicker({format:'YYYY-MM-DD hh:mm:ss'});
-});
+
