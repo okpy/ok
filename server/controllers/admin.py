@@ -230,7 +230,7 @@ def grade(bid):
     return redirect(next_page)
 
 
-@admin.route("/version/<name>", methods=['GET', 'POST'])
+@admin.route("/versions/<name>", methods=['GET', 'POST'])
 @is_staff()
 def client_version(name):
     courses, current_course = get_courses()
