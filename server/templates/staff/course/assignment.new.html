@@ -33,8 +33,8 @@
                   {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', type='text') }}
                   {{ forms.render_field(form.name, label_visible=true, placeholder='cs61a/sp16/proj01', type='text') }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
-                  {{ forms.render_field(form.due_date, label_visible=true, type='text', class='datepicker') }}
-                  {{ forms.render_field(form.lock_date, label_visible=true, type='text', class='datepicker') }}
+                  {{ forms.render_field(form.due_date, label_visible=true, type='text', class='form-control datepicker') }}
+                  {{ forms.render_field(form.lock_date, label_visible=true, type='text', class='form-control datepicker') }}
                   {{ forms.render_field(form.url, label_visible=true, placeholder='http://cs61a.org/proj/hog (Optional)', type='text') }}
                   {{ forms.render_checkbox_field(form.visible, label_visible=true) }}
                   {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
