@@ -52,7 +52,7 @@
                         <td class="submission-time" data-timestamp="{{ item.created }}" data-timestamp="{{ item.subm_time }}">{{ utils.local_time(item.subm_time, current_course) }}
                         </td>
                         <td class="final-subm-id">
-                            <a href="{{ url_for('admin.grading', bid=item.final_subm.id) }}">
+                            <a href="{{ url_for('.grading', bid=item.final_subm.id) }}">
                                 {{ item.final_subm.hashid }}
                             </a>
                         </td>
@@ -67,7 +67,11 @@
                     <td class="scores">
                     {% if item.final_subm and item.final_subm.scores %}
                         {% for score in item.final_subm.scores %}
-                            <span class="label label-info">{{score.kind}}: {{score.score | round(2)}}</span>
+                            {% if not score.archived %}
+                            <a href="{{ url_for('.grading', bid=item.final_subm.id) }}">
+                                <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span>
+                            </a>
+                            {% endif %}
                         {% endfor %}
                     {% else %}
                     &mdash;

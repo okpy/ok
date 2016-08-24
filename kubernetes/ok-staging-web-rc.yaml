@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: ok-v3-staging
-        image: cs61a/ok
+        image: cs61a/ok-server:staging-student-details
         imagePullPolicy: Always
         livenessProbe:
           # an http probe

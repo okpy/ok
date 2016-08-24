@@ -223,12 +223,15 @@
                             <td>
                             {% if item.scores %}
                               {% for score in item.scores %}
-                                  <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span> <br>
+                                {% if not score.archived %}
+                                <a href="{{ url_for('.grading', bid=item.final_subm.id) }}">
+                                    <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span>
+                                </a>
+                                {% endif %}
                               {% endfor %}
                             {% else %}
                             &mdash;
                             {% endif %}
-
                             </td>
                             <td>
                             <div class="btn-group">
