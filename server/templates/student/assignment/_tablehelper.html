@@ -21,7 +21,9 @@
             </a>
           </td>
           <td>
-            {{ utils.local_time(subm.created, course) }}
+            <span class="due-date">
+              {{ utils.local_time(subm.created, course) }}
+            </span>
           </td>
           <td>
             <span class="due-date">
@@ -92,7 +94,9 @@
             </a>
           </td>
           <td>
-            {{ utils.local_time(backup.created, course) }}
+            <span class="due-date">
+              {{ utils.local_time(backup.created, course) }}
+            </span>
           </td>
           <td>
             <span class="due-date">

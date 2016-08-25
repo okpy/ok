@@ -254,7 +254,7 @@ section {
     .due-dot.red,.prog-dot.red {
       background-color:#C00;
     }
-    .due-date,.due-text {
+    .due .due-date,.due-text {
       width:100%;
       display:inline-block;
     }
