@@ -346,12 +346,13 @@ def seed_oauth():
     print("Seeding OAuth")
     client = Client(
         name='dev', client_id='normal', client_secret='normal',
-        _redirect_uris=(
-            'http://localhost:8000/authorized '
-            'http://127.0.0.1:8000/authorized '
-        ), is_confidential=False,
+        redirect_uris=[
+            'http://localhost:8000/authorized',
+            'http://127.0.0.1:8000/authorized',
+        ],
+        is_confidential=False,
         description='Sample App for building OAuth',
-        _default_scopes=' '.join(OAUTH_SCOPES)
+        default_scopes=OAUTH_SCOPES,
     )
     db.session.add(client)
     db.session.commit()

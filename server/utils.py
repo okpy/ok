@@ -1,3 +1,4 @@
+import base64
 import csv
 import datetime as dt
 import logging
@@ -163,3 +164,8 @@ def generate_csv(query, items, selector_fn):
             data.update(dict)
         csv_writer.writerow(data)
         yield csv_file.getvalue()
+
+def generate_secret_key():
+    """Generates a base64-encoded secret, as a string."""
+    random_bytes = bytes(random.randrange(0, 256) for _ in range(24))
+    return base64.b64encode(random_bytes).decode('ascii')

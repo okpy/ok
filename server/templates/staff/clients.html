@@ -1,0 +1,70 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} OAuth Clients {% endblock %}
+
+{% block main %}
+<section class="content-header">
+  <h1>OAuth Clients</h1>
+  <ol class="breadcrumb">
+    <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+    <li><i class="fa fa-dashboard"></i>OAuth Clients</li>
+  </ol>
+</section>
+
+  <section class="content">
+    {% include 'alerts.html' %}
+      <div class="row">
+        <div class="col-md-12">
+          <div class="box">
+            <div class="box-header">
+              <h3 class="box-title">OAuth Clients</h3>
+            </div>
+            <div class="box-body table-responsive no-padding">
+              <table class="table table-striped">
+                <tbody>
+                  <tr>
+                    <th>Name</th>
+                    <th>Client ID</th>
+                    <th>Confidentiality</th>
+                    <th>Redirect URIs</th>
+                    <th>Default Scopes</th>
+                  </tr>
+
+                  {% for client in clients %}
+                  <tr>
+                    <td>{{ client.name }}</td>
+                    <td>{{ client.client_id }}</td>
+                    <td>{{ 'confidential' if client.is_confidential else 'public'}}</td>
+                    <td>{{ client.redirect_uris | join(', ') }}</td>
+                    <td>{{ client.default_scopes | join(', ') }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+              <div class="box-header">
+                <h3 class="box-title">New OAuth Client</h3>
+              </div>
+              <div class="box-body">
+              {% call forms.render_form(form, action_url="", action_text='Create OAuth Client', class_='form') %}
+                {{ forms.render_field(form.name, label_visible=true, placeholder='Ok Client', type='text') }}
+                {{ forms.render_field(form.description, label_visible=true, placeholder='A client for OK', type='text') }}
+                {{ forms.render_field(form.client_id, label_visible=true, placeholder='ok-client', type='text') }}
+                {{ forms.render_field(form.client_secret, label_visible=true, readonly='readonly', type='text') }}
+                {{ forms.render_checkbox_field(form.is_confidential, label_visible=true) }}
+                {{ forms.render_field(form.redirect_uris, label_visible=true) }}
+                {{ forms.render_field(form.default_scopes, label_visible=true) }}
+              {% endcall %}
+              </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock %}

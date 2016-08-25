@@ -637,23 +637,18 @@ def enrollment_csv(cid):
                     mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
-@admin.route("/clients/new/", methods=['GET', 'POST'])
+@admin.route("/clients/", methods=['GET', 'POST'])
 @is_staff()
-def new_client():
-    form = forms.ClientForm()
+def clients():
+    clients = Client.query.all()
+    form = forms.ClientForm(client_secret=utils.generate_secret_key())
     if form.validate_on_submit():
         client = Client(user=current_user)
         form.populate_obj(client)
         db.session.add(client)
         db.session.commit()
 
-        flash(client.name + " OAuth client added.", "success")
+        flash('OAuth client "{}" added'.format(client.name), "success")
         return redirect(url_for(".clients"))
 
-    return render_template('staff/clients/new.html', form=form)
-
-@admin.route("/clients/")
-@is_staff()
-def clients():
-    clients = Client.query.all()
-    return render_template('staff/clients/index.html', clients=clients)
+    return render_template('staff/clients.html', clients=clients, form=form)

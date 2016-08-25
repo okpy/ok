@@ -100,3 +100,34 @@ class TestOAuth(OkTestCase):
         response = self.client.get(("/api/v3/assignment/{}?access_token={}"
                                     .format(self.assignment.name, self.valid_token_bad_scope.access_token)))
         self.assert_200(response)
+
+    def test_client_form(self):
+        self._setup_clients()
+        self.login(self.admin.email)
+
+        redirect_uris = [
+            'http://myapp.com/authorize',
+            'https://myapp.com/authorize',
+        ]
+        default_scopes = ['email', 'all']
+        data = {
+            'name': 'My App',
+            'description': 'A web app that does stuff',
+            'client_id': 'my-app',
+            'client_secret': 'my-secret-key',
+            'is_confidential': 'true',
+            'redirect_uris': ', '.join(redirect_uris),
+            'default_scopes': ', '.join(default_scopes),
+        }
+
+        self.assert_200(self.client.post('/admin/clients/',
+            data=data, follow_redirects=True))
+
+        client = Client.query.filter_by(client_id="my-app").one()
+        self.assertEqual(client.name, data['name'])
+        self.assertEqual(client.description, data['description'])
+        self.assertEqual(client.client_id, data['client_id'])
+        self.assertEqual(client.client_secret, data['client_secret'])
+        self.assertTrue(client.is_confidential)
+        self.assertEqual(client.redirect_uris, redirect_uris)
+        self.assertEqual(client.default_scopes, default_scopes)

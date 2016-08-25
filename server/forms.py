@@ -2,7 +2,7 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
-                     SelectMultipleField, FieldList, widgets, validators)
+                     SelectMultipleField, Field, widgets, validators)
 from flask_wtf.html5 import EmailField
 
 import datetime as dt
@@ -32,6 +32,20 @@ class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
+class CommaSeparatedField(Field):
+    widget = widgets.TextInput()
+
+    def _value(self):
+        if self.data:
+            return ', '.join(self.data)
+        else:
+            return ''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            self.data = [x.strip() for x in valuelist[0].split(',')]
+        else:
+            self.data = []
 
 class BaseForm(Form):
 
@@ -234,19 +248,20 @@ class ClientForm(BaseForm):
     description = StringField('Description', validators=[validators.optional()])
 
     client_id = StringField('Client ID', validators=[validators.required()])
-    client_secret = StringField('Client Secret',
+    client_secret = StringField(
+        'Client Secret',
+        description="Save this token in your configuration. You won't be able to see it again.",
         validators=[validators.required()])
 
-    is_confidential = SelectField(
-        'Confidentiality',
-        choices=[(True, 'confidential'), (False, 'public')],
+    is_confidential = BooleanField(
+        'Confidential',
+        description='Refresh tokens are only available for "confidential" clients.',
         default=True)
 
-    redirect_uris = FieldList(
-        StringField('Redirect URI',
-            validators=[validators.required(), validators.url()]))
+    redirect_uris = CommaSeparatedField(
+        'Redirect URIs',
+        description='Comma-separated list.')
 
-    default_scopes = SelectField(
-        'Scope',
-        choices=[('all', 'all'), ('email', 'email')],
-        default='all')
+    default_scopes = CommaSeparatedField(
+        'Default Scope',
+        description='Comma-separated list. Valid scopes are "email" and "all".')
