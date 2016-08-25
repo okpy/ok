@@ -9,7 +9,7 @@
           {% if scores %}<th class="col-scores">Scores</th> {% endif %}
           <th class="col-status">Status</th>
           <th class="col-due-date">Due Date</th>
-          <th class="col-group hidden-md">Group</th>
+          <th class="col-group">Group</th>
         </tr>
         {% for assign, subm_time, group, fs in assignments %}
         <tr>
@@ -90,7 +90,7 @@
 
           </td>
           {% if group %}
-          <td class="tip-trigger hidden-md">
+          <td class="tip-trigger">
               {% if group.is_pending() %}
               <div class="due-dot red"></div>
                 <div class="due">
@@ -121,7 +121,7 @@
                 </div>
           </td>
           {% elif assign.max_group_size == 1 %}
-          <td class="hidden-md">
+          <td>
             <div class="due-dot"></div>
             <div class="due">
               <span class="due-text">Indvidual Assignment</span>
@@ -129,7 +129,7 @@
             </div>
           </td>
           {% else %}
-          <td class="tip-trigger hidden-md">
+          <td class="tip-trigger">
                 <div class="due-dot grey"></div>
                 <div class="due">
                   <span class="due-text">No group</span>
