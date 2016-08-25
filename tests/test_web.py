@@ -278,3 +278,19 @@ if driver:
             self.assertTrue("Hog" in self.driver.page_source)
             # Ensure tasks were created for two staff members
             self.assertTrue("for 2 staff" in self.driver.page_source)
+
+        def test_login_redirect(self):
+            self._seed_course()
+
+            target_url = '{}/admin/course/{}/assignments'.format(
+                self.get_server_url(),
+                self.course.id)
+            login_url = '{}/testing-login/'.format(self.get_server_url())
+
+            # Access page while not logged in - should redirect to login
+            self.pageLoad(target_url)
+            self.assertEquals(self.driver.current_url, login_url)
+
+            # Login and redirect back to original page
+            self.driver.find_element_by_id('admin').click()
+            self.assertEquals(self.driver.current_url, target_url)

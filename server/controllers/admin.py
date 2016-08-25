@@ -6,7 +6,7 @@ from io import StringIO
 from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
 
-from flask_login import current_user
+from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
 
@@ -50,7 +50,7 @@ def is_staff(course_arg=None):
                 return redirect(url_for("student.index"))
             flash("You are not on the course staff", "error")
             return redirect(url_for("student.index"))
-        return wrapper
+        return login_required(wrapper)
     return decorator
 
 
