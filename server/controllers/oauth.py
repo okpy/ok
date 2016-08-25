@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 
 from server.models import db, Client, Token, Grant
 from server.extensions import csrf, oauth_provider
+from server.controllers.auth import use_testing_login
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +80,8 @@ def save_token(token, orequest, *args, **kwargs):
 @login_required
 def authorize(*args, **kwargs):
     # Only CSRF protect this route.
-    csrf.protect()
+    if not use_testing_login():
+        csrf.protect()
 
     if request.method == 'GET':
         client_id = kwargs.get('client_id')
