@@ -10,7 +10,7 @@ def create_client(app):
     oauth = OAuth(app)
 
     remote = oauth.remote_app(
-        'dev',  # Client Name
+        'ok-server',  # Server Name
         consumer_key='normal',
         consumer_secret='normal',
         request_token_params={'scope': 'all'},
