@@ -17,7 +17,7 @@ from server.controllers.auth import get_token_if_valid
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, db)
-from server.constants import STAFF_ROLES, STUDENT_ROLE, GRADE_TAGS
+from server.constants import STAFF_ROLES, STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADE_TAGS
 from server.extensions import cache
 import server.forms as forms
 import server.highlight as highlight
@@ -595,8 +595,14 @@ def enrollment(cid):
              .filter(Enrollment.course_id == cid, Enrollment.role.in_(STAFF_ROLES))
              .all())
 
+    lab_assistants = (Enrollment.query.options(db.joinedload('user'))
+                      .filter_by(course_id=cid, role=LAB_ASSISTANT_ROLE)
+                      .order_by(Enrollment.created.desc())
+                      .all())
+
     return render_template('staff/course/enrollment.html',
                            enrollments=students, staff=staff,
+                           lab_assistants=lab_assistants,
                            single_form=single_form,
                            courses=courses,
                            current_course=current_course)

@@ -4,7 +4,8 @@ STUDENT_ROLE = 'student'
 GRADER_ROLE = 'grader'
 STAFF_ROLE = 'staff'
 INSTRUCTOR_ROLE = 'instructor'
-VALID_ROLES = [STUDENT_ROLE, GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
+LAB_ASSISTANT_ROLE = 'lab assistant'
+VALID_ROLES = [STUDENT_ROLE, GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE, LAB_ASSISTANT_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 GRADE_TAGS = ['composition', 'total', 'partner a', 'partner b', 'regrade',
               'revision']

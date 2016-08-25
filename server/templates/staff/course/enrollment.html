@@ -30,6 +30,9 @@
             {% with roster=staff, title="Staff" %}
                 {% include 'staff/course/students.list.html' %}
             {% endwith %}
+            {% with roster=lab_assistants, title="Lab Assistants" %}
+                {% include 'staff/course/students.list.html' %}
+            {% endwith %}
         </div>
         <!-- Side Panel -->
         <div class="col-md-3 col-xs-12">
@@ -125,5 +128,13 @@
     var staffLit = new List('Staff-list', staffOptions);
     // TODO: Use removeClass with polyfill
     document.getElementById('Staff-list').style.display = 'block';
+
+    var labAssistantOptions = {
+        valueNames: ['email', 'name', 'sid', 'role', 'section'],
+        plugins [ListPagination()],
+        page:20
+    };
+    var labAssistantList = new List('LabAssistant-list', labAssistantOptions);
+    document.getElementById('LabAssistant-list').style.display = 'block';
 </script>
 {% endblock %}
