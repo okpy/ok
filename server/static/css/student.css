@@ -209,8 +209,11 @@ section {
   th.col-offering, th.col-institution {
     width:20%;
   }
-  th.col-status, th.col-due-date, th.col-group {
+  th.col-status, th.col-due-date, th.col-group, th.col-flagged, th.col-submit {
     width:25%;
+  }
+  th.col-author {
+    width:30%;
   }
   tr {
     border-bottom:1px solid #eee;
