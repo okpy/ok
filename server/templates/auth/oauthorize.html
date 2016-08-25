@@ -1,5 +1,5 @@
 {% extends "about/base.html" %}
-{% import '_formhelpers.html' as forms %}
+{% import 'staff/_formhelpers.html' as forms %}
 
 {% block title %}Authorize {{client.name }} | Ok{% endblock %}
 
@@ -34,7 +34,7 @@
       </ul>
 
       <form class="form-horizontal" action="{{ url_for('oauth.authorize') }}" method="POST">
-      {% call forms.render_form_partial(CSRFForm(), action_url=url_for('oauth.authorize'), class_='form-horizontal') %}
+      {% call forms.render_form_bare(CSRFForm(), action_url=url_for('oauth.authorize'), class_='form-horizontal') %}
         <div class="form-group">
             <p class="center-block">
                 <input type="hidden" name="client_id" value="{{ client.client_id }}">
