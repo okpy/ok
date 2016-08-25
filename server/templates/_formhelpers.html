@@ -38,16 +38,12 @@
  #}
 {% macro render_checkbox_field(field) -%}
     <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
-          <label for="{{ field.id }}" class="control-label">{{ field.label }}: {{ field(type='checkbox', **kwargs) }}</label>
-
+        <label for="{{ field.id }}" class="control-label">{{ field.label }}: {{ field(type='checkbox', **kwargs) }}</label>
         <div class="checkbox">
-
         </div>
-
        {% if field.description %}
             <p class="help-block">{{ field.description }}</p>
         {% endif %}
-
     </div>
 {%- endmacro %}
 
@@ -107,7 +103,7 @@
     </form>
 {%- endmacro %}
 
-{% macro render_form_partial(form, action_url='', class_='', btn_class='btn btn-default', enctype="application/x-www-form-urlencoded") -%}
+{% macro render_form_partial(form, action_url='', class_='', enctype="application/x-www-form-urlencoded") -%}
     <form method="POST" action="{{ action_url }}" role="form" class="{{ class_ }}" enctype="{{ enctype }}">
         {{ form.hidden_tag() if form.hidden_tag }}
         {% if caller %}

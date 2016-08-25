@@ -1,14 +1,12 @@
 import datetime as dt
 import logging
 
-from flask import (abort, Blueprint, current_app, flash, redirect,
-                   render_template, request, session, url_for, jsonify)
+from flask import (Blueprint, flash, redirect, render_template,
+                   request, session, url_for, jsonify)
 
-from flask_login import login_required, current_user, login_user
-from flask_oauthlib.contrib.oauth2 import bind_sqlalchemy
+from flask_login import login_required, current_user
 
-from server import utils
-from server.models import db, User, Enrollment, Client, Token, Grant
+from server.models import db, Client, Token, Grant
 from server.extensions import csrf, oauth_provider
 
 logger = logging.getLogger(__name__)
@@ -80,6 +78,9 @@ def save_token(token, orequest, *args, **kwargs):
 @oauth_provider.authorize_handler
 @login_required
 def authorize(*args, **kwargs):
+    # Only CSRF protect this route.
+    csrf.protect()
+
     if request.method == 'GET':
         client_id = kwargs.get('client_id')
         client = Client.query.filter_by(client_id=client_id).first()
