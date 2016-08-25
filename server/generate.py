@@ -295,7 +295,7 @@ def seed_scores():
              score = gen_score(backup, admin, kind='composition')
              db.session.add(score)
         if random.choice([True, False]):
-             score = gen_score(backup, admin, kind='Total')
+             score = gen_score(backup, admin, kind='total')
              db.session.add(score)
     db.session.commit()
 
