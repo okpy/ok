@@ -116,9 +116,9 @@ if driver:
             self.driver.get(self.get_server_url() + "/testing-login/")
             self.assertIn('Login', self.driver.title)
 
-            inputElement = self.driver.find_element_by_id("email-login")
-            inputElement.send_keys(email)
-            inputElement.submit()
+            input_element = self.driver.find_element_by_id("email-login")
+            input_element.send_keys(email)
+            input_element.submit()
 
             self.assertIn('Courses | Ok', self.driver.title)
 
@@ -350,9 +350,9 @@ if driver:
             self.assertEquals(self.driver.current_url, login_url)
 
             # Login and redirect back to original page
-            inputElement = self.driver.find_element_by_id("email-login")
-            inputElement.send_keys(self.user1.email)
-            inputElement.submit()
+            input_element = self.driver.find_element_by_id("email-login")
+            input_element.send_keys(self.user1.email)
+            input_element.submit()
 
             # Now confirm OAuth
             self.assertIn(self.user1.email, self.driver.page_source)
