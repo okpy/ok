@@ -11,7 +11,7 @@
       </h1>
       <ol class="breadcrumb">
         <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li><a id="course_link" href="{{ url_for("admin.course", cid=current_course.id) }}">
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
