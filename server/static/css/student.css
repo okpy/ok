@@ -503,10 +503,10 @@ header .logo {
 /* Small devices (tablets, 768px and up) */
 @media (min-width: 768px) {
   .subcontent {
-    padding:1em 7em;
+    padding:0 5%;
   }
   .content {
-    padding: 0 0 5em 0;
+    padding:0 0 5em 0;
   }
 }
 
