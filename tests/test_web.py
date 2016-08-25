@@ -5,6 +5,7 @@ Docs: http://selenium-python.readthedocs.io/getting-started.html
 import json
 import os
 import signal
+import urllib.parse
 
 import requests
 from flask_testing import LiveServerTestCase
@@ -53,6 +54,18 @@ if driver:
             group.accept(self.user4)
 
             models.Group.invite(self.user2, self.user3, self.assignment)
+
+            self.oauth_client = models.Client(
+                name='Testing Client',
+                client_id='test-client',
+                client_secret='secret',
+                redirect_uris=['http://example.com/'],
+                is_confidential=False,
+                description='Sample App for testing OAuth',
+                default_scopes=['email'],
+            )
+            models.db.session.add(self.oauth_client)
+            models.db.session.commit()
 
         def create_app(self):
             app = create_app('settings/test.py')
@@ -294,3 +307,59 @@ if driver:
             # Login and redirect back to original page
             self.driver.find_element_by_id('admin').click()
             self.assertEquals(self.driver.current_url, target_url)
+
+        def test_oauth(self):
+            self._seed_course()
+
+            # Login
+            self._login_as(self.user1.email)
+
+            # Start OAuth and click "Confirm"
+            self.pageLoad('{}/oauth/authorize?{}'.format(
+                self.get_server_url(),
+                urllib.parse.urlencode({
+                    'response_type': 'code',
+                    'client_id': self.oauth_client.client_id,
+                    'redirect_uri': self.oauth_client.redirect_uris[0],
+                    'scope': 'email',
+                }),
+            ))
+            self.assertIn(self.user1.email, self.driver.page_source)
+            self.driver.find_element_by_id('confirm-button').click()
+
+            # Get code from redirect URI
+            redirect_uri, query_string = self.driver.current_url.split('?')
+            query = dict(urllib.parse.parse_qsl(query_string))
+            self.assertEquals(redirect_uri, self.oauth_client.redirect_uris[0])
+            self.assertIn('code', query)
+
+        def test_oauth_logged_out(self):
+            self._seed_course()
+
+            # Start OAuth - redirects to log in
+            self.pageLoad('{}/oauth/authorize?{}'.format(
+                self.get_server_url(),
+                urllib.parse.urlencode({
+                    'response_type': 'code',
+                    'client_id': self.oauth_client.client_id,
+                    'redirect_uri': self.oauth_client.redirect_uris[0],
+                    'scope': 'email',
+                }),
+            ))
+            login_url = '{}/testing-login/'.format(self.get_server_url())
+            self.assertEquals(self.driver.current_url, login_url)
+
+            # Login and redirect back to original page
+            inputElement = self.driver.find_element_by_id("email-login")
+            inputElement.send_keys(self.user1.email)
+            inputElement.submit()
+
+            # Now confirm OAuth
+            self.assertIn(self.user1.email, self.driver.page_source)
+            self.driver.find_element_by_id('confirm-button').click()
+
+            # Get code from redirect URI
+            redirect_uri, query_string = self.driver.current_url.split('?')
+            query = dict(urllib.parse.parse_qsl(query_string))
+            self.assertEquals(redirect_uri, self.oauth_client.redirect_uris[0])
+            self.assertIn('code', query)
