@@ -31,7 +31,7 @@
                 {% include 'staff/course/students.list.html' %}
             {% endwith %}
             {% with roster=lab_assistants, title="Lab Assistant" %}
-                {% if roster|length > 0 %}
+                {% if roster %}
                     {% include 'staff/course/students.list.html' %}
                 {% endif %}
             {% endwith %}
@@ -136,7 +136,8 @@
       plugins: [ListPagination()],
       page: 20
     };
-    var labAssistantList = new List('LabAssistant-list', labAssistantOptions);
-    var labAssistantElement = document.getElementById('LabAssistant-list');
+    var labAssistantList = new List('Lab Assistant-list', labAssistantOptions);
+    var labAssistantElement = document.getElementById('Lab Assistant-list');
+    labAssistantElement.style.display = 'block';
 </script>
 {% endblock %}
