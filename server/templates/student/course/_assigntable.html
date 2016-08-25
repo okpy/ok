@@ -6,9 +6,12 @@
       <table>
         <tr class="header">
           <th class="col-name">Name</th>
-          {% if scores %}<th class="col-scores">Scores</th> {% endif %}
+          {% if scores %}
+            <th class="col-scores">Scores</th>
+          {% else %}
+            <th class="col-due-date">Due Date</th>
+          {% endif %}
           <th class="col-status">Status</th>
-          <th class="col-due-date">Due Date</th>
           <th class="col-group">Group</th>
         </tr>
         {% for assign, subm_time, group, fs in assignments %}
@@ -50,7 +53,29 @@
                     </span>
                 </td>
                 {% endif %}
+            {% else %}
+              <td>
+              {% if assign.active %}
+              <div class="due-dot green"></div>
+              <div class="due">
+                <span class="due-text green">{{ utils.natural_time(assign.due_date) }}</span>
+                <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
+              </div>
+              {% elif subm_time %}
+              <div class="due-dot grey"></div>
+              <div class="due">
+                <span class="due-text grey">{{ utils.natural_time(assign.due_date) }}</span>
+                <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
+              </div>
+              {% else %}
+              <div class="due-dot red"></div>
+              <div class="due">
+                <span class="due-text red">{{ utils.natural_time(assign.due_date) }}</span>
+                <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
+              </div>
             {% endif %}
+          </td>
+          {% endif %}
           <td>
           {% if subm_time %}
             <div class="due-dot green"></div>
@@ -65,29 +90,6 @@
               <span class="due-text grey">Did you run <code>--submit</code>?</span>
             </div>
           {% endif %}
-          </td>
-          <td>
-            {% if assign.active %}
-            <div class="due-dot green"></div>
-            <div class="due">
-              <span class="due-text green">{{ utils.natural_time(assign.due_date) }}</span>
-              <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-            </div>
-            {% elif subm_time %}
-            <div class="due-dot grey"></div>
-            <div class="due">
-              <span class="due-text grey">{{ utils.natural_time(assign.due_date) }}</span>
-              <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-            </div>
-            {% else %}
-            <div class="due-dot red"></div>
-            <div class="due">
-              <span class="due-text red">{{ utils.natural_time(assign.due_date) }}</span>
-              <span class="due-date">Due: {{ utils.local_time(assign.due_date, course) }}</span>
-            </div>
-
-            {% endif %}
-
           </td>
           {% if group %}
           <td class="tip-trigger">
