@@ -18,3 +18,4 @@ if (typeof HTMLElement.prototype.removeClass !== "function") {
         this.className = newClassName;
     }
 }
+

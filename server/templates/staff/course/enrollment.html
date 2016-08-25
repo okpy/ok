@@ -24,148 +24,87 @@
     {% include 'alerts.html' %}
     <div class="row">
         <div class="col-md-9 col-xs-12">
+            {% with roster=enrollments, title="Student" %}
                 {% include 'staff/course/students.list.html' %}
-                <!-- TODO: Merge staff/student render code -->
-                    <div class="box">
-                        <div class="box-header">
-                            <h3 class="box-title"><span> Staff </span></h3>
-                            <div class="box-tools pull-right">
-                                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- /.box-header -->
-                        <div class="box-body table-responsive no-padding" style="display: none;" id="staff-list">
-                            <table class="table table-hover">
-                                <thead>
-                                    <th class="sort" data-sort="email">User</th>
-                                    <th class="sort" data-sort="name">Name</th>
-                                    <th class="sort" data-sort="secondary">Secondary ID</th>
-                                    <th class="sort" data-sort="role">Role</th>
-                                    <th>Remove</th>
-                                </thead>
-                                <tbody class="list">
-                                    {%- for item in staff %}
-                                    <tr>
-                                        <td class="email">{{ item.user.email }}</td>
-                                        <td class="name">{{ item.user.name }}</td>
-                                        <td class="secondary">{{ item.user.secondary }}</td>
-                                        <td class="role"><span class="label label-warning">{{item.role}}</span></td>
-                                        <td><button class="btn disabled btn-xs btn-red"> <i class="fa fa-trash"></i> </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-
-                                    <!-- Include another header because list.js forces us to include this inside of the tbody -->
-                                    <div class="box-header">
-                                        <span>
-                                            <div class="pull-left">
-                                                <ul class="pagination pagination-md no-margin pull-right"></ul>
-                                            </div>
-
-                                            <div class="pull-right">
-                                                <div class="input-group input-group-md" style="width: 200px;">
-                                                    <input type="text" name="query" class="form-control pull-right search" placeholder="Search">
-                                                    <div class="input-group-btn">
-                                                        <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </span>
-                                    </div>
-                                    <!-- End extra header -->
-
-                                </table>
-                            </div>
-
-                                <div class="box-footer">
-                                    <div class="pull-left">
-                                    <h5 class="box-title"><span> Total: {{ staff | length }} </span></h5>
-                                    </div>
-                                    <ul class="pagination pagination-md no-margin pull-right"></ul>
-                                </div>
-
-                                <!-- /.box-body -->
-                            </div>
-                        </div>
-                        <!-- Side Panel -->
-                        <div class="col-md-3 col-xs-12">
-                            <!-- Box -->
-                            <div class="box">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title">Export Roster</h3>
-                                    <div class="box-tools pull-right">
-                                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
-                                            <i class="fa fa-minus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="box-body">
-                                    <a href="{{url_for('.enrollment_csv',cid=current_course.id)}}">
-                                        <button class="btn btn-primary btn-block"> Export Roster (CSV) </button>
-                                    </a>
-                                </div>
-                                <!-- /.box-body -->
-                                <!-- /.box-footer-->
-                            </div>
-
-                            <!-- New Box -->
-                            <div class="box">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title">Batch Enroll (Students)</h3>
-                                    <div class="box-tools pull-right">
-                                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
-                                            <i class="fa fa-minus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="box-body">
-                                    <a href="{{url_for('.batch_enroll',cid=current_course.id)}}">
-                                        <button class="btn btn-primary btn-block"> Enroll from CSV </button>
-                                    </a>
-                                </div>
-                                <!-- /.box-body -->
-                                <!-- /.box-footer-->
-                            </div>
-
-                           <!-- Box -->
-                            <div class="box collapsed-box">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title">Add/Edit Participant</h3>
-                                    <div class="box-tools pull-right">
-                                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Expand">
-                                            <i class="fa fa-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="box-body">
-                                    <!-- form goes here -->
-                                    {% call forms.render_form(single_form, action_url=url_for('.enrollment', cid=current_course.id), action_text='Enroll',
-                                    class_='form') %}
-                                        {{ forms.render_field(single_form.name, label_visible=true, placeholder='Student Name (optional)', type='text') }}
-                                        {{ forms.render_field(single_form.email, label_visible=true, placeholder='test@test.com') }}
-                                        {{ forms.render_field(single_form.sid, label_visible=true, placeholder='1234567', type='text') }}
-                                        {{ forms.render_field(single_form.secondary, label_visible=true, placeholder='cs61a-abc', type='text') }}
-                                        {{ forms.render_field(single_form.section, label_visible=true, placeholder='', type='text') }}
-                                        {{ forms.render_field(single_form.role, label_visible=true) }}
-                                    {% endcall %}
-                                </div>
-                                <!-- /.box-body -->
-                                <!-- /.box-footer-->
-                            </div>
-                            <!-- /.box -->
-
-
-                        </div>
+            {% endwith %}
+            {% with roster=staff, title="Staff" %}
+                {% include 'staff/course/students.list.html' %}
+            {% endwith %}
+        </div>
+        <!-- Side Panel -->
+        <div class="col-md-3 col-xs-12">
+            <!-- Box -->
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Export Roster</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                            <i class="fa fa-minus"></i>
+                        </button>
                     </div>
+                </div>
+                <div class="box-body">
+                    <a href="{{url_for('.enrollment_csv',cid=current_course.id)}}">
+                        <button class="btn btn-primary btn-block"> Export Roster (CSV) </button>
+                    </a>
+                </div>
+                <!-- /.box-body -->
+                <!-- /.box-footer-->
+            </div>
 
-                </section>
+            <!-- New Box -->
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Batch Enroll (Students)</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <a href="{{url_for('.batch_enroll',cid=current_course.id)}}">
+                        <button class="btn btn-primary btn-block"> Enroll from CSV </button>
+                    </a>
+                </div>
+                <!-- /.box-body -->
+                <!-- /.box-footer-->
+            </div>
+
+           <!-- Box -->
+            <div class="box collapsed-box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Add/Edit Participant</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Expand">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <!-- form goes here -->
+                    {% call forms.render_form(single_form, action_url=url_for('.enrollment', cid=current_course.id), action_text='Enroll',
+                    class_='form') %}
+                        {{ forms.render_field(single_form.name, label_visible=true, placeholder='Student Name (optional)', type='text') }}
+                        {{ forms.render_field(single_form.email, label_visible=true, placeholder='test@test.com') }}
+                        {{ forms.render_field(single_form.sid, label_visible=true, placeholder='1234567', type='text') }}
+                        {{ forms.render_field(single_form.secondary, label_visible=true, placeholder='cs61a-abc', type='text') }}
+                        {{ forms.render_field(single_form.section, label_visible=true, placeholder='', type='text') }}
+                        {{ forms.render_field(single_form.role, label_visible=true) }}
+                    {% endcall %}
+                </div>
+                <!-- /.box-body -->
+                <!-- /.box-footer-->
+            </div>
+            <!-- /.box -->
 
 
-                <!-- </body> do not close body in template-->
-                {% endblock %}
+        </div>
+    </div>
+
+</section>
+<!-- </body> do not close body in template-->
+{% endblock %}
 
 {% block page_js %}
 <script>
@@ -174,17 +113,17 @@
       plugins: [ListPagination()],
       page: 20
     };
-    var studentList = new List('student-list', studentOptions);
+    var studentList = new List('Student-list', studentOptions);
     studentList.sort("timestamp", {order: "desc"})
-    document.getElementById('student-list').style.display = 'block';
+    document.getElementById('Student-list').style.display = 'block';
 
     var staffOptions = {
       valueNames: [ 'email', 'name', 'secondary', 'role' ],
       plugins: [ListPagination()],
       page: 20
     };
-    var staffLit = new List('staff-list', staffOptions);
+    var staffLit = new List('Staff-list', staffOptions);
     // TODO: Use removeClass with polyfill
-    document.getElementById('staff-list').style.display = 'block';
+    document.getElementById('Staff-list').style.display = 'block';
 </script>
 {% endblock %}

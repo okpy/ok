@@ -107,7 +107,7 @@
     </form>
 {%- endmacro %}
 
-{% macro render_form_partial(form, action_url='', class_='', btn_class='btn btn-default', enctype="application/x-www-form-urlencoded") -%}
+{% macro render_form_bare(form, action_url='', class_='', enctype="application/x-www-form-urlencoded") -%}
     <form method="POST" action="{{ action_url }}" role="form" class="{{ class_ }}" enctype="{{ enctype }}">
         {{ form.hidden_tag() if form.hidden_tag }}
         {% if caller %}

@@ -14,8 +14,8 @@ from server.models import (db, User, Course, Assignment, Enrollment, Group,
 from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE, OAUTH_SCOPES
 from server.extensions import cache
 
-original_file = open('tests/files/fizzbuzz_before.py').read()
-modified_file = open('tests/files/fizzbuzz_after.py').read()
+original_file = open('tests/files/fizzbuzz_before.py', encoding="utf8").read()
+modified_file = open('tests/files/fizzbuzz_after.py', encoding="utf8").read()
 
 def weighted_choice(choices):
     # http://stackoverflow.com/a/3679747
@@ -292,8 +292,11 @@ def seed_scores():
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
         if random.choice([True, False]):
-            score = gen_score(backup, admin)
-            db.session.add(score)
+             score = gen_score(backup, admin, kind='composition')
+             db.session.add(score)
+        if random.choice([True, False]):
+             score = gen_score(backup, admin, kind='total')
+             db.session.add(score)
     db.session.commit()
 
 def seed_queues():

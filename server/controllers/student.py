@@ -4,8 +4,10 @@ from flask_login import login_required, current_user
 from werkzeug.exceptions import BadRequest
 
 import collections
+import logging
 
 from server import highlight, models, utils
+from server.autograder import submit_continous
 from server.controllers.api import make_backup
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
@@ -13,6 +15,8 @@ from server.forms import CSRFForm, UploadSubmissionForm
 from server.models import User, Course, Assignment, Group, Backup, db
 from server.utils import (is_safe_redirect_url, group_action_email,
                           invite_email, send_email)
+
+logger = logging.getLogger(__name__)
 
 student = Blueprint('student', __name__)
 
@@ -63,21 +67,11 @@ def index():
 @student.route('/<offering:offering>/')
 @login_required
 def course(offering):
-    def assignment_info(assignment):
-        # TODO does this make O(n) db queries?
-        # TODO need group info too
-        user_ids = assignment.active_user_ids(current_user.id)
-        final_submission = assignment.final_submission(user_ids)
-        submission_time = final_submission and final_submission.created
-        group = Group.lookup(current_user, assignment)
-        return assignment, submission_time, group, final_submission
-
     course = get_course(offering)
-
     assignments = {
-        'active': [assignment_info(a) for a in course.assignments
+        'active': [a.user_status(current_user) for a in course.assignments
                    if a.active and a.visible],
-        'inactive': [assignment_info(a) for a in course.assignments
+        'inactive': [a.user_status(current_user) for a in course.assignments
                      if not a.active and a.visible]
     }
     return render_template('student/course/index.html', course=course,
@@ -156,6 +150,13 @@ def submit_assignment(name):
             backup = make_backup(current_user, assign.id, messages, True)
             if form.flag_submission.data:
                 assign.flag(backup.id, user_ids)
+            if assign.autograding_key:
+                try:
+                    submit_continous(backup)
+                except ValueError as e:
+                    logger.warning('Web submission did not autograde', exc_info=True)
+                    flash('Did not send to autograder: {}'.format(e), 'warning')
+
             flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
             return redirect(url_for('.assignment', name=assign.name))
 

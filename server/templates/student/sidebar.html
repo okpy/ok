@@ -2,7 +2,7 @@
     <div class="logo-box">
       <a href="{{ url_for('student.index') }}">
         <div class="software-logo">
-            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Ok Logo">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Ok Logo" draggable="false">
         </div>
       </a>
       <p class="logo-name"> {{ current_user.email }}</p>

@@ -1,6 +1,6 @@
 <div class="box">
     <div class="box-header">
-        <h3 class="box-title"><span> Students </span></h3>
+        <h3 class="box-title"><span> {{ title }} </span></h3>
         <div class="box-tools">
             <div class="box-tools pull-right">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
@@ -11,7 +11,7 @@
     </div>
 
     <!-- /.box-header -->
-    <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="student-list">
+    <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="{{ title }}-list">
         <table class="table table-hover">
             <thead>
                 <th class="sort" data-sort="email">User</th>
@@ -24,9 +24,13 @@
             </thead>
 
             <tbody class="list">
-                {%- for item in enrollments %}
+                {%- for item in roster %}
                 <tr>
-                    <td class="email">{{ item.user.email }}</td>
+                    <td class="email">
+                        <a href="{{ url_for('.student_view', cid=current_course.id, email=item.user.email) }}">
+                            {{ item.user.email }}
+                        </a>
+                    </td>
                     <td class="name">{{ item.user.name }}</td>
                     <td class="sid">{{ item.sid }}</td>
                     <td class="secondary">{{ item.class_account }}</td>
