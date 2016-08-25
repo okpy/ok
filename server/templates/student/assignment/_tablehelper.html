@@ -8,9 +8,8 @@
       <table>
         <tr class="header">
           <th>ID</th>
-          <th>Time</th>
-          <th>Submitter</th>
-          <th class="col-md-2">Flagged</th>
+          <th>Author</th>
+          <th>Flagged</th>
           <th>Code</th>
         </tr>
         {% for subm in subms %}
@@ -21,14 +20,11 @@
             </a>
           </td>
           <td>
-            <span class="due-date">
-              {{ utils.local_time(subm.created, course) }}
-            </span>
-          </td>
-          <td>
-            <span class="due-date">
-              {{ subm.submitter.email }}
-            </span>
+            <div class="due-dot grey"></div>
+            <div class="due">
+              <span class="due-text grey">{{ subm.submitter.email }}</span>
+              <span class="due-date">{{ utils.local_time(subm.created, course) }}</span>
+            </div>
           </td>
           <td>
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=subm.id), class_='form-inline') %}
@@ -81,9 +77,8 @@
       <table>
         <tr class="header">
           <th>ID</th>
-          <th>Time</th>
-          <th>Creator</th>
-          <th class="col-md-2">Submit</th>
+          <th>Author</th>
+          <th>Submit</th>
           <th>Code</th>
         </tr>
         {% for backup in backups %}
@@ -94,14 +89,11 @@
             </a>
           </td>
           <td>
-            <span class="due-date">
-              {{ utils.local_time(backup.created, course) }}
-            </span>
-          </td>
-          <td>
-            <span class="due-date">
-              {{ backup.submitter.email }}
-            </span>
+            <div class="due-dot grey"></div>
+            <div class="due">
+              <span class="due-text grey">{{ backup.submitter.email }}</span>
+              <span class="due-date">{{ utils.local_time(backup.created, course) }}</span>
+            </div>
           </td>
           <td>
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}
