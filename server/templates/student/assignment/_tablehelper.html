@@ -7,11 +7,10 @@
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
-          <th>ID</th>
-          <th>Time</th>
-          <th>Submitter</th>
-          <th class="col-md-2">Flagged</th>
-          <th>Code</th>
+          <th class="col-id">ID</th>
+          <th class="col-author">Author</th>
+          <th class="col-flag">Flag</th>
+          <th class="col-code">Code</th>
         </tr>
         {% for subm in subms %}
         <tr>
@@ -21,12 +20,11 @@
             </a>
           </td>
           <td>
-            {{ utils.local_time(subm.created, course) }}
-          </td>
-          <td>
-            <span class="due-date">
-              {{ subm.submitter.email }}
-            </span>
+            <div class="due-dot grey"></div>
+            <div class="due">
+              <span class="due-text grey">{{ subm.submitter.email }}</span>
+              <span class="due-date">{{ utils.local_time(subm.created, course) }}</span>
+            </div>
           </td>
           <td>
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=subm.id), class_='form-inline') %}
@@ -78,11 +76,10 @@
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
-          <th>ID</th>
-          <th>Time</th>
-          <th>Creator</th>
-          <th class="col-md-2">Submit</th>
-          <th>Code</th>
+          <th class="col-id">ID</th>
+          <th class="col-author">Author</th>
+          <th class="col-submit">Submit</th>
+          <th class="col-code">Code</th>
         </tr>
         {% for backup in backups %}
         <tr>
@@ -92,12 +89,11 @@
             </a>
           </td>
           <td>
-            {{ utils.local_time(backup.created, course) }}
-          </td>
-          <td>
-            <span class="due-date">
-              {{ backup.submitter.email }}
-            </span>
+            <div class="due-dot grey"></div>
+            <div class="due">
+              <span class="due-text grey">{{ backup.submitter.email }}</span>
+              <span class="due-date">{{ utils.local_time(backup.created, course) }}</span>
+            </div>
           </td>
           <td>
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}

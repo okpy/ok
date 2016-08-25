@@ -15,6 +15,11 @@ i, br {
   font-size:3em;
   letter-spacing:-0.05em;
 }
+  .content h1 .assignment-due-date {
+    font-family:'Lato';
+    font-weight:300;
+    letter-spacing:normal;
+  }
 .content h2 {
   font-size:2em;
   font-weight:300;
@@ -206,11 +211,20 @@ section {
   tr.header {
     color:#767676;
   }
+  th.col-status, th.col-offering, th.col-institution, th.col-code {
+    width:20%;
+  }
+  th.col-scores, th.col-due-date, th.col-group, th.col-flag, th.col-submit {
+    width:25%;
+  }
+  th.col-author {
+    width:30%;
+  }
   tr {
     border-bottom:1px solid #eee;
   }
   .list th, .list td {
-    padding:1em;
+    padding:14px;
   }
   .due-dot,.prog-dot {
     height:8px;
@@ -248,7 +262,7 @@ section {
     .due-dot.red,.prog-dot.red {
       background-color:#C00;
     }
-    .due-date,.due-text {
+    .due .due-date,.due-text {
       width:100%;
       display:inline-block;
     }
@@ -453,10 +467,10 @@ header .logo {
      outline: none;
   }
 .content h1 {
-  padding:0 0.5em;
+  padding:0 14px;
 }
 .content h2 {
-  padding:0 0.75em 0.5em 0.75em;
+  padding:0 14px 10px 14px;
 }
 .cell {
   padding:2em;
@@ -484,7 +498,7 @@ header .logo {
       margin-top: 0.25em;
   }
 .string-nav {
-  padding:2em 1.5em 0.5em 1.5em;
+  padding:2em 14px 0.5em 14px;
 }
 
 .other-courses {
@@ -497,10 +511,10 @@ header .logo {
 /* Small devices (tablets, 768px and up) */
 @media (min-width: 768px) {
   .subcontent {
-    padding:1em 7em;
+    padding:0 5%;
   }
   .content {
-    padding: 0 0 5em 0;
+    padding:0 0 5em 0;
   }
 }
 

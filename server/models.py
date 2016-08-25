@@ -620,7 +620,7 @@ class Backup(Model):
         """ Return public grades. "Autograder" kind are errors from the
         autograder and should not be shown.
         """
-        return [s for s in self.scores if s.kind == "composition" and s.public]
+        return [s for s in self.scores if s.kind != "autograder" and s.public]
 
     @hybrid_property
     def is_revision(self):
