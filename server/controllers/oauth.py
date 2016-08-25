@@ -78,9 +78,8 @@ def save_token(token, orequest, *args, **kwargs):
 
 @oauth.route('/oauth/authorize', methods=['GET', 'POST'])
 @oauth_provider.authorize_handler
+@login_required
 def authorize(*args, **kwargs):
-    if not current_user.is_authenticated:
-        return redirect(url_for('auth.login'))
     if request.method == 'GET':
         client_id = kwargs.get('client_id')
         client = Client.query.filter_by(client_id=client_id).first()
