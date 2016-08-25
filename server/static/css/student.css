@@ -206,10 +206,10 @@ section {
   tr.header {
     color:#767676;
   }
-  th.col-status, th.col-offering, th.col-institution {
+  th.col-status, th.col-offering, th.col-institution, th.col-code {
     width:20%;
   }
-  th.col-due-date, th.col-group, th.col-flagged, th.col-submit {
+  th.col-due-date, th.col-group, th.col-flag, th.col-submit {
     width:25%;
   }
   th.col-author {
