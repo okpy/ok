@@ -17,43 +17,10 @@
         </li>
 
         <li class="header">Courses</li>
-            {% for course in courses %}
-              <li class="treeview  {% if (request.endpoint == "admin.index" and loop.length == 1) %}active default{% endif %} {% if request.view_args['cid'] == course.id %} active{% endif %}" >
-                <a href="#">
-                  <i class="fa fa-university"></i> <span>{{ course.display_name_with_semester | truncate(25, True) }}</span>
-                  <i class="fa fa-angle-left pull-right"></i>
-                </a>
+          {% with courses_list=courses %}
+            {% include 'staff/sidebar.course.html' %}
+          {% endwith %}
 
-                <ul class="treeview-menu {% if (loop.length == 1 or request.view_args['cid'] == course.id) %}menu-open{% endif %}">
-                  <li>
-                    <a href="{{ url_for('.course', cid=course.id) }}">
-                      <i class="fa fa-circle-o {% if (request.endpoint == "admin.course" and request.view_args['cid'] == course.id) %}text-blue{% endif %}"></i>
-                      Dashboard
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('.course_assignments', cid=course.id) }}">
-                      <i class="fa fa-book {% if (request.endpoint == "admin.course_assignments" and request.view_args['cid'] == course.id) %}text-blue{% endif %}"></i>
-                      Assignments
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('.enrollment', cid=course.id) }}">
-                      <i class="fa fa-list {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == course.id) %}text-blue{% endif %}"></i> Enrollment
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('.course_settings', cid=course.id) }}">
-                      <i class="fa fa-cogs {% if (request.endpoint == 'admin.course_settings' and request.view_args['cid'] == course.id) %}text-blue{% endif %}"></i> Settings
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('student.course', offering=course.offering) }}">
-                      <i class="fa fa-user"></i> Student View
-                    </a>
-                  </li>
-                </ul>
-            {% endfor %}
 
           {% if current_user.is_admin %}
             <li><a href="{{ url_for('.create_course') }}"><i class="fa fa-plus"></i> Create Course </a></li>
