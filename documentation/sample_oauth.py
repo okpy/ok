@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ This file is a sample implementation of OAuth with OK """
 import urllib.parse
+from werkzeug import security
 
 from flask import Flask, redirect, url_for, session, request, jsonify, abort
 from flask_oauthlib.client import OAuth
@@ -13,13 +14,28 @@ def create_client(app):
         'ok-server',  # Server Name
         consumer_key='example-app',
         consumer_secret='example-secret',
-        request_token_params={'scope': 'all'},
+        request_token_params={'scope': 'all',
+                              'state': lambda: security.gen_salt(10)},
         base_url='http://localhost:5000/api/v3/',
         request_token_url=None,
         access_token_method='POST',
         access_token_url='http://localhost:5000/oauth/token',
         authorize_url='http://localhost:5000/oauth/authorize'
     )
+
+    # Real OK Server
+    # remote = oauth.remote_app(
+    #     'ok-server',  # Server Name
+    #     consumer_key='example',
+    #     consumer_secret='fake-secret-get-the-real-one',
+    #     request_token_params={'scope': 'email',
+    #                           'state': lambda: security.gen_salt(10)},
+    #     base_url='https://ok.cs61a.org/api/v3/',
+    #     request_token_url=None,
+    #     access_token_method='POST',
+    #     access_token_url='https://ok.cs61a.org/oauth/token',
+    #     authorize_url='https://ok.cs61a.org/oauth/authorize'
+    # )
 
     # def check_req(uri, headers, body):
     #     """ Add access_token to the URL Request. """
