@@ -1,4 +1,3 @@
-import base64
 import csv
 import datetime as dt
 import logging
@@ -11,6 +10,7 @@ from urllib.parse import urlparse, urljoin
 from flask import render_template, url_for
 from hashids import Hashids
 import humanize
+from oauthlib.common import generate_token
 from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
@@ -165,7 +165,6 @@ def generate_csv(query, items, selector_fn):
         csv_writer.writerow(data)
         yield csv_file.getvalue()
 
-def generate_secret_key():
-    """Generates a base64-encoded secret, as a string."""
-    random_bytes = bytes(random.randrange(0, 256) for _ in range(24))
-    return base64.b64encode(random_bytes).decode('ascii')
+def generate_secret_key(length=31):
+    """Generates a random secret, as a string."""
+    return generate_token(length=length)
