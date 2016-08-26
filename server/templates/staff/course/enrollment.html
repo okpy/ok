@@ -117,6 +117,7 @@
     var studentList = new List('Student-list', studentOptions);
     studentList.sort("timestamp", {order: "desc"})
     document.getElementById('Student-list').style.display = 'block';
+    {% endif %}
 
     {% if staff %}
     var staffOptions = {
