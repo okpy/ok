@@ -79,13 +79,6 @@ def is_safe_redirect_url(request, target):
     return redirect_url.scheme in ('http', 'https') and \
         host_url.netloc == redirect_url.netloc
 
-def str_to_tz(tz_str):
-    if tz_str not in pytz.common_timezones_set:
-        logger.warning("Invalid TZ choice {}".format(tz_str))
-        return None
-    return pytz.timezone(tz_str)
-
-
 def random_row(query):
     count = query.count()
     if not count:

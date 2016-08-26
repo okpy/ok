@@ -266,7 +266,6 @@ def create_course():
     form = forms.NewCourseForm()
     if form.validate_on_submit():
         new_course = Course()
-        form.timezone.data = utils.str_to_tz(form.timezone.data)
         form.populate_obj(new_course)
 
         # Add user as instructor, can be changed later
@@ -296,7 +295,6 @@ def course_settings(cid):
     courses, current_course = get_courses(cid)
     form = forms.CourseUpdateForm(obj=current_course)
     if form.validate_on_submit():
-        form.timezone.data = utils.str_to_tz(form.timezone.data)
         form.populate_obj(current_course)
         db.session.commit()
 

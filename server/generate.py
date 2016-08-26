@@ -103,7 +103,7 @@ def gen_course():
             random.choice(['CS', 'Data Science']),
             random.randrange(100),
             random.choice(['', 'A'])),
-        active=gen_bool(0.3))
+        active=gen_bool(0.6))
 
 def gen_assignment(course):
     if gen_bool(0.5):

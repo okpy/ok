@@ -10,18 +10,22 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
 
+from markdown import markdown
+import pytz
+
 import functools
 from collections import namedtuple
 import contextlib
 import csv
 from datetime import datetime as dt
 import json
-from markdown import markdown
-import pytz
+import logging
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
 from server.utils import encode_id, chunks
+
+logger = logging.getLogger(__name__)
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -83,6 +87,12 @@ class Timezone(types.TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         # Python -> SQL
+        if not hasattr(value, 'zone'):
+            if value not in pytz.common_timezones_set:
+                logger.warning('Unknown TZ: {}'.format(value))
+                # Unknown TZ, use default instead
+                return TIMEZONE
+            return value
         return value.zone
 
     def process_result_value(self, value, dialect):
