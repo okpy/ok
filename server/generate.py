@@ -348,7 +348,9 @@ def seed_flags():
 def seed_oauth():
     print("Seeding OAuth")
     client = Client(
-        name='dev', client_id='normal', client_secret='normal',
+        name='Example Application',
+        client_id='example-app',
+        client_secret='example-secret',
         redirect_uris=[
             'http://localhost:8000/authorized',
             'http://127.0.0.1:8000/authorized',

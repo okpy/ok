@@ -11,8 +11,8 @@ def create_client(app):
 
     remote = oauth.remote_app(
         'ok-server',  # Server Name
-        consumer_key='normal',
-        consumer_secret='normal',
+        consumer_key='example-app',
+        consumer_secret='example-secret',
         request_token_params={'scope': 'all'},
         base_url='http://localhost:5000/api/v3/',
         request_token_url=None,
