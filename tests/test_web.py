@@ -381,3 +381,40 @@ if driver:
             query = dict(urllib.parse.parse_qsl(query_string))
             self.assertEquals(redirect_uri, self.oauth_client.redirect_uris[0])
             self.assertIn('code', query)
+
+        def test_oauth_reauthenticate(self):
+            self._seed_course()
+
+            # Login
+            self._login_as(self.user1.email)
+
+            # Start OAuth and reauthenticate
+            self.pageLoad('{}/oauth/authorize?{}'.format(
+                self.get_server_url(),
+                urllib.parse.urlencode({
+                    'response_type': 'code',
+                    'client_id': self.oauth_client.client_id,
+                    'redirect_uri': self.oauth_client.redirect_uris[0],
+                    'scope': 'email',
+                }),
+            ))
+            self.assertIn(self.user1.email, self.driver.page_source)
+            self.driver.find_element_by_id('reauthenticate-button').click()
+
+            login_url = '{}/testing-login/'.format(self.get_server_url())
+            self.assertEquals(self.driver.current_url, login_url)
+
+            # Login and redirect back to original page
+            input_element = self.driver.find_element_by_id("email-login")
+            input_element.send_keys(self.user2.email)
+            input_element.submit()
+
+            # Now confirm OAuth
+            self.assertIn(self.user2.email, self.driver.page_source)
+            self.driver.find_element_by_id('confirm-button').click()
+
+            # Get code from redirect URI
+            redirect_uri, query_string = self.driver.current_url.split('?')
+            query = dict(urllib.parse.parse_qsl(query_string))
+            self.assertEquals(redirect_uri, self.oauth_client.redirect_uris[0])
+            self.assertIn('code', query)

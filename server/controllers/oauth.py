@@ -4,7 +4,7 @@ import logging
 from flask import (Blueprint, flash, redirect, render_template,
                    request, session, url_for, jsonify)
 
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required, logout_user
 
 from server.models import db, Client, Token, Grant
 from server.extensions import csrf, oauth_provider
@@ -90,6 +90,12 @@ def authorize(*args, **kwargs):
 
     confirm = request.form.get('confirm', 'no')
     return confirm == 'yes'
+
+@oauth.route('/oauth/reauthenticate')
+def reauthenticate():
+    logout_user()
+    session.clear()
+    return redirect(url_for('.authorize', **request.args))
 
 @oauth.route('/oauth/token', methods=['POST'])
 @oauth_provider.token_handler

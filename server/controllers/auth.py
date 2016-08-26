@@ -235,9 +235,7 @@ def testing_logout():
     if not use_testing_login():
         abort(404)
     logout_user()
-    session.pop('google_token', None)
-    session.pop('token_expiry', None)
-    session.pop('sudo-user', None)
+    session.clear()
     return redirect(url_for('student.index'))
 
 @auth.route("/logout/", methods=['POST'])
@@ -247,6 +245,5 @@ def logout():
     csrf_check()
 
     logout_user()
-    session.pop('google_token', None)
-    session.pop('sudo-user', None)
+    session.clear()
     return redirect(url_for('student.index'))

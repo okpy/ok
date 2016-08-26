@@ -17,6 +17,10 @@
       </blockquote>
       {% endif %}
 
+      <p>You are logged in as {{ current_user.email }}. Not you?
+        <a id="reauthenticate-button" data-no-instant href="{{ url_for('.reauthenticate', **dict(request.uri_query_params)) }}">Use a different account</a>
+      </p>
+
       <p>This will grant {{client.name}} access to: </p>
       <ul class="list-group">
           {% for scope in scopes %}
