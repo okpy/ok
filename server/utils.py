@@ -10,6 +10,7 @@ from urllib.parse import urlparse, urljoin
 from flask import render_template, url_for
 from hashids import Hashids
 import humanize
+from oauthlib.common import generate_token
 from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
@@ -163,3 +164,7 @@ def generate_csv(query, items, selector_fn):
             data.update(dict)
         csv_writer.writerow(data)
         yield csv_file.getvalue()
+
+def generate_secret_key(length=31):
+    """Generates a random secret, as a string."""
+    return generate_token(length=length)

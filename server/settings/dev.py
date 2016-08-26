@@ -16,6 +16,4 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///../oksqlite.db'
 
 MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # Max Upload Size is 8MB
 
-CACHE_TYPE = 'simple'
-
 GOOGLE_CONSUMER_KEY = ''

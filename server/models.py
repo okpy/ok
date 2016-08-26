@@ -15,6 +15,7 @@ from collections import namedtuple
 import contextlib
 import csv
 from datetime import datetime as dt
+from datetime import timedelta
 import json
 from markdown import markdown
 import pytz
@@ -89,6 +90,17 @@ class Timezone(types.TypeDecorator):
         # SQL -> Python
         return pytz.timezone(value)
 
+class StringList(types.TypeDecorator):
+    impl = types.Text
+
+    def process_bind_param(self, string_list, dialect):
+        # Python -> SQL
+        return ' '.join(string_list)
+
+    def process_result_value(self, value, dialect):
+        # SQL -> Python
+        return value.split()
+
 class Model(db.Model):
     """Timestamps all models, and serializes model objects."""
     __abstract__ = True
@@ -100,7 +112,11 @@ class Model(db.Model):
         if hasattr(self, 'id'):
             key_val = self.id
         else:
-            key_val = self.__mapper__.primary_key._list[0].name
+            pk = self.__mapper__.primary_key
+            if type(pk) == tuple:
+                key_val = pk[0].name
+            else:
+                key_val = self.__mapper__.primary_key._list[0].name
         return '<{0} {1}>'.format(self.__class__.__name__, key_val)
 
     @classmethod
@@ -1123,3 +1139,82 @@ class GradingTask(Model):
                 cache.delete_memoized(User.num_grading_tasks, grader)
         db.session.add_all(tasks)
         return tasks
+
+class Client(db.Model):
+    """ OAuth Clients.
+    See: https://flask-oauthlib.readthedocs.io/en/latest/oauth2.html
+    """
+    name = db.Column(db.String(40))
+
+    # human readable description, not required
+    description = db.Column(db.String(400))
+
+    # creator of the client, not required
+    user_id = db.Column(db.ForeignKey('user.id'))
+    # required if you need to support client credential
+    user = db.relationship('User')
+
+    client_id = db.Column(db.String(40), primary_key=True)
+    client_secret = db.Column(db.String(55), unique=True, index=True,
+                              nullable=False)
+
+    is_confidential = db.Column(db.Boolean, nullable=False)
+
+    redirect_uris = db.Column(StringList, nullable=False)
+    default_scopes = db.Column(StringList, nullable=False)
+
+    @property
+    def default_redirect_uri(self):
+        return self.redirect_uris[0]
+
+class Grant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE')
+    )
+    user = db.relationship('User')
+
+    client_id = db.Column(
+        db.String(40), db.ForeignKey('client.client_id'),
+        nullable=False,
+    )
+    client = db.relationship('Client')
+
+    code = db.Column(db.String(255), index=True, nullable=False)
+
+    redirect_uri = db.Column(db.String(255))
+    expires = db.Column(db.DateTime)
+
+    scopes = db.Column(StringList)
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+        return self
+
+class Token(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(
+        db.String(40), db.ForeignKey('client.client_id'),
+        nullable=False,
+    )
+    client = db.relationship('Client')
+
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id')
+    )
+    user = db.relationship('User')
+
+    # currently only bearer is supported
+    token_type = db.Column(db.String(40))
+
+    access_token = db.Column(db.String(255), unique=True)
+    refresh_token = db.Column(db.String(255), unique=True)
+    expires = db.Column(db.DateTime)
+    scopes = db.Column(StringList)
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+        return self
