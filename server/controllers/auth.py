@@ -133,8 +133,21 @@ def use_testing_login():
     Return True if we use the unsecure testing login instead of Google OAuth.
     Requires TESTING_LOGIN = True in the config and the environment is not prod.
     """
-    return current_app.config.get('TESTING_LOGIN', False) and \
-        current_app.config.get('ENV') != 'prod'
+    return (current_app.config.get('TESTING_LOGIN', False) and
+            current_app.config.get('ENV') != 'prod')
+
+def csrf_check():
+    """ Manually against CSRF if available. Usually done by default, but this
+    function is neccesary for routes in blueprints that have disabled csrf protection.
+
+    CSRF protect is disabled in testing, but not in dev or prod.
+    Always checks for CSRF in prod
+    """
+    current_env = current_app.config.get('ENV')
+    csrf_enabled = current_app.config.get('WTF_CSRF_ENABLED', True)
+
+    if current_env == 'prod' or csrf_enabled:
+        csrf.protect()
 
 @auth.route("/login/")
 def login():
@@ -231,7 +244,7 @@ def testing_logout():
 @login_required
 def logout():
     # Only CSRF protect this route.
-    csrf.protect()
+    csrf_check()
 
     logout_user()
     session.pop('google_token', None)
