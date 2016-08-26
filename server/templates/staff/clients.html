@@ -59,8 +59,8 @@
                 {{ forms.render_field(form.client_id, label_visible=true, placeholder='ok-client', type='text') }}
                 {{ forms.render_field(form.client_secret, label_visible=true, readonly='readonly', type='text') }}
                 {{ forms.render_checkbox_field(form.is_confidential, label_visible=true) }}
-                {{ forms.render_field(form.redirect_uris, label_visible=true) }}
-                {{ forms.render_field(form.default_scopes, label_visible=true) }}
+                {{ forms.render_field(form.redirect_uris, placeholder='http://localhost:8000/authorized,https://cs61a.org/oauth/authorized', label_visible=true) }}
+                {{ forms.render_field(form.default_scopes, placeholder='email,all', label_visible=true) }}
               {% endcall %}
               </div>
           </div>
