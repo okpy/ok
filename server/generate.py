@@ -104,7 +104,7 @@ def gen_course():
             random.choice(['CS', 'Data Science']),
             random.randrange(100),
             random.choice(['', 'A'])),
-        active=gen_bool(0.3))
+        active=gen_bool(0.6))
 
 def gen_assignment(course):
     if gen_bool(0.5):
@@ -119,7 +119,7 @@ def gen_assignment(course):
 
     last_night = (datetime.datetime.utcnow()
                           .replace(hour=0, minute=0, second=0, microsecond=0)
-                  - datetime.timedelta(seconds=1))
+                          - datetime.timedelta(seconds=1))
     last_night = (pytz.timezone("America/Los_Angeles")
                       .localize(last_night)
                       .astimezone(pytz.utc))
