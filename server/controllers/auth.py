@@ -54,11 +54,13 @@ def google_oauth_token(token=None):
 # Helpers #
 ###########
 
-def check_oauth_token(scopes=[]):
+def check_oauth_token(scopes=None):
     """ Check the request for OAuth creds.
     Requires: Flask Request and access_token in request.args
     Return Token or None
     """
+    if scopes is None:
+        scopes = []
     # Check with local OAuth Provider for user
     valid, req = oauth_provider.verify_request(scopes)
     if valid:
