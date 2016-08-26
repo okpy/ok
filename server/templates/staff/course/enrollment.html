@@ -110,7 +110,7 @@
 <script>
     {% if enrollments %}
     var studentOptions = {
-      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section', { attr: 'data-timestamp', name: 'timestamp' }],
+      valueNames: ['email', 'name', 'sid', 'secondary', 'section'],
       plugins: [ListPagination()],
       page: 20
     };
@@ -121,11 +121,11 @@
 
     {% if staff %}
     var staffOptions = {
-      valueNames: [ 'email', 'name', 'secondary', 'role' ],
+      valueNames: [ 'email', 'name', 'secondary' ],
       plugins: [ListPagination()],
       page: 20
     };
-    var staffLit = new List('Staff-list', staffOptions);
+    var staffList = new List('Staff-list', staffOptions);
     // TODO: Use removeClass with polyfill
     document.getElementById('Staff-list').style.display = 'block';
     {% endif %}
