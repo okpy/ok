@@ -299,6 +299,13 @@ if driver:
             self.assertIn('Ok -', self.driver.title)
             self.assertTrue("Hog Stats" in self.driver.page_source)
 
+        def test_admin_enrollment(self):
+            self._login(role="admin")
+            self.pageLoad(self.get_server_url() + "/admin/course/1/enrollment")
+            self.assertIn('Ok -', self.driver.title)
+            self.assertTrue(self.course.offering in self.driver.page_source)
+            self.assertTrue('Export Roster' in self.driver.page_source)
+
         def test_queue_create(self):
             self._login(role="admin")
             self.pageLoad(self.get_server_url() + "/admin/")
