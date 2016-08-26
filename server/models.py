@@ -263,6 +263,9 @@ class Assignment(Model):
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
+    UserAssignment = namedtuple('UserAssignment',
+                                ['assignment', 'subm_time', 'group', 'final_subm'])
+
     @hybrid_property
     def active(self):
         return dt.utcnow() <= self.lock_date
@@ -325,6 +328,14 @@ class Assignment(Model):
     def by_name(name):
         """Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
+
+    def user_status(self, user):
+        user_ids = self.active_user_ids(user.id)
+        final_submission = self.final_submission(user_ids)
+        submission_time = final_submission and final_submission.created
+        group = Group.lookup(user, self)
+        return self.UserAssignment(self, submission_time, group,
+                                   final_submission)
 
     def course_submissions(self):
         seen = set()
@@ -502,6 +513,7 @@ class Enrollment(Model):
     def enroll_from_csv(cid, form):
         enrollment_info = []
         rows = form.csv.data.splitlines()
+        role = form.role.data
         entries = list(csv.reader(rows))
         new_users = []
         existing_user_count = 0
@@ -526,7 +538,7 @@ class Enrollment(Model):
         db.session.commit()
         for info in enrollment_info:
             info['id'] = info['id'].id
-        Enrollment.create(cid, enrollment_info, STUDENT_ROLE)
+        Enrollment.create(cid, enrollment_info, role)
         return len(new_users), existing_user_count
 
     @staticmethod
@@ -618,7 +630,7 @@ class Backup(Model):
         """ Return public grades. "Autograder" kind are errors from the
         autograder and should not be shown.
         """
-        return [s for s in self.scores if s.kind == "composition" and s.public]
+        return [s for s in self.scores if s.kind != "autograder" and s.public]
 
     @hybrid_property
     def is_revision(self):
@@ -653,6 +665,16 @@ class Backup(Model):
             # submit is not a real file, but the client sends it anyway
             contents.pop('submit', None)
             return contents
+        else:
+            return {}
+
+    def analytics(self):
+        """Return a dictionary of filenames to contents."""
+        message = Message.query.filter_by(
+            backup_id=self.id,
+            kind='analytics').first()
+        if message:
+            return dict(message.contents)
         else:
             return {}
 
@@ -738,6 +760,30 @@ class Group(Model):
 
     @staticmethod
     @transaction
+    def force_add(staff, sender, recipient, assignment):
+        """Used by staff to create groups users on behalf of users."""
+        group = Group.lookup(sender, assignment)
+        add_sender = group is None
+        if not group:
+            group = Group(assignment=assignment)
+            db.session.add(group)
+        with group._log('accept', staff.id, recipient.id):
+            if add_sender:
+                group._add_member(sender, 'active')
+            group._add_member(recipient, 'active')
+
+    @staticmethod
+    @transaction
+    def force_remove(staff, sender, target, assignment):
+        """Used by staff to remove users."""
+        group = Group.lookup(sender, assignment)
+        if not group:
+            raise BadRequest('No group to remove from')
+        with group._log('remove', staff.id, target.id):
+            group._remove_member(target)
+
+    @staticmethod
+    @transaction
     def invite(sender, recipient, assignment):
         """Invite a user to a group, creating a group if necessary."""
         if not assignment.active:
@@ -803,7 +849,7 @@ class Group(Model):
             assignment=self.assignment
         ).one_or_none()
         if member:
-            raise BadRequest('{0} is already in this group'.format(user.email))
+            raise BadRequest('{0} is already in a group'.format(user.email))
         member = GroupMember(
             user_id=user.id,
             group=self,

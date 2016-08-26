@@ -7,22 +7,27 @@ in a sandboxed environment.
 from flask import url_for
 import json
 import requests
+import logging
 
 import server.constants as constants
 from server.models import User, db
 import server.utils as utils
 
+logger = logging.getLogger(__name__)
+
 def send_autograder(endpoint, data):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
     r = requests.post(constants.AUTOGRADER_URL + endpoint,
-                      data=json.dumps(data), headers=headers, timeout=5)
+                      data=json.dumps(data), headers=headers, timeout=8)
 
     if r.status_code == requests.codes.ok:
         return {'status': True, 'message': 'OK'}
     else:
         error_message = 'The autograder rejected your request. {0}'.format(
             r.text)
+        logger.debug('Autograder {} response: {}'.format(r.status_code,
+                                                         error_message))
         raise ValueError(error_message)
 
 def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
@@ -94,12 +99,4 @@ def submit_continous(backup):
     if not backup.submitter.is_enrolled(assignment.course_id):
         raise ValueError("User is not enrolled and cannot be autograded")
 
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-
-    r = requests.post(constants.AUTOGRADER_URL + '/api/file/grade/continous',
-                      data=json.dumps(data), headers=headers, timeout=4)
-
-    if r.status_code == requests.codes.ok:
-        return {'status': "pending"}
-    else:
-        raise ValueError('The autograder the rejected your request')
+    return send_autograder('/api/file/grade/continous', data)

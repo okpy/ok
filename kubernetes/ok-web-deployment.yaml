@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: ok-v3-deploy
-        image: cs61a/ok:latest
+        image: cs61a/ok:v3.1.0
         imagePullPolicy: Always
         livenessProbe:
           # an http probe

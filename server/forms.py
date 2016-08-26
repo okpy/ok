@@ -145,7 +145,7 @@ class EnrollmentForm(BaseForm):
                             validators=[validators.optional()])
     section = StringField('Section',
                           validators=[validators.optional()])
-    role = SelectField('Role',
+    role = SelectField('Role', default=STUDENT_ROLE,
                        choices=[(r, r.capitalize()) for r in VALID_ROLES])
 
 
@@ -158,6 +158,8 @@ class VersionForm(BaseForm):
 
 class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField('Email, Name, SID, Course Login, Section')
+    role = SelectField('Role', default=STUDENT_ROLE,
+                       choices=[(r, r.capitalize()) for r in VALID_ROLES])
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()
@@ -228,6 +230,16 @@ class UploadSubmissionForm(BaseForm):
     upload_files = FileField('Submission Files', [FileRequired()])
     flag_submission = BooleanField('Flag this submission for grading',
                                    default=False)
+
+class StaffAddGroupFrom(BaseForm):
+    description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""
+
+    email = EmailField('Email',
+                       validators=[validators.required(), validators.email()])
+
+class StaffRemoveGroupFrom(BaseForm):
+    email = SelectField('Email',
+                        validators=[validators.required(), validators.email()])
 
 class NewCourseForm(BaseForm):
     offering = StringField('Offering (example: cal/cs61a/sp16)',

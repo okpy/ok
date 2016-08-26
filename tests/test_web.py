@@ -252,6 +252,24 @@ if driver:
             self.driver.find_element_by_class_name('submit-btn').click()
             self.assertTrue("Uploaded submission" in self.driver.page_source)
 
+        def test_web_submit_with_autograding(self):
+            self._seed_course()
+            self.assignment.autograding_key = 'test' # the development key
+            self.assignment.uploads_enabled = True
+            dir_path, file_name = os.path.split(os.path.abspath(__file__))
+            self.assignment.files = {file_name: 'sample template\nfile'}
+            models.db.session.commit()
+            self._login_as(email=self.user4.email)
+
+            self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
+            file_input = self.driver.find_element_by_id("file-select")
+            file_input.send_keys(os.path.abspath(__file__))
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("Uploaded submission" in self.driver.page_source)
+            # Will only pass when there is network connectivity. TODO: Mock external API response
+            # self.assertTrue("Did not send to autograder" not in self.driver.page_source)
+
         def test_login_admin_reject(self):
             self._login(role="student")
             self.pageLoad(self.get_server_url() + "/admin/")
