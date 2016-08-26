@@ -11,7 +11,7 @@ import datetime as dt
 from server import utils
 from server.models import Assignment, Course
 from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
-                              TIMEZONE)
+                              TIMEZONE, STUDENT_ROLE)
 
 import csv
 import logging
