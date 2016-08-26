@@ -10,8 +10,9 @@ import pytz
 
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
-                           GradingTask)
-from server.constants import STUDENT_ROLE
+                           GradingTask, Client, Token)
+from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE, OAUTH_SCOPES
+from server.extensions import cache
 
 original_file = open('tests/files/fizzbuzz_before.py', encoding="utf8").read()
 modified_file = open('tests/files/fizzbuzz_after.py', encoding="utf8").read()
@@ -344,12 +345,30 @@ def seed_flags():
                 chosen = random.choice(submissions)
                 assignment.flag(chosen.id, user_ids)
 
+def seed_oauth():
+    print("Seeding OAuth")
+    client = Client(
+        name='Example Application',
+        client_id='example-app',
+        client_secret='example-secret',
+        redirect_uris=[
+            'http://localhost:8000/authorized',
+            'http://127.0.0.1:8000/authorized',
+        ],
+        is_confidential=False,
+        description='Sample App for building OAuth',
+        default_scopes=OAUTH_SCOPES,
+    )
+    db.session.add(client)
+    db.session.commit()
+
+
 def seed():
     db.session.add(User(email='okstaff@okpy.org', is_admin=True))
     db.session.commit()
 
     random.seed(0)
-    seed_users()
+    seed_users(num=15)
     seed_courses()
     seed_assignments()
     seed_enrollments()
@@ -359,6 +378,7 @@ def seed():
     seed_flags()
     seed_queues()
     seed_scores()
+    seed_oauth()
 
     # Large course test. Uncomment to test large number of enrollments
     # cache.clear()

@@ -386,4 +386,3 @@ class TestAuth(OkTestCase):
         self.assert_200(current)
         self.assert_200(specific)
         self.assertEquals(specific.json['data']['email'], student.email)
-

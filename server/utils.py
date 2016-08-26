@@ -11,6 +11,7 @@ from urllib.parse import urlparse, urljoin
 from flask import render_template, url_for
 from hashids import Hashids
 import humanize
+from oauthlib.common import generate_token
 from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
@@ -175,3 +176,7 @@ def is_valid_endpoint(endpoint, valid_format):
         # Ensure that the name does not begin with forbidden names
         return True
     return False
+
+def generate_secret_key(length=31):
+    """Generates a random secret, as a string."""
+    return generate_token(length=length)

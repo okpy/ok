@@ -74,12 +74,23 @@ def envelope_api(data, code, headers=None):
     }
     return output_json(data, code, headers)
 
+def custom_abort(status_code, message, data=None):
+    response = jsonify({
+        'code': status_code,
+        'data': data,
+        'message': message,
+    })
+    response.status_code = status_code
+    return response
+
+##############
+# Decorators #
+##############
 
 def authenticate(func):
     """ Provide user object to API methods. Passes USER as a keyword argument
         to all protected API Methods.
     """
-    # TODO: Require API token for all requests to API.
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Public methods do not need authentication
@@ -90,6 +101,35 @@ def authenticate(func):
         return func(*args, **kwargs)
     return wrapper
 
+
+def check_scopes(func):
+    """ Check scopes for route against user scopes (if using OAuth)
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if getattr(func, 'public', False):
+            return func(*args, **kwargs)
+        user_scopes = getattr(current_user, 'scopes', None)
+        resource = getattr(func, '__self__', None)
+        if not resource:
+            # Not protecting an API resource, unknown permissions
+            return func(*args, **kwargs)
+        resource_scopes = getattr(resource, 'required_scopes', {})
+        # If unspecified, assume 'all' scope is neccesary
+        needed_scopes = resource_scopes.get(func.__name__, ['all'])
+        if user_scopes is None:
+            # Not an OAuth Based Request
+            return func(*args, **kwargs)
+        else:
+            if 'all' not in user_scopes:
+                for scope in needed_scopes:
+                    if scope not in user_scopes:
+                        data = {'current_scopes': user_scopes, 'required_scopes': needed_scopes}
+                        return custom_abort(403,
+                                            "The '{}' scope is required".format(scope),
+                                            data=data)
+        return func(*args, **kwargs)
+    return wrapper
 
 def check_version(func):
     @wraps(func)
@@ -150,6 +190,10 @@ def make_score(user, backup, score, message, kind):
     models.db.session.commit()
     score.archive_duplicates()
     return score
+
+###########
+# Schemas #
+###########
 
 class APISchema():
     """ APISchema describes the input and output formats for
@@ -362,7 +406,8 @@ class ScoreSchema(APISchema):
 
 class Resource(restful.Resource):
     version = 'v3'
-    method_decorators = [authenticate, check_version]
+    method_decorators = [check_scopes, authenticate, check_version]
+    required_scopes = {}
     # applies to all inherited resources
 
     def __repr__(self):
@@ -633,6 +678,9 @@ class Version(PublicResource):
     """
     model = models.Version
     schema = VersionSchema()
+    required_scopes = {
+        'get': []
+    }
 
     @marshal_with(schema.get_fields)
     @cache.memoize(600)
@@ -650,6 +698,9 @@ class Assignment(Resource):
     """
     model = models.Assignment
     schema = AssignmentSchema()
+    required_scopes = {
+        'get': []
+    }
 
     @marshal_with(schema.get_fields)
     def get(self, user, name):
@@ -702,6 +753,9 @@ class User(Resource):
     """
     model = models.User
     schema = UserSchema()
+    required_scopes = {
+        'get': ['email']
+    }
 
     @marshal_with(schema.get_fields)
     def get(self, user, email=None):

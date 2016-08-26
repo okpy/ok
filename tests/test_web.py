@@ -5,6 +5,7 @@ Docs: http://selenium-python.readthedocs.io/getting-started.html
 import json
 import os
 import signal
+import urllib.parse
 
 import requests
 from flask_testing import LiveServerTestCase
@@ -53,6 +54,18 @@ if driver:
             group.accept(self.user4)
 
             models.Group.invite(self.user2, self.user3, self.assignment)
+
+            self.oauth_client = models.Client(
+                name='Testing Client',
+                client_id='test-client',
+                client_secret='secret',
+                redirect_uris=['http://example.com/'],
+                is_confidential=False,
+                description='Sample App for testing OAuth',
+                default_scopes=['email'],
+            )
+            models.db.session.add(self.oauth_client)
+            models.db.session.commit()
 
         def create_app(self):
             app = create_app('settings/test.py')
@@ -103,9 +116,9 @@ if driver:
             self.driver.get(self.get_server_url() + "/testing-login/")
             self.assertIn('Login', self.driver.title)
 
-            inputElement = self.driver.find_element_by_id("email-login")
-            inputElement.send_keys(email)
-            inputElement.submit()
+            input_element = self.driver.find_element_by_id("email-login")
+            input_element.send_keys(email)
+            input_element.submit()
 
             self.assertIn('Courses | Ok', self.driver.title)
 
@@ -296,3 +309,117 @@ if driver:
             self.assertTrue("Hog" in self.driver.page_source)
             # Ensure tasks were created for two staff members
             self.assertTrue("for 2 staff" in self.driver.page_source)
+
+        def test_login_redirect(self):
+            self._seed_course()
+
+            target_url = '{}/admin/course/{}/assignments'.format(
+                self.get_server_url(),
+                self.course.id)
+            login_url = '{}/testing-login/'.format(self.get_server_url())
+
+            # Access page while not logged in - should redirect to login
+            self.pageLoad(target_url)
+            self.assertEquals(self.driver.current_url, login_url)
+
+            # Login and redirect back to original page
+            self.driver.find_element_by_id('admin').click()
+            self.assertEquals(self.driver.current_url, target_url)
+
+        def _confirm_oauth(self):
+            self.driver.find_element_by_id('confirm-button').click()
+
+            # Get code from redirect URI
+            redirect_uri, query_string = self.driver.current_url.split('?')
+            query = dict(urllib.parse.parse_qsl(query_string))
+            self.assertEquals(redirect_uri, self.oauth_client.redirect_uris[0])
+            self.assertIn('code', query)
+
+            # Try exchanging code for token
+            token_url = self.get_server_url() + '/oauth/token'
+            response = requests.post(token_url, data={
+                'code': query['code'],
+                'client_id': self.oauth_client.client_id,
+                'client_secret': self.oauth_client.client_secret,
+                'redirect_uri': self.oauth_client.redirect_uris[0],
+                'grant_type': 'authorization_code',
+            })
+            self.assertEquals(response.status_code, 200)
+            data = response.json()
+            self.assertIn('access_token', data)
+            self.assertIn('refresh_token', data)
+
+        def test_oauth(self):
+            self._seed_course()
+
+            # Login
+            self._login_as(self.user1.email)
+
+            # Start OAuth and click "Confirm"
+            self.pageLoad('{}/oauth/authorize?{}'.format(
+                self.get_server_url(),
+                urllib.parse.urlencode({
+                    'response_type': 'code',
+                    'client_id': self.oauth_client.client_id,
+                    'redirect_uri': self.oauth_client.redirect_uris[0],
+                    'scope': 'email',
+                }),
+            ))
+            self.assertIn(self.user1.email, self.driver.page_source)
+            self._confirm_oauth()
+
+        def test_oauth_logged_out(self):
+            self._seed_course()
+
+            # Start OAuth - redirects to log in
+            self.pageLoad('{}/oauth/authorize?{}'.format(
+                self.get_server_url(),
+                urllib.parse.urlencode({
+                    'response_type': 'code',
+                    'client_id': self.oauth_client.client_id,
+                    'redirect_uri': self.oauth_client.redirect_uris[0],
+                    'scope': 'email',
+                }),
+            ))
+            login_url = '{}/testing-login/'.format(self.get_server_url())
+            self.assertEquals(self.driver.current_url, login_url)
+
+            # Login and redirect back to original page
+            input_element = self.driver.find_element_by_id("email-login")
+            input_element.send_keys(self.user1.email)
+            input_element.submit()
+
+            # Now confirm OAuth
+            self.assertIn(self.user1.email, self.driver.page_source)
+            self._confirm_oauth()
+
+        def test_oauth_reauthenticate(self):
+            self._seed_course()
+
+            # Login
+            self._login_as(self.user1.email)
+
+            # Start OAuth and reauthenticate
+            self.pageLoad('{}/oauth/authorize?{}'.format(
+                self.get_server_url(),
+                urllib.parse.urlencode({
+                    'response_type': 'code',
+                    'client_id': self.oauth_client.client_id,
+                    'redirect_uri': self.oauth_client.redirect_uris[0],
+                    'scope': 'email',
+                }),
+            ))
+            self.assertIn(self.user1.email, self.driver.page_source)
+            self.driver.find_element_by_id('reauthenticate-button').click()
+
+            login_url = '{}/testing-login/'.format(self.get_server_url())
+            self.assertEquals(self.driver.current_url, login_url)
+
+            # Login and redirect back to original page
+            input_element = self.driver.find_element_by_id("email-login")
+            input_element.send_keys(self.user2.email)
+            input_element.submit()
+
+            # Now confirm OAuth
+            self.assertIn(self.user2.email, self.driver.page_source)
+            self._confirm_oauth()

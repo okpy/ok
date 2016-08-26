@@ -7,7 +7,7 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
 from werkzeug.exceptions import BadRequest
 
-from flask_login import current_user
+from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
 
@@ -16,7 +16,7 @@ from server.controllers.auth import get_token_if_valid
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, Group, db)
+                           GradingTask, Backup, Score, Group, Client, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               GRADE_TAGS)
 
@@ -24,7 +24,6 @@ from server.extensions import cache
 import server.forms as forms
 import server.highlight as highlight
 import server.utils as utils
-
 
 admin = Blueprint('admin', __name__)
 
@@ -54,7 +53,7 @@ def is_staff(course_arg=None):
                 return redirect(url_for("student.index"))
             flash("You are not on the course staff", "error")
             return redirect(url_for("student.index"))
-        return wrapper
+        return login_required(wrapper)
     return decorator
 
 
@@ -234,7 +233,7 @@ def grade(bid):
     return redirect(next_page)
 
 
-@admin.route("/client/<name>", methods=['GET', 'POST'])
+@admin.route("/versions/<name>", methods=['GET', 'POST'])
 @is_staff()
 def client_version(name):
     courses, current_course = get_courses()
@@ -680,6 +679,21 @@ def enrollment_csv(cid):
                     mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
+@admin.route("/clients/", methods=['GET', 'POST'])
+@is_staff()
+def clients():
+    clients = Client.query.all()
+    form = forms.ClientForm(client_secret=utils.generate_secret_key())
+    if form.validate_on_submit():
+        client = Client(user=current_user)
+        form.populate_obj(client)
+        db.session.add(client)
+        db.session.commit()
+
+        flash('OAuth client "{}" added'.format(client.name), "success")
+        return redirect(url_for(".clients"))
+
+    return render_template('staff/clients.html', clients=clients, form=form)
 
 ################
 # Student View #

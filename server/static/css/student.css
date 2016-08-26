@@ -357,6 +357,7 @@ section {
 }
 header .logo {
   width:3em;
+  margin-top: 4px;
 }
 .landing {
   width:100%;

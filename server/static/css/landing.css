@@ -1,6 +1,6 @@
 .home header {
     width: 100%;
-    padding: 1.5em 3em;
+    padding: 1.5em 0em;
     position: relative;
 }
 
@@ -8,7 +8,7 @@
   background: #468dc6;
 }
 
-header .btn {
+header .landing-btn {
   line-height: 150%;
   font-size: 1.35em;
   font-weight: 300;
@@ -30,17 +30,17 @@ header .btn {
   margin-top: 0px;
 }
 
-.btn:hover{
+.landing-btn:hover{
 	background-color:#DDDDDD;
 }
 
-.btn.round{
+.landing-btn.round{
 	-webkit-border-radius: 3px;
 	-moz-border-radius: 3px;
 	border-radius: 3px;
 }
 
-.btn.pill{
+.landing-btn.pill{
   -webkit-border-radius: 16px;
   -moz-border-radius: 16px;
   border-radius: 16px;

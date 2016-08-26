@@ -9,6 +9,7 @@ STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 GRADE_TAGS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
 			  'regrade', 'revision']
 API_PREFIX = '/api'
+OAUTH_SCOPES = ['all', 'email']
 
 COURSE_ENDPOINT_FORMAT = '^\w+/\w+/\w+$'
 ASSIGNMENT_ENDPOINT_FORMAT = COURSE_ENDPOINT_FORMAT[:-1] + '/\w+$'
@@ -25,6 +26,7 @@ FORBIDDEN_ROUTE_NAMES = [
     'comments',
     'login',
     'logout',
+    'oauth',
     'testing-login',
 ]
 FORBIDDEN_ASSIGNMENT_NAMES = []

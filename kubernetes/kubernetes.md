@@ -27,6 +27,12 @@ The kubernetes documentations on deployments is useful. [Deployment Info](http:/
 
 ## Migrations
 
+Use a local MySQL DB that is based off the lastest deployed version (checkout the git tag/commit).
+
+Then checkout your branch/change. Run `./manage.py db migrate -m 'info about migration'` to generate the migration. Inspect the generated files.
+
+Commit, push, and deploy to staging.
+
 1. Deploy the new branch/image into the staging environment.
 > `kubectl apply -f kubernetes/ok-staging-web-rc.yaml`
 
@@ -34,7 +40,7 @@ The kubernetes documentations on deployments is useful. [Deployment Info](http:/
 > `kubectl get pod # to get the name of the staging pod`
 > `k exec -ti ok-staging-deployment-number-something -- ./manage.py db upgrade`
 
-3. Ship it to production.
+3. Immediately ship it to production.
 
 ### Notes for developers
 
