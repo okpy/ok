@@ -108,6 +108,7 @@
 
 {% block page_js %}
 <script>
+    {% if enrollments %}
     var studentOptions = {
       valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section', { attr: 'data-timestamp', name: 'timestamp' }],
       plugins: [ListPagination()],
@@ -117,6 +118,7 @@
     studentList.sort("timestamp", {order: "desc"})
     document.getElementById('Student-list').style.display = 'block';
 
+    {% if staff %}
     var staffOptions = {
       valueNames: [ 'email', 'name', 'secondary', 'role' ],
       plugins: [ListPagination()],

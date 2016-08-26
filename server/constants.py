@@ -11,6 +11,9 @@ GRADE_TAGS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
 
+COURSE_ENDPOINT_FORMAT = '^\w+/\w+/\w+$'
+ASSIGNMENT_ENDPOINT_FORMAT = COURSE_ENDPOINT_FORMAT[:-1] + '/\w+$'
+
 GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
 
