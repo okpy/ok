@@ -2,7 +2,7 @@ from tests import OkTestCase
 
 from server.models import db, Enrollment, User
 from server.forms import EnrollmentForm, BatchEnrollmentForm
-from server.constants import STUDENT_ROLE
+from server.constants import STUDENT_ROLE, LAB_ASSISTANT_ROLE
     
 class TestEnrollment(OkTestCase):
     
@@ -13,27 +13,31 @@ class TestEnrollment(OkTestCase):
             'email': 'frank.underwood@whitehouse.gov',
             'sid': '123456789',
             'class_account': 'cs61a-fu',
-            'section': '101'
+            'section': '101',
+            'role': STUDENT_ROLE
         }
         self.studentB = {
             'name': 'Claire Underwood',
             'email': 'claire.underwood@whitehouse.gov',
             'sid': '987654321',
             'class_account': 'cs61a-cu',
-            'section': '102'
+            'section': '102',
+            'role': STUDENT_ROLE
         }
         self.studentB_alt = {
             'name': 'Claire Hale Underwood',
             'email': 'claire.underwood@whitehouse.gov',
             'sid': '9876543210',
             'class_account': 'cs61a-chu',
-            'section': '103'
+            'section': '103',
+            'role': STUDENT_ROLE
         }
         self.lab_assistant = {
             'name': 'Ned Stark',
             'email': 'eddard.stark@winterfell.com',
             'sid': '152342343',
-            'section': '101'
+            'section': '101',
+            'role': LAB_ASSISTANT_ROLE
         }
     
     def test_create(self):
@@ -110,24 +114,22 @@ class TestEnrollment(OkTestCase):
         assert query.count() == 1
         
         enrollment = query[0]
-        assert enrollment.user.name == info['name']
-        assert enrollment.user.email == info['email']
-        assert enrollment.user_id == info['id']
-        assert enrollment.sid == info['sid']
-        if 'class_account' in info:
-            assert enrollment.class_account == info['class_account']
-        assert enrollment.section == info['section']
-        assert enrollment.role == STUDENT_ROLE
+        assert enrollment.user.name == info.get('name')
+        assert enrollment.user.email == info.get('email')
+        assert enrollment.user_id == info.get('id')
+        assert enrollment.sid == info.get('sid')
+        assert enrollment.class_account == info.get('class_account')
+        assert enrollment.section == info.get('section')
+        assert enrollment.role == info.get('role')
         
         
 def make_enrollment_form(info):
     form = EnrollmentForm()
-    form.name.data = info['name']
-    form.email.data = info['email']
-    form.sid.data = info['sid']
-    if 'class_account' in info:
-        form.secondary.data = info['class_account']
-    form.section.data = info['section']
-    form.role.data = STUDENT_ROLE
+    form.name.data = info.get('name')
+    form.email.data = info.get('email')
+    form.sid.data = info.get('sid')
+    form.secondary.data = info.get('class_account')
+    form.section.data = info.get('section')
+    form.role.data = info.get('role')
     return form
     

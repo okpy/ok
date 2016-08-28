@@ -296,3 +296,8 @@ if driver:
             self.assertTrue("Hog" in self.driver.page_source)
             # Ensure tasks were created for two staff members
             self.assertTrue("for 2 staff" in self.driver.page_source)
+
+        def test_enrollment(self):
+            self._login(role="admin")
+            self.pageLoad(self.get_server_url() + "/admin/")
+            self.pageLoad(self.get_server_url() + "/admin/course/1/enrollment")
