@@ -92,7 +92,4 @@ class OkTestCase(TestCase):
         self.staff1 = make_staff(1)
         self.staff2 = make_staff(2)
 
-        self.lab_assistant1 = make_lab_assistant(1)
-        self.lab_assistant2 = make_lab_assistant(2)
-
         db.session.commit()
