@@ -579,10 +579,10 @@ def autograde(cid, aid):
 @is_staff(course_arg='cid')
 def enrollment(cid):
     courses, current_course = get_courses(cid)
-    single_form = forms.EnrollmentForm(prefix="single")
-    if single_form.validate_on_submit():
-        email, role = single_form.email.data, single_form.role.data
-        Enrollment.enroll_from_form(cid, single_form)
+    form = forms.EnrollmentForm()
+    if form.validate_on_submit():
+        email, role = form.email.data, form.role.data
+        Enrollment.enroll_from_form(cid, form)
         flash("Added {email} as {role}".format(
             email=email, role=role), "success")
 
@@ -603,7 +603,7 @@ def enrollment(cid):
     return render_template('staff/course/enrollment.html',
                            enrollments=students, staff=staff,
                            lab_assistants=lab_assistants,
-                           single_form=single_form,
+                           form=form,
                            courses=courses,
                            current_course=current_course)
 

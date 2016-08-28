@@ -10,8 +10,7 @@ import requests
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
 
-from server import create_app
-from server import models
+from server import create_app, models
 
 from tests import OkTestCase
 
@@ -297,7 +296,4 @@ if driver:
             # Ensure tasks were created for two staff members
             self.assertTrue("for 2 staff" in self.driver.page_source)
 
-        def test_enrollment(self):
-            self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/")
-            self.pageLoad(self.get_server_url() + "/admin/course/1/enrollment")
+

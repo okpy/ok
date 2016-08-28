@@ -32,11 +32,25 @@ class TestEnrollment(OkTestCase):
             'section': '103',
             'role': STUDENT_ROLE
         }
-        self.lab_assistant = {
+        self.lab_assistantA = {
             'name': 'Ned Stark',
             'email': 'eddard.stark@winterfell.com',
             'sid': '152342343',
             'section': '101',
+            'role': LAB_ASSISTANT_ROLE
+        }
+        self.lab_assistantA = {
+            'name': 'Ned Stark',
+            'email': 'eddard.stark@winterfell.com',
+            'sid': '152342343',
+            'section': '101',
+            'role': LAB_ASSISTANT_ROLE
+        }
+        self.lab_assistantB = {
+            'name': 'Robb Stark',
+            'email': 'robb.stark@winterfell.com',
+            'sid': '189693423',
+            'section': '102',
             'role': LAB_ASSISTANT_ROLE
         }
     
@@ -62,11 +76,11 @@ class TestEnrollment(OkTestCase):
         
         self.enrollment_matches_info(user, self.studentB)
 
-        Enrollment.enroll_from_form(self.course.id, make_enrollment_form(self.lab_assistant)) 
-        lab_assistant = User.lookup(self.lab_assistant['email'])
-        self.lab_assistant['id'] = lab_assistant.id
+        Enrollment.enroll_from_form(self.course.id, make_enrollment_form(self.lab_assistantA)) 
+        lab_assistant = User.lookup(self.lab_assistantA['email'])
+        self.lab_assistantA['id'] = lab_assistant.id
         
-        self.enrollment_matches_info(lab_assistant, self.lab_assistant)
+        self.enrollment_matches_info(lab_assistant, self.lab_assistantA)
 
         
     def test_enroll_from_csv(self):
@@ -121,7 +135,36 @@ class TestEnrollment(OkTestCase):
         assert enrollment.class_account == info.get('class_account')
         assert enrollment.section == info.get('section')
         assert enrollment.role == info.get('role')
-        
+
+    def test_lab_assistant_enroll_web(self):
+        self.setup_course()
+        self.login(self.staff1.email)
+        response = self.client.get('/admin/course/{}/enrollment'.format(self.course.id))
+        self.assert200(response)
+        source = response.get_data().decode("utf-8")
+        self.assertTrue("<span> Student </span>" in source)
+        self.assertTrue("<span> Staff </span>" in source)
+        self.assertFalse("<span> Lab Assistant </span>" in source)
+
+        response = self.client.post('/admin/course/{}/enrollment'.format(self.course.id),
+                        data=self.lab_assistantA, follow_redirects=True)
+        self.assert200(response)
+        source = response.get_data().decode("utf-8")
+        self.assertTrue("<span> Student </span>" in source)
+        self.assertTrue("<span> Staff </span>" in source)
+        self.assertTrue("<span> Lab Assistant </span>" in source)
+
+        response = self.client.get('/admin/course/{}/enrollment'.format(self.course.id))
+        self.assert200(response)
+        source = response.get_data().decode("utf-8")
+        self.assertTrue("<span> Student </span>" in source)
+        self.assertTrue("<span> Staff </span>" in source)
+        self.assertTrue("<span> Lab Assistant </span>" in source)
+
+        self.login(self.user1.email)
+        response = self.client.post('/admin/course/{}/enrollment'.format(self.course.id),
+                        data=self.lab_assistantB)
+        self.assertRedirects(response, '/')
         
 def make_enrollment_form(info):
     form = EnrollmentForm()
