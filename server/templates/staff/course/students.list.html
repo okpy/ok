@@ -34,7 +34,7 @@
                     <td class="name">{{ item.user.name }}</td>
                     <td class="sid">{{ item.sid }}</td>
                     <td class="secondary">{{ item.class_account }}</td>
-                    <td class="role"><span class="label label-success">{{item.role}}</span></td>
+                    <td class="role"><span class="label label-success">{{item.role | title }}</span></td>
                     <td class="timestamp" data-timestamp="{{ item.created }}">{{ utils.local_time(item.created, current_course) }}</td>
                     <td class="section">{{item.section}}</td>
                 </tr>
