@@ -387,3 +387,12 @@ class TestAuth(OkTestCase):
         self.assert_200(specific)
         self.assertEquals(specific.json['data']['email'], student.email)
 
+        # Lab Assistants don't have access
+        self.login(self.lab_assistant1.email)
+        current, specific = test_both_endpoints(student)
+        self.assert_200(current)
+        self.assert_403(specific)
+        
+
+
+
