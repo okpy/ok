@@ -643,8 +643,20 @@ def enrollment(cid):
                            enrollments=students, staff=staff,
                            lab_assistants=lab_assistants,
                            form=form,
+                           unenroll_form=forms.CSRFForm(),
                            courses=courses,
                            current_course=current_course)
+
+@admin.route("/course/<int:cid>/<int:user_id>/unenroll", methods=['POST'])
+@is_staff(course_arg='cid')
+def unenrollment(cid, user_id):
+    user = User.query.filter_by(id=user_id).one_or_none()
+    enrollment = user.is_enrolled(cid);
+    if user and enrollment:
+        Enrollment.unenroll(enrollment)
+        flash("{email} has been unenrolled".format(email=user.email), "success")
+    
+    return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/course/<int:cid>/enrollment/batch",
              methods=['GET', 'POST'])

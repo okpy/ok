@@ -526,6 +526,13 @@ class Enrollment(Model):
 
     @staticmethod
     @transaction
+    def unenroll(enrollment):
+        db.session.delete(enrollment)
+        db.session.commit()
+        cache.delete_memoized(User.is_enrolled)
+
+    @staticmethod
+    @transaction
     def enroll_from_csv(cid, form):
         enrollment_info = []
         rows = form.csv.data.splitlines()
