@@ -58,12 +58,11 @@ class TestEnrollment(OkTestCase):
         
         self.enrollment_matches_info(user, self.studentB)
 
-        Enrollment.enroll_from_form(self.course_id, make_enrollment_form(self.lab_assistant))
-
+        Enrollment.enroll_from_form(self.course.id, make_enrollment_form(self.lab_assistant)) 
         lab_assistant = User.lookup(self.lab_assistant['email'])
         self.lab_assistant['id'] = lab_assistant.id
         
-        self.enrollment_matches_info(user, self.lab_assistant)
+        self.enrollment_matches_info(lab_assistant, self.lab_assistant)
 
         
     def test_enroll_from_csv(self):
@@ -115,7 +114,8 @@ class TestEnrollment(OkTestCase):
         assert enrollment.user.email == info['email']
         assert enrollment.user_id == info['id']
         assert enrollment.sid == info['sid']
-        assert enrollment.class_account == info['class_account']
+        if 'class_account' in info:
+            assert enrollment.class_account == info['class_account']
         assert enrollment.section == info['section']
         assert enrollment.role == STUDENT_ROLE
         
@@ -125,7 +125,8 @@ def make_enrollment_form(info):
     form.name.data = info['name']
     form.email.data = info['email']
     form.sid.data = info['sid']
-    form.secondary.data = info['class_account']
+    if 'class_account' in info:
+        form.secondary.data = info['class_account']
     form.section.data = info['section']
     form.role.data = STUDENT_ROLE
     return form
