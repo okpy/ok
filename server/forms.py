@@ -74,7 +74,7 @@ class AssignmentForm(BaseForm):
 
     display_name = StringField('Display Name',
                                validators=[validators.required()])
-    name = StringField('Offering (example: cal/cs61a/sp16/lab00)',
+    name = StringField('Offering (example: cal/cs61a/fa16/proj01)',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
                              default=utils.next_week_obj,
