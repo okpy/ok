@@ -46,11 +46,7 @@ def local_time(time, course, fmt='%a %m/%d %I:%M %p'):
     """Format a time string in a course's locale.
     Note that %-I does not perform as expected on Alpine Linux
     """
-    if not time.tzinfo:
-        # Assume UTC
-        time = pytz.utc.localize(time)
-    local = time.astimezone(pytz.timezone('America/Los_Angeles'))
-    return local.strftime(fmt)
+    return local_time_obj(time, course).strftime(fmt)
 
 def local_time_obj(time, course):
     """Get a Datetime object in a course's locale from a TZ Aware DT object."""
