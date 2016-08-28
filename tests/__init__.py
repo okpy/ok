@@ -5,6 +5,7 @@ from flask_testing import TestCase
 
 from server import create_app
 from server.models import db, Assignment, Course, Enrollment, User
+from server import constants
 
 class OkTestCase(TestCase):
     def create_app(self):
@@ -59,18 +60,19 @@ class OkTestCase(TestCase):
 
         def make_student(n):
             user = User(email='student{0}@aol.com'.format(n))
-            participant = Enrollment(
-                user=user,
-                course=self.course)
+            participant = Enrollment(user=user, course=self.course)
             db.session.add(participant)
             return user
 
-        def make_staff(n, role='staff'):
+        def make_staff(n, role=constants.STAFF_ROLE):
             user = User(email='staff{0}@bitdiddle.net'.format(n))
-            participant = Enrollment(
-                user=user,
-                course=self.course,
-                role=role)
+            participant = Enrollment(user=user, course=self.course, role=role)
+            db.session.add(participant)
+            return user
+
+        def make_lab_assistant(self, n, role=constants.LAB_ASSISTANT_ROLE):
+            user = User(email='lab_assistant{0}@labassist.net'.format(n))
+            participant = Enrollment(user=user, course=self.course, role=role)
             db.session.add(participant)
             return user
 
@@ -84,12 +86,3 @@ class OkTestCase(TestCase):
         self.staff2 = make_staff(2)
 
         db.session.commit()
-
-    def make_lab_assistant(self, n, role='lab_assistant'):
-        user = User(email='lab_assistant{0}@labassist.net'.format(n))
-        participant = Enrollment(
-            user=user,
-            course=self.course,
-            role=role)
-        db.session.add(participant)
-        return user
