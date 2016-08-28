@@ -137,7 +137,9 @@
       page: 20
     };
     var labAssistantList = new List('Lab Assistant-list', labAssistantOptions);
-    var labAssistantElement = document.getElementById('Lab Assistant-list');
-    labAssistantElement.style.display = 'block';
+    var labAssistantListElement = document.getElementById('Lab Assistant-list')
+    if (labAssistantListElement != null) {
+        labAssistantListElement.style.display = 'block';
+    }
 </script>
 {% endblock %}
