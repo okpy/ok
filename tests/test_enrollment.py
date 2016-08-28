@@ -29,6 +29,12 @@ class TestEnrollment(OkTestCase):
             'class_account': 'cs61a-chu',
             'section': '103'
         }
+        self.lab_assistant = {
+            'name': 'Ned Stark',
+            'email': 'eddard.stark@winterfell.com',
+            'sid': '152342343',
+            'section': '101'
+        }
     
     def test_create(self):
         self.setup_course()
@@ -51,6 +57,14 @@ class TestEnrollment(OkTestCase):
         self.studentB['id'] = user.id
         
         self.enrollment_matches_info(user, self.studentB)
+
+        Enrollment.enroll_from_form(self.course_id, make_enrollment_form(self.lab_assistant))
+
+        lab_assistant = User.lookup(self.lab_assistant['email'])
+        self.lab_assistant['id'] = lab_assistant.id
+        
+        self.enrollment_matches_info(user, self.lab_assistant)
+
         
     def test_enroll_from_csv(self):
         self.setup_course()
