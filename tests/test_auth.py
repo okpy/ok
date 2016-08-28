@@ -2,6 +2,7 @@ import flask
 import urllib.request
 
 from tests import OkTestCase
+from server.models import db
 
 class TestAuth(OkTestCase):
     email = 'martymcfly@aol.com'
@@ -99,7 +100,7 @@ class TestAuth(OkTestCase):
         attempt_suite(self.admin.email, authorized=True)
 
         # Login as lab assistant
-        self.lab_assistant1 = make_lab_assistant(1)
+        self.lab_assistant1 = self.make_lab_assistant(1)
         db.session.commit()
         attempt_suite(self.lab_assistant1.email, authorized=False)
 
