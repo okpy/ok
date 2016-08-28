@@ -67,6 +67,12 @@ def server_time_obj(time, course):
     # Store using UTC on the server side.
     return time.astimezone(pytz.utc)
 
+def next_week_obj():
+    """Get a datetime object representing 1 week from now at 11:59:59 pm."""
+    return dt.datetime.combine(dt.date.today() + dt.timedelta(weeks=1),
+                               dt.time(hour=23, minute=59, second=59,
+                                       microsecond=0))
+
 def natural_time(date):
     """Format a human-readable time difference (e.g. "6 days ago")"""
     if date.tzinfo:

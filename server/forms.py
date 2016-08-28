@@ -74,13 +74,14 @@ class AssignmentForm(BaseForm):
 
     display_name = StringField('Display Name',
                                validators=[validators.required()])
-    name = StringField('Offering (example: cal/cs61a/sp16/lab01)',
+    name = StringField('Offering (example: cal/cs61a/sp16/lab00)',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
-                             default=dt.datetime.now,
+                             default=utils.next_week_obj,
                              validators=[validators.required()])
     lock_date = DateTimeField('Lock Date (Course Time)',
-                              default=dt.datetime.now,
+                              default=lambda: utils.next_week_obj()
+                                              + dt.timedelta(days=1),
                               validators=[validators.required()])
     max_group_size = IntegerField('Max Group Size',
                                   default=1,
