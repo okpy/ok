@@ -98,5 +98,8 @@ class TestAuth(OkTestCase):
         # Login as admin
         attempt_suite(self.admin.email, authorized=True)
 
+        # Login as lab assistant
+        attempt_suite(self.lab_assistant1.email, authorized=False)
+
         # Logged out user
         attempt_suite(None, authorized=False)
