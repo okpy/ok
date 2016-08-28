@@ -39,13 +39,6 @@ class TestEnrollment(OkTestCase):
             'section': '101',
             'role': LAB_ASSISTANT_ROLE
         }
-        self.lab_assistantA = {
-            'name': 'Ned Stark',
-            'email': 'eddard.stark@winterfell.com',
-            'sid': '152342343',
-            'section': '101',
-            'role': LAB_ASSISTANT_ROLE
-        }
         self.lab_assistantB = {
             'name': 'Robb Stark',
             'email': 'robb.stark@winterfell.com',

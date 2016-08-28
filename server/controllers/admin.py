@@ -7,7 +7,7 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
 from werkzeug.exceptions import BadRequest
 
-from flask_login import current_user
+from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
 
@@ -16,13 +16,14 @@ from server.controllers.auth import get_token_if_valid
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, Group, db)
-from server.constants import STAFF_ROLES, STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADE_TAGS
+                           GradingTask, Backup, Score, Group, Client, db)
+from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE, 
+                                LAB_ASSISTANT_ROLE, GRADE_TAGS)
+
 from server.extensions import cache
 import server.forms as forms
 import server.highlight as highlight
 import server.utils as utils
-
 
 admin = Blueprint('admin', __name__)
 
@@ -52,14 +53,14 @@ def is_staff(course_arg=None):
                 return redirect(url_for("student.index"))
             flash("You are not on the course staff", "error")
             return redirect(url_for("student.index"))
-        return wrapper
+        return login_required(wrapper)
     return decorator
 
 
 def get_courses(cid=None):
-    #  TODO : The decorator could add these to the routes
     if current_user.is_authenticated and current_user.is_admin:
-        courses = Course.query.all()
+        courses = (Course.query.order_by(Course.created.desc())
+                         .all())
     else:
         enrollments = current_user.enrollments(roles=STAFF_ROLES)
         courses = [e.course for e in enrollments]
@@ -68,7 +69,7 @@ def get_courses(cid=None):
 
     matching_courses = [c for c in courses if c.id == cid]
     if len(matching_courses) == 0:
-        abort(401)  # TODO to actual error page
+        abort(401)
     current_course = matching_courses[0]
     return courses, current_course
 
@@ -232,7 +233,7 @@ def grade(bid):
     return redirect(next_page)
 
 
-@admin.route("/client/<name>", methods=['GET', 'POST'])
+@admin.route("/versions/<name>", methods=['GET', 'POST'])
 @is_staff()
 def client_version(name):
     courses, current_course = get_courses()
@@ -257,6 +258,30 @@ def client_version(name):
                            courses=courses, current_course=current_course,
                            version=version, form=form)
 
+##########
+# Course #
+##########
+@admin.route("/course/new", methods=['GET', 'POST'])
+@is_staff()
+def create_course():
+    courses, current_course = get_courses()
+    form = forms.NewCourseForm()
+    if form.validate_on_submit():
+        new_course = Course()
+        form.populate_obj(new_course)
+
+        # Add user as instructor, can be changed later
+        enroll = Enrollment(course=new_course, user_id=current_user.id,
+                            role=INSTRUCTOR_ROLE)
+        db.session.add(new_course)
+        db.session.add(enroll)
+
+        db.session.commit()
+
+        flash(new_course.offering + " created successfully.", "success")
+        return redirect(url_for(".course", cid=new_course.id))
+    return render_template('staff/course/course.new.html', form=form,
+                           courses=courses)
 
 @admin.route("/course/<int:cid>")
 @is_staff(course_arg='cid')
@@ -265,6 +290,20 @@ def course(cid):
     # courses, current_course = get_courses(cid)
     # return render_template('staff/course/index.html',
     #                       courses=courses, current_course=current_course)
+
+@admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def course_settings(cid):
+    courses, current_course = get_courses(cid)
+    form = forms.CourseUpdateForm(obj=current_course)
+    if form.validate_on_submit():
+        form.populate_obj(current_course)
+        db.session.commit()
+
+        flash(current_course.offering + " edited successfully.", "success")
+        return redirect(url_for(".course", cid=current_course.id))
+    return render_template('staff/course/course.edit.html', form=form,
+                           courses=courses, current_course=current_course)
 
 
 @admin.route("/course/<int:cid>/assignments")
@@ -646,6 +685,21 @@ def enrollment_csv(cid):
                     mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
+@admin.route("/clients/", methods=['GET', 'POST'])
+@is_staff()
+def clients():
+    clients = Client.query.all()
+    form = forms.ClientForm(client_secret=utils.generate_secret_key())
+    if form.validate_on_submit():
+        client = Client(user=current_user)
+        form.populate_obj(client)
+        db.session.add(client)
+        db.session.commit()
+
+        flash('OAuth client "{}" added'.format(client.name), "success")
+        return redirect(url_for(".clients"))
+
+    return render_template('staff/clients.html', clients=clients, form=form)
 
 ################
 # Student View #

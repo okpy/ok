@@ -5,16 +5,19 @@ import math
 from io import StringIO
 import os
 import random
+import re
 from urllib.parse import urlparse, urljoin
 
 from flask import render_template, url_for
 from hashids import Hashids
 import humanize
+from oauthlib.common import generate_token
 from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
 
 from server.extensions import cache
+from server import constants
 
 sg = sendgrid.SendGridClient(
     os.getenv('SENDGRID_KEY'), None, raise_errors=True)
@@ -163,3 +166,17 @@ def generate_csv(query, items, selector_fn):
             data.update(dict)
         csv_writer.writerow(data)
         yield csv_file.getvalue()
+
+def is_valid_endpoint(endpoint, valid_format):
+    """Validates an endpoint name against a regex pattern VALID_FORMAT. """
+    r = re.compile(valid_format)
+    is_forbidden = any([endpoint.startswith(name) for name
+                        in constants.FORBIDDEN_ROUTE_NAMES])
+    if r.match(endpoint) is not None and not is_forbidden:
+        # Ensure that the name does not begin with forbidden names
+        return True
+    return False
+
+def generate_secret_key(length=31):
+    """Generates a random secret, as a string."""
+    return generate_token(length=length)

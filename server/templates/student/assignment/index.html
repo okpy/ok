@@ -18,7 +18,7 @@
               <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name_with_semester }}</a></span> &raquo;
               <span>{{ assignment.display_name }}</span>
             </div>
-            <h1>{{ assignment.display_name}} <small> Due: {{  utils.local_time(assignment.due_date, course) }} </small></h1>
+            <h1>{{ assignment.display_name}} <small class="assignment-due-date"> Due: {{  utils.local_time(assignment.due_date, course) }} </small></h1>
           </div>
           {% include 'alerts.html' %}
 

@@ -13,7 +13,11 @@ class TestAuth(OkTestCase):
         assert response.code == 200
 
     def test_login(self):
-        """GET /login/ should redirect to Google OAuth."""
+        """GET /login/ should redirect to Google OAuth (in production)."""
+        response = self.client.get('/login/')
+        self.assertRedirects(response, '/testing-login/')
+
+        self.app.config['TESTING_LOGIN'] = False
         response = self.client.get('/login/')
         assert response.location.startswith('https://accounts.google.com/o/oauth2/auth')
 

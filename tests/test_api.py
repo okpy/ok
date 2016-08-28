@@ -394,7 +394,3 @@ class TestAuth(OkTestCase):
         current, specific = test_both_endpoints(student)
         self.assert_200(current)
         self.assert_403(specific)
-        
-
-
-

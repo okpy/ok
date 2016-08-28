@@ -27,7 +27,7 @@ class RunTests(Command):
         test_suite = test_loader.discover('tests/')
         test_runner.run(test_suite)
 
-manager.add_command("server", Server(host='0.0.0.0'))
+manager.add_command("server", Server(host='localhost'))
 manager.add_command("show-urls", ShowUrls())
 manager.add_command("clean", Clean())
 manager.add_command('db', MigrateCommand)

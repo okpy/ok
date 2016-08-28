@@ -27,6 +27,7 @@ class HashidConverter(BaseConverter):
 
 name_part = '[^/]+'
 
+# TODO: Move the regexes to constants.py
 def restricted_name_part(exceptions):
     """Return a regex that matches a URL part except one of the words in the
     exceptions list.
