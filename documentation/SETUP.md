@@ -26,8 +26,8 @@ Run tests via
 
     $ make test
 
-In order to run the tests in `tests/test_web.py`, `phantom.js` needs to be installed. First
-make sure [Homebrew](http://brew.sh/) is installed. Install `phantom.js`:
+In order to run the tests in `tests/test_web.py`, `phantom.js` needs to be installed. 
+On OSX: First make sure [Homebrew](http://brew.sh/) is installed. To install `phantom.js`:
 
     $ brew install phantomjs
 
