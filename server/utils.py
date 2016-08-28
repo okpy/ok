@@ -67,11 +67,21 @@ def server_time_obj(time, course):
     # Store using UTC on the server side.
     return time.astimezone(pytz.utc)
 
-def next_week_obj():
+def next_week_obj(course):
     """Get a datetime object representing 1 week from now at 11:59:59 pm."""
-    return dt.datetime.combine(dt.date.today() + dt.timedelta(weeks=1),
-                               dt.time(hour=23, minute=59, second=59,
-                                       microsecond=0))
+    next_week_date = dt.datetime.now(course.timezone) + dt.timedelta(weeks=1)
+    midnight_time = dt.time(hour=23, minute=59, second=59, microsecond=0,
+                            tzinfo=course.timezone)
+    return dt.datetime.combine(next_week_date, midnight_time)
+
+def new_due_date(course):
+    """Return a string representing a new due date next week."""
+    return local_time(next_week_obj(course), course, '%Y-%m-%d %H:%M:%S')
+
+def new_lock_date(course):
+    """Return a string representing a new lock date 8 days from now."""
+    return local_time(next_week_obj(course) + dt.timedelta(days=1), course,
+                      '%Y-%m-%d %H:%M:%S')
 
 def natural_time(date):
     """Format a human-readable time difference (e.g. "6 days ago")"""
