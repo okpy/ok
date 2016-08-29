@@ -94,6 +94,18 @@ class TestEnrollment(OkTestCase):
             course_id=self.course.id, 
             user_id=user.id).one_or_none()
         assert enrollment is None
+
+    def test_unenroll_form(self):
+        self.setup_course()
+        self.login(self.staff1.email)
+
+        url = "/admin/course/{cid}/{user_id}/unenroll".format(cid=self.course.id, user_id=self.user1.id)
+        response = self.client.post(url, follow_redirects=True)
+
+        enrollment = Enrollment.query.filter_by(
+            course_id=self.course.id,
+            user_id=self.user1.id).one_or_none()
+        assert enrollment is None
         
     def test_enroll_from_csv(self):
         self.setup_course()

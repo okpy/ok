@@ -651,11 +651,11 @@ def enrollment(cid):
 @is_staff(course_arg='cid')
 def unenrollment(cid, user_id):
     user = User.query.filter_by(id=user_id).one_or_none()
-    enrollment = user.is_enrolled(cid);
-    if user and enrollment:
-        enrollment.unenroll()
-        cache.delete_memoized(User.is_enrolled, user, cid)
-        flash("{email} has been unenrolled".format(email=user.email), "success")
+    if user:
+        enrollment = user.is_enrolled(cid);
+        if enrollment:
+            enrollment.unenroll()
+            flash("{email} has been unenrolled".format(email=user.email), "success")
     
     return redirect(url_for(".enrollment", cid=cid))
 
