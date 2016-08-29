@@ -31,6 +31,24 @@ class OkTestCase(TestCase):
         self.assert_200(response)
         self.assert_template_used('index.html')
 
+    def make_student(self, n):
+        user = User(email='student{0}@aol.com'.format(n))
+        participant = Enrollment(user=user, course=self.course)
+        db.session.add(participant)
+        return user
+
+    def make_staff(self, n, role=constants.STAFF_ROLE):
+        user = User(email='staff{0}@bitdiddle.net'.format(n))
+        participant = Enrollment(user=user, course=self.course, role=role)
+        db.session.add(participant)
+        return user
+
+    def make_lab_assistant(self, n, role=constants.LAB_ASSISTANT_ROLE):
+        user = User(email='lab_assistant{0}@labassist.net'.format(n))
+        participant = Enrollment(user=user, course=self.course, role=role)
+        db.session.add(participant)
+        return user
+
     def setup_course(self):
         """Creates:
 
