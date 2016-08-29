@@ -133,7 +133,7 @@ class TestEnrollment(OkTestCase):
         [db.session.delete(e) for e in (Enrollment.query
                             .options(db.joinedload('user'))
                             .filter_by(role = LAB_ASSISTANT_ROLE,
-                                    course_id = 1)
+                                    course_id = self.course_id)
                             .all()
                             )]
         db.session.commit()
