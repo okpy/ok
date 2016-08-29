@@ -104,8 +104,6 @@ class TestAuth(OkTestCase):
         attempt_suite(self.admin.email, authorized=True)
 
         # Login as lab assistant
-        self.lab_assistant1 = self.make_lab_assistant(1)
-        db.session.commit()
         attempt_suite(self.lab_assistant1.email, authorized=False)
 
         # Logged out user

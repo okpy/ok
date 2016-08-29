@@ -70,7 +70,7 @@ class OkTestCase(TestCase):
             db.session.add(participant)
             return user
 
-        def make_lab_assistant(self, n, role=constants.LAB_ASSISTANT_ROLE):
+        def make_lab_assistant(n, role=constants.LAB_ASSISTANT_ROLE):
             user = User(email='lab_assistant{0}@labassist.net'.format(n))
             participant = Enrollment(user=user, course=self.course, role=role)
             db.session.add(participant)
@@ -84,5 +84,7 @@ class OkTestCase(TestCase):
 
         self.staff1 = make_staff(1)
         self.staff2 = make_staff(2)
+
+        self.lab_assistant1 = make_lab_assistant(1)
 
         db.session.commit()
