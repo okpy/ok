@@ -524,12 +524,9 @@ class Enrollment(Model):
         }
         Enrollment.create(cid, [info], role)
 
-    @staticmethod
     @transaction
-    def unenroll(enrollment):
-        db.session.delete(enrollment)
-        db.session.commit()
-        cache.delete_memoized(User.is_enrolled)
+    def unenroll(self):
+        db.session.delete(self)
 
     @staticmethod
     @transaction

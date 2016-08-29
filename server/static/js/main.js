@@ -23,7 +23,7 @@ $('body').on('click', 'button[data-confirm]', function(e) {
   e.preventDefault();
 
   var form = $(this).parents('form');
-  var confirmText = $(this).attr('data-confirm');
+  var confirmText = $(this).data('confirm');
 
   swal({
     title: confirmText,
