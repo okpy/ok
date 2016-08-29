@@ -1,1 +1,1 @@
-web: gunicorn -b 0.0.0.0:$PORT wsgi:app
+web: gunicorn -b 0.0.0.0:$PORT --timeout 300 wsgi:app
