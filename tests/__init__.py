@@ -31,6 +31,24 @@ class OkTestCase(TestCase):
         self.assert_200(response)
         self.assert_template_used('index.html')
 
+    def make_student(self, n):
+        user = User(email='student{0}@aol.com'.format(n))
+        participant = Enrollment(user=user, course=self.course)
+        db.session.add(participant)
+        return user
+
+    def make_staff(self, n, role=constants.STAFF_ROLE):
+        user = User(email='staff{0}@bitdiddle.net'.format(n))
+        participant = Enrollment(user=user, course=self.course, role=role)
+        db.session.add(participant)
+        return user
+
+    def make_lab_assistant(self, n, role=constants.LAB_ASSISTANT_ROLE):
+        user = User(email='lab_assistant{0}@labassist.net'.format(n))
+        participant = Enrollment(user=user, course=self.course, role=role)
+        db.session.add(participant)
+        return user
+
     def setup_course(self):
         """Creates:
 
@@ -58,31 +76,13 @@ class OkTestCase(TestCase):
             max_group_size=4)
         db.session.add(self.assignment)
 
-        def make_student(n):
-            user = User(email='student{0}@aol.com'.format(n))
-            participant = Enrollment(user=user, course=self.course)
-            db.session.add(participant)
-            return user
+        self.user1 = self.make_student(1)
+        self.user2 = self.make_student(2)
+        self.user3 = self.make_student(3)
+        self.user4 = self.make_student(4)
+        self.user5 = self.make_student(5)
 
-        def make_staff(n, role=constants.STAFF_ROLE):
-            user = User(email='staff{0}@bitdiddle.net'.format(n))
-            participant = Enrollment(user=user, course=self.course, role=role)
-            db.session.add(participant)
-            return user
-
-        def make_lab_assistant(self, n, role=constants.LAB_ASSISTANT_ROLE):
-            user = User(email='lab_assistant{0}@labassist.net'.format(n))
-            participant = Enrollment(user=user, course=self.course, role=role)
-            db.session.add(participant)
-            return user
-
-        self.user1 = make_student(1)
-        self.user2 = make_student(2)
-        self.user3 = make_student(3)
-        self.user4 = make_student(4)
-        self.user5 = make_student(5)
-
-        self.staff1 = make_staff(1)
-        self.staff2 = make_staff(2)
+        self.staff1 = self.make_staff(1)
+        self.staff2 = self.make_staff(2)
 
         db.session.commit()
