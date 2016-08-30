@@ -17,7 +17,7 @@ from server.controllers.auth import get_token_if_valid
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, db)
-from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE, 
+from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                                 LAB_ASSISTANT_ROLE, GRADE_TAGS)
 
 from server.extensions import cache
