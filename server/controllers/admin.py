@@ -656,6 +656,8 @@ def unenrollment(cid, user_id):
         if enrollment:
             enrollment.unenroll()
             flash("{email} has been unenrolled".format(email=user.email), "success")
+        else:
+            flash("{email} is not enrolled".format(email=user.email), "warning")
     
     return redirect(url_for(".enrollment", cid=cid))
 
