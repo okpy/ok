@@ -658,7 +658,9 @@ def unenrollment(cid, user_id):
             flash("{email} has been unenrolled".format(email=user.email), "success")
         else:
             flash("{email} is not enrolled".format(email=user.email), "warning")
-    
+    else:
+        flash("Unknown user", "warning")
+  
     return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/course/<int:cid>/enrollment/batch",
