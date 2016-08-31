@@ -21,6 +21,7 @@
                 <th class="sort" data-sort="role">Role</th>
                 <th class="sort" data-sort="timestamp">Enrolled At</th>
                 <th class="sort" data-sort="section">Section</th>
+                <th data-sort="unenroll">Action</th>
             </thead>
 
             <tbody class="list">
@@ -37,6 +38,11 @@
                     <td class="role"><span class="label label-success">{{item.role | title }}</span></td>
                     <td class="timestamp" data-timestamp="{{ item.created }}">{{ utils.local_time(item.created, current_course) }}</td>
                     <td class="section">{{item.section}}</td>
+                    <td class="unenroll">
+                        {% call forms.render_form_bare(unenroll_form, action_url=url_for('.unenrollment', cid=current_course.id, user_id=item.user.id), class_='form') %}
+                            <button class='btn btn-sm btn-danger' data-confirm='Are you sure you want to unenroll {{ item.user.email }} from {{ current_course.display_name }}?'><i class='fa fa-trash-o'></i></button>
+                        {% endcall %}
+                    </td>
                 </tr>
                 {% endfor %}
                 <!-- Include another header because list.js forces us to include this inside of the tbody -->

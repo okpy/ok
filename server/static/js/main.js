@@ -19,3 +19,18 @@ if (typeof HTMLElement.prototype.removeClass !== "function") {
     }
 }
 
+$('body').on('click', 'button[data-confirm]', function(e) {
+  e.preventDefault();
+
+  var form = $(this).parents('form');
+  var confirmText = $(this).data('confirm');
+
+  swal({
+    title: confirmText,
+    showCancelButton: true,
+    confirmButtonText: "Yes, I'm sure!",
+    closeOnConfirm: true
+  }, function(isConfirm){
+      if (isConfirm) form.submit();
+  });
+})
