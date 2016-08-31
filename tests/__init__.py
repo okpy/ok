@@ -76,6 +76,16 @@ class OkTestCase(TestCase):
             max_group_size=4)
         db.session.add(self.assignment)
 
+        self.assignment2 = Assignment(
+            name='cal/cs61a/sp16/proj2',
+            creator_id=self.admin.id,
+            course=self.course,
+            display_name='Maps',
+            due_date=dt.datetime.now() + dt.timedelta(days=2),
+            lock_date=dt.datetime.now() + dt.timedelta(days=3),
+            max_group_size=3)
+        db.session.add(self.assignment2)
+
         def make_student(n):
             user = User(email='student{0}@aol.com'.format(n))
             participant = Enrollment(user=user, course=self.course)
