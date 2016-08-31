@@ -167,7 +167,7 @@ class EnrollmentForm(BaseForm):
     section = StringField('Section',
                           validators=[validators.optional()])
     role = SelectField('Role', default=STUDENT_ROLE,
-                       choices=[(r, r.capitalize()) for r in VALID_ROLES])
+                       choices=[(r, r.title()) for r in VALID_ROLES])
 
 
 class VersionForm(BaseForm):
@@ -180,7 +180,7 @@ class VersionForm(BaseForm):
 class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField('Email, Name, SID, Course Login, Section')
     role = SelectField('Role', default=STUDENT_ROLE,
-                       choices=[(r, r.capitalize()) for r in VALID_ROLES])
+                       choices=[(r, r.title()) for r in VALID_ROLES])
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()

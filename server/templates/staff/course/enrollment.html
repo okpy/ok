@@ -30,6 +30,11 @@
             {% with roster=staff, title="Staff" %}
                 {% include 'staff/course/students.list.html' %}
             {% endwith %}
+            {% with roster=lab_assistants, title="Lab Assistant" %}
+                {% if roster %}
+                    {% include 'staff/course/students.list.html' %}
+                {% endif %}
+            {% endwith %}
         </div>
         <!-- Side Panel -->
         <div class="col-md-3 col-xs-12">
@@ -83,14 +88,14 @@
                 </div>
                 <div class="box-body">
                     <!-- form goes here -->
-                    {% call forms.render_form(single_form, action_url=url_for('.enrollment', cid=current_course.id), action_text='Enroll',
+                    {% call forms.render_form(form, action_url=url_for('.enrollment', cid=current_course.id), action_text='Enroll',
                     class_='form') %}
-                        {{ forms.render_field(single_form.name, label_visible=true, placeholder='Student Name (optional)', type='text') }}
-                        {{ forms.render_field(single_form.email, label_visible=true, placeholder='test@test.com') }}
-                        {{ forms.render_field(single_form.sid, label_visible=true, placeholder='1234567', type='text') }}
-                        {{ forms.render_field(single_form.secondary, label_visible=true, placeholder='cs61a-abc', type='text') }}
-                        {{ forms.render_field(single_form.section, label_visible=true, placeholder='', type='text') }}
-                        {{ forms.render_field(single_form.role, label_visible=true) }}
+                        {{ forms.render_field(form.name, label_visible=true, placeholder='Student Name (optional)', type='text') }}
+                        {{ forms.render_field(form.email, label_visible=true, placeholder='test@test.com') }}
+                        {{ forms.render_field(form.sid, label_visible=true, placeholder='1234567', type='text') }}
+                        {{ forms.render_field(form.secondary, label_visible=true, placeholder='cs61a-abc', type='text') }}
+                        {{ forms.render_field(form.section, label_visible=true, placeholder='', type='text') }}
+                        {{ forms.render_field(form.role, label_visible=true) }}
                     {% endcall %}
                 </div>
                 <!-- /.box-body -->
@@ -128,6 +133,16 @@
     var staffList = new List('Staff-list', staffOptions);
     // TODO: Use removeClass with polyfill
     document.getElementById('Staff-list').style.display = 'block';
+    {% endif %}
+
+    {% if lab_assistants %}
+        var labAssistantOptions = {
+        valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section' ],
+        plugins: [ListPagination()],
+        page: 20
+        };
+        var labAssistantList = new List('Lab Assistant-list', labAssistantOptions);
+        document.getElementById('Lab Assistant-list').style.display = 'block';
     {% endif %}
 </script>
 {% endblock %}

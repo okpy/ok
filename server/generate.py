@@ -145,6 +145,7 @@ def gen_enrollment(user, course):
         ('student', 100),
         ('grader', 2),
         ('staff', 20),
+        ('lab assistant', 20),
         ('instructor', 2),
     ])
     sid = ''.join(random.choice(string.digits) for _ in range(8))

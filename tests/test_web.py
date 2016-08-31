@@ -11,8 +11,7 @@ import requests
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
 
-from server import create_app
-from server import models
+from server import create_app, models
 
 from tests import OkTestCase
 

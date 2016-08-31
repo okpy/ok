@@ -5,6 +5,7 @@ from flask_testing import TestCase
 
 from server import create_app
 from server.models import db, Assignment, Course, Enrollment, User
+from server import constants
 
 class OkTestCase(TestCase):
     def create_app(self):
@@ -29,6 +30,24 @@ class OkTestCase(TestCase):
         response = self.client.post('/testing-login/logout/', follow_redirects=True)
         self.assert_200(response)
         self.assert_template_used('index.html')
+
+    def make_student(self, n):
+        user = User(email='student{0}@aol.com'.format(n))
+        participant = Enrollment(user=user, course=self.course)
+        db.session.add(participant)
+        return user
+
+    def make_staff(self, n, role=constants.STAFF_ROLE):
+        user = User(email='staff{0}@bitdiddle.net'.format(n))
+        participant = Enrollment(user=user, course=self.course, role=role)
+        db.session.add(participant)
+        return user
+
+    def make_lab_assistant(self, n, role=constants.LAB_ASSISTANT_ROLE):
+        user = User(email='lab_assistant{0}@labassist.net'.format(n))
+        participant = Enrollment(user=user, course=self.course, role=role)
+        db.session.add(participant)
+        return user
 
     def setup_course(self):
         """Creates:
@@ -57,20 +76,31 @@ class OkTestCase(TestCase):
             max_group_size=4)
         db.session.add(self.assignment)
 
+        self.assignment2 = Assignment(
+            name='cal/cs61a/sp16/proj2',
+            creator_id=self.admin.id,
+            course=self.course,
+            display_name='Maps',
+            due_date=dt.datetime.now() + dt.timedelta(days=2),
+            lock_date=dt.datetime.now() + dt.timedelta(days=3),
+            max_group_size=3)
+        db.session.add(self.assignment2)
+
         def make_student(n):
             user = User(email='student{0}@aol.com'.format(n))
-            participant = Enrollment(
-                user=user,
-                course=self.course)
+            participant = Enrollment(user=user, course=self.course)
             db.session.add(participant)
             return user
 
-        def make_staff(n, role='staff'):
+        def make_staff(n, role=constants.STAFF_ROLE):
             user = User(email='staff{0}@bitdiddle.net'.format(n))
-            participant = Enrollment(
-                user=user,
-                course=self.course,
-                role=role)
+            participant = Enrollment(user=user, course=self.course, role=role)
+            db.session.add(participant)
+            return user
+
+        def make_lab_assistant(n, role=constants.LAB_ASSISTANT_ROLE):
+            user = User(email='lab_assistant{0}@labassist.net'.format(n))
+            participant = Enrollment(user=user, course=self.course, role=role)
             db.session.add(participant)
             return user
 
@@ -82,5 +112,7 @@ class OkTestCase(TestCase):
 
         self.staff1 = make_staff(1)
         self.staff2 = make_staff(2)
+
+        self.lab_assistant1 = make_lab_assistant(1)
 
         db.session.commit()

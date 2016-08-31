@@ -18,7 +18,7 @@ import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                              GRADE_TAGS)
+                                LAB_ASSISTANT_ROLE, GRADE_TAGS)
 
 from server.extensions import cache
 import server.forms as forms
@@ -618,10 +618,10 @@ def autograde(cid, aid):
 @is_staff(course_arg='cid')
 def enrollment(cid):
     courses, current_course = get_courses(cid)
-    single_form = forms.EnrollmentForm(prefix="single")
-    if single_form.validate_on_submit():
-        email, role = single_form.email.data, single_form.role.data
-        Enrollment.enroll_from_form(cid, single_form)
+    form = forms.EnrollmentForm()
+    if form.validate_on_submit():
+        email, role = form.email.data, form.role.data
+        Enrollment.enroll_from_form(cid, form)
         flash("Added {email} as {role}".format(
             email=email, role=role), "success")
 
@@ -634,11 +634,34 @@ def enrollment(cid):
              .filter(Enrollment.course_id == cid, Enrollment.role.in_(STAFF_ROLES))
              .all())
 
+    lab_assistants = (Enrollment.query.options(db.joinedload('user'))
+                      .filter_by(course_id=cid, role=LAB_ASSISTANT_ROLE)
+                      .order_by(Enrollment.created.desc())
+                      .all())
+
     return render_template('staff/course/enrollment.html',
                            enrollments=students, staff=staff,
-                           single_form=single_form,
+                           lab_assistants=lab_assistants,
+                           form=form,
+                           unenroll_form=forms.CSRFForm(),
                            courses=courses,
                            current_course=current_course)
+
+@admin.route("/course/<int:cid>/<int:user_id>/unenroll", methods=['POST'])
+@is_staff(course_arg='cid')
+def unenrollment(cid, user_id):
+    user = User.query.filter_by(id=user_id).one_or_none()
+    if user:
+        enrollment = user.is_enrolled(cid);
+        if enrollment:
+            enrollment.unenroll()
+            flash("{email} has been unenrolled".format(email=user.email), "success")
+        else:
+            flash("{email} is not enrolled".format(email=user.email), "warning")
+    else:
+        flash("Unknown user", "warning")
+  
+    return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/course/<int:cid>/enrollment/batch",
              methods=['GET', 'POST'])
