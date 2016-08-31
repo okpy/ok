@@ -11,7 +11,7 @@ import datetime as dt
 from server import utils
 from server.models import Assignment, Course
 from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
-                              TIMEZONE, STUDENT_ROLE)
+                              TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT)
 
 import csv
 import logging
@@ -74,13 +74,11 @@ class AssignmentForm(BaseForm):
 
     display_name = StringField('Display Name',
                                validators=[validators.required()])
-    name = StringField('Offering (example: cal/cs61a/sp16/lab01)',
+    name = StringField('Offering (example: cal/cs61a/fa16/proj01)',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
-                             default=dt.datetime.now,
                              validators=[validators.required()])
     lock_date = DateTimeField('Lock Date (Course Time)',
-                              default=dt.datetime.now,
                               validators=[validators.required()])
     max_group_size = IntegerField('Max Group Size',
                                   default=1,
@@ -114,7 +112,11 @@ class AssignmentForm(BaseForm):
             return False
 
         # Ensure the name has the right format:
-        if not self.name.data.startswith(self.course.offering):
+        is_valid_endpoint = utils.is_valid_endpoint(self.name.data,
+                                                    ASSIGNMENT_ENDPOINT_FORMAT)
+        has_course_endpoint = self.name.data.startswith(self.course.offering)
+
+        if not has_course_endpoint or not is_valid_endpoint:
             self.name.errors.append(
                 'The name should be of the form {0}/<name>'.format(self.course.offering))
             return False
@@ -135,10 +137,15 @@ class AssignmentUpdateForm(AssignmentForm):
             return False
 
         # Ensure the name has the right format:
-        if not self.name.data.startswith(self.course.offering):
-            self.name.errors.append(('The name should be of the form {0}/<name>'
-                                     .format(self.course.offering)))
+        is_valid_endpoint = utils.is_valid_endpoint(self.name.data,
+                                                    ASSIGNMENT_ENDPOINT_FORMAT)
+        has_course_endpoint = self.name.data.startswith(self.course.offering)
+
+        if not has_course_endpoint or not is_valid_endpoint:
+            self.name.errors.append(
+                'The name should be of the form {0}/<name>'.format(self.course.offering))
             return False
+
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn and (self.obj and assgn.id != self.obj.id):
             self.name.errors.append('That offering already exists.')

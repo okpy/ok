@@ -9,7 +9,7 @@ VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 GRADE_TAGS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
-			  'regrade', 'revision', 'private']
+              'regrade', 'revision', 'private']
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
 
@@ -18,6 +18,7 @@ ASSIGNMENT_ENDPOINT_FORMAT = COURSE_ENDPOINT_FORMAT[:-1] + '/\w+$'
 
 GRADES_BUCKET = 'ok_grades_bucket'
 TIMEZONE = 'America/Los_Angeles'
+ISO_DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
 
 AUTOGRADER_URL = 'https://autograder.cs61a.org'
 

@@ -46,11 +46,7 @@ def local_time(time, course, fmt='%a %m/%d %I:%M %p'):
     """Format a time string in a course's locale.
     Note that %-I does not perform as expected on Alpine Linux
     """
-    if not time.tzinfo:
-        # Assume UTC
-        time = pytz.utc.localize(time)
-    local = time.astimezone(pytz.timezone('America/Los_Angeles'))
-    return local.strftime(fmt)
+    return local_time_obj(time, course).strftime(fmt)
 
 def local_time_obj(time, course):
     """Get a Datetime object in a course's locale from a TZ Aware DT object."""
@@ -66,6 +62,22 @@ def server_time_obj(time, course):
         time = course.timezone.localize(time)
     # Store using UTC on the server side.
     return time.astimezone(pytz.utc)
+
+def future_time_obj(course, **kwargs):
+    """Get a datetime object representing some timedelta from now with the clock
+    time set at 23:59:59."""
+    date = course.timezone.localize(dt.datetime.now() + dt.timedelta(**kwargs))
+    time = dt.time(hour=23, minute=59, second=59, microsecond=0)
+    return dt.datetime.combine(date, time)
+
+def new_due_date(course):
+    """Return a string representing a new due date next week."""
+    return future_time_obj(course, weeks=1).strftime(constants.ISO_DATETIME_FMT)
+
+def new_lock_date(course):
+    """Return a string representing a new lock date 8 days from now."""
+    return (future_time_obj(course, weeks=1, days=1)
+            .strftime(constants.ISO_DATETIME_FMT))
 
 def natural_time(date):
     """Format a human-readable time difference (e.g. "6 days ago")"""

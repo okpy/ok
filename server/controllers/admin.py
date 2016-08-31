@@ -446,7 +446,7 @@ def export_scores(cid, aid):
             csv_writer = csv.DictWriter(csv_file, fieldnames=items)
             submitters = score.backup.enrollment_info()
             group = [s.user.email for s in submitters]
-            time_str = utils.local_time(score.backup.created, course)
+            time_str = utils.local_time(score.backup.created, current_course)
             for submitter in submitters:
                 data = {'email': submitter.user.email,
                         'time': time_str,
