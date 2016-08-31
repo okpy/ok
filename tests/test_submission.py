@@ -89,7 +89,8 @@ class TestSubmission(OkTestCase):
         new_secondary_final = self.assignment2.final_submission(self.active_user_ids)
         # Flagged submission should be recognized as the final.
         assert secondary_submit == new_secondary_final
-        assert secondary_final.flagged
+        assert not secondary_final.flagged
+        assert new_secondary_final.flagged
 
         # It should not affect the final submission of the other assignment
         a1_final = self.assignment.final_submission(self.active_user_ids)
