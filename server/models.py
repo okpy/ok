@@ -460,10 +460,13 @@ class Assignment(Model):
         return backup
 
     def _unflag_all(self, member_ids):
-        """Unflag all submissions by members of MEMBER_IDS."""
+        """Unflag all submissions by members of MEMBER_IDS for
+        this assignment (SELF)
+        """
         # There should only ever be one flagged submission
         backup = Backup.query.filter(
             Backup.submitter_id.in_(member_ids),
+            Backup.assignment_id == self.id,
             Backup.flagged == True
         ).one_or_none()
         if backup:
