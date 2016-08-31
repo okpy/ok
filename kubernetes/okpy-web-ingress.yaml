@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: okpy-ing
+spec:
+  backend:
+    serviceName: ok-direct-service
+    servicePort: 80
+  tls:
+  - secretName: okpy-tls
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: ok-web-deploy-service
+          servicePort: 80
+      - path: /admin/
+        backend:
+          serviceName: ok-web-deploy-service
+          servicePort: 80
+      - path: /*
+        backend:
+          serviceName: ok-web-deploy-service
+          servicePort: 80
