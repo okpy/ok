@@ -42,8 +42,6 @@ def decode_id(value):
 # "tzinfo argument of the standard datetime constructors 'does not work'
 # with pytz for many timezones."
 
-iso_datetime_fmt = '%Y-%m-%d %H:%M:%S'
-
 def local_time(time, course, fmt='%a %m/%d %I:%M %p'):
     """Format a time string in a course's locale.
     Note that %-I does not perform as expected on Alpine Linux
@@ -74,11 +72,12 @@ def future_time_obj(course, **kwargs):
 
 def new_due_date(course):
     """Return a string representing a new due date next week."""
-    return future_time_obj(course, weeks=1).strftime(iso_datetime_fmt)
+    return future_time_obj(course, weeks=1).strftime(constants.ISO_DATETIME_FMT)
 
 def new_lock_date(course):
     """Return a string representing a new lock date 8 days from now."""
-    return future_time_obj(course, weeks=1, days=1).strftime(iso_datetime_fmt)
+    return (future_time_obj(course, weeks=1, days=1)
+            .strftime(constants.ISO_DATETIME_FMT))
 
 def natural_time(date):
     """Format a human-readable time difference (e.g. "6 days ago")"""
