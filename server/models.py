@@ -466,7 +466,7 @@ class Assignment(Model):
         # There should only ever be one flagged submission
         backup = Backup.query.filter(
             Backup.submitter_id.in_(member_ids),
-            Backup.assignment_id == self,
+            Backup.assignment_id == self.id,
             Backup.flagged == True
         ).one_or_none()
         if backup:
