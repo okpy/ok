@@ -40,7 +40,7 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
     """
     course_submissions = assignment.course_submissions(include_empty=False)
     submissions = [fs['backup'] for fs in course_submissions if fs['backup']]
-    submissions_id = set(utils.encode_id(fs['id']) for fs in course_submissions)
+    submissions_id = set(utils.encode_id(fs['id']) for fs in submissions)
 
     if autopromotion:
         # Change FS backups into submissions
