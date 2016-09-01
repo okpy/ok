@@ -1,3 +1,5 @@
-from werkzeug.exceptions import Forbidden, NotFound, Unauthorized
+from werkzeug.exceptions import (Forbidden, NotFound, Unauthorized,
+                                 ClientDisconnected, MethodNotAllowed)
 
-RAVEN_IGNORE_EXCEPTIONS = [Forbidden, NotFound, Unauthorized]
+RAVEN_IGNORE_EXCEPTIONS = [Forbidden, NotFound, Unauthorized,
+                           ClientDisconnected, MethodNotAllowed]
