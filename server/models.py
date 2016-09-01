@@ -366,7 +366,6 @@ class Assignment(Model):
         """
         current_db = db.engine.name
         if current_db != 'mysql':
-            print("RUnning slow query")
             return self.course_submissions_slow(include_empty=include_empty)
 
         # Can only run the fast query on MySQL
