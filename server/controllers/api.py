@@ -606,25 +606,35 @@ class ExportFinal(Resource):
                 return restful.abort(404)
             return restful.abort(403)
 
+        limit = request.args.get('limit', 150, type=int)
+        offset = request.args.get('offset', 0, type=int)
+
         if not self.model.can(assign, user, 'export'):
             return restful.abort(403)
 
-        students, subms, no_subms = assign.course_submissions()
+        subms = assign.course_submissions(include_empty=False)
 
         output = []
-        subm_keys = sorted(list(subms))
+        subm_keys = set(s['backup']['id'] for s in subms)
+        joined = models.db.joinedload
+        base_query = (models.Backup.query.options(joined('assignment'),
+                                                  joined('submitter'),
+                                                  joined('messages'))
+                            .filter(models.Backup.id.in_(subm_keys))
+                            .order_by(models.Backup.created.desc()))
 
-        for s_id in subm_keys:
-            output.append(models.Backup.query.get(s_id))
-
-        num_subms = len(output)
+        num_subms = len(subm_keys)
+        output = base_query.limit(limit).offset(offset)
+        has_more = ((num_subms - offset) - limit) > 0
 
         for backup in output:
             backup.group = [models.User.get_by_id(uid) for uid in backup.owners()]
 
-        data = {'backups': output,
-                'count': num_subms}
-        return data
+        return {'backups': output,
+                'limit': limit,
+                'offset': offset,
+                'count': num_subms,
+                'has_more': has_more}
 
 class Enrollment(Resource):
     """ View what courses an email is enrolled in.

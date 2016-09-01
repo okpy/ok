@@ -7,7 +7,7 @@
   <section class="content-header">
       <h1>
         {{ assignment.display_name }} Stats
-        <small>{{ current_course.offering }} - (as of ~30 minutes ago) </small>
+        <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
         <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
@@ -34,7 +34,7 @@
                   <div class="row">
                     <div class="col-sm-12">
                       <div class="description-block border-bottom">
-                        <h5 class="description-header">{{ stats['students_submitted'] }}</h5>
+                        <h5 class="description-header">{{ stats['students_with_subm'] }}</h5>
                         <span class="description-text">Students with submissions</span>
                       </div>
                       <!-- /.description-block -->
@@ -43,8 +43,8 @@
                   <div class="row">
                     <div class="col-sm-12">
                       <div class="description-block border-bottom">
-                        <h5 class="description-header">{{ stats['students_nosubmit'] }}</h5>
-                        <span class="description-text">Students without Submissions</span>
+                        <h5 class="description-header">{{ stats['students_with_backup'] }}</h5>
+                        <span class="description-text">Students with only backups</span>
                       </div>
                       <!-- /.description-block -->
                     </div>
@@ -52,8 +52,8 @@
                   <div class="row">
                     <div class="col-sm-12">
                       <div class="description-block border-bottom">
-                        <h5 class="description-header">{{ stats['groups'] }}</h5>
-                        <span class="description-text">Groups</span>
+                        <h5 class="description-header">{{ stats['students_no_backup'] }}</h5>
+                        <span class="description-text">Students without submissions</span>
                       </div>
                       <!-- /.description-block -->
                     </div>
@@ -61,7 +61,16 @@
                   <div class="row">
                     <div class="col-sm-12">
                       <div class="description-block border-bottom">
-                        <h5 class="description-header">{{ stats['students_submissions'] }}</h5>
+                        <h5 class="description-header">{{ stats['active_groups'] }}</h5>
+                        <span class="description-text">Active Groups</span>
+                      </div>
+                      <!-- /.description-block -->
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <div class="description-block border-bottom">
+                        <h5 class="description-header">{{ stats['unique_submissions'] }}</h5>
                         <span class="description-text">Submissions to grade</span>
                       </div>
                       <!-- /.description-block -->
