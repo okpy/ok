@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: ok-v3-staging
-        image: cs61a/ok:dev-enhancement_sumukh_query_optimize
+        image: cs61a/ok
         imagePullPolicy: Always
         livenessProbe:
           # an http probe

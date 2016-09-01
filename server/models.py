@@ -457,12 +457,11 @@ class Assignment(Model):
                 group_ids = self.active_user_ids(student.user_id)
                 group_obj = Group.lookup(student_user, self)
                 if group_obj:
-                    group_members = [member.user for member in group_obj.members]
-                    group_emails = ','.join([u.email for
-                                             u in group_members])
+                    group_members = [m.user for m in group_obj.members]
                 else:
                     group_members = [student_user]
-                    group_emails = student_user.email
+                group_emails = ','.join([u.email for u in group_members])
+                group_member_ids = ','.join([str(u_id) for u_id in group_ids])
 
                 fs = self.final_submission(group_ids)
                 for member in group_members:
@@ -475,7 +474,7 @@ class Assignment(Model):
                         },
                         'group': {
                             'group_id': group_obj.id,
-                            'group_member': ','.join([str(m_id) for m_id in group_ids]),
+                            'group_member': group_member_ids,
                             'group_member_emails': group_emails
                         } if group_obj else None,
                         'backup': fs.as_dict() if fs else None
