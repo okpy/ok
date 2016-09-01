@@ -623,17 +623,18 @@ class ExportFinal(Resource):
                             .filter(models.Backup.id.in_(subm_keys))
                             .order_by(models.Backup.created.desc()))
 
-        output = base_query.all()
         num_subms = len(subm_keys)
-        # output = base_query.limit(limit).offset(offset)
-        # num_subms = base_query.count()
-        # has_more = ((num_subms - offset) - limit) > 0
+        output = base_query.limit(limit).offset(offset)
+        has_more = ((num_subms - offset) - limit) > 0
 
         for backup in output:
             backup.group = [models.User.get_by_id(uid) for uid in backup.owners()]
 
         return {'backups': output,
-                'count': num_subms}
+                'limit': limit,
+                'offset': offset,
+                'count': num_subms,
+                'has_more': has_more}
 
 class Enrollment(Resource):
     """ View what courses an email is enrolled in.

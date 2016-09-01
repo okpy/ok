@@ -1,4 +1,4 @@
-# Ok Server API
+ # Ok Server API
 
 ## Introduction
 
@@ -342,12 +342,15 @@ curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab00/submissions?ac
     },
     },],
 "count": 36,
+"limit": 150,
+"offset": 0,
+"has_more": false
 },
 "code": 200
 }
 ```
 
-Get all submissions for a course. This obtains all submissions for an assignment from users that are enrolled in the course.
+Get submissions for a course. This obtains all submissions for an assignment from users that are enrolled in the course.
 
 #### Permissions
 The access_token's user must have at least staff level access to the assignment.
@@ -359,6 +362,9 @@ The access_token's user must have at least staff level access to the assignment.
 Parameter | Default | Description
 ---------- | ------- | -------
 access_token | None | (Required) Access Token of staff member
+limit | 150 | (Optional) Number of backups to retrieve in one request. High numbers may result in slower responses.
+offset | 0 | (Optional) How many recent backups to ignore. An offset of 100 with a limit of 150 will provide backup numbers #101 to #250.
+
 
 #### Response
 Name | Type | Description

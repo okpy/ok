@@ -233,7 +233,16 @@ class TestAuth(OkTestCase):
         backups = response.json['data']['backups']
         self.assertEquals(len(backups), 1)
         self.assertEquals(response.json['data']['count'], 1)
+        self.assertEquals(response.json['data']['has_more'], False)
+        self.assertEquals(response.json['data']['offset'], 0)
 
+        response = self.client.get(endpoint + '?offset=1')
+        self.assert_200(response)
+        backups = response.json['data']['backups']
+        self.assertEquals(len(backups), 0)
+        self.assertEquals(response.json['data']['count'], 1)
+        self.assertEquals(response.json['data']['has_more'], False)
+        self.assertEquals(response.json['data']['offset'], 1)
 
     def test_assignment_api(self):
         self._test_backup(True)
