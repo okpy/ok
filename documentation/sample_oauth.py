@@ -30,11 +30,11 @@ def create_client(app):
     #     consumer_secret='fake-secret-get-the-real-one',
     #     request_token_params={'scope': 'email',
     #                           'state': lambda: security.gen_salt(10)},
-    #     base_url='https://ok.cs61a.org/api/v3/',
+    #     base_url='https://okpy.org/api/v3/',
     #     request_token_url=None,
     #     access_token_method='POST',
-    #     access_token_url='https://ok.cs61a.org/oauth/token',
-    #     authorize_url='https://ok.cs61a.org/oauth/authorize'
+    #     access_token_url='https://okpy.org/oauth/token',
+    #     authorize_url='https://okpy.org/oauth/authorize'
     # )
 
     # def check_req(uri, headers, body):

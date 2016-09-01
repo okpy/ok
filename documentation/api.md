@@ -4,7 +4,7 @@
 
 The Ok Server API provides a variety of endpoints to interact with the Ok Server.
 
-> The Base URL is `https://ok.cs61a.org/api/v3/`
+> The Base URL is `https://okpy.org/api/v3/`
 
 ## Authentication
 
@@ -30,7 +30,7 @@ If you are using a browser to perform these requests and are currently logged in
 Include the access_token as a parameter in every request to be authenticated.
 
 ```
-https://ok.cs61a.org/api/v3/endpoint?access_token=ba23.abcdef...w20a
+https://okpy.org/api/v3/endpoint?access_token=ba23.abcdef...w20a
 ```
 
 Almost all endpoints require authentication. If you are using the `ok-client`, there is a built in method to obtain a user's access token. Otherwise, you can should obtain a user's access token.
@@ -47,7 +47,7 @@ If the `client_version` parameter is included in the URL, the API will respond w
 ## API Info
 >><h4> Example Response </h4>
 ```
-curl "https://ok.cs61a.org/api/v3/"
+curl "https://okpy.org/api/v3/"
 {
     "code": 200,
     "message": "success",
@@ -66,7 +66,7 @@ Info about the V3 API
 No authentication required.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/version/`
+`GET https://okpy.org/api/v3/version/`
 
 #### Query Parameters
 None
@@ -74,7 +74,7 @@ None
 ## Client Version
 >><h4> Example Response </h4>
 ```
-curl "https://ok.cs61a.org/api/v3/version"
+curl "https://okpy.org/api/v3/version"
 {
     "message": "success",
     "data": {
@@ -97,12 +97,12 @@ The version is changed in the admin dashboard.
 No authentication required.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/version`
-`GET https://ok.cs61a.org/api/v3/version/<string:client-name>`
+`GET https://okpy.org/api/v3/version`
+`GET https://okpy.org/api/v3/version/<string:client-name>`
 
 #### Query Parameters
 If the endpoint is provided with the name of a client in the form of
-`GET https://ok.cs61a.org/api/v3/version/name/`, the results will be filtered for clients with that name.
+`GET https://okpy.org/api/v3/version/name/`, the results will be filtered for clients with that name.
 Currently, the only client name used is `ok-client`
 
 #### Response
@@ -111,7 +111,7 @@ See example response.
 ## Enrollment
 >><h4> Example Response </h4>
 ```
-curl "https://ok.cs61a.org/api/v3/enrollment/example@gmail.com?access_token=test"
+curl "https://okpy.org/api/v3/enrollment/example@gmail.com?access_token=test"
 {
     "data": {
         "courses": [
@@ -140,7 +140,7 @@ Get the courses that a specific user is enrolled in. Used by ok-client to see if
 The access_token must belong to the email being requested or be an OK admin.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/enrollment/<string:email>/`
+`GET https://okpy.org/api/v3/enrollment/<string:email>/`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -157,7 +157,7 @@ See example response.
 ## Assignment Info
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab01"
+curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab01"
 {
     "code": 200,
     "data": {
@@ -186,7 +186,7 @@ Get detailed assignment info.
 Requires an access token. The assignment is presented to all staff members of the course or admins but is only shown to other users if the staff marked the assignment as visible .
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/assignment/<assignment_name:endpoint>``
+`GET https://okpy.org/api/v3/assignment/<assignment_name:endpoint>``
 
 #### Query Parameters
 Parameter | Default | Description
@@ -205,7 +205,7 @@ See example output for other fields.
 ## Group Info
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab01/group/email@example.com"
+curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab01/group/email@example.com"
 {
     "code": 200,
     "data": {
@@ -239,7 +239,7 @@ Get detailed assignment info.
 Requires an access token. The group info is presented to all staff members of the course or admins. Otherwise, the access_token must belong to the user whose email is in the URL to get a response.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/assignment/<assignment_name:endpoint>/group/<string:email>`
+`GET https://okpy.org/api/v3/assignment/<assignment_name:endpoint>/group/<string:email>`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -257,7 +257,7 @@ See example output for fields.
 ## Export Backups
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab00/export/email@berkeley.edu?access_token=test&limit=2&offset=17"
+curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab00/export/email@berkeley.edu?access_token=test&limit=2&offset=17"
 {
     "code": 200,
     "message": "success",
@@ -295,7 +295,7 @@ The access_token's user must have permission to view the backup. They must have
 at least staff level access to the assignment.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/assignment/<assignment_name:endpoint>/export/<string:email>`
+`GET https://okpy.org/api/v3/assignment/<assignment_name:endpoint>/export/<string:email>`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -316,7 +316,7 @@ offset | Integer | The value of the limit parameter
 ## Export Final Submissions
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/assignment/cal/cs61a/sp16/lab00/submissions?access_token=test"
+curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab00/submissions?access_token=test"
 {
 "message": "success",
 "data": {
@@ -353,7 +353,7 @@ Get all submissions for a course. This obtains all submissions for an assignment
 The access_token's user must have at least staff level access to the assignment.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/assignment/<assignment_name:endpoint>/submissions/`
+`GET https://okpy.org/api/v3/assignment/<assignment_name:endpoint>/submissions/`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -384,7 +384,7 @@ data = {
          }
     }
 }
-url = "https://ok.cs61a.org/api/v3/backups/?access_token={}"
+url = "https://okpy.org/api/v3/backups/?access_token={}"
 access_token = 'test'
 r = requests.post(url.format(access_token), data=data)
 response = r.json()
@@ -394,7 +394,7 @@ response = r.json()
 {
     "data": {
         "email": "test@berkeley.edu",
-        "url": "http://ok.cs61a.org/cal/cs61a/su16/sample/backups/aF249e/",
+        "url": "http://okpy.org/cal/cs61a/su16/sample/backups/aF249e/",
         "id": "aF249e",
         "course": {
             "id": 1,
@@ -416,7 +416,7 @@ Used by the ok-client to create a new backup or submission.
 The access_token must be valid. Any student may submit to an assignment, even if they are not enrolled.
 
 #### HTTP Request
-`POST https://ok.cs61a.org/api/v3/backups/`
+`POST https://okpy.org/api/v3/backups/`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -444,7 +444,7 @@ course | Dictionary | Course Information
 Creates a backup as a revision. Similiar to Create a Backup
 
 #### HTTP Request
-`POST https://ok.cs61a.org/api/v3/revision/`
+`POST https://okpy.org/api/v3/revision/`
 
 Same arugments as Create a Backup.
 
@@ -453,7 +453,7 @@ If a user does not have a composition score to revise, the server responds with 
 ## View a backup
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/backups/aF249e/?access_token=test"
+curl "https://okpy.org/api/v3/backups/aF249e/?access_token=test"
 {
     "data": {
         "submitter": { "email": "test@berkeley.edu", "id": "a4r4gd"},
@@ -488,7 +488,7 @@ View a specific backup
 The access_token must be for a staff member or be for the user who has created the backup. Users who are in the same group as the creator may also view this resource.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/backups/<string:id>/`
+`GET https://okpy.org/api/v3/backups/<string:id>/`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -504,7 +504,7 @@ See example
 
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/user/?access_token=test"
+curl "https://okpy.org/api/v3/user/?access_token=test"
 {
     "data": {
         "email": "dschmidt1@gmail.com",
@@ -537,8 +537,8 @@ View a specific user. If the email is not provided, the current users info will 
 The access_token must be for the user whose info is being requested. To view other emails, it must be an admin level access token.
 
 #### HTTP Request
-`GET https://ok.cs61a.org/api/v3/user/` (Current User)
-`GET https://ok.cs61a.org/api/v3/user/<string:email>`
+`GET https://okpy.org/api/v3/user/` (Current User)
+`GET https://okpy.org/api/v3/user/<string:email>`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -560,7 +560,7 @@ data = {
     'kind': 'Total',
     'message': 'Test Output:\nTest 1: 2/2.\nGreat Work!'
 }
-url = 'https://ok.cs61a.org/api/v3/score/?access_token={}'
+url = 'https://okpy.org/api/v3/score/?access_token={}'
 access_token = 'test'
 r = requests.post(url.format(access_token), data=data)
 response = r.json()
@@ -582,7 +582,7 @@ Score a backup or submission through the API.
 This is used by the server side autograder.
 
 #### HTTP Request
-`POST https://ok.cs61a.org/api/v3/score/`
+`POST https://okpy.org/api/v3/score/`
 
 #### Query Parameters
 Parameter | Default | Description
@@ -608,7 +608,7 @@ message | String | More details about the success state
 The Ok API uses the following error codes:
 >><h4> Example Response </h4>
 > ```
-curl "https://ok.cs61a.org/api/v3/404"
+curl "https://okpy.org/api/v3/404"
 {
 "message": "The requested URL was not found on the server.
   If you entered the URL manually please check your spelling and try again.
