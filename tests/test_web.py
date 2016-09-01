@@ -298,6 +298,16 @@ if driver:
             self.assertIn('Ok -', self.driver.title)
             self.assertTrue("Hog Stats" in self.driver.page_source)
 
+        def test_assignment_send_to_ag(self):
+            self._login(role="admin")
+            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1/autograde")
+            self.assertTrue("Autograde Hog" in self.driver.page_source)
+
+            assign_key = self.driver.find_element_by_id("autograder_id")
+            assign_key.send_keys('test') # AG responds with a 200 if ID = 'test'
+            self.driver.find_element_by_class_name('ag-submit-btn').click()
+            self.assertTrue("Submitted to the autograder" in self.driver.page_source)
+
         def test_admin_enrollment(self):
             self._login(role="admin")
             self.pageLoad(self.get_server_url() + "/admin/course/1/enrollment")
