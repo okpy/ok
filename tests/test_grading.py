@@ -45,7 +45,7 @@ class TestGrading(OkTestCase):
         db.session.commit()
 
     def _course_submissions_ids(self, assignment):
-        """ Return course submissions with objects. """
+        """Return IDs of students with/out submissions & IDs of submissions."""
         seen = set()
         students, submissions, no_submissions = set(), set(), set()
         for student in assignment.course.participations:
