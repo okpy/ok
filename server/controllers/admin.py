@@ -376,14 +376,16 @@ def assignment_stats(cid, aid):
     if not Assignment.can(assign, current_user, 'edit'):
         flash('Insufficient permissions', 'error')
         return abort(401)
+
     stats = Assignment.assignment_stats(assign.id, detailed=True)
 
     pie_chart = pygal.Pie(half_pie=True, disable_xml_declaration=True,
                           style=CleanStyle,
                           inner_radius=.5, legend_at_bottom=True)
     pie_chart.title = 'Students submission status'
-    pie_chart.add('Students with Submissions', stats['students_submitted'])
-    pie_chart.add('Not Submitted', stats['students_nosubmit'])
+    pie_chart.add('Students with Submissions', stats['students_with_subm'])
+    pie_chart.add('Students with Backups', stats['students_with_backup'])
+    pie_chart.add('Not Started', stats['students_no_backup'])
 
     return render_template('staff/course/assignment.stats.html',
                            assignment=assign, subm_chart=pie_chart,
@@ -562,8 +564,11 @@ def assign_grading(cid, aid):
             if user and user.is_enrolled(cid, roles=STAFF_ROLES):
                 selected_users.append(user)
 
-        # Available backups:
-        students, backups, no_submissions = assign.course_submissions()
+        # Available backups
+        data = assign.course_submissions()
+        backups = set(b['backup']['id'] for b in data if b['backup'])
+        students = set(b['user']['id'] for b in data if b['backup'])
+        no_submissions = set(b['user']['id'] for b in data if not b['backup'])
 
         tasks = GradingTask.create_staff_tasks(backups, selected_users, aid, cid,
                                                form.kind.data, form.only_unassigned.data)
@@ -660,7 +665,7 @@ def unenrollment(cid, user_id):
             flash("{email} is not enrolled".format(email=user.email), "warning")
     else:
         flash("Unknown user", "warning")
-  
+
     return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/course/<int:cid>/enrollment/batch",

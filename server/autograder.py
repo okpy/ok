@@ -10,7 +10,7 @@ import requests
 import logging
 
 import server.constants as constants
-from server.models import User, db
+from server.models import User, Backup, db
 import server.utils as utils
 
 logger = logging.getLogger(__name__)
@@ -38,24 +38,20 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
     @ag_assign_key: Autograder ID (from Autograder Dashboard)
     @token: OK Access Token (from auth)
     """
-    students, submissions, no_submissions = assignment.course_submissions()
-
-    backups_to_grade = [utils.encode_id(bid) for bid in submissions]
+    course_submissions = assignment.course_submissions(include_empty=False)
+    submissions = [fs['backup'] for fs in course_submissions if fs['backup']]
+    submissions_id = set(utils.encode_id(fs['id']) for fs in course_submissions)
 
     if autopromotion:
-        # Hunt for backups from those with no_submissions
-        seen = set()
-        for student_uid in no_submissions:
-            if student_uid not in seen:
-                found_backup = assignment.backups([student_uid]).first()
-                if found_backup:
-                    seen |= found_backup.owners()
-                    backups_to_grade.append(utils.encode_id(found_backup.id))
-                    found_backup.submit = True
+        # Change FS backups into submissions
+        for fs in submissions:
+            if not fs['submit']:
+                backup = Backup.query.get(fs['id'])
+                backup.submit = True
         db.session.commit()
 
     data = {
-        'subm_ids': backups_to_grade,
+        'subm_ids': submissions_id,
         'assignment': ag_assign_key,
         'access_token': token,
         'priority': 'default',

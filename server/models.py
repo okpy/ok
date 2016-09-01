@@ -9,6 +9,7 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
+from sqlalchemy.sql import text
 
 from markdown import markdown
 import pytz
@@ -145,6 +146,11 @@ class Model(db.Model):
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
+    def from_dict(self, dict):
+        for c in self.__table__.columns:
+            if c.name in dict:
+                setattr(self, c.name, dict[c.name])
+        return self
 
 class User(Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -301,7 +307,7 @@ class Assignment(Model):
         return is_staff
 
     @staticmethod
-    @cache.memoize(900)
+    @cache.memoize(10)
     def assignment_stats(assign_id, detailed=False):
         assignment = Assignment.query.get(assign_id)
         base_query = Backup.query.filter_by(assignment=assignment)
@@ -311,23 +317,23 @@ class Assignment(Model):
             'groups': Group.query.filter_by(assignment=assignment).count(),
         }
         if detailed:
-            # This is query intesive, maybe save for detailed stats?
-            students, submissions, not_started = assignment.course_submissions()
-            # now = dt.utcnow()
-            # day_ago = now - timedelta(hours=48)
+            data = assignment.course_submissions()
+            submissions = [fs['backup'] for fs in data if fs['backup']]
+            submissions_id = set(encode_id(fs['id']) for fs in submissions)
 
-            # subms_by_hour = (db.session.query(Backup.created)
-            #                    .filter(Backup.assignment_id == assign_id,
-            #                            Backup.submit == True,
-            #                            Backup.created >= day_ago,
-            #                            Backup.created <= now).all())
-            # hourly = collections.Counter([b[0].hour for b in subms_by_hour])
-
+            students_with_subms = set(s['user']['id'] for s in data
+                                      if s['backup'] and s['backup']['submit'])
+            students_with_backup = set(s['user']['id'] for s in data
+                                       if s['backup'] and not s['backup']['submit'])
+            students_without_subms = set(s['user']['id'] for s in data
+                                         if not s['backup'])
+            groups = [g for g in data if g['group']]
             stats.update({
-                'students_submitted': len(students),
-                'students_submissions': len(submissions),
-                'students_nosubmit': len(not_started),
-                # 'hourly_subms': sorted(hourly.items())
+                'unique_submissions': len(submissions_id),
+                'students_with_subm': len(students_with_subms),
+                'students_with_backup': len(students_with_backup),
+                'students_no_backup': len(students_without_subms),
+                'active_groups': len(groups),
             })
         return stats
 
@@ -353,20 +359,130 @@ class Assignment(Model):
         return self.UserAssignment(self, submission_time, group,
                                    final_submission)
 
-    def course_submissions(self):
+    def course_submissions(self, include_empty=True):
+        """ Return data on all course submissions for all enrolled users
+        List of dictionaries with user, group, backup dictionaries.
+        Sample [ {'user': {}, 'group': {}, 'backup': {} }]
+        """
+        current_db = db.engine.name
+        if current_db != 'mysql':
+            print("RUnning slow query")
+            return self.course_submissions_slow(include_empty=include_empty)
+
+        # Can only run the fast query on MySQL
+        submissions = []
+
+        stats = self.mysql_course_submissions_query()
+        keys = stats.keys()
+        for r in stats:
+            user_info = {k: v for k, v in zip(keys[:2], r[:2])}
+            group_info = {k: v for k, v in zip(keys[2:5], r[2:5])}
+            backup_info = {k: v for k, v in zip(keys[5:], r[5:])}
+            if not include_empty and backup_info['id'] is None:
+                continue
+            data = {'user': user_info,
+                    'group': group_info if group_info.get('group_id') else None,
+                    'backup': backup_info if backup_info.get('id') else None}
+            submissions.append(data)
+        return submissions
+
+    def mysql_course_submissions_query(self):
+        """ For MySQL Clients only. Returns a SQLAlchemy result proxy object
+        Contains all of the following fields.
+
+        id  email   group_id    group_member group_member_emails
+        5   dschmidt1@gmail.com 3   5,15 dschmidt1@gmail.com, foo@bar.com
+
+        created id  id submitter_id assignment_id submit  flagged extension
+        2016-09-07 20:22:04 4790    15  1   1   1   0
+        """
+        # Start generating the query
+        def generate_number_table(num):
+            if num <= 1:
+                return 'SELECT 1 as pos'
+            else:
+                base = 'SELECT 1 as pos UNION '
+                additional = ['SELECT {}'.format(i) for i in range(1, num)]
+                return base + ' UNION '.join(additional)
+
+        giant_query = """SELECT * FROM
+              (SELECT u.id,
+                      u.email,
+                      gm.group_id,
+                      GROUP_CONCAT(IFNULL(gm2.user_id, u.id)) AS group_member,
+                      GROUP_CONCAT((SELECT partners.email from user as partners
+                                    where id = gm2.user_id AND partners.id != u.id)) AS group_member_emails
+               FROM
+                 (SELECT u.id,
+                         u.email
+                  FROM user AS u,
+                               enrollment AS e
+                  WHERE e.course_id = :course_id
+                    AND e.user_id = u.id
+                    AND e.role='student') AS u
+               LEFT JOIN
+                 (SELECT *
+                  FROM group_member
+                  WHERE status = 'active'
+                    AND assignment_id = :assign_id) AS gm ON u.id = gm.user_id
+               LEFT JOIN group_member AS gm2 ON gm2.group_id = gm.group_id
+               AND gm2.status = 'active'
+               GROUP BY u.id) AS members
+            LEFT JOIN backup AS b2 ON b2.id=
+              (SELECT id
+               FROM backup AS b3,
+                 ({group_number_table}) AS member_index_counter
+               WHERE assignment_id=:assign_id
+                 AND b3.submitter_id = CAST(NULLIF(SUBSTRING_INDEX(members.group_member, ',', -pos),
+                                                   SUBSTRING_INDEX(members.group_member, ',', 1 - pos))
+                                            AS UNSIGNED)
+               ORDER BY flagged DESC, submit DESC, created DESC LIMIT 1)
+               ORDER BY group_id DESC;
+        """.format(group_number_table=generate_number_table(self.max_group_size))
+
+        giant_query = text(giant_query)
+        giant_query = giant_query.bindparams(db.bindparam("course_id", db.Integer),
+                                             db.bindparam("assign_id", db.Integer))
+        result = db.session.execute(giant_query, {'course_id': self.course.id,
+                                                  'assign_id': self.id})
+        return result
+
+    def course_submissions_slow(self, include_empty=True):
+        """ Return course submissions info with a slow set of queries. """
         seen = set()
-        students, submissions, no_submissions = set(), set(), set()
+        submissions = []
         for student in self.course.participations:
             if student.role == STUDENT_ROLE and student.user_id not in seen:
-                group = self.active_user_ids(student.user_id)
-                fs = self.final_submission(group)
-                seen |= group  # Perform union of two sets
-                if fs:
-                    students |= group
-                    submissions.add(fs.id)
+                student_user = student.user
+                group_ids = self.active_user_ids(student.user_id)
+                group_obj = Group.lookup(student_user, self)
+                if group_obj:
+                    group_members = [member.user for member in group_obj.members]
+                    group_emails = ','.join([u.email for
+                                             u in group_members])
                 else:
-                    no_submissions |= group
-        return students, submissions, no_submissions
+                    group_members = [student_user]
+                    group_emails = student_user.email
+
+                fs = self.final_submission(group_ids)
+                for member in group_members:
+                    if not fs and not include_empty:
+                        continue
+                    data = {
+                        'user': {
+                            'id': member.id,
+                            'email': member.email,
+                        },
+                        'group': {
+                            'group_id': group_obj.id,
+                            'group_member': ','.join([str(m_id) for m_id in group_ids]),
+                            'group_member_emails': group_emails
+                        } if group_obj else None,
+                        'backup': fs.as_dict() if fs else None
+                    }
+                    submissions.append(data)
+                seen |= group_ids  # Perform union of two sets
+        return submissions
 
     def active_user_ids(self, user_id):
         """Return a set of the ids of all users that are active in the same group

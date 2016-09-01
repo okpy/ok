@@ -30,7 +30,7 @@ test:
 	py.test --cov-report term-missing --cov=server tests/
 
 docker-test:
-	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.test.yml run --rm web db
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.test.yml run --rm web
 
 docker-build:
 	find . | grep -E "(__pycache__|\.pyc|\.DS_Store|\.db|\.pyo$\)" | xargs rm -rf
