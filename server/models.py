@@ -307,8 +307,8 @@ class Assignment(Model):
         return is_staff
 
     @staticmethod
-    @cache.memoize(10)
-    def assignment_stats(assign_id, detailed=False):
+    @cache.memoize(30)
+    def assignment_stats(assign_id, detailed=True):
         assignment = Assignment.query.get(assign_id)
         base_query = Backup.query.filter_by(assignment=assignment)
         stats = {
@@ -316,24 +316,35 @@ class Assignment(Model):
             'backups': base_query.count(),
             'groups': Group.query.filter_by(assignment=assignment).count(),
         }
-        if detailed:
-            data = assignment.course_submissions()
-            submissions = [fs['backup'] for fs in data if fs['backup']]
-            submissions_id = set(encode_id(fs['id']) for fs in submissions)
+        data = assignment.course_submissions()
+        submissions = [fs['backup'] for fs in data if fs['backup']]
+        submissions_id = set(encode_id(fs['id']) for fs in submissions)
 
-            students_with_subms = set(s['user']['id'] for s in data
-                                      if s['backup'] and s['backup']['submit'])
-            students_with_backup = set(s['user']['id'] for s in data
-                                       if s['backup'] and not s['backup']['submit'])
-            students_without_subms = set(s['user']['id'] for s in data
-                                         if not s['backup'])
-            groups = [g for g in data if g['group']]
+        students_with_subms = set(s['user']['id'] for s in data
+                                  if s['backup'] and s['backup']['submit'])
+        students_with_backup = set(s['user']['id'] for s in data
+                                   if s['backup'] and not s['backup']['submit'])
+        students_without_subms = set(s['user']['id'] for s in data
+                                     if not s['backup'])
+        groups = set([g['group']['group_id'] for g in data if g['group']])
+        total_students = len(data)
+        percent_started = ((len(students_with_subms) + len(students_with_backup)) /
+                           total_students) * 100
+        percent_finished = (len(students_with_subms) / total_students) * 100
+
+        stats.update({
+            'unique_submissions': len(submissions_id),
+            'students_with_subm': len(students_with_subms),
+            'students_with_backup': len(students_with_backup),
+            'students_no_backup': len(students_without_subms),
+            'percent_started': percent_started,
+            'percent_finished': percent_finished,
+            'active_groups': len(groups)
+        })
+
+        if detailed:
             stats.update({
-                'unique_submissions': len(submissions_id),
-                'students_with_subm': len(students_with_subms),
-                'students_with_backup': len(students_with_backup),
-                'students_no_backup': len(students_without_subms),
-                'active_groups': len(groups),
+                'raw_data': data
             })
         return stats
 
@@ -374,9 +385,9 @@ class Assignment(Model):
         stats = self.mysql_course_submissions_query()
         keys = stats.keys()
         for r in stats:
-            user_info = {k: v for k, v in zip(keys[:2], r[:2])}
-            group_info = {k: v for k, v in zip(keys[2:5], r[2:5])}
-            backup_info = {k: v for k, v in zip(keys[5:], r[5:])}
+            user_info = {k: v for k, v in zip(keys[:3], r[:3])}
+            group_info = {k: v for k, v in zip(keys[3:6], r[3:6])}
+            backup_info = {k: v for k, v in zip(keys[6:], r[6:])}
             if not include_empty and backup_info['id'] is None:
                 continue
             data = {'user': user_info,
@@ -389,8 +400,8 @@ class Assignment(Model):
         """ For MySQL Clients only. Returns a SQLAlchemy result proxy object
         Contains all of the following fields.
 
-        id  email   group_id    group_member group_member_emails
-        5   dschmidt1@gmail.com 3   5,15 dschmidt1@gmail.com, foo@bar.com
+        id  email   name                  group_id group_member group_member_emails
+        5   dschmidt1@gmail.com 'david s' 3   5,15 dschmidt1@gmail.com, foo@bar.com
 
         created id  id submitter_id assignment_id submit  flagged extension
         2016-09-07 20:22:04 4790    15  1   1   1   0
@@ -407,13 +418,15 @@ class Assignment(Model):
         giant_query = """SELECT * FROM
               (SELECT u.id,
                       u.email,
+                      u.name,
                       gm.group_id,
                       GROUP_CONCAT(IFNULL(gm2.user_id, u.id)) AS group_member,
                       GROUP_CONCAT((SELECT partners.email from user as partners
                                     where id = gm2.user_id AND partners.id != u.id)) AS group_member_emails
                FROM
                  (SELECT u.id,
-                         u.email
+                         u.email,
+                         u.name
                   FROM user AS u,
                                enrollment AS e
                   WHERE e.course_id = :course_id
@@ -463,12 +476,16 @@ class Assignment(Model):
                 group_member_ids = ','.join([str(u_id) for u_id in group_ids])
 
                 fs = self.final_submission(group_ids)
+                if not fs:
+                    fs = self.backups(group_ids).first()
+
                 for member in group_members:
                     if not fs and not include_empty:
                         continue
                     data = {
                         'user': {
                             'id': member.id,
+                            'name': member.name,
                             'email': member.email,
                         },
                         'group': {

@@ -25,14 +25,14 @@
     <div class="row">
         <div class="col-md-9 col-xs-12">
             {% with roster=enrollments, title="Student" %}
-                {% include 'staff/course/students.list.html' %}
+                {% include 'staff/course/enrollment/students.list.html' %}
             {% endwith %}
             {% with roster=staff, title="Staff" %}
-                {% include 'staff/course/students.list.html' %}
+                {% include 'staff/course/enrollment/students.list.html' %}
             {% endwith %}
             {% with roster=lab_assistants, title="Lab Assistant" %}
                 {% if roster %}
-                    {% include 'staff/course/students.list.html' %}
+                    {% include 'staff/course/enrollment/students.list.html' %}
                 {% endif %}
             {% endwith %}
         </div>
