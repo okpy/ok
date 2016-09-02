@@ -87,17 +87,12 @@ class TestGrading(OkTestCase):
         slow_submissions = [fs['backup']['id'] for fs in slow_course_subms if fs['backup']]
         self.assertEquals(len(submissions), len(course_subms_filtered))
         self.assertEquals(len(slow_submissions), len(course_subms_filtered))
+        print("Running with {}".format(db.engine.name))
 
         if db.engine.name == 'mysql':
-            print("Running with {}".format(db.engine.name))
             query = self.assignment.mysql_course_submissions_query()
-            data = [d for d in query]
-            backups_from_query = [d[6] for d in data if d[6]]
-            self.assertEquals(len(course_submissions), len(data))
-            # d[6] is the Backup ID
-            self.assertEquals(len(course_subms_filtered), len(backups_from_query))
-            # Query should have same backup IDs as the method.
-            self.assertEquals(set(submissions), set(backups_from_query))
+            mysql_data = [d for d in query]
+            self.assertEquals(len(course_submissions), len(mysql_data))
 
             has_submission = sorted(list(fs['user']['id'] for fs in course_submissions
                                  if fs['backup']))
@@ -117,7 +112,6 @@ class TestGrading(OkTestCase):
                                       if fs['backup']))
 
             self.assertEquals(backup, backup_slow)
-
         else:
             self.assertEquals(slow_course_subms, course_submissions)
 

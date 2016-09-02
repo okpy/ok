@@ -46,12 +46,18 @@
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body" class="spoiler">
-                    Submitter: {{ backup.submitter.email }}
+                    Submitter:
+                    <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
+                       {{ backup.submitter.email }}
+                    </a>
+
                     {% if group | length > 1 %}
                         <br>
                         Group:
                         {% for member in group %}
-                            {{ member.email }}
+                            <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
+                               {{ member.email }}
+                            </a>
                         {% endfor %}
                     {% endif %}
                 </div>

@@ -101,7 +101,8 @@ def create_app(default_config_path=None):
     })
 
     app.jinja_env.filters.update({
-        'markdown': lambda data: Markup(markdown(data))
+        'markdown': lambda data: Markup(markdown(data)),
+        'pluralize': utils.pluralize
     })
 
     # register our blueprints

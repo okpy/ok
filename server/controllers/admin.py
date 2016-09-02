@@ -314,7 +314,7 @@ def course_assignments(cid):
     active_asgns = [a for a in assgns if a.active]
     due_asgns = [a for a in assgns if not a.active]
     # TODO CLEANUP : Better way to send this data to the template.
-    return render_template('staff/course/assignments.html',
+    return render_template('staff/course/assignment/assignments.html',
                            courses=courses, current_course=current_course,
                            active_asgns=active_asgns, due_assgns=due_asgns)
 
@@ -338,7 +338,7 @@ def new_assignment(cid):
         flash("Assignment created successfully.", "success")
         return redirect(url_for(".course_assignments", cid=cid))
 
-    return render_template('staff/course/assignment.new.html', form=form,
+    return render_template('staff/course/assignment/assignment.new.html', form=form,
                            courses=courses, current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>",
@@ -364,7 +364,7 @@ def assignment(cid, aid):
         db.session.commit()
         flash("Assignment edited successfully.", "success")
 
-    return render_template('staff/course/assignment.html', assignment=assign,
+    return render_template('staff/course/assignment/assignment.html', assignment=assign,
                            form=form, courses=courses, stats=stats,
                            current_course=current_course)
 
@@ -377,7 +377,9 @@ def assignment_stats(cid, aid):
         flash('Insufficient permissions', 'error')
         return abort(401)
 
-    stats = Assignment.assignment_stats(assign.id, detailed=True)
+    stats = Assignment.assignment_stats(assign.id)
+
+    submissions = [d for d in stats.pop('raw_data')]
 
     pie_chart = pygal.Pie(half_pie=True, disable_xml_declaration=True,
                           style=CleanStyle,
@@ -387,9 +389,9 @@ def assignment_stats(cid, aid):
     pie_chart.add('Students with Backups', stats['students_with_backup'])
     pie_chart.add('Not Started', stats['students_no_backup'])
 
-    return render_template('staff/course/assignment.stats.html',
+    return render_template('staff/course/assignment/assignment.stats.html',
                            assignment=assign, subm_chart=pie_chart,
-                           courses=courses, stats=stats,
+                           courses=courses, stats=stats, submissions=submissions,
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/template",
@@ -419,7 +421,7 @@ def templates(cid, aid):
         flash("Templates Uploaded", "success")
 
     # TODO: Use same student facing code rendering/highlighting
-    return render_template('staff/course/assignment.template.html',
+    return render_template('staff/course/assignment/assignment.template.html',
                            assignment=assignment, form=form, courses=courses,
                            current_course=current_course)
 
@@ -644,7 +646,7 @@ def enrollment(cid):
                       .order_by(Enrollment.created.desc())
                       .all())
 
-    return render_template('staff/course/enrollment.html',
+    return render_template('staff/course/enrollment/enrollment.html',
                            enrollments=students, staff=staff,
                            lab_assistants=lab_assistants,
                            form=form,
@@ -681,7 +683,7 @@ def batch_enroll(cid):
         flash(msg, "success")
         return redirect(url_for(".enrollment", cid=cid))
 
-    return render_template('staff/course/enrollment.batch.html',
+    return render_template('staff/course/enrollment/enrollment.batch.html',
                            batch_form=batch_form,
                            courses=courses,
                            current_course=current_course)
