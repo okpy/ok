@@ -158,7 +158,7 @@
                             <th class="sort" data-sort="identifier">Submitter</th>
                             <th class="sort" data-sort="group">Group</th>
                             <th class="sort" data-sort="final-subm-id">Code</th>
-                            <th class="sort" data-sort="time">Timestamp</th>
+                            <th class="sort" data-sort="created">Timestamp</th>
                             <th class="sort" data-sort="submit">Status</th>
                             <th>Actions</th>
                         </thead>
@@ -166,10 +166,11 @@
                         <tbody class="list">
                             {%- for item in submissions %}
                             <tr>
-                                <td class="identifier" data-email="item['user']['email']">
-                                    <a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=item['user']['email'], aid=assignment.id) }}">
-                                        {{ item['user']['name'] or item['user']['email'] }}
-                                    </a>
+                                <td class="identifier" data-email="{{item['user']['email']}}" data-name="{{item['user']['name']}}">
+                                <a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=item['user']['email'], aid=assignment.id)}}">
+                                    {{ item['user']['email'] }}
+                                    <!-- {{ item['user']['name'] }}-->
+                                </a>
                                 </td>
                                 {% if item['group'] %}
                                   <td class="group">
@@ -184,7 +185,7 @@
 
                                       {% endfor %}
                                     {% else %}
-                                    {{ item['group'] }}
+                                      <span class="label label-default">Pending</span>
                                     {% endif %}
                                   </td>
                                 {% else %}
@@ -271,6 +272,7 @@
     var submissionOptions = {
       valueNames: [ 'identifier', 'group', 'final-subm-id', 'created', 'submit',
                   { attr: 'data-email', name: 'email' },
+                  { attr: 'data-name', name: 'name' },
                   { attr: 'data-time', name: 'time' }
                   ],
       plugins: [ListPagination()],
