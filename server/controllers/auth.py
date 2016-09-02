@@ -88,7 +88,6 @@ def user_from_email(email):
 @cache.memoize(1800)
 def google_user_data(token):
     """ Query google for a user's info. """
-    logger.info("Querying google for user information")
     if not token:
         return None
     resp = google_auth.get('userinfo', token=(token, ''))
