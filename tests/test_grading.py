@@ -92,9 +92,9 @@ class TestGrading(OkTestCase):
             print("Running with {}".format(db.engine.name))
             query = self.assignment.mysql_course_submissions_query()
             data = [d for d in query]
-            backups_from_query = [d[6] for d in data if d[6]]
+            backups_from_query = [d[7] for d in data if d[7]]
             self.assertEquals(len(course_submissions), len(data))
-            # d[6] is the Backup ID
+            # d[7] is the Backup ID
             self.assertEquals(len(course_subms_filtered), len(backups_from_query))
             # Query should have same backup IDs as the method.
             self.assertEquals(set(submissions), set(backups_from_query))
