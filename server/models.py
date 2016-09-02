@@ -318,7 +318,7 @@ class Assignment(Model):
         }
         data = assignment.course_submissions()
         submissions = [fs['backup'] for fs in data if fs['backup']]
-        submissions_id = set(encode_id(fs['id']) for fs in submissions)
+        submissions_id = set(fs['id'] for fs in submissions)
 
         students_with_subms = set(s['user']['id'] for s in data
                                   if s['backup'] and s['backup']['submit'])
@@ -326,11 +326,12 @@ class Assignment(Model):
                                    if s['backup'] and not s['backup']['submit'])
         students_without_subms = set(s['user']['id'] for s in data
                                      if not s['backup'])
-        groups = set([g['group']['group_member'] for g in data if g['group']])
+        groups = [g['group'] for g in data if g['group']]
         total_students = len(data)
         percent_started = ((len(students_with_subms) + len(students_with_backup)) /
-                           total_students) * 100
-        percent_finished = (len(students_with_subms) / total_students) * 100
+                           (total_students or 1)) * 100
+        percent_finished = (len(students_with_subms) / (total_students or 1)) * 100
+        active_groups = len(set([g['group_id'] for g in groups if ',' in g['group_member']]))
 
         stats.update({
             'unique_submissions': len(submissions_id),
@@ -339,7 +340,8 @@ class Assignment(Model):
             'students_no_backup': len(students_without_subms),
             'percent_started': percent_started,
             'percent_finished': percent_finished,
-            'active_groups': len([g for g in groups if ',' in g])
+            'active_groups': active_groups,
+            'percent_groups_active': active_groups/(stats['groups'] or 1)
         })
 
         if detailed:
@@ -387,6 +389,8 @@ class Assignment(Model):
         for r in stats:
             user_info = {k: v for k, v in zip(keys[:3], r[:3])}
             group_info = {k: v for k, v in zip(keys[3:6], r[3:6])}
+            if group_info['group_member_emails']:
+                group_info['group_member_emails'] = group_info['group_member_emails'].split(',')
             backup_info = {k: v for k, v in zip(keys[6:], r[6:])}
             if not include_empty and backup_info['id'] is None:
                 continue
@@ -472,7 +476,7 @@ class Assignment(Model):
                     group_members = [m.user for m in group_obj.members]
                 else:
                     group_members = [student_user]
-                group_emails = ','.join([u.email for u in group_members])
+                group_emails = [u.email for u in group_members]
                 group_member_ids = ','.join([str(u_id) for u_id in group_ids])
 
                 fs = self.final_submission(group_ids)

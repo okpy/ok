@@ -117,6 +117,7 @@
     var studentOptions = {
       valueNames: ['email', 'name', 'sid', 'secondary', 'section'],
       plugins: [ListPagination()],
+      indexAsync: true,
       page: 20
     };
     var studentList = new List('Student-list', studentOptions);
@@ -128,7 +129,7 @@
     var staffOptions = {
       valueNames: [ 'email', 'name', 'secondary' ],
       plugins: [ListPagination()],
-      page: 20
+      page: 10
     };
     var staffList = new List('Staff-list', staffOptions);
     // TODO: Use removeClass with polyfill
@@ -139,7 +140,8 @@
         var labAssistantOptions = {
         valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section' ],
         plugins: [ListPagination()],
-        page: 20
+        indexAsync: true,
+        page: 10
         };
         var labAssistantList = new List('Lab Assistant-list', labAssistantOptions);
         document.getElementById('Lab Assistant-list').style.display = 'block';

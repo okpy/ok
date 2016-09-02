@@ -99,7 +99,7 @@
                   <span class="info-box-number">{{ stats['active_groups'] }}</span>
 
                   <div class="progress">
-                    <div class="progress-bar bg-teal" style="width: {{ ((stats['active_groups']/stats['groups'])*100) | round(1) | int }}%"></div>
+                    <div class="progress-bar bg-teal" style="width: {{ (stats['percent_groups_active']*100) | round(1) | int }}%"></div>
                   </div>
                   <span class="progress-description">
                     {{ stats['groups'] - stats['active_groups'] }} {{ (stats['groups'] - stats['active_groups']) | pluralize('is', 'are')}} still pending

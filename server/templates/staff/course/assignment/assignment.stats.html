@@ -135,8 +135,14 @@
           <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
-                    <h3 class="box-title"><span> Submissions </span></h3>
+                    <h3 class="box-title"><span> Submissions</span></h3>
+
                     <div class="box-tools">
+                        <div class="pull-left" id="submissions-loading">
+                          <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
+                          <span class="sr-only">Loading...</span>
+                        </div>
+
                         <div class="box-tools pull-right">
                             <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
                                 <i class="fa fa-minus"></i>
@@ -152,7 +158,7 @@
                             <th class="sort" data-sort="identifier">Submitter</th>
                             <th class="sort" data-sort="group">Group</th>
                             <th class="sort" data-sort="final-subm-id">Code</th>
-                            <th class="sort" data-sort="created">Timestamp</th>
+                            <th class="sort" data-sort="time">Timestamp</th>
                             <th class="sort" data-sort="submit">Status</th>
                             <th>Actions</th>
                         </thead>
@@ -160,14 +166,15 @@
                         <tbody class="list">
                             {%- for item in submissions %}
                             <tr>
-                                <td class="identifier">
+                                <td class="identifier" data-email="item['user']['email']">
                                     <a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=item['user']['email'], aid=assignment.id) }}">
                                         {{ item['user']['name'] or item['user']['email'] }}
                                     </a>
                                 </td>
                                 {% if item['group'] %}
                                   <td class="group">
-                                      {% set user_list = item['group']['group_member_emails'].split(',') %}
+                                    {% if item['group']['group_member_emails'] %}
+                                      {% set user_list = item['group']['group_member_emails'] %}
                                       {% for member in user_list %}
                                         {% if member != item['user']['email'] %}
                                         <a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=member, aid=assignment.id) }}">
@@ -176,6 +183,9 @@
                                         {% endif %}
 
                                       {% endfor %}
+                                    {% else %}
+                                    {{ item['group'] }}
+                                    {% endif %}
                                   </td>
                                 {% else %}
                                   <td class="group">&mdash;</td>
@@ -187,7 +197,7 @@
                                         {{ utils.encode_id(item['backup']['id']) }}
                                     </a>
                                   </td>
-                                  <td class="created">{{ utils.local_time_obj(item['backup']['created'], current_course) }}
+                                  <td class="created" data-time="item['backup']['created']">{{ utils.local_time_obj(item['backup']['created'], current_course) }}
                                   </td>
 
                                   <td class="submit">
@@ -241,6 +251,9 @@
                     <div class="pull-left">
                     <h5 class="box-title"><span> Total: {{ submissions | length }} </span></h5>
                     </div>
+                    <div class='pull-right'>
+                      <button type="button" class="btn btn-block btn-default btn-sm" onclick="listIncreasePagination(submissionList, 50)">Show 50 more per page</button>
+                    </div>
                 </div>
 
             </div>
@@ -257,14 +270,16 @@
 
     var submissionOptions = {
       valueNames: [ 'identifier', 'group', 'final-subm-id', 'created', 'submit',
-
+                  { attr: 'data-email', name: 'email' },
+                  { attr: 'data-time', name: 'time' }
                   ],
       plugins: [ListPagination()],
-      page: 20
+      page: 20,
+      indexAsync: true,
     };
     var submissionList = new List('submissions-list', submissionOptions);
-    submissionList.sort("created", {order: "desc"})
-
+    submissionList.sort("data-time", {order: "desc"})
+    document.getElementById('submissions-loading').style.display = 'none';
     document.getElementById('submissions-list').style.display = 'block';
 
 </script>
