@@ -76,8 +76,12 @@
                 <span class="info-box-icon bg-aqua"><i class="fa fa-file-code-o"></i></span>
 
                 <div class="info-box-content">
-                  <span class="info-box-text"># to grade</span>
+                  <span class="info-box-text">Unique Submissions</span>
                   <span class="info-box-number"> {{ stats['unique_submissions'] }}</span>
+                  <span class="progress-description">
+                    (Includes backups)
+                  </span>
+
                 </div>
                 <!-- /.info-box-content -->
               </div>
@@ -98,7 +102,7 @@
                     <div class="progress-bar bg-teal" style="width: {{ ((stats['active_groups']/stats['groups'])*100) | round(1) | int }}%"></div>
                   </div>
                   <span class="progress-description">
-                    {{ stats['groups'] - stats['active_groups'] }} are still pending
+                    {{ stats['groups'] - stats['active_groups'] }} {{ (stats['groups'] - stats['active_groups']) | pluralize('is', 'are')}} still pending
                   </span>
                 </div>
                 <!-- /.info-box-content -->

@@ -326,7 +326,7 @@ class Assignment(Model):
                                    if s['backup'] and not s['backup']['submit'])
         students_without_subms = set(s['user']['id'] for s in data
                                      if not s['backup'])
-        groups = set([g['group']['group_id'] for g in data if g['group']])
+        groups = set([g['group']['group_member'] for g in data if g['group']])
         total_students = len(data)
         percent_started = ((len(students_with_subms) + len(students_with_backup)) /
                            total_students) * 100
@@ -339,7 +339,7 @@ class Assignment(Model):
             'students_no_backup': len(students_without_subms),
             'percent_started': percent_started,
             'percent_finished': percent_finished,
-            'active_groups': len(groups)
+            'active_groups': len([g for g in groups if ',' in g])
         })
 
         if detailed:
