@@ -1067,7 +1067,7 @@ class Version(Model):
     download_link = db.Column(db.Text())
 
     @staticmethod
-    @cache.memoize(1000)
+    @cache.memoize(1800)
     def get_current_version(name):
         version = Version.query.filter_by(name=name).one_or_none()
         if version:
