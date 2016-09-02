@@ -1,4 +1,4 @@
-var listIncreasePagination = function(list, amount) {
+function listIncreasePagination(list, amount) {
 	if (list) {
 		list.page += amount;
 		list.update()
