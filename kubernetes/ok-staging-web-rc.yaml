@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: ok-v3-staging
-        image: cs61a/ok:dev-enhancement_sumukh_query_optimize
+        image: cs61a/ok
         imagePullPolicy: Always
         livenessProbe:
           # an http probe
@@ -61,7 +61,7 @@ spec:
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
-              name: ok-services
+              name: ok-staging-services
               key: sentry-dsn
         - name: SENDGRID_USER
           valueFrom:

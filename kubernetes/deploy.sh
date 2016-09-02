@@ -13,7 +13,6 @@ then
     docker build -t cs61a/ok-server:$tag_name .
     docker tag cs61a/ok-server:$tag_name cs61a/ok-server:latest
     docker push cs61a/ok-server:$tag_name
-    docker push cs61a/ok-server:latest
     echo "Done building. Run git tag "$tag_name
 fi
 
@@ -32,6 +31,8 @@ else
     echo    # (optional) move to a new line
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
+        echo "Pushing to docker, ok-server:latest"
+        docker push cs61a/ok-server:latest
         echo "Watch with 'watch kubectl get pods'"
         kubectl set image deployment/ok-web-deployment ok-v3-deploy=cs61a/ok-server:$tag_name
         kubectl rollout status deployment/ok-web-deployment
