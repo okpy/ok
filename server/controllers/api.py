@@ -353,7 +353,7 @@ class BackupSchema(APISchema):
         backup = make_backup(user, assignment['id'], args['messages'],
                              elgible_submit)
         if args['submit'] and lock_flag:
-            raise ValueError('Late Submission')
+            raise ValueError('Late Submission of {}'.format(args['assignment']))
         if elgible_submit and assignment['autograding_key']:
             submit_continous(backup)
         return backup
