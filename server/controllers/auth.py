@@ -16,7 +16,7 @@ import logging
 
 from server import utils
 from server.models import db, User, Enrollment, Client, Token, Grant
-from server.extensions import csrf, oauth_provider
+from server.extensions import csrf, oauth_provider, cache
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +85,18 @@ def user_from_email(email):
         db.session.commit()
     return user
 
+@cache.memoize(1800)
+def google_user_data(token):
+    """ Query google for a user's info. """
+    logger.info("Querying google for user information")
+    if not token:
+        return None
+    resp = google_auth.get('userinfo', token=(token, ''))
+    if resp.status != 200:
+        logger.error("Could not authenticated {}", resp.data)
+        return None
+    return resp.data
+
 def user_from_google_token(token):
     """
     Get a User with the given Google access token, or create one if no User with
@@ -94,10 +106,11 @@ def user_from_google_token(token):
         return None
     if use_testing_login() and token == "test":
         return user_from_email("okstaff@okpy.org")
-    resp = google_auth.get('userinfo', token=(token, ''))
-    if resp.status != 200:
+    user_data = google_user_data(token)
+
+    if not user_data:
         return None
-    return user_from_email(resp.data['email'])
+    return user_from_email(user_data['email'])
 
 login_manager = LoginManager()
 
