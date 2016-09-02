@@ -92,7 +92,7 @@ def google_user_data(token):
         return None
     resp = google_auth.get('userinfo', token=(token, ''))
     if resp.status != 200:
-        logger.error("Could not authenticated {}", resp.data)
+        logger.error("Could not authenticate {}", resp.data)
         return None
     return resp.data
 
