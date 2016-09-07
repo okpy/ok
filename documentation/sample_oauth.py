@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-""" This file is a sample implementation of OAuth with OK """
+""" This file is a sample implementation of OAuth with OK.
+If you are running OK Locally, make sure you are using different
+hostnames for the two apps (otherwise Flask will clobber your session)
+"""
 import urllib.parse
 from werkzeug import security
 
@@ -54,8 +57,9 @@ def create_client(app):
     def index():
         if 'dev_token' in session:
             ret = remote.get('user', token=session['dev_token'])
+            # User: ret.data['data']['email']
             return jsonify(ret.data)
-            return "Welcome {}".format(ret.data['data']['email'])
+
         return redirect(url_for('login'))
 
     @app.route('/login')
