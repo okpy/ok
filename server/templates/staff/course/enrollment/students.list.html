@@ -36,7 +36,7 @@
                     <td class="sid">{{ item.sid }}</td>
                     <td class="secondary">{{ item.class_account }}</td>
                     <td class="role"><span class="label label-success">{{item.role | title }}</span></td>
-                    <td class="timestamp" data-timestamp="{{ item.created }}">{{ utils.local_time(item.created, current_course) }}</td>
+                    <td class="timestamp" data-timestamp="{{ item.created }}">{{ utils.local_time_obj(item.created, current_course) }}</td>
                     <td class="section">{{item.section}}</td>
                     <td class="unenroll">
                         {% call forms.render_form_bare(unenroll_form, action_url=url_for('.unenrollment', cid=current_course.id, user_id=item.user.id), class_='form') %}
