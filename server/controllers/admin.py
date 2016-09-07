@@ -336,6 +336,8 @@ def new_assignment(cid):
         cache.delete_memoized(Assignment.name_to_assign_info)
 
         flash("Assignment created successfully.", "success")
+        if form.visible.data:
+            return redirect(url_for(".templates", cid=cid, aid=model.id))
         return redirect(url_for(".course_assignments", cid=cid))
 
     return render_template('staff/course/assignment/assignment.new.html', form=form,
