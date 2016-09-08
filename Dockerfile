@@ -10,6 +10,6 @@ RUN pip3 install -r requirements.txt
 
 ADD . .
 
-CMD gunicorn -b 0.0.0.0:5000 wsgi:app
+CMD gunicorn -b 0.0.0.0:5000 wsgi:app --workers 3
 
 EXPOSE 5000
