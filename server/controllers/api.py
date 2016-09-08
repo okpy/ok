@@ -250,6 +250,7 @@ class UserSchema(APISchema):
         'id': HashIDField,
         'email': fields.String,
         'name': fields.String,
+        'is_admin': fields.Boolean,
         'participations': fields.List(fields.Nested(ParticipationSchema.get_fields))
     }
 

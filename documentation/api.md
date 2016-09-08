@@ -516,6 +516,7 @@ curl "https://okpy.org/api/v3/user/?access_token=test"
         "email": "dschmidt1@gmail.com",
         "id": "penRe7",
         "name": null,
+        "is_admin": false,
         "participations": [
             {
                 "class_account": "cs61a-mbh",
