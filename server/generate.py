@@ -355,6 +355,7 @@ def seed_oauth():
         redirect_uris=[
             'http://localhost:8000/authorized',
             'http://127.0.0.1:8000/authorized',
+            'http://127.0.0.1:8000/login/authorized',
         ],
         is_confidential=False,
         description='Sample App for building OAuth',
