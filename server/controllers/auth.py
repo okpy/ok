@@ -85,7 +85,6 @@ def user_from_email(email):
         db.session.commit()
     return user
 
-@cache.memoize(1800)
 def google_user_data(token):
     """ Query google for a user's info. """
     if not token:
@@ -138,6 +137,9 @@ def unauthorized():
     return redirect(url_for('auth.login'))
 
 def authorize_user(user):
+    if user is None:
+        logger.error("Google Auth Failure - attempting to authorize None user")
+        raise TypeError("Cannot login as None")
     login_user(user)
     after_login = session.pop('after_login', None)
     return redirect(after_login or url_for('student.index'))
