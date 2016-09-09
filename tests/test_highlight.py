@@ -37,6 +37,7 @@ class TestHighlight(OkTestCase):
             'before.py': open('tests/files/difflib_before.py').read(),
             'after.py': open('tests/files/difflib_after.py').read(),
             'empty.py': '',
+            'empty': '',
         }
 
     def _test_highlight_file(self, filename, source):

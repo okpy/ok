@@ -83,7 +83,11 @@ def highlight_diff(filename, a, b, diff_type='short'):
     if diff_type == 'short':
         groups = matcher.get_grouped_opcodes()
     elif diff_type == 'full':
-        groups = [matcher.get_opcodes()]
+        opcodes = matcher.get_opcodes()
+        if opcodes:
+            groups = [opcodes]
+        else:
+            groups = []
     else:
         raise ValueError('Unknown diff type {}'.format(diff_type))
     for group in groups:
