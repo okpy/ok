@@ -17,6 +17,8 @@ class Line:
 
 def highlight(filename, source):
     """Highlights an input string into a list of HTML strings, one per line."""
+    if not source:
+        return []  # pygments does not play nice with empty files
     try:
         highlighted = pygments.highlight(source,
             pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False),
