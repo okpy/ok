@@ -664,7 +664,7 @@ class Enrollment(Model):
 
     @transaction
     def unenroll(self):
-        cache.delete_memoized(User.is_enrolled, self.user, self.course.id)
+        cache.delete_memoized(User.is_enrolled)
         db.session.delete(self)
 
     @staticmethod
