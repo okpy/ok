@@ -96,11 +96,16 @@
             {% endif %}
         </div>
       </div>
+      {% if assignment.uploads_enabled %}
+        <div class="subcontent row">
+          <div class="col-xs-12">
+            <a id="new-submission" href="{{url_for('.submit_assignment', name=assignment.name)}}" class="button-large"><i class="fa fa-inbox grey"></i> Create a new submission </a>
+          </div>
+        </div>
+      {% endif %}
+
         <!-- start desktop/tablet version -->
         <div class="subcontent row hidden-xs hidden-sm">
-          {% if assignment.uploads_enabled %}
-            <a id="new-submission" href="{{url_for('.submit_assignment', name=assignment.name)}}" class="button-large"><i class="fa fa-inbox grey"></i> Create a new submission </a>
-          {% endif %}
           <div class="col-md-12">
            <!-- TODO: Better link to view all backups -->
             {{ table.render_subms(subms, course, flagged, csrf_form, tname="Recent Submissions") }}
