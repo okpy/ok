@@ -80,6 +80,7 @@ def user_from_email(email):
     """Get a User with the given email, or create one."""
     user = User.lookup(email)
     if not user:
+        logger.info("Creating user {}".format(email))
         user = User(email=email)
         db.session.add(user)
         db.session.commit()
@@ -194,7 +195,7 @@ def authorized(resp):
 
     access_token = resp['access_token']
     user = user_from_google_token(access_token)
-
+    logger.info("Login from {}".format(user.email))
     expires_in = resp.get('expires_in', 0)
     session['token_expiry'] = dt.datetime.now() + dt.timedelta(seconds=expires_in)
     session['google_token'] = (access_token, '')  # (access_token, secret)

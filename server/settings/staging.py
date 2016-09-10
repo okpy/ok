@@ -21,6 +21,7 @@ TESTING_LOGIN = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+SENTRY_USER_ATTRS = ['email', 'name']
 
 db_url = os.getenv('DATABASE_URL')
 if db_url:

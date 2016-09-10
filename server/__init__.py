@@ -1,4 +1,5 @@
 import os
+import logging
 
 from markdown import markdown
 from flask import Flask, render_template, g, request
@@ -59,6 +60,10 @@ def create_app(default_config_path=None):
                     public_dsn=sentry.client.get_public_dsn('https')
                 ), 500
 
+        # In production mode, add log handler to sys.stderr.
+        app.logger.addHandler(logging.StreamHandler())
+        app.logger.setLevel(logging.INFO)
+
     @app.errorhandler(404)
     def not_found_error(error):
         if request.path.startswith("/api"):
@@ -79,6 +84,7 @@ def create_app(default_config_path=None):
 
     # initialize SQLAlchemy
     db.init_app(app)
+
 
     # Flask-Login manager
     login_manager.init_app(app)
