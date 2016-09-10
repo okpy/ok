@@ -86,9 +86,11 @@ def user_from_email(email):
         db.session.commit()
     return user
 
+@cache.memoize(timeout=600)
 def google_user_data(token):
     """ Query google for a user's info. """
     if not token:
+        logger.info("Google Token is None")
         return None
     resp = google_auth.get('userinfo', token=(token, ''))
     if resp.status != 200:
@@ -106,6 +108,9 @@ def user_from_google_token(token):
     if use_testing_login() and token == "test":
         return user_from_email("okstaff@okpy.org")
     user_data = google_user_data(token)
+
+    if user_data is None:
+        cache.delete_memoized(google_user_data, token)
 
     if not user_data:
         return None
