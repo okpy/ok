@@ -16,7 +16,7 @@ WTF_CSRF_ENABLED = False
 
 CACHE_TYPE = 'simple'
 
-REDIS_HOST = 'localhost'
+REDIS_HOST = os.getenv('TEST_REDIS_HOST', 'localhost')
 REDIS_PORT = 6379
 
 GOOGLE_CONSUMER_KEY = ''
