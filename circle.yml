@@ -3,6 +3,8 @@ machine:
     version: 3.5.0
   environment:
     OK_ENV: test
+  services:
+    - redis
 
 dependencies:
   pre:
