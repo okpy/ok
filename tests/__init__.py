@@ -20,6 +20,7 @@ class OkTestCase(TestCase):
 
     def login(self, email):
         """Log in as an email address."""
+        self.logout()
         response = self.client.post('/testing-login/authorized/', data={
             'email': email
         }, follow_redirects=True)
