@@ -23,6 +23,11 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SENTRY_USER_ATTRS = ['email', 'name']
 
+RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
+    os.getenv('REDIS_HOST', 'redis-master')
+REDIS_PORT = 6379
+RQ_POLL_INTERVAL = 2000
+
 db_url = os.getenv('DATABASE_URL')
 if db_url:
     db_url = db_url.replace('mysql://', 'mysql+pymysql://')

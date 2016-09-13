@@ -3,8 +3,8 @@ web:
   command: py.test --cov-report term-missing --cov=server tests/
   environment:
     OK_ENV: 'test'
-    TEST_DATABASE_URL: 'mysql+pymysql://okdev:okdev@db:3306/okdev?charset=utf8mb4'
-    TEST_REDIS_HOST: 'redis'
+    DATABASE_URL: 'mysql+pymysql://okdev:okdev@db:3306/okdev?charset=utf8mb4'
+    REDIS_HOST: 'redis'
   links:
     - db
     - redis
