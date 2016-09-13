@@ -16,6 +16,7 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///../oksqlite.db'
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
+RQ_POLL_INTERVAL = 2000
 
 MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # Max Upload Size is 8MB
 
