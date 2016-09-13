@@ -126,6 +126,7 @@ def create_app(default_config_path=None):
     app.register_blueprint(about, url_prefix='/about')
 
     # Redis Queue dashboard
+    csrf.exempt(queue)
     app.register_blueprint(queue, url_prefix='/rq')
 
     # API does not need CSRF protection
