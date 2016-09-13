@@ -5,6 +5,7 @@ import time
 
 from flask_login import current_user
 from flask_rq import get_connection, get_queue
+import redis.exceptions
 import rq
 
 from server.models import db, Job
@@ -50,12 +51,19 @@ def enqueue_job(func, *args, **kwargs):
     db.session.add(job)
     db.session.commit()
 
-    get_queue().enqueue_call(
-        func=func,
-        args=args,
-        kwargs=kwargs,
-        job_id=str(job.id),
-    )
+    try:
+        get_queue().enqueue_call(
+            func=func,
+            args=args,
+            kwargs=kwargs,
+            job_id=str(job.id),
+        )
+    except redis.exceptions.ConnectionError as e:
+        job.failed = True
+        job.status = 'finished'
+        job.log = 'Could not connect to Redis: ' + str(e)
+        db.session.add(job)
+        db.session.commit()
 
     return job
 
