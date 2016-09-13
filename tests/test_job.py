@@ -1,3 +1,5 @@
+import re
+
 from flask_rq import get_worker
 
 from server import jobs
@@ -11,6 +13,7 @@ class TestJob(OkTestCase):
 
     def run_jobs(self):
         get_worker().work(burst=True)
+        db.session.expire_all()
 
     def test_dashboard_access(self):
         response = self.client.get('/rq/')
@@ -26,13 +29,15 @@ class TestJob(OkTestCase):
 
     def start_test_job(self, should_fail=False):
         self.login(self.admin.email)
-        if should_fail:
-            data = {'should_fail': 'yes'}
-        else:
-            data = {}
-        response = self.client.post('/rq/start-test-job/', data=data)
+        response = self.client.post('/admin/jobs/test/', data={
+            'duration': 0,
+            'should_fail': 'checked' if should_fail else '',
+        }, follow_redirects=True)
         self.assert_200(response)
-        job_id = int(response.data)
+
+        # Get the job ID with a regex. Yeah, I know
+        match = re.search(r'Job\s+(\d+)', response.data.decode('utf-8'))
+        job_id = match.group(1)
         job = Job.query.get(job_id)
 
         self.assertEqual(job.user_id, self.admin.id)

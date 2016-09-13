@@ -16,12 +16,13 @@ from server.controllers.auth import get_token_if_valid
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, Group, Client, db)
+                           GradingTask, Backup, Score, Group, Client, Job, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                                 LAB_ASSISTANT_ROLE, GRADE_TAGS)
 
 from server.extensions import cache
 import server.forms as forms
+import server.jobs as jobs
 import server.highlight as highlight
 import server.utils as utils
 
@@ -958,3 +959,22 @@ def staff_submit_backup(cid, email, aid):
 
             flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
             return redirect(result_page)
+
+@admin.route('/jobs/<int:job_id>/')
+@is_staff()
+def job(job_id):
+    job = Job.query.get_or_404(job_id)
+    return render_template('staff/jobs/job.html', job=job)
+
+@admin.route('/jobs/test/', methods=['GET', 'POST'])
+@is_staff()
+def start_test_job():
+    form = forms.TestJobForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            jobs.test_job,
+            duration=form.duration.data,
+            should_fail=form.should_fail.data)
+        return redirect(url_for('admin.job', job_id=job.id))
+    else:
+        return render_template('staff/jobs/test.html', form=form)

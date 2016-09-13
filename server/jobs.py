@@ -23,12 +23,9 @@ def background_job(f):
         job.status = 'running'
         db.session.commit()
 
+        stream = io.StringIO()
         logger = get_job_logger()
         logger.setLevel(logging.INFO)
-        for handler in logger.handlers:
-            logger.removeHandler(handler)
-
-        stream = io.StringIO()
         logger.addHandler(logging.StreamHandler(stream))
 
         try:
@@ -63,10 +60,11 @@ def enqueue_job(func, *args, **kwargs):
     return job
 
 @background_job
-def test_job(should_fail=False):
+def test_job(duration=0, should_fail=False):
     logger = get_job_logger()
 
     logger.info('Starting...')
+    time.sleep(duration)
     if should_fail:
         1/0
     logger.info('Finished!')

@@ -3,6 +3,7 @@ import os
 import binascii
 import unittest
 
+from flask_rq import get_worker
 from flask_script import Manager, Server, Command
 from flask_script.commands import ShowUrls, Clean
 
@@ -107,6 +108,10 @@ def generate_session_key():
         Copy the value in between the quotation marks to the settings file
     """
     return binascii.hexlify(os.urandom(24))
+
+@manager.command
+def worker():
+    get_worker().work()
 
 if __name__ == "__main__":
     manager.run()
