@@ -19,5 +19,6 @@ CACHE_TYPE = 'simple'
 RQ_DEFAULT_HOST = REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = 6379
 RQ_POLL_INTERVAL = 2000
+RQ_DEFAULT_DB = 2  # to prevent conflicts with development
 
 GOOGLE_CONSUMER_KEY = ''

@@ -3,6 +3,24 @@
 {% block title %} Ok - Job {{ job.id }}{% endblock %}
 
 {% block main %}
+<section class="content-header">
+    <h1>
+        {{ current_course.display_name_with_semester }} Jobs
+        <small>{{ current_course.offering }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for(".course_jobs", cid=current_course.id) }}">
+            <i class="fa fa-list"></i>Jobs
+        </a></li>
+        <li class="active"><a href="{{ url_for('.course_job', cid=current_course.id, job_id=job.id) }}">
+            <i class="fa fa-file-text"></i>Job {{ job.id }}</a>
+        </li>
+    </ol>
+</section>
 <section class="content">
   {% include 'alerts.html' %}
   <div class="row">
@@ -15,8 +33,8 @@
         <!-- /.box-header -->
         <div class="box-body">
           <dl class="dl-horizontal">
-            <dt>Job Name</dt>
-            <dd>{{ job.name }}</dd>
+            <dt>Description</dt>
+            <dd>{{ job.description }}</dd>
             <dt>User</dt>
             <dd>{{ job.user.email }}</dd>
             <dt>Status</dt>
@@ -25,7 +43,7 @@
             {% elif job.status == 'running' %}
               <dd>Running (Refresh to Update)</dd>
             {% elif job.status == 'finished' %}
-              <dd>{{ 'Failed' if job.failed else 'Succeeded' }}</dd>
+              <dd>{{ 'Failed' if job.failed else 'Finished' }}</dd>
               <dt>Log</dt>
               <dd><pre>{{ job.log }}</pre></dd>
             {% endif %}

@@ -29,7 +29,8 @@ class TestJob(OkTestCase):
 
     def start_test_job(self, should_fail=False):
         self.login(self.admin.email)
-        response = self.client.post('/admin/jobs/test/', data={
+        url = '/admin/course/{}/jobs/test/'.format(self.course.id)
+        response = self.client.post(url, data={
             'duration': 0,
             'should_fail': 'checked' if should_fail else '',
         }, follow_redirects=True)

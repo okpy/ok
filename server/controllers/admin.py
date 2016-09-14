@@ -960,21 +960,49 @@ def staff_submit_backup(cid, email, aid):
             flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
             return redirect(result_page)
 
-@admin.route('/jobs/<int:job_id>/')
-@is_staff()
-def job(job_id):
-    job = Job.query.get_or_404(job_id)
-    return render_template('staff/jobs/job.html', job=job)
+@admin.route('/course/<int:cid>/jobs/')
+@is_staff(course_arg='cid')
+def course_jobs(cid):
+    courses, current_course = get_courses(cid)
+    jobs = Job.query.filter_by(course_id=cid).all()
+    return render_template(
+        'staff/jobs/index.html',
+        courses=courses,
+        current_course=current_course,
+        jobs=jobs,
+    )
 
-@admin.route('/jobs/test/', methods=['GET', 'POST'])
-@is_staff()
-def start_test_job():
+@admin.route('/course/<int:cid>/jobs/<int:job_id>/')
+@is_staff(course_arg='cid')
+def course_job(cid, job_id):
+    courses, current_course = get_courses(cid)
+    job = Job.query.get_or_404(job_id)
+    if job.course_id != cid:
+        abort(404)
+    return render_template(
+        'staff/jobs/job.html',
+        courses=courses,
+        current_course=current_course,
+        job=job,
+    )
+
+@admin.route('/course/<int:cid>/jobs/test/', methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def start_test_job(cid):
+    courses, current_course = get_courses(cid)
     form = forms.TestJobForm()
     if form.validate_on_submit():
         job = jobs.enqueue_job(
             jobs.test_job,
+            description='Test Job',
+            course_id=cid,
             duration=form.duration.data,
             should_fail=form.should_fail.data)
-        return redirect(url_for('admin.job', job_id=job.id))
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
-        return render_template('staff/jobs/test.html', form=form)
+        return render_template(
+            'staff/jobs/test.html',
+            courses=courses,
+            current_course=current_course,
+            form=form,
+        )

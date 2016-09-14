@@ -1374,7 +1374,7 @@ class Token(db.Model):
         db.session.commit()
         return self
 
-class Job(db.Model):
+class Job(Model):
     """A background job."""
     statuses = ['queued', 'running', 'finished']
 
@@ -1384,10 +1384,17 @@ class Job(db.Model):
 
     # The user who started the job.
     user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id')
+        db.Integer, db.ForeignKey('user.id'), nullable=False, index=True
     )
     user = db.relationship('User')
 
+    course_id = db.Column(
+        db.Integer, db.ForeignKey('course.id'), nullable=False, index=True
+    )
+    course = db.relationship('Course')
+
     name = db.Column(db.String(255), nullable=False)  # The name of the function
+    # Human-readable description of the job
+    description = db.Column(db.Text, nullable=False)
     failed = db.Column(db.Boolean, nullable=False, default=False)
     log = db.Column(db.Text)  # All output, if the job has finished

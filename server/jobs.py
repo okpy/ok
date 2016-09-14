@@ -42,11 +42,17 @@ def background_job(f):
 
     return job_handler
 
-def enqueue_job(func, *args, **kwargs):
+def enqueue_job(func, *args, description=None, course_id=None, **kwargs):
+    if not description:
+        raise ValueError('Description required to start background job')
+    if not course_id:
+        raise ValueError('Course ID required to start background job')
     job = Job(
         status='queued',
+        course_id=course_id,
         user_id=current_user.id,
         name=func.__name__,
+        description=description,
     )
     db.session.add(job)
     db.session.commit()
