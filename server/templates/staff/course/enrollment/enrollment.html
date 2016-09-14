@@ -109,7 +109,7 @@
 <script>
     {% if enrollments %}
     var studentOptions = {
-      valueNames: ['email', 'name', 'sid', 'secondary', 'section'],
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
       plugins: [ListPagination()],
       indexAsync: true,
       page: 20
@@ -121,7 +121,7 @@
 
     {% if staff %}
     var staffOptions = {
-      valueNames: [ 'email', 'name', 'secondary' ],
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
       plugins: [ListPagination()],
       page: 10
     };
@@ -131,14 +131,14 @@
     {% endif %}
 
     {% if lab_assistants %}
-        var labAssistantOptions = {
-        valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section' ],
+    var labAssistantOptions = {
+        valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
         plugins: [ListPagination()],
         indexAsync: true,
         page: 10
-        };
-        var labAssistantList = new List('Lab Assistant-list', labAssistantOptions);
-        document.getElementById('Lab Assistant-list').style.display = 'block';
+    };
+    var labAssistantList = new List('Lab Assistant-list', labAssistantOptions);
+    document.getElementById('Lab Assistant-list').style.display = 'block';
     {% endif %}
 </script>
 {% endblock %}
