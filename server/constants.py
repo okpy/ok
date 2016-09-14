@@ -30,6 +30,7 @@ FORBIDDEN_ROUTE_NAMES = [
     'login',
     'logout',
     'oauth',
+    'rq',
     'testing-login',
 ]
 FORBIDDEN_ASSIGNMENT_NAMES = []
