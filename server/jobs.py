@@ -42,15 +42,18 @@ def background_job(f):
 
     return job_handler
 
-def enqueue_job(func, *args, description=None, course_id=None, **kwargs):
+def enqueue_job(func, *args,
+        description=None, course_id=None, user_id=None, **kwargs):
     if not description:
         raise ValueError('Description required to start background job')
     if not course_id:
         raise ValueError('Course ID required to start background job')
+    if not user_id:
+        user_id = current_user.id
     job = Job(
         status='queued',
         course_id=course_id,
-        user_id=current_user.id,
+        user_id=user_id,
         name=func.__name__,
         description=description,
     )

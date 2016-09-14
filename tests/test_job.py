@@ -28,18 +28,14 @@ class TestJob(OkTestCase):
         self.assert_200(response)
 
     def start_test_job(self, should_fail=False):
-        self.login(self.admin.email)
-        url = '/admin/course/{}/jobs/test/'.format(self.course.id)
-        response = self.client.post(url, data={
-            'duration': 0,
-            'should_fail': 'checked' if should_fail else '',
-        }, follow_redirects=True)
-        self.assert_200(response)
-
-        # Get the job ID with a regex. Yeah, I know
-        match = re.search(r'Job\s+(\d+)', response.data.decode('utf-8'))
-        job_id = match.group(1)
-        job = Job.query.get(job_id)
+        job = jobs.enqueue_job(
+            jobs.test_job,
+            description='Test Job',
+            course_id=self.course.id,
+            user_id=self.admin.id,
+            duration=0,
+            should_fail=should_fail,
+        )
 
         self.assertEqual(job.user_id, self.admin.id)
         self.assertEqual(job.name, 'test_job')
@@ -47,7 +43,7 @@ class TestJob(OkTestCase):
         self.assertFalse(job.failed)
         self.assertEqual(job.log, None)
 
-        return job_id
+        return job.id
 
     def test_job(self):
         job_id = self.start_test_job(should_fail=False)
