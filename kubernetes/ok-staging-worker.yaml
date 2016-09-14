@@ -1,24 +1,21 @@
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: v1
+kind: ReplicationController
 metadata:
-  name: ok-staging-worker2
+  name: ok-worker
 spec:
-  replicas: 1
-  strategy:
-      type: RollingUpdate
-      rollingUpdate:
-          maxUnavailable: 75%
+  replicas: 5
+  selector:
+    app: ok-worker
   template:
     metadata:
       labels:
-        app: staging
+        app: ok-worker
     spec:
       containers:
-      - name: ok-v3-staging-worker
-        image: cs61a/ok-server:worker-dev2
+      - name: ok-worker
+        image: cs61a/ok-server:worker
         command:
-          - ./worker.py
-        imagePullPolicy: Always
+          - "./worker.py"
         env:
         - name: OK_ENV
           value: prod
