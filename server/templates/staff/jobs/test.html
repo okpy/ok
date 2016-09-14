@@ -28,8 +28,7 @@
     <div class="col-md-12">
       <div class="box">
         <div class="box-body">
-          {% call forms.render_form(form,
-              action_text='Start Test Job', target="_blank") %}
+          {% call forms.render_form(form, action_text='Start Test Job') %}
             {{ forms.render_field(form.duration) }}
             {{ forms.render_checkbox_field(form.should_fail) }}
           {% endcall %}
