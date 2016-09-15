@@ -10,6 +10,7 @@ from flask_oauthlib.contrib.oauth2 import bind_sqlalchemy
 
 from flask_login import (LoginManager, login_user, logout_user, login_required,
                          current_user)
+import requests
 
 import datetime as dt
 import logging
@@ -86,6 +87,18 @@ def user_from_email(email):
         db.session.commit()
     return user
 
+def google_plus_user_data(token):
+    """ Use fallback of Google Plus Endpoint Profile Info.
+    """
+    endpoint = "https://www.googleapis.com/plus/v1/people/me?access_token={}"
+    r = requests.get(endpoint.format(token))
+    data = r.json()
+    if 'error' in data:
+        logger.error("Login error with plus/v1 {}".format(data))
+        return None
+    user_email = data['emails'][0].get('email')
+    return {'email': user_email}
+
 @cache.memoize(timeout=600)
 def google_user_data(token):
     """ Query google for a user's info. """
@@ -94,7 +107,7 @@ def google_user_data(token):
         return None
     resp = google_auth.get('userinfo', token=(token, ''))
     if resp.status != 200:
-        logger.error("Could not authenticate {}", resp.data)
+        logger.error("Could not authenticate with oauth2 {}", resp.data)
         return None
     return resp.data
 
@@ -109,10 +122,13 @@ def user_from_google_token(token):
         return user_from_email("okstaff@okpy.org")
     user_data = google_user_data(token)
 
-    if user_data is None:
+    if not user_data:
         cache.delete_memoized(google_user_data, token)
+        logger.warning("Could not login with oauth. Trying with plus".format(token))
+        user_data = google_plus_user_data(token)
 
     if not user_data:
+        logger.warning("Both auth methods failed for token {}".format(token))
         return None
     return user_from_email(user_data['email'])
 
@@ -181,14 +197,8 @@ def login():
     return google_auth.authorize(callback=url_for('.authorized', _external=True))
 
 @auth.route('/login/authorized/')
-@google_auth.authorized_handler
-def authorized(resp):
-    if isinstance(resp, OAuthException):
-        error = "{0} - {1}".format(resp.data.get('error', 'Unknown Error'),
-                                   resp.data.get('error_description', 'Unknown'))
-        flash(error, "error")
-        # TODO Error Page
-        return redirect("/")
+def authorized():
+    resp = google_auth.authorized_response()
     if resp is None:
         error = "Access denied: reason={0} error={1}".format(
             request.args['error_reason'],
@@ -197,9 +207,20 @@ def authorized(resp):
         flash(error, "error")
         # TODO Error Page
         return redirect("/")
+    if isinstance(resp, OAuthException):
+        error = "{0} - {1}".format(resp.data.get('error', 'Unknown Error'),
+                                   resp.data.get('error_description', 'Unknown'))
+        flash(error, "error")
+        # TODO Error Page
+        return redirect("/")
 
     access_token = resp['access_token']
     user = user_from_google_token(access_token)
+    if not user:
+        logger.warning("Attempt to get user info failed")
+        flash("We could not log you in. Maybe try another email?", 'warning')
+        return redirect("/")
+
     logger.info("Login from {}".format(user.email))
     expires_in = resp.get('expires_in', 0)
     session['token_expiry'] = dt.datetime.now() + dt.timedelta(seconds=expires_in)
