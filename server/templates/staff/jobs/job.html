@@ -39,9 +39,9 @@
             <dd>{{ job.user.email }}</dd>
             <dt>Status</dt>
             {% if job.status == 'queued' %}
-              <dd>Queued (Refresh to Update)</dd>
+              <dd>Queued (Refreshing...)</dd>
             {% elif job.status == 'running' %}
-              <dd>Running (Refresh to Update)</dd>
+              <dd>Running (Refreshing...)</dd>
             {% elif job.status == 'finished' %}
               <dd>{{ 'Failed' if job.failed else 'Finished' }}</dd>
               <dt>Log</dt>
@@ -55,4 +55,15 @@
     </div>
   </div>
 </section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+  {% if job.status == 'queued' or  job.status == 'running' %}
+  // Reload the page every 3 seconds
+  setTimeout(function(){
+     window.location.reload();
+  }, 4500);
+  {% endif %}
+</script>
 {% endblock %}
