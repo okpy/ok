@@ -1,7 +1,3 @@
-import re
-
-from flask_rq import get_worker
-
 from server import jobs
 from server.models import db, Job
 from tests import OkTestCase
@@ -10,10 +6,6 @@ class TestJob(OkTestCase):
     def setUp(self):
         super(TestJob, self).setUp()
         self.setup_course()
-
-    def run_jobs(self):
-        get_worker().work(burst=True)
-        db.session.expire_all()
 
     def test_dashboard_access(self):
         response = self.client.get('/rq/')

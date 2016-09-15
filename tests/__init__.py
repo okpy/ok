@@ -1,6 +1,7 @@
 import datetime as dt
 import os
 
+from flask_rq import get_worker
 from flask_testing import TestCase
 
 from server import create_app
@@ -117,3 +118,7 @@ class OkTestCase(TestCase):
         self.lab_assistant1 = make_lab_assistant(1)
 
         db.session.commit()
+
+    def run_jobs(self):
+        get_worker().work(burst=True)
+        db.session.expire_all()
