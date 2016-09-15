@@ -17,6 +17,6 @@ ADD . .
 
 RUN ./manage.py assets build
 
-CMD nginx; gunicorn -b 0.0.0.0:5000 wsgi:app --workers 3
+CMD nginx; gunicorn --bind unix:/tmp/server.sock wsgi:app --workers 3
 
 EXPOSE 5000
