@@ -3,7 +3,7 @@ kind: ReplicationController
 metadata:
   name: ok-worker
 spec:
-  replicas: 5
+  replicas: 2
   selector:
     app: ok-worker
   template:
@@ -51,7 +51,7 @@ spec:
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
-              name: ok-staging-services
+              name: ok-services
               key: sentry-dsn
         - name: SENDGRID_USER
           valueFrom:
