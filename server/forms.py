@@ -325,3 +325,7 @@ class CourseUpdateForm(BaseForm):
                            validators=[validators.optional(), validators.url()])
     active = BooleanField('Activate Course', default=True)
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
+
+class TestJobForm(BaseForm):
+    should_fail = BooleanField('Divide By Zero', default=False)
+    duration = IntegerField('Duration (seconds)', default=2)

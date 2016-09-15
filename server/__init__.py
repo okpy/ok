@@ -19,6 +19,7 @@ from server.controllers.api import api  # Flask Restful API
 from server.controllers.auth import auth, login_manager
 from server.controllers.oauth import oauth
 from server.controllers.student import student
+from server.controllers.queue import queue
 from server.constants import API_PREFIX
 
 from server.extensions import (
@@ -123,6 +124,10 @@ def create_app(default_config_path=None):
 
     app.register_blueprint(admin, url_prefix='/admin')
     app.register_blueprint(about, url_prefix='/about')
+
+    # Redis Queue dashboard
+    csrf.exempt(queue)
+    app.register_blueprint(queue, url_prefix='/rq')
 
     # API does not need CSRF protection
     csrf.exempt(api_endpoints)

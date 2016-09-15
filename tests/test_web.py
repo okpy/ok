@@ -439,3 +439,37 @@ if driver:
             # Now confirm OAuth
             self.assertIn(self.user2.email, self.driver.page_source)
             self._confirm_oauth()
+
+        def test_job(self):
+            self._login_as(self.staff1.email)
+
+            jobs_list_url = '{}/admin/course/{}/jobs/'.format(
+                self.get_server_url(), self.course.id)
+
+            self.pageLoad(jobs_list_url + 'test')
+            input_element = self.driver.find_element_by_id('duration')
+            input_element.clear()
+            input_element.send_keys('0')
+            input_element = self.driver.find_element_by_id('should_fail')
+            input_element.click()
+            input_element.submit()
+
+            job_url = self.driver.current_url
+            self.assertIn('Test Job', self.driver.page_source)
+            self.assertIn('Queued', self.driver.page_source)
+
+            self.pageLoad(jobs_list_url)
+            self.assertIn('Test Job', self.driver.page_source)
+            self.assertIn('Queued', self.driver.page_source)
+
+            OkTestCase.run_jobs(self)
+
+            self.pageLoad(job_url)
+            self.assertIn('Test Job', self.driver.page_source)
+            self.assertIn('Failed', self.driver.page_source)
+            self.assertIn('Traceback', self.driver.page_source)
+            self.assertIn('ZeroDivisionError', self.driver.page_source)
+
+            self.pageLoad(jobs_list_url)
+            self.assertIn('Test Job', self.driver.page_source)
+            self.assertIn('Failed', self.driver.page_source)

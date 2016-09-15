@@ -1,0 +1,109 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} Ok - {{ current_course.display_name_with_semester }} Enrollment{% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        {{ current_course.display_name_with_semester }} Jobs
+        <small>{{ current_course.offering }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li class="active"><a href="{{ url_for(".course_jobs", cid=current_course.id) }}">
+            <i class="fa fa-list"></i>Jobs
+        </a></li>
+    </ol>
+</section>
+
+<section class="content">
+    {% include 'alerts.html' %}
+    <div class="row">
+        <div class="col-md-12">
+          <div class="box">
+              <div class="box-header">
+                  <h3 class="box-title"><span>Jobs</span></h3>
+              </div>
+
+              <!-- /.box-header -->
+              <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="job-list">
+                  <table class="table table-hover">
+                      <thead>
+                          <th class="sort" data-sort="job-id">ID</th>
+                          <th class="sort" data-sort="description">Description</th>
+                          <th class="sort" data-sort="user">User</th>
+                          <th class="sort" data-sort="status">Status</th>
+                          <th class="sort" data-sort="timestamp">Started</th>
+                      </thead>
+
+                      <tbody class="list">
+                          {%- for job in jobs %}
+                          <tr>
+                              <td class="job-id">
+                                  <a href="{{ url_for('.course_job', cid=current_course.id, job_id=job.id) }}">
+                                      Job {{ job.id }}
+                                  </a>
+                              </td>
+                              <td class="description">{{ job.description }}</td>
+                              <td class="user">{{ job.user.email }}</td>
+                              <td class="status">
+                                {% if job.status == 'queued' %}
+                                <span class="label label-info">Queued</span>
+                                {% elif job.status == 'running' %}
+                                <span class="label label-warning">Running</span>
+                                {% elif job.status == 'finished' and job.failed %}
+                                <span class="label label-danger">Failed</span>
+                                {% elif job.status == 'finished' and not job.failed %}
+                                <span class="label label-success">Finished</span>
+                                {% endif %}
+                              </td>
+                              <td class="timestamp" data-timestamp="{{ job.created }}">{{ utils.local_time_obj(job.created, current_course) }}</td>
+                          </tr>
+                          {% endfor %}
+                          <!-- Include another header because list.js forces us to include this inside of the tbody -->
+                          <div class="box-header">
+                              <span>
+                                  <div class="pull-left">
+                                      <ul class="pagination pagination-md no-margin pull-right"></ul>
+                                  </div>
+
+                                  <div class="pull-right">
+                                      <div class="input-group input-group-md" style="width: 200px;">
+                                          <input type="text" name="query" class="form-control pull-right search" placeholder="Search">
+                                          <div class="input-group-btn">
+                                              <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </span>
+                          </div>
+
+                      </tbody>
+                  </table>
+              </div>
+              <!-- /.box-body -->
+
+          </div>
+
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+    var jobOptions = {
+      valueNames: ['job-id', 'description', 'user', 'status', 'timestamp'],
+      plugins: [ListPagination()],
+      indexAsync: true,
+      page: 20
+    };
+    var jobList = new List('job-list', jobOptions);
+    jobList.sort("timestamp", {order: "desc"})
+    document.getElementById('job-list').style.display = 'block';
+</script>
+{% endblock %}
