@@ -13,6 +13,7 @@ INSTANTCLICK = True
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_DATABASE_URI = 'sqlite:///../oksqlite.db'
 # SQLALCHEMY_ECHO = True
+COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/csv', 'text/xml', 'application/json', 'application/javascript']
 
 RQ_DEFAULT_HOST = REDIS_HOST = 'localhost'
 REDIS_PORT = 6379

@@ -3,6 +3,7 @@ from flask_wtf.csrf import CsrfProtect
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_assets import Environment
 from flask_oauthlib.provider import OAuth2Provider
+from flask.ext.compress import Compress
 
 from raven.contrib.flask import Sentry
 
@@ -21,3 +22,6 @@ debug_toolbar = DebugToolbarExtension()
 
 # Sentry Error reporting
 sentry = Sentry()
+
+compress = Compress()
+

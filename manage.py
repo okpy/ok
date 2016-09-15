@@ -3,7 +3,6 @@ import os
 import binascii
 import unittest
 
-from flask_assets import ManageAssets
 from flask_rq import get_worker
 from flask_script import Manager, Server, Command
 from flask_script.commands import ShowUrls, Clean
@@ -12,7 +11,7 @@ from flask_migrate import Migrate, MigrateCommand
 
 from server import create_app, generate
 from server.models import db, User, Course, Version
-from server.extensions import assets_env, cache
+from server.extensions import cache
 
 # default to dev config
 env = os.environ.get('OK_ENV', 'dev')
@@ -34,7 +33,6 @@ manager.add_command("show-urls", ShowUrls())
 manager.add_command("clean", Clean())
 manager.add_command('db', MigrateCommand)
 manager.add_command('test', RunTests())
-manager.add_command("assets", ManageAssets(assets_env))
 
 @manager.shell
 def make_shell_context():
