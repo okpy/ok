@@ -29,6 +29,7 @@ Flask-WTF==0.12
 Flask-RESTful==0.3.5
 Flask-Testing==0.5.0
 Flask-RQ==0.2
+flask-compress==1.3.0
 
 # Flask DB Extensions
 Flask-SQLAlchemy==2.1

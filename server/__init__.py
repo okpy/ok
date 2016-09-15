@@ -28,7 +28,8 @@ from server.extensions import (
     csrf,
     debug_toolbar,
     oauth_provider,
-    sentry
+    sentry,
+    compress
 )
 
 def create_app(default_config_path=None):
@@ -95,6 +96,8 @@ def create_app(default_config_path=None):
     assets_loader = PythonAssetsLoader(assets)
     for name, bundle in assets_loader.load_bundles().items():
         assets_env.register(name, bundle)
+
+    compress.init_app(app)
 
     # custom URL handling
     converters.init_app(app)
