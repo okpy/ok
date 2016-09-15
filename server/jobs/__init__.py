@@ -1,7 +1,6 @@
 import functools
 import io
 import logging
-import time
 
 from flask_login import current_user
 from flask_rq import get_connection, get_queue
@@ -75,13 +74,3 @@ def enqueue_job(func, *args,
         db.session.commit()
 
     return job
-
-@background_job
-def test_job(duration=0, should_fail=False):
-    logger = get_job_logger()
-
-    logger.info('Starting...')
-    time.sleep(duration)
-    if should_fail:
-        1/0
-    logger.info('Finished!')

@@ -1,4 +1,5 @@
 from server import jobs
+from server.jobs import example
 from server.models import db, Job
 from tests import OkTestCase
 
@@ -21,7 +22,7 @@ class TestJob(OkTestCase):
 
     def start_test_job(self, should_fail=False):
         job = jobs.enqueue_job(
-            jobs.test_job,
+            example.test_job,
             description='Test Job',
             course_id=self.course.id,
             user_id=self.admin.id,

@@ -23,6 +23,7 @@ from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
+import server.jobs.example as example
 import server.highlight as highlight
 import server.utils as utils
 
@@ -993,7 +994,7 @@ def start_test_job(cid):
     form = forms.TestJobForm()
     if form.validate_on_submit():
         job = jobs.enqueue_job(
-            jobs.test_job,
+            example.test_job,
             description='Test Job',
             course_id=cid,
             duration=form.duration.data,
