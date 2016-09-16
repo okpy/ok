@@ -91,6 +91,8 @@ def submit_to_moss(moss_id=None, file_regex="*", assignment_id=None, language=No
         chosen_files, available_file_names = [], []
         match_pattern = re.compile(file_regex)
 
+        logger.info("Running with regex match {}".format(file_regex))
+
         for file in all_student_files:
             fname = ntpath.basename(file)
             available_file_names.append(fname)
