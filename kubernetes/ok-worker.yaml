@@ -14,6 +14,7 @@ spec:
       containers:
       - name: ok-worker
         image: cs61a/ok-server:v3.1.26
+        imagePullPolicy: Always
         command:
           - "./worker.py"
         env:
