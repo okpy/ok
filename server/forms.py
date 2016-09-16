@@ -318,13 +318,17 @@ class NewCourseForm(BaseForm):
 
 class CourseUpdateForm(BaseForm):
     institution = StringField('School (e.g. UC Berkeley)',
-                           validators=[validators.optional()])
+                              validators=[validators.optional()])
     display_name = StringField('Course Name (e.g CS61A)',
-                           validators=[validators.required()])
+                              validators=[validators.required()])
     website = StringField('Course Website',
-                           validators=[validators.optional(), validators.url()])
+                          validators=[validators.optional(), validators.url()])
     active = BooleanField('Activate Course', default=True)
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
+
+########
+# Jobs #
+########
 
 class TestJobForm(BaseForm):
     should_fail = BooleanField('Divide By Zero', default=False)
@@ -333,7 +337,7 @@ class TestJobForm(BaseForm):
 class MossSubmissionForm(BaseForm):
     valid_languages = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
     moss_userid = StringField('Your MOSS User ID',
-                           validators=[validators.required()])
-    file_regex = StringField('Regex for files to search for (* by default)', default='*',
-                           validators=[validators.required()])
+                              validators=[validators.required()])
+    file_regex = StringField('Regex for submitted files', default='*',
+                             validators=[validators.required()])
     language = SelectField('Langauge', choices=[(pl, pl) for pl in valid_languages])
