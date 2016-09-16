@@ -5,7 +5,7 @@ import shlex
 import glob
 import shutil
 
-from server.models import Assignment, Backup, User, Course, db
+from server.models import Assignment, Backup, db
 from server.utils import encode_id
 from server import jobs
 
@@ -30,14 +30,16 @@ def submit_to_moss(moss_id=None, assignment_id=None, language=None):
             seen.add(subm['backup']['id'])
 
         if subm['group']:
-            logger.info("{} -> {}".format(encode_id(subm['backup']['id']), subm['group']['group_member_emails']))
+            logger.info("{} -> {}".format(encode_id(subm['backup']['id']),
+                                          subm['group']['group_member_emails']))
         else:
-            logger.info("{} -> {}".format(encode_id(subm['backup']['id']), subm['user']['email']))
+            logger.info("{} -> {}".format(encode_id(subm['backup']['id']),
+                                          subm['user']['email']))
 
     backup_query = (Backup.query.options(db.joinedload('messages'))
-                        .filter(Backup.id.in_(subm_keys))
-                        .order_by(Backup.created.desc())
-                        .all())
+                          .filter(Backup.id.in_(subm_keys))
+                          .order_by(Backup.created.desc())
+                          .all())
 
     logger.info("Retreived {} final submissions".format(len(subm_keys)))
 
@@ -52,7 +54,7 @@ def submit_to_moss(moss_id=None, assignment_id=None, language=None):
     with open('server/jobs/moss-submission.pl', 'r') as f:
         moss_script = f.read()
         moss_script = moss_script.replace('YOUR_USER_ID_HERE', str(moss_id))
-        with open(tmp_dir + "/moss.pl", 'w') as  script:
+        with open(tmp_dir + "/moss.pl", 'w') as script:
             script.write(moss_script)
 
     for backup in backup_query:
@@ -75,9 +77,7 @@ def submit_to_moss(moss_id=None, assignment_id=None, language=None):
 
     logger.info("Wrote all files to {}".format(tmp_dir))
 
-    # TODO: Write template files into folder
     template_files = []
-
     for template in assign.files:
         dest = "{}/{}".format(tmp_dir, template)
         with open(dest, 'w') as f:
@@ -87,15 +87,13 @@ def submit_to_moss(moss_id=None, assignment_id=None, language=None):
 
     logger.info("Using template files: {}".format(' '.join(template_files)))
 
-    # TODO: moss command
     templates = ' '.join(["-b {file}".format(file=f) for f in template_files])
 
     os.chdir(tmp_dir)
     files = glob.glob("*/*")
 
-    command = "perl moss.pl -l {lang} {templates} -d {folder}".format(lang=language,
-                                                                 templates=templates,
-                                                                 folder=' '.join(files))
+    command = ("perl moss.pl -l {lang} {templates} -d {folder}"
+               .format(lang=language, templates=templates, folder=' '.join(files)))
 
     logger.info("Running {}".format(command[:50] + ' ...'))
 
