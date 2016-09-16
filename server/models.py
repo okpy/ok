@@ -1397,4 +1397,4 @@ class Job(Model):
     # Human-readable description of the job
     description = db.Column(db.Text, nullable=False)
     failed = db.Column(db.Boolean, nullable=False, default=False)
-    log = db.Column(db.Text)  # All output, if the job has finished
+    log = db.Column(mysql.MEDIUMTEXT)  # All output, if the job has finished
