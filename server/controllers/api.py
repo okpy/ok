@@ -628,10 +628,19 @@ class ExportFinal(Resource):
         output = base_query.limit(limit).offset(offset)
         has_more = ((num_subms - offset) - limit) > 0
 
+        results = []
         for backup in output:
-            backup.group = [models.User.get_by_id(uid) for uid in backup.owners()]
+            data = backup.as_dict()
+            data.update({
+                'group': [models.User.get_by_id(uid) for uid in backup.owners()],
+                'assignment': assign,
+                'is_late': backup.is_late,
+                'submitter': backup.submitter,
+                'messages': backup.messages
+            })
+            results.append(data)
 
-        return {'backups': output,
+        return {'backups': results,
                 'limit': limit,
                 'offset': offset,
                 'count': num_subms,

@@ -232,6 +232,11 @@ class TestAuth(OkTestCase):
         self.assert_200(response)
         backups = response.json['data']['backups']
         self.assertEquals(len(backups), 1)
+        self.assertEquals(backups[0]['is_late'], False)
+        self.assertEquals(len(backups[0]['group']), 1)
+        self.assertEquals(backups[0]['group'][0]['email'], self.user1.email)
+        self.assertEquals(len(backups[0]['messages']), 1)
+
         self.assertEquals(response.json['data']['count'], 1)
         self.assertEquals(response.json['data']['has_more'], False)
         self.assertEquals(response.json['data']['offset'], 0)
