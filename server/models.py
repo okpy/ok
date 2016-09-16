@@ -1295,7 +1295,7 @@ class GradingTask(Model):
         db.session.add_all(tasks)
         return tasks
 
-class Client(db.Model):
+class Client(Model):
     """ OAuth Clients.
     See: https://flask-oauthlib.readthedocs.io/en/latest/oauth2.html
     """
@@ -1322,7 +1322,7 @@ class Client(db.Model):
     def default_redirect_uri(self):
         return self.redirect_uris[0]
 
-class Grant(db.Model):
+class Grant(Model):
     id = db.Column(db.Integer, primary_key=True)
 
     user_id = db.Column(
@@ -1348,7 +1348,7 @@ class Grant(db.Model):
         db.session.commit()
         return self
 
-class Token(db.Model):
+class Token(Model):
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(
         db.String(40), db.ForeignKey('client.client_id'),
