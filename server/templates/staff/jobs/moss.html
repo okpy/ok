@@ -1,0 +1,44 @@
+{% extends "staff/base.html" %}
+{% import "staff/_formhelpers.html" as forms %}
+
+{% block title %} Ok - Start Moss Job {% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        {{ current_course.display_name_with_semester }} Jobs
+        <small>{{ current_course.offering }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li><a href="{{ url_for(".course_jobs", cid=current_course.id) }}">
+            <i class="fa fa-list"></i>Jobs
+        </a></li>
+        <li class="active"><a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}">
+            <i class="fa fa-file-text"></i>Start Moss Job</a>
+        </li>
+    </ol>
+</section>
+<section class="content">
+  {% include 'alerts.html' %}
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-body">
+          {% call forms.render_form(form, action_text='Start Moss Upload') %}
+            {{ forms.render_field(form.moss_userid) }}
+            {{ forms.render_field(form.language) }}
+          {% endcall %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

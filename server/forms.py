@@ -329,3 +329,9 @@ class CourseUpdateForm(BaseForm):
 class TestJobForm(BaseForm):
     should_fail = BooleanField('Divide By Zero', default=False)
     duration = IntegerField('Duration (seconds)', default=2)
+
+class MossSubmissionForm(BaseForm):
+    valid_languages = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
+    moss_userid = StringField('Your MOSS User ID',
+                           validators=[validators.required()])
+    language = SelectField('Langauge', choices=[(pl, pl) for pl in valid_languages])
