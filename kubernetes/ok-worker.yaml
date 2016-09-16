@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: ok-worker
-        image: cs61a/ok-server:v3.1.30-dev-2
+        image: cs61a/ok-server:v3.1.26
         command:
           - "./worker.py"
         env:
