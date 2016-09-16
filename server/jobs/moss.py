@@ -76,10 +76,19 @@ def submit_to_moss(moss_id=None, assignment_id=None, language=None):
     logger.info("Wrote all files to {}".format(tmp_dir))
 
     # TODO: Write template files into folder
-    template_file_locs = []
+    template_files = []
+
+    for template in assign.files:
+        dest = "{}/{}".format(tmp_dir, template)
+        with open(dest, 'w') as f:
+            f.write(assign.files[template])
+
+        template_files.append(template)
+
+    logger.info("Using template files: {}".format(' '.join(template_files)))
 
     # TODO: moss command
-    templates = ' '.join(["-b {file}".format(f) for f in template_file_locs])
+    templates = ' '.join(["-b {file}".format(file=f) for f in template_files])
 
     os.chdir(tmp_dir)
     files = glob.glob("*/*")
