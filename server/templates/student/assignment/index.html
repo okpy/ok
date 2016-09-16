@@ -38,7 +38,7 @@
             {% if final_submission %}
               <div class="cell col-xs-12">
                 <div class="cell-title">
-                  <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="due-text green">
+                  <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="due-text green" data-no-instant>
                     {{ utils.local_time(final_submission.created, course) }}
                   </a>
                 </div>
@@ -60,11 +60,11 @@
                 </div>
                 <div class="cell-status">
                   <div class="pull-left">
-                        <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="dashed">
+                        <a href="{{ url_for('.code', name=assignment.name, bid=final_submission.id, submit=final_submission.submit)}}" class="dashed" data-no-instant>
                           View Code
                         </a>
                         {% if revision %}
-                          <a href="{{ url_for('.code', name=assignment.name, bid=revision.id, submit=revision.submit)}}" class="dashed">
+                          <a href="{{ url_for('.code', name=assignment.name, bid=revision.id, submit=revision.submit)}}" class="dashed" data-no-instant>
                             View Composition Revision
                           </a>
                         {% endif %}
