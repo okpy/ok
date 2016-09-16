@@ -3,8 +3,8 @@ import subprocess
 import shlex
 import glob
 import tempfile
-import fnmatch
 import ntpath
+import re
 
 from server.models import Assignment, Backup, db
 from server.utils import encode_id
@@ -89,11 +89,12 @@ def submit_to_moss(moss_id=None, file_regex="*", assignment_id=None, language=No
         os.chdir(tmp_dir)
         all_student_files = glob.glob("*/*")
         chosen_files, available_file_names = [], []
+        match_pattern = re.compile(file_regex)
 
         for file in all_student_files:
             fname = ntpath.basename(file)
             available_file_names.append(fname)
-            if fnmatch.fnmatch(fname, file_regex):
+            if match_pattern.match(fname):
                 chosen_files.append(file)
 
         if not chosen_files:
