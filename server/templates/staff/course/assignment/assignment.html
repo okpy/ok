@@ -27,13 +27,13 @@
         <!-- Stats Row -->
         <div class="row">
 
-            <div class="col-md-3 col-sm-3 col-xs-6">
-
+            <div class="col-md-3 col-sm-6 col-xs-6">
               <div class="info-box">
-                <span class="info-box-icon bg-green">
-                  <i class="fa fa-inbox"></i>
-                </span>
-
+                <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}">
+                  <span class="info-box-icon bg-green">
+                    <i class="fa fa-inbox"></i>
+                  </span>
+                </a>
                 <div class="info-box-content">
                   <span class="info-box-text">Submitted</span>
                   <span class="info-box-number">{{ stats['students_with_subm'] }}</span>
@@ -47,14 +47,16 @@
                 </div>
                 <!-- /.info-box-content -->
               </div>
+
             </div>
 
-            <div class="col-md-3 col-sm-3 col-xs-6">
+            <div class="col-md-3 col-sm-6 col-xs-6">
               <div class="info-box">
+               <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}">
                 <span class="info-box-icon bg-yellow">
                   <i class="fa fa-folder-open-o"></i>
                 </span>
-
+               </a>
                 <div class="info-box-content">
                   <span class="info-box-text">Started</span>
                   <span class="info-box-number">{{ stats['students_with_subm'] + stats['students_with_backup'] }}</span>
@@ -71,10 +73,11 @@
             </div>
 
 
-            <div class="col-md-3 col-sm-3 col-xs-6">
+            <div class="col-md-3 col-sm-6 col-xs-6">
               <div class="info-box">
+               <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}">
                 <span class="info-box-icon bg-aqua"><i class="fa fa-file-code-o"></i></span>
-
+                </a>
                 <div class="info-box-content">
                   <span class="info-box-text">Unique Submissions</span>
                   <span class="info-box-number"> {{ stats['unique_submissions'] }}</span>
@@ -88,12 +91,13 @@
               <!-- /.info-box -->
             </div>
             <!-- /.col -->
-            <div class="col-md-3 col-sm-3 col-xs-6">
+            <div class="col-md-3 col-sm-6 col-xs-6">
               <div class="info-box">
+               <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}">
                 <span class="info-box-icon bg-teal">
                   <i class="fa fa-users"></i>
                 </span>
-
+              </a>
                 <div class="info-box-content">
                   <span class="info-box-text">Active Groups</span>
                   <span class="info-box-number">{{ stats['active_groups'] }}</span>
@@ -150,37 +154,6 @@
 
                       </div>
                       <!-- ./box-body -->
-                      <div class="box-footer">
-                        <div class="pull-left">
-                                  <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
-                                        <i class="fa fa-download"></i> Download Scores
-                                  </a>
-                                  <a href="{{ url_for('.autograde', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
-                                        <i class="fa fa-send"></i> Autograde
-                                  </a>
-                        </div>
-                        <div class="pull-right">
-                                  <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
-                                        <i class="fa fa-bar-chart-o"></i> Detailed Stats
-                                  </a>
-                                  <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
-                                        <i class="fa fa-inbox"></i> Grading Queues
-                                  </a>
-                                  <a href="{{ url_for('.assign_grading', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-info btn-flat">
-                                        <i class="fa fa-user-plus"></i> Assign Grading
-                                  </a>
-                        </div>
-
-<!--                        <div class="col-md-6 col-xs-12">
-                                <div class="input-group margin">
-                                  <input type="text" placeholder="Student Email" class="form-control disabled">
-                                  <span class="input-group-btn">
-                                    <button type="button" class="btn btn-info btn-flat disabled">Search</button>
-                                  </span>
-                                </div>
-                            </div>
- -->
-                      </div>
                       <!-- /.box-footer -->
                     </div>
                     <!-- /.box -->
@@ -189,41 +162,88 @@
                 </div>
 
         <!-- Default box -->
-        <div class="box">
-          <div class="box-header with-border">
-            <h3 class="box-title">Edit {{ assignment.display_name }} Assignment</h3>
-            <div class="box-tools pull-right">
-               <a href="{{ url_for('.templates', cid=current_course.id, aid=assignment.id) }}" type="button" class="btn btn-default btn-flat">
-                 <i class="fa fa-copy"></i> Edit Assignment Template
-              </a>
-              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
-                <i class="fa fa-minus"></i>
-              </button>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="box box-solid">
+              <div class="box-header with-border">
+                <h3 class="box-title">Actions</h3>
+
+                <div class="box-tools">
+                  <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="box-body no-padding">
+                <ul class="nav nav-pills nav-stacked">
+                  <li class="active"><a href="#"><i class="fa fa-book"></i> Overview
+                    {% if assignment.active %}
+                      <span class="label label-success pull-right">Active</span></a>
+                    {% else %}
+                      <span class="label label-warning pull-right">Inactive</span></a>
+                    {% endif %}
+                  </li>
+                  <li> <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-bar-chart-o"></i> Detailed Stats
+                  </a></li>
+                  <li> <a href="{{ url_for('.autograde', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-send"></i> Autograde
+                  </a></li>
+                  <li> <a href="{{ url_for('.templates', cid=current_course.id, aid=assignment.id) }}" type="button">
+                     <i class="fa fa fa-file-text-o"></i> Edit Assignment Template
+                  </a></li>
+
+                  <li> <a href="{{ url_for('.assign_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-user-plus"></i> Assign Grading
+                  </a></li>
+                  <li> <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-inbox"></i> Grading Queues
+                  </a></li>
+                  <li> <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-download"></i> Download Scores
+                  </a></li>
+                  <li> <a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-gavel"></i> Run MOSS
+                  </a></li>
+
+                </ul>
+              </div>
+              <!-- /.box-body -->
             </div>
+            <!-- /. box -->
           </div>
-          <div class="box-body">
-              <!-- form goes here -->
-              {% call forms.render_form(form, action_url="", action_text='Update Assignment', class_='form') %}
-                  {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', type='text') }}
-                  {{ forms.render_field(form.name, label_visible=true, placeholder='cal/cs61a/fa16/proj01', type='text') }}
-                  {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1') }}
-                  {{ forms.render_field(form.due_date, label_visible=true, placeholder=utils.new_due_date(current_course), type='text', class='form-control datepicker') }}
-                  {{ forms.render_field(form.lock_date, label_visible=true, placeholder=utils.new_lock_date(current_course), type='text', class='form-control datepicker') }}
-                  {{ forms.render_field(form.url, label_visible=true, placeholder='http://cs61a.org/proj/hog/ (Optional)', type='text') }}
-                  {{ forms.render_checkbox_field(form.visible, label_visible=true) }}
-                  {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
-                  {{ forms.render_checkbox_field(form.revisions_allowed, label_visible=true) }}
-                  {{ forms.render_checkbox_field(form.uploads_enabled, label_visible=true) }}
-                  {{ forms.render_field(form.upload_info, label_visible=true, placeholder='Upload the following files: test.py', type='text') }}
-              {% endcall %}
-          </div>
-          <!-- /.box-body -->
-          <!-- /.box-footer-->
+
+            <div class="col-md-8">
+              <div class="box">
+                <div class="box-header with-border">
+                  <h3 class="box-title">Edit {{ assignment.display_name }} Assignment</h3>
+                  <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                      <i class="fa fa-minus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="box-body">
+                    <!-- form goes here -->
+                    {% call forms.render_form(form, action_url="", action_text='Update Assignment', class_='form') %}
+                        {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', type='text') }}
+                        {{ forms.render_field(form.name, label_visible=true, placeholder='cal/cs61a/fa16/proj01', type='text') }}
+                        {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1') }}
+                        {{ forms.render_field(form.due_date, label_visible=true, placeholder=utils.new_due_date(current_course), type='text', class='form-control datepicker') }}
+                        {{ forms.render_field(form.lock_date, label_visible=true, placeholder=utils.new_lock_date(current_course), type='text', class='form-control datepicker') }}
+                        {{ forms.render_field(form.url, label_visible=true, placeholder='http://cs61a.org/proj/hog/ (Optional)', type='text') }}
+                        {{ forms.render_checkbox_field(form.visible, label_visible=true) }}
+                        {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
+                        {{ forms.render_checkbox_field(form.revisions_allowed, label_visible=true) }}
+                        {{ forms.render_checkbox_field(form.uploads_enabled, label_visible=true) }}
+                        {{ forms.render_field(form.upload_info, label_visible=true, placeholder='Upload the following files: test.py', type='text') }}
+                    {% endcall %}
+                </div>
+                <!-- /.box-body -->
+                <!-- /.box-footer-->
+              </div>
+              <!-- /.box -->
+            </div>
         </div>
-        <!-- /.box -->
-
-
-
 
   <!-- </body> do not close body in template-->
 {% endblock %}
