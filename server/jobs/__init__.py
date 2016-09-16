@@ -42,7 +42,7 @@ def background_job(f):
     return job_handler
 
 def enqueue_job(func, *args,
-        description=None, course_id=None, user_id=None, **kwargs):
+        description=None, course_id=None, user_id=None, timeout=300, **kwargs):
     if not description:
         raise ValueError('Description required to start background job')
     if not course_id:
@@ -65,6 +65,7 @@ def enqueue_job(func, *args,
             args=args,
             kwargs=kwargs,
             job_id=str(job.id),
+            timeout=timeout
         )
     except redis.exceptions.ConnectionError as e:
         job.failed = True
