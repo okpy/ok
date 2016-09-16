@@ -646,6 +646,7 @@ def start_moss_job(cid, aid):
             user_id=current_user.id,
             assignment_id=assign.id,
             moss_id=form.moss_userid.data,
+            file_regex=form.file_regex.data or '*',
             language=form.language.data)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:

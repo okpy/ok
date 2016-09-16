@@ -334,4 +334,6 @@ class MossSubmissionForm(BaseForm):
     valid_languages = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
     moss_userid = StringField('Your MOSS User ID',
                            validators=[validators.required()])
+    file_regex = StringField('Regex for files to search for (* by default)', default='*',
+                           validators=[validators.required()])
     language = SelectField('Langauge', choices=[(pl, pl) for pl in valid_languages])
