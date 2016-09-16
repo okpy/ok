@@ -627,6 +627,40 @@ def autograde(cid, aid):
                            current_course=current_course,
                            assignment=assign, form=form)
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def start_moss_job(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.MossSubmissionForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            moss.submit_to_moss,
+            description='Moss Upload for {}'.format(assign.display_name),
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id,
+            moss_id=form.moss_userid.data,
+            language=form.language.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/moss.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
+
+##############
+# Enrollment #
+##############
+
 @admin.route("/course/<int:cid>/enrollment", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
 def enrollment(cid):
@@ -1015,32 +1049,3 @@ def start_test_job(cid):
             form=form,
         )
 
-@admin.route("/course/<int:cid>/jobs/assignments/<int:aid>/moss",
-             methods=["GET", "POST"])
-@is_staff(course_arg='cid')
-def start_moss_job(cid, aid):
-    courses, current_course = get_courses(cid)
-    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
-    if not assign or not Assignment.can(assign, current_user, 'grade'):
-        flash('Cannot access assignment', 'error')
-        return abort(404)
-
-    form = forms.MossSubmissionForm()
-    if form.validate_on_submit():
-        job = jobs.enqueue_job(
-            moss.submit_to_moss,
-            description='Moss Upload for {}'.format(assign.display_name),
-            course_id=cid,
-            user_id=current_user.id,
-            assignment_id=assign.id,
-            moss_id=form.moss_userid.data,
-            language=form.language.data)
-        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
-    else:
-        return render_template(
-            'staff/jobs/moss.html',
-            courses=courses,
-            current_course=current_course,
-            assignment=assign,
-            form=form,
-        )
