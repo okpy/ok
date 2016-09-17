@@ -48,7 +48,9 @@
                 <div class="cell-text">
                   {% if final_submission.visible_grades %}
                     {% for score in final_submission.visible_grades %}
-                        <span title="{{score.message}}"> {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(25) }} </span>
+                    <h4>
+                      <span class="label label-primary"> {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(30) }}</span>
+                    </h4>
                     {% endfor %}
                   {% else %}
                       {% if final_submission.flagged %}
