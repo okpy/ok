@@ -340,4 +340,4 @@ class MossSubmissionForm(BaseForm):
                               validators=[validators.required()])
     file_regex = StringField('Regex for submitted files', default='*',
                              validators=[validators.required()])
-    language = SelectField('Langauge', choices=[(pl, pl) for pl in valid_languages])
+    language = SelectField('Language', choices=[(pl, pl) for pl in valid_languages])
