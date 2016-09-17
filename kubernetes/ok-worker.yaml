@@ -1,21 +1,37 @@
-apiVersion: v1
-kind: ReplicationController
+apiVersion: extensions/v1beta1
+kind: Deployment
 metadata:
-  name: ok-worker
+  name: ok-worker-deployment
+  labels:
+    role: worker
+    tier: backend
+    app: ok-worker
 spec:
   replicas: 2
-  selector:
-    app: ok-worker
+  strategy:
+      type: RollingUpdate
+      rollingUpdate:
+          maxUnavailable: 50%
   template:
     metadata:
       labels:
+        role: worker
+        tier: backend
         app: ok-worker
     spec:
       containers:
-      - name: ok-worker
-        image: cs61a/ok-server:worker
+      - name: ok-v3-worker
+        image: cs61a/ok-server:v3.1.30-dev
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - rq
+            - info
+          initialDelaySeconds: 15
+          timeoutSeconds: 2
         command:
-          - "./worker.py"
+          - ./worker.py
         env:
         - name: OK_ENV
           value: prod
