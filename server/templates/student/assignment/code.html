@@ -30,7 +30,7 @@
                     {% if score.message | length < 100 %}
                     <p class="text-center"> Message: {{ score.message }}  </p>
                     {% else %}
-                    <pre>{{ score.message }}</pre>
+                    <pre class="score-box">{{ score.message }}</pre>
                     {% endif %}
                 {% endfor %}
               {% endif %}
