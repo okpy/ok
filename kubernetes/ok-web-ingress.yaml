@@ -7,8 +7,9 @@ spec:
     serviceName: ok-direct-service
     servicePort: 80
   tls:
-  - secretName: ok-tls
+  - secretName: ok-letsencrypt-tls
   rules:
+  - host: ok.cs61a.org
   - http:
       paths:
       - path: /
