@@ -22,8 +22,8 @@
 
   <section class="content">
       {% include 'alerts.html' %}
-      <div class="row visible-sm visible-xs">
-        <div class="col-sm-12">
+      <div class="row">
+        <div class="col-md-12">
           <div class="box box-widget widget-user-2">
             <div class="widget-user-header bg-yellow">
              <div class="widget-user-image">
@@ -36,20 +36,28 @@
             </div>
             <div class="box-footer no-padding">
               <ul class="nav nav-stacked">
+                {% if enrollment.sid %}
                 <li>
-                  <a href="#">Student ID <span class="pull-right badge bg-blue">{{ enrollment.sid }}</span></a></li>
+                  <a href="#">Student ID <span class="pull-right badge bg-blue">{{ enrollment.sid }}</span></a>
+                </li>
+                {% endif %}
+                {% if enrollment.class_account %}
                 <li>
                   <a href="#">Course Account <span class="pull-right badge bg-aqua">
                   {{ enrollment.class_account }}
-                </span></a></li>
+                  </span></a>
+                </li>
+                {% endif %}
                 <li>
                   <a href="#">Role <span class="pull-right badge bg-red">
                   {{ enrollment.role }}
-                </span></a></li>
+                  </span></a>
+                </li>
                 <li>
                   <a href="#">Enrolled At <span class="pull-right badge bg-green">
                   {{ utils.local_time(enrollment.created, current_course) }}
-                </span></a></li>
+                  </span></a>
+                </li>
               </ul>
             </div>
           </div>
