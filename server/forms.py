@@ -158,7 +158,7 @@ class AssignmentTemplateForm(BaseForm):
 
 
 class EnrollmentForm(BaseForm):
-    name = StringField('Name', validators=[validators.optional()])
+    name = StringField('Name', validators=[validators.required()])
     email = EmailField('Email',
                        validators=[validators.required(), validators.email()])
     sid = StringField('SID', validators=[validators.optional()])
@@ -338,6 +338,6 @@ class MossSubmissionForm(BaseForm):
     valid_languages = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
     moss_userid = StringField('Your MOSS User ID',
                               validators=[validators.required()])
-    file_regex = StringField('Regex for submitted files', default='*',
+    file_regex = StringField('Regex for submitted files', default='.*',
                              validators=[validators.required()])
     language = SelectField('Language', choices=[(pl, pl) for pl in valid_languages])

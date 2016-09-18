@@ -34,7 +34,7 @@
         <div class="box-body">
           {% call forms.render_form(form, action_text='Start Moss Upload') %}
             {{ forms.render_field(form.moss_userid) }}
-            {{ forms.render_field(form.file_regex, default="*") }}
+            {{ forms.render_field(form.file_regex, default=".*") }}
             {{ forms.render_field(form.language) }}
           {% endcall %}
         </div>
