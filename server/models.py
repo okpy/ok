@@ -25,7 +25,7 @@ import logging
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
-from server.utils import encode_id, chunks
+from server.utils import encode_id, chunks, humanize_name
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +180,7 @@ class User(Model, UserMixin):
 
     @hybrid_property
     def identifier(self):
-        return self.name or self.email
+        return humanize_name(self.name) or self.email
 
     @cache.memoize(3600)
     def num_grading_tasks(self):
