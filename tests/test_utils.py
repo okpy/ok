@@ -47,3 +47,29 @@ class TestUtils(OkTestCase):
         localized = eastern.localize(time)
         self.assertEquals(utils.local_time(localized, self.course), 'Wed 01/20 09:01 AM')
 
+    def test_humanize_name(self):
+        test_corpus = (
+                ("", ""),
+                ("Doe, John", "John Doe"),
+                ("Doe, John A. Kenneth", "John A. Kenneth Doe"),
+                ("De La Vega, Juan", "Juan De La Vega"),
+                ("Velasquez Y Garcia, Juan", "Juan Velasquez Y Garcia"),
+                ("De La Vega, Juan Q.", "Juan Q. De La Vega"),
+                ("Velasquez Y Garcia, Juan Q.", "Juan Q. Velasquez Y Garcia"),
+                ("De La Vega, Juan Q. Xavier", "Juan Q. Xavier De La Vega"),
+                ("Velasquez Y Garcia, Juan Q. Xavier", "Juan Q. Xavier Velasquez Y Garcia"),
+                ("Chien, Michal Justin", "Michal Justin Chien"),
+                ("Kim, Isabella Tae-Yeon", "Isabella Tae-Yeon Kim"),
+                ("Roberts, Stephen Ryan Boyle Nathan Long", "Stephen Ryan Boyle Nathan Long Roberts"),
+                ("Morgan-Damien Hill, Matthew Trent Colins", "Matthew Trent Colins Morgan-Damien Hill"),
+                ("Park-Guo, Byung-Woo", "Byung-Woo Park-Guo"),
+                ("Russell Diane Benjamin Lawrence, James", "James Russell Diane Benjamin Lawrence"),
+                )
+        for name, expected in test_corpus:
+            self.assertEquals(utils.humanize_name(expected), expected)
+            self.assertEquals(utils.humanize_name(expected.upper()), expected)
+            self.assertEquals(utils.humanize_name(name), expected)
+            self.assertEquals(utils.humanize_name(name.upper()), expected)
+        self.assertEquals(utils.humanize_name("john a. powell"), "john a. powell")
+        self.assertEquals(utils.humanize_name("Ronald McDonald"), "Ronald McDonald")
+        self.assertEquals(utils.humanize_name("McDonald, Ronald"), "Ronald McDonald")
