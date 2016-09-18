@@ -65,6 +65,7 @@ class TestUtils(OkTestCase):
                 ("Park-Guo, Byung-Woo", "Byung-Woo Park-Guo"),
                 ("Russell Diane Benjamin Lawrence, James", "James Russell Diane Benjamin Lawrence"),
                 )
+        self.assertEquals(utils.humanize_name(None), None)
         for name, expected in test_corpus:
             self.assertEquals(utils.humanize_name(expected), expected)
             self.assertEquals(utils.humanize_name(expected.upper()), expected)
