@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 # link with an ID in it.
 hashids = Hashids(min_length=6)
 
-
 def encode_id(id_number):
     return hashids.encode(id_number)
 
@@ -43,19 +42,19 @@ def decode_id(value):
 # with pytz for many timezones."
 
 def local_time(time, course, fmt='%a %m/%d %I:%M %p'):
-    """Format a time string in a course's locale.
+    """ Format a time string in a course's locale.
     Note that %-I does not perform as expected on Alpine Linux
     """
     return local_time_obj(time, course).strftime(fmt)
 
 def local_time_obj(time, course):
-    """Get a Datetime object in a course's locale from a TZ Aware DT object."""
+    """ Get a Datetime object in a course's locale from a TZ Aware DT object."""
     if not time.tzinfo:
         time = pytz.utc.localize(time)
     return time.astimezone(course.timezone)
 
 def server_time_obj(time, course):
-    """Convert a datetime object from a course's locale to a UTC
+    """ Convert a datetime object from a course's locale to a UTC
     datetime object.
     """
     if not time.tzinfo:
@@ -64,27 +63,29 @@ def server_time_obj(time, course):
     return time.astimezone(pytz.utc)
 
 def future_time_obj(course, **kwargs):
-    """Get a datetime object representing some timedelta from now with the clock
-    time set at 23:59:59."""
+    """ Get a datetime object representing some timedelta from now with the time
+    set at 23:59:59.
+    """
     date = course.timezone.localize(dt.datetime.now() + dt.timedelta(**kwargs))
     time = dt.time(hour=23, minute=59, second=59, microsecond=0)
     return dt.datetime.combine(date, time)
 
 def new_due_date(course):
-    """Return a string representing a new due date next week."""
+    """ Return a string representing a new due date next week."""
     return future_time_obj(course, weeks=1).strftime(constants.ISO_DATETIME_FMT)
 
 def new_lock_date(course):
-    """Return a string representing a new lock date 8 days from now."""
+    """ Return a string representing a new lock date 8 days from now."""
     return (future_time_obj(course, weeks=1, days=1)
             .strftime(constants.ISO_DATETIME_FMT))
 
 def natural_time(date):
-    """Format a human-readable time difference (e.g. "6 days ago")"""
+    """ Format a human-readable time difference (e.g. "6 days ago")"""
     if date.tzinfo:
         date = date.astimezone(pytz.utc).replace(tzinfo=None)
     now = dt.datetime.utcnow()
     return humanize.naturaltime(now - date)
+
 
 def is_safe_redirect_url(request, target):
     host_url = urlparse(request.host_url)
@@ -180,7 +181,7 @@ def generate_csv(query, items, selector_fn):
         yield csv_file.getvalue()
 
 def is_valid_endpoint(endpoint, valid_format):
-    """Validates an endpoint name against a regex pattern VALID_FORMAT. """
+    """ Validates an endpoint name against a regex pattern VALID_FORMAT. """
     r = re.compile(valid_format)
     is_forbidden = any([endpoint.startswith(name) for name
                         in constants.FORBIDDEN_ROUTE_NAMES])
@@ -199,7 +200,7 @@ def pluralize(number, singular='', plural='s'):
         return plural
 
 def generate_secret_key(length=31):
-    """Generates a random secret, as a string."""
+    """ Generates a random secret, as a string."""
     return generate_token(length=length)
 
 def generate_number_table(num):
