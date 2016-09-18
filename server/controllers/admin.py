@@ -145,13 +145,14 @@ def grading(bid):
         abort(404)
 
     form = forms.GradeForm()
-    existing = Score.query.filter_by(backup=backup).first()
+    existing = [s for s in backup.scores if not s.archived]
+    first_score = existing[0] if existing else None
 
-    if existing and existing.kind in GRADE_TAGS:
-        form = forms.GradeForm(kind=existing.kind)
-        form.kind.data = existing.kind
-        form.message.data = existing.message
-        form.score.data = existing.score
+    if first_score and first_score.kind in GRADE_TAGS:
+        form = forms.GradeForm(kind=first_score.kind)
+        form.kind.data = first_score.kind
+        form.message.data = first_score.message
+        form.score.data = first_score.score
 
     return grading_view(backup, form=form)
 

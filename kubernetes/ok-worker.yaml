@@ -7,11 +7,8 @@ metadata:
     tier: backend
     app: ok-worker
 spec:
-  replicas: 2
-  strategy:
-      type: RollingUpdate
-      rollingUpdate:
-          maxUnavailable: 50%
+  replicas: 3
+  strategy: {}
   template:
     metadata:
       labels:
@@ -23,13 +20,6 @@ spec:
       - name: ok-v3-worker
         image: cs61a/ok-server:v3.1.30-dev
         imagePullPolicy: Always
-        livenessProbe:
-          exec:
-            command:
-            - rq
-            - info
-          initialDelaySeconds: 15
-          timeoutSeconds: 2
         command:
           - ./worker.py
         env:
