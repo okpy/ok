@@ -275,8 +275,8 @@ class Assignment(Model):
         lock_date - DEADLINE+1 (Hard Deadline for submissions)
         url - cs61a.org/proj/hog/hog.zip
         flagged - User has indicated this one should be graded and not others
+        published - grades are either hidden from or public to students
     """
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
@@ -292,6 +292,7 @@ class Assignment(Model):
     autograding_key = db.Column(db.String(255))
     uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
     upload_info = db.Column(db.Text)
+    grades_published = db.Column(db.Boolean(), nullable=False, default=False)
 
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")

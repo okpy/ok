@@ -83,6 +83,7 @@
                   <th>Visible</th>
                   <th>Due Date</th>
                   <th>Lock Date</th>
+                  <th>Grades</th>
                 </tr>
 
                 {% for asgn in due_assgns %}
@@ -98,6 +99,13 @@
                   </td>
                   <td>{{ utils.local_time(asgn.due_date, current_course) }}</td>
                   <td>{{ utils.local_time(asgn.lock_date, current_course) }}</td>
+                  <td>
+                      {% if asgn.grades_published %}
+                        <span class="label label-success">Public</span>
+                      {% else %}
+                        <span class="label label-warning">Hidden</span>
+                      {% endif %}
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>
