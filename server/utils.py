@@ -89,6 +89,8 @@ def natural_time(date):
 
 def humanize_name(name):
     """ Return a canonical representation of a name in First Last format."""
+    if not isinstance(name, str):
+        return name
     parts = [part.strip() for part in name.split(",")]
     if name == name.upper():
         split = [["-".join(subword.capitalize() for subword in word.split("-"))
