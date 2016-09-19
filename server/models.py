@@ -25,7 +25,7 @@ import logging
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
-from server.utils import encode_id, chunks
+from server.utils import encode_id, chunks, generate_number_table
 
 logger = logging.getLogger(__name__)
 
@@ -410,15 +410,6 @@ class Assignment(Model):
         created id  id submitter_id assignment_id submit  flagged extension
         2016-09-07 20:22:04 4790    15  1   1   1   0
         """
-        # Start generating the query
-        def generate_number_table(num):
-            if num <= 1:
-                return 'SELECT 1 as pos'
-            else:
-                base = 'SELECT 1 as pos UNION '
-                additional = ['SELECT {}'.format(i) for i in range(1, num)]
-                return base + ' UNION '.join(additional)
-
         giant_query = """SELECT * FROM
               (SELECT u.id,
                       u.email,

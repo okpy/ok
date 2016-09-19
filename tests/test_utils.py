@@ -47,3 +47,9 @@ class TestUtils(OkTestCase):
         localized = eastern.localize(time)
         self.assertEquals(utils.local_time(localized, self.course), 'Wed 01/20 09:01 AM')
 
+    def test_generate_number_table(self):
+        results = {i: utils.generate_number_table(i) for i in range(1, 4)}
+
+        self.assertEquals(results[1], "SELECT 1 as pos")
+        self.assertEquals(results[2], "SELECT 1 as pos UNION SELECT 2 as pos")
+        self.assertEquals(results[3], "SELECT 1 as pos UNION SELECT 2 as pos UNION SELECT 3 as pos")

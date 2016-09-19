@@ -201,3 +201,9 @@ def pluralize(number, singular='', plural='s'):
 def generate_secret_key(length=31):
     """Generates a random secret, as a string."""
     return generate_token(length=length)
+
+def generate_number_table(num):
+    """ Generate a table of number with column name pos.
+    Used in models.Assignment.mysql_course_submissions_query
+    """
+    return ' UNION '.join('SELECT {} as pos'.format(i) for i in range(1, num + 1))
