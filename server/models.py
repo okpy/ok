@@ -1580,3 +1580,43 @@ class Job(Model):
     description = db.Column(db.Text, nullable=False)
     failed = db.Column(db.Boolean, nullable=False, default=False)
     log = db.Column(mysql.MEDIUMTEXT)  # All output, if the job has finished
+
+##########
+# Canvas #
+##########
+
+class CanvasCourse(Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # The API domain (e.g. bcourses.berkeley.edu or canvas.instructure.com)
+    api_domain = db.Column(db.String(255), nullable=False)
+    # The ID of the course for the Canvas API
+    external_id = db.Column(db.Integer, nullable=False)
+    # API access token
+    access_token = db.Column(db.String(255), nullable=False)
+
+    course_id = db.Column(
+        db.Integer, db.ForeignKey('course.id'),
+        index=True, nullable=False,
+    )
+    course = db.relationship('Course')
+
+    # Don't export access token
+    export_items = ('api_domain', 'external_id', 'course_id')
+
+class CanvasAssignment(Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # The ID of the assignment for the Canvas API
+    external_id = db.Column(db.Integer, nullable=False)
+    score_kind = db.Column(db.String(255), nullable=False)
+
+    canvas_course_id = db.Column(
+        db.Integer, db.ForeignKey('canvas_course.id'),
+        index=True, nullable=False,
+    )
+    canvas_course = db.relationship('CanvasCourse')
+
+    assignment_id = db.Column(
+        db.Integer, db.ForeignKey('assignment.id'),
+        index=True, nullable=False,
+    )
+    assignment = db.relationship('Assignment')
