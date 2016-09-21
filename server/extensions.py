@@ -3,7 +3,6 @@ from flask_wtf.csrf import CsrfProtect
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_assets import Environment
 from flask_oauthlib.provider import OAuth2Provider
-
 from raven.contrib.flask import Sentry
 
 # Setup flask cache
