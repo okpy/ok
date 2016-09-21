@@ -292,10 +292,16 @@ class Assignment(Model):
     autograding_key = db.Column(db.String(255))
     uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
     upload_info = db.Column(db.Text)
-    grades_published = db.Column(db.Boolean(), nullable=False, default=False)
 
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
+
+    publish_tags = [tag if tag != 'private' else 'hidden' for tag in GRADE_TAGS]
+    grades_published = db.Column(db.String(255), nullable=False, default="hidden")
+    __table_args__ = (
+        db.CheckConstraint(grades_published.in_(grades_published))
+    )
+
 
     UserAssignment = namedtuple('UserAssignment',
                                 ['assignment', 'subm_time', 'group', 'final_subm'])
@@ -316,6 +322,8 @@ class Assignment(Model):
         is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
         if action == "view":
             return is_staff or obj.visible
+        if action == "publish":
+            return is_staff and obj.visible
         return is_staff
 
     @staticmethod
@@ -609,6 +617,12 @@ class Assignment(Model):
         ).one_or_none()
         if backup:
             backup.flagged = False
+
+    @transaction
+    def publish_grade(self, ):
+        """Publish student grades for the assignment."""
+        if not self.grades_published:
+            self.grades_published = True
 
 
 class Enrollment(Model):
