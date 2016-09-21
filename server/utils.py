@@ -91,13 +91,7 @@ def humanize_name(name):
     """ Return a canonical representation of a name in First Last format."""
     if not isinstance(name, str):
         return name
-    parts = [part.strip() for part in name.split(",")]
-    if name == name.upper():
-        split = [["-".join(subword.capitalize() for subword in word.split("-"))
-                    for word in part.split()]
-                for part in parts]
-        parts = [" ".join(part) for part in split]
-    return " ".join(parts[::-1])
+    return " ".join([part.strip() for part in name.split(",")][::-1])
 
 
 def is_safe_redirect_url(request, target):
