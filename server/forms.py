@@ -319,7 +319,7 @@ class CourseUpdateForm(BaseForm):
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
 
 class GradeVisibilityUpdateForm(BaseForm):
-    grades = SelectField('Publish Grade', choices=Assignment.publish_tags)
+    grades = SelectField('Publish Grade', choices=[(t, t) for t in Assignment.publish_tags], default='Total')
 
 
 ########

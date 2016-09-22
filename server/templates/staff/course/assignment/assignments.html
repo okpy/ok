@@ -100,10 +100,10 @@
                   <td>{{ utils.local_time(asgn.due_date, current_course) }}</td>
                   <td>{{ utils.local_time(asgn.lock_date, current_course) }}</td>
                   <td>
-                      {% if asgn.grades_published %}
-                        <span class="label label-success">Public</span>
-                      {% else %}
+                      {% if asgn.grade_visibility == "Hidden" %}
                         <span class="label label-warning">Hidden</span>
+                      {% else %}
+                        <span class="label label-success">{{ asgn.grade_visibility }}</span>
                       {% endif %}
                   </td>
                 </tr>

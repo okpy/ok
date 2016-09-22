@@ -451,6 +451,27 @@ def templates(cid, aid):
                            assignment=assignment, form=form, courses=courses,
                            current_course=current_course)
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/publish",
+                methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def publish_grades(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assignment, current_user, 'publish'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+    form = forms.GradeVisibilityUpdateForm()
+    if form.validate_on_submit():
+        visibility = form.grades.data
+        assign.publish_grades(visibility)
+        flash("Changed {assignment} grades to {visibility}".format(
+            assignment=assign.display_name, visibility=visibility), "success")
+
+    return render_template('staff/course/assignment/assignment_publish.html',
+                            assignment=assign, form=form, courses=courses,
+                            current_course=current_course)
+
+
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
 @is_staff(course_arg='cid')
 def export_scores(cid, aid):
