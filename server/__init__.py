@@ -5,7 +5,7 @@ from markdown import markdown
 from flask import Flask, render_template, g, request
 from flask import Markup
 from flask_rq import RQ
-from flask_sslify import SSLify
+from flask_wtf.csrf import CsrfProtect
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from werkzeug.contrib.fixers import ProxyFix
 
@@ -65,9 +65,6 @@ def create_app(default_config_path=None):
         app.logger.addHandler(logging.StreamHandler())
         app.logger.setLevel(logging.INFO)
 
-        # SSL Force
-        sslify = SSLify(app, age=300, skips=['api'])
-
     @app.errorhandler(404)
     def not_found_error(error):
         if request.path.startswith("/api"):
@@ -88,6 +85,7 @@ def create_app(default_config_path=None):
 
     # initialize SQLAlchemy
     db.init_app(app)
+
 
     # Flask-Login manager
     login_manager.init_app(app)
