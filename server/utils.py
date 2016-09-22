@@ -87,6 +87,16 @@ def natural_time(date):
     return humanize.naturaltime(now - date)
 
 
+def humanize_name(name):
+    """ Return a canonical representation of a name in First Last format."""
+    if not isinstance(name, str):
+        return name
+    elif name.upper() == name:
+        return " ".join([part.strip().title() for part in name.split(",")][::-1])
+    else:
+        return " ".join([part.strip() for part in name.split(",")][::-1])
+
+
 def is_safe_redirect_url(request, target):
     host_url = urlparse(request.host_url)
     redirect_url = urlparse(urljoin(request.host_url, target))

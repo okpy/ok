@@ -2,7 +2,7 @@
           <div class="header-bg">
             <div class="left hidden-md hidden-lg mobile-header-left">
                 <div class="header-text user-profile">
-                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
+                  <span class="user-name"> {{ current_user.identifier | default(current_user.email, True) }}</span>
                 </div>
             </div>
 
@@ -15,7 +15,7 @@
                 </form>
 
                 <div class="header-text user-profile hidden-sm hidden-xs">
-                  <span class="user-name"> {{ current_user.name | default(current_user.email, True) }}</span>
+                  <span class="user-name"> {{ current_user.identifier | default(current_user.email, True) }}</span>
                   <i class="fa fa-user"></i>
                 </div>
             </div>
