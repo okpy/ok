@@ -68,7 +68,12 @@ class TestUtils(OkTestCase):
         self.assertEquals(utils.humanize_name(None), None)
         for name, expected in test_corpus:
             self.assertEquals(utils.humanize_name(expected), expected)
+            self.assertEquals(utils.humanize_name(expected.upper()), expected)
             self.assertEquals(utils.humanize_name(name), expected)
-        self.assertEquals(utils.humanize_name("john a. powell"), "john a. powell")
+            self.assertEquals(utils.humanize_name(name.upper()), expected)
+        self.assertEquals(utils.humanize_name("ronald mcdonald"), "ronald mcdonald")
+        self.assertEquals(utils.humanize_name("mcdonald, ronald"), "ronald mcdonald")
+        self.assertEquals(utils.humanize_name("ronald mcDonald"), "ronald mcDonald")
+        self.assertEquals(utils.humanize_name("mcDonald, ronald"), "ronald mcDonald")
         self.assertEquals(utils.humanize_name("Ronald McDonald"), "Ronald McDonald")
         self.assertEquals(utils.humanize_name("McDonald, Ronald"), "Ronald McDonald")
