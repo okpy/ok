@@ -25,6 +25,7 @@ import server.forms as forms
 import server.jobs as jobs
 import server.jobs.example as example
 import server.jobs.moss as moss
+import server.jobs.github_search as github_search
 
 import server.highlight as highlight
 import server.utils as utils
@@ -659,6 +660,40 @@ def start_moss_job(cid, aid):
             form=form,
         )
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/github",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def start_github_search(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.GithubSearchRecentForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            github_search.search_similar_repos,
+            description='Github Search for {}'.format(assign.display_name),
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id,
+            keyword=form.keyword.data,
+            template_name=form.template_name.data,
+            access_token=form.access_token.data,
+            weeks_past=form.weeks_past.data,
+            language=form.language.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/github_search.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
+
+
 ##############
 # Enrollment #
 ##############
@@ -1050,4 +1085,3 @@ def start_test_job(cid):
             current_course=current_course,
             form=form,
         )
-

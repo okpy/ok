@@ -13,6 +13,8 @@ GRADE_TAGS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
 
+COMMON_LANGUAGES = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
+
 COURSE_ENDPOINT_FORMAT = '^\w+/\w+/\w+$'
 ASSIGNMENT_ENDPOINT_FORMAT = COURSE_ENDPOINT_FORMAT[:-1] + '/\w+$'
 
