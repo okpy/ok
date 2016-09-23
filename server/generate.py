@@ -164,7 +164,7 @@ def gen_enrollment(user, course):
 def gen_backup(user, assignment):
     messages = {
         'file_contents': {
-            'fizzbuzz.py': modified_file,
+            'fizzbuzz.py': modified_file[:random.randint(0, len(modified_file))],
             'moby_dick': 'Call me Ishmael.'
         },
         'analytics': {}

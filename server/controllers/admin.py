@@ -851,6 +851,62 @@ def student_assignment_detail(cid, email, aid):
                            stats=stats,
                            assign_status=assignment_stats)
 
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/overview")
+@is_staff(course_arg='cid')
+def student_overview_detail(cid, email, aid):
+    courses, current_course = get_courses(cid)
+    page = request.args.get('page', 1, type=int)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    assignment_stats = assign.user_status(student)
+
+    user_ids = assign.active_user_ids(student.id)
+
+    latest = assignment_stats.final_subm or assign.backups(user_ids).first()
+
+    stats = {
+        'num_backups': assign.backups(user_ids).count(),
+        'num_submissions': assign.submissions(user_ids).count(),
+        'current_q': None,
+        'attempts': None,
+        'latest': latest,
+        'analytics': latest and latest.analytics()
+    }
+
+    backups = (Backup.query.options(db.joinedload('scores'),
+                                    db.joinedload('submitter'))
+                     .filter(Backup.submitter_id.in_(user_ids),
+                             Backup.assignment_id == assign.id)
+                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
+                               Backup.created.desc())).all()
+
+    files = highlight.diff_files(backups[1].files(), backups[0].files(), "short")
+    # paginate = backups.paginate(page=page, per_page=15)
+
+    if stats['analytics']:
+        stats['current_q'] = stats['analytics'].get('question')
+        stats['attempts'] = (stats['analytics'].get('history', {})
+                                               .get('all_attempts'))
+
+    return render_template('staff/student/assignment.overview.html',
+                           courses=courses, current_course=current_course,
+                           student=student, assignment=assign,
+                           add_member_form=forms.StaffAddGroupFrom(),
+                           csrf_form=forms.CSRFForm(),
+                           upload_form=forms.UploadSubmissionForm(),
+                           stats=stats,
+                           assign_status=assignment_stats,
+                           backup=backups[0],
+                           files=files)
+
 ########################
 # Student view actions #
 ########################
