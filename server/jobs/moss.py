@@ -29,8 +29,10 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
             subm_keys.add(subm['backup']['id'])
 
         if subm['group']:
+            group_members = subm['group']['group_member_emails'] or []
+            group_members.append(subm['user']['email'])
             logger.info("{} -> {}".format(encode_id(subm['backup']['id']),
-                                          subm['group']['group_member_emails']))
+                                          ', '.join(group_members)))
         else:
             logger.info("{} -> {}".format(encode_id(subm['backup']['id']),
                                           subm['user']['email']))
