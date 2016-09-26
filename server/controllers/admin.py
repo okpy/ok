@@ -888,14 +888,14 @@ def student_overview_detail(cid, email, aid):
                      .order_by(Backup.flagged.desc(), Backup.submit.desc(),
                                Backup.created.desc())).all()
 
-    # files_list = []
-    # for i, backup in enumerate(backups):
-    #     prev = backup.files()
-    #     if i:
-    #         prev = backups[i - 1].code
-    #     curr = backup.files()
-    #     files = highlight.diff_files(prev, curr, "short") # short for now
-    #     files_list.append(files)
+    files_list = []
+    for i, backup in enumerate(backups):
+        prev = backup.files()
+        if i:
+            prev = backups[i - 1].files()
+        curr = backup.files()
+        files = highlight.diff_files(prev, curr, "short") # short for now
+        files_list.append(files)
 
     files = highlight.diff_files(backups[1].files(), backups[0].files(), "short")
     # paginate = backups.paginate(page=page, per_page=15)
@@ -914,7 +914,7 @@ def student_overview_detail(cid, email, aid):
                            stats=stats,
                            assign_status=assignment_stats,
                            backup=backups[0],
-                           files=files)
+                           files_list=files_list)
 
 ########################
 # Student view actions #

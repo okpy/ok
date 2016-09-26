@@ -114,19 +114,21 @@
                 <div class="subcontent">
                     <ul class="nav nav-tabs nav-justified">
                         {{ diff_tab(None, 'Files') }}
-                        {{ diff_tab('short', 'Diff (short)') }}
-                        {{ diff_tab('full', 'Diff (full)') }}
+                   <!--      {{ diff_tab('short', 'Diff (short)') }}
+                        {{ diff_tab('full', 'Diff (full)') }} -->
                     </ul>
                 </div>
                 {% endif %}
 
-                <div class="subcontent list">
-                    <div class="wrap">
-                        {% for filename, lines in files | dictsort %}
-                        {{ diff.source_file(backup, filename, lines) }}
-                        {% endfor %}
+                {% for files in files_list %}
+                    <div class="subcontent list">
+                        <div class="wrap">
+                            {% for filename, lines in files | dictsort %}
+                            {{ diff.source_file(backup, filename, lines) }}
+                            {% endfor %}
+                        </div>
                     </div>
-                </div>
+                {% endfor %}
             </div>
             <!-- ./box-body -->
          
