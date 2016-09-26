@@ -163,12 +163,12 @@ def gen_enrollment(user, course):
 
 def gen_backup(user, assignment):
     fizzbuzz_lines = modified_file.split("\n")
-    random.shuffle(fizzbuzz_lines)
-    shuffled_file = "\n".join(fizzbuzz_lines)
+    cropped_lines = fizzbuzz_lines[:random.randint(0, len(fizzbuzz_lines)]
+    cropped_file = "\n".join(cropped_lines)
     
     messages = {
         'file_contents': {
-            'fizzbuzz.py': shuffled_file,
+            'fizzbuzz.py': cropped_file,
             'moby_dick': 'Call me Ishmael.'
         },
         'analytics': {}
