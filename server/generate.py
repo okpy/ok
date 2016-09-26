@@ -118,8 +118,8 @@ def gen_assignment(course):
     name = course.offering + '/' + display_name.lower().replace(' ', '')
 
     last_night = (datetime.datetime.utcnow()
-                          .replace(hour=0, minute=0, second=0, microsecond=0)
-                          - datetime.timedelta(seconds=1))
+                          .replace(hour=0, minute=0, second=0, microsecond=0) -
+                  datetime.timedelta(seconds=1))
     last_night = (pytz.timezone("America/Los_Angeles")
                       .localize(last_night)
                       .astimezone(pytz.utc))
@@ -162,9 +162,13 @@ def gen_enrollment(user, course):
         section=gen_maybe(section, 0.4))
 
 def gen_backup(user, assignment):
+    fizzbuzz_lines = modified_file.split("\n")
+    random.shuffle(fizzbuzz_lines)
+    shuffled_file = "\n".join(fizzbuzz_lines)
+
     messages = {
         'file_contents': {
-            'fizzbuzz.py': modified_file,
+            'fizzbuzz.py': shuffled_file,
             'moby_dick': 'Call me Ishmael.'
         },
         'analytics': {}
@@ -293,11 +297,11 @@ def seed_scores():
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
         if random.choice([True, False]):
-             score = gen_score(backup, admin, kind='composition')
-             db.session.add(score)
+            score = gen_score(backup, admin, kind='composition')
+            db.session.add(score)
         if random.choice([True, False]):
-             score = gen_score(backup, admin, kind='total')
-             db.session.add(score)
+            score = gen_score(backup, admin, kind='total')
+            db.session.add(score)
     db.session.commit()
 
 def seed_queues():
