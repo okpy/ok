@@ -28,6 +28,12 @@ def background_job(f):
         logger.setLevel(logging.INFO)
         logger.addHandler(logging.StreamHandler(stream))
 
+        def show_log():
+            job.log = stream.getvalue()
+            db.session.commit()
+
+        kwargs['show_log'] = show_log
+
         try:
             f(*args, **kwargs)
         except:

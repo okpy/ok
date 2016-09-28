@@ -10,7 +10,8 @@ from server.utils import encode_id
 from server import jobs
 
 @jobs.background_job
-def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=None):
+def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=None,
+                   show_log=None):
     logger = jobs.get_job_logger()
     logger.info('Starting MOSS Export...')
 
@@ -43,7 +44,7 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                           .all())
 
     logger.info("Retreived {} final submissions".format(len(subm_keys)))
-
+    show_log()
     # TODO: Customize the location of the tmp writing (especially useful during dev)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -113,6 +114,7 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                            folder=' '.join(all_student_files)))
 
         logger.info("Running {}".format(command[:100] + ' ...'))
+        show_log()
 
         try:
             process = subprocess.check_output(shlex.split(command),

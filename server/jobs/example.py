@@ -3,7 +3,7 @@ import time
 from server import jobs
 
 @jobs.background_job
-def test_job(duration=0, should_fail=False):
+def test_job(duration=0, should_fail=False, show_log=None):
     logger = jobs.get_job_logger()
 
     logger.info('Starting...')
