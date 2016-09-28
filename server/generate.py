@@ -163,7 +163,7 @@ def gen_enrollment(user, course):
 
 def gen_backup(user, assignment):
     fizzbuzz_lines = modified_file.split("\n")
-    cropped_lines = fizzbuzz_lines[:random.randint(0, len(fizzbuzz_lines)]
+    cropped_lines = fizzbuzz_lines[:random.randint(1, len(fizzbuzz_lines))]
     cropped_file = "\n".join(cropped_lines)
     
     messages = {

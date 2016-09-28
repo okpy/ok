@@ -110,18 +110,18 @@
                 </li>
                 {% endmacro %}
 
-                {% if assignment.files %}
+              <!--   {% if assignment.files %}
                 <div class="subcontent">
                     <ul class="nav nav-tabs nav-justified">
                         {{ diff_tab(None, 'Files') }}
-                   <!--      {{ diff_tab('short', 'Diff (short)') }}
-                        {{ diff_tab('full', 'Diff (full)') }} -->
+                        {{ diff_tab('short', 'Diff (short)') }}
+                        {{ diff_tab('full', 'Diff (full)') }}
                     </ul>
                 </div>
                 {% endif %}
-
+ -->
                 {% for files in files_list %}
-                    <div class="subcontent list">
+                    <div class="subcontent list diff-delta">
                         <div class="wrap">
                             {% for filename, lines in files | dictsort %}
                             {{ diff.source_file(backup, filename, lines) }}
@@ -145,3 +145,10 @@
 
         <!-- </body> do not close body in template-->
         {% endblock %}
+
+{% block page_js %}
+<script type="text/javascript">
+    $('.diff-delta').hide()
+    $('.diff-delta')[0].show()
+</script>
+{% endblock %}

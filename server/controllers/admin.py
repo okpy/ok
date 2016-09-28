@@ -888,16 +888,19 @@ def student_overview_detail(cid, email, aid):
                      .order_by(Backup.flagged.desc(), Backup.submit.desc(),
                                Backup.created.desc())).all()
 
+    scores = [backup.scores for backup in backups]
+    print(scores)
+
     files_list = []
     for i, backup in enumerate(backups):
         prev = backup.files()
         if i:
             prev = backups[i - 1].files()
         curr = backup.files()
-        files = highlight.diff_files(prev, curr, "short") # short for now
+        files = highlight.diff_files(prev, curr, "full") # short for now
         files_list.append(files)
 
-    files = highlight.diff_files(backups[1].files(), backups[0].files(), "short")
+    # files = highlight.diff_files(backups[1].files(), backups[0].files(), "full")
     # paginate = backups.paginate(page=page, per_page=15)
 
     if stats['analytics']:

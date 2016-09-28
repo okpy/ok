@@ -191,6 +191,17 @@
               <!-- /.box-footer-->
             </div>
             <!-- /.box -->
+
+            <!-- Begin Overview -->
+            <div class="box collapsed-box">
+              <div class="box-header with-border">
+                <h3 class="box-title">Diff Overiew</h3>
+                <!-- "/course/<int:cid>/<string:email>/<int:aid>/overview" -->
+                <a href="{{ url_for('.student_overview_detail', cid=current_course.id, email=student.email, aid=assignment.id)}}"</a>
+                <h8> test </h8>
+              </div>
+            </div>
+            <!-- /.box -->
           </div>
 
           <div class="col-md-9 col-sm-12">
