@@ -889,7 +889,6 @@ def student_overview_detail(cid, email, aid):
                                Backup.created.desc())).all()
 
     scores = [backup.scores for backup in backups]
-    print(scores)
 
     files_list = []
     for i, backup in enumerate(backups):
@@ -897,7 +896,7 @@ def student_overview_detail(cid, email, aid):
         if i:
             prev = backups[i - 1].files()
         curr = backup.files()
-        files = highlight.diff_files(prev, curr, "full") # short for now
+        files = highlight.diff_files(prev, curr, "short") 
         files_list.append(files)
 
     # files = highlight.diff_files(backups[1].files(), backups[0].files(), "full")
