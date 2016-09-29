@@ -95,7 +95,6 @@
 
 
         <div class="box">
-            <!-- /.box-header -->
             <div class="box-body">
                 {% for files in files_list %}
                     <div class="subcontent list diff-delta">
@@ -108,12 +107,17 @@
                 {% endfor %}
             </div>
 
-            <a class="w3-btn-floating" style="position:absolute;top:45%;left:0" onclick="scroll_left()">❮</a>
-            <a class="w3-btn-floating" style="position:absolute;top:45%;right:0" onclick="scroll_right()">❯</a>
-            <!-- ./box-body -->
-         
-            <!-- /.box-footer -->
+            <a class="w3-btn-floating" style="position:absolute;top:45%;left:0" onclick="scroll_left()">❮
+            </a>
+            <a class="w3-btn-floating" style="position:absolute;top:45%;right:0" onclick="scroll_right()">❯
+            </a>
         </div>
+
+
+        {% for stats in stats_list %}
+            {{stats_box(stats)}}
+        {% endfor %}
+
         <!-- /.box -->
 
         <script type="text/template" id="editor-template">
@@ -126,13 +130,32 @@
         <!-- </body> do not close body in template-->
         {% endblock %}
 
+{% macro stats_box(stat) %}
+    <div class="row diff-delta-box">
+        <div class="col-md-12 col-xs-1">
+            <div class="box box-default collapsed-box">
+                <div class="box-header with-border text-center">
+                    <h1 class="box-title">Diff Information</h1>
+                    <p> commit id = {{stat.commit_id}} </p>
+                    <p> question = {{stat.current_q}} </p>
+                    <p> time = {{stat.time}} </p>
+                    <p> passed = {{stat.passed}} </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+
 {% block page_js %}
 <script type="text/javascript">
     // show only diff 1
     $('.diff-delta').hide()
+    $('.diff-delta-box').hide()
     var backup_number = 0;
     var backup_total = $('.diff-delta').length;
     $('.diff-delta').eq(backup_number).show()
+    $('.diff-delta-box').eq(backup_number).show()
 
     // create buttons
     $(document).ready(function(){
@@ -163,16 +186,20 @@
     function scroll_left() {
         if (backup_number > 0) {
             $('.diff-delta').eq(backup_number).hide();
+            $('.diff-delta-box').eq(backup_number).hide();
             backup_number = backup_number - 1;
             $('.diff-delta').eq(backup_number).show(250);
+            $('.diff-delta-box').eq(backup_number).show(250);
         }
     }
 
     function scroll_right() {
         if (backup_number < backup_total - 1) {
             $('.diff-delta').eq(backup_number).hide();
+            $('.diff-delta-box').eq(backup_number).hide();
             backup_number = backup_number + 1;
             $('.diff-delta').eq(backup_number).show(250);
+            $('.diff-delta-box').eq(backup_number).show(250);
         }
     }
 
