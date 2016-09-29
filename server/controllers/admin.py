@@ -883,11 +883,11 @@ def student_overview_detail(cid, email, aid):
     files_list, stats_list = [], []
     for i, backup in enumerate(backups):
         prev = backups[i - 1].files()
+        curr = backup.files()
         if not i:
             prev = assign.files
         if not prev or not curr:
             continue
-        curr = backup.files()
         files = highlight.diff_files(prev, curr, "short") 
         files_list.append(files)
 
