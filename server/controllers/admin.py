@@ -885,6 +885,8 @@ def student_overview_detail(cid, email, aid):
         prev = backups[i - 1].files()
         if not i:
             prev = assign.files
+        if not prev or not curr:
+            continue
         curr = backup.files()
         files = highlight.diff_files(prev, curr, "short") 
         files_list.append(files)
@@ -894,7 +896,7 @@ def student_overview_detail(cid, email, aid):
             'commit_id' : commit_id,
             'analytics': backup and backup.analytics(),
             'grading': backup and backup.grading(),
-            'current_q': None,
+            'question': None,
             'time': None,
             'passed': None,
             'failed': None
@@ -903,14 +905,20 @@ def student_overview_detail(cid, email, aid):
         question = ''
         if backup_stats['analytics']:
             backup_stats['time'] = backup_stats['analytics'].get('time')
-            question_list = backup_stats['analytics'].get('question')
-            if question_list:
-                question = question_list[0]
-            backup_stats['current_q'] = question
 
-        if backup_stats['grading'] and question:
-            backup_stats['passed'] = backup_stats['grading'].get(question).get('passed')
-            backup_stats['failed'] = backup_stats['grading'].get(question).get('failed')
+        if backup_stats['grading']:
+            questions = list(backup_stats['grading'].keys())
+            question = None
+            passed, failed = 0, 0
+            for question in questions:
+                passed += backup_stats['grading'].get(question).get('passed')
+                passed += backup_stats['grading'].get(question).get('failed')
+            if len(questions) > 1:
+                question = questions
+
+            backup_stats['question'] = question
+            backup_stats['passed'] = passed
+            backup_stats['failed'] = failed
 
         stats_list.append(backup_stats)
 
