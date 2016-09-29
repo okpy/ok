@@ -872,15 +872,6 @@ def student_overview_detail(cid, email, aid):
 
     latest = assignment_stats.final_subm or assign.backups(user_ids).first()
 
-    stats = {
-        'num_backups': assign.backups(user_ids).count(),
-        'num_submissions': assign.submissions(user_ids).count(),
-        'current_q': None,
-        'attempts': None,
-        'latest': latest,
-        'analytics': latest and latest.analytics()
-    }
-
     backups = (Backup.query.options(db.joinedload('scores'),
                                     db.joinedload('submitter'))
                      .filter(Backup.submitter_id.in_(user_ids),
@@ -889,7 +880,7 @@ def student_overview_detail(cid, email, aid):
                                Backup.created.desc())).all()
     backups.reverse()
 
-    files_list = []
+    files_list, stats_list = [], []
     for i, backup in enumerate(backups):
         prev = backups[i - 1].files()
         if not i:
@@ -898,11 +889,30 @@ def student_overview_detail(cid, email, aid):
         files = highlight.diff_files(prev, curr, "short") 
         files_list.append(files)
 
+        commit_id = backup.id
+        backup_stats = {
+            'commit_id' : commit_id,
+            'analytics': backup and backup.analytics(),
+            'grading': backup and backup.grading(),
+            'current_q': None,
+            'time': None,
+            'passed': None,
+            'failed': None
+        }
 
-    if stats['analytics']:
-        stats['current_q'] = stats['analytics'].get('question')
-        stats['attempts'] = (stats['analytics'].get('history', {})
-                                               .get('all_attempts'))
+        question = ''
+        if backup_stats['analytics']:
+            backup_stats['time'] = backup_stats['analytics'].get('time')
+            question_list = backup_stats['analytics'].get('question')
+            if question_list:
+                question = question_list[0]
+            backup_stats['current_q'] = question
+
+        if backup_stats['grading'] and question:
+            backup_stats['passed'] = backup_stats['grading'].get(question).get('passed')
+            backup_stats['failed'] = backup_stats['grading'].get(question).get('failed')
+
+        stats_list.append(backup_stats)
 
     return render_template('staff/student/assignment.overview.html',
                            courses=courses, current_course=current_course,
@@ -910,7 +920,7 @@ def student_overview_detail(cid, email, aid):
                            add_member_form=forms.StaffAddGroupFrom(),
                            csrf_form=forms.CSRFForm(),
                            upload_form=forms.UploadSubmissionForm(),
-                           stats=stats,
+                           stats_list=stats_list,
                            assign_status=assignment_stats,
                            backup=backups[0],
                            files_list=files_list)

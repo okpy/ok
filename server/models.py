@@ -821,10 +821,20 @@ class Backup(Model):
             return {}
 
     def analytics(self):
-        """ Return a dictionary of filenames to contents."""
+        """ Return a dictionary of analytics."""
         message = Message.query.filter_by(
             backup_id=self.id,
             kind='analytics').first()
+        if message:
+            return dict(message.contents)
+        else:
+            return {}
+
+    def grading(self):
+        """ Return a dictionary of grading stats."""
+        message = Message.query.filter_by(
+            backup_id=self.id,
+            kind='grading').first()
         if message:
             return dict(message.contents)
         else:

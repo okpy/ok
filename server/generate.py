@@ -165,20 +165,54 @@ def gen_backup(user, assignment):
     fizzbuzz_lines = modified_file.split("\n")
     cropped_lines = fizzbuzz_lines[:random.randint(1, len(fizzbuzz_lines))]
     cropped_file = "\n".join(cropped_lines)
+
+    is_passed = random.randint(0, 1)
+    attempts = random.randint(0, 100)
+    created = assignment.due_date - datetime.timedelta(seconds=random.randrange(-100000, 100))
+
+    analytics = {
+        'history': {
+            'question': [
+              'fizzbuzz'
+            ],
+            'questions': {
+              'fizzbuzz': {
+                'attempts': attempts,
+                'solved': is_passed == 1
+              }
+            },
+            'all_attempts': attempts
+          },
+          'unlock': gen_bool(),
+          'question': [
+            'fizzbuzz'
+          ],
+          'started': {},
+          'time': str(created)
+    }
+
+    grading = {
+        'fizzbuzz': {
+            'passed': is_passed,
+            'locked': 0,
+            'failed': 1 - is_passed
+        }
+    }
     
     messages = {
         'file_contents': {
             'fizzbuzz.py': cropped_file,
             'moby_dick': 'Call me Ishmael.'
         },
-        'analytics': {}
+        'analytics': analytics,
+        'grading': grading
     }
+
     submit = gen_bool(0.1)
     if submit:
         messages['file_contents']['submit'] = ''
     backup = Backup(
-        created=assignment.due_date -
-        datetime.timedelta(seconds=random.randrange(-100000, 100)),
+        created=created,
         submitter_id=user.id,
         assignment_id=assignment.id,
         submit=submit)
