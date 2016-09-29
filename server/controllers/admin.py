@@ -887,20 +887,17 @@ def student_overview_detail(cid, email, aid):
                              Backup.assignment_id == assign.id)
                      .order_by(Backup.flagged.desc(), Backup.submit.desc(),
                                Backup.created.desc())).all()
-
-    scores = [backup.scores for backup in backups]
+    backups.reverse()
 
     files_list = []
     for i, backup in enumerate(backups):
-        prev = backup.files()
-        if i:
-            prev = backups[i - 1].files()
+        prev = backups[i - 1].files()
+        if not i:
+            prev = assign.files
         curr = backup.files()
         files = highlight.diff_files(prev, curr, "short") 
         files_list.append(files)
 
-    # files = highlight.diff_files(backups[1].files(), backups[0].files(), "full")
-    # paginate = backups.paginate(page=page, per_page=15)
 
     if stats['analytics']:
         stats['current_q'] = stats['analytics'].get('question')

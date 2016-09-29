@@ -7,12 +7,7 @@
 {% block main %}
 <section class="content-header">
     <h1>
-        Grade {{ backup.assignment.display_name }} {{ "submission" if backup.is_submit else "backup" }}
-        {% if task %}
-        <small> Assigned to {{ task.grader.email }} </small>
-        {% else %}
-        <small> Not assigned to grade </small>
-        {% endif %}
+        {{ backup.assignment.display_name }} Diff Overview for {{ backup.submitter.email }} 
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
@@ -23,7 +18,6 @@
           <i class="fa fa-list"></i> Assignments</a>
         </li>
         <li class="active"><a href="{{ url_for('.assignment', cid=backup.assignment.course.id, aid=backup.assignment.id) }}"><i class="fa fa-book"></i> {{ backup.assignment.display_name }}</a></li>
-        <li class="active"><a href="{{ url_for('.grading', bid=backup.id) }}"><i class="fa fa-book"></i> Grade {{ utils.encode_id(backup.id) }}</a></li>
     </ol>
 </section>
 
@@ -103,23 +97,6 @@
         <div class="box">
             <!-- /.box-header -->
             <div class="box-body">
-
-                {% macro diff_tab(target_diff_type, text) %}
-                <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
-                    <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
-                </li>
-                {% endmacro %}
-
-              <!--   {% if assignment.files %}
-                <div class="subcontent">
-                    <ul class="nav nav-tabs nav-justified">
-                        {{ diff_tab(None, 'Files') }}
-                        {{ diff_tab('short', 'Diff (short)') }}
-                        {{ diff_tab('full', 'Diff (full)') }}
-                    </ul>
-                </div>
-                {% endif %}
- -->
                 {% for files in files_list %}
                     <div class="subcontent list diff-delta">
                         <div class="wrap">
@@ -130,6 +107,9 @@
                     </div>
                 {% endfor %}
             </div>
+
+            <a class="w3-btn-floating" style="position:absolute;top:45%;left:0" onclick="scroll_left()">❮</a>
+            <a class="w3-btn-floating" style="position:absolute;top:45%;right:0" onclick="scroll_right()">❯</a>
             <!-- ./box-body -->
          
             <!-- /.box-footer -->
@@ -148,7 +128,53 @@
 
 {% block page_js %}
 <script type="text/javascript">
+    // show only diff 1
     $('.diff-delta').hide()
-    $('.diff-delta')[0].show()
+    var backup_number = 0;
+    var backup_total = $('.diff-delta').length;
+    $('.diff-delta').eq(backup_number).show()
+
+    // create buttons
+    $(document).ready(function(){
+        $('#prev').click(function(){
+            scroll_left()
+        });
+        $('#next').click(function(){
+            scroll_right()
+        });
+    });
+
+    // bind arrow keys
+    $(document).keydown(function(e) {
+    switch(e.which) {
+        case 37: // left
+        scroll_left()
+        break;
+
+        case 39: // right
+        scroll_right()
+        break;
+
+        default: return; // exit this handler for other keys
+    }
+    e.preventDefault(); // prevent the default action (scroll / move caret)
+});
+
+    function scroll_left() {
+        if (backup_number > 0) {
+            $('.diff-delta').eq(backup_number).hide();
+            backup_number = backup_number - 1;
+            $('.diff-delta').eq(backup_number).show(250);
+        }
+    }
+
+    function scroll_right() {
+        if (backup_number < backup_total - 1) {
+            $('.diff-delta').eq(backup_number).hide();
+            backup_number = backup_number + 1;
+            $('.diff-delta').eq(backup_number).show(250);
+        }
+    }
+
 </script>
 {% endblock %}
