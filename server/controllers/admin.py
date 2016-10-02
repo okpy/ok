@@ -463,9 +463,14 @@ def publish_grades(cid, aid):
     form = forms.GradeVisibilityUpdateForm()
     if form.validate_on_submit():
         visibility = form.grades.data
+        hide = form.hide.data
         assign.publish_grades(visibility)
-        flash("Changed {assignment} grades to {visibility}".format(
-            assignment=assign.display_name, visibility=visibility), "success")
+        if not hide:
+            flash("Published {assignment} {visibility} scores".format(
+                assignment=assign.display_name, visibility=visibility.lower()), "success")
+        else:
+            flash("Hid {assignment} {visibility} scores".format(
+                assignment=assign.display_name, visibility=visibility.lower()), "success")
 
     return render_template('staff/course/assignment/assignment_publish.html',
                             assignment=assign, form=form, courses=courses,

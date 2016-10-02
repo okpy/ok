@@ -24,7 +24,7 @@ import json
 import logging
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-    GRADE_TAGS, HIDDEN_GRADE_TAGS)
+    HIDDEN_GRADE_TAGS)
 from server.extensions import cache
 from server.utils import (decode_id, encode_id, chunks, generate_number_table,
                           humanize_name)
@@ -292,19 +292,15 @@ class Assignment(Model):
     autograding_key = db.Column(db.String(255))
     uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
     upload_info = db.Column(db.Text)
+    published_scores = db.Column(StringList, nullable=False, default=[])
 
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
-    publish_tags = [tag.title() if tag != 'private' else 'Hidden' for tag in GRADE_TAGS]
-    grade_visibility = db.Column(db.String(255), nullable=False, default="Hidden")
-    __table_args__ = (
-        db.CheckConstraint(grade_visibility.in_(publish_tags)),
-    )
-
 
     UserAssignment = namedtuple('UserAssignment',
                                 ['assignment', 'subm_time', 'group', 'final_subm'])
+
 
     @hybrid_property
     def active(self):
@@ -619,9 +615,13 @@ class Assignment(Model):
             backup.flagged = False
 
     @transaction
-    def publish_grades(self, tag):
+    def publish_grades(self, tag, hide=False):
         """Publish student grades for the assignment."""
-        self.grade_visibility = tag
+        published = tag in self.published_scores
+        if hide and published:
+            self.published_scores.remove(tag)
+        elif not hide and not published:
+            self.published_scores.append(tag)
 
 
 class Enrollment(Model):
