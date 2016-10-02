@@ -619,9 +619,13 @@ class Assignment(Model):
         """Publish student grades for the assignment."""
         published = tag in self.published_scores
         if hide and published:
-            self.published_scores.remove(tag)
+            self.published_scores = [t for t in self.published_scores if t != tag]
         elif not hide and not published:
-            self.published_scores.append(tag)
+            if tag == 'Total':
+                self.published_scores = self.published_scores + [tag, 'Composition', 'Correctness']
+            elif tag == 'Revision' and 'Composition' not in self.published_scores:
+                self.published_scores = self.published_scores + [tag, 'Composition']
+            self.published_scores = self.published_scores + [tag]
 
 
 class Enrollment(Model):

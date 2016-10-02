@@ -24,7 +24,11 @@
              {% if backup.scores %}
                 {% for score in backup.visible_grades %}
                     <h3 class="text-center">
-                      <span class="label label-primary">{{ score.kind.title() }}: {{ score.score | round(2) }}</span>
+                      {% if score.kind.title() in assignment.published_scores %}
+                        <span class="label label-primary">{{ score.kind.title() }}: {{ score.score | round(2) }}</span>
+                      {% else %}
+                        <span class="label label-primary">{{ score.kind.title() }}: Not Published Yet</span>
+                      {% endif %}
                     </h3>
                     {% if score.kind == "composition" %}
                       <p class="text-center"> Grader: {{ score.grader.email }} </p>

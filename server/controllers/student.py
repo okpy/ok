@@ -111,6 +111,7 @@ def assignment(name):
         'can_remove': can_remove,
         'csrf_form': CSRFForm()
     }
+    print("assignment's published scores in student controller", assign.published_scores)
     return render_template('student/assignment/index.html', **data)
 
 

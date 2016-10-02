@@ -457,14 +457,16 @@ def templates(cid, aid):
 def publish_grades(cid, aid):
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
-    if not Assignment.can(assignment, current_user, 'publish'):
+    if not Assignment.can(assign, current_user, 'publish'):
         flash('Insufficient permissions', 'error')
         return abort(401)
     form = forms.GradeVisibilityUpdateForm()
     if form.validate_on_submit():
         visibility = form.grades.data
         hide = form.hide.data
-        assign.publish_grades(visibility)
+        print("before call to publish", assign.published_scores)
+        assign.publish_grades(visibility, form.hide.data)
+        print("after call to publish", assign.published_scores)
         if not hide:
             flash("Published {assignment} {visibility} scores".format(
                 assignment=assign.display_name, visibility=visibility.lower()), "success")

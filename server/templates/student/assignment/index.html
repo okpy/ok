@@ -49,7 +49,11 @@
                   {% if final_submission.visible_grades %}
                     {% for score in final_submission.visible_grades %}
                     <h4>
-                      <span class="label label-primary"> {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(30) }}</span>
+                      {% if score.kind.title() in assignment.published_scores %}
+                        <span class="label label-primary"> {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(30) }}</span>
+                      {% else %}
+                        <span class="label label-primary"> {{ score.kind.title() }}: Not Published Yet - {{ score.message | truncate(30) }}</span>
+                      {% endif %}
                     </h4>
                     {% endfor %}
                   {% else %}
