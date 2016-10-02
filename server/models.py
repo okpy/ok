@@ -622,8 +622,6 @@ class Assignment(Model):
     def publish_grades(self, tag):
         """Publish student grades for the assignment."""
         self.grade_visibility = tag
-        db.session.add(self)
-        db.session.commit()
 
 
 class Enrollment(Model):
