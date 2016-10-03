@@ -521,9 +521,7 @@ response = r.json()
 >><h4> Response </h4>
 ```
 {
-    "data": {
-        'html': "<div class='comment'> ... </div>"
-    },
+    "data": {},
     "code": 200,
     "message": "success"
 }
@@ -551,9 +549,7 @@ line | Integer | (Required) Line number on the backup to place comment.
 message | String | (Required) Comment contents as raw Markdown text. New lines require `\n`.
 
 #### Response
-Parameter | Type | Description
----------- | ------- | -------
-html | String | Comment rendered as HTML.
+No `data` is returned. 
 
 # Users
 

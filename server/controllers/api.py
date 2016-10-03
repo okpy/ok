@@ -17,7 +17,7 @@ API.py - /api/{version}/endpoints
 """
 from functools import wraps
 
-from flask import Blueprint, jsonify, request, url_for, render_template
+from flask import Blueprint, jsonify, request, url_for
 from flask_login import current_user
 import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
@@ -406,9 +406,7 @@ class ScoreSchema(APISchema):
         return {'success': False, 'message': "Permission error"}
 
 class CommentSchema(APISchema):
-    post_fields = {
-        'html': fields.String
-    }
+    post_fields = {}
 
     def __init__(self):
         APISchema.__init__(self)
@@ -430,9 +428,8 @@ class CommentSchema(APISchema):
             message=args['message'])
         models.db.session.add(comment)
         models.db.session.commit()
-        html_preview = render_template('student/assignment/comment.html',
-                                       comment=comment)
-        return {'html': html_preview}
+        return {}
+
 
 class Resource(restful.Resource):
     version = 'v3'
