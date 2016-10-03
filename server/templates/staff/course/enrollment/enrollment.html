@@ -84,8 +84,8 @@
                     <!-- form goes here -->
                     {% call forms.render_form(form, action_url=url_for('.enrollment', cid=current_course.id), action_text='Enroll',
                     class_='form') %}
-                        {{ forms.render_field(form.name, label_visible=true, placeholder='Student Name (optional)', type='text') }}
-                        {{ forms.render_field(form.email, label_visible=true, placeholder='test@test.com') }}
+                        {{ forms.render_field(form.name, label_visible=true, placeholder='Name', required="required", type='text') }}
+                        {{ forms.render_field(form.email, label_visible=true, required="required", placeholder='test@test.com') }}
                         {{ forms.render_field(form.sid, label_visible=true, placeholder='1234567', type='text') }}
                         {{ forms.render_field(form.secondary, label_visible=true, placeholder='cs61a-abc', type='text') }}
                         {{ forms.render_field(form.section, label_visible=true, placeholder='', type='text') }}

@@ -158,7 +158,7 @@ class AssignmentTemplateForm(BaseForm):
 
 
 class EnrollmentForm(BaseForm):
-    name = StringField('Name', validators=[validators.optional()])
+    name = StringField('Name', validators=[validators.required()])
     email = EmailField('Email',
                        validators=[validators.required(), validators.email()])
     sid = StringField('SID', validators=[validators.optional()])
