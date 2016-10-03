@@ -541,7 +541,7 @@ The access_token must be authorized to view the backup to leave a comment.
 #### Query Parameters
 Parameter | Default | Description
 ---------- | ------- | -------
-access_token | None | (Required) Access Token of submitter
+access_token | None | (Required) Access Token of commenter
 
 #### POST Data Fields
 Parameter | Type | Description
