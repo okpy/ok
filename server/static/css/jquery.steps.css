@@ -1,381 +1,305 @@
-/*
-    Common
-*/
 
-.wizard,
-.tabcontrol
-{
+.tabcontrol,.wizard {
     display: block;
     width: 100%;
+    overflow: hidden
+}
+
+.tabcontrol a,.wizard a {
+    outline: 0
+}
+
+.tabcontrol ul,.wizard ul {
+    list-style: none!important;
+    padding: 0;
+    margin: 0
+}
+
+.tabcontrol ul>li,.wizard ul>li {
+    display: block;
+    padding: 0
+}
+
+.tabcontrol>.content>.title,.tabcontrol>.steps .current-info,.wizard>.content>.title,.wizard>.steps .current-info {
+    position: absolute;
+    left: -999em
+}
+
+.wizard>.steps {
+    position: relative;
+    display: block;
+    width: 100%
+}
+
+.wizard>.steps .number {
+    font-size: 1.429em
+}
+
+.wizard>.steps>ul>li {
+    width: 25%
+}
+
+.wizard>.content {
+    background: #fff;
+    display: block;
+    margin: .5em;
+    min-height: 500px;
     overflow: hidden;
-}
-
-.wizard a,
-.tabcontrol a
-{
-    outline: 0;
-}
-
-.wizard ul,
-.tabcontrol ul
-{
-    list-style: none !important;
-    padding: 0;
-    margin: 0;
-}
-
-.wizard ul > li,
-.tabcontrol ul > li
-{
-    display: block;
-    padding: 0;
-}
-
-/* Accessibility */
-.wizard > .steps .current-info,
-.tabcontrol > .steps .current-info
-{
-    position: absolute;
-    left: -999em;
-}
-
-.wizard > .content > .title,
-.tabcontrol > .content > .title
-{
-    position: absolute;
-    left: -999em;
-}
-
-
-
-/*
-    Wizard
-*/
-
-.wizard > .steps
-{
-    position: relative;
-    display: block;
-    width: 100%;
-}
-
-.wizard.vertical > .steps
-{
-    display: inline;
-    float: left;
-    width: 30%;
-}
-
-.wizard > .steps .number
-{
-    font-size: 1.429em;
-}
-
-.wizard > .steps > ul > li
-{
-    width: 25%;
-}
-
-.wizard > .steps > ul > li,
-.wizard > .actions > ul > li
-{
-    float: left;
-}
-
-.wizard.vertical > .steps > ul > li
-{
-    float: none;
-    width: 100%;
-}
-
-.wizard > .steps a,
-.wizard > .steps a:hover,
-.wizard > .steps a:active
-{
-    display: block;
-    width: auto;
-    margin: 0 0.5em 0.5em;
-    padding: 1em 1em;
-    text-decoration: none;
-
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
-}
-
-.wizard > .steps .disabled a,
-.wizard > .steps .disabled a:hover,
-.wizard > .steps .disabled a:active
-{
-    background: #eee;
-    color: #aaa;
-    cursor: default;
-}
-
-.wizard > .steps .current a,
-.wizard > .steps .current a:hover,
-.wizard > .steps .current a:active
-{
-    background: #2184be;
-    color: #fff;
-    cursor: default;
-}
-
-.wizard > .steps .done a,
-.wizard > .steps .done a:hover,
-.wizard > .steps .done a:active
-{
-    background: #9dc8e2;
-    color: #fff;
-}
-
-.wizard > .steps .error a,
-.wizard > .steps .error a:hover,
-.wizard > .steps .error a:active
-{
-    background: #ff3111;
-    color: #fff;
-}
-
-.wizard > .content
-{
-    display: block;
-    margin: 0.5em;
-    min-height: 35em;
-    overflow: scroll;
     position: relative;
     width: auto;
-
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
+    border-radius: 5px
 }
 
-.wizard.vertical > .content
-{
-    display: inline;
-    float: left;
-    margin: 0 2.5% 0.5em 2.5%;
-    width: 65%;
-}
-
-.wizard > .content > .body
-{
+.wizard>.content>.body {
     float: left;
     position: absolute;
-    width: 95%;
+    width: 100%;
     height: 95%;
-    padding: 2.5%;
+    padding: 2.5% 0
 }
 
-.wizard > .content > .body ul
-{
-    list-style: disc !important;
+.wizard>.content>.body ul {
+    list-style: disc!important
 }
 
-.wizard > .content > .body ul > li
-{
-    display: list-item;
+.wizard>.content>.body ul>li {
+    display: list-item
 }
 
-.wizard > .content > .body > iframe
-{
+.wizard>.content>.body>iframe {
     border: 0 none;
     width: 100%;
-    height: 100%;
+    height: 100%
 }
 
-.wizard > .content > .body input
-{
-    display: block;
-    border: 1px solid #ccc;
+.wizard>.content>.body input {
+    display: block
 }
 
-.wizard > .content > .body input[type="checkbox"]
-{
-    display: inline-block;
-}
-
-.wizard > .content > .body input.error
-{
-    background: rgb(251, 227, 228);
+.wizard>.content>.body input.error {
+    background: #fbe3e4;
     border: 1px solid #fbc2c4;
-    color: #8a1f11;
+    color: #8a1f11
 }
 
-.wizard > .content > .body label
-{
+.wizard>.content>.body label {
     display: inline-block;
-    margin-bottom: 0.5em;
+    margin-bottom: .5em
 }
 
-.wizard > .content > .body label.error
-{
-    color: #8a1f11;
-    display: inline-block;
+.wizard>.content>.body label.error {
+    color: #f05050;
+    display: block!important;
     margin-left: 1.5em;
+    padding: 0
 }
 
-.wizard > .actions
-{
+.wizard>.actions {
     position: relative;
     display: block;
     text-align: right;
-    width: 100%;
+    width: 100%
 }
 
-.wizard.vertical > .actions
-{
+.wizard>.actions>ul {
+    display: inline-block;
+    text-align: right
+}
+
+.wizard>.actions>ul>li {
+    margin: 0 .5em
+}
+
+.wizard.vertical>.steps {
+    display: inline;
+    float: left;
+    width: 30%
+}
+
+.wizard.vertical>.steps>ul>li {
+    float: none;
+    width: 100%
+}
+
+.wizard.vertical>.content {
+    display: inline;
+    float: left;
+    margin: 0 2.5% .5em;
+    width: 65%
+}
+
+.wizard.vertical>.actions {
     display: inline;
     float: right;
     margin: 0 2.5%;
-    width: 95%;
+    width: 95%
 }
 
-.wizard > .actions > ul
-{
-    display: inline-block;
-    text-align: right;
+.wizard.vertical>.actions>ul>li {
+    margin: 0 0 0 1em
 }
 
-.wizard > .actions > ul > li
-{
-    margin: 0 0.5em;
+.wizard>.actions>ul>li,.wizard>.steps>ul>li {
+    float: left
 }
 
-.wizard.vertical > .actions > ul > li
-{
-    margin: 0 0 0 1em;
-}
-
-.wizard > .actions a,
-.wizard > .actions a:hover,
-.wizard > .actions a:active
-{
-    background: #2184be;
-    color: #fff;
+.wizard>.steps a,.wizard>.steps a:active,.wizard>.steps a:hover {
     display: block;
-    padding: 0.5em 1em;
+    width: auto;
+    margin: 0 .5em .5em;
+    padding: 1em;
     text-decoration: none;
-
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
+    border-radius: 0;
+    font-weight: 700;
+    color: #515253
 }
 
-.wizard > .actions .disabled a,
-.wizard > .actions .disabled a:hover,
-.wizard > .actions .disabled a:active
-{
-    background: #eee;
-    color: #aaa;
+.wizard>.steps a:active>small,.wizard>.steps a:hover>small,.wizard>.steps a>small {
+    font-weight: 400;
+    color: #909fa7
 }
 
-.wizard > .loading
-{
+.wizard>.steps .disabled a,.wizard>.steps .disabled a:active,.wizard>.steps .disabled a:hover {
+    background: #fcfcfc;
+    color: #515253;
+    cursor: default
 }
 
-.wizard > .loading .spinner
-{
+.wizard>.steps .current a,.wizard>.steps .current a:active,.wizard>.steps .current a:hover {
+    background: #3c8dbc;
+    color: #fff;
+    cursor: default
 }
 
+.wizard>.steps .current a:active>small,.wizard>.steps .current a:hover>small,.wizard>.steps .current a>small {
+    color: #fff
+}
 
+.wizard>.steps .done a,.wizard>.steps .done a:active,.wizard>.steps .done a:hover {
+    background: #fcfcfc;
+    color: #515253
+}
 
-/*
-    Tabcontrol
-*/
+.wizard>.steps .error a,.wizard>.steps .error a:active,.wizard>.steps .error a:hover {
+    background: #ff3111;
+    color: #fff
+}
 
-.tabcontrol > .steps
-{
+.wizard>.actions a,.wizard>.actions a:active,.wizard>.actions a:hover {
+    display: inline-block;
+    padding: 6px 16px;
+    font-size: 13px;
+    border-radius: 3px;
+    text-decoration: none;
+    color: #fff;
+    background-color: #3c8dbc;
+    border-color: #3c8dbc
+}
+
+.open>.dropdown-toggle.wizard>.actions a,.open>.dropdown-toggle.wizard>.actions a.focus,.open>.dropdown-toggle.wizard>.actions a:active,.open>.dropdown-toggle.wizard>.actions a:active.focus,.open>.dropdown-toggle.wizard>.actions a:active:focus,.open>.dropdown-toggle.wizard>.actions a:active:hover,.open>.dropdown-toggle.wizard>.actions a:focus,.open>.dropdown-toggle.wizard>.actions a:hover,.open>.dropdown-toggle.wizard>.actions a:hover.focus,.open>.dropdown-toggle.wizard>.actions a:hover:focus,.open>.dropdown-toggle.wizard>.actions a:hover:hover,.wizard>.actions a.active,.wizard>.actions a.active.focus,.wizard>.actions a.active:focus,.wizard>.actions a.active:hover,.wizard>.actions a.focus,.wizard>.actions a:active,.wizard>.actions a:active.active,.wizard>.actions a:active.active.focus,.wizard>.actions a:active.active:focus,.wizard>.actions a:active.active:hover,.wizard>.actions a:active.focus,.wizard>.actions a:active:active,.wizard>.actions a:active:active.focus,.wizard>.actions a:active:active:focus,.wizard>.actions a:active:active:hover,.wizard>.actions a:active:focus,.wizard>.actions a:active:hover,.wizard>.actions a:focus,.wizard>.actions a:hover,.wizard>.actions a:hover.active,.wizard>.actions a:hover.active.focus,.wizard>.actions a:hover.active:focus,.wizard>.actions a:hover.active:hover,.wizard>.actions a:hover.focus,.wizard>.actions a:hover:active,.wizard>.actions a:hover:active.focus,.wizard>.actions a:hover:active:focus,.wizard>.actions a:hover:active:hover,.wizard>.actions a:hover:focus,.wizard>.actions a:hover:hover {
+    color: #fff;
+    background-color: #4b91ea;
+    border-color: #3886e8
+}
+
+.open>.dropdown-toggle.wizard>.actions a,.open>.dropdown-toggle.wizard>.actions a:active,.open>.dropdown-toggle.wizard>.actions a:hover,.wizard>.actions a.active,.wizard>.actions a:active,.wizard>.actions a:active.active,.wizard>.actions a:active:active,.wizard>.actions a:hover.active,.wizard>.actions a:hover:active {
+    background-image: none
+}
+
+.wizard>.actions a.disabled.focus,.wizard>.actions a.disabled:focus,.wizard>.actions a.disabled:hover,.wizard>.actions a:active.disabled.focus,.wizard>.actions a:active.disabled:focus,.wizard>.actions a:active.disabled:hover,.wizard>.actions a:active[disabled].focus,.wizard>.actions a:active[disabled]:focus,.wizard>.actions a:active[disabled]:hover,.wizard>.actions a:hover.disabled.focus,.wizard>.actions a:hover.disabled:focus,.wizard>.actions a:hover.disabled:hover,.wizard>.actions a:hover[disabled].focus,.wizard>.actions a:hover[disabled]:focus,.wizard>.actions a:hover[disabled]:hover,.wizard>.actions a[disabled].focus,.wizard>.actions a[disabled]:focus,.wizard>.actions a[disabled]:hover,fieldset[disabled] .wizard>.actions a.focus,fieldset[disabled] .wizard>.actions a:active.focus,fieldset[disabled] .wizard>.actions a:active:focus,fieldset[disabled] .wizard>.actions a:active:hover,fieldset[disabled] .wizard>.actions a:focus,fieldset[disabled] .wizard>.actions a:hover,fieldset[disabled] .wizard>.actions a:hover.focus,fieldset[disabled] .wizard>.actions a:hover:focus,fieldset[disabled] .wizard>.actions a:hover:hover {
+    background-color: #3c8dbc;
+    border-color: #3c8dbc
+}
+
+.wizard>.actions a .badge,.wizard>.actions a:active .badge,.wizard>.actions a:hover .badge {
+    color: #3c8dbc;
+    background-color: #fff
+}
+
+.wizard>.actions .disabled a,.wizard>.actions .disabled a:active,.wizard>.actions .disabled a:hover {
+    color: #333;
+    background: #fff;
+    border: 1px solid #eaeaea
+}
+
+.tabcontrol>.steps {
     position: relative;
     display: block;
-    width: 100%;
+    width: 100%
 }
 
-.tabcontrol > .steps > ul
-{
+.tabcontrol>.steps>ul {
     position: relative;
-    margin: 6px 0 0 0;
+    margin: 6px 0 0;
     top: 1px;
-    z-index: 1;
+    z-index: 1
 }
 
-.tabcontrol > .steps > ul > li
-{
+.tabcontrol>.steps>ul>li {
     float: left;
     margin: 5px 2px 0 0;
     padding: 1px;
-
     -webkit-border-top-left-radius: 5px;
     -webkit-border-top-right-radius: 5px;
     -moz-border-radius-topleft: 5px;
     -moz-border-radius-topright: 5px;
     border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    border-top-right-radius: 5px
 }
 
-.tabcontrol > .steps > ul > li:hover
-{
-    background: #edecec;
-    border: 1px solid #bbb;
-    padding: 0;
-}
-
-.tabcontrol > .steps > ul > li.current
-{
-    background: #fff;
-    border: 1px solid #bbb;
-    border-bottom: 0 none;
-    padding: 0 0 1px 0;
-    margin-top: 0;
-}
-
-.tabcontrol > .steps > ul > li > a
-{
+.tabcontrol>.steps>ul>li>a {
     color: #5f5f5f;
     display: inline-block;
     border: 0 none;
     margin: 0;
     padding: 10px 30px;
-    text-decoration: none;
+    text-decoration: none
 }
 
-.tabcontrol > .steps > ul > li > a:hover
-{
-    text-decoration: none;
+.tabcontrol>.steps>ul>li>a:hover {
+    text-decoration: none
 }
 
-.tabcontrol > .steps > ul > li.current > a
-{
-    padding: 15px 30px 10px 30px;
+.tabcontrol>.steps>ul>li:hover {
+    background: #edecec;
+    border: 1px solid #bbb;
+    padding: 0
 }
 
-.tabcontrol > .content
-{
+.tabcontrol>.steps>ul>li.current {
+    background: #fff;
+    border: 1px solid #bbb;
+    border-bottom: 0 none;
+    padding: 0 0 1px;
+    margin-top: 0
+}
+
+.tabcontrol>.steps>ul>li.current>a {
+    padding: 15px 30px 10px
+}
+
+.tabcontrol>.content {
     position: relative;
     display: inline-block;
     width: 100%;
-    height: 35em;
+    height: 300px;
     overflow: hidden;
     border-top: 1px solid #bbb;
-    padding-top: 20px;
+    padding-top: 20px
 }
 
-.tabcontrol > .content > .body
-{
+.tabcontrol>.content>.body {
     float: left;
     position: absolute;
     width: 95%;
     height: 95%;
-    padding: 2.5%;
+    padding: 2.5%
 }
 
-.tabcontrol > .content > .body ul
-{
-    list-style: disc !important;
+.tabcontrol>.content>.body ul {
+    list-style: disc!important
 }
 
-.tabcontrol > .content > .body ul > li
-{
-    display: list-item;
+.tabcontrol>.content>.body ul>li {
+    display: list-item
 }
