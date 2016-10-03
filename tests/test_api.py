@@ -352,6 +352,43 @@ class TestAuth(OkTestCase):
         self.assert_200(response)
         assert response.json['code'] == 200
 
+
+    def test_comment_staff(self):
+        self._test_backup(True)
+
+        user = User.lookup(self.user1.email)
+        self.login(self.staff1.email)
+        backup = Backup.query.filter(Backup.submitter_id == user.id).first()
+        comment_url = "/api/v3/backups/{}/comment/".format(encode_id(backup.id))
+
+        response = self.client.post(comment_url)
+        self.assert_400(response) # Not all fields present
+        assert response.json['code'] == 400
+
+        data = {'line': 2, 'filename': 'fizzbuzz.py',
+                'message': 'wow'}
+        response = self.client.post(comment_url, data=data)
+        self.assert_200(response)
+        assert response.json['code'] == 200
+
+        self.logout()
+        self.login(self.admin.email)
+
+        data = {'line': 2, 'filename': 'fizzbuzz.py',
+                'message': 'wow'}
+        response = self.client.post(comment_url, data=data)
+        self.assert_200(response)
+        assert response.json['code'] == 200
+
+        # Check that another student is not able to comment
+        self.login(self.user2.email)
+        data = {'line': 2, 'filename': 'fizzbuzz.py',
+                'message': 'wow'}
+        response = self.client.post(comment_url, data=data)
+        self.assert_403(response)
+        assert response.json['code'] == 403
+
+
     def test_user_api(self):
         self._test_backup(True)
         self.logout()
