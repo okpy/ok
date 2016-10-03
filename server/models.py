@@ -25,7 +25,8 @@ import logging
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
-from server.utils import encode_id, chunks, generate_number_table, humanize_name
+from server.utils import (decode_id, encode_id, chunks, generate_number_table,
+                          humanize_name)
 
 logger = logging.getLogger(__name__)
 
