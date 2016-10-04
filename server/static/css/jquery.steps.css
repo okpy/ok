@@ -43,10 +43,9 @@
     background: #fff;
     display: block;
     margin: .5em;
+    width: 95%;
     min-height: 500px;
-    overflow: hidden;
     position: relative;
-    width: auto;
     border-radius: 5px
 }
 
