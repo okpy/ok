@@ -888,7 +888,17 @@ def student_overview_detail(cid, email, aid):
             prev = assign.files
         if not prev or not curr:
             continue
-        files = highlight.diff_files(prev, curr, "short") 
+        files = highlight.diff_files(prev, curr, "short")
+
+        # do not add backups with no change in lines
+        no_change = True
+        for lines in files.values():
+        	if lines:
+        		no_change = False
+        		break
+        if no_change:
+        	continue
+
         files_list.append(files)
 
         commit_id = backup.id

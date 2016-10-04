@@ -120,6 +120,16 @@
 
         <!-- /.box -->
 
+
+        <input type="range" min="0" max="50" value="0" step="5" onchange="showValue(this.value)" />
+        <span id="range">0</span>
+        <script type="text/javascript">
+        function showValue(newValue)
+        {
+            document.getElementById("range").innerHTML=newValue;
+        }
+        </script>
+
         <script type="text/template" id="editor-template">
             {{ diff.editor_template() }}
         </script>
@@ -188,8 +198,8 @@
             $('.diff-delta').eq(backup_number).hide();
             $('.diff-delta-box').eq(backup_number).hide();
             backup_number = backup_number - 1;
-            $('.diff-delta').eq(backup_number).show(250);
-            $('.diff-delta-box').eq(backup_number).show(250);
+            $('.diff-delta').eq(backup_number).show();
+            $('.diff-delta-box').eq(backup_number).show();
         }
     }
 
@@ -198,8 +208,8 @@
             $('.diff-delta').eq(backup_number).hide();
             $('.diff-delta-box').eq(backup_number).hide();
             backup_number = backup_number + 1;
-            $('.diff-delta').eq(backup_number).show(250);
-            $('.diff-delta-box').eq(backup_number).show(250);
+            $('.diff-delta').eq(backup_number).show();
+            $('.diff-delta-box').eq(backup_number).show();
         }
     }
 
