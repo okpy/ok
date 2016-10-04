@@ -7,7 +7,7 @@
   <section class="content-header">
       <h1>
         New assignment
-        <small>{{ current_course.offering }}</small>
+        <small id="course-offering">{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
         <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
@@ -32,8 +32,10 @@
               {% call forms.render_form_bare(form, action_url="", class_='form new-assign-form wizard') %}
                 <h3>Name</h3>
                 <fieldset>
-                  {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog', required="required", type='text') }}
-                  {{ forms.render_field(form.name, label_visible=true, value=current_course.offering + '/', placeholder='cal/cs61a/fa16/proj01', type='text') }}
+                  {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog',
+                                        required="required", type='text', id="display-name") }}
+                  {{ forms.render_field(form.name, label_visible=true, value=current_course.offering + '/',
+                                        placeholder='cal/cs61a/fa16/proj01', type='text', id="assignment-offering") }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
                 </fieldset>
                 <h3>Deadlines</h3>
@@ -81,6 +83,16 @@ form.steps({
         form.submit();
     }
 })
-
+var nameTweaked = false;
+$('#display-name').on('change, keyup', debounce(function () {
+    if (!nameTweaked) {
+        display_name = $('#display-name').val().toLowerCase().split(' ').join('')
+        course_offering = $.trim($("#course-offering").text())
+        $('#assignment-offering').val(course_offering + '/' + display_name)
+    }
+}, 25))
+$('#assignment-offering').keyup(function () {
+    nameTweaked = true;
+})
 </script>
 {% endblock %}
