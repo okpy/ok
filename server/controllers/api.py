@@ -780,7 +780,7 @@ class Group(Resource):
 
         group = self.model.lookup(target, assign)
 
-        member_emails = []
+        member_emails = [email.lower()]
         if group:
             member_emails = [m.user.email.lower() for m in group.members]
 
