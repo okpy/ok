@@ -305,6 +305,15 @@ class TestAuth(OkTestCase):
         self.assertEquals(len(members), 2)
         assert 'email' in members[0]['user']
 
+        # Make sure user2 can access user1's endpoint
+        self.login(self.user2.email)
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        members = response.json['data']['members']
+        self.assertEquals(len(members), 2)
+        assert 'email' in members[1]['user']
+
+
         self.login(self.staff1.email)
         response = self.client.get(endpoint)
 
