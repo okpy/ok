@@ -23,7 +23,8 @@ from datetime import timedelta
 import json
 import logging
 
-from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
+from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
+    HIDDEN_GRADE_TAGS)
 from server.extensions import cache
 from server.utils import (decode_id, encode_id, chunks, generate_number_table,
                           humanize_name)
@@ -781,9 +782,8 @@ class Backup(Model):
         """ Return public grades. "Autograder" kind are errors from the
         autograder and should not be shown.
         """
-        return [s for s in self.scores if (s.public and
-                                           s.kind != "autograder" and
-                                           s.kind != "private")]
+        return [s for s in self.scores
+            if s.public and s.kind not in HIDDEN_GRADE_TAGS]
 
     @hybrid_property
     def is_revision(self):
