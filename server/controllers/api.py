@@ -779,9 +779,11 @@ class Group(Resource):
             restful.abort(403)
 
         group = self.model.lookup(target, assign)
+        member_emails = [m.user.email.lower() for m in group.members]
+
         is_admin = user.is_admin
         is_staff = user.is_enrolled(assign.course.id, STAFF_ROLES)
-        is_self = user.email.lower() == email.lower()
+        is_self = user.email.lower() in member_emails
 
         if is_self or is_staff or is_admin:
             if group:
