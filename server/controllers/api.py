@@ -539,7 +539,8 @@ class Revision(Resource):
         # Only accept revision if the assignment has revisions enabled
         if not assignment.revisions_allowed:
             return restful.abort(403,
-                                 message="Revisions are not enabled for this assignment",
+                                 message=("Revisions are not enabled for {}"
+                                          .format(assignment.name)),
                                  data={'backup': True, 'late': True})
 
         # Only accept revision if the user has a FS
