@@ -13,7 +13,8 @@ then
     docker build -t cs61a/ok-server:$tag_name .
     docker tag cs61a/ok-server:$tag_name cs61a/ok-server:latest
     docker push cs61a/ok-server:$tag_name
-    echo "Done building. Run git tag "$tag_name
+    echo "Done building. Running git tag "$tag_name
+    git tag $tag_name -m "Deploy of $tag_name"
 fi
 
 echo "Deploying image cs61a/ok-server:"$tag_name
