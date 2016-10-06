@@ -891,13 +891,8 @@ def student_overview_detail(cid, email, aid):
         files = highlight.diff_files(prev, curr, "short")
 
         # do not add backups with no change in lines
-        no_change = True
-        for lines in files.values():
-        	if lines:
-        		no_change = False
-        		break
-        if no_change:
-        	continue
+        if not any(files.values()):
+            continue
 
         files_list.append(files)
 
@@ -941,7 +936,8 @@ def student_overview_detail(cid, email, aid):
                            stats_list=stats_list,
                            assign_status=assignment_stats,
                            backup=backups[0],
-                           files_list=files_list)
+                           files_list=files_list,
+                           num_diffs=len(files_list)-1)
 
 ########################
 # Student view actions #
