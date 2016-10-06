@@ -38,6 +38,26 @@
             {{ forms.render_field(form.weeks_past, default=12) }}
             {{ forms.render_field(form.keyword, default="def ") }}
             {{ forms.render_field(form.language) }}
+            {{ forms.render_field(form.issue_title) }}
+            {{ forms.render_field(form.issue_body) }}
+            <div class="sample-message">
+            <p> Sample Body
+            <pre>
+Hello @{author}
+
+The CS61A staff has noticed that your code is publically available on `{repo}`. Public repos with solutions make it much harder for us to keep the course fair and challenging.
+
+The [course syllabus](http://cs61a.org/articles/about.html) explicitly states the following policy regarding Academic Honesty:
+
+> "Do not share your code with anyone but your partner, and do not read anyone but your partner's code. Do not post your solutions online. Do not use pastebin or github, which post your work publicly by default."
+
+If you are a current student - you could be held liable for academic conduct violations if another student finds and uses this code.
+
+If you would kindly make your repository private or delete it, we’d appreciate it. You can register for a student account on Github and get *unlimited free private repos* by going to [education.github.com](https://education.github.com/pack). You can also check out Bitbucket, which has unlimited private repositories.
+</pre></p>
+<br>
+
+          </div>
           {% endcall %}
         </div>
       </div>

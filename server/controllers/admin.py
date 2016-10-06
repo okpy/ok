@@ -682,7 +682,9 @@ def start_github_search(cid, aid):
             template_name=form.template_name.data,
             access_token=form.access_token.data,
             weeks_past=form.weeks_past.data,
-            language=form.language.data)
+            language=form.language.data,
+            issue_title=form.issue_title.data,
+            issue_body=form.issue_body.data)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         return render_template(

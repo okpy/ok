@@ -321,7 +321,7 @@ class CourseUpdateForm(BaseForm):
     institution = StringField('School (e.g. UC Berkeley)',
                               validators=[validators.optional()])
     display_name = StringField('Course Name (e.g CS61A)',
-                              validators=[validators.required()])
+                               validators=[validators.required()])
     website = StringField('Course Website',
                           validators=[validators.optional(), validators.url()])
     active = BooleanField('Activate Course', default=True)
@@ -350,5 +350,9 @@ class GithubSearchRecentForm(BaseForm):
                                 validators=[validators.required()])
     keyword = StringField('Search for lines starting with', default="def ",
                           validators=[validators.required()])
-    weeks_past = IntegerField('Weeks since course started', default=12)
+    weeks_past = IntegerField('Limit search to weeks since start of course?', default=12)
     language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+    issue_title = StringField('Issue Title (Optional)', validators=[validators.optional()],
+                                default="Academic Integrity - Please Delete This Repository")
+    issue_body = TextAreaField('Issue Body (Optional)', validators=[validators.optional()],
+                               description="The strings '{repo}' and '{author}' will be replace with the approriate value")
