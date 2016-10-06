@@ -6,6 +6,7 @@ omit =
     *templates*
     *settings*
     *generate.py
+    server/jobs/*
 
 [report]
 # Regexes for lines to exclude from consideration

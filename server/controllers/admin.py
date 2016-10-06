@@ -18,7 +18,7 @@ import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                                LAB_ASSISTANT_ROLE, GRADE_TAGS)
+                              LAB_ASSISTANT_ROLE, GRADE_TAGS)
 
 from server.extensions import cache
 import server.forms as forms

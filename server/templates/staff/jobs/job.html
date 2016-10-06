@@ -44,6 +44,8 @@
               <dd>Running (Refreshing...)</dd>
             {% elif job.status == 'finished' %}
               <dd>{{ 'Failed' if job.failed else 'Finished' }}</dd>
+            {% endif %}
+            {% if job.log %}
               <dt>Log</dt>
               <dd><pre>{{ job.log }}</pre></dd>
             {% endif %}

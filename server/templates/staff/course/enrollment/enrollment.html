@@ -24,17 +24,11 @@
     {% include 'alerts.html' %}
     <div class="row">
         <div class="col-md-9 col-xs-12">
-            {% with roster=enrollments, title="Student" %}
-                {% include 'staff/course/enrollment/students.list.html' %}
-            {% endwith %}
-            {% with roster=staff, title="Staff" %}
-                {% include 'staff/course/enrollment/students.list.html' %}
-            {% endwith %}
-            {% with roster=lab_assistants, title="Lab Assistant" %}
+            {% for roster, title in ((enrollments, "Student"), (staff, "Staff"), (lab_assistants, "Lab Assistant")) %}
                 {% if roster %}
-                    {% include 'staff/course/enrollment/students.list.html' %}
+                    {% include 'staff/course/enrollment/enrollment.list.html' %}
                 {% endif %}
-            {% endwith %}
+            {% endfor %}
         </div>
         <!-- Side Panel -->
         <div class="col-md-3 col-xs-12">
@@ -90,8 +84,8 @@
                     <!-- form goes here -->
                     {% call forms.render_form(form, action_url=url_for('.enrollment', cid=current_course.id), action_text='Enroll',
                     class_='form') %}
-                        {{ forms.render_field(form.name, label_visible=true, placeholder='Student Name (optional)', type='text') }}
-                        {{ forms.render_field(form.email, label_visible=true, placeholder='test@test.com') }}
+                        {{ forms.render_field(form.name, label_visible=true, placeholder='Name', required="required", type='text') }}
+                        {{ forms.render_field(form.email, label_visible=true, required="required", placeholder='test@test.com') }}
                         {{ forms.render_field(form.sid, label_visible=true, placeholder='1234567', type='text') }}
                         {{ forms.render_field(form.secondary, label_visible=true, placeholder='cs61a-abc', type='text') }}
                         {{ forms.render_field(form.section, label_visible=true, placeholder='', type='text') }}
@@ -115,7 +109,7 @@
 <script>
     {% if enrollments %}
     var studentOptions = {
-      valueNames: ['email', 'name', 'sid', 'secondary', 'section'],
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
       plugins: [ListPagination()],
       indexAsync: true,
       page: 20
@@ -127,7 +121,7 @@
 
     {% if staff %}
     var staffOptions = {
-      valueNames: [ 'email', 'name', 'secondary' ],
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
       plugins: [ListPagination()],
       page: 10
     };
@@ -137,14 +131,14 @@
     {% endif %}
 
     {% if lab_assistants %}
-        var labAssistantOptions = {
-        valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'section' ],
+    var labAssistantOptions = {
+        valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
         plugins: [ListPagination()],
         indexAsync: true,
         page: 10
-        };
-        var labAssistantList = new List('Lab Assistant-list', labAssistantOptions);
-        document.getElementById('Lab Assistant-list').style.display = 'block';
+    };
+    var labAssistantList = new List('Lab Assistant-list', labAssistantOptions);
+    document.getElementById('Lab Assistant-list').style.display = 'block';
     {% endif %}
 </script>
 {% endblock %}

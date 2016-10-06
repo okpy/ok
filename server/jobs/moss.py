@@ -43,7 +43,6 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                           .all())
 
     logger.info("Retreived {} final submissions".format(len(subm_keys)))
-
     # TODO: Customize the location of the tmp writing (especially useful during dev)
 
     with tempfile.TemporaryDirectory() as tmp_dir:

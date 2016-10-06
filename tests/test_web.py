@@ -43,8 +43,13 @@ if driver:
                         assignment=self.assignment, submit=submit)
                     messages = [models.Message(kind=k, backup=backup,
                         contents=m) for k, m in message_dict.items()]
+                    comment = models.Comment(author=self.user1, backup=backup,
+                        filename='backup.py', line=1,
+                        message="# cool story\n<script>document.title = '1337 hax0r'</script>")
+
                     models.db.session.add_all(messages)
                     models.db.session.add(backup)
+                    models.db.session.add(comment)
             models.db.session.commit()
 
             # Setup some groups
@@ -167,6 +172,8 @@ if driver:
 
             self.driver.find_element_by_class_name("view-code").click()
             self.assertTrue("backup.py" in self.driver.page_source)
+            # Make sure the XSS attempt didn't work
+            self.assertTrue(self.driver.title != '1337 hax0r')
 
             self.pageLoad("{}/cal/cs61a/sp16/proj1/backups/".format(self.get_server_url()))
             self.pageLoad("{}/cal/cs61a/sp16/proj1/submissions/".format(self.get_server_url()))
