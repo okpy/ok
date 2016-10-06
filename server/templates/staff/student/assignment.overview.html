@@ -116,12 +116,19 @@
         <!-- /.box -->
 
 
-        <input type="range" min="0" max="50" value="0" step="5" onchange="showValue(this.value)" />
-        <span id="range">0</span>
+        <input type="range" id="backupRange" min="0" max="{{num_diffs}}" value="0" step="1" 
+            onchange="showValue(this.value)" />
+        <span id="backup_num">0</span>
         <script type="text/javascript">
         function showValue(newValue)
         {
-            document.getElementById("range").innerHTML=newValue;
+            $('.diff-delta').eq(backup_number).hide();
+            $('.diff-delta-box').eq(backup_number).hide();
+            backup_number = parseInt(newValue);
+            document.getElementById("backup_num").innerHTML = backup_number;
+            document.getElementById("backupRange").value = backup_number;
+            $('.diff-delta').eq(backup_number).show();
+            $('.diff-delta-box').eq(backup_number).show();
         }
         </script>
 
@@ -191,21 +198,29 @@
 
     function scroll_left() {
         if (backup_number > 0) {
-            $('.diff-delta').eq(backup_number).hide();
-            $('.diff-delta-box').eq(backup_number).hide();
-            backup_number = backup_number - 1;
-            $('.diff-delta').eq(backup_number).show();
-            $('.diff-delta-box').eq(backup_number).show();
+            showValue(backup_number - 1);
+            // $('.diff-delta').eq(backup_number).hide();
+            // $('.diff-delta-box').eq(backup_number).hide();
+            // backup_number = backup_number - 1;
+            // $('.diff-delta').eq(backup_number).show();
+            // $('.diff-delta-box').eq(backup_number).show();
+            // document.getElementById("range").innerHTML = backup_number;
+            // document.getElementById("range").value = toString(backup_number);
+            // document.getElementById("range").trigger("change");
         }
     }
 
     function scroll_right() {
         if (backup_number < backup_total - 1) {
-            $('.diff-delta').eq(backup_number).hide();
-            $('.diff-delta-box').eq(backup_number).hide();
-            backup_number = backup_number + 1;
-            $('.diff-delta').eq(backup_number).show();
-            $('.diff-delta-box').eq(backup_number).show();
+            showValue(backup_number + 1);
+            // $('.diff-delta').eq(backup_number).hide();
+            // $('.diff-delta-box').eq(backup_number).hide();
+            // backup_number = backup_number + 1;
+            // $('.diff-delta').eq(backup_number).show();
+            // $('.diff-delta-box').eq(backup_number).show();
+            // document.getElementById("range").innerHTML = backup_number;
+            // document.getElementById("range").value = toString(backup_number);
+            // document.getElementById("range").trigger("change");
         }
     }
 
