@@ -7,7 +7,7 @@
 {% block main %}
 <section class="content-header">
     <h1>
-        {{ backup.assignment.display_name }} Diff Overview for {{ backup.submitter.email }} 
+        {{ backup.assignment.display_name }} Diff Overview
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
@@ -40,12 +40,7 @@
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body" class="spoiler">
-                    Submitter:
-                    <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
-                       {{ backup.submitter.email }}
-                    </a>
-
-                    {% if group | length > 1 %}
+                    {% if group %}
                         <br>
                         Group:
                         {% for member in group %}
@@ -146,6 +141,7 @@
             <div class="box box-default collapsed-box">
                 <div class="box-header with-border text-center">
                     <h1 class="box-title">Diff Information</h1>
+                    <p> submitted email = {{stat.submitter}} </p>
                     <p> commit id = {{stat.commit_id}} </p>
                     <p> question = {{stat.question}} </p>
                     <p> time = {{stat.time}} </p>

@@ -879,7 +879,6 @@ def student_overview_detail(cid, email, aid):
                      .order_by(Backup.flagged.desc(), Backup.submit.desc(),
                                Backup.created.desc())).all()
     backups.reverse()
-
     files_list, stats_list = [], []
     for i, backup in enumerate(backups):
         prev = backups[i - 1].files()
@@ -901,8 +900,9 @@ def student_overview_detail(cid, email, aid):
 
         files_list.append(files)
 
-        commit_id = backup.id
+        commit_id = backup.hashid
         backup_stats = {
+            'submitter': backup.submitter.email,
             'commit_id' : commit_id,
             'analytics': backup and backup.analytics(),
             'grading': backup and backup.grading(),
@@ -931,7 +931,7 @@ def student_overview_detail(cid, email, aid):
             backup_stats['failed'] = failed
 
         stats_list.append(backup_stats)
-
+    group = [User.query.get(o) for o in backup.owners()]
     return render_template('staff/student/assignment.overview.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,
@@ -941,7 +941,8 @@ def student_overview_detail(cid, email, aid):
                            stats_list=stats_list,
                            assign_status=assignment_stats,
                            backup=backups[0],
-                           files_list=files_list)
+                           files_list=files_list,
+                           group=group)
 
 ########################
 # Student view actions #
