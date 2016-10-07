@@ -5,13 +5,20 @@ services:
   - docker
 python:
     - "3.5"
-install:
-  - make docker-build
 env:
   global:
     - OK_ENV=test
+  - USE_DOCKER=1
+  - USE_NATIVE=0
+install:
+  - if [ -n "$USE_DOCKER" ]; make docker-build
+  - if [ -n "$USE_NATIVE" ]; pip install -r requirements.txt
 script:
-  - docker run -it cs61a/ok-server py.test tests/ --ignore=tests/test_job.py
+  - if [ -n "$USE_DOCKER" ]; docker run -it cs61a/ok-server py.test tests/ --ignore=tests/test_job.py
+  - if [ -n "$USE_NATIVE" ]; make test
+after_success:
+  - if [ -n "$USE_NATIVE" ]; pip install python-coveralls
+  - if [ -n "$USE_NATIVE" ]; coveralls
 notifications:
   email: false
   slack:
