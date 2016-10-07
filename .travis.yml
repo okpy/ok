@@ -1,16 +1,28 @@
 sudo: required
 dist: trusty
-language: generic
+language: python
 services:
   - docker
+  - mysql
 python:
     - "3.5"
-install: "python3 -m pip install -r requirements.txt"
+addons:
+  apt:
+    packages:
+    - mysql-server-5.7
+    - mysql-client-core-5.7
+    - mysql-client-5.7
+env:
+  - OK_ENV=test
+  - DATABASE_URL=mysql://root@127.0.0.1:3306/ok_test
+install:
+    -  pip install -r requirements.txt
+    - mysql -u root -e 'create database ok_test;'
 script:
   - make test
   - make docker-build
 after_success:
-  - python3 -m pip install python-coveralls
+  - pip install python-coveralls
   - coveralls
 notifications:
   email: false
