@@ -1,16 +1,14 @@
 machine:
   python:
-    version: 3.5.1
+    version: 3.5.2
   environment:
     OK_ENV: test
   services:
     - redis
-
 dependencies:
   pre:
     - pip install https://github.com/dustinfarris/pytest-circleci/archive/python-3.zip
     - pip install coveralls
-
 test:
   override:
     - py.test --junitxml $CIRCLE_TEST_REPORTS/django/results.xml --cov-report term-missing --cov=server tests/ :
