@@ -3,11 +3,15 @@ dist: trusty
 language: generic
 services:
   - docker
+python:
+    - "3.4"
+install: "pip install -r requirements.txt"
 script:
-  - make docker-test
-cache:
-  directories:
-    - /var/lib/docker
+  - make test
+  - make docker-build
+after_success:
+  - pip install python-coveralls
+  - coveralls
 notifications:
   email: false
   slack:
