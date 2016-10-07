@@ -24,7 +24,22 @@ WTForms>=2.0,<3.0
 Flask-Assets>=0.12,<0.12.99
 Flask-Cache==0.13.1
 Flask-Login==0.3.2
-Flask-OAuthlib==0.9.3
+
+# OAuth
+
+# Pin OAuthlib until https://github.com/idan/oauthlib/issues/433
+# and https://github.com/idan/oauthlib/issues/359 are fixed
+# Otherwise, there will be errors when using nginx.
+# oauthlib==1.1.2
+# Attempt to install oauthlib2.0 with approriate fixes applied.
+
+https://github.com/Sumukh/oauthlib/archive/master.zip
+
+# Flask-OAuthlib==0.9.3
+# OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
+
+https://github.com/lepture/flask-oauthlib/archive/e1bb478b2015239dd12f1d3ee13fb2627a5a3407.zip
+
 Flask-WTF==0.12
 Flask-RESTful==0.3.5
 Flask-Testing==0.5.0
