@@ -21,6 +21,7 @@ class JobLogHandler(logging.StreamHandler):
     def handle(self, record):
         self.counter += 1
         super().handle(record)
+        print(record.message)
         if (self.counter % self.log_every) == 0:
             self.job.log = self.contents
             db.session.commit()

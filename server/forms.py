@@ -11,7 +11,8 @@ import datetime as dt
 from server import utils
 from server.models import Assignment, Course
 from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
-                              TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT)
+                              TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
+                              COMMON_LANGUAGES)
 
 import csv
 import logging
@@ -320,7 +321,7 @@ class CourseUpdateForm(BaseForm):
     institution = StringField('School (e.g. UC Berkeley)',
                               validators=[validators.optional()])
     display_name = StringField('Course Name (e.g CS61A)',
-                              validators=[validators.required()])
+                               validators=[validators.required()])
     website = StringField('Course Website',
                           validators=[validators.optional(), validators.url()])
     active = BooleanField('Activate Course', default=True)
@@ -335,9 +336,23 @@ class TestJobForm(BaseForm):
     duration = IntegerField('Duration (seconds)', default=2)
 
 class MossSubmissionForm(BaseForm):
-    valid_languages = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
     moss_userid = StringField('Your MOSS User ID',
                               validators=[validators.required()])
     file_regex = StringField('Regex for submitted files', default='.*',
                              validators=[validators.required()])
-    language = SelectField('Language', choices=[(pl, pl) for pl in valid_languages])
+    language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+
+class GithubSearchRecentForm(BaseForm):
+    access_token = StringField('Github Access Token',
+                               description="Get a token at https://github.com/settings/tokens",
+                               validators=[validators.required()])
+    template_name = StringField('Template File Name',
+                                validators=[validators.required()])
+    keyword = StringField('Search for lines starting with', default="def ",
+                          validators=[validators.required()])
+    weeks_past = IntegerField('Limit search to weeks since start of course?', default=12)
+    language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+    issue_title = StringField('Issue Title (Optional)', validators=[validators.optional()],
+                                default="Academic Integrity - Please Delete This Repository")
+    issue_body = TextAreaField('Issue Body (Optional)', validators=[validators.optional()],
+                               description="The strings '{repo}' and '{author}' will be replace with the approriate value")
