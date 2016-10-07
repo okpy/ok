@@ -21,7 +21,7 @@ def get_file_from_github(html_url, logger):
     """ Github HTML url to raw url with github """
     # return html_url.replace('http://github.com/', 'https://raw.githubusercontent.com/')
     html_url = html_url.replace('/blob', '')
-    return html_url.replace('https://github.com/', 'http://rawgit.com/')
+    html_url = html_url.replace('https://github.com/', 'http://rawgit.com/')
 
     try:
         get = requests.get(html_url)
@@ -29,6 +29,7 @@ def get_file_from_github(html_url, logger):
         return get.text
     except requests.exceptions.RequestException as e:
         logger.warning("Failed to fetch {} - {}".format(html_url, e))
+        return None
 
 def make_github_req(url, access_token, params={}):
     r = requests.get(url, params=params,
@@ -149,7 +150,7 @@ def get_all_results(search_line, language, logger, access_token):
             data_set.extend(results['items'])
     return data_set
 
-def download_repos(dest_dir, repos):
+def download_repos(dest_dir, repos, logger):
     """ For future use.
     """
     for url in repos:
@@ -160,8 +161,11 @@ def download_repos(dest_dir, repos):
         dest = "{}/{}/".format(dest_dir, repo_name)
         if not os.path.exists(dest):
             os.makedirs(dest)
-        with open(dest + file_name, 'w') as f:
-            f.write(file_contents)
+        if not file_contents:
+            logger.warning("Could not download {}".format(url))
+        else:
+            with open(dest + file_name, 'w') as f:
+                f.write(file_contents)
 
 def get_longest_defs(source_file, keyword, num_results=5):
     defs = [d.strip() for d in source_file.split('\n') if d.startswith(keyword)]
