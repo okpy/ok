@@ -31,13 +31,17 @@ def get_file_from_github(html_url, logger):
         logger.warning("Failed to fetch {} - {}".format(html_url, e))
         return None
 
-def make_github_req(url, access_token, params={}):
+def make_github_req(url, access_token, params=None):
+    if params:
+        params = {}
     r = requests.get(url, params=params,
                      headers={"Authorization": "Bearer {}".format(access_token)})
     r.raise_for_status()
     return r.json()
 
-def safe_github_req(url, access_token, logger, params={}):
+def safe_github_req(url, access_token, logger, params=None):
+    if params:
+        params = {}
     try:
         return make_github_req(url, access_token, params)
     except requests.exceptions.RequestException as e:
