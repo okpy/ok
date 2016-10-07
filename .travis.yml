@@ -4,13 +4,13 @@ language: generic
 services:
   - docker
 python:
-    - "3.4"
-install: "pip3 install -r requirements.txt"
+    - "3.5"
+install: "python3 -m pip install -r requirements.txt"
 script:
   - make test
   - make docker-build
 after_success:
-  - pip3 install python-coveralls
+  - python3 -m pip install python-coveralls
   - coveralls
 notifications:
   email: false
