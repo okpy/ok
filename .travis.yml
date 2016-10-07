@@ -9,14 +9,18 @@ python:
 addons:
   apt:
     packages:
-    - mysql-server-5.7
-    - mysql-client-core-5.7
-    - mysql-client-5.7
+    - mysql-server-5.6 # Should 5.7 really but 5.6 is easier to install
+    - mysql-client-core-5.6
+    - mysql-client-5.6
 env:
-  - OK_ENV=test
-  - DATABASE_URL=mysql://root@127.0.0.1:3306/ok_test
+  global:
+    - OK_ENV=test
+    - DATABASE_URL=mysql://root@127.0.0.1:3306/ok_test
+  matrix:
+      - USE_DOCKER=true
+      - USE_DOCKER=false
 install:
-    -  pip install -r requirements.txt
+    - pip install -r requirements.txt
     - mysql -u root -e 'create database ok_test;'
 script:
   - make test
