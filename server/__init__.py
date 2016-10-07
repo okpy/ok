@@ -8,6 +8,7 @@ from flask_rq import RQ
 from flask_wtf.csrf import CsrfProtect
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from werkzeug.contrib.fixers import ProxyFix
+from jinja2 import escape
 
 from server import assets, converters, utils
 from server.forms import CSRFForm
@@ -108,7 +109,7 @@ def create_app(default_config_path=None):
     })
 
     app.jinja_env.filters.update({
-        'markdown': lambda data: Markup(markdown(data)),
+        'markdown': lambda data: Markup(markdown(escape(data))),
         'pluralize': utils.pluralize
     })
 
