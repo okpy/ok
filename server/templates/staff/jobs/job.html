@@ -44,6 +44,8 @@
               <dd>Running (Refreshing...)</dd>
             {% elif job.status == 'finished' %}
               <dd>{{ 'Failed' if job.failed else 'Finished' }}</dd>
+            {% endif %}
+            {% if job.log %}
               <dt>Log</dt>
               <dd><pre>{{ job.log }}</pre></dd>
             {% endif %}
@@ -60,7 +62,7 @@
 {% block page_js %}
 <script>
   {% if job.status == 'queued' or  job.status == 'running' %}
-  // Reload the page every 3 seconds
+  // Reload the page every 4.5 seconds
   setTimeout(function(){
      window.location.reload();
   }, 4500);

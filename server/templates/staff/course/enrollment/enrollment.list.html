@@ -32,7 +32,7 @@
                             {{ item.user.email }}
                         </a>
                     </td>
-                    <td class="name">{{ item.user.name }}</td>
+                    <td class="name">{{ utils.humanize_name(item.user.name) }}</td>
                     <td class="sid">{{ item.sid }}</td>
                     <td class="secondary">{{ item.class_account }}</td>
                     <td class="role"><span class="label label-success">{{item.role | title }}</span></td>

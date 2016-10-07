@@ -23,8 +23,15 @@
             <h3 class="text-center">Received on {{ utils.local_time(backup.created, course) }} from {{ backup.submitter.email }}</h3>
              {% if backup.scores %}
                 {% for score in backup.visible_grades %}
-                    <p class="text-center"> {{ score.kind.title() }}: {{ score.score | round(2) }}. Grader: {{ score.grader.email }} </p>
+                    <h3 class="text-center">
+                      <span class="label label-primary">{{ score.kind.title() }}: {{ score.score | round(2) }}</span>
+                    </h3>
+                    <p class="text-center"> Grader: {{ score.grader.email }} </p>
+                    {% if score.message | length < 100 %}
                     <p class="text-center"> Message: {{ score.message }}  </p>
+                    {% else %}
+                    <pre class="score-box">{{ score.message }}</pre>
+                    {% endif %}
                 {% endfor %}
               {% endif %}
 

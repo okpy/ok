@@ -509,6 +509,10 @@ header .logo {
   display: none;
 }
 
+.score-box {
+  max-height: 200px;
+}
+
 /* Small devices (tablets, 768px and up) */
 @media (min-width: 768px) {
   .subcontent {

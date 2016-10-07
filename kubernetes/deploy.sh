@@ -13,7 +13,8 @@ then
     docker build -t cs61a/ok-server:$tag_name .
     docker tag cs61a/ok-server:$tag_name cs61a/ok-server:latest
     docker push cs61a/ok-server:$tag_name
-    echo "Done building. Run git tag "$tag_name
+    echo "Done building. Running git tag "$tag_name
+    git tag $tag_name -m "Deploy of $tag_name"
 fi
 
 echo "Deploying image cs61a/ok-server:"$tag_name
@@ -24,7 +25,8 @@ then
     echo "Watch with 'watch kubectl get pods'"
     kubectl set image deployment/ok-staging-deployment ok-v3-staging=cs61a/ok-server:$tag_name
     kubectl rollout status deployment/ok-staging-deployment
-    kubectl rolling-update ok-worker --update-period 2s --image=cs61a/ok-server:$tag_name --image-pull-policy Always
+    kubectl set image deployment/ok-worker-deployment ok-v3-worker=cs61a/ok-server:$tag_name
+    kubectl rollout status deployment/ok-worker-deployment
     kubectl get pods
     echo "Deployed to staging. Run command again if you want to deploy to production"
 else
@@ -37,7 +39,8 @@ else
         echo "Watch with 'watch kubectl get pods'"
         kubectl set image deployment/ok-web-deployment ok-v3-deploy=cs61a/ok-server:$tag_name
         kubectl rollout status deployment/ok-web-deployment
-        kubectl rolling-update ok-worker --update-period 2s --image=cs61a/ok-server:$tag_name --image-pull-policy Always
+        kubectl set image deployment/ok-worker-deployment ok-v3-worker=cs61a/ok-server:$tag_name
+        kubectl rollout status deployment/ok-worker-deployment
         kubectl get pods
         echo "Done"
     fi

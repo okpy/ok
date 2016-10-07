@@ -18,12 +18,14 @@ import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                                LAB_ASSISTANT_ROLE, GRADE_TAGS)
+                              LAB_ASSISTANT_ROLE, GRADE_TAGS)
 
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
 import server.jobs.example as example
+import server.jobs.moss as moss
+
 import server.highlight as highlight
 import server.utils as utils
 
@@ -143,13 +145,14 @@ def grading(bid):
         abort(404)
 
     form = forms.GradeForm()
-    existing = Score.query.filter_by(backup=backup).first()
+    existing = [s for s in backup.scores if not s.archived]
+    first_score = existing[0] if existing else None
 
-    if existing and existing.kind in GRADE_TAGS:
-        form = forms.GradeForm(kind=existing.kind)
-        form.kind.data = existing.kind
-        form.message.data = existing.message
-        form.score.data = existing.score
+    if first_score and first_score.kind in GRADE_TAGS:
+        form = forms.GradeForm(kind=first_score.kind)
+        form.kind.data = first_score.kind
+        form.message.data = first_score.message
+        form.score.data = first_score.score
 
     return grading_view(backup, form=form)
 
@@ -625,6 +628,41 @@ def autograde(cid, aid):
                            current_course=current_course,
                            assignment=assign, form=form)
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def start_moss_job(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.MossSubmissionForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            moss.submit_to_moss,
+            description='Moss Upload for {}'.format(assign.display_name),
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id,
+            moss_id=form.moss_userid.data,
+            file_regex=form.file_regex.data or '*',
+            language=form.language.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/moss.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
+
+##############
+# Enrollment #
+##############
+
 @admin.route("/course/<int:cid>/enrollment", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
 def enrollment(cid):
@@ -961,6 +999,11 @@ def staff_submit_backup(cid, email, aid):
             flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
             return redirect(result_page)
 
+
+########
+# Jobs #
+########
+
 @admin.route('/course/<int:cid>/jobs/')
 @is_staff(course_arg='cid')
 def course_jobs(cid):
@@ -1007,3 +1050,4 @@ def start_test_job(cid):
             current_course=current_course,
             form=form,
         )
+
