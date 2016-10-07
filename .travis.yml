@@ -3,6 +3,7 @@ dist: trusty
 language: python
 services:
   - docker
+  - redis
 python:
     - "3.5"
 env:
@@ -10,7 +11,7 @@ env:
      - OK_ENV=test
   matrix:
     - USE_DOCKER=1
-    - USE_NATIVE=0
+    - USE_NATIVE=1
 install:
   - if [ -n "$USE_DOCKER" ]; then make docker-build; fi
   - if [ -n "$USE_NATIVE" ]; then pip install -r requirements.txt; fi
