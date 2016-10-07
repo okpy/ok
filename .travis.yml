@@ -1,6 +1,7 @@
 sudo: required
 dist: trusty
 language: python
+cache: pip
 services:
   - docker
   - redis
