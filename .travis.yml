@@ -5,12 +5,12 @@ services:
   - docker
 python:
     - "3.4"
-install: "pip install -r requirements.txt"
+install: "pip3 install -r requirements.txt"
 script:
   - make test
   - make docker-build
 after_success:
-  - pip install python-coveralls
+  - pip3 install python-coveralls
   - coveralls
 notifications:
   email: false
