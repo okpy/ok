@@ -10,6 +10,7 @@ env:
     - OK_ENV=test
 script:
   - make docker-build
+  - docker run -it cs61a/ok-server docker run cs61a/ok-server py.test tests/
 notifications:
   email: false
   slack:

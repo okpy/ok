@@ -1,6 +1,6 @@
 FROM python:3.5-alpine
 
-RUN apk add --update patch ca-certificates nginx perl; echo "hello"
+RUN apk add --update patch ca-certificates nginx perl;
 
 RUN mkdir /code/
 WORKDIR /code/
