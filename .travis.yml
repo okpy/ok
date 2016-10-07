@@ -5,11 +5,12 @@ services:
   - docker
 python:
     - "3.5"
+install:
+  - make docker-build
 env:
   global:
     - OK_ENV=test
 script:
-  - make docker-build
   - docker run -it cs61a/ok-server docker run cs61a/ok-server py.test tests/
 notifications:
   email: false
