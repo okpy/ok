@@ -87,29 +87,43 @@ def user_from_email(email):
         db.session.commit()
     return user
 
-def google_plus_user_data(token):
+def google_oauth_request(token):
     """ Use fallback of Google Plus Endpoint Profile Info.
     """
-    endpoint = "https://www.googleapis.com/plus/v1/people/me?access_token={}"
-    r = requests.get(endpoint.format(token))
-    data = r.json()
-    if 'error' in data:
-        logger.error("Login error with plus/v1 {}".format(data))
-        return None
-    user_email = data['emails'][0].get('email')
-    return {'email': user_email}
 
 @cache.memoize(timeout=600)
-def google_user_data(token):
+def google_user_data(token, timeout=5):
     """ Query google for a user's info. """
     if not token:
         logger.info("Google Token is None")
         return None
-    resp = google_auth.get('userinfo', token=(token, ''))
-    if resp.status != 200:
-        logger.error("Could not authenticate with oauth2 {}", resp.data)
+    google_plus_endpoint = "https://www.googleapis.com/plus/v1/people/me?access_token={}"
+
+    try:
+        r = requests.get(google_plus_endpoint.format(token), timeout=timeout)
+        data = r.json()
+        if 'error' not in data:
+            user_email = data['emails'][0].get('email')
+            return {'email': user_email}
+    except requests.exceptions.Timeout as e:
+        logger.error("Timed out when using google oauth2 {}", data)
         return None
-    return resp.data
+
+    # If Google+ didn't work - fall back to OAuth2
+    oauth2_endpoint = "https://www.googleapis.com/oauth2/v3/userinfo?access_token={}"
+
+    try:
+        r = requests.get(oauth2_endpoint.format(token), timeout=timeout)
+        data = r.json()
+        if r.status_code != 200:
+            logger.error("Google returned non 200 status code: {}", r.status_code)
+        return data
+    except requests.exceptions.Timeout as e:
+        logger.error("Timed out when using google oauth2 {}", data)
+        return None
+
+    logger.warning("None of the endpoints returned an access token.")
+    return None
 
 def user_from_google_token(token):
     """
@@ -124,11 +138,12 @@ def user_from_google_token(token):
 
     if not user_data:
         cache.delete_memoized(google_user_data, token)
-        logger.warning("Could not login with oauth. Trying with plus".format(token))
-        user_data = google_plus_user_data(token)
+        logger.warning("Could not login with oauth. Trying again".format(token))
+        user_data = google_user_data(token, timeout=10)
 
     if not user_data:
-        logger.warning("Both auth methods failed for token {}".format(token))
+        cache.delete_memoized(google_user_data, token)
+        logger.warning("Auth Retry failed for token {}".format(token))
         return None
     return user_from_email(user_data['email'])
 
