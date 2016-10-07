@@ -11,7 +11,7 @@ env:
   global:
     - OK_ENV=test
 script:
-  - docker run -it cs61a/ok-server py.test tests/
+  - docker run -it cs61a/ok-server py.test tests/ --ignore=tests/test_job.py
 notifications:
   email: false
   slack:
