@@ -452,3 +452,17 @@ class TestAuth(OkTestCase):
         current, specific = test_both_endpoints(student)
         self.assert_200(current)
         self.assert_403(specific)
+
+    def test_course_enrollment(self):
+        self._test_backup(True)
+        student = User.lookup(self.user1.email)
+        courses = student.enrollments()
+        course = courses[0]
+        student_endpoint = '/api/v3/course/cal/cs61a/sp16/enrollment'
+        self.login(self.staff1.email)
+        response = self.client.get(student_endpoint)
+        self.assert_200(response)
+        self.login(self.user1.email)
+        response = self.client.get(student_endpoint)
+        self.assert_403(response)
+
