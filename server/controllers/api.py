@@ -28,7 +28,7 @@ from server.extensions import cache
 from server.utils import encode_id, decode_id
 import server.models as models
 from server.autograder import submit_continous
-from server.constants import STAFF_ROLES
+from server.constants import STAFF_ROLES, VALID_ROLES
 
 endpoints = Blueprint('api', __name__)
 endpoints.config = {}
@@ -246,6 +246,7 @@ class EnrollmentSchema(APISchema):
         'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
     }
 
+
 class UserSchema(APISchema):
     get_fields = {
         'id': HashIDField,
@@ -260,6 +261,9 @@ class UserSchema(APISchema):
         'email': fields.String,
     }
 
+class CourseEnrollmentSchema(APISchema):
+    get_fields = { role : fields.List(fields.Nested(UserSchema.simple_fields))
+                    for role in VALID_ROLES }
 
 class AssignmentSchema(APISchema):
     get_fields = {
@@ -700,6 +704,29 @@ class Enrollment(Resource):
             return True
         return resource == requester
 
+class CourseEnrollment(Resource):
+    """ Information about all students in a course.
+    Authenticated. Permissions: >= User or admins
+    Used by: Export scripts.
+    """
+    model = models.Course
+    schema = CourseEnrollmentSchema()
+
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering, user):
+        course = self.model.by_name(offering)
+        if course == None:
+            restful.abort(404)
+        if not self.model.can(course, user, 'staff'):
+            restful.abort(403)
+        data = {}
+        for role in VALID_ROLES:
+            data[role] = []
+        for p in course.participations:
+            data[p.role].append(p.user)
+        return data
+
 class Score(Resource):
     """ Score creation.
         Authenticated. Permissions: >= Staff
@@ -869,6 +896,7 @@ api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
+api.add_resource(CourseEnrollment, '/v3/course/<offering:offering>/enrollment')
 api.add_resource(Score, '/v3/score/')
 api.add_resource(User, '/v3/user/', '/v3/user/<string:email>')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')
