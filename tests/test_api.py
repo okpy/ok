@@ -462,6 +462,8 @@ class TestAuth(OkTestCase):
         self.login(self.staff1.email)
         response = self.client.get(student_endpoint)
         self.assert_200(response)
+        student_emails = [s['email'] for s in response.json['data']['student']]
+        self.assertEquals(self.user1.email in student_emails, True)
         self.login(self.user1.email)
         response = self.client.get(student_endpoint)
         self.assert_403(response)
