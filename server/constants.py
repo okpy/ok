@@ -5,21 +5,12 @@ GRADER_ROLE = 'grader'
 STAFF_ROLE = 'staff'
 INSTRUCTOR_ROLE = 'instructor'
 LAB_ASSISTANT_ROLE = 'lab assistant'
-<<<<<<< HEAD
-ROLES_NEW={
-'student':'Student',
-'grader':'Reader',
-'staff':'Teaching Assistant',
-'instructor':'Instructor',
-'lab assistant':'Lab Assistant'
-=======
 ROLE_DISPLAY_NAMES = {
     'student' : 'Student',
     'grader' : 'Reader',
     STAFF_ROLE : 'Teaching Assistant',
     'instructor' : 'Instructor',
     'lab assistant' : 'Lab Assistant',
->>>>>>> master
 }
 VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
