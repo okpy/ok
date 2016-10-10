@@ -167,7 +167,7 @@ class EnrollmentForm(BaseForm):
                             validators=[validators.optional()])
     section = StringField('Section',
                           validators=[validators.optional()])
-    role = SelectField('Role', default=STUDENT_ROLE, 
+    role = SelectField('Role', default=STUDENT_ROLE,
                        choices=ROLE_DISPLAY_NAMES.items())
 
 
