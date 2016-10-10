@@ -1,10 +1,17 @@
 """App constants"""
 
 STUDENT_ROLE = 'student'
-GRADER_ROLE = 'reader'
-STAFF_ROLE = 'teaching assistant'
+GRADER_ROLE = 'grader'
+STAFF_ROLE = 'staff'
 INSTRUCTOR_ROLE = 'instructor'
 LAB_ASSISTANT_ROLE = 'lab assistant'
+ROLES_NEW={
+'student':'Student',
+'grader':'Reader',
+'staff':'Teaching Assistant',
+'instructor':'Instructor',
+'lab assistant':'Lab Assistant'
+}
 VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
