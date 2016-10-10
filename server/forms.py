@@ -12,7 +12,11 @@ from server import utils
 from server.models import Assignment, Course
 from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
+<<<<<<< HEAD
                               COMMON_LANGUAGES,ROLES_NEW)
+=======
+                              COMMON_LANGUAGES,ROLE_DISPLAY_NAMES)
+>>>>>>> master
 
 import csv
 import logging
@@ -168,7 +172,11 @@ class EnrollmentForm(BaseForm):
     section = StringField('Section',
                           validators=[validators.optional()])
     role = SelectField('Role', default=STUDENT_ROLE,
+<<<<<<< HEAD
                        choices=[(r, ROLES_NEW[r]) for r in VALID_ROLES])
+=======
+			choices=ROLE_DISPLAY_NAMES.items())
+>>>>>>> master
 
 
 class VersionForm(BaseForm):
@@ -181,7 +189,7 @@ class VersionForm(BaseForm):
 class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField('Email, Name, SID, Course Login, Section')
     role = SelectField('Role', default=STUDENT_ROLE,
-                       choices=[(r, r.title()) for r in VALID_ROLES])
+                       choices=ROLE_DISPLAY_NAMES.items())
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()
