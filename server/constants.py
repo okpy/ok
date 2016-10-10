@@ -6,11 +6,11 @@ STAFF_ROLE = 'staff'
 INSTRUCTOR_ROLE = 'instructor'
 LAB_ASSISTANT_ROLE = 'lab assistant'
 ROLE_DISPLAY_NAMES = {
-    'student' : 'Student',
-    'grader' : 'Reader',
-    STAFF_ROLE : 'Teaching Assistant',
-    'instructor' : 'Instructor',
-    'lab assistant' : 'Lab Assistant',
+    STUDENT_ROLE: 'Student',
+    GRADER_ROLE: 'Reader',
+    STAFF_ROLE: 'Teaching Assistant',
+    INSTRUCTOR_ROLE: 'Instructor',
+    LAB_ASSISTANT_ROLE: 'Lab Assistant',
 }
 VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
