@@ -12,7 +12,7 @@ from server import utils
 from server.models import Assignment, Course
 from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
-                              COMMON_LANGUAGES,ROLE_DISPLAY_NAMES)
+                              COMMON_LANGUAGES, ROLE_DISPLAY_NAMES)
 
 import csv
 import logging
@@ -167,8 +167,8 @@ class EnrollmentForm(BaseForm):
                             validators=[validators.optional()])
     section = StringField('Section',
                           validators=[validators.optional()])
-    role = SelectField('Role', default=STUDENT_ROLE,
-			choices=ROLE_DISPLAY_NAMES.items())
+    role = SelectField('Role', default=STUDENT_ROLE, 
+                       choices=ROLE_DISPLAY_NAMES.items())
 
 
 class VersionForm(BaseForm):
