@@ -1,8 +1,8 @@
 """App constants"""
 
 STUDENT_ROLE = 'student'
-GRADER_ROLE = 'grader'
-STAFF_ROLE = 'staff'
+GRADER_ROLE = 'reader'
+STAFF_ROLE = 'teaching assistant'
 INSTRUCTOR_ROLE = 'instructor'
 LAB_ASSISTANT_ROLE = 'lab assistant'
 VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
