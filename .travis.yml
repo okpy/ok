@@ -18,7 +18,7 @@ install:
   - if [ -n "$USE_NATIVE" ]; then pip install -r requirements.txt; fi
 script:
   - if [ -n "$USE_DOCKER" ]; then docker run -it cs61a/ok-server py.test tests/ --ignore=tests/test_job.py; fi
-  - if [ -n "$USE_NATIVE" ]; then make test; fi
+  - if [ -n "$USE_NATIVE" ]; then py.test --cov-report term-missing --cov=server tests/ --ignore=tests/test_web.py ; fi
 after_success:
   - if [ -n "$USE_NATIVE" ]; then pip install python-coveralls; fi
   - if [ -n "$USE_NATIVE" ]; then coveralls; fi
