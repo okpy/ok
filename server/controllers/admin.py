@@ -525,8 +525,6 @@ def assignment_single_queue(cid, aid, uid):
         return abort(401)
 
     assigned_grader = User.get_by_id(uid)
-    if not Assignment.can(assignment, assigned_grader, 'grade'):
-        return abort(404)
 
     page = request.args.get('page', 1, type=int)
     tasks_query = GradingTask.query.filter_by(assignment=assignment,
