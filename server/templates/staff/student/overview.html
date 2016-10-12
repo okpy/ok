@@ -35,31 +35,41 @@
               <h5 class="widget-user-desc"> {{ student.role | capitalize }}</h5>
             </div>
             <div class="box-footer no-padding">
-              <ul class="nav nav-stacked">
-                {% if enrollment.sid %}
+`              <ul class="nav nav-stacked">
+                {% if enrollment %}
+
+                    {% if enrollment.sid %}
+                    <li>
+                      <a href="#">Student ID <span class="pull-right badge bg-blue">{{ enrollment.sid }}</span></a>
+                    </li>
+                    {% endif %}
+                    {% if enrollment.class_account %}
+                    <li>
+                      <a href="#">Course Account <span class="pull-right badge bg-aqua">
+                      {{ enrollment.class_account }}
+                      </span></a>
+                    </li>
+                    {% endif %}
+                    <li>
+                      <a href="#">Role <span class="pull-right badge bg-red">
+                      {{ enrollment.role }}
+                      </span></a>
+                    </li>
+                    <li>
+                      <a href="#">Enrolled At <span class="pull-right badge bg-green">
+                            {{ utils.local_time(enrollment.created, current_course) }}
+                      </span></a>
+                    </li>
+                {% else %}
                 <li>
-                  <a href="#">Student ID <span class="pull-right badge bg-blue">{{ enrollment.sid }}</span></a>
-                </li>
-                {% endif %}
-                {% if enrollment.class_account %}
-                <li>
-                  <a href="#">Course Account <span class="pull-right badge bg-aqua">
-                  {{ enrollment.class_account }}
+                  <a href="{{ url_for('.enrollment', cid=current_course.id) }}">
+                  Status: <span class="pull-right badge bg-red">
+                  Not Enrolled
                   </span></a>
                 </li>
                 {% endif %}
-                <li>
-                  <a href="#">Role <span class="pull-right badge bg-red">
-                  {{ enrollment.role }}
-                  </span></a>
-                </li>
-                <li>
-                  <a href="#">Enrolled At <span class="pull-right badge bg-green">
-                  {{ utils.local_time(enrollment.created, current_course) }}
-                  </span></a>
-                </li>
               </ul>
-            </div>
+`            </div>
           </div>
           <!-- /.widget-user -->
         </div>
