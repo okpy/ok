@@ -106,7 +106,7 @@ def google_user_data(token, timeout=5):
             user_email = data['emails'][0]['value']
             return {'email': user_email}
     except requests.exceptions.Timeout as e:
-        logger.error("Timed out when using google oauth2 {}", data)
+        logger.error("Timed out when using google+")
         return None
 
     # If Google+ didn't work - fall back to OAuth2
@@ -119,7 +119,7 @@ def google_user_data(token, timeout=5):
             logger.error("Google returned non 200 status code: {}", r.status_code)
         return data
     except requests.exceptions.Timeout as e:
-        logger.error("Timed out when using google oauth2 {}", data)
+        logger.error("Timed out when using google oauth2")
         return None
 
     logger.warning("None of the endpoints returned an access token.")
