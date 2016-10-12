@@ -29,28 +29,23 @@
 
 <section class="content">
     {% include 'alerts.html' %}
-
     <div class="row">
         <div class="col-xs-12">
+            {% macro diff_tab(target_diff_type, text) %}
+            <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+                <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
+            </li>
+            {% endmacro %}
+            {% if assignment.files %}
+            <ul class="nav nav-tabs nav-justified">
+                {{ diff_tab(None, 'Files') }}
+                {{ diff_tab('short', 'Diff (short)') }}
+                {{ diff_tab('full', 'Diff (full)') }}
+            </ul>
+            {% endif %}
             <div class="box">
                 <!-- /.box-header -->
                 <div class="box-body">
-
-                    {% macro diff_tab(target_diff_type, text) %}
-                    <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
-                        <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
-                    </li>
-                    {% endmacro %}
-
-                    {% if assignment.files %}
-                    <div class="subcontent">
-                        <ul class="nav nav-tabs nav-justified">
-                            {{ diff_tab(None, 'Files') }}
-                            {{ diff_tab('short', 'Diff (short)') }}
-                            {{ diff_tab('full', 'Diff (full)') }}
-                        </ul>
-                    </div>
-                    {% endif %}
 
                     <div class="subcontent list">
                         <div class="wrap">
