@@ -19,9 +19,9 @@ install:
   - if [ -n "$USE_NATIVE" ]; then pip install pytest-timeout python-coveralls; fi
 script:
   - if [ -n "$USE_DOCKER" ]; then docker run -it cs61a/ok-server py.test tests/ --ignore=tests/test_job.py; fi
-  - if [ -n "$USE_NATIVE" ]; then py.test --cov-report term-missing --cov=server tests/ --timeout=30; fi
+  - if [ -n "$USE_NATIVE" ]; then py.test --cov-report term-missing --cov=server tests/  --ignore tests/test_web.py --timeout=30; fi
 after_success:
-  - if [ -n "$USE_NATIVE" ]; then coveralls; fi
+  - if [ -n "$USE_NATIVE" ]; then echo "eventually should run coveralls here"; fi
 notifications:
   email: false
   slack:
