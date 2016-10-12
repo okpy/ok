@@ -290,6 +290,7 @@ def create_course():
                            courses=courses)
 
 @admin.route("/course/<int:cid>")
+@admin.route("/course/<int:cid>/")
 @is_staff(course_arg='cid')
 def course(cid):
     return redirect(url_for(".course_assignments", cid=cid))
