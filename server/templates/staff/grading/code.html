@@ -30,13 +30,61 @@
 <section class="content">
     {% include 'alerts.html' %}
 
-    <!-- Default box -->
-    <!-- Content Box -->
     <div class="row">
-        <div class="col-md-6 col-xs-12">
-            <div class="box box-default collapsed-box">
+        <div class="col-xs-12">
+            <div class="box">
+                <!-- /.box-header -->
+                <div class="box-body">
+
+                    {% macro diff_tab(target_diff_type, text) %}
+                    <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+                        <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
+                    </li>
+                    {% endmacro %}
+
+                    {% if assignment.files %}
+                    <div class="subcontent">
+                        <ul class="nav nav-tabs nav-justified">
+                            {{ diff_tab(None, 'Files') }}
+                            {{ diff_tab('short', 'Diff (short)') }}
+                            {{ diff_tab('full', 'Diff (full)') }}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div class="subcontent list">
+                        <div class="wrap">
+                            {% for filename, lines in files | dictsort %}
+                            {{ diff.source_file(backup, filename, lines) }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <!-- ./box-body -->
+                <div class="box-footer">
+                    <!-- Grade Box -->
+
+                    {% call forms.render_form(form, action_url=url_for('.grade', bid=backup.id),
+                                              action_text='Submit Score',
+                                              class_='form') %}
+                        {{ forms.render_field(form.kind, label_visible=true) }}
+                        {{ forms.render_field(form.message, label_visible=true, placeholder='Great work! Here are some suggestions ... ', type='text') }}
+                        {{ forms.render_field(form.score, label_visible=true) }}
+                    {% endcall %}
+
+                </div>
+                <!-- /.box-footer -->
+            </div>
+            <!-- /.box -->
+
+            <script type="text/template" id="editor-template">
+                {{ diff.editor_template() }}
+            </script>
+
+            <!-- /.box -->
+            <div class="box collapsed-box">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Submitter Information</h3>
+                    <h3 class="box-title">Submission Information ({{ scores | length }} Assigned Scores) </h3>
 
                     <div class="box-tools pull-right">
                         <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
@@ -45,7 +93,7 @@
                     <!-- /.box-tools -->
                 </div>
                 <!-- /.box-header -->
-                <div class="box-body" class="spoiler">
+                <div class="box-body" class="spoiler" style="display: none;">
                     Submitter:
                     <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
                        {{ backup.submitter.email }}
@@ -61,93 +109,25 @@
                         {% endfor %}
                     {% endif %}
                 </div>
-                <!-- /.box-body -->
-            </div>
-        </div>
-        <div class="col-md-6 col-xs-12">
-            <!-- /.box -->
-            <div class="box collapsed-box">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Scores ({{ scores | length }}) </h3>
-
-                    <div class="box-tools pull-right">
-                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
-                        </button>
-                    </div>
-                    <!-- /.box-tools -->
-                </div>
-                <!-- /.box-header -->
                 <div class="box-body no-padding" class="spoiler" style="display: none;">
-                    <ul class="nav nav-pills nav-stacked" >
+                    <ul class="nav nav-pills nav-stacked">
                         {% if not scores %}
-                        <li><a href="#"><b> No Scores </b> <span class="pull-right text-red">Ungraded</span></a></li>
+                        <li><a><b> No Scores </b> <span class="pull-right text-red">Ungraded</span></a></li>
                         {% else %}
                         {% for score in scores %}
-                            <li><a href="#"><b>{{ score.kind }}</b>: "{{ score.message | truncate(20) }}" from {{ score.grader.email }}
+                        <li><a><b>{{ score.kind }}</b>:
+                                <pre>{{ score.message }}</pre> from {{ score.grader.email }}
                                 <span class="pull-right text-{{ 'green' if score.public else 'red' }}">{{ score.score | round(3) }} </span>
                                 </a>
                             </li>
                         {% endfor %}
                         {% endif %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- /.widget-user -->
-
-
-        </div>
-
-
-        <div class="box">
-            <!-- /.box-header -->
-            <div class="box-body">
-
-                {% macro diff_tab(target_diff_type, text) %}
-                <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
-                    <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
-                </li>
-                {% endmacro %}
-
-                {% if assignment.files %}
-                <div class="subcontent">
-                    <ul class="nav nav-tabs nav-justified">
-                        {{ diff_tab(None, 'Files') }}
-                        {{ diff_tab('short', 'Diff (short)') }}
-                        {{ diff_tab('full', 'Diff (full)') }}
                     </ul>
                 </div>
-                {% endif %}
-
-                <div class="subcontent list">
-                    <div class="wrap">
-                        {% for filename, lines in files | dictsort %}
-                        {{ diff.source_file(backup, filename, lines) }}
-                        {% endfor %}
-                    </div>
-                </div>
             </div>
-            <!-- ./box-body -->
-            <div class="box-footer">
-                <!-- Grade Box -->
-
-                {% call forms.render_form(form, action_url=url_for('.grade', bid=backup.id),
-                                          action_text='Submit Score',
-                                          class_='form') %}
-                    {{ forms.render_field(form.kind, label_visible=true) }}
-                    {{ forms.render_field(form.message, label_visible=true, placeholder='Great work! Here are some suggestions ... ', type='text') }}
-                    {{ forms.render_field(form.score, label_visible=true) }}
-                {% endcall %}
-
-            </div>
-            <!-- /.box-footer -->
         </div>
-        <!-- /.box -->
+    </div>
 
-        <script type="text/template" id="editor-template">
-            {{ diff.editor_template() }}
-        </script>
 
         <!-- /.box -->
         <!-- </section> do not close the content section -->
