@@ -1,24 +1,30 @@
 sudo: required
 dist: trusty
-language: generic
+language: python
+cache: pip
 services:
   - docker
+  - redis
+python:
+    - "3.5"
 env:
-  DOCKER_COMPOSE_VERSION: 1.5.2
-before_install:
-  - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
+  global:
+     - OK_ENV=test
+  matrix:
+    - USE_DOCKER=1
+    - USE_NATIVE=1
+install:
+  - if [ -n "$USE_DOCKER" ]; then make docker-build; fi
+  - if [ -n "$USE_NATIVE" ]; then pip install -r requirements.txt; fi
+  - if [ -n "$USE_NATIVE" ]; then pip install pytest-timeout python-coveralls; fi
 script:
-  - make docker-test
-cache:
-  directories:
-    - /var/lib/docker
+  - if [ -n "$USE_DOCKER" ]; then docker run -it cs61a/ok-server py.test tests/ --ignore=tests/test_job.py; fi
+  - if [ -n "$USE_NATIVE" ]; then py.test --cov-report term-missing --cov=server tests/  --ignore tests/test_web.py --timeout=30; fi
+after_success:
+  - if [ -n "$USE_NATIVE" ]; then echo "eventually should run coveralls here"; fi
 notifications:
   email: false
   slack:
     on_success: never
     on_failure: always
-    on_pull_requests: false
     secure: mGqCgRCFMB89AKsYVOZI79sifCFOLaQkuY3rvFKMitpD1GYQQpkBbZ9Z1SWi0VQV63oOKTQBrPCeDSwhZMaJA/dCZZIuz6e9nkVyJJUIrqAuH9PjgQr6FM4FkKzVLpHdPnXIikAvUAKiPRzzj8z4KO1EohBRR/xb2/4TpoWrkSA=

@@ -52,6 +52,7 @@ Flask-Migrate==2.0.0
 
 # Timezones
 pytz
+arrow
 
 # Emailing
 sendgrid==1.5.20
