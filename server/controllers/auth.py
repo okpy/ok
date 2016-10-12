@@ -102,8 +102,8 @@ def google_user_data(token, timeout=5):
     try:
         r = requests.get(google_plus_endpoint.format(token), timeout=timeout)
         data = r.json()
-        if 'error' not in data:
-            user_email = data['emails'][0].get('email')
+        if 'error' not in data and data.get('emails'):
+            user_email = data['emails'][0]['value']
             return {'email': user_email}
     except requests.exceptions.Timeout as e:
         logger.error("Timed out when using google oauth2 {}", data)
@@ -145,6 +145,7 @@ def user_from_google_token(token):
         cache.delete_memoized(google_user_data, token)
         logger.warning("Auth Retry failed for token {}".format(token))
         return None
+
     return user_from_email(user_data['email'])
 
 login_manager = LoginManager()
