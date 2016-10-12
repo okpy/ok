@@ -35,7 +35,7 @@
                   {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog',
                                         required="required", type='text', id="display-name") }}
                   {{ forms.render_field(form.name, label_visible=true, value=current_course.offering + '/',
-                                        placeholder='cal/cs61a/fa16/proj01', type='text', id="assignment-offering") }}
+                                        placeholder='cal/cs61a/fa16/hog', type='text', id="assignment-offering") }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
                 </fieldset>
                 <h3>Deadlines</h3>
@@ -83,16 +83,19 @@ form.steps({
         form.submit();
     }
 })
+
 var nameTweaked = false;
-$('#display-name').on('change, keyup', debounce(function () {
-    if (!nameTweaked) {
-        display_name = $('#display-name').val().toLowerCase().split(' ').join('')
-        course_offering = $.trim($("#course-offering").text())
-        $('#assignment-offering').val(course_offering + '/' + display_name)
-    }
-}, 25))
-$('#assignment-offering').keyup(function () {
-    nameTweaked = true;
-})
+function registerDisplayName(courseOffering) {
+    $('#display-name').on('change, keyup', debounce(function () {
+        if (!nameTweaked) {
+            displayName = $('#display-name').val().toLowerCase().split(' ').join('')
+            $('#assignment-offering').val(courseOffering + '/' + displayName)
+        }
+    }, 25))
+    $('#assignment-offering').keyup(function () {
+        nameTweaked = true;
+    })
+}
+registerDisplayName('{{ current_course.offering }}')
 </script>
 {% endblock %}
