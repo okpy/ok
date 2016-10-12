@@ -5,7 +5,6 @@ machine:
     OK_ENV: test
   services:
     - redis
-cache: pip
 dependencies:
   pre:
     - pip install https://github.com/dustinfarris/pytest-circleci/archive/python-3.zip
