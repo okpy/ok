@@ -136,14 +136,14 @@ def user_from_google_token(token):
         return user_from_email("okstaff@okpy.org")
     user_data = google_user_data(token)
 
-    if not user_data:
+    if not user_data or 'email' not in user_data:
         cache.delete_memoized(google_user_data, token)
-        logger.warning("Could not login with oauth. Trying again".format(token))
+        logger.warning("Could not login with oauth. Trying again - {}".format(user_data))
         user_data = google_user_data(token, timeout=10)
 
-    if not user_data:
+    if not user_data or 'email' not in user_data:
         cache.delete_memoized(google_user_data, token)
-        logger.warning("Auth Retry failed for token {}".format(token))
+        logger.warning("Auth Retry failed for token {} - {}".format(token, user_data))
         return None
 
     return user_from_email(user_data['email'])
