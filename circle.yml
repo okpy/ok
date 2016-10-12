@@ -6,9 +6,15 @@ machine:
   services:
     - redis
 dependencies:
+  cache_directories:
+    - /home/ubuntu/.cache/pip
+    - .pip-cache
+    - .pyenv
   pre:
     - pip install https://github.com/dustinfarris/pytest-circleci/archive/python-3.zip
     - pip install coveralls
+    - pip install -r requirements.txt
+
 test:
   override:
     - py.test --junitxml $CIRCLE_TEST_REPORTS/django/results.xml --cov-report term-missing --cov=server tests/ :
