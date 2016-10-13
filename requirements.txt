@@ -1,7 +1,7 @@
 Flask>=0.11,<0.12
 
 # WSGI Containers
-gunicorn
+gunicorn==19.6.0
 
 # Errors
 raven[flask]
@@ -51,7 +51,7 @@ Flask-SQLAlchemy-Cache==0.1.5
 Flask-Migrate==2.0.0
 
 # Timezones
-pytz
+pytz==2016.7
 arrow
 
 # Emailing
@@ -82,7 +82,7 @@ names==0.3.0
 # Testing
 pytest>=3.0.0,<3.1
 pytest-cov==2.3.1
-selenium
+selenium==3.0.0
 
 # until version 1.0.6 is on pypi
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip
