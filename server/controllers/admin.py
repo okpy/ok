@@ -643,6 +643,7 @@ def start_moss_job(cid, aid):
         job = jobs.enqueue_job(
             moss.submit_to_moss,
             description='Moss Upload for {}'.format(assign.display_name),
+            timeout=600,
             course_id=cid,
             user_id=current_user.id,
             assignment_id=assign.id,
@@ -674,6 +675,7 @@ def start_github_search(cid, aid):
         job = jobs.enqueue_job(
             github_search.search_similar_repos,
             description='Github Search for {}'.format(assign.display_name),
+            timeout=600,
             course_id=cid,
             user_id=current_user.id,
             assignment_id=assign.id,
