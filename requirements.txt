@@ -7,8 +7,8 @@ gunicorn
 raven[flask]
 
 # Database
-pymysql==0.7.6
-sqlalchemy==1.0.14
+pymysql==0.7.9
+sqlalchemy>=1.1,<1.2
 
 # Caching
 redis==2.10.5
@@ -40,9 +40,9 @@ https://github.com/Sumukh/oauthlib/archive/master.zip
 
 https://github.com/lepture/flask-oauthlib/archive/e1bb478b2015239dd12f1d3ee13fb2627a5a3407.zip
 
-Flask-WTF==0.12
+Flask-WTF==0.13.1
 Flask-RESTful==0.3.5
-Flask-Testing==0.5.0
+Flask-Testing>=0.5.0,<1.0
 Flask-RQ==0.2
 
 # Flask DB Extensions
@@ -68,8 +68,8 @@ jsmin==2.2.1
 hashids==1.1.0
 pygments==2.1.3
 humanize==0.5.1
-markdown==2.6.6
-pygal==2.2.3
+markdown>=2.6,<2.7
+pygal>=2.3,<2.4
 
 # Development
 Flask-DebugToolbar==0.10.0
