@@ -902,7 +902,6 @@ def student_commit_overview(cid, email, aid, commit_id):
         # do not add backups with no change in lines
         if not any(files.values()):
             empty_backups.append(backup)
-            print("encountered empty diff")
             continue
 
         files_list.append(files)
@@ -946,7 +945,7 @@ def student_commit_overview(cid, email, aid, commit_id):
     for b in empty_backups:
         backups.remove(b)
     start_index = [i for i, backup in enumerate(backups) if backup.hashid == commit_id][0]
-    
+
     group = [User.query.get(o) for o in backup.owners()]
 
     return render_template('staff/student/assignment.overview.html',
@@ -1017,19 +1016,24 @@ def student_assignment_graph_detail(cid, email, aid):
         if time_difference_in_secs < 0:
             continue
 
-        # find diffs
-        diff_code = highlight.diff_files(prev_code, curr_code, "short")
+        # # find diffs
+        # diff_code = highlight.diff_files(prev_code, curr_code, "short")
 
-        # do not add backups with no change in lines
-        if not any(diff_code.values()):
+        # # do not add backups with no change in lines
+        # if not any(diff_code.values()):
+        #     continue
+
+        # # count lines changed
+        # lines_changed = 0
+        # for x in diff_code:
+        #     for line in diff_code[x]:
+        #         if line.contents[0] == "+" or line.contents[0] == "-":
+        #             lines_changed += 1
+
+        lines_changed = highlight.diff_lines(prev_code, curr_code)
+        if lines_changed == 0:
             continue
 
-        # count lines changed
-        lines_changed = 0
-        for x in diff_code:
-            for line in diff_code[x]:
-                if line.contents[0] == "+" or line.contents[0] == "-":
-                    lines_changed += 1
         
         # find ratio of lines to seconds
         lines_time_ratio = lines_changed / time_difference_in_secs
