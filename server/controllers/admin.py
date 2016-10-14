@@ -862,9 +862,9 @@ def student_commit_overview(cid, email, aid, commit_id):
         flash('Cannot access assignment', 'error')
         return abort(404)
 
-    extra = request.args and ("email" in request.args)
+    extra = request.args and ("student_email" in request.args)
     if extra:
-        email = request.args["email"]
+        email = request.args["student_email"]
 
     student = User.lookup(email)
     if not student.is_enrolled(cid):
@@ -978,9 +978,9 @@ def student_assignment_graph_detail(cid, email, aid):
         flash('Cannot access assignment', 'error')
         return abort(404)
 
-    extra = request.args and ("email" in request.args)
+    extra = request.args and ("student_email" in request.args)
     if extra:
-        email = request.args["email"]
+        email = request.args["student_email"]
 
     student = User.lookup(email)
     if not student.is_enrolled(cid):
@@ -1055,7 +1055,7 @@ def student_assignment_graph_detail(cid, email, aid):
         url = url_for('.student_commit_overview', 
                 cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
         if extra:
-            url += "?email=" + email
+            url += "?student_email=" + email
         return {
             "value": value,
             "label" : label,

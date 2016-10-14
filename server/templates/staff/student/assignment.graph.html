@@ -52,7 +52,7 @@
                         <br>
                         Search Only:
                         {% for member in group %}
-                            <a href="{{ url_for('.student_assignment_graph_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) + '?email=' + member.email }}">
+                            <a href="{{ url_for('.student_assignment_graph_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id, student_email=member.email)}}">
                                {{ member.email }}
                             </a>
                         {% endfor %}
