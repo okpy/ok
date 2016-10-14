@@ -1,0 +1,68 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms with context %}
+{% import 'staff/_helpers.html' as helpers %}
+
+{% block title %} {{ assignment.display_name }} Timeline {% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ student.identifier }}'s {{ assignment.display_name }}
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li> <a href="{{ url_for('.student_view', cid=current_course.id, email=student.email) }}"><i class="fa fa-user"></i> {{ student.identifier }} </a></li>
+        <li class="active"><a href="#"><i class="fa fa-inbox"></i> History </a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+    {% include 'alerts.html' %}
+
+      <div class="row">
+          <div class="col-sm-3">
+            <!-- Default box -->
+                  <ul class="timeline">
+
+                      <!-- timeline time label -->
+                      <li class="time-label">
+                          <span class="bg-red">
+                              10 Feb. 2014
+                          </span>
+                      </li>
+                      <!-- /.timeline-label -->
+
+                      <!-- timeline item -->
+                      <li>
+                          <!-- timeline icon -->
+                          <i class="fa fa-envelope bg-blue"></i>
+                          <div class="timeline-item">
+                              <span class="time"><i class="fa fa-clock-o"></i> 12:05 am</span>
+
+                              <h3 class="timeline-header"><a href="#">Started Q10</a> ...</h3>
+
+                              <div class="timeline-body">
+                                  Started Q10
+                              </div>
+
+                              <div class="timeline-footer">
+                                  <a class="btn btn-primary btn-xs"> View Code </a>
+                              </div>
+                          </div>
+                      </li>
+                      <!-- END timeline item -->
+
+                  </ul>
+
+          </div>
+        </div>
+
+</section>
+  <!-- </body> do not close body in template-->
+{% endblock %}

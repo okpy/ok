@@ -16,7 +16,8 @@ from server.controllers.auth import get_token_if_valid
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, Group, Client, Job, db)
+                           GradingTask, Backup, Score, Group, Client, Job,
+                           Message, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, GRADE_TAGS)
 
@@ -835,6 +836,38 @@ def student_view(cid, email):
                            student=student, enrollment=enrollment,
                            assignments=assignments)
 
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/timeline")
+@is_staff(course_arg='cid')
+def student_assignment_timeline(cid, email, aid):
+    courses, current_course = get_courses(cid)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    user_ids = assign.active_user_ids(student.id)
+
+    analytics = (db.session.query(Backup, Message)
+                       .outerjoin(Message)
+                       .filter(Backup.submitter_id.in_(user_ids),
+                               Backup.assignment_id == assign.id,
+                               Message.kind == "analytics")
+                       .order_by(Backup.flagged.desc(), Backup.submit.desc(),
+                                 Backup.created.desc())
+                       .all())
+    for backup, message in analytics:
+        print(message.contents)
+
+    return render_template('staff/student/assignment.timeline.html',
+                           courses=courses, current_course=current_course,
+                           student=student, assignment=assign)
+
+
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>")
 @is_staff(course_arg='cid')
 def student_assignment_detail(cid, email, aid):
@@ -888,6 +921,7 @@ def student_assignment_detail(cid, email, aid):
                            upload_form=forms.UploadSubmissionForm(),
                            stats=stats,
                            assign_status=assignment_stats)
+
 
 ########################
 # Student view actions #
