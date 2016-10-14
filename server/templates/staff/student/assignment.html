@@ -81,6 +81,26 @@
               </div>
             </div>
 
+            <div class="box">
+              <div class="box-header with-border">
+                <h3 class="box-title">Actions</h3>
+
+                <div class="box-tools">
+                  <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="box-body no-padding">
+                <ul class="nav nav-pills nav-stacked">
+                  <li> <a href="{{ url_for('.assignment_timeline', cid=current_course.id, email=student.email,
+                                           aid=assignment.id) }}" type="button">
+                        <i class="fa fa-clock-o"></i> View Backup Timeline
+                  </a></li>
+                </ul>
+              </div>
+              <!-- /.box-body -->
+            </div>
+            <!-- /. box -->
 
             <!-- Begin Group -->
             <div class="box">
@@ -246,7 +266,7 @@
                             <td>
                             <div class="btn-group">
                               <a href="{{ url_for('.grading', bid=item.id, diff='short') }}" class="btn btn-primary btn-flat">
-                                  Edit Grade
+                                  Grade
                               </a>
                             </div>
                             </td>

@@ -838,7 +838,7 @@ def student_view(cid, email):
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/timeline")
 @is_staff(course_arg='cid')
-def student_assignment_timeline(cid, email, aid):
+def assignment_timeline(cid, email, aid):
     courses, current_course = get_courses(cid)
 
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
