@@ -148,7 +148,7 @@
                     {% call forms.render_form_bare(csrf_form, action_url=url_for('.staff_group_remove', cid=current_course.id, email=student.email,
                     aid=assignment.id), class_='') %}
                       <input class="hidden" name="target" value="{{ member.user.email }}" type="hidden"></input>
-                      <button class="btn btn-default group-action btn-block"  type="submit" value="remove">
+                      <button class="btn btn-default group-action btn-block hide-overflow"  type="submit" value="remove">
                           <i class="fa fa-minus-circle "></i>
                            Remove {{ member.user.email }}
                       </button>

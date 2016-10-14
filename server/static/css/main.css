@@ -178,3 +178,7 @@ td.slim-cell {
   -o-animation: none !important;
   animation: none !important;
 }
+
+.hide-overflow {
+    overflow: hidden;
+}
