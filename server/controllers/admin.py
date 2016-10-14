@@ -857,15 +857,49 @@ def student_assignment_timeline(cid, email, aid):
                        .filter(Backup.submitter_id.in_(user_ids),
                                Backup.assignment_id == assign.id,
                                Message.kind == "analytics")
-                       .order_by(Backup.flagged.desc(), Backup.submit.desc(),
-                                 Backup.created.desc())
+                       .order_by(Backup.created.asc())
                        .all())
+
+    started_questions = {}
+    solved_questions = {}
+    history, timeline = [], []
+    last_q = (None, False, 0)
     for backup, message in analytics:
-        print(message.contents)
+        contents = message.contents
+        current_question = contents.get('question', [None])[0]
+        if not current_question:
+            continue
+        if ('history' not in contents or 'questions' not in contents['history'] or
+            type(contents['history']['questions']) != dict):
+            continue
+
+        curr_q_stats = message.contents['history']['questions'].get(current_question)
+        is_solved = curr_q_stats.get('solved', None)
+
+        if current_question not in started_questions:
+            started_questions[current_question] = backup.hashid
+            timeline.append({"event": "Started", "title": "Started {}".format(current_question),
+                             "backup": backup})
+        if is_solved and current_question not in solved_questions:
+            # Just solved a question
+            solved_questions[current_question] = backup.hashid
+            timeline.append({"event": "Solved", "title": "Solved {}".format(current_question),
+                             "body": "{} Backups Later".format(last_q[2]),
+                             "backup": backup})
+        if last_q[0] != current_question and last_q[0] is not None:
+            # Didn't just solve it/just start it but did switch questions.
+            timeline.append({"event": "Switched", "title": "Switched to {}".format(current_question),
+                             "backup": backup, "date": backup.created})
+            last_q = (current_question, is_solved, 0)
+        else:
+            last_q = (current_question, is_solved, last_q[2]+1)
+
+        history.append(message.contents)
 
     return render_template('staff/student/assignment.timeline.html',
                            courses=courses, current_course=current_course,
-                           student=student, assignment=assign)
+                           student=student, assignment=assign,
+                           history=history, timeline=timeline[::-1])
 
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>")
