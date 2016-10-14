@@ -893,14 +893,18 @@ def student_commit_overview(cid, email, aid, commit_id):
     for i, backup in enumerate(backups):
         prev = backups[i - 1].files()
         curr = backup.files()
-        if not i:
-            prev = assign.files
+        if i == 0: # create empty files for first backup diff
+            prev = {}
+            for filename in backup.files().keys():
+                prev[filename] = ''
+        # if not i:
+        #     prev = assign.files
         if not prev or not curr:
             continue
         files = highlight.diff_files(prev, curr, "short")
 
-        # do not add backups with no change in lines
-        if not any(files.values()):
+        # do not add backups with no change in lines except for first backup
+        if not any(files.values()) and i != 0: 
             empty_backups.append(backup)
             continue
 

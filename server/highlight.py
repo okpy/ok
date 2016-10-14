@@ -130,7 +130,6 @@ def diff_lines(files_before, files_after):
         matcher = difflib.SequenceMatcher(None, a.splitlines(), b.splitlines())
         groups = matcher.get_grouped_opcodes()
         for group in groups:
-            first, last = group[0], group[-1]
             for tag, i1, i2, j1, j2 in group:
                 if tag == 'replace':
                     diff_lines += (j2 - j1) + (i2 - i1)
@@ -138,4 +137,4 @@ def diff_lines(files_before, files_after):
                     diff_lines += (i2 - i1)
                 elif tag == 'insert':
                     diff_lines += (j2 - j1)
-        return diff_lines
+    return diff_lines
