@@ -7,7 +7,7 @@
 {% block main %}
   <section class="content-header">
       <h1>
-        {{ student.identifier }}'s {{ assignment.display_name }}
+        {{ student.identifier }}'s {{ assignment.display_name }} Timeline
       </h1>
       <ol class="breadcrumb">
         <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
@@ -26,38 +26,52 @@
     {% include 'alerts.html' %}
 
       <div class="row">
-          <div class="col-sm-3">
+          <div class="col-sm-6">
             <!-- Default box -->
                   <ul class="timeline">
 
                       <!-- timeline time label -->
                       <li class="time-label">
                           <span class="bg-red">
-                              10 Feb. 2014
+                              History
                           </span>
                       </li>
                       <!-- /.timeline-label -->
-
+                      {% for event in timeline %}
                       <!-- timeline item -->
                       <li>
+                          {% if event['event'] == "later" %}
+                            <i class="fa fa-ellipis-h bg-gray"></i>
+                          {% elif event['event'] == "Started" %}
+                            <i class="fa fa-hourglass-start bg-blue"></i>
+                          {% elif event['event'] == "Solved" %}
+                            <i class="fa fa-check-circle bg-green"></i>
+                          {% else %}
+                            <i class="fa fa-info bg-blue"></i>
+                          {% endif %}
                           <!-- timeline icon -->
-                          <i class="fa fa-envelope bg-blue"></i>
                           <div class="timeline-item">
-                              <span class="time"><i class="fa fa-clock-o"></i> 12:05 am</span>
+                              <span class="time"><i class="fa fa-clock-o"></i> {{utils.local_time(event['backup'].created, current_course) }}</span>
 
-                              <h3 class="timeline-header"><a href="#">Started Q10</a> ...</h3>
+                              <h3 class="timeline-header"><a href="#"> {{ event['title'] }} {{ event['event']}}</a> </h3>
 
+                              {% if event['body'] %}
                               <div class="timeline-body">
-                                  Started Q10
+                                 {{ event['body'] }}
                               </div>
+                              {% endif %}
 
                               <div class="timeline-footer">
-                                  <a class="btn btn-primary btn-xs"> View Code </a>
+                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.grading', bid=event['backup'].id) }}"> View Code </a>
+                                  <span class="pull-right"> {{ event['backup'].submitter.email }} </span>
                               </div>
                           </div>
                       </li>
                       <!-- END timeline item -->
-
+                      {% endfor %}
+                      <li>
+                          <i class="fa fa-clock-o bg-gray"></i>
+                      </li>
                   </ul>
 
           </div>

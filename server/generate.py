@@ -161,24 +161,60 @@ def gen_enrollment(user, course):
         class_account=gen_maybe(class_account, 0.4),
         section=gen_maybe(section, 0.4))
 
-def gen_backup(user, assignment):
+def gen_messages(assignment, seconds_offset):
     fizzbuzz_lines = modified_file.split("\n")
     random.shuffle(fizzbuzz_lines)
     shuffled_file = "\n".join(fizzbuzz_lines)
+
+    if seconds_offset < 0:
+        progress = abs(seconds_offset)/100100
+    else:
+        progress = (seconds_offset+100000)/100100
+
+    attempts = int(progress * 50)
+    is_passed = True if progress > 0.75 else False
+
+    created = assignment.due_date - datetime.timedelta(seconds=seconds_offset)
 
     messages = {
         'file_contents': {
             'fizzbuzz.py': shuffled_file,
             'moby_dick': 'Call me Ishmael.'
         },
-        'analytics': {}
+        'analytics': {
+            'history': {
+                'question': ['fizzbuzz'],
+                'questions': {
+                    'fizzbuzz': {
+                        'attempts': attempts,
+                        'solved': is_passed
+                    }
+                },
+                'all_attempts': attempts
+            },
+            'unlock': gen_bool(),
+            'question': ['fizzbuzz'],
+            'started': {},
+            'time': str(created),
+        },
+        'grading': {
+            'fizzbuzz': {
+                'passed': is_passed,
+                'locked': 0, 'failed': 1 - is_passed
+            }
+        }
     }
+    return messages
+
+
+def gen_backup(user, assignment):
+    seconds_offset = random.randrange(-100000, 100)
+    messages = gen_messages(assignment, seconds_offset)
     submit = gen_bool(0.1)
     if submit:
         messages['file_contents']['submit'] = ''
     backup = Backup(
-        created=assignment.due_date -
-        datetime.timedelta(seconds=random.randrange(-100000, 100)),
+        created=assignment.due_date - datetime.timedelta(seconds=seconds_offset),
         submitter_id=user.id,
         assignment_id=assignment.id,
         submit=submit)
