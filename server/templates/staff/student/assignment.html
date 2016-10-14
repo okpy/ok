@@ -192,11 +192,14 @@
             </div>
             <!-- /.box -->
 
-            <!-- Begin Overview -->
+            <!-- Begin Diff Graph -->
             <div class="box collapsed-box">
               <div class="box-header with-border">
-                <a href="{{ url_for('.student_assignment_graph_detail', cid=current_course.id, email=student.email, aid=assignment.id)}}"</a>
-                <h3 class="box-title">Diff Graph</h3>
+                <h3 class="box-title">
+                  <a href="{{ url_for('.student_assignment_graph_detail', cid=current_course.id, email=student.email, aid=assignment.id)}}">
+                  Diff Graph
+                  </a>
+                </h3>
               </div>
             </div>
             <!-- /.box -->
