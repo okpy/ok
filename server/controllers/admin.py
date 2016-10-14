@@ -886,8 +886,10 @@ def student_commit_overview(cid, email, aid, commit_id):
 
     bound = 10
     backups = backups[max(0, i - bound):min(len(backups), i + bound)]
+    start_index = 0
 
     files_list, stats_list = [], []
+    empty_backups = []
     for i, backup in enumerate(backups):
         prev = backups[i - 1].files()
         curr = backup.files()
@@ -899,14 +901,16 @@ def student_commit_overview(cid, email, aid, commit_id):
 
         # do not add backups with no change in lines
         if not any(files.values()):
+            empty_backups.append(backup)
+            print("encountered empty diff")
             continue
 
         files_list.append(files)
 
-        commit_id = backup.hashid
+        backup_id = backup.hashid
         backup_stats = {
             'submitter': backup.submitter.email,
-            'commit_id' : commit_id,
+            'commit_id' : backup_id,
             'analytics': backup and backup.analytics(),
             'grading': backup and backup.grading(),
             'question': None,
@@ -936,6 +940,13 @@ def student_commit_overview(cid, email, aid, commit_id):
             backup_stats['question'] = unlock
 
         stats_list.append(backup_stats)
+
+
+    # calculate starting diff for template
+    for b in empty_backups:
+        backups.remove(b)
+    start_index = [i for i, backup in enumerate(backups) if backup.hashid == commit_id][0]
+    
     group = [User.query.get(o) for o in backup.owners()]
 
     return render_template('staff/student/assignment.overview.html',
@@ -949,7 +960,8 @@ def student_commit_overview(cid, email, aid, commit_id):
                            backup=backups[0],
                            files_list=files_list,
                            group=group,
-                           num_diffs=len(files_list)-1)
+                           num_diffs=len(files_list)-1,
+                           start_index=start_index)
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/graph")
 @is_staff(course_arg='cid')
