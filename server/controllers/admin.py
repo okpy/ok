@@ -863,6 +863,7 @@ def student_assignment_timeline(cid, email, aid):
     unlock_started_q = {}
     started_questions = {}
     solved_questions = {}
+    submitter_counts = {}
     history, timeline = [], []
     last_q = (None, False, 0)
     for backup, message in analytics:
@@ -873,6 +874,11 @@ def student_assignment_timeline(cid, email, aid):
         if ('history' not in contents or 'questions' not in contents['history'] or
             type(contents['history']['questions']) != dict):
             continue
+
+        if backup.submitter.email not in submitter_counts:
+            submitter_counts[backup.submitter.email] = 1
+        else:
+            submitter_counts[backup.submitter.email] += 1
 
         curr_q_stats = message.contents['history']['questions'].get(current_question)
         total_attempt_count = message.contents['history'].get('all_attempts')
@@ -915,6 +921,7 @@ def student_assignment_timeline(cid, email, aid):
     return render_template('staff/student/assignment.timeline.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,
+                           submitters=submitter_counts,
                            history=history, timeline=timeline[::-1])
 
 

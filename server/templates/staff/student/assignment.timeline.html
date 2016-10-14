@@ -29,20 +29,20 @@
           <div class="col-sm-12" style="display:none">
               {{ history }}
           </div>
-
-          <div class="col-md-5 col-md-offset-5 col-sm-6 col-xs-8  col-xs-offset-6">
+          {% for submitter in submitters %}
+          <div class="col-md-5">
             <!-- Default box -->
                   <ul class="timeline">
                       <!-- timeline time label -->
                       <li class="time-label">
                           <span class="bg-red">
-                              History
+                              {{ submitter }} ( {{ submitters[submitter] }} backups)
                           </span>
                       </li>
                       <!-- /.timeline-label -->
                       {% for event in timeline %}
                       <!-- timeline item -->
-                      <li>
+                      <li style="{% if event['backup'].submitter.email == submitter %} visibility: hidden;{% endif %}" >
                           {% if event['event'] == "later" %}
                             <i class="fa fa-ellipis-h bg-gray"></i>
                           {% elif event['event'] == "Started" %}
@@ -57,7 +57,7 @@
                             <i class="fa fa-info bg-blue"></i>
                           {% endif %}
                           <!-- timeline icon -->
-                          <div class="timeline-item {% if event['backup'].submitter.email != student.identifier %} timeline-inverted {% endif %} ">
+                          <div class="timeline-item ">
                               <span class="time"><i class="fa fa-clock-o"></i> {{utils.local_time(event['backup'].created, current_course) }}</span>
 
                               <h3 class="timeline-header"><a href="#"> {{ event['title'] }} </a> </h3>
@@ -85,6 +85,9 @@
                   </ul>
 
           </div>
+
+          {% endfor %}
+
         </div>
 
 </section>
