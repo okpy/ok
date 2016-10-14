@@ -1,5 +1,6 @@
 import collections
 import csv
+import datetime
 from functools import wraps
 from io import StringIO
 
@@ -855,7 +856,6 @@ def student_assignment_detail(cid, email, aid):
 @is_staff(course_arg='cid')
 def student_overview_detail(cid, email, aid):
     courses, current_course = get_courses(cid)
-    page = request.args.get('page', 1, type=int)
 
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):
@@ -869,8 +869,6 @@ def student_overview_detail(cid, email, aid):
     assignment_stats = assign.user_status(student)
 
     user_ids = assign.active_user_ids(student.id)
-
-    latest = assignment_stats.final_subm or assign.backups(user_ids).first()
 
     backups = (Backup.query.options(db.joinedload('scores'),
                                     db.joinedload('submitter'))
@@ -907,7 +905,6 @@ def student_overview_detail(cid, email, aid):
             'failed': None
         }
 
-        question = ''
         if backup_stats['analytics']:
             backup_stats['time'] = backup_stats['analytics'].get('time')
 
@@ -924,9 +921,13 @@ def student_overview_detail(cid, email, aid):
             backup_stats['question'] = question
             backup_stats['passed'] = passed
             backup_stats['failed'] = failed
+        else:
+            unlock = backup.unlocking()
+            backup_stats['question'] = unlock
 
         stats_list.append(backup_stats)
     group = [User.query.get(o) for o in backup.owners()]
+
     return render_template('staff/student/assignment.overview.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,
@@ -940,6 +941,119 @@ def student_overview_detail(cid, email, aid):
                            group=group,
                            num_diffs=len(files_list)-1)
 
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/graph")
+@is_staff(course_arg='cid')
+def student_assignment_graph_detail(cid, email, aid):
+    courses, current_course = get_courses(cid)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    assignment_stats = assign.user_status(student)
+
+    user_ids = assign.active_user_ids(student.id)
+
+    backups = (Backup.query.options(db.joinedload('scores'),
+                                    db.joinedload('submitter'))
+                     .filter(Backup.submitter_id.in_(user_ids),
+                             Backup.assignment_id == assign.id)
+                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
+                               Backup.created.desc())).all()
+    backups.reverse()
+    stats_list = []
+    # generate statistics for graph
+    for i in range(len(backups)):
+        if not i:
+            continue
+        prev_backup, curr_backup = backups[i - 1], backups[i]
+        prev_code, curr_code = prev_backup.files(), curr_backup.files()
+        prev_analytics = prev_backup and prev_backup.analytics()
+        curr_analytics = curr_backup and curr_backup.analytics()
+
+        # ensure all needed info exists
+        if not (prev_code and curr_code and prev_analytics and curr_analytics):
+            continue
+
+        # get time differences
+        prev_time_string, curr_time_string = prev_analytics.get("time"), curr_analytics.get("time")
+        if not (prev_time_string and curr_time_string):
+            continue
+
+        # find difference in time submitted
+        time_format = "%Y-%m-%d %X"
+        prev_time = datetime.datetime.strptime(prev_time_string.split(".")[0], time_format)
+        curr_time = datetime.datetime.strptime(curr_time_string.split(".")[0], time_format)
+        time_difference = curr_time - prev_time
+        time_difference_in_secs = time_difference.total_seconds()
+
+        if time_difference_in_secs < 0:
+            continue
+
+        # find diffs
+        diff_code = highlight.diff_files(prev_code, curr_code, "short")
+
+        # do not add backups with no change in lines
+        if not any(diff_code.values()):
+            continue
+
+        # count lines changed
+        lines_changed = 0
+        for x in diff_code:
+            for line in diff_code[x]:
+                if line.contents[0] == "+" or line.contents[0] == "-":
+                    lines_changed += 1
+        
+        # find ratio of lines to seconds
+        lines_time_ratio = lines_changed / time_difference_in_secs
+
+        backup_stats = {
+            'submitter': curr_backup.submitter.email,
+            'commit_id' : curr_backup.hashid,
+            'lines_changed': lines_changed,
+            'time_difference': time_difference,
+            'lines_time_ratio': lines_time_ratio
+        }
+
+        stats_list.append(backup_stats)
+
+    group = [User.query.get(o) for o in backups[0].owners()] #TODO
+
+    def gen_point(stat):
+        return {
+            "value": stat["lines_time_ratio"],
+            "label" : "Commit ID: {0}\nSubmitter: {1}".format(\
+                stat["commit_id"],
+                stat["submitter"]
+                )
+        }
+
+    points = [gen_point(stat) for stat in stats_list]
+
+    line_chart = pygal.Line(disable_xml_declaration=True,
+                            # human_readable=True,
+                            # width=1000, height=1000,
+                            explicit_size=10000)
+    line_chart.title = 'Lines changed : Time'
+    line_chart.x_labels = map(str, range(len(stats_list)))
+    line_chart.add('Lines Changed', points)
+    
+    return render_template('staff/student/assignment.graph.html',
+                           courses=courses, current_course=current_course,
+                           student=student, assignment=assign,
+                           add_member_form=forms.StaffAddGroupFrom(),
+                           csrf_form=forms.CSRFForm(),
+                           upload_form=forms.UploadSubmissionForm(),
+                           stats_list=stats_list,
+                           assign_status=assignment_stats,
+                           backup=backups[0],
+                           group=group,
+                           graph=line_chart)
 ########################
 # Student view actions #
 ########################

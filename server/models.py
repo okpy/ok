@@ -840,6 +840,18 @@ class Backup(Model):
         else:
             return {}
 
+    def unlocking(self):
+        """ Return a string for which question the student is unlocking."""
+        message = Message.query.filter_by(
+            backup_id=self.id,
+            kind='unlock').first()
+        if message and len(message.contents):
+            dict_form = dict(message.contents[0])
+            case = dict_form["case_id"]
+            return case
+        else:
+            return "Unknown Question"
+
     @staticmethod
     @cache.memoize(120)
     def statistics(self):
