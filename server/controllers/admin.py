@@ -860,6 +860,7 @@ def student_assignment_timeline(cid, email, aid):
                        .order_by(Backup.created.asc())
                        .all())
 
+    unlock_started_q = {}
     started_questions = {}
     solved_questions = {}
     history, timeline = [], []
@@ -874,23 +875,38 @@ def student_assignment_timeline(cid, email, aid):
             continue
 
         curr_q_stats = message.contents['history']['questions'].get(current_question)
+        total_attempt_count = message.contents['history'].get('all_attempts')
         is_solved = curr_q_stats.get('solved', None)
+
+        if contents.get('unlock'):
+            # Is unlocking.
+            if current_question not in unlock_started_q:
+                unlock_started_q[current_question] = backup.hashid
+                timeline.append({"event": "Unlock",
+                                 "title": "Started unlocking {}".format(current_question),
+                                 "backup": backup})
+            if current_question != last_q[0]:
+                last_q = (current_question, is_solved, 0)
+            else:
+                last_q = (current_question, is_solved, last_q[2]+1)
 
         if current_question not in started_questions:
             started_questions[current_question] = backup.hashid
             timeline.append({"event": "Started", "title": "Started {}".format(current_question),
                              "backup": backup})
+        elif last_q[0] != current_question and last_q[0] is not None:
+            # Didn't just start it but did switch questions.
+            timeline.append({"event": "Switched", "title": "Switched to {}".format(current_question),
+                             "body": "{} Backups Later. Attempt: {}".format(last_q[2], total_attempt_count),
+                             "backup": backup, "date": backup.created})
+            last_q = (current_question, is_solved, 1)
         if is_solved and current_question not in solved_questions:
             # Just solved a question
             solved_questions[current_question] = backup.hashid
+
             timeline.append({"event": "Solved", "title": "Solved {}".format(current_question),
-                             "body": "{} Backups Later".format(last_q[2]),
+                             "body": "{} Backups Later. Attempt: {}".format(last_q[2], total_attempt_count),
                              "backup": backup})
-        if last_q[0] != current_question and last_q[0] is not None:
-            # Didn't just solve it/just start it but did switch questions.
-            timeline.append({"event": "Switched", "title": "Switched to {}".format(current_question),
-                             "backup": backup, "date": backup.created})
-            last_q = (current_question, is_solved, 0)
         else:
             last_q = (current_question, is_solved, last_q[2]+1)
 

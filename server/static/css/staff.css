@@ -24,3 +24,9 @@
 .email-reminder {
     margin-right: 20px;
 }
+
+.timeline-inverted {
+    left: -100%;
+    margin-left: 75px !important;
+    margin-right: 0px !important;
+}

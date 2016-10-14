@@ -26,10 +26,13 @@
     {% include 'alerts.html' %}
 
       <div class="row">
-          <div class="col-sm-6">
+          <div class="col-sm-12" style="display:none">
+              {{ history }}
+          </div>
+
+          <div class="col-md-5 col-md-offset-5 col-sm-6 col-xs-8  col-xs-offset-6">
             <!-- Default box -->
                   <ul class="timeline">
-
                       <!-- timeline time label -->
                       <li class="time-label">
                           <span class="bg-red">
@@ -46,24 +49,31 @@
                             <i class="fa fa-hourglass-start bg-blue"></i>
                           {% elif event['event'] == "Solved" %}
                             <i class="fa fa-check-circle bg-green"></i>
+                          {% elif event['event'] == "Switched" %}
+                            <i class="fa fa-random bg-green"></i>
+                          {% elif event['event'] == "Unlock" %}
+                            <i class="fa fa-unlock bg-green"></i>
                           {% else %}
                             <i class="fa fa-info bg-blue"></i>
                           {% endif %}
                           <!-- timeline icon -->
-                          <div class="timeline-item">
+                          <div class="timeline-item {% if event['backup'].submitter.email != student.identifier %} timeline-inverted {% endif %} ">
                               <span class="time"><i class="fa fa-clock-o"></i> {{utils.local_time(event['backup'].created, current_course) }}</span>
 
-                              <h3 class="timeline-header"><a href="#"> {{ event['title'] }} {{ event['event']}}</a> </h3>
+                              <h3 class="timeline-header"><a href="#"> {{ event['title'] }} </a> </h3>
 
                               {% if event['body'] %}
                               <div class="timeline-body">
-                                 {{ event['body'] }}
+                                 <p>{{ event['body'] }} <br>
+                                  {{ event['backup'].submitter.email }} </p>
+
                               </div>
                               {% endif %}
 
                               <div class="timeline-footer">
-                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.grading', bid=event['backup'].id) }}"> View Code </a>
-                                  <span class="pull-right"> {{ event['backup'].submitter.email }} </span>
+
+                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.grading', bid=event['backup'].id) }}"> Code </a>
+                                  <span class="pull-right"> {{ event['backup'].hashid }} </span>
                               </div>
                           </div>
                       </li>
