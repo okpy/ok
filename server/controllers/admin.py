@@ -879,10 +879,16 @@ def student_commit_overview(cid, email, aid, commit_id):
     backups.reverse()
 
     # only keep "near" backups
+    found = False
     for i, backup in enumerate(backups):
         backup_commit_id = backup.hashid
         if backup_commit_id == commit_id:
+            found = True
             break
+
+    if not found:
+        flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
+        return abort(404)
 
     bound = 20
     backups = backups[max(0, i - bound):min(len(backups), i + bound)]
@@ -1017,7 +1023,7 @@ def student_assignment_graph_detail(cid, email, aid):
 
         
         # find ratio of lines to seconds
-        lines_time_ratio = lines_changed / time_difference_in_secs
+        lines_time_ratio = lines_changed / (time_difference_in_secs + 1)
 
         backup_stats = {
             'submitter': curr_backup.submitter.email,

@@ -88,6 +88,14 @@
 
         </div>
 
+        <ul class="pager">
+          <li class="previous" onclick="scroll_left()">
+            <a href="#">Previous</a>
+          </li>
+          <li class="next" onclick="scroll_right()">
+            <a href="#">Next</a>
+          </li>
+        </ul>
 
         <div class="box">
             <div class="box-body">
@@ -101,11 +109,6 @@
                     </div>
                 {% endfor %}
             </div>
-
-            <a class="w3-btn-floating" style="position:absolute;top:45%;left:0" onclick="scroll_left()">❮
-            </a>
-            <a class="w3-btn-floating" style="position:absolute;top:45%;right:0" onclick="scroll_right()">❯
-            </a>
         </div>
 
         {% for stats in stats_list %}
