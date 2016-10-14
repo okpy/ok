@@ -884,28 +884,20 @@ def student_commit_overview(cid, email, aid, commit_id):
         if backup_commit_id == commit_id:
             break
 
-    bound = 10
+    bound = 20
     backups = backups[max(0, i - bound):min(len(backups), i + bound)]
     start_index = 0
 
     files_list, stats_list = [], []
-    empty_backups = []
     for i, backup in enumerate(backups):
         prev = backups[i - 1].files()
         curr = backup.files()
-        if i == 0: # create empty files for first backup diff
-            prev = {}
-            for filename in backup.files().keys():
-                prev[filename] = ''
-        # if not i:
-        #     prev = assign.files
-        if not prev or not curr:
+        if not (i and prev and curr):
             continue
         files = highlight.diff_files(prev, curr, "short")
 
         # do not add backups with no change in lines except for first backup
-        if not any(files.values()) and i != 0: 
-            empty_backups.append(backup)
+        if not any(files.values()): 
             continue
 
         files_list.append(files)
@@ -946,9 +938,7 @@ def student_commit_overview(cid, email, aid, commit_id):
 
 
     # calculate starting diff for template
-    for b in empty_backups:
-        backups.remove(b)
-    start_index = [i for i, backup in enumerate(backups) if backup.hashid == commit_id][0]
+    start_index = [i for i, stat in enumerate(stats_list) if stat["commit_id"] == commit_id][0]
 
     group = [User.query.get(o) for o in backup.owners()]
 
@@ -1020,20 +1010,7 @@ def student_assignment_graph_detail(cid, email, aid):
         if time_difference_in_secs < 0:
             continue
 
-        # # find diffs
-        # diff_code = highlight.diff_files(prev_code, curr_code, "short")
-
-        # # do not add backups with no change in lines
-        # if not any(diff_code.values()):
-        #     continue
-
-        # # count lines changed
-        # lines_changed = 0
-        # for x in diff_code:
-        #     for line in diff_code[x]:
-        #         if line.contents[0] == "+" or line.contents[0] == "-":
-        #             lines_changed += 1
-
+        # find diffs
         lines_changed = highlight.diff_lines(prev_code, curr_code)
         if lines_changed == 0:
             continue
