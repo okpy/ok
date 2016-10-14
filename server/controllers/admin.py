@@ -852,9 +852,9 @@ def student_assignment_detail(cid, email, aid):
                            stats=stats,
                            assign_status=assignment_stats)
 
-@admin.route("/course/<int:cid>/<string:email>/<int:aid>/overview")
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/<string:commit_id>")
 @is_staff(course_arg='cid')
-def student_overview_detail(cid, email, aid):
+def student_commit_overview(cid, email, aid, commit_id):
     courses, current_course = get_courses(cid)
 
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
@@ -877,6 +877,16 @@ def student_overview_detail(cid, email, aid):
                      .order_by(Backup.flagged.desc(), Backup.submit.desc(),
                                Backup.created.desc())).all()
     backups.reverse()
+
+    # only keep "near" backups
+    for i, backup in enumerate(backups):
+        backup_commit_id = backup.hashid
+        if backup_commit_id == commit_id:
+            break
+
+    bound = 10
+    backups = backups[max(0, i - bound):min(len(backups), i + bound)]
+
     files_list, stats_list = [], []
     for i, backup in enumerate(backups):
         prev = backups[i - 1].files()
@@ -1027,21 +1037,20 @@ def student_assignment_graph_detail(cid, email, aid):
     def gen_point(stat):
         return {
             "value": stat["lines_time_ratio"],
-            "label" : "Commit ID: {0}\nSubmitter: {1}".format(\
-                stat["commit_id"],
-                stat["submitter"]
-                )
+            "label" : "Submitter: {0}".format(stat["submitter"]),
+            "xlink": url_for('.student_commit_overview', 
+                cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
         }
 
     points = [gen_point(stat) for stat in stats_list]
 
     line_chart = pygal.Line(disable_xml_declaration=True,
-                            # human_readable=True,
-                            # width=1000, height=1000,
-                            explicit_size=10000)
-    line_chart.title = 'Lines changed : Time'
-    line_chart.x_labels = map(str, range(len(stats_list)))
-    line_chart.add('Lines Changed', points)
+                            human_readable=True,
+                            legend_at_bottom=True,
+                            pretty_print=True
+                            )
+    line_chart.title = 'Lines changed over Seconds Ratio'
+    line_chart.add('Ratio', points)
     
     return render_template('staff/student/assignment.graph.html',
                            courses=courses, current_course=current_course,
