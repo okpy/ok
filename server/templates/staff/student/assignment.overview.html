@@ -114,7 +114,7 @@
 
         <!-- /.box -->
 
-
+<!-- 
         <input type="range" id="backupRange" min="0" max="{{num_diffs}}" value="0" step="1" 
             onchange="showValue(this.value)" />
         <span id="backup_num">0</span>
@@ -130,7 +130,7 @@
             $('.diff-delta-box').eq(backup_number).show();
         }
         </script>
-
+ -->
         <script type="text/template" id="editor-template">
             {{ diff.editor_template() }}
         </script>
@@ -164,7 +164,7 @@
     // show only diff 1
     $('.diff-delta').hide()
     $('.diff-delta-box').hide()
-    var backup_number = 0;
+    var backup_number = {{start_index}};
     var backup_total = $('.diff-delta').length;
     $('.diff-delta').eq(backup_number).show()
     $('.diff-delta-box').eq(backup_number).show()
@@ -197,29 +197,29 @@
 
     function scroll_left() {
         if (backup_number > 0) {
-            showValue(backup_number - 1);
-            // $('.diff-delta').eq(backup_number).hide();
-            // $('.diff-delta-box').eq(backup_number).hide();
-            // backup_number = backup_number - 1;
-            // $('.diff-delta').eq(backup_number).show();
-            // $('.diff-delta-box').eq(backup_number).show();
-            // document.getElementById("range").innerHTML = backup_number;
-            // document.getElementById("range").value = toString(backup_number);
-            // document.getElementById("range").trigger("change");
+            // showValue(backup_number - 1);
+            $('.diff-delta').eq(backup_number).hide();
+            $('.diff-delta-box').eq(backup_number).hide();
+            backup_number = backup_number - 1;
+            $('.diff-delta').eq(backup_number).show();
+            $('.diff-delta-box').eq(backup_number).show();
+            document.getElementById("range").innerHTML = backup_number;
+            document.getElementById("range").value = toString(backup_number);
+            document.getElementById("range").trigger("change");
         }
     }
 
     function scroll_right() {
         if (backup_number < backup_total - 1) {
-            showValue(backup_number + 1);
-            // $('.diff-delta').eq(backup_number).hide();
-            // $('.diff-delta-box').eq(backup_number).hide();
-            // backup_number = backup_number + 1;
-            // $('.diff-delta').eq(backup_number).show();
-            // $('.diff-delta-box').eq(backup_number).show();
-            // document.getElementById("range").innerHTML = backup_number;
-            // document.getElementById("range").value = toString(backup_number);
-            // document.getElementById("range").trigger("change");
+            // showValue(backup_number + 1);
+            $('.diff-delta').eq(backup_number).hide();
+            $('.diff-delta-box').eq(backup_number).hide();
+            backup_number = backup_number + 1;
+            $('.diff-delta').eq(backup_number).show();
+            $('.diff-delta-box').eq(backup_number).show();
+            document.getElementById("range").innerHTML = backup_number;
+            document.getElementById("range").value = toString(backup_number);
+            document.getElementById("range").trigger("change");
         }
     }
 
