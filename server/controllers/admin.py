@@ -862,13 +862,19 @@ def student_commit_overview(cid, email, aid, commit_id):
         flash('Cannot access assignment', 'error')
         return abort(404)
 
+    extra = request.args and ("email" in request.args)
+    if extra:
+        email = request.args["email"]
+
     student = User.lookup(email)
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    assignment_stats = assign.user_status(student)
+    user_ids = {student.id}
+    if not extra:
+        user_ids = assign.active_user_ids(student.id)
 
-    user_ids = assign.active_user_ids(student.id)
+    assignment_stats = assign.user_status(student)
 
     backups = (Backup.query.options(db.joinedload('scores'),
                                     db.joinedload('submitter'))
@@ -972,13 +978,19 @@ def student_assignment_graph_detail(cid, email, aid):
         flash('Cannot access assignment', 'error')
         return abort(404)
 
+    extra = request.args and ("email" in request.args)
+    if extra:
+        email = request.args["email"]
+
     student = User.lookup(email)
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    assignment_stats = assign.user_status(student)
+    user_ids = {student.id}
+    if not extra:
+        user_ids = assign.active_user_ids(student.id)
 
-    user_ids = assign.active_user_ids(student.id)
+    assignment_stats = assign.user_status(student)
 
     backups = (Backup.query.options(db.joinedload('scores'),
                                     db.joinedload('submitter'))
@@ -1038,11 +1050,16 @@ def student_assignment_graph_detail(cid, email, aid):
     group = [User.query.get(o) for o in backups[0].owners()] #TODO
 
     def gen_point(stat):
-        return {
-            "value": stat["lines_time_ratio"],
-            "label" : "Submitter: {0}".format(stat["submitter"]),
-            "xlink": url_for('.student_commit_overview', 
+        value = stat["lines_time_ratio"]
+        label = "Submitter: {0}".format(stat["submitter"])
+        url = url_for('.student_commit_overview', 
                 cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
+        if extra:
+            url += "?email=" + email
+        return {
+            "value": value,
+            "label" : label,
+            "xlink": url
         }
 
     points = [gen_point(stat) for stat in stats_list]
