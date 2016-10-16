@@ -614,16 +614,15 @@ class Assignment(Model):
             backup.flagged = False
 
     @transaction
-    def publish_grades(self, tag, hide=False):
-        """Publish student grades for the assignment."""
-        published = tag in self.published_scores
-        if hide and published:
-            self.published_scores = [t for t in self.published_scores if t != tag]
-        elif not hide and not published:
-            # No current use case for correctness tag
-            if tag == 'Revision' and 'Composition' not in self.published_scores:
-                self.published_scores = self.published_scores + [tag, 'Composition']
-            self.published_scores = self.published_scores + [tag]
+    def publish_score(self, tag):
+        """Publish student score for the assignment."""
+        self.published_scores = self.published_scores + [tag]
+
+    @transaction
+    def hide_score(self, tag):
+        """Hide student score for the assignment."""
+        self.published_scores = [t for t in self.published_scores if t != tag]
+
 
 
 class Enrollment(Model):
@@ -807,21 +806,8 @@ class Backup(Model):
         """ Return public grades. "Autograder" kind are errors from the
         autograder and should not be shown.
         """
-        published_scores = self.assignment.published_scores
         return [s for s in self.scores
-            if s.public and s.kind not in HIDDEN_GRADE_TAGS and s.kind.title() in published_scores]
-
-        # print("published_scores", published_scores)
-        # lst = []
-        # for s in self.scores:
-        #     print("public", s.public)
-        #     print("kind", s.kind)
-        #     print("hidden", s.kind in HIDDEN_GRADE_TAGS)
-        #     print("published", s.kind.titel() in published_scores)
-        #     if s.public and s.kind not in HIDDEN_GRADE_TAGS and s.kind.title() in published_scores:
-        #         print('appending')
-        #         lst.append(s)
-        # return lst
+            if s.public and s.kind not in HIDDEN_GRADE_TAGS and s.kind in self.assignment.published_scores]
 
     @hybrid_property
     def is_revision(self):

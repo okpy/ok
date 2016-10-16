@@ -454,23 +454,40 @@ def templates(cid, aid):
 @admin.route("/course/<int:cid>/assignments/<int:aid>/publish",
                 methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
-def publish_grades(cid, aid):
+def publish_scores(cid, aid):
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assign, current_user, 'publish'):
         flash('Insufficient permissions', 'error')
         return abort(401)
-    form = forms.GradeVisibilityUpdateForm()
+    form = forms.PublishScoresWithTags()
     if form.validate_on_submit():
         visibility = form.grades.data
+        tag = visibility.lower()
         hide = form.hide.data
-        assign.publish_grades(visibility, form.hide.data)
-        if not hide:
-            flash("Published {assignment} {visibility} scores".format(
-                assignment=assign.display_name, visibility=visibility.lower()), "success")
+        print("Tag", tag, "Hide", hide)
+        print("before publish", assign.published_scores)
+        if hide:
+            if tag not in assign.published_scores:
+                flash("{visibility} scores for {assignment} already hidden".format(
+                    visibility=visibility, assignment=assign.display_name), "success")
+            else:
+                assign.hide_score(tag)
+                flash("Hid {assignment} {visibility} scores".format(
+                    assignment=assign.display_name, visibility=tag), "success")
         else:
-            flash("Hid {assignment} {visibility} scores".format(
-                assignment=assign.display_name, visibility=visibility.lower()), "success")
+            if tag in assign.published_scores:
+                flash("{visibility} scores for {assignment} already published".format(
+                    visibility=visibility, assignment=assign.display_name), "success")
+            elif tag == 'revision' and 'composition' not in assign.published_scores:
+                flash("{visibility} scores for {assignment} cannot be published with hidden composition scores".format(
+                    visibility=visibility, assignment=assign.display_name), "error")
+            else:
+                assign.publish_score(tag)
+                flash("Published {assignment} {visibility} scores".format(
+                    assignment=assign.display_name, visibility=tag), "success")
+        print("after publish", assign.published_scores)
+            
 
     return render_template('staff/course/assignment/assignment_publish.html',
                             assignment=assign, form=form, courses=courses,
