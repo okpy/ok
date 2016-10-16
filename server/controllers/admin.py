@@ -593,7 +593,7 @@ def assign_grading(cid, aid):
                            form=form)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/autograde",
-             methods=["GET", "POST"])
+             methods=["POST"])
 @is_staff(course_arg='cid')
 def autograde(cid, aid):
     courses, current_course = get_courses(cid)
@@ -608,9 +608,7 @@ def autograde(cid, aid):
             flash('Submitted to the autograder', 'success')
         except ValueError as e:
             flash(str(e), 'error')
-    return render_template('staff/grading/autograde.html',
-                           current_course=current_course,
-                           assignment=assign)
+    return redirect(url_for('.assignment', cid=cid, aid=aid))
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
              methods=["GET", "POST"])
