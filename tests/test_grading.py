@@ -44,8 +44,8 @@ class TestGrading(OkTestCase):
                     db.session.add_all(messages)
                     db.session.add(backup)
                     # Debugging print if tests fails
-                    # print("User {} | Assignment {} | Submission {} | Time {}".format(
-                        # user_id, assign.id, num, time))
+                    print("User {} | Assignment {} | Submission {} | Time {}".format(
+                        user_id, assign.id, num, time))
         db.session.commit()
 
     def _course_submissions_ids(self, assignment):
@@ -245,7 +245,7 @@ class TestGrading(OkTestCase):
         # Admin can publish and hide scores
         self.login('okadmin@okpy.org')
         endpoint ='/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
-        response = self.client.post(endpoint, data={'grades':'Composition'})
+        response = self.client.post(endpoint, data={'grades':'composition'})
         self.assert_200(response)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
@@ -268,7 +268,7 @@ class TestGrading(OkTestCase):
             check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
             check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
 
-        # Cannot publish a already published grade
+        # Cannot publish an already published grade
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
         response = self.client.post(endpoint, data={})

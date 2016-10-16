@@ -319,8 +319,7 @@ class CourseUpdateForm(BaseForm):
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
 
 class PublishScoresWithTags(BaseForm):
-    publish_tags = [tag.title() for tag in GRADE_TAGS if tag != 'private']
-    grades = SelectField('Publish Grade', choices=[(t, t) for t in publish_tags], default='Total')
+    grades = SelectField('Publish Grade', choices=[(t, t.title()) for t in GRADE_TAGS if t !='private'], default='total')
     hide = BooleanField("Hide", default=False)
 
 

@@ -462,13 +462,12 @@ def publish_scores(cid, aid):
         return abort(401)
     form = forms.PublishScoresWithTags()
     if form.validate_on_submit():
-        visibility = form.grades.data
-        tag = visibility.lower()
+        tag = form.grades.data
         hide = form.hide.data
         if hide:
             if tag not in assign.published_scores:
                 flash("{visibility} scores for {assignment} already hidden".format(
-                    visibility=visibility, assignment=assign.display_name), "success")
+                    visibility=tag.title(), assignment=assign.display_name), "success")
             else:
                 assign.hide_score(tag)
                 flash("Hid {assignment} {visibility} scores".format(
@@ -476,10 +475,10 @@ def publish_scores(cid, aid):
         else:
             if tag in assign.published_scores:
                 flash("{visibility} scores for {assignment} already published".format(
-                    visibility=visibility, assignment=assign.display_name), "success")
+                    visibility=tag.title(), assignment=assign.display_name), "success")
             elif tag == 'revision' and 'composition' not in assign.published_scores:
                 flash("{visibility} scores for {assignment} cannot be published with hidden composition scores".format(
-                    visibility=visibility, assignment=assign.display_name), "warning")
+                    visibility=tag.title(), assignment=assign.display_name), "warning")
             else:
                 assign.publish_score(tag)
                 flash("Published {assignment} {visibility} scores".format(
