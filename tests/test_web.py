@@ -5,6 +5,7 @@ Docs: http://selenium-python.readthedocs.io/getting-started.html
 import json
 import os
 import signal
+import time
 import urllib.parse
 
 import requests
@@ -307,13 +308,27 @@ if driver:
 
         def test_assignment_send_to_ag(self):
             self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1/autograde")
-            self.assertTrue("Autograde Hog" in self.driver.page_source)
+            self.assignment.autograding_key = "test" # Autograder will respond with 200
+            models.db.session.commit()
 
-            assign_key = self.driver.find_element_by_id("autograder_id")
-            assign_key.send_keys('test') # AG responds with a 200 if ID = 'test'
+            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1")
+            self.assertTrue("Queue on Autograder" in self.driver.page_source)
             self.driver.find_element_by_class_name('ag-submit-btn').click()
+            time.sleep(0.5)
+            self.driver.find_element_by_class_name('confirm').click()
             self.assertTrue("Submitted to the autograder" in self.driver.page_source)
+
+        def test_assignment_send_to_ag_with_no_token(self):
+            self._login(role="admin")
+            self.assignment.autograding_key = ""
+            models.db.session.commit()
+
+            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1")
+
+            self.assertTrue("Queue on Autograder" in self.driver.page_source)
+            self.driver.find_element_by_class_name('ag-submit-btn').submit()
+            self.assertTrue("Assignment has no autograder key" in self.driver.page_source)
+            self.assertTrue("Submitted to the autograder" not in self.driver.page_source)
 
         def test_admin_enrollment(self):
             self._login(role="admin")
