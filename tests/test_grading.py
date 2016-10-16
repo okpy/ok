@@ -1,5 +1,6 @@
 import csv
 import datetime
+import random
 from io import StringIO
 
 from werkzeug.exceptions import BadRequest
@@ -46,7 +47,7 @@ class TestGrading(OkTestCase):
                     # print("User {} | Assignment {} | Submission {} | Time {}".format(
                         # user_id, assign.id, num, time))
         db.session.commit()
-
+        
     def _course_submissions_ids(self, assignment):
         """Return IDs of students with/out submissions & IDs of submissions."""
         seen = set()
@@ -184,20 +185,29 @@ class TestGrading(OkTestCase):
 
         self.assertEquals(len(backup_creators), len(csv_rows) - 1)
 
+
     def test_publish_grades(self):
-        points = [20.0, 2.0, 15.0, 1.0, 17.0, 0.0, 20.0, 1.0]
-        scores, i, users = {}, 0, [self.user1, self.user3]
-        for score_kind in ['Total', 'Composition']:
+        scores, users = {}, [self.user1, self.user3]
+        for score_kind in ['total', 'composition']:
             for user in users:
                 for assign in self.active_assignments:
                     backup = assign.final_submission(assign.active_user_ids(user.id))
-                    scores = Score(backup_id=backup.id, kind=score_kind, score=points[i],
+                    duplicate_score = False
+                    for s in backup.scores:
+                        if s.kind == score_kind:
+                            duplicate_score = True
+                    if not duplicate_score:
+                        if score_kind == "composition":
+                            point = random.randrange(2)
+                        else:
+                            point = random.uniform(0, 100)
+                    scores = Score(backup_id=backup.id, kind=score_kind, score=point,
                                    message="Good work", assignment_id=assign.id,
                                    grader=self.staff1)
                     db.session.add(scores)
         db.session.commit()
 
-        # Check that by default scores are hidden
+        
         def check_visible_scores(user, assignment, hidden=(), visible=()):
             self.login(user.email)
             endpoint = '/{}/'.format(assignment.name)
@@ -209,6 +219,7 @@ class TestGrading(OkTestCase):
             for score in visible:
                 self.assertTrue("{}:".format(score) in s)
 
+        # Checks that by default scores are hidden
         for user, assign in zip(users, self.active_assignments):
             check_visible_scores(user, assign, hidden=['Total', 'Composition'])
 
@@ -219,14 +230,16 @@ class TestGrading(OkTestCase):
             response = self.client.post(endpoint, data={})
             self.assertStatus(response, 302)
 
-
+        # Adding total tag by staff changes score visibility for all users for that assignment
         self.login(self.staff1.email)        
         response = self.client.post(endpoint, data={})
         self.assert_200(response)
+        self.assertTrue('total' in self.assignment.published_scores)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
             check_visible_scores(user, self.assignment2, hidden=['Total', 'Composition'])
 
+        # Admin can publish and hide scores
         self.login('okadmin@okpy.org')
         endpoint ='/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
         response = self.client.post(endpoint, data={'grades':'Composition'})
@@ -235,6 +248,7 @@ class TestGrading(OkTestCase):
             check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
             check_visible_scores(user, self.assignment2, hidden=['Total'], visible=['Composition'])
 
+        # Hiding score only affect targetted assignment
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
         response = self.client.post(endpoint, data={'hide':True})
