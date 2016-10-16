@@ -48,142 +48,142 @@ class TestGrading(OkTestCase):
                         # user_id, assign.id, num, time))
         db.session.commit()
 
-    # def _course_submissions_ids(self, assignment):
-    #     """Return IDs of students with/out submissions & IDs of submissions."""
-    #     seen = set()
-    #     students, submissions, no_submissions = set(), set(), set()
-    #     for student in assignment.course.participations:
-    #         if student.role == constants.STUDENT_ROLE and student.user_id not in seen:
-    #             group = assignment.active_user_ids(student.user_id)
-    #             fs = assignment.final_submission(group)
-    #             seen |= group  # Perform union of two sets
-    #             if fs:
-    #                 students |= group
-    #                 submissions.add(fs.id)
-    #             else:
-    #                 no_submissions |= group
-    #     return students, submissions, no_submissions
+    def _course_submissions_ids(self, assignment):
+        """Return IDs of students with/out submissions & IDs of submissions."""
+        seen = set()
+        students, submissions, no_submissions = set(), set(), set()
+        for student in assignment.course.participations:
+            if student.role == constants.STUDENT_ROLE and student.user_id not in seen:
+                group = assignment.active_user_ids(student.user_id)
+                fs = assignment.final_submission(group)
+                seen |= group  # Perform union of two sets
+                if fs:
+                    students |= group
+                    submissions.add(fs.id)
+                else:
+                    no_submissions |= group
+        return students, submissions, no_submissions
 
-    # def test_course_submissions_ids(self):
-    #     students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-    #     self.assertEquals(sorted(list(students)), [2, 3, 4])
-    #     self.assertEquals(sorted(list(no_submission)), [5, 6])
-    #     self.assertEquals(sorted(list(submissions)), [14, 15])
-    #     owners_by_backup = [(i, Backup.query.get(i).owners()) for i in submissions]
-    #     self.assertEquals(sorted(owners_by_backup),  [(14, {2, 3}), (15, {4})])
+    def test_course_submissions_ids(self):
+        students, submissions, no_submission = self._course_submissions_ids(self.assignment)
+        self.assertEquals(sorted(list(students)), [2, 3, 4])
+        self.assertEquals(sorted(list(no_submission)), [5, 6])
+        self.assertEquals(sorted(list(submissions)), [14, 15])
+        owners_by_backup = [(i, Backup.query.get(i).owners()) for i in submissions]
+        self.assertEquals(sorted(owners_by_backup),  [(14, {2, 3}), (15, {4})])
 
-    # def test_course_submissions(self):
-    #     students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-    #     self.assertEquals(sorted(list(students)), [2, 3, 4])
-    #     self.assertEquals(sorted(list(no_submission)), [5, 6])
-    #     self.assertEquals(sorted(list(submissions)), [14, 15])
-
-
-    # def test_course_submissions_optimized(self):
-    #     # Slow query should be indentical to general query (which might be fast)
-    #     course_submissions = self.assignment.course_submissions()
-    #     slow_course_subms = self.assignment.course_submissions_slow()
-
-    #     course_subms_filtered = self.assignment.course_submissions(include_empty=False)
-    #     assert len(course_subms_filtered) < len(course_submissions)
-
-    #     submissions = [fs['backup']['id'] for fs in course_submissions if fs['backup']]
-    #     slow_submissions = [fs['backup']['id'] for fs in slow_course_subms if fs['backup']]
-    #     self.assertEquals(len(submissions), len(course_subms_filtered))
-    #     self.assertEquals(len(slow_submissions), len(course_subms_filtered))
-    #     print("Running with {}".format(db.engine.name))
-
-    #     if db.engine.name == 'mysql':
-    #         query = self.assignment.mysql_course_submissions_query()
-    #         mysql_data = [d for d in query]
-    #         self.assertEquals(len(course_submissions), len(mysql_data))
-
-    #         has_submission = sorted(list(fs['user']['id'] for fs in course_submissions
-    #                              if fs['backup']))
-    #         has_submission_slow = sorted(list(fs['user']['id'] for fs in slow_course_subms
-    #                                   if fs['backup']))
-    #         self.assertEquals(has_submission, has_submission_slow)
-
-    #         no_subm = sorted(list(fs['user']['id'] for fs in course_submissions
-    #                              if not fs['backup']))
-    #         no_subm_slow = sorted(list(fs['user']['id'] for fs in slow_course_subms
-    #                                   if not fs['backup']))
-    #         self.assertEquals(no_subm, no_subm_slow)
-
-    #         backup = sorted(list(fs['backup']['id'] for fs in course_submissions
-    #                              if fs['backup']))
-    #         backup_slow = sorted(list(fs['backup']['id'] for fs in slow_course_subms
-    #                                   if fs['backup']))
-
-    #         self.assertEquals(backup, backup_slow)
-    #     else:
-    #         self.assertEquals(slow_course_subms, course_submissions)
+    def test_course_submissions(self):
+        students, submissions, no_submission = self._course_submissions_ids(self.assignment)
+        self.assertEquals(sorted(list(students)), [2, 3, 4])
+        self.assertEquals(sorted(list(no_submission)), [5, 6])
+        self.assertEquals(sorted(list(submissions)), [14, 15])
 
 
-    # def test_flag(self):
-    #     submission = self.assignment.submissions(self.active_user_ids).all()[10]
-    #     self.assignment.flag(submission.id, self.active_user_ids)
-    #     print("Flagged submission {}".format(submission.id))
+    def test_course_submissions_optimized(self):
+        # Slow query should be indentical to general query (which might be fast)
+        course_submissions = self.assignment.course_submissions()
+        slow_course_subms = self.assignment.course_submissions_slow()
 
-    #     students, submissions, no_submission = self._course_submissions_ids(self.assignment)
-    #     self.assertEquals(sorted(list(students)), [2, 3, 4])
-    #     self.assertEquals(sorted(list(no_submission)), [5, 6])
-    #     self.assertEquals(sorted(list(submissions)), [submission.id, 15])
-    #     owners_by_backup = [(i, Backup.query.get(i).owners()) for i in submissions]
-    #     self.assertEquals(sorted(owners_by_backup),  [(submission.id, {2, 3}), (15, {4})])
+        course_subms_filtered = self.assignment.course_submissions(include_empty=False)
+        assert len(course_subms_filtered) < len(course_submissions)
 
-    # def test_queue_generation(self):
-    #     students, backups, no_submissions = self._course_submissions_ids(self.assignment)
+        submissions = [fs['backup']['id'] for fs in course_submissions if fs['backup']]
+        slow_submissions = [fs['backup']['id'] for fs in slow_course_subms if fs['backup']]
+        self.assertEquals(len(submissions), len(course_subms_filtered))
+        self.assertEquals(len(slow_submissions), len(course_subms_filtered))
+        print("Running with {}".format(db.engine.name))
 
-    #     tasks = GradingTask.create_staff_tasks(backups, self.active_staff,
-    #                                            self.assignment.id,
-    #                                            self.assignment.course.id,
-    #                                            "Composition")
-    #     self.assertEquals(len(tasks), 2)
-    #     self.assertEquals([t.grader.id for t in tasks], [self.staff1.id, self.staff2.id])
+        if db.engine.name == 'mysql':
+            query = self.assignment.mysql_course_submissions_query()
+            mysql_data = [d for d in query]
+            self.assertEquals(len(course_submissions), len(mysql_data))
 
-    #     # When only_unassigned is true, it should not add any new backups
-    #     tasks = GradingTask.create_staff_tasks(backups, self.active_staff,
-    #                                            self.assignment.id,
-    #                                            self.assignment.course.id,
-    #                                            "Composition", True)
-    #     self.assertEquals(len(tasks), 0)
+            has_submission = sorted(list(fs['user']['id'] for fs in course_submissions
+                                 if fs['backup']))
+            has_submission_slow = sorted(list(fs['user']['id'] for fs in slow_course_subms
+                                      if fs['backup']))
+            self.assertEquals(has_submission, has_submission_slow)
 
-    # def test_score_export(self):
-    #     self.login(self.staff1.email)
-    #     endpoint = '/admin/course/1/assignments/1/scores'
-    #     response = self.client.get(endpoint)
-    #     self.assert_200(response)
-    #     # No Scores
-    #     self.assertEquals(response.data, b'time,is_late,email,group,sid,class_account,section,assignment_id,kind,score,message,backup_id,grader\n')
+            no_subm = sorted(list(fs['user']['id'] for fs in course_submissions
+                                 if not fs['backup']))
+            no_subm_slow = sorted(list(fs['user']['id'] for fs in slow_course_subms
+                                      if not fs['backup']))
+            self.assertEquals(no_subm, no_subm_slow)
 
-    # def test_scores_with_generate(self, generate=False):
-    #     if generate:
-    #         db.drop_all()
-    #         db.create_all()
-    #         generate.seed()
-    #         self.login('okstaff@okpy.org')
-    #     else:
-    #         backup = Backup.query.filter_by(submitter_id=self.user1.id, submit=True).first()
-    #         score = Score(backup_id=backup.id, kind="Composition", score=2.0,
-    #                       message="Good work", assignment_id=self.assignment.id,
-    #                       grader=self.staff1)
-    #         db.session.add(score)
-    #         db.session.commit()
-    #         self.login(self.staff1.email)
+            backup = sorted(list(fs['backup']['id'] for fs in course_submissions
+                                 if fs['backup']))
+            backup_slow = sorted(list(fs['backup']['id'] for fs in slow_course_subms
+                                      if fs['backup']))
 
-    #     endpoint = '/admin/course/1/assignments/1/scores'
-    #     response = self.client.get(endpoint)
-    #     self.assert_200(response)
-    #     csv_rows = list(csv.reader(StringIO(str(response.data, 'utf-8'))))
+            self.assertEquals(backup, backup_slow)
+        else:
+            self.assertEquals(slow_course_subms, course_submissions)
 
-    #     scores = Score.query.filter_by(assignment_id=1).all()
 
-    #     backup_creators = []
-    #     for s in scores:
-    #         backup_creators.extend(s.backup.owners())
+    def test_flag(self):
+        submission = self.assignment.submissions(self.active_user_ids).all()[10]
+        self.assignment.flag(submission.id, self.active_user_ids)
+        print("Flagged submission {}".format(submission.id))
 
-    #     self.assertEquals(len(backup_creators), len(csv_rows) - 1)
+        students, submissions, no_submission = self._course_submissions_ids(self.assignment)
+        self.assertEquals(sorted(list(students)), [2, 3, 4])
+        self.assertEquals(sorted(list(no_submission)), [5, 6])
+        self.assertEquals(sorted(list(submissions)), [submission.id, 15])
+        owners_by_backup = [(i, Backup.query.get(i).owners()) for i in submissions]
+        self.assertEquals(sorted(owners_by_backup),  [(submission.id, {2, 3}), (15, {4})])
+
+    def test_queue_generation(self):
+        students, backups, no_submissions = self._course_submissions_ids(self.assignment)
+
+        tasks = GradingTask.create_staff_tasks(backups, self.active_staff,
+                                               self.assignment.id,
+                                               self.assignment.course.id,
+                                               "Composition")
+        self.assertEquals(len(tasks), 2)
+        self.assertEquals([t.grader.id for t in tasks], [self.staff1.id, self.staff2.id])
+
+        # When only_unassigned is true, it should not add any new backups
+        tasks = GradingTask.create_staff_tasks(backups, self.active_staff,
+                                               self.assignment.id,
+                                               self.assignment.course.id,
+                                               "Composition", True)
+        self.assertEquals(len(tasks), 0)
+
+    def test_score_export(self):
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/1/assignments/1/scores'
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        # No Scores
+        self.assertEquals(response.data, b'time,is_late,email,group,sid,class_account,section,assignment_id,kind,score,message,backup_id,grader\n')
+
+    def test_scores_with_generate(self, generate=False):
+        if generate:
+            db.drop_all()
+            db.create_all()
+            generate.seed()
+            self.login('okstaff@okpy.org')
+        else:
+            backup = Backup.query.filter_by(submitter_id=self.user1.id, submit=True).first()
+            score = Score(backup_id=backup.id, kind="Composition", score=2.0,
+                          message="Good work", assignment_id=self.assignment.id,
+                          grader=self.staff1)
+            db.session.add(score)
+            db.session.commit()
+            self.login(self.staff1.email)
+
+        endpoint = '/admin/course/1/assignments/1/scores'
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        csv_rows = list(csv.reader(StringIO(str(response.data, 'utf-8'))))
+
+        scores = Score.query.filter_by(assignment_id=1).all()
+
+        backup_creators = []
+        for s in scores:
+            backup_creators.extend(s.backup.owners())
+
+        self.assertEquals(len(backup_creators), len(csv_rows) - 1)
 
 
     def test_publish_grades(self):
@@ -231,13 +231,16 @@ class TestGrading(OkTestCase):
             self.assertStatus(response, 302)
 
         # Adding total tag by staff changes score visibility for all users for that assignment
-        self.login(self.staff1.email)        
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
         response = self.client.post(endpoint, data={})
         self.assert_200(response)
-        self.assertTrue('total' in self.assignment.published_scores)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'total') in source)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
             check_visible_scores(user, self.assignment2, hidden=['Total', 'Composition'])
+
 
         # Admin can publish and hide scores
         self.login('okadmin@okpy.org')
@@ -265,6 +268,27 @@ class TestGrading(OkTestCase):
             check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
             check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
 
+        # Cannot publish a already published grade
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
+        response = self.client.post(endpoint, data={})
+        self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("{} scores for {} already published".format('Total', self.assignment2.display_name) in source)
+        for user in users:
+            check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
+            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
+
+        # Cannot hide a nonpublished grade
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
+        response = self.client.post(endpoint, data={"hide":True})
+        self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("{} scores for {} already hidden".format('Total', self.assignment.display_name) in source)
+        for user in users:
+            check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
+            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
 
         # If assignment is not visible, cannot publish
         self.assignment.visible = False
@@ -272,6 +296,3 @@ class TestGrading(OkTestCase):
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
         response = self.client.post(endpoint, data={})
         self.assert_401(response)
-
-
-
