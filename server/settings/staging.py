@@ -14,6 +14,7 @@ PREFERRED_URL_SCHEME = 'https'
 SECRET_KEY = os.getenv('SECRET_KEY', default_secret)
 CACHE_TYPE = 'simple'
 
+MAINTAINENCE = True
 DEBUG = False
 ASSETS_DEBUG = False
 TESTING_LOGIN = False

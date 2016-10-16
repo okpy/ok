@@ -69,7 +69,7 @@ def create_app(default_config_path=None):
         def check_for_maintenance():
             if request.path.startswith('/api/'):
                 return jsonify({'code': 503,
-                                'message': "Maintainence - scheduled downtime",
+                                'message': "Maintainence - scheduled downtime. We'll be back soon.",
                                 'data': {}}), 503
             if not request.path.startswith('/static/'):
                 return render_template('errors/maintenance.html'), 503

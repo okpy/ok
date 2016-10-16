@@ -20,6 +20,7 @@ DEBUG = False
 ASSETS_DEBUG = False
 TESTING_LOGIN = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
+MAINTAINENCE = True
 
 db_url = os.getenv('DATABASE_URL')
 if db_url:
