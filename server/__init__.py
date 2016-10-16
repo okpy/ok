@@ -1,4 +1,5 @@
 import os
+import logging
 
 from markdown import markdown
 from flask import Flask, render_template, g, request, jsonify
@@ -7,6 +8,7 @@ from flask_rq import RQ
 from flask_wtf.csrf import CsrfProtect
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from werkzeug.contrib.fixers import ProxyFix
+from jinja2 import escape
 
 from server import assets, converters, utils
 from server.forms import CSRFForm
@@ -16,7 +18,9 @@ from server.controllers.admin import admin
 from server.controllers.api import endpoints as api_endpoints
 from server.controllers.api import api  # Flask Restful API
 from server.controllers.auth import auth, login_manager
+from server.controllers.oauth import oauth
 from server.controllers.student import student
+from server.controllers.queue import queue
 from server.constants import API_PREFIX
 
 from server.extensions import (
@@ -24,6 +28,7 @@ from server.extensions import (
     cache,
     csrf,
     debug_toolbar,
+    oauth_provider,
     sentry
 )
 
@@ -57,6 +62,10 @@ def create_app(default_config_path=None):
                     public_dsn=sentry.client.get_public_dsn('https')
                 ), 500
 
+        # In production mode, add log handler to sys.stderr.
+        app.logger.addHandler(logging.StreamHandler())
+        app.logger.setLevel(logging.INFO)
+
     @app.errorhandler(404)
     def not_found_error(error):
         if request.path.startswith("/api"):
@@ -89,6 +98,8 @@ def create_app(default_config_path=None):
     # initialize SQLAlchemy
     db.init_app(app)
 
+
+    # Flask-Login manager
     login_manager.init_app(app)
 
     # Import and register the different asset bundles
@@ -104,20 +115,30 @@ def create_app(default_config_path=None):
     app.jinja_env.globals.update({
         'utils': utils,
         'debug': app.debug,
+        'instantclick': app.config.get('INSTANTCLICK', True),
         'CSRFForm': CSRFForm
     })
 
     app.jinja_env.filters.update({
-        'markdown': lambda data: Markup(markdown(data))
+        'markdown': lambda data: Markup(markdown(escape(data))),
+        'pluralize': utils.pluralize
     })
 
     # register our blueprints
     # OAuth should not need CSRF protection
     csrf.exempt(auth)
     app.register_blueprint(auth)
+
+    csrf.exempt(oauth)
+    app.register_blueprint(oauth)
+
     app.register_blueprint(student)
     app.register_blueprint(admin, url_prefix='/admin')
     app.register_blueprint(about, url_prefix='/about')
+
+    # Redis Queue dashboard
+    csrf.exempt(queue)
+    app.register_blueprint(queue, url_prefix='/rq')
 
     # API does not need CSRF protection
     csrf.exempt(api_endpoints)

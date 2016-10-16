@@ -7,26 +7,24 @@
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
-          <th>ID</th>
-          <th>Time</th>
-          <th>Submitter</th>
-          <th class="col-md-2">Flagged</th>
-          <th>Code</th>
+          <th class="col-id">ID</th>
+          <th class="col-author">Author</th>
+          <th class="col-flag">Flag</th>
+          <th class="col-code">Code</th>
         </tr>
         {% for subm in subms %}
         <tr>
           <td>
-            <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}">
+            <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" data-no-instant>
               Submission {{ subm.hashid }}
             </a>
           </td>
           <td>
-            {{ utils.local_time(subm.created, course) }}
-          </td>
-          <td>
-            <span class="due-date">
-              {{ subm.submitter.email }}
-            </span>
+            <div class="due-dot grey"></div>
+            <div class="due">
+              <span class="due-text grey">{{ subm.submitter.email }}</span>
+              <span class="due-date">{{ utils.local_time(subm.created, course) }}</span>
+            </div>
           </td>
           <td>
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=subm.id), class_='form-inline') %}
@@ -34,7 +32,7 @@
                 <input type="hidden" name="flag">
               {% endif %}
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
+              <button class="flag-button tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
                 <div class="tip">
                   {% if not assignment.active %}
                     <span>Cannot be changed after deadline</span>
@@ -52,7 +50,7 @@
           </td>
 
           <td>
-              <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" class="no-dash button-small">
+              <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" class="view-code no-dash button-small" data-no-instant>
                 View Code
               </a>
           </td>
@@ -78,32 +76,30 @@
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
-          <th>ID</th>
-          <th>Time</th>
-          <th>Creator</th>
-          <th class="col-md-2">Submit</th>
-          <th>Code</th>
+          <th class="col-id">ID</th>
+          <th class="col-author">Author</th>
+          <th class="col-submit">Submit</th>
+          <th class="col-code">Code</th>
         </tr>
         {% for backup in backups %}
         <tr>
           <td>
-            <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}">
+            <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" data-no-instant>
               Backup {{ backup.hashid }}
             </a>
           </td>
           <td>
-            {{ utils.local_time(backup.created, course) }}
-          </td>
-          <td>
-            <span class="due-date">
-              {{ backup.submitter.email }}
-            </span>
+            <div class="due-dot grey"></div>
+            <div class="due">
+              <span class="due-text grey">{{ backup.submitter.email }}</span>
+              <span class="due-date">{{ utils.local_time(backup.created, course) }}</span>
+            </div>
           </td>
           <td>
             {% call forms.render_form(flag_form, action_url=url_for('.flag', name=assignment.name, bid=backup.id), class_='form-inline') %}
               <input type="hidden" name="flag">
               <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
+              <button class="convert-button tip-trigger final-button button-small"  {% if not assignment.active %} disabled {% endif %} type="submit">
                   {% if not assignment.active %}
                   <div class="tip">
                     <span>Too late to convert submission</span>
@@ -114,12 +110,11 @@
                   </div>
                   {% endif %}
                   Convert to submission
-
               </button>
             {% endcall %}
           </td>
           <td>
-              <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" class="no-dash button-small">
+              <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" class="no-dash button-small" data-no-instant>
                 View Code
               </a>
           </td>
@@ -145,7 +140,7 @@
       {% for subm in subms %}
 
       <div class="cell col-xs-12">
-        <div class="cell-title"><a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}">{{ utils.local_time(subm.created, course) }}      </a></div>
+        <div class="cell-title"><a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" data-no-instant> {{ utils.local_time(subm.created, course) }} </a></div>
         <div class="cell-text"><span>Submitter:  {{ subm.submitter.email }}</span></div>
         <div class="cell-status">
           <span>
@@ -164,7 +159,7 @@
         <hr>
         <div class="cell-footer">
             <div class="pull-left">
-                <a href="{{url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" class="dashed">
+                <a href="{{url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" class="dashed" data-no-instant>
                     View Code
                 </a>
             </div>
@@ -201,11 +196,11 @@
       {% for backup in backups %}
 
       <div class="cell col-xs-12">
-        <div class="cell-title"><a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}"> {{ utils.local_time(backup.created, course) }} </a></div>
+        <div class="cell-title"><a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" data-no-instant> {{ utils.local_time(backup.created, course) }} </a></div>
         <div class="cell-text"><span>Submitter:  {{ backup.submitter.email }}</span></div>
         <div class="cell-status">
             <div class="pull-left">
-                <a href="{{url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" class="dashed">
+                <a href="{{url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" class="dashed" data-no-instant>
                     View Code
                 </a>
             </div>

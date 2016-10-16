@@ -2,21 +2,6 @@
 {% import 'diff.html' as diff with context %}
 
 {% block title %} Assignment | Ok {% endblock %}
-{% block css %}
-  <!-- src="https:// .. .js" -->
-{% endblock %}
-
-{% block header %}
-
-  <!-- <div class="left col-md-2">
-    <div class="stripes">
-      <div class="stripe"></div>
-      <div class="stripe"></div>
-      <div class="stripe"></div>
-    </div>
-  </div> -->
-
-{% endblock %}
 
 {% block body %}
     <main>
@@ -38,8 +23,17 @@
             <h3 class="text-center">Received on {{ utils.local_time(backup.created, course) }} from {{ backup.submitter.email }}</h3>
              {% if backup.scores %}
                 {% for score in backup.visible_grades %}
-                    <p class="text-center"> {{ score.kind.title() }}: {{ score.score | round(2) }}. Grader: {{ score.grader.email }} </p>
+                    <h3 class="text-center">
+                      <span class="label label-primary">{{ score.kind.title() }}: {{ score.score | round(2) }}</span>
+                    </h3>
+                    {% if score.kind == "composition" %}
+                      <p class="text-center"> Grader: {{ score.grader.email }} </p>
+                    {% endif %}
+                    {% if score.message | length < 100 %}
                     <p class="text-center"> Message: {{ score.message }}  </p>
+                    {% else %}
+                    <pre class="score-box">{{ score.message }}</pre>
+                    {% endif %}
                 {% endfor %}
               {% endif %}
 

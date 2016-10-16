@@ -6,7 +6,7 @@ help:
 	@echo "  clean        remove unwanted files like .pyc's"
 	@echo "  lint         check style with flake8"
 	@echo "  test         run all your tests using py.test"
-	@echo "  docker-test  test with docker image (like CI)"
+	@echo "  docker-test  test with docker image & mysql (like CI)"
 	@echo "  docker-build Build cs61a/ok-server image"
 
 env:

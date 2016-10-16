@@ -1,0 +1,114 @@
+{% extends "staff/base.html" %}
+
+{% block title %} Ok - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ current_course.display_name_with_semester }} Assignments
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li class="active"><a href="#"><i class="fa fa-book"></i> Assignments</a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+        {% include 'alerts.html' %}
+
+        <!-- Default box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Active Assignments</h3>
+            <div class="box-tools pull-right">
+              <a class="btn btn-primary" href="{{url_for('.new_assignment', cid=current_course.id)}}">
+                <i class="fa fa-plus"></i> Create Assignment
+              </a>
+              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                <i class="fa fa-minus"></i></button>
+            </div>
+          </div>
+          <div class="box-body table-responsive no-padding">
+            <table class="table table-striped">
+                <tbody><tr>
+                  <th>Name</th>
+                  <th>Offering</th>
+                  <th>Visible</th>
+                  <th>Due Date</th>
+                  <th>Lock Date</th>
+                </tr>
+
+                {% for asgn in active_asgns %}
+                <tr>
+                  <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=asgn.id) }}">{{ asgn.display_name }}</a></td>
+                  <td>{{ asgn.name }}</td>
+                  <td>
+                      {% if asgn.visible %}
+                        <span class="label label-success">Visible</span>
+                      {% else %}
+                        <span class="label label-warning">Hidden</span>
+                      {% endif %}
+                  </td>
+                  <td>{{ utils.local_time(asgn.due_date, current_course) }}</td>
+                  <td>{{ utils.local_time(asgn.lock_date, current_course) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <!-- /.box-body -->
+          <!-- /.box-footer-->
+        </div>
+        <!-- /.box -->
+
+        <!-- Default box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Completed Assignments</h3>
+
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                <i class="fa fa-minus"></i></button>
+            </div>
+          </div>
+          <div class="box-body table-responsive no-padding">
+            <table class="table table-striped">
+                <tbody><tr>
+                  <th>Name</th>
+                  <th>Offering</th>
+                  <th>Visible</th>
+                  <th>Due Date</th>
+                  <th>Lock Date</th>
+                </tr>
+
+                {% for asgn in due_assgns %}
+                <tr>
+                  <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=asgn.id) }}">{{ asgn.display_name }}</a></td>
+                  <td>{{ asgn.name }}</td>
+                  <td>
+                      {% if asgn.visible %}
+                        <span class="label label-success">Visible</span>
+                      {% else %}
+                        <span class="label label-warning">Hidden</span>
+                      {% endif %}
+                  </td>
+                  <td>{{ utils.local_time(asgn.due_date, current_course) }}</td>
+                  <td>{{ utils.local_time(asgn.lock_date, current_course) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <!-- /.box-footer-->
+        </div>
+        <!-- /.box -->
+
+
+
+
+  <!-- </body> do not close body in template-->
+{% endblock %}

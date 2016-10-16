@@ -1,0 +1,65 @@
+{% extends "about/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %}Authorize {{client.name }} | Ok{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="oauth">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+      {% include 'alerts.html' %}
+      <h1 class="title">Authorize {{client.name}}</h1>
+      <h2><a name="policy" id="policy"></a>{{client.name}} wants to access your OK Account</h2>
+      {% if client.description %}
+      <blockquote>
+        <p><strong>You are logged in as {{ current_user.email }}. Not you?
+        <a id="reauthenticate-button" data-no-instant href="{{ url_for('.reauthenticate', **dict(request.uri_query_params)) }}">Use a different account</a></strong></p>
+      </blockquote>
+      {% endif %}
+
+      <p>{{ client.description}} </p>
+
+      <p>This will grant {{client.name}} access to: </p>
+      <ul class="list-group">
+          {% for scope in scopes %}
+            {% if scope == 'all' %}
+                <li class="list-group-item"> All information for {{ current_user.email }} including: </li>
+                <li class="list-group-item"> &raquo; View Backups & Submissions </li>
+                <li class="list-group-item"> &raquo; Create Backups & Submissions on your behalf </li>
+                <li class="list-group-item"> &raquo; Enrollment Status </li>
+                <li class="list-group-item"> &raquo; Group Status </li>
+            {% elif scope == 'email' %}
+                <li class="list-group-item"> Your Email Address ({{ current_user.email }}) </li>
+                <li class="list-group-item"> Enrollment Status </li>
+            {% endif %}
+          {% endfor %}
+      </ul>
+
+      <form class="form-horizontal" action="{{ url_for('oauth.authorize') }}" method="POST">
+      {% call forms.render_form_bare(CSRFForm(), action_url=url_for('oauth.authorize'), class_='form-horizontal') %}
+        <div class="form-group">
+            <p class="center-block">
+                <input type="hidden" name="client_id" value="{{ client.client_id }}">
+                <input type="hidden" name="scope" value="{{ scopes|join(' ') }}">
+                <input type="hidden" name="response_type" value="{{ response_type }}">
+                <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+                {% if state %}
+                <input type="hidden" name="state" value="{{ state }}">
+                {% endif %}
+                <div class="row oauth-confirm-row">
+                    <div class="col-md-6 col-xs-12 oauth-button-block">
+                        <button id="confirm-button" name="confirm" class="oauth-allow-btn btn-lg btn-success btn-block btn" value="yes">Confirm</button>
+                    </div>
+                    <div class="col-md-6 col-xs-12 oauth-button-block">
+                        <button id="cancel-button" name="confirm" class="oauth-deny-btn btn-lg btn-warning btn-block btn" value="no">Cancel</button>
+                    </div>
+                </div>
+            <p>
+        </div>
+        {% endcall %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock content %}

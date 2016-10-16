@@ -4,71 +4,45 @@
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
   <head>
-      <title>{% block title %}{% endblock %}</title>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-      {% block meta %}
-          <meta name="description" content="">
-          <meta name="author" content="">
-          <link rel="apple-touch-icon" sizes="57x57" href="/static/img/favicon/apple-touch-icon-57x57.png">
-          <link rel="apple-touch-icon" sizes="60x60" href="/static/img/favicon/apple-touch-icon-60x60.png">
-          <link rel="apple-touch-icon" sizes="72x72" href="/static/img/favicon/apple-touch-icon-72x72.png">
-          <link rel="apple-touch-icon" sizes="76x76" href="/static/img/favicon/apple-touch-icon-76x76.png">
-          <link rel="apple-touch-icon" sizes="114x114" href="/static/img/favicon/apple-touch-icon-114x114.png">
-          <link rel="apple-touch-icon" sizes="120x120" href="/static/img/favicon/apple-touch-icon-120x120.png">
-          <link rel="apple-touch-icon" sizes="144x144" href="/static/img/favicon/apple-touch-icon-144x144.png">
-          <link rel="apple-touch-icon" sizes="152x152" href="/static/img/favicon/apple-touch-icon-152x152.png">
-          <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favicon/apple-touch-icon-180x180.png">
-          <link rel="icon" type="image/png" href="/static/img/favicon/favicon-32x32.png" sizes="32x32">
-          <link rel="icon" type="image/png" href="/static/img/favicon/favicon-194x194.png" sizes="194x194">
-          <link rel="icon" type="image/png" href="/static/img/favicon/favicon-96x96.png" sizes="96x96">
-          <link rel="icon" type="image/png" href="/static/img/favicon/android-chrome-192x192.png" sizes="192x192">
-          <link rel="icon" type="image/png" href="/static/img/favicon/favicon-16x16.png" sizes="16x16">
-          <link rel="manifest" href="/static/img/favicon/manifest.json">
-          <link rel="mask-icon" href="/static/img/favicon/safari-pinned-tab.svg" color="#346694">
-          <link rel="shortcut icon" href="/static/img/favicon/favicon.ico">
-          <meta name="apple-mobile-web-app-title" content="Ok">
-          <meta name="application-name" content="Ok">
-          <meta name="msapplication-TileColor" content="#da532c">
-          <meta name="msapplication-TileImage" content="/static/img/favicon/mstile-144x144.png">
-          <meta name="msapplication-config" content="/static/img/favicon/browserconfig.xml">
-          <meta name="theme-color" content="#346694">
-      {% endblock %}
+    {% include "icons.html" %}
 
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css" rel="stylesheet">
+    {% assets "common_css" %}
+      <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+    {% endassets %}
 
-      {% assets "common_css" %}
-          <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-      {% endassets %}
+    {% block css %}
+    {% endblock %}
+  </head>
+  <body>
 
-      {% assets "adminlte_css" %}
-          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-          <!-- Ionicons -->
-          <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-          <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-      {% endassets %}
+    {% block body %}
+    {% endblock %}
 
-      {% block css %}
-      {% endblock %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown.js/0.5.0/markdown.min.js"></script>
+    {% assets "common_js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
 
+    {% block js %}
+    {% endblock %}
 
-      <script src="{{ url_for('static', filename='lib/modernizr/modernizr.js') }}"></script>
-
-    </head>
-
-      {% block body %}
-      {% endblock %}
-
-
-      {% assets "common_js" %}
-          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-      {% endassets %}
-      {% assets "adminlte_js" %}
-          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-      {% endassets %}
-
-      {% block js %}
-      {% endblock %}
-    </body>
+    <script type="text/javascript">
+      var csrf_token = "{{ csrf_token() }}";
+    </script>
+  </body>
 </html>

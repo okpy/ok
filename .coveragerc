@@ -2,11 +2,11 @@
 branch = True
 include = server/*
 omit =
-    *__init__.py
     *static*
     *templates*
-    # GCS API wrapper
-    *cloudstorage*
+    *settings*
+    *generate.py
+    server/jobs/*
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -20,6 +20,7 @@ exclude_lines =
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
     raise NotImplementedError
+    raise ValueError
     pass
 
     # Don't complain if non-runnable code isn't run:

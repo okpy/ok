@@ -1,0 +1,76 @@
+<div class="box">
+    <div class="box-header">
+        <h3 class="box-title"><span> {{ title }} </span></h3>
+        <div class="box-tools">
+            <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                    <i class="fa fa-minus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- /.box-header -->
+    <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="{{ title }}-list">
+        <table class="table table-hover">
+            <thead>
+                <th class="sort" data-sort="email">User</th>
+                <th class="sort" data-sort="name">Name</th>
+                <th class="sort" data-sort="sid">SID</th>
+                <th class="sort" data-sort="secondary">Secondary ID</th>
+                <th class="sort" data-sort="role">Role</th>
+                <th class="sort" data-sort="timestamp">Enrolled At</th>
+                <th class="sort" data-sort="section">Section</th>
+                <th data-sort="unenroll">Action</th>
+            </thead>
+
+            <tbody class="list">
+                {%- for item in roster %}
+                <tr>
+                    <td class="email">
+                        <a href="{{ url_for('.student_view', cid=current_course.id, email=item.user.email) }}">
+                            {{ item.user.email }}
+                        </a>
+                    </td>
+                    <td class="name">{{ utils.humanize_name(item.user.name) }}</td>
+                    <td class="sid">{{ item.sid }}</td>
+                    <td class="secondary">{{ item.class_account }}</td>
+                    <td class="role"><span class="label label-success">{{item.role | title }}</span></td>
+                    <td class="timestamp" data-timestamp="{{ item.created }}">{{ utils.local_time_obj(item.created, current_course) }}</td>
+                    <td class="section">{{item.section}}</td>
+                    <td class="unenroll">
+                        {% call forms.render_form_bare(unenroll_form, action_url=url_for('.unenrollment', cid=current_course.id, user_id=item.user.id), class_='form') %}
+                            <button class='btn btn-sm btn-danger' data-confirm='Are you sure you want to unenroll {{ item.user.email }} from {{ current_course.display_name }}?'><i class='fa fa-trash-o'></i></button>
+                        {% endcall %}
+                    </td>
+                </tr>
+                {% endfor %}
+                <!-- Include another header because list.js forces us to include this inside of the tbody -->
+                <div class="box-header">
+                    <span>
+                        <div class="pull-left">
+                            <ul class="pagination pagination-md no-margin pull-right"></ul>
+                        </div>
+
+                        <div class="pull-right">
+                            <div class="input-group input-group-md" style="width: 200px;">
+                                <input type="text" name="query" class="form-control pull-right search" placeholder="Search">
+                                <div class="input-group-btn">
+                                    <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </span>
+                </div>
+
+            </tbody>
+        </table>
+    </div>
+    <!-- /.box-body -->
+    <div class="box-footer">
+        <div class="pull-left">
+        <h5 class="box-title"><span> Total: {{ roster | length }} </span></h5>
+        </div>
+    </div>
+
+</div>

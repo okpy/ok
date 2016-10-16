@@ -3,6 +3,8 @@ import os
 import binascii
 import unittest
 
+from flask_assets import ManageAssets
+from flask_rq import get_worker
 from flask_script import Manager, Server, Command
 from flask_script.commands import ShowUrls, Clean
 
@@ -10,7 +12,7 @@ from flask_migrate import Migrate, MigrateCommand
 
 from server import create_app, generate
 from server.models import db, User, Course, Version
-from server.extensions import cache
+from server.extensions import assets_env, cache
 
 # default to dev config
 env = os.environ.get('OK_ENV', 'dev')
@@ -27,11 +29,12 @@ class RunTests(Command):
         test_suite = test_loader.discover('tests/')
         test_runner.run(test_suite)
 
-manager.add_command("server", Server(host='0.0.0.0'))
+manager.add_command("server", Server(host='localhost'))
 manager.add_command("show-urls", ShowUrls())
 manager.add_command("clean", Clean())
 manager.add_command('db', MigrateCommand)
 manager.add_command('test', RunTests())
+manager.add_command("assets", ManageAssets(assets_env))
 
 @manager.shell
 def make_shell_context():
@@ -65,7 +68,7 @@ def setup_default():
     db.session.add(course)
 
     url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.5/ok'
-    ok = Version(name='ok-client', current_version='v1.5.5', download_link=url)
+    ok = Version(name='ok-client', current_version='v1.5.4', download_link=url)
     db.session.add(ok)
     db.session.commit()
 
@@ -107,6 +110,10 @@ def generate_session_key():
         Copy the value in between the quotation marks to the settings file
     """
     return binascii.hexlify(os.urandom(24))
+
+@manager.command
+def worker():
+    get_worker().work()
 
 if __name__ == "__main__":
     manager.run()

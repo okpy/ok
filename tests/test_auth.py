@@ -2,6 +2,7 @@ import flask
 import urllib.request
 
 from tests import OkTestCase
+from server.models import db
 
 class TestAuth(OkTestCase):
     email = 'martymcfly@aol.com'
@@ -12,7 +13,11 @@ class TestAuth(OkTestCase):
         assert response.code == 200
 
     def test_login(self):
-        """GET /login/ should redirect to Google OAuth."""
+        """GET /login/ should redirect to Google OAuth (in production)."""
+        response = self.client.get('/login/')
+        self.assertRedirects(response, '/testing-login/')
+
+        self.app.config['TESTING_LOGIN'] = False
         response = self.client.get('/login/')
         assert response.location.startswith('https://accounts.google.com/o/oauth2/auth')
 
@@ -97,6 +102,9 @@ class TestAuth(OkTestCase):
 
         # Login as admin
         attempt_suite(self.admin.email, authorized=True)
+
+        # Login as lab assistant
+        attempt_suite(self.lab_assistant1.email, authorized=False)
 
         # Logged out user
         attempt_suite(None, authorized=False)

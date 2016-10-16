@@ -27,7 +27,7 @@ class TestVersion(OkTestCase):
             "download_link": "https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok"
         }
 
-        response = self.client.post('/admin/client/ok-client',
+        response = self.client.post('/admin/versions/ok-client',
                         data=data, follow_redirects=True)
 
         assert response.status_code == 200

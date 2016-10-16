@@ -49,12 +49,16 @@ table.highlight td {
   border-width: 0 1px 0 0;
   color: rgba(0, 0, 0, 0.3);
   width: 1%;
+  vertical-align: top;
   min-width: 50px;
 }
 
 .highlight-source {
   color: inherit;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  display: block;
 }
 
 .highlight-header td {

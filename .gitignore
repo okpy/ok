@@ -11,6 +11,7 @@
 venv
 env
 .env
+*.tags*
 
 # Don't store secret keys in version control
 *secrets.json*
@@ -30,13 +31,9 @@ dist
 *coverage_report/*
 ghostdriver.log
 
-# static assets
-*.webassets-cache*
-server/static/vendor/*
-
 # generated static assets (assets.py)
-server/static/public/css/*.css
-server/static/public/js/*.js
+*.webassets-cache*
+server/static/public/
 
 .cache
 _cache/*

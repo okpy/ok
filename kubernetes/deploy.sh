@@ -13,19 +13,35 @@ then
     docker build -t cs61a/ok-server:$tag_name .
     docker tag cs61a/ok-server:$tag_name cs61a/ok-server:latest
     docker push cs61a/ok-server:$tag_name
-    docker push cs61a/ok-server:latest
-    echo "Done building. Run git tag "$tag_name
+    echo "Done building. Running git tag "$tag_name
+    git tag $tag_name -m "Deploy of $tag_name"
 fi
 
 echo "Deploying image cs61a/ok-server:"$tag_name
-read -p "Are you sure you want to deploy? " -n 1 -r
+read -p "Deploy to staging? " -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     echo "Watch with 'watch kubectl get pods'"
-    kubectl delete hpa ok-web-rc
-    kubectl rolling-update ok-web-rc --update-period 10s --image=cs61a/ok-server:$tag_name
-    kubectl autoscale rc ok-web-rc --min=5 --max=15 --cpu-percent=75
-    echo "Done"
+    kubectl set image deployment/ok-staging-deployment ok-v3-staging=cs61a/ok-server:$tag_name
+    kubectl rollout status deployment/ok-staging-deployment
+    kubectl set image deployment/ok-worker-deployment ok-v3-worker=cs61a/ok-server:$tag_name
+    kubectl rollout status deployment/ok-worker-deployment
+    kubectl get pods
+    echo "Deployed to staging. Run command again if you want to deploy to production"
+else
+    read -p "Are you sure you want to deploy to production? " -n 1 -r
+    echo    # (optional) move to a new line
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        echo "Pushing to docker, ok-server:latest"
+        docker push cs61a/ok-server:latest
+        echo "Watch with 'watch kubectl get pods'"
+        kubectl set image deployment/ok-web-deployment ok-v3-deploy=cs61a/ok-server:$tag_name
+        kubectl rollout status deployment/ok-web-deployment
+        kubectl set image deployment/ok-worker-deployment ok-v3-worker=cs61a/ok-server:$tag_name
+        kubectl rollout status deployment/ok-worker-deployment
+        kubectl get pods
+        echo "Done"
+    fi
 fi
-

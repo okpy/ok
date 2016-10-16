@@ -1,44 +1,5 @@
-<aside class="sidebar nomapa col-md-2 left hidden-sm hidden-xs">
-    <div class="logo-box">
-      <a href="{{ url_for('student.index') }}">
-        <div class="software-logo">
-            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Ok Logo">
-        </div>
-      </a>
-      <p class="logo-name"> {{ current_user.email }}</p>
-    </div>
-  <li class="sidebar-title">Announcements</li>
-  <ul class="staff">
-    {% if announcements %}
-    <li class="top-level"><i class="fa fa-bullhorn"></i><div class="list-item">Project 1 has been released! <span>See cs61a.org.</span></div></li>
-    <li class="top-level"><i class="fa fa-bullhorn"></i><div class="list-item">Superhuman Sumukh saved the day, yet again! <span>Ok has been resurrected.</span></div></li>
-    {% else %}
-    <li class="top-level"><i class="fa fa-bullhorn"></i><div class="list-item">Welcome to Ok! <br> <span><a class="dashed" href="http://cs61a.org/articles/using-ok.html">Ok User Guide</a></span></div></li>
-    {% endif %}
-  </ul>
-  <li class="sidebar-title">Actions</li>
-  <ul class="staff" role="navigation" aria-label="site navigation">
-    <li class="top-level">
-      <i class="fa fa-list"></i>
-      <div class="list-item">
-        <a href="{{ url_for('student.index' )}}">Choose Courses</a>
-      </div>
-      {% if request.endpoint == 'student.index' %}
-        <i class="fa fa-eye viewing"></i>
-      {% endif %}
-    </li>
-    </a>
-    <li class="top-level">
-        <i class="fa fa-sign-out"></i>
-        <div class="list-item">
-            <form method="POST" action="{{ url_for('auth.logout' )}}" role="form" class="form-inline" id="logout-form">
-                <div style="display:none;"><input id="csrf_token" name="csrf_token" type="hidden" value="{{ csrf_token() }}"></div>
-                  <button class="plain-btn" type="submit">
-                         Logout<span></span>
-                  </button>
-            </form>
-        </div></li>
-    </li>
-  </ul>
+{% extends "student/sidebar.html" %}
 
-</aside>
+{% block actions %}
+    <!-- TODO: List some assignments -->
+{% endblock %}

@@ -28,10 +28,10 @@
       <h2>{{ tname }}</h2>
       <table>
         <tr class="header">
-          <th>Name</th>
-          <th>Offering</th>
-          <th>Institution</th>
-          <th>Status</th>
+          <th class="col-name">Name</th>
+          <th class="col-offering">Offering</th>
+          <th class="col-institution">Institution</th>
+          <th class="col-status">Status</th>
         </tr>
         {% for course in courses %}
         <tr>
@@ -39,9 +39,9 @@
             <div class="due">
               <span>
                 {% if admin %}
-                <a href="{{ url_for('admin.course', cid=course.id) }}" data-no-instant>{{course.display_name_with_semester}}</a>
+                <a class="admin-course" href="{{ url_for('admin.course', cid=course.id) }}" data-no-instant>{{course.display_name_with_semester}}</a>
                 {% else %}
-                <a href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name_with_semester}}</a>
+                <a class="student-course" href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name_with_semester}}</a>
                 {% endif %}
               </span>
             </div>
@@ -89,9 +89,9 @@
       <div class="cell col-xs-12">
         <div class="cell-title">
           {% if admin %}
-            <a href="{{ url_for('admin.course', cid=course.id) }}" data-no-instant>{{course.display_name_with_semester}}</a>
+            <a class="admin-course" href="{{ url_for('admin.course', cid=course.id) }}" data-no-instant>{{course.display_name_with_semester}}</a>
           {% else %}
-            <a href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name_with_semester}}</a>
+            <a class="student-course" href="{{ url_for('student.course', offering=course.offering) }}">{{course.display_name_with_semester}}</a>
           {% endif %}
         </div>
         <div class="cell-text"><span>{{course.offering}} @ {{course.institution}}</span></div>
@@ -101,7 +101,7 @@
             <span class="green">Enrolled</span>
           {% else %}
             <span class="due-dot red"></span>
-            <span class="green">Inactive</span>
+            <span class="red">Inactive</span>
           {% endif %}
         </div>
       </div>

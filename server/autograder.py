@@ -7,25 +7,28 @@ in a sandboxed environment.
 from flask import url_for
 import json
 import requests
+import logging
 
 import server.constants as constants
-from server.models import User
+from server.models import User, Backup, db
 import server.utils as utils
 
+logger = logging.getLogger(__name__)
 
 def send_autograder(endpoint, data):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
     r = requests.post(constants.AUTOGRADER_URL + endpoint,
-                      data=json.dumps(data), headers=headers, timeout=5)
+                      data=json.dumps(data), headers=headers, timeout=8)
 
     if r.status_code == requests.codes.ok:
         return {'status': True, 'message': 'OK'}
     else:
         error_message = 'The autograder rejected your request. {0}'.format(
             r.text)
+        logger.debug('Autograder {} response: {}'.format(r.status_code,
+                                                         error_message))
         raise ValueError(error_message)
-
 
 def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
     """ Autograde all enrolled students for this assignment.
@@ -35,22 +38,20 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
     @ag_assign_key: Autograder ID (from Autograder Dashboard)
     @token: OK Access Token (from auth)
     """
-    students, submissions, no_submissions = assignment.course_submissions()
-
-    backups_to_grade = [utils.encode_id(bid) for bid in submissions]
+    course_submissions = assignment.course_submissions(include_empty=False)
+    submissions = [fs['backup'] for fs in course_submissions if fs['backup']]
+    submissions_id = list(set(utils.encode_id(fs['id']) for fs in submissions))
 
     if autopromotion:
-        # Hunt for backups from those with no_submissions
-        seen = set()
-        for student_uid in no_submissions:
-            if student_uid not in seen:
-                found_backup = assignment.backups([student_uid]).first()
-                if found_backup:
-                    seen |= found_backup.owners()
-                    backups_to_grade.append(utils.encode_id(found_backup.id))
+        # Change FS backups into submissions
+        for fs in submissions:
+            if not fs['submit']:
+                backup = Backup.query.get(fs['id'])
+                backup.submit = True
+        db.session.commit()
 
     data = {
-        'subm_ids': backups_to_grade,
+        'subm_ids': submissions_id,
         'assignment': ag_assign_key,
         'access_token': token,
         'priority': 'default',
@@ -59,7 +60,6 @@ def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
         'testing': token == 'testing',
     }
     return send_autograder('/api/ok/v3/grade/batch', data)
-
 
 def grade_single(backup, ag_assign_key, token):
 
@@ -73,7 +73,6 @@ def grade_single(backup, ag_assign_key, token):
         'testing': token == 'testing',
     }
     return send_autograder('/api/ok/v3/grade/batch', data)
-
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)
@@ -96,12 +95,4 @@ def submit_continous(backup):
     if not backup.submitter.is_enrolled(assignment.course_id):
         raise ValueError("User is not enrolled and cannot be autograded")
 
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-
-    r = requests.post(constants.AUTOGRADER_URL + '/api/file/grade/continous',
-                      data=json.dumps(data), headers=headers, timeout=4)
-
-    if r.status_code == requests.codes.ok:
-        return {'status': "pending"}
-    else:
-        raise ValueError('The autograder the rejected your request')
+    return send_autograder('/api/file/grade/continous', data)

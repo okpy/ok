@@ -19,7 +19,7 @@ class HashidConverter(BaseConverter):
     def to_python(self, value):
         try:
             return utils.decode_id(value)
-        except TypeError as e:
+        except (TypeError, ValueError) as e:
             raise ValidationError(str(e))
 
     def to_url(self, value):
@@ -27,6 +27,7 @@ class HashidConverter(BaseConverter):
 
 name_part = '[^/]+'
 
+# TODO: Move the regexes to constants.py
 def restricted_name_part(exceptions):
     """Return a regex that matches a URL part except one of the words in the
     exceptions list.

@@ -9,19 +9,27 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import aliased, backref
+from sqlalchemy.sql import text
+
+from markdown import markdown
+import pytz
 
 import functools
 from collections import namedtuple
 import contextlib
 import csv
 from datetime import datetime as dt
+from datetime import timedelta
 import json
-from markdown import markdown
-import pytz
+import logging
 
-from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
+from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
+    HIDDEN_GRADE_TAGS)
 from server.extensions import cache
-from server.utils import encode_id
+from server.utils import (decode_id, encode_id, chunks, generate_number_table,
+                          humanize_name)
+
+logger = logging.getLogger(__name__)
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -34,7 +42,7 @@ metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
 
 def transaction(f):
-    """Decorator for database (session) transactions."""
+    """ Decorator for database (session) transactions."""
     @functools.wraps(f)
     def wrapper(*args, **kwds):
         try:
@@ -83,14 +91,31 @@ class Timezone(types.TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         # Python -> SQL
+        if not hasattr(value, 'zone'):
+            if value not in pytz.common_timezones_set:
+                logger.warning('Unknown TZ: {}'.format(value))
+                # Unknown TZ, use default instead
+                return TIMEZONE
+            return value
         return value.zone
 
     def process_result_value(self, value, dialect):
         # SQL -> Python
         return pytz.timezone(value)
 
+class StringList(types.TypeDecorator):
+    impl = types.Text
+
+    def process_bind_param(self, string_list, dialect):
+        # Python -> SQL
+        return ' '.join(string_list)
+
+    def process_result_value(self, value, dialect):
+        # SQL -> Python
+        return value.split()
+
 class Model(db.Model):
-    """Timestamps all models, and serializes model objects."""
+    """ Timestamps all models, and serializes model objects."""
     __abstract__ = True
 
     created = db.Column(db.DateTime(timezone=True),
@@ -100,7 +125,11 @@ class Model(db.Model):
         if hasattr(self, 'id'):
             key_val = self.id
         else:
-            key_val = self.__mapper__.primary_key._list[0].name
+            pk = self.__mapper__.primary_key
+            if type(pk) == tuple:
+                key_val = pk[0].name
+            else:
+                key_val = self.__mapper__.primary_key._list[0].name
         return '<{0} {1}>'.format(self.__class__.__name__, key_val)
 
     @classmethod
@@ -119,6 +148,11 @@ class Model(db.Model):
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
+    def from_dict(self, dict):
+        for c in self.__table__.columns:
+            if c.name in dict:
+                setattr(self, c.name, dict[c.name])
+        return self
 
 class User(Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -148,7 +182,7 @@ class User(Model, UserMixin):
 
     @hybrid_property
     def identifier(self):
-        return self.name or self.email
+        return humanize_name(self.name) or self.email
 
     @cache.memoize(3600)
     def num_grading_tasks(self):
@@ -157,7 +191,7 @@ class User(Model, UserMixin):
 
     @staticmethod
     def get_by_id(uid):
-        """ Performs .query.get; potentially can be cached. """
+        """ Performs .query.get; potentially can be cached."""
         return User.query.get(uid)
 
     @staticmethod
@@ -169,7 +203,7 @@ class User(Model, UserMixin):
 
     @staticmethod
     def lookup(email):
-        """Get a User with the given email address, or None."""
+        """ Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
 
 class Course(Model):
@@ -225,7 +259,7 @@ class Course(Model):
                             )]
 
 class Assignment(Model):
-    """Assignments are particular to courses and have unique names.
+    """ Assignments are particular to courses and have unique names.
         name - cal/cs61a/fa14/proj1
         display_name - Hog
         due_date - DEADLINE (Publically displayed)
@@ -241,13 +275,20 @@ class Assignment(Model):
     display_name = db.Column(db.String(255), nullable=False)
     due_date = db.Column(db.DateTime(timezone=True), nullable=False)
     lock_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    visible = db.Column(db.Boolean(), default=True)
     creator_id = db.Column(db.ForeignKey("user.id"))
     url = db.Column(db.Text)
     max_group_size = db.Column(db.Integer(), nullable=False, default=1)
     revisions_allowed = db.Column(db.Boolean(), nullable=False, default=False)
     autograding_key = db.Column(db.String(255))
+    uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
+    upload_info = db.Column(db.Text)
+
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
+
+    UserAssignment = namedtuple('UserAssignment',
+                                ['assignment', 'subm_time', 'group', 'final_subm'])
 
     @hybrid_property
     def active(self):
@@ -262,13 +303,14 @@ class Assignment(Model):
             return False
         if user.is_admin:
             return True
+        is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
         if action == "view":
-            return user.is_authenticated
-        return user.is_enrolled(obj.course.id, STAFF_ROLES)
+            return is_staff or obj.visible
+        return is_staff
 
     @staticmethod
-    @cache.memoize(900)
-    def assignment_stats(assign_id, detailed=False):
+    @cache.memoize(30)
+    def assignment_stats(assign_id, detailed=True):
         assignment = Assignment.query.get(assign_id)
         base_query = Backup.query.filter_by(assignment=assignment)
         stats = {
@@ -276,24 +318,37 @@ class Assignment(Model):
             'backups': base_query.count(),
             'groups': Group.query.filter_by(assignment=assignment).count(),
         }
+        data = assignment.course_submissions()
+        submissions = [fs['backup'] for fs in data if fs['backup']]
+        submissions_id = set(fs['id'] for fs in submissions)
+
+        students_with_subms = set(s['user']['id'] for s in data
+                                  if s['backup'] and s['backup']['submit'])
+        students_with_backup = set(s['user']['id'] for s in data
+                                   if s['backup'] and not s['backup']['submit'])
+        students_without_subms = set(s['user']['id'] for s in data
+                                     if not s['backup'])
+        groups = [g['group'] for g in data if g['group']]
+        total_students = len(data)
+        percent_started = ((len(students_with_subms) + len(students_with_backup)) /
+                           (total_students or 1)) * 100
+        percent_finished = (len(students_with_subms) / (total_students or 1)) * 100
+        active_groups = len(set([g['group_id'] for g in groups if ',' in g['group_member']]))
+
+        stats.update({
+            'unique_submissions': len(submissions_id),
+            'students_with_subm': len(students_with_subms),
+            'students_with_backup': len(students_with_backup),
+            'students_no_backup': len(students_without_subms),
+            'percent_started': percent_started,
+            'percent_finished': percent_finished,
+            'active_groups': active_groups,
+            'percent_groups_active': active_groups/(stats['groups'] or 1)
+        })
+
         if detailed:
-            # This is query intesive, maybe save for detailed stats?
-            students, submissions, not_started = assignment.course_submissions()
-            # now = dt.utcnow()
-            # day_ago = now - timedelta(hours=48)
-
-            # subms_by_hour = (db.session.query(Backup.created)
-            #                    .filter(Backup.assignment_id == assign_id,
-            #                            Backup.submit == True,
-            #                            Backup.created >= day_ago,
-            #                            Backup.created <= now).all())
-            # hourly = collections.Counter([b[0].hour for b in subms_by_hour])
-
             stats.update({
-                'students_submitted': len(students),
-                'students_submissions': len(submissions),
-                'students_nosubmit': len(not_started),
-                # 'hourly_subms': sorted(hourly.items())
+                'raw_data': data
             })
         return stats
 
@@ -308,26 +363,141 @@ class Assignment(Model):
 
     @staticmethod
     def by_name(name):
-        """Return assignment object when given a name."""
+        """ Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
-    def course_submissions(self):
+    def user_status(self, user):
+        user_ids = self.active_user_ids(user.id)
+        final_submission = self.final_submission(user_ids)
+        submission_time = final_submission and final_submission.created
+        group = Group.lookup(user, self)
+        return self.UserAssignment(self, submission_time, group,
+                                   final_submission)
+
+    def course_submissions(self, include_empty=True):
+        """ Return data on all course submissions for all enrolled users
+        List of dictionaries with user, group, backup dictionaries.
+        Sample [ {'user': {}, 'group': {}, 'backup': {} }]
+        """
+        current_db = db.engine.name
+        if current_db != 'mysql':
+            return self.course_submissions_slow(include_empty=include_empty)
+
+        # Can only run the fast query on MySQL
+        submissions = []
+
+        stats = self.mysql_course_submissions_query()
+        keys = stats.keys()
+        for r in stats:
+            user_info = {k: v for k, v in zip(keys[:3], r[:3])}
+            group_info = {k: v for k, v in zip(keys[3:6], r[3:6])}
+            if group_info['group_member_emails']:
+                group_info['group_member_emails'] = group_info['group_member_emails'].split(',')
+            backup_info = {k: v for k, v in zip(keys[6:], r[6:])}
+            if not include_empty and backup_info['id'] is None:
+                continue
+            data = {'user': user_info,
+                    'group': group_info if group_info.get('group_id') else None,
+                    'backup': backup_info if backup_info.get('id') else None}
+            submissions.append(data)
+        return submissions
+
+    def mysql_course_submissions_query(self):
+        """ For MySQL Clients only. Returns a SQLAlchemy result proxy object
+        Contains all of the following fields.
+
+        id  email   name                  group_id group_member group_member_emails
+        5   dschmidt1@gmail.com 'david s' 3   5,15 dschmidt1@gmail.com, foo@bar.com
+
+        created id  id submitter_id assignment_id submit  flagged extension
+        2016-09-07 20:22:04 4790    15  1   1   1   0
+        """
+        giant_query = """SELECT * FROM
+              (SELECT u.id,
+                      u.email,
+                      u.name,
+                      gm.group_id,
+                      GROUP_CONCAT(IFNULL(gm2.user_id, u.id)) AS group_member,
+                      GROUP_CONCAT((SELECT partners.email from user as partners
+                                    where id = gm2.user_id AND partners.id != u.id)) AS group_member_emails
+               FROM
+                 (SELECT u.id,
+                         u.email,
+                         u.name
+                  FROM user AS u,
+                               enrollment AS e
+                  WHERE e.course_id = :course_id
+                    AND e.user_id = u.id
+                    AND e.role='student') AS u
+               LEFT JOIN
+                 (SELECT *
+                  FROM group_member
+                  WHERE status = 'active'
+                    AND assignment_id = :assign_id) AS gm ON u.id = gm.user_id
+               LEFT JOIN group_member AS gm2 ON gm2.group_id = gm.group_id
+               AND gm2.status = 'active'
+               GROUP BY u.id) AS members
+            LEFT JOIN backup AS b2 ON b2.id=
+              (SELECT id
+               FROM backup AS b3,
+                 ({group_number_table}) AS member_index_counter
+               WHERE assignment_id=:assign_id
+                 AND b3.submitter_id = CAST(NULLIF(SUBSTRING_INDEX(members.group_member, ',', -pos),
+                                                   SUBSTRING_INDEX(members.group_member, ',', 1 - pos))
+                                            AS UNSIGNED)
+               ORDER BY flagged DESC, submit DESC, created DESC LIMIT 1)
+               ORDER BY group_id DESC;
+        """.format(group_number_table=generate_number_table(self.max_group_size))
+
+        giant_query = text(giant_query)
+        giant_query = giant_query.bindparams(db.bindparam("course_id", db.Integer),
+                                             db.bindparam("assign_id", db.Integer))
+        result = db.session.execute(giant_query, {'course_id': self.course.id,
+                                                  'assign_id': self.id})
+        return result
+
+    def course_submissions_slow(self, include_empty=True):
+        """ Return course submissions info with a slow set of queries."""
         seen = set()
-        students, submissions, no_submissions = set(), set(), set()
+        submissions = []
         for student in self.course.participations:
             if student.role == STUDENT_ROLE and student.user_id not in seen:
-                group = self.active_user_ids(student.user_id)
-                fs = self.final_submission(group)
-                seen |= group  # Perform union of two sets
-                if fs:
-                    students |= group
-                    submissions.add(fs.id)
+                student_user = student.user
+                group_ids = self.active_user_ids(student.user_id)
+                group_obj = Group.lookup(student_user, self)
+                if group_obj:
+                    group_members = [m.user for m in group_obj.members]
                 else:
-                    no_submissions |= group
-        return students, submissions, no_submissions
+                    group_members = [student_user]
+                group_emails = [u.email for u in group_members]
+                group_member_ids = ','.join([str(u_id) for u_id in group_ids])
+
+                fs = self.final_submission(group_ids)
+                if not fs:
+                    fs = self.backups(group_ids).first()
+
+                for member in group_members:
+                    if not fs and not include_empty:
+                        continue
+                    data = {
+                        'user': {
+                            'id': member.id,
+                            'name': member.name,
+                            'email': member.email,
+                        },
+                        'group': {
+                            'group_id': group_obj.id,
+                            'group_member': group_member_ids,
+                            'group_member_emails': group_emails
+                        } if group_obj else None,
+                        'backup': fs.as_dict() if fs else None
+                    }
+                    submissions.append(data)
+                seen |= group_ids  # Perform union of two sets
+        return submissions
 
     def active_user_ids(self, user_id):
-        """Return a set of the ids of all users that are active in the same group
+        """ Return a set of the ids of all users that are active in the same group
         that our user is active in. If the user is not in a group, return just
         that user's id (i.e. as if they were in a 1-person group).
         """
@@ -346,7 +516,7 @@ class Assignment(Model):
             return {member.user_id for member in members}
 
     def backups(self, user_ids):
-        """Return a query for the backups that the list of users has for this
+        """ Return a query for the backups that the list of users has for this
         assignment.
         """
         return Backup.query.filter(
@@ -356,7 +526,7 @@ class Assignment(Model):
         ).order_by(Backup.created.desc())
 
     def submissions(self, user_ids):
-        """Return a query for the submissions that the list of users has for this
+        """ Return a query for the submissions that the list of users has for this
         assignment.
         """
         return Backup.query.filter(
@@ -366,7 +536,7 @@ class Assignment(Model):
         ).order_by(Backup.created.desc())
 
     def final_submission(self, user_ids):
-        """Return a final submission for a user, or None."""
+        """ Return a final submission for a user, or None."""
         return (Backup.query
                       .options(db.joinedload(Backup.scores))
                       .filter(Backup.submitter_id.in_(user_ids),
@@ -376,9 +546,19 @@ class Assignment(Model):
                                 Backup.created.desc())
                       .first())
 
+    def revision(self, user_ids):
+        """ Return the revision backup for a user, or None."""
+        return (Backup.query.options(db.joinedload(Backup.scores))
+                      .filter(Backup.scores.any(kind="revision",
+                                                archived=False),
+                              Backup.submitter_id.in_(user_ids),
+                              Backup.assignment_id == self.id)
+                      .order_by(Backup.created.desc())
+                      .first())
+
     @transaction
     def flag(self, backup_id, member_ids):
-        """Flag a submission. First unflags any submissions by one of
+        """ Flag a submission. First unflags any submissions by one of
         MEMBER_IDS, which is a list of group member user IDs.
         """
         self._unflag_all(member_ids)
@@ -396,7 +576,7 @@ class Assignment(Model):
 
     @transaction
     def unflag(self, backup_id, member_ids):
-        """Unflag a submission."""
+        """ Unflag a submission."""
         backup = Backup.query.filter(
             Backup.id == backup_id,
             Backup.submitter_id.in_(member_ids),
@@ -408,10 +588,13 @@ class Assignment(Model):
         return backup
 
     def _unflag_all(self, member_ids):
-        """Unflag all submissions by members of MEMBER_IDS."""
+        """ Unflag all submissions by members of MEMBER_IDS for
+        this assignment (SELF)
+        """
         # There should only ever be one flagged submission
         backup = Backup.query.filter(
             Backup.submitter_id.in_(member_ids),
+            Backup.assignment_id == self.id,
             Backup.flagged == True
         ).one_or_none()
         if backup:
@@ -472,11 +655,17 @@ class Enrollment(Model):
         }
         Enrollment.create(cid, [info], role)
 
+    @transaction
+    def unenroll(self):
+        cache.delete_memoized(User.is_enrolled)
+        db.session.delete(self)
+
     @staticmethod
     @transaction
     def enroll_from_csv(cid, form):
         enrollment_info = []
         rows = form.csv.data.splitlines()
+        role = form.role.data
         entries = list(csv.reader(rows))
         new_users = []
         existing_user_count = 0
@@ -501,7 +690,7 @@ class Enrollment(Model):
         db.session.commit()
         for info in enrollment_info:
             info['id'] = info['id'].id
-        Enrollment.create(cid, enrollment_info, STUDENT_ROLE)
+        Enrollment.create(cid, enrollment_info, role)
         return len(new_users), existing_user_count
 
     @staticmethod
@@ -593,7 +782,12 @@ class Backup(Model):
         """ Return public grades. "Autograder" kind are errors from the
         autograder and should not be shown.
         """
-        return [s for s in self.scores if s.kind == "composition" and s.public]
+        return [s for s in self.scores
+            if s.public and s.kind not in HIDDEN_GRADE_TAGS]
+
+    @hybrid_property
+    def is_revision(self):
+        return any(s for s in self.scores if s.kind == "revision")
 
     # @hybrid_property
     # def group(self):
@@ -615,7 +809,7 @@ class Backup(Model):
         return submitters
 
     def files(self):
-        """Return a dictionary of filenames to contents."""
+        """ Return a dictionary of filenames to contents."""
         message = Message.query.filter_by(
             backup_id=self.id,
             kind='file_contents').first()
@@ -624,6 +818,16 @@ class Backup(Model):
             # submit is not a real file, but the client sends it anyway
             contents.pop('submit', None)
             return contents
+        else:
+            return {}
+
+    def analytics(self):
+        """ Return a dictionary of filenames to contents."""
+        message = Message.query.filter_by(
+            backup_id=self.id,
+            kind='analytics').first()
+        if message:
+            return dict(message.contents)
         else:
             return {}
 
@@ -638,7 +842,7 @@ class Backup(Model):
 
 
 class GroupMember(Model):
-    """A member of a group must accept the invite to join the group.
+    """ A member of a group must accept the invite to join the group.
     Only members of a group can view each other's submissions.
     A user may only be invited or participate in a single group per assignment.
     The status value can be one of:
@@ -665,7 +869,7 @@ class GroupMember(Model):
 
 
 class Group(Model):
-    """A group is a collection of users who are either members or invited.
+    """ A group is a collection of users who are either members or invited.
     Groups are created when a member not in a group invites another member.
     Invited members may accept or decline invitations. Active members may
     revoke invitations and remove members (including themselves).
@@ -709,8 +913,32 @@ class Group(Model):
 
     @staticmethod
     @transaction
+    def force_add(staff, sender, recipient, assignment):
+        """ Used by staff to create groups users on behalf of users."""
+        group = Group.lookup(sender, assignment)
+        add_sender = group is None
+        if not group:
+            group = Group(assignment=assignment)
+            db.session.add(group)
+        with group._log('accept', staff.id, recipient.id):
+            if add_sender:
+                group._add_member(sender, 'active')
+            group._add_member(recipient, 'active')
+
+    @staticmethod
+    @transaction
+    def force_remove(staff, sender, target, assignment):
+        """ Used by staff to remove users."""
+        group = Group.lookup(sender, assignment)
+        if not group:
+            raise BadRequest('No group to remove from')
+        with group._log('remove', staff.id, target.id):
+            group._remove_member(target)
+
+    @staticmethod
+    @transaction
     def invite(sender, recipient, assignment):
-        """Invite a user to a group, creating a group if necessary."""
+        """ Invite a user to a group, creating a group if necessary."""
         if not assignment.active:
             raise BadRequest('The assignment is past due')
         group = Group.lookup(sender, assignment)
@@ -727,7 +955,7 @@ class Group(Model):
 
     @transaction
     def remove(self, user, target_user):
-        """Remove a user from the group.
+        """ Remove a user from the group.
         The user must be an active member in the group, and the target user
         must be an active or pending member. You may remove yourself to leave
         the group. The assignment must also be active.
@@ -741,7 +969,7 @@ class Group(Model):
 
     @transaction
     def accept(self, user):
-        """Accept an invitation."""
+        """ Accept an invitation."""
         if not self.assignment.active:
             raise BadRequest('The assignment is past due')
         member = GroupMember.query.filter_by(
@@ -753,12 +981,11 @@ class Group(Model):
             raise BadRequest('{0} is not invited to this group'.format(user.email))
         with self._log('accept', user.id, user.id):
             member.status = 'active'
-        for member in self.assignment.active_user_ids(user.id):
-            self.assignment._unflag_all([member])
+        self.assignment._unflag_all([user.id])
 
     @transaction
     def decline(self, user):
-        """Decline an invitation."""
+        """ Decline an invitation."""
         if not self.assignment.active:
             raise BadRequest('The assignment is past due')
         with self._log('decline', user.id, user.id):
@@ -774,7 +1001,7 @@ class Group(Model):
             assignment=self.assignment
         ).one_or_none()
         if member:
-            raise BadRequest('{0} is already in this group'.format(user.email))
+            raise BadRequest('{0} is already in a group'.format(user.email))
         member = GroupMember(
             user_id=user.id,
             group=self,
@@ -794,7 +1021,7 @@ class Group(Model):
             db.session.delete(self)
 
     def serialize(self):
-        """Turn the group into a JSON object with:
+        """ Turn the group into a JSON object with:
         - id: the group id
         - assignment_id: the assignment id
         - members: a list of objects, with keys
@@ -813,7 +1040,7 @@ class Group(Model):
 
     @contextlib.contextmanager
     def _log(self, action_type, user_id, target_id):
-        """Usage:
+        """ Usage:
 
         with self._log('invite', user_id, target_id):
             ...
@@ -831,7 +1058,7 @@ class Group(Model):
 
 
 class GroupAction(Model):
-    """A group event, for auditing purposes. All group activity is logged."""
+    """ A group event, for auditing purposes. All group activity is logged."""
     action_types = ['invite', 'accept', 'decline', 'remove']
 
     id = db.Column(db.Integer, primary_key=True)
@@ -852,7 +1079,7 @@ class Version(Model):
     download_link = db.Column(db.Text())
 
     @staticmethod
-    @cache.memoize(1000)
+    @cache.memoize(1800)
     def get_current_version(name):
         version = Version.query.filter_by(name=name).one_or_none()
         if version:
@@ -917,7 +1144,7 @@ class Score(Model):
 
     @hybrid_property
     def export(self):
-        """ CSV export data. Overrides Model.export """
+        """ CSV export data. Overrides Model.export."""
         data = self.as_dict()
         data['backup_id'] = encode_id(self.backup_id)
         data['grader'] = User.email_by_id(self.grader_id)
@@ -925,7 +1152,7 @@ class Score(Model):
 
     @hybrid_property
     def students(self):
-        """ The users to which this score applies. """
+        """ The users to which this score applies."""
         return [User.query.get(owner) for owner in self.backup.owners()]
 
     @classmethod
@@ -937,8 +1164,29 @@ class Score(Model):
             return obj.backup.can_view(user, course)
         return user.is_enrolled(course.id, STAFF_ROLES)
 
+    def archive(self, commit=True):
+        self.public = False
+        self.archived = True
+
+        if commit:
+            db.session.commit()
+
+    @transaction
+    def archive_duplicates(self):
+        """ Archive scores with of the same kind on the same backup.
+        TODO: Investigate doing automatically on create/save.
+        """
+        existing_scores = Score.query.filter_by(backup=self.backup,
+                                                kind=self.kind,
+                                                archived=False).all()
+        for old_score in existing_scores:
+            if old_score.id != self.id:  # Do not archive current score
+                old_score.archive(commit=False)
+
+
+
 class GradingTask(Model):
-    """Each task represent a single submission assigned to a grader."""
+    """ Each task represent a single submission assigned to a grader."""
     id = db.Column(db.Integer(), primary_key=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), index=True,
                               nullable=False)
@@ -1017,5 +1265,127 @@ class GradingTask(Model):
 
         # Sort by number of outstanding tasks
         queues.sort(key=lambda q: q.total - q.completed, reverse=True)
-
         return queues
+
+    @classmethod
+    @transaction
+    def create_staff_tasks(cls, backups, staff, assignment_id, course_id, kind,
+                           only_unassigned=False):
+        if only_unassigned:
+            # Filter out backups that have a GradingTasks
+            backups = [b for b in backups if not cls.query.filter_by(backup_id=b).count()]
+
+        paritions = chunks(list(backups), len(staff))
+        tasks = []
+        for assigned_backups, grader in zip(paritions, staff):
+            for backup_id in assigned_backups:
+                task = cls(kind=kind, backup_id=backup_id, course_id=course_id,
+                           assignment_id=assignment_id, grader=grader)
+                tasks.append(task)
+                cache.delete_memoized(User.num_grading_tasks, grader)
+        db.session.add_all(tasks)
+        return tasks
+
+class Client(Model):
+    """ OAuth Clients.
+    See: https://flask-oauthlib.readthedocs.io/en/latest/oauth2.html
+    """
+    name = db.Column(db.String(40))
+
+    # human readable description, not required
+    description = db.Column(db.String(400))
+
+    # creator of the client, not required
+    user_id = db.Column(db.ForeignKey('user.id'))
+    # required if you need to support client credential
+    user = db.relationship('User')
+
+    client_id = db.Column(db.String(40), primary_key=True)
+    client_secret = db.Column(db.String(55), unique=True, index=True,
+                              nullable=False)
+
+    is_confidential = db.Column(db.Boolean, nullable=False)
+
+    redirect_uris = db.Column(StringList, nullable=False)
+    default_scopes = db.Column(StringList, nullable=False)
+
+    @property
+    def default_redirect_uri(self):
+        return self.redirect_uris[0]
+
+class Grant(Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE')
+    )
+    user = db.relationship('User')
+
+    client_id = db.Column(
+        db.String(40), db.ForeignKey('client.client_id'),
+        nullable=False,
+    )
+    client = db.relationship('Client')
+
+    code = db.Column(db.String(255), index=True, nullable=False)
+
+    redirect_uri = db.Column(db.String(255))
+    expires = db.Column(db.DateTime)
+
+    scopes = db.Column(StringList)
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+        return self
+
+class Token(Model):
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(
+        db.String(40), db.ForeignKey('client.client_id'),
+        nullable=False,
+    )
+    client = db.relationship('Client')
+
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id')
+    )
+    user = db.relationship('User')
+
+    # currently only bearer is supported
+    token_type = db.Column(db.String(40))
+
+    access_token = db.Column(db.String(255), unique=True)
+    refresh_token = db.Column(db.String(255), unique=True)
+    expires = db.Column(db.DateTime)
+    scopes = db.Column(StringList)
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+        return self
+
+class Job(Model):
+    """ A background job."""
+    statuses = ['queued', 'running', 'finished']
+
+    id = db.Column(db.Integer, primary_key=True)
+    updated = db.Column(db.DateTime(timezone=True), onupdate=db.func.now())
+    status = db.Column(db.Enum(*statuses, name='status'), nullable=False)
+
+    # The user who started the job.
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id'), nullable=False, index=True
+    )
+    user = db.relationship('User')
+
+    course_id = db.Column(
+        db.Integer, db.ForeignKey('course.id'), nullable=False, index=True
+    )
+    course = db.relationship('Course')
+
+    name = db.Column(db.String(255), nullable=False)  # The name of the function
+    # Human-readable description of the job
+    description = db.Column(db.Text, nullable=False)
+    failed = db.Column(db.Boolean, nullable=False, default=False)
+    log = db.Column(mysql.MEDIUMTEXT)  # All output, if the job has finished

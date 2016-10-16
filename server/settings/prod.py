@@ -1,10 +1,11 @@
 """ Do not put secrets in this file. This file is public.
     Production config.
 """
-
 import os
 import sys
 import binascii
+
+from server.settings import RAVEN_IGNORE_EXCEPTIONS
 
 default_secret = binascii.hexlify(os.urandom(24))
 
@@ -32,13 +33,20 @@ else:
 
 SQLALCHEMY_DATABASE_URI = db_url
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+SENTRY_USER_ATTRS = ['email', 'name']
+PREFERRED_URL_SCHEME = 'https'
+OAUTH2_PROVIDER_TOKEN_EXPIRES_IN = 28800
 
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 
 CACHE_TYPE = 'redis'
-CACHE_REDIS_HOST = os.getenv('REDIS_HOST', 'redis-master')
 CACHE_KEY_PREFIX = 'ok-web'
+
+RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
+    os.getenv('REDIS_HOST', 'redis-master')
+REDIS_PORT = 6379
+RQ_POLL_INTERVAL = 2000
 
 try:
     os.environ["GOOGLE_ID"]
