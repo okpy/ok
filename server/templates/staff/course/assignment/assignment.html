@@ -193,10 +193,11 @@
                     {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde', cid=current_course.id, aid=assignment.id), class_='form') %}
                         <button type="submit" class="ag-submit-btn" data-confirm="Are you sure you want to send to the autograder?"> <i class="fa fa-send"></i> Queue on Autograder </button>
                     {% endcall %}
-                  {% endif %}
+                  {% else %}
                     <a type="button" class="disabled">
                       <i class="fa fa-ban"></i> No "Autograder Key"
                     </a>
+                  {% endif %}
                  </li>
                   <li> <a href="{{ url_for('.templates', cid=current_course.id, aid=assignment.id) }}" type="button">
                      <i class="fa fa fa-file-text-o"></i> Edit Assignment Template
