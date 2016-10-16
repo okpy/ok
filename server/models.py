@@ -318,7 +318,7 @@ class Assignment(Model):
         if action == "view":
             return is_staff or obj.visible
         if action == "publish":
-            return is_staff and obj.visible
+            return is_staff if obj.visible else False
         return is_staff
 
     @staticmethod
