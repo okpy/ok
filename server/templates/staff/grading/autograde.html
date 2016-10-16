@@ -36,10 +36,7 @@
 
           </div>
           <div class="box-body">
-              {% call forms.render_form(form, action_url="", action_text='Queue on Autograder', class_='form', btn_class='ag-submit-btn btn btn-default',) %}
-                  {{ forms.render_field(form.token, description=form.description, label_visible=true) }}
-                  {{ forms.render_field(form.autograder_id, label_visible=true) }}
-                  {{ forms.render_checkbox_field(form.autopromote, label_visible=true) }}
+              {% call forms.render_form(CSRFForm(), action_url="", action_text='Queue on Autograder', class_='form', btn_class='ag-submit-btn btn btn-default',) %}
               {% endcall %}
           </div>
           <!-- /.box-body -->

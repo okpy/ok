@@ -347,7 +347,7 @@ def seed_flags():
                 assignment.flag(chosen.id, user_ids)
 
 def seed_oauth():
-    print("Seeding OAuth")
+    print("Seeding OAuth...")
     client = Client(
         name='Example Application',
         client_id='example-app',
@@ -362,6 +362,18 @@ def seed_oauth():
         default_scopes=OAUTH_SCOPES,
     )
     db.session.add(client)
+    db.session.commit()
+
+    autograder_client = Client(
+        name='Autograder',
+        client_id='autograder',
+        client_secret='autograder',
+        redirect_uris=[],
+        is_confidential=False,
+        description='Autograder',
+        default_scopes=OAUTH_SCOPES,
+    )
+    db.session.add(autograding_key)
     db.session.commit()
 
 
