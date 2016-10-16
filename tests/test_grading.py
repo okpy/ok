@@ -198,7 +198,7 @@ class TestGrading(OkTestCase):
         db.session.commit()
 
         # Check that by default scores are hidden
-        def check_visible_scores(assignment, hidden=[], visible=[]):
+        def check_visible_scores(assignment, hidden=(), visible=()):
             for user in users:
                 self.login(user.email)
                 endpoint = '/{}/'.format(assign.name)
