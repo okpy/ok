@@ -44,8 +44,8 @@ class TestGrading(OkTestCase):
                     db.session.add_all(messages)
                     db.session.add(backup)
                     # Debugging print if tests fails
-                    print("User {} | Assignment {} | Submission {} | Time {}".format(
-                        user_id, assign.id, num, time))
+                    # print("User {} | Assignment {} | Submission {} | Time {}".format(
+                    #     user_id, assign.id, num, time))
         db.session.commit()
 
     def _course_submissions_ids(self, assignment):
