@@ -71,6 +71,18 @@ if driver:
             models.db.session.add(self.oauth_client)
             models.db.session.commit()
 
+            autograder_client = models.Client(
+                name='Autograder',
+                client_id='autograder',
+                client_secret='autograder',
+                redirect_uris=[],
+                is_confidential=False,
+                description='Autograder',
+                default_scopes=[],
+            )
+            models.db.session.add(autograder_client)
+            models.db.session.commit()
+
         def create_app(self):
             app = create_app('settings/test.py')
             # Default port is 5000
@@ -306,6 +318,8 @@ if driver:
             self.assertTrue("Hog Stats" in self.driver.page_source)
 
         def test_assignment_send_to_ag(self):
+            self._seed_course()
+
             self._login(role="admin")
             self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1/autograde")
             self.assertTrue("Autograde Hog" in self.driver.page_source)
