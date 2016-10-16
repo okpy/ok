@@ -620,9 +620,8 @@ class Assignment(Model):
         if hide and published:
             self.published_scores = [t for t in self.published_scores if t != tag]
         elif not hide and not published:
-            if tag == 'Total':
-                self.published_scores = self.published_scores + [tag, 'Composition', 'Correctness']
-            elif tag == 'Revision' and 'Composition' not in self.published_scores:
+            # No current use case for correctness tag
+            if tag == 'Revision' and 'Composition' not in self.published_scores:
                 self.published_scores = self.published_scores + [tag, 'Composition']
             self.published_scores = self.published_scores + [tag]
 
@@ -809,10 +808,20 @@ class Backup(Model):
         autograder and should not be shown.
         """
         published_scores = self.assignment.published_scores
-        return [s for s in self.scores if (s.public and
-                                           s.kind != "autograder" and
-                                           s.kind != "private" and
-                                           s.kind.title() in published_scores)]
+        return [s for s in self.scores
+            if s.public and s.kind not in HIDDEN_GRADE_TAGS and s.kind.title() in published_scores]
+
+        # print("published_scores", published_scores)
+        # lst = []
+        # for s in self.scores:
+        #     print("public", s.public)
+        #     print("kind", s.kind)
+        #     print("hidden", s.kind in HIDDEN_GRADE_TAGS)
+        #     print("published", s.kind.titel() in published_scores)
+        #     if s.public and s.kind not in HIDDEN_GRADE_TAGS and s.kind.title() in published_scores:
+        #         print('appending')
+        #         lst.append(s)
+        # return lst
 
     @hybrid_property
     def is_revision(self):

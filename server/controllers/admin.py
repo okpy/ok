@@ -464,9 +464,7 @@ def publish_grades(cid, aid):
     if form.validate_on_submit():
         visibility = form.grades.data
         hide = form.hide.data
-        print("before call to publish", assign.published_scores)
         assign.publish_grades(visibility, form.hide.data)
-        print("after call to publish", assign.published_scores)
         if not hide:
             flash("Published {assignment} {visibility} scores".format(
                 assignment=assign.display_name, visibility=visibility.lower()), "success")
