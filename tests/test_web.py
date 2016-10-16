@@ -310,8 +310,6 @@ if driver:
             self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1/autograde")
             self.assertTrue("Autograde Hog" in self.driver.page_source)
 
-            assign_key = self.driver.find_element_by_id("autograder_id")
-            assign_key.send_keys('test') # AG responds with a 200 if ID = 'test'
             self.driver.find_element_by_class_name('ag-submit-btn').click()
             self.assertTrue("Submitted to the autograder" in self.driver.page_source)
 
