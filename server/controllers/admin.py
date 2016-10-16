@@ -12,7 +12,6 @@ import pygal
 from pygal.style import CleanStyle
 
 from server.autograder import autograde_assignment, submit_continous
-from server.controllers.auth import get_token_if_valid
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
@@ -594,7 +593,7 @@ def assign_grading(cid, aid):
                            form=form)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/autograde",
-             methods=["GET", "POST"])
+             methods=["POST"])
 @is_staff(course_arg='cid')
 def autograde(cid, aid):
     courses, current_course = get_courses(cid)
@@ -602,31 +601,14 @@ def autograde(cid, aid):
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
-    auth_token = get_token_if_valid()
-    form = forms.AutogradeForm()
+    form = forms.CSRFForm()
     if form.validate_on_submit():
-        if hasattr(form, 'token') and form.token.data:
-            token = form.token.data
-        else:
-            token = auth_token
-
-        autopromotion = form.autopromote.data
         try:
-            autograde_assignment(assign, form.autograder_id.data,
-                                 token, autopromotion=autopromotion)
+            autograde_assignment(assign)
             flash('Submitted to the autograder', 'success')
         except ValueError as e:
             flash(str(e), 'error')
-
-    if not form.token.data and auth_token:
-        form.token.data = auth_token[0]
-
-    if not form.autograder_id.data and assign.autograding_key:
-        form.autograder_id.data = assign.autograding_key
-
-    return render_template('staff/grading/autograde.html',
-                           current_course=current_course,
-                           assignment=assign, form=form)
+    return redirect(url_for('.assignment', cid=cid, aid=aid))
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
              methods=["GET", "POST"])

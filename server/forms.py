@@ -239,15 +239,6 @@ class CreateTaskForm(BaseForm):
     only_unassigned = BooleanField('Ignore submissions that already have a grader',
                                    default=False)
 
-class AutogradeForm(BaseForm):
-    description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""
-    token = StringField('Access Token', description=description,
-                        validators=[validators.optional()])
-    autograder_id = StringField('Autograder Assignment ID',
-                                validators=[validators.required()])
-    autopromote = BooleanField('Backup Autopromotion',
-                               description="If an enrolled student does not have a submission, this will grade their latest submission before the deadline")
-
 class UploadSubmissionForm(BaseForm):
     upload_files = FileField('Submission Files', [FileRequired()])
     flag_submission = BooleanField('Flag this submission for grading',
