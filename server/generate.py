@@ -364,19 +364,6 @@ def seed_oauth():
     db.session.add(client)
     db.session.commit()
 
-    autograder_client = Client(
-        name='Autograder',
-        client_id='autograder',
-        client_secret='autograder',
-        redirect_uris=[],
-        is_confidential=False,
-        description='Autograder',
-        default_scopes=OAUTH_SCOPES,
-    )
-    db.session.add(autograding_key)
-    db.session.commit()
-
-
 def seed():
     db.session.add(User(email='okstaff@okpy.org', is_admin=True))
     db.session.commit()

@@ -44,7 +44,17 @@ def autograde_assignment(assignment):
     # Create an access token for this run
     autograder_client = Client.query.get('autograder')
     if not autograder_client:
-        raise ValueError('Autograder OAuth client does not exist')
+        autograder_client = Client(
+            name='Autograder',
+            client_id='autograder',
+            client_secret='autograder',
+            redirect_uris=[],
+            is_confidential=False,
+            description='The Autopy autograder system',
+            default_scopes=['all'],
+        )
+        db.session.add(autograder_client)
+        db.session.commit()
     token = Token(
         client=autograder_client,
         user=current_user,
