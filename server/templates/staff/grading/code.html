@@ -32,48 +32,6 @@
 
     <div class="row">
         <div class="col-xs-12">
-            {% macro diff_tab(target_diff_type, text) %}
-            <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
-                <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
-            </li>
-            {% endmacro %}
-            {% if assignment.files %}
-            <ul class="nav nav-tabs nav-justified">
-                {{ diff_tab(None, 'Files') }}
-                {{ diff_tab('short', 'Diff (short)') }}
-                {{ diff_tab('full', 'Diff (full)') }}
-            </ul>
-            {% endif %}
-            <div class="box">
-                <!-- /.box-header -->
-                <div class="box-body">
-
-                    <div class="subcontent list">
-                        <div class="wrap">
-                            {% for filename, lines in files | dictsort %}
-                            {{ diff.source_file(backup, filename, lines) }}
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-                <!-- ./box-body -->
-                <div class="box-footer">
-                    <!-- Grade Box -->
-
-                    {% call forms.render_form(form, action_url=url_for('.grade', bid=backup.id),
-                                              action_text='Submit Score',
-                                              class_='form') %}
-                        {{ forms.render_field(form.kind, label_visible=true) }}
-                        {{ forms.render_field(form.message, label_visible=true, placeholder='Great work! Here are some suggestions ... ', type='text') }}
-                        {{ forms.render_field(form.score, label_visible=true) }}
-                    {% endcall %}
-
-                </div>
-                <!-- /.box-footer -->
-            </div>
-            <!-- /.box -->
-
-            <!-- /.box -->
             <div class="box collapsed-box">
                 <div class="box-header with-border">
                     <h3 class="box-title">Submission Information ({{ scores | length }} Assigned Scores) </h3>
@@ -117,6 +75,46 @@
                     </ul>
                 </div>
             </div>
+            {% macro diff_tab(target_diff_type, text) %}
+            <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+                <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
+            </li>
+            {% endmacro %}
+            {% if assignment.files %}
+            <ul class="nav nav-tabs nav-justified">
+                {{ diff_tab(None, 'Files') }}
+                {{ diff_tab('short', 'Diff (short)') }}
+                {{ diff_tab('full', 'Diff (full)') }}
+            </ul>
+            {% endif %}
+            <div class="box">
+                <!-- /.box-header -->
+                <div class="box-body">
+
+                    <div class="subcontent list">
+                        <div class="wrap">
+                            {% for filename, lines in files | dictsort %}
+                            {{ diff.source_file(backup, filename, lines) }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <!-- ./box-body -->
+                <div class="box-footer">
+                    <!-- Grade Box -->
+
+                    {% call forms.render_form(form, action_url=url_for('.grade', bid=backup.id),
+                                              action_text='Submit Score',
+                                              class_='form') %}
+                        {{ forms.render_field(form.kind, label_visible=true) }}
+                        {{ forms.render_field(form.message, label_visible=true, placeholder='Great work! Here are some suggestions ... ', type='text') }}
+                        {{ forms.render_field(form.score, label_visible=true) }}
+                    {% endcall %}
+
+                </div>
+                <!-- /.box-footer -->
+            </div>
+            <!-- /.box -->
         </div>
     </div>
 
