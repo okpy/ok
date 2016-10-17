@@ -12,7 +12,7 @@ import requests
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
 
-from server import create_app, models
+from server import create_app, models, utils
 
 from tests import OkTestCase
 
@@ -329,6 +329,27 @@ if driver:
             self.driver.find_element_by_class_name('ag-submit-btn').submit()
             self.assertTrue("Assignment has no autograder key" in self.driver.page_source)
             self.assertTrue("Submitted to the autograder" not in self.driver.page_source)
+
+        def test_assignment_send_backup_to_ag(self):
+            self._login(role="admin")
+            self.assignment.autograding_key = "test" # Autograder will respond with 200
+            models.db.session.commit()
+
+            # find a backup
+            backup = models.Backup(
+                submitter_id=self.user1.id,
+                assignment=self.assignment,
+            )
+            models.db.session.add(backup)
+            models.db.session.commit()
+
+            bid = utils.encode_id(backup.id)
+
+            self.pageLoad(self.get_server_url() + "/admin/grading/" + bid)
+            # show the button
+            self.driver.find_element_by_id('expand-submission-information').click()
+            self.driver.find_element_by_id('autograde-button').click()
+            self.assertIn("Submitted to the autograder", self.driver.page_source)
 
         def test_admin_enrollment(self):
             self._login(role="admin")

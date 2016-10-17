@@ -11,7 +11,7 @@ from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
 
-from server.autograder import autograde_assignment, submit_continous
+from server import autograder
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
@@ -237,6 +237,24 @@ def grade(bid):
                             cid=backup.assignment.course_id)
     return redirect(next_page)
 
+@admin.route('/grading/<hashid:bid>/autograde', methods=['POST'])
+@is_staff()
+def autograde_backup(bid):
+    backup = Backup.query.options(db.joinedload('assignment')).get(bid)
+    if not backup:
+        abort(404)
+    if not Backup.can(backup, current_user, 'grade'):
+        flash("You do not have permission to score this assignment.", "warning")
+        abort(401)
+
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        try:
+            autograder.autograde_backup(backup)
+            flash('Submitted to the autograder', 'success')
+        except ValueError as e:
+            flash(str(e), 'error')
+    return redirect(url_for('.grading', bid=bid))
 
 @admin.route("/versions/<name>", methods=['GET', 'POST'])
 @is_staff()
@@ -604,7 +622,7 @@ def autograde(cid, aid):
     form = forms.CSRFForm()
     if form.validate_on_submit():
         try:
-            autograde_assignment(assign)
+            autograder.autograde_assignment(assign)
             flash('Submitted to the autograder', 'success')
         except ValueError as e:
             flash(str(e), 'error')
@@ -1012,7 +1030,7 @@ def staff_submit_backup(cid, email, aid):
                 assign.flag(backup.id, user_ids)
             if assign.autograding_key:
                 try:
-                    submit_continous(backup)
+                    autograder.submit_continous(backup)
                 except ValueError as e:
                     flash('Did not send to autograder: {}'.format(e), 'warning')
 
