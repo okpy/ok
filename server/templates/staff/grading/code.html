@@ -37,7 +37,7 @@
                     <h3 class="box-title">Submission Information ({{ scores | length }} Assigned Scores) </h3>
 
                     <div class="box-tools pull-right">
-                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
                         </button>
                     </div>
                     <!-- /.box-tools -->
@@ -76,7 +76,7 @@
                 </div>
                 <div class="box-footer">
                     {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}
-                    <button class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
+                    <button id="autograde-button" class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
                     </button>
                     {% endcall %}
                 </div>
