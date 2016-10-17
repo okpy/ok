@@ -74,6 +74,12 @@
                         {% endif %}
                     </ul>
                 </div>
+                <div class="box-footer">
+                    {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}
+                    <button class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
+                    </button>
+                    {% endcall %}
+                </div>
             </div>
             {% macro diff_tab(target_diff_type, text) %}
             <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">

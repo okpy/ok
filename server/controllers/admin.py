@@ -237,6 +237,13 @@ def grade(bid):
                             cid=backup.assignment.course_id)
     return redirect(next_page)
 
+@admin.route('/grading/<hashid:bid>/autograde', methods=['POST'])
+@is_staff()
+def autograde_backup(bid):
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        pass
+    return redirect(url_for('.grading', bid=bid))
 
 @admin.route("/versions/<name>", methods=['GET', 'POST'])
 @is_staff()
