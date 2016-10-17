@@ -33,11 +33,7 @@ def send_autograder(endpoint, data):
                                                          error_message))
         raise ValueError(error_message)
 
-def autograde_assignment(assignment):
-    """Autograde all enrolled students for this assignment.
-
-    @assignment: Assignment object
-    """
+def send_batch(assignment, backup_ids):
     if not assignment.autograding_key:
         raise ValueError('Assignment has no autograder key')
 
@@ -66,32 +62,26 @@ def autograde_assignment(assignment):
     db.session.add(token)
     db.session.commit()
 
-    course_submissions = assignment.course_submissions(include_empty=False)
-    submissions = [fs['backup'] for fs in course_submissions if fs['backup']]
-    submissions_id = list(set(utils.encode_id(fs['id']) for fs in submissions))
-
-    data = {
-        'subm_ids': submissions_id,
+    return send_autograder('/api/ok/v3/grade/batch', {
+        'subm_ids': [utils.encode_id(bid) for bid in backup_ids],
         'assignment': assignment.autograding_key,
         'access_token': token.access_token,
         'priority': 'default',
         'backup_url': url_for('api.backup', _external=True),
         'ok-server-version': 'v3',
-    }
-    return send_autograder('/api/ok/v3/grade/batch', data)
+    })
 
-def grade_single(backup, ag_assign_key, token):
+def autograde_assignment(assignment):
+    """Autograde all enrolled students for this assignment.
 
-    data = {
-        'subm_ids': [utils.encode_id(backup.id)],
-        'assignment': ag_assign_key,
-        'access_token': token,
-        'priority': 'default',
-        'backup_url': url_for('api.backup', _external=True),
-        'ok-server-version': 'v3',
-        'testing': token == 'testing',
-    }
-    return send_autograder('/api/ok/v3/grade/batch', data)
+    @assignment: Assignment object
+    """
+    course_submissions = assignment.course_submissions(include_empty=False)
+    backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
+    return send_batch(assignment, backup_ids)
+
+def autograde_backup(backup):
+    return send_batch(backup.assignment, [backup.id])
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)
