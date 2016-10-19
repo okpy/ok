@@ -1,10 +1,11 @@
 """ Do not put secrets in this file. This file is public.
     For staging environment (Using Dokku)
 """
-
 import os
 import sys
 import binascii
+
+from server.settings import RAVEN_IGNORE_EXCEPTIONS
 
 default_secret = binascii.hexlify(os.urandom(24))
 
@@ -20,6 +21,13 @@ TESTING_LOGIN = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+SENTRY_USER_ATTRS = ['email', 'name']
+
+RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
+    os.getenv('REDIS_HOST', 'redis-master')
+REDIS_PORT = 6379
+RQ_POLL_INTERVAL = 2000
+OAUTH2_PROVIDER_TOKEN_EXPIRES_IN = 28800
 
 db_url = os.getenv('DATABASE_URL')
 if db_url:
@@ -32,6 +40,7 @@ else:
 SQLALCHEMY_DATABASE_URI = db_url
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
+MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # Max Upload Size is 8MB
 
 try:
     os.environ["GOOGLE_ID"]

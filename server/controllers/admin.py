@@ -5,22 +5,29 @@ from io import StringIO
 
 from flask import (Blueprint, render_template, flash, redirect, Response,
                    url_for, abort, request, stream_with_context)
+from werkzeug.exceptions import BadRequest
 
-from flask_login import current_user
+from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
 
-from server.autograder import autograde_assignment
-from server.controllers.auth import google_oauth_token
+from server import autograder
+
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, db)
-from server.constants import STAFF_ROLES, STUDENT_ROLE, GRADE_TAGS
+                           GradingTask, Backup, Score, Group, Client, Job, db)
+from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
+                              LAB_ASSISTANT_ROLE, GRADE_TAGS)
+
 from server.extensions import cache
 import server.forms as forms
+import server.jobs as jobs
+import server.jobs.example as example
+import server.jobs.moss as moss
+import server.jobs.github_search as github_search
+
 import server.highlight as highlight
 import server.utils as utils
-
 
 admin = Blueprint('admin', __name__)
 
@@ -50,14 +57,14 @@ def is_staff(course_arg=None):
                 return redirect(url_for("student.index"))
             flash("You are not on the course staff", "error")
             return redirect(url_for("student.index"))
-        return wrapper
+        return login_required(wrapper)
     return decorator
 
 
 def get_courses(cid=None):
-    #  TODO : The decorator could add these to the routes
     if current_user.is_authenticated and current_user.is_admin:
-        courses = Course.query.all()
+        courses = (Course.query.order_by(Course.created.desc())
+                         .all())
     else:
         enrollments = current_user.enrollments(roles=STAFF_ROLES)
         courses = [e.course for e in enrollments]
@@ -66,7 +73,7 @@ def get_courses(cid=None):
 
     matching_courses = [c for c in courses if c.id == cid]
     if len(matching_courses) == 0:
-        abort(401)  # TODO to actual error page
+        abort(401)
     current_course = matching_courses[0]
     return courses, current_course
 
@@ -138,13 +145,14 @@ def grading(bid):
         abort(404)
 
     form = forms.GradeForm()
-    existing = Score.query.filter_by(backup=backup).first()
+    existing = [s for s in backup.scores if not s.archived]
+    first_score = existing[0] if existing else None
 
-    if existing and existing.kind in GRADE_TAGS:
-        form = forms.GradeForm(kind=existing.kind)
-        form.kind.data = existing.kind
-        form.message.data = existing.message
-        form.score.data = existing.score
+    if first_score and first_score.kind in GRADE_TAGS:
+        form = forms.GradeForm(kind=first_score.kind)
+        form.kind.data = first_score.kind
+        form.message.data = first_score.message
+        form.score.data = first_score.score
 
     return grading_view(backup, form=form)
 
@@ -229,8 +237,26 @@ def grade(bid):
                             cid=backup.assignment.course_id)
     return redirect(next_page)
 
+@admin.route('/grading/<hashid:bid>/autograde', methods=['POST'])
+@is_staff()
+def autograde_backup(bid):
+    backup = Backup.query.options(db.joinedload('assignment')).get(bid)
+    if not backup:
+        abort(404)
+    if not Backup.can(backup, current_user, 'grade'):
+        flash("You do not have permission to score this assignment.", "warning")
+        abort(401)
 
-@admin.route("/client/<name>", methods=['GET', 'POST'])
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        try:
+            autograder.autograde_backup(backup)
+            flash('Submitted to the autograder', 'success')
+        except ValueError as e:
+            flash(str(e), 'error')
+    return redirect(url_for('.grading', bid=bid))
+
+@admin.route("/versions/<name>", methods=['GET', 'POST'])
 @is_staff()
 def client_version(name):
     courses, current_course = get_courses()
@@ -255,14 +281,53 @@ def client_version(name):
                            courses=courses, current_course=current_course,
                            version=version, form=form)
 
+##########
+# Course #
+##########
+@admin.route("/course/new", methods=['GET', 'POST'])
+@is_staff()
+def create_course():
+    courses, current_course = get_courses()
+    form = forms.NewCourseForm()
+    if form.validate_on_submit():
+        new_course = Course()
+        form.populate_obj(new_course)
+
+        # Add user as instructor, can be changed later
+        enroll = Enrollment(course=new_course, user_id=current_user.id,
+                            role=INSTRUCTOR_ROLE)
+        db.session.add(new_course)
+        db.session.add(enroll)
+
+        db.session.commit()
+
+        flash(new_course.offering + " created successfully.", "success")
+        return redirect(url_for(".course", cid=new_course.id))
+    return render_template('staff/course/course.new.html', form=form,
+                           courses=courses)
 
 @admin.route("/course/<int:cid>")
+@admin.route("/course/<int:cid>/")
 @is_staff(course_arg='cid')
 def course(cid):
     return redirect(url_for(".course_assignments", cid=cid))
     # courses, current_course = get_courses(cid)
     # return render_template('staff/course/index.html',
     #                       courses=courses, current_course=current_course)
+
+@admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def course_settings(cid):
+    courses, current_course = get_courses(cid)
+    form = forms.CourseUpdateForm(obj=current_course)
+    if form.validate_on_submit():
+        form.populate_obj(current_course)
+        db.session.commit()
+
+        flash(current_course.offering + " edited successfully.", "success")
+        return redirect(url_for(".course", cid=current_course.id))
+    return render_template('staff/course/course.edit.html', form=form,
+                           courses=courses, current_course=current_course)
 
 
 @admin.route("/course/<int:cid>/assignments")
@@ -273,7 +338,7 @@ def course_assignments(cid):
     active_asgns = [a for a in assgns if a.active]
     due_asgns = [a for a in assgns if not a.active]
     # TODO CLEANUP : Better way to send this data to the template.
-    return render_template('staff/course/assignments.html',
+    return render_template('staff/course/assignment/assignments.html',
                            courses=courses, current_course=current_course,
                            active_asgns=active_asgns, due_assgns=due_asgns)
 
@@ -295,9 +360,11 @@ def new_assignment(cid):
         cache.delete_memoized(Assignment.name_to_assign_info)
 
         flash("Assignment created successfully.", "success")
+        if form.visible.data:
+            return redirect(url_for(".templates", cid=cid, aid=model.id))
         return redirect(url_for(".course_assignments", cid=cid))
 
-    return render_template('staff/course/assignment.new.html', form=form,
+    return render_template('staff/course/assignment/assignment.new.html', form=form,
                            courses=courses, current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>",
@@ -318,11 +385,12 @@ def assignment(cid, aid):
     if form.validate_on_submit():
         # populate_obj converts back to UTC
         form.populate_obj(assign)
+        assign.creator_id = current_user.id
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
         flash("Assignment edited successfully.", "success")
 
-    return render_template('staff/course/assignment.html', assignment=assign,
+    return render_template('staff/course/assignment/assignment.html', assignment=assign,
                            form=form, courses=courses, stats=stats,
                            current_course=current_course)
 
@@ -334,18 +402,22 @@ def assignment_stats(cid, aid):
     if not Assignment.can(assign, current_user, 'edit'):
         flash('Insufficient permissions', 'error')
         return abort(401)
-    stats = Assignment.assignment_stats(assign.id, detailed=True)
+
+    stats = Assignment.assignment_stats(assign.id)
+
+    submissions = [d for d in stats.pop('raw_data')]
 
     pie_chart = pygal.Pie(half_pie=True, disable_xml_declaration=True,
                           style=CleanStyle,
                           inner_radius=.5, legend_at_bottom=True)
     pie_chart.title = 'Students submission status'
-    pie_chart.add('Students with Submissions', stats['students_submitted'])
-    pie_chart.add('Not Submitted', stats['students_nosubmit'])
+    pie_chart.add('Students with Submissions', stats['students_with_subm'])
+    pie_chart.add('Students with Backups', stats['students_with_backup'])
+    pie_chart.add('Not Started', stats['students_no_backup'])
 
-    return render_template('staff/course/assignment.stats.html',
+    return render_template('staff/course/assignment/assignment.stats.html',
                            assignment=assign, subm_chart=pie_chart,
-                           courses=courses, stats=stats,
+                           courses=courses, stats=stats, submissions=submissions,
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/template",
@@ -368,14 +440,14 @@ def templates(cid, aid):
         if files:
             templates = {}
             for template in files:
-                templates[template.filename] = str(template.read(), 'utf-8')
+                templates[template.filename] = str(template.read(), 'latin1')
             assignment.files = templates
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
         flash("Templates Uploaded", "success")
 
     # TODO: Use same student facing code rendering/highlighting
-    return render_template('staff/course/assignment.template.html',
+    return render_template('staff/course/assignment/assignment.template.html',
                            assignment=assignment, form=form, courses=courses,
                            current_course=current_course)
 
@@ -404,9 +476,10 @@ def export_scores(cid, aid):
             csv_writer = csv.DictWriter(csv_file, fieldnames=items)
             submitters = score.backup.enrollment_info()
             group = [s.user.email for s in submitters]
+            time_str = utils.local_time(score.backup.created, current_course)
             for submitter in submitters:
                 data = {'email': submitter.user.email,
-                        'time': score.backup.created,
+                        'time': time_str,
                         'is_late': score.backup.is_late,
                         'group': group}
                 data.update(submitter.export)
@@ -453,7 +526,6 @@ def assignment_queues(cid, aid):
     else:
         flash("You don't have a queue for this assignment", 'info')
 
-
     return render_template('staff/grading/overview.html', courses=courses,
                            current_course=current_course,
                            assignment=assignment, queues=queues,
@@ -470,8 +542,6 @@ def assignment_single_queue(cid, aid, uid):
         return abort(401)
 
     assigned_grader = User.get_by_id(uid)
-    if not Assignment.can(assignment, assigned_grader, 'grade'):
-        return abort(404)
 
     page = request.args.get('page', 1, type=int)
     tasks_query = GradingTask.query.filter_by(assignment=assignment,
@@ -506,6 +576,7 @@ def assign_grading(cid, aid):
     details = lambda e: "{0} - ({1})".format(e.user.email, e.role)
     form.staff.choices = [(utils.encode_id(e.user_id), details(e))
                           for e in course_staff]
+
     if not form.staff.data:
         # Select all by default
         form.staff.default = [u[0] for u in form.staff.choices]
@@ -519,24 +590,14 @@ def assign_grading(cid, aid):
             if user and user.is_enrolled(cid, roles=STAFF_ROLES):
                 selected_users.append(user)
 
-        # Available backups:
-        students, backups, no_submissions = assign.course_submissions()
+        # Available backups
+        data = assign.course_submissions()
+        backups = set(b['backup']['id'] for b in data if b['backup'])
+        students = set(b['user']['id'] for b in data if b['backup'])
+        no_submissions = set(b['user']['id'] for b in data if not b['backup'])
 
-        # If only want to assign unassigned ones:
-        # unassigned_backups = [b for b in backups if not b.grading_tasks]
-
-        chunks = utils.chunks(list(backups), len(selected_users))
-        tasks = []
-        for assigned_backups, grader in zip(chunks, selected_users):
-            for backup_id in assigned_backups:
-                task = GradingTask(kind=form.kind.data, backup_id=backup_id,
-                                   course_id=cid, assignment_id=aid,
-                                   grader=grader)
-                tasks.append(task)
-                cache.delete_memoized(User.num_grading_tasks, grader)
-
-        db.session.add_all(tasks)
-        db.session.commit()
+        tasks = GradingTask.create_staff_tasks(backups, selected_users, aid, cid,
+                                               form.kind.data, form.only_unassigned.data)
 
         num_with_submissions = len(students) - len(no_submissions)
         flash(("Created {0} tasks ({1} students) for {2} staff."
@@ -550,7 +611,7 @@ def assign_grading(cid, aid):
                            form=form)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/autograde",
-             methods=["GET", "POST"])
+             methods=["POST"])
 @is_staff(course_arg='cid')
 def autograde(cid, aid):
     courses, current_course = get_courses(cid)
@@ -558,70 +619,136 @@ def autograde(cid, aid):
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
-    auth_token = google_oauth_token()
-    form = forms.AutogradeForm()
+    form = forms.CSRFForm()
     if form.validate_on_submit():
-        if hasattr(form, 'token') and form.token.data:
-            token = form.token.data
-        else:
-            token = auth_token
-
-        autopromotion = form.autopromote.data
         try:
-            autograde_assignment(assign, form.autograder_id.data,
-                                 token, autopromotion=autopromotion)
+            autograder.autograde_assignment(assign)
             flash('Submitted to the autograder', 'success')
         except ValueError as e:
             flash(str(e), 'error')
+    return redirect(url_for('.assignment', cid=cid, aid=aid))
 
-    if not form.token.data and auth_token:
-        form.token.data = auth_token[0]
+@admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def start_moss_job(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
 
-    if not form.autograder_id.data and assign.autograding_key:
-        form.autograder_id.data = assign.autograding_key
+    form = forms.MossSubmissionForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            moss.submit_to_moss,
+            description='Moss Upload for {}'.format(assign.display_name),
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id,
+            moss_id=form.moss_userid.data,
+            file_regex=form.file_regex.data or '*',
+            language=form.language.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/moss.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
 
-    return render_template('staff/grading/autograde.html',
-                           current_course=current_course,
-                           assignment=assign, form=form)
+@admin.route("/course/<int:cid>/assignments/<int:aid>/github",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def start_github_search(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.GithubSearchRecentForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            github_search.search_similar_repos,
+            description='Github Search for {}'.format(assign.display_name),
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id,
+            keyword=form.keyword.data,
+            template_name=form.template_name.data,
+            access_token=form.access_token.data,
+            weeks_past=form.weeks_past.data,
+            language=form.language.data,
+            issue_title=form.issue_title.data,
+            issue_body=form.issue_body.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/github_search.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
+
+
+##############
+# Enrollment #
+##############
 
 @admin.route("/course/<int:cid>/enrollment", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
 def enrollment(cid):
     courses, current_course = get_courses(cid)
-    single_form = forms.EnrollmentForm(prefix="single")
-    if single_form.validate_on_submit():
-        email, role = single_form.email.data, single_form.role.data
-        Enrollment.enroll_from_form(cid, single_form)
+    form = forms.EnrollmentForm()
+    if form.validate_on_submit():
+        email, role = form.email.data, form.role.data
+        Enrollment.enroll_from_form(cid, form)
         flash("Added {email} as {role}".format(
             email=email, role=role), "success")
 
-    query = request.args.get('query', '').strip()
-    page = request.args.get('page', 1, type=int)
+    students = (Enrollment.query.options(db.joinedload('user'))
+                .filter_by(course_id=cid, role=STUDENT_ROLE)
+                .order_by(Enrollment.created.desc())
+                .all())
 
-    students = None
-    if query:
-        find_student = User.query.filter_by(email=query)
-        student = find_student.first()
-        if student:
-            students = (Enrollment.query
-                        .filter_by(course_id=cid, role=STUDENT_ROLE,
-                                   user_id=student.id)
-                        .paginate(page=page, per_page=1))
-        else:
-            flash("No student found with email {0}".format(query), "warning")
-    if not students:
-        students = (Enrollment.query
-                    .filter_by(course_id=cid, role=STUDENT_ROLE)
-                    .paginate(page=page, per_page=5))
+    staff = (Enrollment.query.options(db.joinedload('user'))
+             .filter(Enrollment.course_id == cid, Enrollment.role.in_(STAFF_ROLES))
+             .all())
 
-    staff = Enrollment.query.filter(Enrollment.course_id == cid,
-                                    Enrollment.role.in_(STAFF_ROLES)).all()
+    lab_assistants = (Enrollment.query.options(db.joinedload('user'))
+                      .filter_by(course_id=cid, role=LAB_ASSISTANT_ROLE)
+                      .order_by(Enrollment.created.desc())
+                      .all())
 
-    return render_template('staff/course/enrollment.html',
-                           enrollments=students, staff=staff, query=query,
-                           single_form=single_form,
+    return render_template('staff/course/enrollment/enrollment.html',
+                           enrollments=students, staff=staff,
+                           lab_assistants=lab_assistants,
+                           form=form,
+                           unenroll_form=forms.CSRFForm(),
                            courses=courses,
                            current_course=current_course)
+
+@admin.route("/course/<int:cid>/<int:user_id>/unenroll", methods=['POST'])
+@is_staff(course_arg='cid')
+def unenrollment(cid, user_id):
+    user = User.query.filter_by(id=user_id).one_or_none()
+    if user:
+        enrollment = user.is_enrolled(cid);
+        if enrollment:
+            enrollment.unenroll()
+            flash("{email} has been unenrolled".format(email=user.email), "success")
+        else:
+            flash("{email} is not enrolled".format(email=user.email), "warning")
+    else:
+        flash("Unknown user", "warning")
+
+    return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/course/<int:cid>/enrollment/batch",
              methods=['GET', 'POST'])
@@ -631,11 +758,12 @@ def batch_enroll(cid):
     batch_form = forms.BatchEnrollmentForm()
     if batch_form.validate_on_submit():
         new, updated = Enrollment.enroll_from_csv(cid, batch_form)
-        msg = "Added {new}, Updated {old} students".format(new=new, old=updated)
+        msg = ("Added {new}, Updated {old} {role} enrollments"
+               .format(new=new, role=batch_form.role.data, old=updated))
         flash(msg, "success")
         return redirect(url_for(".enrollment", cid=cid))
 
-    return render_template('staff/course/enrollment.batch.html',
+    return render_template('staff/course/enrollment/enrollment.batch.html',
                            batch_form=batch_form,
                            courses=courses,
                            current_course=current_course)
@@ -657,8 +785,306 @@ def enrollment_csv(cid):
 
     csv_generator = utils.generate_csv(query, items, row_to_csv)
 
-    # TODO: Remove. For local performance testing.
-    # return render_template('staff/index.html', data=list(csv_generator))
     return Response(stream_with_context(csv_generator),
                     mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
+
+@admin.route("/clients/", methods=['GET', 'POST'])
+@is_staff()
+def clients():
+    clients = Client.query.all()
+    form = forms.ClientForm(client_secret=utils.generate_secret_key())
+    if form.validate_on_submit():
+        client = Client(user=current_user)
+        form.populate_obj(client)
+        db.session.add(client)
+        db.session.commit()
+
+        flash('OAuth client "{}" added'.format(client.name), "success")
+        return redirect(url_for(".clients"))
+
+    return render_template('staff/clients.html', clients=clients, form=form)
+
+################
+# Student View #
+################
+
+@admin.route("/course/<int:cid>/<string:email>")
+@is_staff(course_arg='cid')
+def student_view(cid, email):
+    courses, current_course = get_courses(cid)
+    assignments = current_course.assignments
+
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+
+    enrollment = student.is_enrolled(cid)
+    if not enrollment:
+        flash("This email is not enrolled", 'warning')
+
+    assignments = {
+        'active': [a.user_status(student) for a in assignments
+                   if a.active],
+        'inactive': [a.user_status(student) for a in assignments
+                     if not a.active]
+    }
+
+    return render_template('staff/student/overview.html',
+                           courses=courses, current_course=current_course,
+                           student=student, enrollment=enrollment,
+                           assignments=assignments)
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>")
+@is_staff(course_arg='cid')
+def student_assignment_detail(cid, email, aid):
+    courses, current_course = get_courses(cid)
+    page = request.args.get('page', 1, type=int)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    assignment_stats = assign.user_status(student)
+
+    user_ids = assign.active_user_ids(student.id)
+
+    latest = assignment_stats.final_subm or assign.backups(user_ids).first()
+
+    stats = {
+        'num_backups': assign.backups(user_ids).count(),
+        'num_submissions': assign.submissions(user_ids).count(),
+        'current_q': None,
+        'attempts': None,
+        'latest': latest,
+        'analytics': latest and latest.analytics()
+    }
+
+    backups = (Backup.query.options(db.joinedload('scores'),
+                                    db.joinedload('submitter'))
+                     .filter(Backup.submitter_id.in_(user_ids),
+                             Backup.assignment_id == assign.id)
+                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
+                               Backup.created.desc()))
+
+    paginate = backups.paginate(page=page, per_page=15)
+
+    if stats['analytics']:
+        stats['current_q'] = stats['analytics'].get('question')
+        stats['attempts'] = (stats['analytics'].get('history', {})
+                                               .get('all_attempts'))
+
+    return render_template('staff/student/assignment.html',
+                           courses=courses, current_course=current_course,
+                           student=student, assignment=assign,
+                           add_member_form=forms.StaffAddGroupFrom(),
+                           paginate=paginate,
+                           csrf_form=forms.CSRFForm(),
+                           upload_form=forms.UploadSubmissionForm(),
+                           stats=stats,
+                           assign_status=assignment_stats)
+
+########################
+# Student view actions #
+########################
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/add_member",
+             methods=["POST"])
+@is_staff(course_arg='cid')
+def staff_group_add(cid, email, aid):
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.StaffAddGroupFrom()
+    result_page = url_for('.student_assignment_detail', cid=cid,
+                          email=email, aid=aid)
+
+    student = User.lookup(email)
+    if not student:
+        return abort(404)
+
+    if form.validate_on_submit():
+        target = User.lookup(form.email.data)
+        if not target or not target.is_enrolled(cid):
+            flash("This user is not enrolled", 'warning')
+            return redirect(result_page)
+        try:
+            Group.force_add(current_user, student, target, assign)
+        except BadRequest as e:
+            flash("Error: {}".format(str(e.description)), 'error')
+            return redirect(result_page)
+
+    return redirect(result_page)
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/remove_member",
+             methods=["POST"])
+@is_staff(course_arg='cid')
+def staff_group_remove(cid, email, aid):
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+
+    result_page = url_for('.student_assignment_detail', cid=cid,
+                          email=email, aid=aid)
+
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        target = User.lookup(request.form['target'])
+        if not target:
+            flash('{} does not exist'.format(request.form['target']), 'error')
+            return redirect(result_page)
+        try:
+            Group.force_remove(current_user, student, target, assign)
+        except BadRequest as e:
+            flash("Error: {}".format(str(e.description)), 'error')
+    return redirect(result_page)
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/flag",
+             methods=["POST"])
+@is_staff(course_arg='cid')
+def staff_flag_backup(cid, email, aid):
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+    result_page = url_for('.student_assignment_detail', cid=cid,
+                          email=email, aid=aid)
+
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+    user_ids = assign.active_user_ids(student.id)
+
+    bid = request.form.get('bid')
+
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        backup = Backup.query.filter_by(id=utils.decode_id(bid),
+                                        assignment=assign).one_or_none()
+        if not backup:
+            flash('{} does not exist'.format(bid, 'error'))
+            return redirect(result_page)
+
+        if not backup.flagged:
+            result = assign.flag(backup.id, user_ids)
+            flash('Flagged backup {} for grading'.format(bid), 'success')
+        else:
+            result = assign.unflag(backup.id, user_ids)
+            flash('Removed grading flag on {}'.format(bid), 'success')
+
+    return redirect(result_page)
+
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/submit",
+             methods=["POST"])
+@is_staff(course_arg='cid')
+def staff_submit_backup(cid, email, aid):
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+    result_page = url_for('.student_assignment_detail', cid=cid,
+                          email=email, aid=aid)
+    student = User.lookup(email)
+    if not student:
+        abort(404)
+    user_ids = assign.active_user_ids(student.id)
+    # TODO: DRY - Unify with student upload code - should just be a function
+    form = forms.UploadSubmissionForm()
+    if form.validate_on_submit():
+        files = request.files.getlist("upload_files")
+        if files:
+            templates = assign.files
+            messages = {'file_contents': {}}
+            for upload in files:
+                data = upload.read()
+                if len(data) > 2097152:
+                    # File is too large (over 2 MB)
+                    flash(("{} is over the maximum file size limit of 2MB"
+                           .format(upload.filename)),
+                          'danger')
+                    return redirect(result_page)
+                messages['file_contents'][upload.filename] = str(data, 'latin1')
+            if templates:
+                missing = []
+                for template in templates:
+                    if template not in messages['file_contents']:
+                        missing.append(template)
+                if missing:
+                    flash(("Missing files: {}. The following files are required: {}"
+                           .format(', '.join(missing), ', '.join([t for t in templates]))
+                           ), 'danger')
+                    return redirect(result_page)
+            # use student, not current_user
+            backup = ok_api.make_backup(student, assign.id, messages, True)
+            if form.flag_submission.data:
+                assign.flag(backup.id, user_ids)
+            if assign.autograding_key:
+                try:
+                    autograder.submit_continous(backup)
+                except ValueError as e:
+                    flash('Did not send to autograder: {}'.format(e), 'warning')
+
+            flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
+            return redirect(result_page)
+
+
+########
+# Jobs #
+########
+
+@admin.route('/course/<int:cid>/jobs/')
+@is_staff(course_arg='cid')
+def course_jobs(cid):
+    courses, current_course = get_courses(cid)
+    jobs = Job.query.filter_by(course_id=cid).all()
+    return render_template(
+        'staff/jobs/index.html',
+        courses=courses,
+        current_course=current_course,
+        jobs=jobs,
+    )
+
+@admin.route('/course/<int:cid>/jobs/<int:job_id>/')
+@is_staff(course_arg='cid')
+def course_job(cid, job_id):
+    courses, current_course = get_courses(cid)
+    job = Job.query.get_or_404(job_id)
+    if job.course_id != cid:
+        abort(404)
+    return render_template(
+        'staff/jobs/job.html',
+        courses=courses,
+        current_course=current_course,
+        job=job,
+    )
+
+@admin.route('/course/<int:cid>/jobs/test/', methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def start_test_job(cid):
+    courses, current_course = get_courses(cid)
+    form = forms.TestJobForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            example.test_job,
+            description='Test Job',
+            course_id=cid,
+            duration=form.duration.data,
+            should_fail=form.should_fail.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/test.html',
+            courses=courses,
+            current_course=current_course,
+            form=form,
+        )

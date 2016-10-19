@@ -1,18 +1,22 @@
-from flask import Blueprint, render_template, flash, request, redirect, \
-    url_for, abort, make_response
-from flask_login import login_required, \
-    current_user
+from flask import (Blueprint, render_template, flash, request, redirect,
+                   url_for, abort, make_response)
+from flask_login import login_required, current_user
 from werkzeug.exceptions import BadRequest
 
 import collections
+import logging
 
 from server import highlight, models, utils
+from server.autograder import submit_continous
+from server.controllers.api import make_backup
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
-from server.forms import CSRFForm
+from server.forms import CSRFForm, UploadSubmissionForm
 from server.models import User, Course, Assignment, Group, Backup, db
-from server.utils import is_safe_redirect_url, group_action_email, \
-    invite_email, send_email
+from server.utils import (is_safe_redirect_url, group_action_email,
+                          invite_email, send_email)
+
+logger = logging.getLogger(__name__)
 
 student = Blueprint('student', __name__)
 
@@ -63,19 +67,12 @@ def index():
 @student.route('/<offering:offering>/')
 @login_required
 def course(offering):
-    def assignment_info(assignment):
-        # TODO does this make O(n) db queries?
-        # TODO need group info too
-        user_ids = assignment.active_user_ids(current_user.id)
-        final_submission = assignment.final_submission(user_ids)
-        submission_time = final_submission and final_submission.created
-        group = Group.lookup(current_user, assignment)
-        return assignment, submission_time, group, final_submission
-
     course = get_course(offering)
     assignments = {
-        'active': [assignment_info(a) for a in course.assignments if a.active],
-        'inactive': [assignment_info(a) for a in course.assignments if not a.active]
+        'active': [a.user_status(current_user) for a in course.assignments
+                   if a.active and a.visible],
+        'inactive': [a.user_status(current_user) for a in course.assignments
+                     if not a.active and a.visible]
     }
     return render_template('student/course/index.html', course=course,
                            **assignments)
@@ -86,6 +83,8 @@ def assignment(name):
     assign = get_assignment(name)
     user_ids = assign.active_user_ids(current_user.id)
     fs = assign.final_submission(user_ids)
+    revision = assign.revision(user_ids)
+
     group = Group.lookup(current_user, assign)
     can_invite = assign.max_group_size > 1 and assign.active
     can_remove = group and group.has_status(current_user, 'active')
@@ -101,11 +100,68 @@ def assignment(name):
         'final_submission': fs,
         'flagged': fs and fs.flagged,
         'group': group,
+        'revision': revision,
         'can_invite': can_invite,
         'can_remove': can_remove,
         'csrf_form': CSRFForm()
     }
     return render_template('student/assignment/index.html', **data)
+
+@student.route('/<assignment_name:name>/submit', methods=['GET', 'POST'])
+@login_required
+def submit_assignment(name):
+    assign = get_assignment(name)
+    group = Group.lookup(current_user, assign)
+    user_ids = assign.active_user_ids(current_user.id)
+    fs = assign.final_submission(user_ids)
+
+    if not assign.uploads_enabled:
+        flash("This assignment cannot be submitted online", 'warning')
+        return redirect(url_for('.assignment', name=assign.name))
+    if not assign.active:
+        flash("It's too late to submit this assignment", 'warning')
+        return redirect(url_for('.assignment', name=assign.name))
+
+    form = UploadSubmissionForm()
+    if form.validate_on_submit():
+        files = request.files.getlist("upload_files")
+        if files:
+            templates = assign.files
+            messages = {'file_contents': {}}
+            for upload in files:
+                data = upload.read()
+                if len(data) > 2097152:
+                    # File is too large (over 2 MB)
+                    flash("{} is over the maximum file size limit of 2MB".format(upload.filename),
+                          'danger')
+                    return redirect(url_for('.submit_assignment', name=assign.name))
+                messages['file_contents'][upload.filename] = str(data, 'latin1')
+            if templates:
+                missing = []
+                for template in templates:
+                    if template not in messages['file_contents']:
+                        missing.append(template)
+                if missing:
+                    flash(("Missing files: {}. The following files are required: {}"
+                           .format(', '.join(missing), ', '.join([t for t in templates]))
+                           ), 'danger')
+                    return redirect(url_for('.submit_assignment', name=assign.name))
+
+            backup = make_backup(current_user, assign.id, messages, True)
+            if form.flag_submission.data:
+                assign.flag(backup.id, user_ids)
+            if assign.autograding_key:
+                try:
+                    submit_continous(backup)
+                except ValueError as e:
+                    logger.warning('Web submission did not autograde', exc_info=True)
+                    flash('Did not send to autograder: {}'.format(e), 'warning')
+
+            flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
+            return redirect(url_for('.assignment', name=assign.name))
+
+    return render_template('student/assignment/submit.html', assignment=assign,
+                           group=group, course=assign.course, form=form)
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/')
 @login_required
@@ -130,14 +186,18 @@ def list_backups(name, submit):
 def code(name, submit, bid):
     assign = get_assignment(name)
     backup = Backup.query.get(bid)
-    if not (backup and backup.submit == submit and
-            Backup.can(backup, current_user, "view")):
+
+    if not (backup and Backup.can(backup, current_user, "view")):
         abort(404)
+    if backup.submit != submit:
+        return redirect(url_for('.code', name=name, submit=backup.submit, bid=bid))
+
     diff_type = request.args.get('diff', None)
     if diff_type not in (None, 'short', 'full'):
         return redirect(url_for('.code', name=name, submit=submit, bid=bid))
     if not assign.files and diff_type:
         return abort(404)
+
     # sort comments by (filename, line)
     comments = collections.defaultdict(list)
     for comment in backup.comments:
@@ -155,9 +215,11 @@ def code(name, submit, bid):
 @login_required
 def download(name, submit, bid, file):
     backup = Backup.query.get(bid)
-    if not (backup and backup.submit == submit and
-            Backup.can(backup, current_user, "view")):
+    if not (backup and Backup.can(backup, current_user, "view")):
         abort(404)
+    if backup.submit != submit:
+        return redirect(url_for('.download', name=name, submit=backup.submit,
+                                bid=bid, file=file))
     try:
         contents = backup.files()[file]
     except KeyError:

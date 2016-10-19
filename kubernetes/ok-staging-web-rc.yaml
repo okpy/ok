@@ -3,7 +3,11 @@ kind: Deployment
 metadata:
   name: ok-staging-deployment
 spec:
-  replicas: 1
+  replicas: 4
+  strategy:
+      type: RollingUpdate
+      rollingUpdate:
+          maxUnavailable: 75%
   template:
     metadata:
       labels:
@@ -11,8 +15,15 @@ spec:
     spec:
       containers:
       - name: ok-v3-staging
-        image: cs61a/ok-server:staging
+        image: cs61a/ok
         imagePullPolicy: Always
+        livenessProbe:
+          # an http probe
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
         ports:
         - containerPort: 5000
         env:
@@ -50,7 +61,7 @@ spec:
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
-              name: ok-services
+              name: ok-staging-services
               key: sentry-dsn
         - name: SENDGRID_USER
           valueFrom:

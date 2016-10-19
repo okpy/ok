@@ -1,0 +1,97 @@
+<div class="box">
+    <div class="box-header">
+        <h3 class="box-title"><span> {{ title }} Assignments </span></h3>
+        <div class="box-tools">
+            <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                    <i class="fa fa-minus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- /.box-header -->
+    <div class="box-body table-responsive no-padding table-loading" id="{{ title }}-list">
+        <table class="table table-hover">
+            <thead>
+                <th class="sort" data-sort="assignment">Assignment</th>
+                <th class="sort" data-sort="due-date">Due Date</th>
+                <th class="sort" data-sort="group">Group</th>
+                <th class="sort" data-sort="submission-time">Time Submitted</th>
+                <th>Final Submission</th>
+                <th class="sort" data-sort="scores">Scores</th>
+                <th>Actions</th>
+            </thead>
+
+            <tbody class="list">
+                {%- for item in assignments %}
+                <tr>
+                    <td class="assignment"><a href="{{url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=item.assignment.id)}}">{{ item.assignment.display_name }}</a></td>
+                    <td class="due-date" data-timestamp="{{ item.assignment.due_date }}">{{ utils.local_time(item.assignment.due_date, current_course) }}
+                    </td>
+                    <td class="group">
+                    {% if item.group %}
+                        {% for member in item.group.members %}
+                            {% if member.user.email != student.email %}
+                                {% if member.status == 'active' %}
+                                    <i class="fa fa-check-circle-o text-green" alt="Active Member"></i>
+                                {% else %}
+                                    <i class="fa fa-envelope text-gray" alt="Active Member"></i>
+                                {% endif %}
+                                <a href="{{ url_for('.student_view', cid=current_course.id, email=member.user.email) }}">{{ member.user.identifier }}</a>
+                                <br>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <i class="fa fa-user-times text-gray" aria-hidden="true"></i>
+                    {% endif %}
+
+                    </td>
+
+                    {% if item.subm_time %}
+                        <td class="submission-time" data-timestamp="{{ item.created }}" data-timestamp="{{ item.subm_time }}">{{ utils.local_time(item.subm_time, current_course) }}
+                        </td>
+                        <td class="final-subm-id">
+                            <a href="{{ url_for('.grading', bid=item.final_subm.id) }}">
+                                {{ item.final_subm.hashid }}
+                            </a>
+                        </td>
+                    {% else %}
+                        <td class="submission-time" data-timestamp="{{ item.created }}">No Submission
+                        </td>
+                        <td class="final-subm-id">
+                            <i class="fa fa-times-circle text-red" aria-hidden="true"></i>
+                        </td>
+
+                    {% endif %}
+                    <td class="scores">
+                    {% if item.final_subm and item.final_subm.scores %}
+                        {% for score in item.final_subm.scores %}
+                            {% if not score.archived %}
+                            <a href="{{ url_for('.grading', bid=item.final_subm.id) }}">
+                                <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span>
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                    &mdash;
+                    {% endif %}
+                    </td>
+                    <td >
+                        <a href="{{url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=item.assignment.id)}}">
+                            <button class="btn btn-xs btn-default btn-plain"> Details </button>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- /.box-body -->
+    <div class="box-footer">
+        <div class="pull-left">
+        <h5 class="box-title"><span> Total: {{ assignments | length }} </span></h5>
+        </div>
+    </div>
+
+</div>

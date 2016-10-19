@@ -10,18 +10,18 @@ class TestSubmission(OkTestCase):
     def setUp(self):
         super(TestSubmission, self).setUp()
         self.setup_course()
-
-        message_dict = {'file_contents': {'backup.py': '1'}, 'analytics': {}}
-
         self.active_user_ids = [self.user1.id, self.user2.id, self.user3.id]
+        self._make_assignment(self.active_user_ids, self.assignment)
 
+    def _make_assignment(self, uids, assignment):
         # create a submission every 15 minutes
-        time = self.assignment.due_date
+        message_dict = {'file_contents': {'backup.py': '1'}, 'analytics': {}}
+        time = assignment.due_date
         for _ in range(20):
-            for user_id in self.active_user_ids:
+            for user_id in uids:
                 time -= datetime.timedelta(minutes=15)
                 backup = Backup(submitter_id=user_id,
-                    assignment=self.assignment, submit=True)
+                    assignment=assignment, submit=True)
                 messages = [Message(kind=k, backup=backup,
                     contents=m) for k, m in message_dict.items()]
                 db.session.add_all(messages)
@@ -62,6 +62,41 @@ class TestSubmission(OkTestCase):
         final = self.assignment.final_submission(self.active_user_ids)
         assert final == submission2
         assert not submission1.flagged
+
+    def test_two_assignments(self):
+        submission1 = self.assignment.submissions(self.active_user_ids).all()[3]
+        submission2 = self.assignment.submissions(self.active_user_ids).all()[7]
+        self.assignment.flag(submission1.id, self.active_user_ids)
+        self.assignment.flag(submission2.id, self.active_user_ids)
+
+        final = self.assignment.final_submission(self.active_user_ids)
+        assert final == submission2
+        assert not submission1.flagged
+
+        new_assignment = self.assignment2
+        self._make_assignment(self.active_user_ids, self.assignment2)
+
+        secondary_submit = self.assignment2.submissions(self.active_user_ids).all()[3]
+        secondary_final = self.assignment2.final_submission(self.active_user_ids)
+
+        # Final submission should be specific to assignments
+        assert final != secondary_final
+        # 4th most recent submit should not be final
+        assert secondary_submit != secondary_final
+        assert not secondary_final.flagged
+
+        self.assignment2.flag(secondary_submit.id, self.active_user_ids)
+        new_secondary_final = self.assignment2.final_submission(self.active_user_ids)
+        # Flagged submission should be recognized as the final.
+        assert secondary_submit == new_secondary_final
+        assert not secondary_final.flagged
+        assert new_secondary_final.flagged
+
+        # It should not affect the final submission of the other assignment
+        a1_final = self.assignment.final_submission(self.active_user_ids)
+        assert final == a1_final
+        assert final == submission2
+
 
     def test_unflag(self):
         submission = self.assignment.submissions(self.active_user_ids).all()[3]

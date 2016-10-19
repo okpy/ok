@@ -7,7 +7,7 @@ gunicorn
 raven[flask]
 
 # Database
-pymysql==0.7.5
+pymysql==0.7.6
 sqlalchemy==1.0.14
 
 # Caching
@@ -21,10 +21,25 @@ rq-dashboard==0.3.7
 WTForms>=2.0,<3.0
 
 # Flask Extensions
-Flask-Assets==0.11
+Flask-Assets>=0.12,<0.12.99
 Flask-Cache==0.13.1
 Flask-Login==0.3.2
-Flask-OAuthlib==0.9.3
+
+# OAuth
+
+# Pin OAuthlib until https://github.com/idan/oauthlib/issues/433
+# and https://github.com/idan/oauthlib/issues/359 are fixed
+# Otherwise, there will be errors when using nginx.
+# oauthlib==1.1.2
+# Attempt to install oauthlib2.0 with approriate fixes applied.
+
+https://github.com/Sumukh/oauthlib/archive/master.zip
+
+# Flask-OAuthlib==0.9.3
+# OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
+
+https://github.com/lepture/flask-oauthlib/archive/e1bb478b2015239dd12f1d3ee13fb2627a5a3407.zip
+
 Flask-WTF==0.12
 Flask-RESTful==0.3.5
 Flask-Testing==0.5.0
@@ -33,17 +48,18 @@ Flask-RQ==0.2
 # Flask DB Extensions
 Flask-SQLAlchemy==2.1
 Flask-SQLAlchemy-Cache==0.1.5
-Flask-Migrate==1.8.1
+Flask-Migrate==2.0.0
 
 # Timezones
 pytz
+arrow
 
 # Emailing
 sendgrid==1.5.20
 pynliner<1.0
 
 # Autograder Interface
-requests==2.10
+requests==2.11
 
 # Front end
 itsdangerous==0.24
@@ -58,14 +74,14 @@ pygal==2.2.3
 # Development
 Flask-DebugToolbar==0.10.0
 Flask-Script==2.0.5
-mccabe==0.5.0
+mccabe==0.5.2
 flake8>=2.5.4
 pylint>=1.5.2
 names==0.3.0
 
 # Testing
-pytest==2.9.2
-pytest-cov==2.3.0
+pytest>=3.0.0,<3.1
+pytest-cov==2.3.1
 selenium
 
 # until version 1.0.6 is on pypi

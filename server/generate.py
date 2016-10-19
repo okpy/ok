@@ -8,13 +8,14 @@ import loremipsum
 import names
 import pytz
 
-from server.models import (db, User, Course, Assignment, Enrollment,
+from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
-                           GradingTask)
+                           GradingTask, Client, Token)
+from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE, OAUTH_SCOPES
+from server.extensions import cache
 
-original_file = open('tests/files/fizzbuzz_before.py').read()
-modified_file = open('tests/files/fizzbuzz_after.py').read()
-
+original_file = open('tests/files/fizzbuzz_before.py', encoding="utf8").read()
+modified_file = open('tests/files/fizzbuzz_after.py', encoding="utf8").read()
 
 def weighted_choice(choices):
     # http://stackoverflow.com/a/3679747
@@ -30,10 +31,8 @@ def weighted_choice(choices):
 def gen_bool(p=0.5):
     return random.random() < p
 
-
 def gen_maybe(value, p=0.5):
     return value if gen_bool(p) else None
-
 
 def gen_list(gen, n, nonempty=False):
     if nonempty:
@@ -42,14 +41,12 @@ def gen_list(gen, n, nonempty=False):
         length = random.randrange(n)
     return [gen() for _ in range(length)]
 
-
 def gen_unique(gen, n, attr):
     generated = collections.OrderedDict()
     while len(generated) < n:
         v = gen()
         generated[getattr(v, attr)] = v
     return generated.values()
-
 
 def gen_markdown():
     def gen_text():
@@ -82,7 +79,6 @@ def gen_markdown():
 
     return '\n\n'.join(gen_list(gen_block, 4, nonempty=True))
 
-
 def gen_user():
     real_name = names.get_full_name()
     first_name, last_name = real_name.lower().split(' ')
@@ -96,7 +92,6 @@ def gen_user():
             random.choice(['berkeley.edu', 'gmail.com'])),
         is_admin=gen_bool(0.05))
 
-
 def gen_course():
     return Course(
         offering='{0}/{1}/{2}{3}'.format(
@@ -109,8 +104,7 @@ def gen_course():
             random.choice(['CS', 'Data Science']),
             random.randrange(100),
             random.choice(['', 'A'])),
-        active=gen_bool(0.3))
-
+        active=gen_bool(0.6))
 
 def gen_assignment(course):
     if gen_bool(0.5):
@@ -125,7 +119,7 @@ def gen_assignment(course):
 
     last_night = (datetime.datetime.utcnow()
                           .replace(hour=0, minute=0, second=0, microsecond=0)
-                  - datetime.timedelta(seconds=1))
+                          - datetime.timedelta(seconds=1))
     last_night = (pytz.timezone("America/Los_Angeles")
                       .localize(last_night)
                       .astimezone(pytz.utc))
@@ -142,16 +136,16 @@ def gen_assignment(course):
         display_name=display_name,
         due_date=due_date,
         lock_date=lock_date,
-        max_group_size=random.randrange(1, 3),
+        max_group_size=weighted_choice([(1, 20), (2, 70), (3, 10)]),
         revisions_allowed=gen_bool(0.3),
         files={'fizzbuzz.py': original_file})
-
 
 def gen_enrollment(user, course):
     role = weighted_choice([
         ('student', 100),
         ('grader', 2),
         ('staff', 20),
+        ('lab assistant', 20),
         ('instructor', 2),
     ])
     sid = ''.join(random.choice(string.digits) for _ in range(8))
@@ -166,7 +160,6 @@ def gen_enrollment(user, course):
         sid=gen_maybe(sid, 0.4),
         class_account=gen_maybe(class_account, 0.4),
         section=gen_maybe(section, 0.4))
-
 
 def gen_backup(user, assignment):
     messages = {
@@ -230,10 +223,16 @@ def gen_queue(backup, grader):
         grader=grader
     )
 
-def seed_users():
+def gen_invite(member, invitee, assignment, accept=False):
+    Group.invite(member, invitee, assignment)
+    group = Group.lookup(invitee, assignment)
+    if accept:
+        group.accept(invitee)
+    return group
+
+def seed_users(num=25):
     print('Seeding users...')
-    users = [User(email='okstaff@okpy.org', is_admin=True)]
-    users.extend(gen_unique(gen_user, 30, 'email'))
+    users = gen_unique(gen_user, num, 'email')
     db.session.add_all(users)
     db.session.commit()
 
@@ -259,6 +258,8 @@ def seed_enrollments():
         for course in Course.query.all():
             if not gen_bool(0.9):
                 continue
+            if user.is_enrolled(course.id):
+                continue
             db.session.add(gen_enrollment(user, course))
     db.session.commit()
 
@@ -275,8 +276,8 @@ def seed_backups():
 
 def seed_versions():
     print('Seeding version...')
-    url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok'
-    ok = Version(name='ok-client', current_version='v1.5.4', download_link=url)
+    url = 'https://github.com/Cal-CS-61A-Staff/ok-client0/releases/download/v1.5.5/ok'
+    ok = Version(name='ok-client', current_version='v1.5.5', download_link=url)
     db.session.add(ok)
 
 
@@ -292,8 +293,11 @@ def seed_scores():
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
         if random.choice([True, False]):
-            score = gen_score(backup, admin)
-            db.session.add(score)
+             score = gen_score(backup, admin, kind='composition')
+             db.session.add(score)
+        if random.choice([True, False]):
+             score = gen_score(backup, admin, kind='total')
+             db.session.add(score)
     db.session.commit()
 
 def seed_queues():
@@ -310,16 +314,74 @@ def seed_queues():
             db.session.add(task)
     db.session.commit()
 
+def seed_groups():
+    print('Seeding groups...')
+    for assign in Assignment.query.all():
+        if assign.max_group_size < 2 or not assign.active:
+            continue
+        enrollments = Enrollment.query.filter_by(course=assign.course,
+                                                 role=STUDENT_ROLE).all()
+        students = [s.user for s in enrollments]
+        while len(students) > 1:
+            member, invitee = random.sample(students, 2)
+            students.remove(member)
+            students.remove(invitee)
+            if gen_bool(0.8):  # Leave some users without any group activity
+                new_group = gen_invite(member, invitee, assign,
+                                       accept=gen_bool(0.8))
+                db.session.add(new_group)
+    db.session.commit()
+
+def seed_flags():
+    print('Seeding flags...')
+    for user in User.query.all():
+        seen_members = set()
+        for assignment in Assignment.query.all():
+            if user.id in seen_members:
+                continue
+            user_ids = assignment.active_user_ids(user.id)
+            seen_members |= user_ids
+            submissions = assignment.submissions(user_ids).all()
+            if submissions and gen_bool(0.8):
+                chosen = random.choice(submissions)
+                assignment.flag(chosen.id, user_ids)
+
+def seed_oauth():
+    print("Seeding OAuth...")
+    client = Client(
+        name='Example Application',
+        client_id='example-app',
+        client_secret='example-secret',
+        redirect_uris=[
+            'http://localhost:8000/authorized',
+            'http://127.0.0.1:8000/authorized',
+            'http://127.0.0.1:8000/login/authorized',
+        ],
+        is_confidential=False,
+        description='Sample App for building OAuth',
+        default_scopes=OAUTH_SCOPES,
+    )
+    db.session.add(client)
+    db.session.commit()
+
 def seed():
+    db.session.add(User(email='okstaff@okpy.org', is_admin=True))
+    db.session.commit()
+
     random.seed(0)
-    seed_users()
+    seed_users(num=15)
     seed_courses()
     seed_assignments()
     seed_enrollments()
     seed_backups()
     seed_comments()
-    # TODO: groups
-    # TODO: submission flagging
+    seed_groups()
+    seed_flags()
     seed_queues()
     seed_scores()
-    seed_versions()
+    seed_oauth()
+
+    # Large course test. Uncomment to test large number of enrollments
+    # cache.clear()
+    # seed_users(num=1500)
+    # seed_enrollments()

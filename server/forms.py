@@ -2,25 +2,26 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
-                     SelectMultipleField, widgets, validators)
+                     SelectMultipleField, Field, widgets, validators)
 from flask_wtf.html5 import EmailField
 
+import pytz
 import datetime as dt
 
 from server import utils
-from server.models import Assignment
-from server.constants import VALID_ROLES, GRADE_TAGS
+from server.models import Assignment, Course
+from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
+                              TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
+                              COMMON_LANGUAGES, ROLE_DISPLAY_NAMES)
 
 import csv
 import logging
-
 
 def strip_whitespace(value):
     if value and hasattr(value, "strip"):
         return value.strip()
     else:
         return value
-
 
 class MultiCheckboxField(SelectMultipleField):
     """
@@ -32,6 +33,20 @@ class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
+class CommaSeparatedField(Field):
+    widget = widgets.TextInput()
+
+    def _value(self):
+        if self.data:
+            return ', '.join(self.data)
+        else:
+            return ''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            self.data = [x.strip() for x in valuelist[0].split(',')]
+        else:
+            self.data = []
 
 class BaseForm(Form):
 
@@ -58,25 +73,30 @@ class AssignmentForm(BaseForm):
                 self.lock_date.data = utils.local_time_obj(
                     obj.lock_date, course)
 
-    display_name = StringField(u'Display Name',
+    display_name = StringField('Display Name',
                                validators=[validators.required()])
-    name = StringField(u'Offering (example: cal/cs61a/sp16/lab01)',
+    name = StringField('Offering (example: cal/cs61a/fa16/proj01)',
                        validators=[validators.required()])
-    due_date = DateTimeField(u'Due Date (Course Time)',
-                             default=dt.datetime.now,
+    due_date = DateTimeField('Due Date (Course Time)',
                              validators=[validators.required()])
-    lock_date = DateTimeField(u'Lock Date (Course Time)',
-                              default=dt.datetime.now,
+    lock_date = DateTimeField('Lock Date (Course Time)',
                               validators=[validators.required()])
-    max_group_size = IntegerField(u'Max Group Size',
+    max_group_size = IntegerField('Max Group Size',
                                   default=1,
                                   validators=[validators.InputRequired(),
                                               validators.number_range(min=1)])
-    url = StringField(u'URL',
+    url = StringField('URL',
                       validators=[validators.optional(), validators.url()])
-    revisions = BooleanField(u'Enable Revisions', default=False,
-                             validators=[validators.optional()])
-    autograding_key = StringField(u'Autograder Key', [validators.optional()])
+    revisions_allowed = BooleanField('Enable Revisions', default=False,
+                                     validators=[validators.optional()])
+    autograding_key = StringField('Autograder Key', [validators.optional()])
+    uploads_enabled = BooleanField('Enable Web Uploads', default=False,
+                                   validators=[validators.optional()])
+    upload_info = StringField('Upload Instructions',
+                              validators=[validators.optional()])
+    visible = BooleanField('Visible On Student Dashboard', default=True)
+    autograding_key = StringField('Autograder Key',
+                                  validators=[validators.optional()])
 
     def populate_obj(self, obj):
         """ Updates obj attributes based on form contents. """
@@ -93,7 +113,11 @@ class AssignmentForm(BaseForm):
             return False
 
         # Ensure the name has the right format:
-        if not self.name.data.startswith(self.course.offering):
+        is_valid_endpoint = utils.is_valid_endpoint(self.name.data,
+                                                    ASSIGNMENT_ENDPOINT_FORMAT)
+        has_course_endpoint = self.name.data.startswith(self.course.offering)
+
+        if not has_course_endpoint or not is_valid_endpoint:
             self.name.errors.append(
                 'The name should be of the form {0}/<name>'.format(self.course.offering))
             return False
@@ -114,10 +138,15 @@ class AssignmentUpdateForm(AssignmentForm):
             return False
 
         # Ensure the name has the right format:
-        if not self.name.data.startswith(self.course.offering):
-            self.name.errors.append(('The name should be of the form {0}/<name>'
-                                     .format(self.course.offering)))
+        is_valid_endpoint = utils.is_valid_endpoint(self.name.data,
+                                                    ASSIGNMENT_ENDPOINT_FORMAT)
+        has_course_endpoint = self.name.data.startswith(self.course.offering)
+
+        if not has_course_endpoint or not is_valid_endpoint:
+            self.name.errors.append(
+                'The name should be of the form {0}/<name>'.format(self.course.offering))
             return False
+
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn and (self.obj and assgn.id != self.obj.id):
             self.name.errors.append('That offering already exists.')
@@ -130,27 +159,29 @@ class AssignmentTemplateForm(BaseForm):
 
 
 class EnrollmentForm(BaseForm):
-    name = StringField(u'Name', validators=[validators.optional()])
-    email = EmailField(u'Email',
+    name = StringField('Name', validators=[validators.required()])
+    email = EmailField('Email',
                        validators=[validators.required(), validators.email()])
-    sid = StringField(u'SID', validators=[validators.optional()])
-    secondary = StringField(u'Secondary Auth (e.g Username)',
+    sid = StringField('SID', validators=[validators.optional()])
+    secondary = StringField('Secondary Auth (e.g Username)',
                             validators=[validators.optional()])
-    section = StringField(u'Section',
+    section = StringField('Section',
                           validators=[validators.optional()])
-    role = SelectField(u'Role',
-                       choices=[(r, r.capitalize()) for r in VALID_ROLES])
+    role = SelectField('Role', default=STUDENT_ROLE,
+                       choices=ROLE_DISPLAY_NAMES.items())
 
 
 class VersionForm(BaseForm):
-    current_version = EmailField(u'Current Version',
+    current_version = EmailField('Current Version',
                                  validators=[validators.required()])
-    download_link = StringField(u'Download Link',
+    download_link = StringField('Download Link',
                                 validators=[validators.required(), validators.url()])
 
 
 class BatchEnrollmentForm(BaseForm):
-    csv = TextAreaField(u'Email, Name, SID, Course Login, Section')
+    csv = TextAreaField('Email, Name, SID, Course Login, Section')
+    role = SelectField('Role', default=STUDENT_ROLE,
+                       choices=ROLE_DISPLAY_NAMES.items())
 
     def validate(self):
         check_validate = super(BatchEnrollmentForm, self).validate()
@@ -192,7 +223,6 @@ class GradeForm(BaseForm):
     kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
                        validators=[validators.required()])
 
-
 class CompositionScoreForm(GradeForm):
     score = SelectField('Composition Score',
                         choices=[('0', '0'), ('1', '1'), ('2', '2')],
@@ -206,13 +236,114 @@ class CreateTaskForm(BaseForm):
                        validators=[validators.required()], default="composition")
     staff = MultiCheckboxField('Assigned Staff', choices=[],
                                validators=[validators.required()])
+    only_unassigned = BooleanField('Ignore submissions that already have a grader',
+                                   default=False)
+
+class UploadSubmissionForm(BaseForm):
+    upload_files = FileField('Submission Files', [FileRequired()])
+    flag_submission = BooleanField('Flag this submission for grading',
+                                   default=False)
+
+class StaffAddGroupFrom(BaseForm):
+    description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""
+
+    email = EmailField('Email',
+                       validators=[validators.required(), validators.email()])
+
+class StaffRemoveGroupFrom(BaseForm):
+    email = SelectField('Email',
+                        validators=[validators.required(), validators.email()])
+
+class ClientForm(BaseForm):
+    """ OAuth Client Form """
+    name = StringField('Client Name', validators=[validators.required()])
+    description = StringField('Description', validators=[validators.optional()])
+
+    client_id = StringField('Client ID', validators=[validators.required()])
+    client_secret = StringField(
+        'Client Secret',
+        description="Save this token in your configuration. You won't be able to see it again.",
+        validators=[validators.required()])
+
+    is_confidential = BooleanField(
+        'Confidential',
+        description='Refresh tokens are only available for "confidential" clients.',
+        default=True)
+
+    redirect_uris = CommaSeparatedField(
+        'Redirect URIs',
+        description='Comma-separated list.')
+
+    default_scopes = CommaSeparatedField(
+        'Default Scope',
+        description='Comma-separated list. Valid scopes are "email" and "all".')
 
 
-class AutogradeForm(BaseForm):
-    description = """"Paste into terminal to get token: cd ~/.config/ok;python3 -c "import pickle; print(pickle.load(open('auth_refresh', 'rb'))['access_token'])"; cd -; """
-    token = StringField('Access Token', description=description,
-                        validators=[validators.optional()])
-    autograder_id = StringField('Autograder Assignment ID',
+class NewCourseForm(BaseForm):
+    offering = StringField('Offering (example: cal/cs61a/sp16)',
+                           validators=[validators.required()])
+    institution = StringField('School (e.g. UC Berkeley)',
+                           validators=[validators.optional()])
+    display_name = StringField('Course Name (e.g CS61A)',
+                           validators=[validators.required()])
+    website = StringField('Course Website',
+                           validators=[validators.optional(), validators.url()])
+    active = BooleanField('Activate Course', default=True)
+    timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones],
+                           default=TIMEZONE)
+
+    def validate(self):
+        # if our validators do not pass
+        if not super(NewCourseForm, self).validate():
+            return False
+
+        # Ensure the name has the right format:
+        if not utils.is_valid_endpoint(self.offering.data, COURSE_ENDPOINT_FORMAT):
+            self.offering.errors.append(('The name should like univ/course101/semYY'))
+            return False
+
+        course = Course.query.filter_by(offering=self.offering.data).first()
+        if course:
+            self.offering.errors.append('That offering already exists.')
+            return False
+        return True
+
+class CourseUpdateForm(BaseForm):
+    institution = StringField('School (e.g. UC Berkeley)',
+                              validators=[validators.optional()])
+    display_name = StringField('Course Name (e.g CS61A)',
+                               validators=[validators.required()])
+    website = StringField('Course Website',
+                          validators=[validators.optional(), validators.url()])
+    active = BooleanField('Activate Course', default=True)
+    timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
+
+########
+# Jobs #
+########
+
+class TestJobForm(BaseForm):
+    should_fail = BooleanField('Divide By Zero', default=False)
+    duration = IntegerField('Duration (seconds)', default=2)
+
+class MossSubmissionForm(BaseForm):
+    moss_userid = StringField('Your MOSS User ID',
+                              validators=[validators.required()])
+    file_regex = StringField('Regex for submitted files', default='.*',
+                             validators=[validators.required()])
+    language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+
+class GithubSearchRecentForm(BaseForm):
+    access_token = StringField('Github Access Token',
+                               description="Get a token at https://github.com/settings/tokens",
+                               validators=[validators.required()])
+    template_name = StringField('Template File Name',
                                 validators=[validators.required()])
-    autopromote = BooleanField('Backup Autopromotion',
-                               description="If an enrolled student does not have a submission, this will grade their latest submission before the deadline")
+    keyword = StringField('Search for lines starting with', default="def ",
+                          validators=[validators.required()])
+    weeks_past = IntegerField('Limit search to weeks since start of course?', default=12)
+    language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+    issue_title = StringField('Issue Title (Optional)', validators=[validators.optional()],
+                                default="Academic Integrity - Please Delete This Repository")
+    issue_body = TextAreaField('Issue Body (Optional)', validators=[validators.optional()],
+                               description="The strings '{repo}' and '{author}' will be replace with the approriate value")

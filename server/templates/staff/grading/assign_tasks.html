@@ -40,6 +40,7 @@
               {% call forms.render_form(form, action_url="", action_text='Assign Grading Tasks',
                                           class_='form') %}
                   {{ forms.render_field(form.staff, label_visible=true, class_="checkbox-list") }}
+                  {{ forms.render_checkbox_field(form.only_unassigned, label_visible=true) }}
               {% endcall %}
           </div>
           <!-- /.box-body -->

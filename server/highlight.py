@@ -17,6 +17,8 @@ class Line:
 
 def highlight(filename, source):
     """Highlights an input string into a list of HTML strings, one per line."""
+    if not source:
+        return []  # pygments does not play nice with empty files
     try:
         highlighted = pygments.highlight(source,
             pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False),
@@ -81,7 +83,11 @@ def highlight_diff(filename, a, b, diff_type='short'):
     if diff_type == 'short':
         groups = matcher.get_grouped_opcodes()
     elif diff_type == 'full':
-        groups = [matcher.get_opcodes()]
+        opcodes = matcher.get_opcodes()
+        if opcodes:
+            groups = [opcodes]
+        else:
+            groups = []
     else:
         raise ValueError('Unknown diff type {}'.format(diff_type))
     for group in groups:

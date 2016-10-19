@@ -20,13 +20,13 @@
                 {% if member.user == current_user %}
                   <input class="hidden" class="user-identifier" name="user-identifier" type="hidden" value="yourself">
                   <input class="hidden" class="form-action" name="email" type="hidden" value="{{ member.user.email }}">
-                  <button class="button-small group-action remove-confirm tip-trigger" type="submit" value="Leave">
+                  <button id="remove-self" class="button-small group-action remove-confirm tip-trigger" type="submit" value="Leave">
                       Leave <div class="tip"> <span> Remove yourself from the group </span> </div>
                   </button>
 
                 {% else %}
                   <input class="hidden" class="form-action user-identifier" name="email" type="hidden" value="{{ member.user.email }}">
-                  <button class="button-small group-action remove-confirm tip-trigger" type="submit" value="Remove">
+                  <button id="remove-member" class="button-small group-action remove-confirm tip-trigger" type="submit" value="Remove">
                       Remove <div class="tip"> <span> {{ member.user.email }} will no longer have access to group submissions. </span> </div>
                   </button>
                 {% endif %}
@@ -40,7 +40,7 @@
                       <input class="hidden" class="user-identifier" name="user-identifier" type="hidden" value="yourself">
                       <input class="hidden" class="form-info" name="email" type="hidden" value="{{ member.user.email }}">
                       <input class="hidden" class="form-action" name="action" type="hidden" value="accept">
-                      <button class="button-small group-action btn-accept tip-trigger"  type="submit" value="Accept">
+                      <button class="invite-accept button-small group-action btn-accept tip-trigger"  type="submit" value="Accept">
                         <i class="fa fa-check "></i> Accept <div class="tip"> <span> Join the group </span> </div>
                       </button>
                     {% endcall %}
@@ -51,14 +51,14 @@
                     {% if member.user ==  current_user %}
                         <input class="hidden" class="user-identifier" name="user-identifier" type="hidden" value="yourself">
                         <input class="hidden" class="form-user" name="email" type="hidden" value="{{ member.user.email }}">
-                        <button class="button-small group-action tip-trigger"  type="submit" value="Decline">
+                        <button id="invite-decline" class="button-small group-action tip-trigger"  type="submit" value="Decline">
                           <i class="fa fa-minus-circle "></i> Decline <div class="tip"> <span> Reject the invitation </span> </div>
                         </button>
                         <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="decline">
 
                     {% else %}
                         <input class="hidden" class="form-user user-identifier" name="email" type="hidden" value="{{ member.user.email }}">
-                        <button class="button-small group-action tip-trigger"  type="submit" value="Revoke">
+                        <button id="invite-revoke" class="button-small group-action tip-trigger"  type="submit" value="Revoke">
                           <i class="fa fa-minus-circle "></i> Revoke <div class="tip"> <span> Undo the invitation. </span> </div>
                         </button>
                         <input class="hidden" class="form-action" id="action" name="action" type="hidden" value="revoke">
