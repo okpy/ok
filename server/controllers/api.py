@@ -622,7 +622,7 @@ class ExportBackup(Resource):
                 'has_more':  has_more}
         return data
 
-class ExportSubmsissions(Resource):
+class ExportSubmissions(Resource):
     """ Export backup retreival.
         Authenticated. Permissions: >= Staff
         Used by: Export Scripts.
@@ -912,7 +912,7 @@ api.add_resource(V3Info, '/v3/')
 
 # Submission endpoints
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
-api.add_resource(ExportSubmsissions, '/v3/assignment/<int:aid>/submissions/')
+api.add_resource(ExportSubmissions, '/v3/assignment/<int:aid>/submissions/')
 api.add_resource(ExportBackup, '/v3/assignment/<int:aid>/export/<string:email>')
 api.add_resource(ExportFinal, '/v3/assignment/<int:aid>/submission/<string:email>')
 api.add_resource(Revision, '/v3/revision/')
