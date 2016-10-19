@@ -567,7 +567,7 @@ class Revision(Resource):
 
         assignment_creator = models.User.get_by_id(assignment.creator_id)
 
-        make_score(assignment_creator, backup, 0.0, "Revision for {}".format(fs_url),
+        make_score(assignment_creator, backup, 2.0, "Revision for {}".format(fs_url),
                    "revision")
         backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
                              bid=encode_id(backup.id), _external=True)
