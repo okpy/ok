@@ -8,10 +8,12 @@ import random
 import re
 from urllib.parse import urlparse, urljoin
 
-from flask import render_template, url_for
+import bleach
+from flask import render_template, url_for, Markup
 from hashids import Hashids
 import humanize
 from oauthlib.common import generate_token
+import markdown
 from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
@@ -36,6 +38,21 @@ def decode_id(value):
     if len(numbers) != 1:
         raise ValueError('Could not decode hash {0} into ID'.format(value))
     return numbers[0]
+
+def convert_markdown(text):
+    # https://pythonadventures.wordpress.com/tag/markdown/
+    allowed_tags = [
+        'a', 'abbr', 'acronym', 'b',
+        'blockquote', 'code', 'em',
+        'i', 'li', 'ol', 'pre', 'strong',
+        'ul', 'h1', 'h2', 'h3', 'p', 'br', 'ins', 'del',
+    ]
+    unsafe_html = markdown.markdown(
+        text,
+        extensions=["markdown.extensions.fenced_code"],
+    )
+    html = bleach.linkify(bleach.clean(unsafe_html, tags=allowed_tags))
+    return Markup(html)
 
 # Timezones. Be cautious with using tzinfo argument. http://pytz.sourceforge.net/
 # "tzinfo argument of the standard datetime constructors 'does not work'
