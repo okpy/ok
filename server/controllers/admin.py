@@ -896,9 +896,16 @@ def student_commit_overview(cid, email, aid, commit_id):
         flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
         return abort(404)
 
+
     bound = 20
+
+    # Naive solution for getting the next commit_id URL to load, not considering no-change diffs
+    prev_commit_id = backups[max(0, i-bound-1)].hashid
+    next_commit_id = backups[min(len(backups)-1, i + bound + 1)].hashid
+
     backups = backups[max(0, i - bound):min(len(backups), i + bound)]
     start_index = 0
+
 
     files_list, stats_list = [], []
     for i, backup in enumerate(backups):
@@ -950,7 +957,12 @@ def student_commit_overview(cid, email, aid, commit_id):
 
 
     # calculate starting diff for template
-    start_index = [i for i, stat in enumerate(stats_list) if stat["commit_id"] == commit_id][0]
+    try:
+        start_index = [i for i, stat in enumerate(stats_list) if stat["commit_id"] == commit_id][0]
+    except:
+        # if not in start_index, commit_id leads to no-change diff?
+        flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
+        return abort(404)
 
     group = [User.query.get(o) for o in backup.owners()]
 
@@ -966,7 +978,9 @@ def student_commit_overview(cid, email, aid, commit_id):
                            files_list=files_list,
                            group=group,
                            num_diffs=len(files_list)-1,
-                           start_index=start_index)
+                           start_index=start_index,
+                           prev_commit_id = prev_commit_id,
+                           next_commit_id = next_commit_id)
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/graph")
 @is_staff(course_arg='cid')

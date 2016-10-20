@@ -117,23 +117,6 @@
 
         <!-- /.box -->
 
-<!-- 
-        <input type="range" id="backupRange" min="0" max="{{num_diffs}}" value="0" step="1" 
-            onchange="showValue(this.value)" />
-        <span id="backup_num">0</span>
-        <script type="text/javascript">
-        function showValue(newValue)
-        {
-            $('.diff-delta').eq(backup_number).hide();
-            $('.diff-delta-box').eq(backup_number).hide();
-            backup_number = parseInt(newValue);
-            document.getElementById("backup_num").innerHTML = backup_number;
-            document.getElementById("backupRange").value = backup_number;
-            $('.diff-delta').eq(backup_number).show();
-            $('.diff-delta-box').eq(backup_number).show();
-        }
-        </script>
- -->
         <script type="text/template" id="editor-template">
             {{ diff.editor_template() }}
         </script>
@@ -206,9 +189,10 @@
             backup_number = backup_number - 1;
             $('.diff-delta').eq(backup_number).show();
             $('.diff-delta-box').eq(backup_number).show();
-            document.getElementById("range").innerHTML = backup_number;
-            document.getElementById("range").value = toString(backup_number);
-            document.getElementById("range").trigger("change");
+        }
+        else {
+           url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = prev_commit_id)}}"
+           window.location.assign(url);
         }
     }
 
@@ -220,9 +204,10 @@
             backup_number = backup_number + 1;
             $('.diff-delta').eq(backup_number).show();
             $('.diff-delta-box').eq(backup_number).show();
-            document.getElementById("range").innerHTML = backup_number;
-            document.getElementById("range").value = toString(backup_number);
-            document.getElementById("range").trigger("change");
+        }
+        else {
+            url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = next_commit_id)}}"
+            window.location.assign(url);
         }
     }
 
