@@ -22,7 +22,6 @@ from flask_login import current_user
 import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
 from flask_restful.representations.json import output_json
-from jinja2 import escape
 
 from server.extensions import cache
 from server.utils import encode_id, decode_id
@@ -424,7 +423,7 @@ class CommentSchema(APISchema):
 
     def store_comment(self, user, backup):
         args = self.parse_args()
-        message = escape(args['message'])
+        message = args['message']
         comment = models.Comment(
             backup_id=backup.id,
             author_id=user.id,
