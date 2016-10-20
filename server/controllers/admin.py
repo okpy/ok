@@ -1048,14 +1048,18 @@ def student_assignment_graph_detail(cid, email, aid):
             continue
 
         
-        # find ratio of lines to seconds
-        lines_time_ratio = lines_changed / (time_difference_in_secs + 1)
+        # find ratio of lines to nearest minute
+        diff_in_minutes = round(time_difference_in_secs / 60)
+        if diff_in_minutes == 0: # round up for results < minute to avoid division errors
+            diff_in_minutes = 1
+        lines_time_ratio = lines_changed / diff_in_minutes
 
         backup_stats = {
             'submitter': curr_backup.submitter.email,
             'commit_id' : curr_backup.hashid,
             'lines_changed': lines_changed,
             'time_difference': time_difference,
+            'lines_changed': lines_changed, 
             'lines_time_ratio': lines_time_ratio
         }
 
@@ -1064,16 +1068,29 @@ def student_assignment_graph_detail(cid, email, aid):
     group = [User.query.get(o) for o in backups[0].owners()] #TODO
 
     def gen_point(stat):
-        value = stat["lines_time_ratio"]
-        label = "Submitter: {0}".format(stat["submitter"])
+        value = stat["lines_changed"]
+        label = "Lines/Minutes Ratio:{0} \n Submitter: {1}".format(
+            round(stat["lines_time_ratio"], 5) ,stat["submitter"])
         url = url_for('.student_commit_overview', 
                 cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
+
+        #arbitrary boundaries for color-coding based on ratio, need more data to determine bounds
+        if lines_time_ratio > 9: 
+            color = 'red'
+        elif lines_time_ratio > 5:
+            color = 'orange'
+        elif lines_time_ratio > 2:
+            color = 'blue'
+        else:
+            color = 'black'
+
         if extra:
             url += "?student_email=" + email
         return {
             "value": value,
             "label" : label,
-            "xlink": url
+            "xlink": url,
+            "color": color
         }
 
     points = [gen_point(stat) for stat in stats_list]
@@ -1083,8 +1100,8 @@ def student_assignment_graph_detail(cid, email, aid):
                             legend_at_bottom=True,
                             pretty_print=True
                             )
-    line_chart.title = 'Lines changed over Seconds Ratio'
-    line_chart.add('Ratio', points)
+    line_chart.title = 'Lines Changed Across Backups'
+    line_chart.add('Backups', points)
     
     return render_template('staff/student/assignment.graph.html',
                            courses=courses, current_course=current_course,
