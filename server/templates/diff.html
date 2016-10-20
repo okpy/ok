@@ -19,7 +19,7 @@
       </div>
       {% endif %}
     </div>
-    <div class="comment-body markdown-body">{{ comment.message | safe | markdown }}</div>
+    <div class="comment-body markdown-body">{{ comment.message | markdown }}</div>
   </div>
 {% endmacro %}
 
