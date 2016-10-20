@@ -106,7 +106,7 @@ jQuery(document).ready(function($){
             debounce(function(e) {
         var editor = $(this).parents('.comment-editor');
         render(editor);
-    }, 250));
+    }, 75));
 
     $('body').on('click', '.comment-cancel', function(e) {
         e.preventDefault();
