@@ -107,8 +107,9 @@ jQuery(document).ready(function($){
         editor.find('.comment-write').removeClass('active');
         editor.find('.comment-preview').addClass('active');
 
+        var markdown = window.markdownit();
         var content = editor.find('textarea').val();
-        var html = content ? markdown.toHTML(content) : '<p>Nothing to preview</p>';
+        var html = content ? markdown.render(content) : '<p>Nothing to preview</p>';
         editor.find('.markdown-body').empty().append(html);
     });
 
