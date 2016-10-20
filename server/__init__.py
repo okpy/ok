@@ -1,14 +1,11 @@
 import os
 import logging
 
-from markdown import markdown
 from flask import Flask, render_template, g, request
-from flask import Markup
 from flask_rq import RQ
 from flask_wtf.csrf import CsrfProtect
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from werkzeug.contrib.fixers import ProxyFix
-from jinja2 import escape
 
 from server import assets, converters, utils
 from server.forms import CSRFForm
@@ -109,9 +106,8 @@ def create_app(default_config_path=None):
     })
 
     app.jinja_env.filters.update({
-        'markdown': lambda data: Markup(markdown(escape(data),
-            extensions=["markdown.extensions.fenced_code"])),
-        'pluralize': utils.pluralize
+        'markdown': utils.convert_markdown,
+        'pluralize': utils.pluralize,
     })
 
     # register our blueprints
