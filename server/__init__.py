@@ -109,7 +109,8 @@ def create_app(default_config_path=None):
     })
 
     app.jinja_env.filters.update({
-        'markdown': lambda data: Markup(markdown(escape(data))),
+        'markdown': lambda data: Markup(markdown(escape(data),
+            extensions=["markdown.extensions.fenced_code"])),
         'pluralize': utils.pluralize
     })
 

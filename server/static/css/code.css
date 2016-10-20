@@ -245,20 +245,7 @@ table.highlight tr:last-child td.comment-container {
 }
 
 .markdown-body code, .markdown-body tt {
-  padding: 0;
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
-  margin: 0;
   font-size: 85%;
-  color: inherit;
-  background-color: rgba(0,0,0,0.04);
-  border-radius: 3px;
-}
-
-.markdown-body code:before, .markdown-body code:after,
-.markdown-body tt:before, .markdown-body tt:after {
-  letter-spacing: -0.2em;
-  content: "\00a0";
 }
 
 .markdown-body h1, .markdown-body h2, .markdown-body h3,
