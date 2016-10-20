@@ -166,15 +166,10 @@ table.highlight tr:last-child td.comment-container {
   color: #333;
   font-size: 14px;
   line-height: 1.6;
-  padding: 15px;
+  margin: 15px;
 }
 
 /* Editor */
-.comment-editor-header {
-  background: #f7f7f7;
-  border-radius: 3px 3px 0 0;
-}
-
 .comment-editor .nav {
   padding: 6px 10px 0;
 }
@@ -188,40 +183,25 @@ table.highlight tr:last-child td.comment-container {
   pointer-events: none;
 }
 
-.comment-write {
-  margin: 10px;
-}
-
 .comment-preview {
-  margin: 10px;
   border-bottom: 1px solid #eee;
+  margin-bottom: 15px;
 }
 
 .comment-editor textarea {
   width: 100%;
-  min-height: 100px;
-  max-height: 500px;
-  padding: 10px;
+  padding: 15px;
   resize: vertical;
-
   color: #333;
   background-color: #fafafa;
-  background-position: right 8px center;
-  border: 1px solid #ddd;
-  border-radius: 3px;
+  border: none;
+  border-bottom: 1px solid #eee;
   outline: none;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
-}
-
-.comment-editor textarea:focus {
-  background-color: #fff;
-  border-color: #51a7e8;
-  box-shadow:inset 0 1px 2px rgba(0,0,0,0.075), 0 0 5px rgba(81,167,232,0.5);
 }
 
 .comment-editor-actions {
   float: right;
-  margin: 0 10px 10px 0;
+  margin: 0 15px 15px 0;
 }
 
 /* Markdown */
