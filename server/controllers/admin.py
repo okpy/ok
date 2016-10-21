@@ -896,8 +896,7 @@ def student_commit_overview(cid, email, aid, commit_id):
         flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
         return abort(404)
 
-
-    bound = 20
+    bound = 20 #todo maybe change
 
     # Naive solution for getting the next commit_id URL to load, not considering no-change diffs
     prev_commit_id = backups[max(0, i-bound-1)].hashid
@@ -906,7 +905,7 @@ def student_commit_overview(cid, email, aid, commit_id):
     backups = backups[max(0, i - bound):min(len(backups), i + bound)]
     start_index = 0
 
-
+    last_kept_backup = backups[0]
     files_list, stats_list = [], []
     for i, backup in enumerate(backups):
         prev = backups[i - 1].files()
@@ -914,14 +913,19 @@ def student_commit_overview(cid, email, aid, commit_id):
         if not (i and prev and curr):
             continue
         files = highlight.diff_files(prev, curr, "short")
+        backup_id = backup.hashid
 
         # do not add backups with no change in lines except for first backup
-        if not any(files.values()): 
+        if not any(files.values()):
+            if commit_id == backup_id:
+                print(backup_id)
+                commit_id = last_kept_backup.hashid
             continue
+
+        last_kept_backup = backup
 
         files_list.append(files)
 
-        backup_id = backup.hashid
         backup_stats = {
             'submitter': backup.submitter.email,
             'commit_id' : backup_id,
@@ -1069,8 +1073,8 @@ def student_assignment_graph_detail(cid, email, aid):
 
     def gen_point(stat):
         value = stat["lines_changed"]
-        label = "Lines/Minutes Ratio:{0} \n Submitter: {1}".format(
-            round(stat["lines_time_ratio"], 5) ,stat["submitter"])
+        label = "Lines/Minutes Ratio:{0} \n Submitter: {1} \n Commit ID: {2}\n".format(
+            round(stat["lines_time_ratio"], 5), stat["submitter"], stat["commit_id"])
         url = url_for('.student_commit_overview', 
                 cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
 
