@@ -41,6 +41,7 @@ convention = {
 metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
 
+
 def transaction(f):
     """ Decorator for database (session) transactions."""
     @functools.wraps(f)
@@ -66,13 +67,16 @@ class Json(types.TypeDecorator):
         # SQL -> Python
         return json.loads(value)
 
+
 @compiles(mysql.MEDIUMBLOB, 'sqlite')
 def ok_blob(element, compiler, **kw):
     return "BLOB"
 
+
 @compiles(mysql.MEDIUMTEXT, 'sqlite')
 def ok_text(element, compiler, **kw):
     return "TEXT"
+
 
 class JsonBlob(types.TypeDecorator):
     impl = mysql.MEDIUMBLOB
@@ -103,6 +107,7 @@ class Timezone(types.TypeDecorator):
         # SQL -> Python
         return pytz.timezone(value)
 
+
 class StringList(types.TypeDecorator):
     impl = types.Text
 
@@ -113,6 +118,7 @@ class StringList(types.TypeDecorator):
     def process_result_value(self, value, dialect):
         # SQL -> Python
         return value.split()
+
 
 class Model(db.Model):
     """ Timestamps all models, and serializes model objects."""
@@ -153,6 +159,7 @@ class Model(db.Model):
             if c.name in dict:
                 setattr(self, c.name, dict[c.name])
         return self
+
 
 class User(Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -206,6 +213,7 @@ class User(Model, UserMixin):
         """ Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
 
+
 class Course(Model):
     id = db.Column(db.Integer, primary_key=True)
     # offering - E.g., 'cal/cs61a/fa14'
@@ -257,6 +265,7 @@ class Course(Model):
                                     Enrollment.course == self)
                             .all()
                             )]
+
 
 class Assignment(Model):
     """ Assignments are particular to courses and have unique names.
@@ -333,7 +342,7 @@ class Assignment(Model):
         percent_started = ((len(students_with_subms) + len(students_with_backup)) /
                            (total_students or 1)) * 100
         percent_finished = (len(students_with_subms) / (total_students or 1)) * 100
-        active_groups = len(set([g['group_id'] for g in groups if ',' in g['group_member']]))
+        active_groups = len({g['group_id'] for g in groups if ',' in g['group_member']})
 
         stats.update({
             'unique_submissions': len(submissions_id),
@@ -717,6 +726,7 @@ class Enrollment(Model):
 
         cache.delete_memoized(User.is_enrolled)
 
+
 class Message(Model):
     __tablename__ = 'message'
     __table_args__ = {'mysql_row_format': 'COMPRESSED'}
@@ -755,14 +765,13 @@ class Backup(Model):
     def can(cls, obj, user, action):
         if action == "create":
             return user.is_authenticated
-        if not obj:
+        elif not obj:
             return False
-        if user.is_admin:
+        elif user.is_admin:
             return True
-        if action == "view":
+        elif action == "view" and user.id in obj.owners():
             # Only allow group members to view
-            if user.id in obj.owners():
-                return True
+            return True
         return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
 
     @hybrid_property
@@ -1086,6 +1095,7 @@ class Version(Model):
             return version.current_version, version.download_link
         return None, None
 
+
 class Comment(Model):
     """ Composition comments. Line is the line # on the Diff.
     Submission_line is the closest line on the submitted file.
@@ -1122,6 +1132,7 @@ class Comment(Model):
     @property
     def formatted(self):
         return markdown(self.message)
+
 
 class Score(Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1182,7 +1193,6 @@ class Score(Model):
         for old_score in existing_scores:
             if old_score.id != self.id:  # Do not archive current score
                 old_score.archive(commit=False)
-
 
 
 class GradingTask(Model):
@@ -1286,6 +1296,7 @@ class GradingTask(Model):
         db.session.add_all(tasks)
         return tasks
 
+
 class Client(Model):
     """ OAuth Clients.
     See: https://flask-oauthlib.readthedocs.io/en/latest/oauth2.html
@@ -1313,6 +1324,7 @@ class Client(Model):
     def default_redirect_uri(self):
         return self.redirect_uris[0]
 
+
 class Grant(Model):
     id = db.Column(db.Integer, primary_key=True)
 
@@ -1339,6 +1351,7 @@ class Grant(Model):
         db.session.commit()
         return self
 
+
 class Token(Model):
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(
@@ -1364,6 +1377,7 @@ class Token(Model):
         db.session.delete(self)
         db.session.commit()
         return self
+
 
 class Job(Model):
     """ A background job."""

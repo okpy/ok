@@ -715,7 +715,7 @@ class CourseEnrollment(Resource):
     @marshal_with(schema.get_fields)
     def get(self, offering, user):
         course = self.model.by_name(offering)
-        if course == None:
+        if course is None:
             restful.abort(404)
         if not self.model.can(course, user, 'staff'):
             restful.abort(403)
