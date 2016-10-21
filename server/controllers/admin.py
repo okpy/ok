@@ -108,7 +108,7 @@ def grading_view(backup, form=None):
     """ General purpose grading view. Used by routes."""
     courses, current_course = get_courses()
     assign = backup.assignment
-    diff_type = request.args.get('diff', None)
+    diff_type = request.args.get('diff')
     if diff_type not in (None, 'short', 'full'):
         diff_type = None
     if not assign.files and diff_type:

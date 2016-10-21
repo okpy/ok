@@ -20,10 +20,12 @@ logger = logging.getLogger(__name__)
 
 student = Blueprint('student', __name__)
 
+
 def check_enrollment(course):
     enrolled = current_user.is_enrolled(course.id)
     if not enrolled and not current_user.is_admin:
         flash("You have not been added to this course on OK", "warning")
+
 
 def get_course(offering):
     """Get a course with the given name. If the user is not enrolled, flash
@@ -35,6 +37,7 @@ def get_course(offering):
     check_enrollment(course)
     return course
 
+
 def get_assignment(name):
     """Get an assignment with the given name. If the user is not enrolled, flash
     a warning message.
@@ -44,6 +47,7 @@ def get_assignment(name):
         abort(404)
     check_enrollment(assignment.course)
     return assignment
+
 
 @student.route('/')
 def index():
@@ -64,6 +68,7 @@ def index():
     else:
         return render_template('index.html')
 
+
 @student.route('/<offering:offering>/')
 @login_required
 def course(offering):
@@ -76,6 +81,7 @@ def course(offering):
     }
     return render_template('student/course/index.html', course=course,
                            **assignments)
+
 
 @student.route('/<assignment_name:name>/')
 @login_required
@@ -106,6 +112,7 @@ def assignment(name):
         'csrf_form': CSRFForm()
     }
     return render_template('student/assignment/index.html', **data)
+
 
 @student.route('/<assignment_name:name>/submit', methods=['GET', 'POST'])
 @login_required
@@ -163,6 +170,7 @@ def submit_assignment(name):
     return render_template('student/assignment/submit.html', assignment=assign,
                            group=group, course=assign.course, form=form)
 
+
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/')
 @login_required
 def list_backups(name, submit):
@@ -181,6 +189,7 @@ def list_backups(name, submit):
                            assignment=assign, paginate=paginate, submit=submit,
                            csrf_form=csrf_form)
 
+
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/')
 @login_required
 def code(name, submit, bid):
@@ -192,7 +201,7 @@ def code(name, submit, bid):
     if backup.submit != submit:
         return redirect(url_for('.code', name=name, submit=backup.submit, bid=bid))
 
-    diff_type = request.args.get('diff', None)
+    diff_type = request.args.get('diff')
     if diff_type not in (None, 'short', 'full'):
         return redirect(url_for('.code', name=name, submit=submit, bid=bid))
     if not assign.files and diff_type:
@@ -211,6 +220,7 @@ def code(name, submit, bid):
         course=assign.course, assignment=assign, backup=backup,
         files=files, diff_type=diff_type)
 
+
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<path:file>')
 @login_required
 def download(name, submit, bid, file):
@@ -227,6 +237,7 @@ def download(name, submit, bid, file):
     response = make_response(contents)
     response.headers["Content-Disposition"] = "attachment; filename={0!s}".format(file)
     return response
+
 
 @student.route('/<assignment_name:name>/submissions/<hashid:bid>/flag/', methods=['POST'])
 @login_required
@@ -256,6 +267,7 @@ def flag(name, bid):
     else:
         flash("Not a valid redirect", "danger")
         abort(400)
+
 
 @student.route('/<assignment_name:name>/group/invite/', methods=['POST'])
 @login_required
@@ -302,12 +314,13 @@ def group_remove(name):
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
 
+
 @student.route('/<assignment_name:name>/group/respond/', methods=['POST'])
 @login_required
 def group_respond(name):
     assignment = get_assignment(name)
-    action = request.form.get('action', None)
-    target = request.form.get('email', None)
+    action = request.form.get('action')
+    target = request.form.get('email')
     if not action or action not in ['accept', 'decline', 'revoke']:
         abort(400)
     group = Group.lookup(current_user, assignment)
@@ -342,6 +355,7 @@ def group_respond(name):
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
 
+
 @student.route('/comments/', methods=['POST'])
 @login_required
 def new_comment():
@@ -357,6 +371,7 @@ def new_comment():
     db.session.add(comment)
     db.session.commit()
     return render_template('student/assignment/comment.html', comment=comment)
+
 
 @student.route('/comments/<hashid:comment_id>', methods=['PUT', 'DELETE'])
 @login_required

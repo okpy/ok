@@ -82,16 +82,16 @@ class TestEnrollment(OkTestCase):
         db.session.add(user)
         db.session.commit()
         self.studentA['id'] = user.id
-        
+
         Enrollment.create(self.course.id, [self.studentA])
         enrollment = Enrollment.query.filter_by(
-            course_id=self.course.id, 
+            course_id=self.course.id,
             user_id=user.id).one_or_none()
         assert enrollment is not None
 
         Enrollment.unenroll(enrollment)
         enrollment = Enrollment.query.filter_by(
-            course_id=self.course.id, 
+            course_id=self.course.id,
             user_id=user.id).one_or_none()
         assert enrollment is None
 
@@ -106,7 +106,7 @@ class TestEnrollment(OkTestCase):
             course_id=self.course.id,
             user_id=self.user1.id).one_or_none()
         assert enrollment is None
-        
+
     def test_enroll_from_csv(self):
         self.setup_course()
 
@@ -116,13 +116,13 @@ class TestEnrollment(OkTestCase):
 
         Enrollment.enroll_from_csv(self.course.id, form)
 
-        userA = User.lookup(self.studentA['email'])
-        self.studentA['id'] = userA.id
-        self.enrollment_matches_info(userA, self.studentA)
+        user_a = User.lookup(self.studentA['email'])
+        self.studentA['id'] = user_a.id
+        self.enrollment_matches_info(user_a, self.studentA)
 
-        userB = User.lookup(self.studentB['email'])
-        self.studentB['id'] = userB.id
-        self.enrollment_matches_info(userB, self.studentB)
+        user_b = User.lookup(self.studentB['email'])
+        self.studentB['id'] = user_b.id
+        self.enrollment_matches_info(user_b, self.studentB)
 
     def test_enroll_twice(self):
         self.setup_course()
