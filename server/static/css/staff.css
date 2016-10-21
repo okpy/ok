@@ -31,3 +31,10 @@
     margin-top: 5px;
     height: 35px;
 }
+.timeline>.time-label>a>span {
+    font-weight: 600;
+    padding: 5px;
+    display: inline-block;
+    background-color: #fff;
+    border-radius: 4px;
+}

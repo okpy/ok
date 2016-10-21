@@ -171,7 +171,7 @@ def gen_messages(assignment, seconds_offset):
     else:
         progress = (seconds_offset+100000)/100100
 
-    attempts = int(progress * 50)
+    attempts = int(progress * 100)
     is_passed = True if progress > 0.75 else False
 
     created = assignment.due_date - datetime.timedelta(seconds=seconds_offset)

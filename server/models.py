@@ -443,7 +443,8 @@ class Assignment(Model):
 
             history.append(message.contents)
 
-        return {'submitters': submitter_counts, 'timeline': timeline[::-1]}
+        return {'submitters': submitter_counts,
+                'timeline': timeline[::-1]}
 
     def user_status(self, user):
         user_ids = self.active_user_ids(user.id)
