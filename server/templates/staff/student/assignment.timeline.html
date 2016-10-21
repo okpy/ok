@@ -31,7 +31,7 @@
                   <ul class="timeline">
                       <!-- timeline time label -->
                       <li class="time-label">
-                          <a href="{{ url_for('.student_view', cid=current_course.id, email=student.email) }}">
+                          <a href="{{ url_for('.student_view', cid=current_course.id, email=submitter) }}">
                               <span class="bg-red">
                                   {{ submitter }} ( {{ submitters[submitter] }} backups)
                               </span>
