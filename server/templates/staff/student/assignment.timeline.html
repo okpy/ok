@@ -71,6 +71,8 @@
                               {% endif %}
                               <div class="timeline-footer">
                                   <a class="btn btn-primary btn-xs" href="{{ url_for('.grading', bid=event['backup'].id) }}"> Code </a>
+                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.student_commit_overview', cid=current_course.id, email=event['backup'].submitter.email, aid=assignment.id, commit_id=event['backup'].hashid, student_email=event['backup'].submitter.email)}}"> Solo Diff </a>
+                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.student_commit_overview', cid=current_course.id, email=event['backup'].submitter.email, aid=assignment.id, commit_id=event['backup'].hashid)}}"> Combined Diff </a>
                                   <span class="pull-right"> Attempt {{ event['attempt'] }} </span>
                               </div>
                           </div>

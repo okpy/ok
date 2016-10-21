@@ -977,7 +977,6 @@ def student_commit_overview(cid, email, aid, commit_id):
         # do not add backups with no change in lines except for first backup
         if not any(files.values()):
             if commit_id == backup_id:
-                print(backup_id)
                 commit_id = last_kept_backup.hashid
             continue
 
