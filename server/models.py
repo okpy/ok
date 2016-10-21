@@ -396,7 +396,7 @@ class Assignment(Model):
 
             curr_q_stats = message.contents['history']['questions'].get(curr_q)
             total_attempt_count = message.contents['history'].get('all_attempts')
-            is_solved = curr_q_stats.get('solved', None)
+            is_solved = curr_q_stats.get('solved')
 
             if contents.get('unlock'):
                 # Is unlocking.
