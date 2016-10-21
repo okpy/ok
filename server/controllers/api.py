@@ -47,6 +47,7 @@ api = restful.Api(endpoints)
 
 API_VERSION = 'v3'
 
+
 def json_field(field):
     """
     Parses field or list, or returns appropriate boolean value.
@@ -70,6 +71,7 @@ class HashIDField(fields.Raw):
         else:
             return decode_id(value)
 
+
 @api.representation('application/json')
 def envelope_api(data, code, headers=None):
     """ API response envelope (for metadata/pagination).
@@ -78,7 +80,7 @@ def envelope_api(data, code, headers=None):
 
         data is the object returned by the API.
         code is the HTTP status code as an int
-        message will always be sucess since the request did not fail.
+        message will always be success since the request did not fail.
     """
     message = 'success'
     if 'message' in data:
@@ -142,7 +144,7 @@ def make_backup(user, assignment_id, messages, submit):
     Create backup with message objects.
 
     :param user: (object) caller
-    :param assignment: (int) Assignment ID
+    :param assignment_id: (int) Assignment ID
     :param messages: Data content of backup/submission
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
@@ -168,10 +170,11 @@ def make_score(user, backup, score, message, kind):
     score.archive_duplicates()
     return score
 
-class APISchema():
+
+class APISchema:
     """ APISchema describes the input and output formats for
     resources. The parser deals with arguments to the API.
-    The API responses are marshalled to json through get_fields
+    The API responses are marshaled to json through get_fields
     """
     get_fields = {
         'id': fields.Integer,
@@ -183,6 +186,7 @@ class APISchema():
 
     def parse_args(self):
         return self.parser.parse_args()
+
 
 class MessageSchema(APISchema):
     """ Messages do not have their own API (currently).
@@ -278,12 +282,12 @@ class BackupSchema(APISchema):
         lock_flag = not assignment['active']
 
         # Do not allow submissions after the lock date
-        elgible_submit = args['submit'] and not lock_flag
+        eligible_submit = args['submit'] and not lock_flag
         backup = make_backup(user, assignment['id'], args[
-                             'messages'], elgible_submit)
+                             'messages'], eligible_submit)
         if args['submit'] and lock_flag:
             raise ValueError('Late Submission')
-        if elgible_submit and assignment['autograding_key']:
+        if eligible_submit and assignment['autograding_key']:
             submit_continous(backup)
         return backup
 
@@ -344,6 +348,7 @@ class ScoreSchema(APISchema):
             return {'success': True, 'message': 'OK'}
         return {'success': False, 'message': "Permission error"}
 
+
 class Resource(restful.Resource):
     version = 'v3'
     method_decorators = [authenticate, check_version]
@@ -364,6 +369,7 @@ class Resource(restful.Resource):
 class PublicResource(Resource):
     method_decorators = []
 
+
 class V3Info(PublicResource):
     def get(self):
         return {
@@ -376,7 +382,7 @@ class V3Info(PublicResource):
 
 # TODO: should be two classes, one for /backups/ and one for /backups/<int:key>/
 class Backup(Resource):
-    """ Submission retreival resource.
+    """ Submission retrieval resource.
         Authenticated. Permissions: >= User/Staff
         Used by: Ok Client Submission/Exports.
     """
@@ -421,8 +427,9 @@ class Backup(Resource):
             'assignment': assignment.name
         }
 
+
 class ExportBackup(Resource):
-    """ Export backup retreival resource without submitter information.
+    """ Export backup retrieval resource without submitter information.
         Authenticated. Permissions: >= Staff
         Used by: Export Scripts.
     """
@@ -463,8 +470,9 @@ class ExportBackup(Resource):
                 'has_more':  has_more}
         return data
 
-class ExportSubmsissions(Resource):
-    """ Export backup retreival.
+
+class ExportSubmissions(Resource):
+    """ Export backup retrieval.
         Authenticated. Permissions: >= Staff
         Used by: Export Scripts.
     """
@@ -503,7 +511,7 @@ class ExportSubmsissions(Resource):
 
 
 class ExportFinal(Resource):
-    """ Export single backup retreival.
+    """ Export single backup retrieval.
         Authenticated. Permissions: Creator or Staff
         Used by: Scripts
     """
@@ -531,6 +539,7 @@ class ExportFinal(Resource):
 
         return fs
 
+
 class Enrollment(Resource):
     """ View what courses an email is enrolled in.
         Authenticated. Permissions: >= User or admins.
@@ -553,6 +562,7 @@ class Enrollment(Resource):
         if requester.is_admin:
             return True
         return resource == requester
+
 
 class Score(Resource):
     """ Score creation.
@@ -593,7 +603,7 @@ class Version(PublicResource):
 
 api.add_resource(V3Info, '/v3/')
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
-api.add_resource(ExportSubmsissions, '/v3/assignment/<int:aid>/submissions/')
+api.add_resource(ExportSubmissions, '/v3/assignment/<int:aid>/submissions/')
 api.add_resource(ExportBackup, '/v3/assignment/<int:aid>/export/<string:email>')
 api.add_resource(ExportFinal, '/v3/assignment/<int:aid>/submission/<string:email>')
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
