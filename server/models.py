@@ -770,7 +770,7 @@ class Backup(Model):
         elif user.is_admin:
             return True
         elif action == "view" and user.id in obj.owners():
-            # Only allow admin or group members to view
+            # Only allow group members to view
             return True
         return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
 
