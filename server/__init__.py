@@ -1,9 +1,7 @@
 import os
 import logging
 
-from markdown import markdown
 from flask import Flask, render_template, g, request
-from flask import Markup
 from flask_rq import RQ
 from flask_wtf.csrf import CsrfProtect
 from webassets.loaders import PythonLoader as PythonAssetsLoader
@@ -108,8 +106,8 @@ def create_app(default_config_path=None):
     })
 
     app.jinja_env.filters.update({
-        'markdown': lambda data: Markup(markdown(data)),
-        'pluralize': utils.pluralize
+        'markdown': utils.convert_markdown,
+        'pluralize': utils.pluralize,
     })
 
     # register our blueprints

@@ -27,7 +27,7 @@ from server.extensions import cache
 from server.utils import encode_id, decode_id
 import server.models as models
 from server.autograder import submit_continous
-from server.constants import STAFF_ROLES
+from server.constants import STAFF_ROLES, VALID_ROLES
 
 endpoints = Blueprint('api', __name__)
 endpoints.config = {}
@@ -245,6 +245,7 @@ class EnrollmentSchema(APISchema):
         'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
     }
 
+
 class UserSchema(APISchema):
     get_fields = {
         'id': HashIDField,
@@ -259,6 +260,9 @@ class UserSchema(APISchema):
         'email': fields.String,
     }
 
+class CourseEnrollmentSchema(APISchema):
+    get_fields = { role : fields.List(fields.Nested(UserSchema.simple_fields))
+                    for role in VALID_ROLES }
 
 class AssignmentSchema(APISchema):
     get_fields = {
@@ -405,6 +409,32 @@ class ScoreSchema(APISchema):
             return {'success': True, 'message': 'OK'}
         return {'success': False, 'message': "Permission error"}
 
+class CommentSchema(APISchema):
+    post_fields = {}
+
+    def __init__(self):
+        APISchema.__init__(self)
+        self.parser.add_argument('filename', type=str, required=True,
+                                 help='Filename to leave comment on')
+        self.parser.add_argument('line', type=int, required=True,
+                                 help='Line to leave comment on')
+        self.parser.add_argument('message', type=str, required=True,
+                                 help='Comment contents')
+
+    def store_comment(self, user, backup):
+        args = self.parse_args()
+        message = args['message']
+        comment = models.Comment(
+            backup_id=backup.id,
+            author_id=user.id,
+            filename=args['filename'],
+            line=args['line'],
+            message=message)
+        models.db.session.add(comment)
+        models.db.session.commit()
+        return {}
+
+
 class Resource(restful.Resource):
     version = 'v3'
     method_decorators = [check_scopes, authenticate, check_version]
@@ -513,7 +543,8 @@ class Revision(Resource):
         # Only accept revision if the assignment has revisions enabled
         if not assignment.revisions_allowed:
             return restful.abort(403,
-                                 message="Revisions are not enabled for this assignment",
+                                 message=("Revisions are not enabled for {}"
+                                          .format(assignment.name)),
                                  data={'backup': True, 'late': True})
 
         # Only accept revision if the user has a FS
@@ -535,7 +566,7 @@ class Revision(Resource):
 
         assignment_creator = models.User.get_by_id(assignment.creator_id)
 
-        make_score(assignment_creator, backup, 0.0, "Revision for {}".format(fs_url),
+        make_score(assignment_creator, backup, 2.0, "Revision for {}".format(fs_url),
                    "revision")
         backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
                              bid=encode_id(backup.id), _external=True)
@@ -672,6 +703,29 @@ class Enrollment(Resource):
             return True
         return resource == requester
 
+class CourseEnrollment(Resource):
+    """ Information about all students in a course.
+    Authenticated. Permissions: >= User or admins
+    Used by: Export scripts.
+    """
+    model = models.Course
+    schema = CourseEnrollmentSchema()
+
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering, user):
+        course = self.model.by_name(offering)
+        if course == None:
+            restful.abort(404)
+        if not self.model.can(course, user, 'staff'):
+            restful.abort(403)
+        data = {}
+        for role in VALID_ROLES:
+            data[role] = []
+        for p in course.participations:
+            data[p.role].append(p.user)
+        return data
+
 class Score(Resource):
     """ Score creation.
         Authenticated. Permissions: >= Staff
@@ -753,11 +807,15 @@ class Group(Resource):
             restful.abort(403)
 
         group = self.model.lookup(target, assign)
-        is_admin = user.is_admin
-        is_staff = user.is_enrolled(assign.course.id, STAFF_ROLES)
-        is_self = user.email.lower() == email.lower()
 
-        if is_self or is_staff or is_admin:
+        member_emails = [email.lower()]
+        if group:
+            member_emails = [m.user.email.lower() for m in group.members]
+
+        is_member = user.email.lower() in member_emails
+        is_staff = user.is_enrolled(assign.course.id, STAFF_ROLES)
+
+        if is_member or is_staff or user.is_admin:
             if group:
                 return group
             else:
@@ -795,12 +853,38 @@ class User(Resource):
 
         restful.abort(403)
 
+class Comment(Resource):
+    """ Create comments programatically.
+        Authenticated. Permissions: >= Student/Staff
+        Used by: Third Party Composition Review
+    """
+    schema = CommentSchema()
+    model = models.Comment
+
+    @marshal_with(schema.post_fields)
+    def post(self, user, backup_id):
+        backup = models.Backup.query.get(backup_id)
+        if not backup:
+            if user.is_admin:
+                restful.abort(404)
+            else:
+                restful.abort(403)
+        if not models.Backup.can(backup, user, "view"):
+            restful.abort(403)
+        if not self.model.can(None, user, "create"):
+            restful.abort(403)
+
+        return self.schema.store_comment(user, backup)
+
 # Endpoints
 api.add_resource(V3Info, '/v3/')
 
 # Submission endpoints
 api.add_resource(Backup, '/v3/backups/', '/v3/backups/<string:key>/')
 api.add_resource(Revision, '/v3/revision/')
+
+# Backup Actions
+api.add_resource(Comment, '/v3/backups/<hashid:backup_id>/comment/')
 
 # Assignment Info
 ASSIGNMENT_BASE = '/v3/assignment/<assignment_name:name>'
@@ -811,8 +895,7 @@ api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
+api.add_resource(CourseEnrollment, '/v3/course/<offering:offering>/enrollment')
 api.add_resource(Score, '/v3/score/')
-
 api.add_resource(User, '/v3/user/', '/v3/user/<string:email>')
-
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')

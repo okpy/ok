@@ -5,13 +5,14 @@ Docs: http://selenium-python.readthedocs.io/getting-started.html
 import json
 import os
 import signal
+import time
 import urllib.parse
 
 import requests
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
 
-from server import create_app, models
+from server import create_app, models, utils
 
 from tests import OkTestCase
 
@@ -43,8 +44,13 @@ if driver:
                         assignment=self.assignment, submit=submit)
                     messages = [models.Message(kind=k, backup=backup,
                         contents=m) for k, m in message_dict.items()]
+                    comment = models.Comment(author=self.user1, backup=backup,
+                        filename='backup.py', line=1,
+                        message="# cool story\n<script>document.title = '1337 hax0r'</script>")
+
                     models.db.session.add_all(messages)
                     models.db.session.add(backup)
+                    models.db.session.add(comment)
             models.db.session.commit()
 
             # Setup some groups
@@ -167,6 +173,8 @@ if driver:
 
             self.driver.find_element_by_class_name("view-code").click()
             self.assertTrue("backup.py" in self.driver.page_source)
+            # Make sure the XSS attempt didn't work
+            self.assertTrue(self.driver.title != '1337 hax0r')
 
             self.pageLoad("{}/cal/cs61a/sp16/proj1/backups/".format(self.get_server_url()))
             self.pageLoad("{}/cal/cs61a/sp16/proj1/submissions/".format(self.get_server_url()))
@@ -300,13 +308,48 @@ if driver:
 
         def test_assignment_send_to_ag(self):
             self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1/autograde")
-            self.assertTrue("Autograde Hog" in self.driver.page_source)
+            self.assignment.autograding_key = "test" # Autograder will respond with 200
+            models.db.session.commit()
 
-            assign_key = self.driver.find_element_by_id("autograder_id")
-            assign_key.send_keys('test') # AG responds with a 200 if ID = 'test'
+            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1")
+            self.assertTrue("Queue on Autograder" in self.driver.page_source)
             self.driver.find_element_by_class_name('ag-submit-btn').click()
+            time.sleep(0.5)
+            self.driver.find_element_by_class_name('confirm').click()
             self.assertTrue("Submitted to the autograder" in self.driver.page_source)
+
+        def test_assignment_send_to_ag_with_no_token(self):
+            self._login(role="admin")
+            self.assignment.autograding_key = ""
+            models.db.session.commit()
+
+            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1")
+
+            self.assertTrue("Queue on Autograder" in self.driver.page_source)
+            self.driver.find_element_by_class_name('ag-submit-btn').submit()
+            self.assertTrue("Assignment has no autograder key" in self.driver.page_source)
+            self.assertTrue("Submitted to the autograder" not in self.driver.page_source)
+
+        def test_assignment_send_backup_to_ag(self):
+            self._login(role="admin")
+            self.assignment.autograding_key = "test" # Autograder will respond with 200
+            models.db.session.commit()
+
+            # find a backup
+            backup = models.Backup(
+                submitter_id=self.user1.id,
+                assignment=self.assignment,
+            )
+            models.db.session.add(backup)
+            models.db.session.commit()
+
+            bid = utils.encode_id(backup.id)
+
+            self.pageLoad(self.get_server_url() + "/admin/grading/" + bid)
+            # show the button
+            self.driver.find_element_by_id('expand-submission-information').click()
+            self.driver.find_element_by_id('autograde-button').click()
+            self.assertIn("Submitted to the autograder", self.driver.page_source)
 
         def test_admin_enrollment(self):
             self._login(role="admin")
@@ -314,6 +357,23 @@ if driver:
             self.assertIn('Ok -', self.driver.title)
             self.assertTrue(self.course.offering in self.driver.page_source)
             self.assertTrue('Export Roster' in self.driver.page_source)
+
+        def test_admin_student_overview(self):
+            self._login(role="admin")
+            self.pageLoad(self.get_server_url() + "/admin/course/1/{}".format(self.user1.email))
+            self.assertIn('Ok -', self.driver.title)
+            self.assertTrue("Enrolled At" in self.driver.page_source)
+
+        def test_admin_student_assign_overview(self):
+            self._login(role="admin")
+            self.pageLoad(self.get_server_url() + "/admin/course/1/{}/{}".format(self.user1.email, self.assignment.id))
+            self.assertIn('Ok -', self.driver.title)
+            self.assertTrue("Submission Stats" in self.driver.page_source)
+
+        def test_admin_student_assign_timeline(self):
+            self._login(role="admin")
+            self.pageLoad(self.get_server_url() + "/admin/course/1/{}/{}/timeline".format(self.user1.email, self.assignment.id))
+            self.assertIn('Timeline', self.driver.title)
 
         def test_queue_create(self):
             self._login(role="admin")

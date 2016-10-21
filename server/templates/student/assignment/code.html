@@ -26,7 +26,9 @@
                     <h3 class="text-center">
                       <span class="label label-primary">{{ score.kind.title() }}: {{ score.score | round(2) }}</span>
                     </h3>
-                    <p class="text-center"> Grader: {{ score.grader.email }} </p>
+                    {% if score.kind == "composition" %}
+                      <p class="text-center"> Grader: {{ score.grader.email }} </p>
+                    {% endif %}
                     {% if score.message | length < 100 %}
                     <p class="text-center"> Message: {{ score.message }}  </p>
                     {% else %}

@@ -504,6 +504,53 @@ access_token | None | (Required) Access Token of submitter
 #### Response
 See example
 
+## Comments
+>><h4> Example Request </h4>
+> ```python
+import requests
+data = {
+    'filename': 'lab00.py',
+    'line': 2,
+    'message': "Great job.\nConsider the use of the `total` variable."
+}
+url = "https://okpy.org/api/v3/backups/a24x23/comment?access_token={}"
+access_token = 'test'
+r = requests.post(url.format(access_token), data=data)
+response = r.json()
+```
+>><h4> Response </h4>
+```
+{
+    "data": {},
+    "code": 200,
+    "message": "success"
+}
+```
+
+Create a new comment on a backup.
+Used by third party review tools.
+
+#### Permissions
+The access_token must be authorized to view the backup to leave a comment.
+
+#### HTTP Request
+`POST https://okpy.org/api/v3/backups/<string:id>/comment/`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of commenter
+
+#### POST Data Fields
+Parameter | Type | Description
+---------- | ------- | -------
+filename | String | (Required) Filename to comment on
+line | Integer | (Required) Line number on the backup to place comment.
+message | String | (Required) Comment contents as raw Markdown text. New lines require `\n`.
+
+#### Response
+No `data` is returned. 
+
 # Users
 
 ## View a specific user

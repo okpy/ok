@@ -5,12 +5,15 @@ in a sandboxed environment.
 """
 
 from flask import url_for
+from flask_login import current_user
+import datetime
 import json
 import requests
 import logging
+import oauthlib.common
 
 import server.constants as constants
-from server.models import User, Backup, db
+from server.models import User, Backup, Client, Token, db
 import server.utils as utils
 
 logger = logging.getLogger(__name__)
@@ -30,49 +33,55 @@ def send_autograder(endpoint, data):
                                                          error_message))
         raise ValueError(error_message)
 
-def autograde_assignment(assignment, ag_assign_key, token, autopromotion=True):
-    """ Autograde all enrolled students for this assignment.
-    If ag_assign_key is 'test', the autograder will respond with 'OK' but not grade.
+def send_batch(assignment, backup_ids):
+    if not assignment.autograding_key:
+        raise ValueError('Assignment has no autograder key')
 
-    @assignment: Assignment object.
-    @ag_assign_key: Autograder ID (from Autograder Dashboard)
-    @token: OK Access Token (from auth)
+    # Create an access token for this run
+    autograder_client = Client.query.get('autograder')
+    if not autograder_client:
+        autograder_client = Client(
+            name='Autograder',
+            client_id='autograder',
+            client_secret='autograder',
+            redirect_uris=[],
+            is_confidential=False,
+            description='The Autopy autograder system',
+            default_scopes=['all'],
+        )
+        db.session.add(autograder_client)
+        db.session.commit()
+    token = Token(
+        client=autograder_client,
+        user=current_user,
+        token_type='bearer',
+        access_token=oauthlib.common.generate_token(),
+        expires=datetime.datetime.utcnow() + datetime.timedelta(hours=2),
+        scopes=['all'],
+    )
+    db.session.add(token)
+    db.session.commit()
+
+    return send_autograder('/api/ok/v3/grade/batch', {
+        'subm_ids': [utils.encode_id(bid) for bid in backup_ids],
+        'assignment': assignment.autograding_key,
+        'access_token': token.access_token,
+        'priority': 'default',
+        'backup_url': url_for('api.backup', _external=True),
+        'ok-server-version': 'v3',
+    })
+
+def autograde_assignment(assignment):
+    """Autograde all enrolled students for this assignment.
+
+    @assignment: Assignment object
     """
     course_submissions = assignment.course_submissions(include_empty=False)
-    submissions = [fs['backup'] for fs in course_submissions if fs['backup']]
-    submissions_id = list(set(utils.encode_id(fs['id']) for fs in submissions))
+    backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
+    return send_batch(assignment, backup_ids)
 
-    if autopromotion:
-        # Change FS backups into submissions
-        for fs in submissions:
-            if not fs['submit']:
-                backup = Backup.query.get(fs['id'])
-                backup.submit = True
-        db.session.commit()
-
-    data = {
-        'subm_ids': submissions_id,
-        'assignment': ag_assign_key,
-        'access_token': token,
-        'priority': 'default',
-        'backup_url': url_for('api.backup', _external=True),
-        'ok-server-version': 'v3',
-        'testing': token == 'testing',
-    }
-    return send_autograder('/api/ok/v3/grade/batch', data)
-
-def grade_single(backup, ag_assign_key, token):
-
-    data = {
-        'subm_ids': [utils.encode_id(backup.id)],
-        'assignment': ag_assign_key,
-        'access_token': token,
-        'priority': 'default',
-        'backup_url': url_for('api.backup', _external=True),
-        'ok-server-version': 'v3',
-        'testing': token == 'testing',
-    }
-    return send_autograder('/api/ok/v3/grade/batch', data)
+def autograde_backup(backup):
+    return send_batch(backup.assignment, [backup.id])
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)

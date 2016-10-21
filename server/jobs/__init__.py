@@ -9,6 +9,27 @@ import rq
 
 from server.models import db, Job
 
+class JobLogHandler(logging.StreamHandler):
+    """Stream log contents to buffer and to DB. """
+    def __init__(self, stream, job, log_every=10):
+        super().__init__(stream)
+        self.stream = stream
+        self.job = job
+        self.counter = 0
+        self.log_every = log_every
+
+    def handle(self, record):
+        self.counter += 1
+        super().handle(record)
+        print(record.message)
+        if (self.counter % self.log_every) == 0:
+            self.job.log = self.contents
+            db.session.commit()
+
+    @property
+    def contents(self):
+        return self.stream.getvalue()
+
 def get_job_id():
     rq_job = rq.get_current_job(connection=get_connection())
     return rq_job.id
@@ -24,9 +45,11 @@ def background_job(f):
         db.session.commit()
 
         stream = io.StringIO()
+        handler = JobLogHandler(stream, job)
         logger = get_job_logger()
+
         logger.setLevel(logging.INFO)
-        logger.addHandler(logging.StreamHandler(stream))
+        logger.addHandler(handler)
 
         try:
             f(*args, **kwargs)
@@ -35,7 +58,7 @@ def background_job(f):
             logger.exception('Job failed')
 
         job.status = 'finished'
-        job.log = stream.getvalue()
+        job.log = handler.contents
         stream.close()
         db.session.commit()
 

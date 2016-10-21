@@ -1,0 +1,67 @@
+{% extends "staff/base.html" %}
+{% import "staff/_formhelpers.html" as forms %}
+
+{% block title %} Github Search | Ok {% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        {{ current_course.display_name_with_semester }} Jobs
+        <small>{{ current_course.offering }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li><a href="{{ url_for(".course_jobs", cid=current_course.id) }}">
+            <i class="fa fa-list"></i>Jobs
+        </a></li>
+        <li class="active"><a href="{{ url_for('.start_github_search', cid=current_course.id, aid=assignment.id) }}">
+            <i class="fa fa-github"></i>Github Search</a>
+        </li>
+    </ol>
+</section>
+<section class="content">
+  {% include 'alerts.html' %}
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-body">
+          {% call forms.render_form(form, action_text='Search Github') %}
+            {{ forms.render_field(form.access_token) }}
+            {{ forms.render_field(form.template_name, placeholder="hog.py") }}
+            {{ forms.render_field(form.weeks_past, default=12) }}
+            {{ forms.render_field(form.keyword, default="def ") }}
+            {{ forms.render_field(form.language) }}
+            {{ forms.render_field(form.issue_title) }}
+            {{ forms.render_field(form.issue_body) }}
+            <div class="sample-message">
+            <p> Sample Body
+            <pre>
+Hello @{author}
+
+The CS61A staff has noticed that your code is publically available on `{repo}`. Public repos with solutions make it much harder for us to keep the course fair and challenging.
+
+The [course syllabus](http://cs61a.org/articles/about.html) explicitly states the following policy regarding Academic Honesty:
+
+> "Do not share your code with anyone but your partner, and do not read anyone but your partner's code. Do not post your solutions online. Do not use pastebin or github, which post your work publicly by default."
+
+If you are a current student - you could be held liable for academic conduct violations if another student finds and uses this code.
+
+If you would kindly make your repository private or delete it, we’d appreciate it. You can register for a student account on Github and get *unlimited free private repos* by going to [education.github.com](https://education.github.com/pack). You can also check out Bitbucket, which has unlimited private repositories.
+</pre></p>
+<br>
+
+          </div>
+          {% endcall %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

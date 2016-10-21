@@ -12,20 +12,21 @@ from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
 
-from server.autograder import autograde_assignment, submit_continous
-from server.controllers.auth import get_token_if_valid
+from server import autograder
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, Group, Client, Job, db)
+                           GradingTask, Backup, Score, Group, Client, Job,
+                           Message, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                                LAB_ASSISTANT_ROLE, GRADE_TAGS)
+                              LAB_ASSISTANT_ROLE, GRADE_TAGS)
 
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
 import server.jobs.example as example
 import server.jobs.moss as moss
+import server.jobs.github_search as github_search
 
 import server.highlight as highlight
 import server.utils as utils
@@ -238,6 +239,24 @@ def grade(bid):
                             cid=backup.assignment.course_id)
     return redirect(next_page)
 
+@admin.route('/grading/<hashid:bid>/autograde', methods=['POST'])
+@is_staff()
+def autograde_backup(bid):
+    backup = Backup.query.options(db.joinedload('assignment')).get(bid)
+    if not backup:
+        abort(404)
+    if not Backup.can(backup, current_user, 'grade'):
+        flash("You do not have permission to score this assignment.", "warning")
+        abort(401)
+
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        try:
+            autograder.autograde_backup(backup)
+            flash('Submitted to the autograder', 'success')
+        except ValueError as e:
+            flash(str(e), 'error')
+    return redirect(url_for('.grading', bid=bid))
 
 @admin.route("/versions/<name>", methods=['GET', 'POST'])
 @is_staff()
@@ -290,12 +309,10 @@ def create_course():
                            courses=courses)
 
 @admin.route("/course/<int:cid>")
+@admin.route("/course/<int:cid>/")
 @is_staff(course_arg='cid')
 def course(cid):
     return redirect(url_for(".course_assignments", cid=cid))
-    # courses, current_course = get_courses(cid)
-    # return render_template('staff/course/index.html',
-    #                       courses=courses, current_course=current_course)
 
 @admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
@@ -524,8 +541,6 @@ def assignment_single_queue(cid, aid, uid):
         return abort(401)
 
     assigned_grader = User.get_by_id(uid)
-    if not Assignment.can(assignment, assigned_grader, 'grade'):
-        return abort(404)
 
     page = request.args.get('page', 1, type=int)
     tasks_query = GradingTask.query.filter_by(assignment=assignment,
@@ -595,7 +610,7 @@ def assign_grading(cid, aid):
                            form=form)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/autograde",
-             methods=["GET", "POST"])
+             methods=["POST"])
 @is_staff(course_arg='cid')
 def autograde(cid, aid):
     courses, current_course = get_courses(cid)
@@ -603,31 +618,14 @@ def autograde(cid, aid):
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
-    auth_token = get_token_if_valid()
-    form = forms.AutogradeForm()
+    form = forms.CSRFForm()
     if form.validate_on_submit():
-        if hasattr(form, 'token') and form.token.data:
-            token = form.token.data
-        else:
-            token = auth_token
-
-        autopromotion = form.autopromote.data
         try:
-            autograde_assignment(assign, form.autograder_id.data,
-                                 token, autopromotion=autopromotion)
+            autograder.autograde_assignment(assign)
             flash('Submitted to the autograder', 'success')
         except ValueError as e:
             flash(str(e), 'error')
-
-    if not form.token.data and auth_token:
-        form.token.data = auth_token[0]
-
-    if not form.autograder_id.data and assign.autograding_key:
-        form.autograder_id.data = assign.autograding_key
-
-    return render_template('staff/grading/autograde.html',
-                           current_course=current_course,
-                           assignment=assign, form=form)
+    return redirect(url_for('.assignment', cid=cid, aid=aid))
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
              methods=["GET", "POST"])
@@ -644,6 +642,7 @@ def start_moss_job(cid, aid):
         job = jobs.enqueue_job(
             moss.submit_to_moss,
             description='Moss Upload for {}'.format(assign.display_name),
+            timeout=600,
             course_id=cid,
             user_id=current_user.id,
             assignment_id=assign.id,
@@ -659,6 +658,43 @@ def start_moss_job(cid, aid):
             assignment=assign,
             form=form,
         )
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/github",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def start_github_search(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.GithubSearchRecentForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            github_search.search_similar_repos,
+            description='Github Search for {}'.format(assign.display_name),
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id,
+            keyword=form.keyword.data,
+            template_name=form.template_name.data,
+            access_token=form.access_token.data,
+            weeks_past=form.weeks_past.data,
+            language=form.language.data,
+            issue_title=form.issue_title.data,
+            issue_body=form.issue_body.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/github_search.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
+
 
 ##############
 # Enrollment #
@@ -797,6 +833,29 @@ def student_view(cid, email):
                            courses=courses, current_course=current_course,
                            student=student, enrollment=enrollment,
                            assignments=assignments)
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/timeline")
+@is_staff(course_arg='cid')
+def assignment_timeline(cid, email, aid):
+    courses, current_course = get_courses(cid)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    stats = assign.user_timeline(student.id)
+
+    return render_template('staff/student/assignment.timeline.html',
+                           courses=courses, current_course=current_course,
+                           student=student, assignment=assign,
+                           submitters=stats['submitters'],
+                           timeline=stats['timeline'])
+
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>")
 @is_staff(course_arg='cid')
@@ -1118,6 +1177,7 @@ def student_assignment_graph_detail(cid, email, aid):
                            backup=backups[0],
                            group=group,
                            graph=line_chart)
+
 ########################
 # Student view actions #
 ########################
@@ -1259,7 +1319,7 @@ def staff_submit_backup(cid, email, aid):
                 assign.flag(backup.id, user_ids)
             if assign.autograding_key:
                 try:
-                    submit_continous(backup)
+                    autograder.submit_continous(backup)
                 except ValueError as e:
                     flash('Did not send to autograder: {}'.format(e), 'warning')
 
@@ -1317,4 +1377,3 @@ def start_test_job(cid):
             current_course=current_course,
             form=form,
         )
-

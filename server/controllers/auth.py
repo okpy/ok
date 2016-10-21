@@ -10,6 +10,7 @@ from flask_oauthlib.contrib.oauth2 import bind_sqlalchemy
 
 from flask_login import (LoginManager, login_user, logout_user, login_required,
                          current_user)
+import requests
 
 import datetime as dt
 import logging
@@ -66,16 +67,6 @@ def check_oauth_token(scopes=None):
     if valid:
         return req
 
-def get_token_if_valid(treshold_min=2):
-    """ Get the current google token if it will continue to be valid for the
-    next TRESHOLD_MIN minutes. Otherwise, return None.
-    """
-    future_usage = dt.datetime.now() + dt.timedelta(minutes=treshold_min)
-    expiry_time = session.get('token_expiry')
-    if expiry_time and expiry_time >= future_usage:
-        return session.get('google_token')
-    return None
-
 def user_from_email(email):
     """Get a User with the given email, or create one."""
     user = User.lookup(email)
@@ -86,17 +77,43 @@ def user_from_email(email):
         db.session.commit()
     return user
 
+def google_oauth_request(token):
+    """ Use fallback of Google Plus Endpoint Profile Info.
+    """
+
 @cache.memoize(timeout=600)
-def google_user_data(token):
+def google_user_data(token, timeout=5):
     """ Query google for a user's info. """
     if not token:
         logger.info("Google Token is None")
         return None
-    resp = google_auth.get('userinfo', token=(token, ''))
-    if resp.status != 200:
-        logger.error("Could not authenticate {}", resp.data)
+    google_plus_endpoint = "https://www.googleapis.com/plus/v1/people/me?access_token={}"
+
+    try:
+        r = requests.get(google_plus_endpoint.format(token), timeout=timeout)
+        data = r.json()
+        if 'error' not in data and data.get('emails'):
+            user_email = data['emails'][0]['value']
+            return {'email': user_email}
+    except requests.exceptions.Timeout as e:
+        logger.error("Timed out when using google+")
         return None
-    return resp.data
+
+    # If Google+ didn't work - fall back to OAuth2
+    oauth2_endpoint = "https://www.googleapis.com/oauth2/v3/userinfo?access_token={}"
+
+    try:
+        r = requests.get(oauth2_endpoint.format(token), timeout=timeout)
+        data = r.json()
+        if r.status_code != 200:
+            logger.error("Google returned non 200 status code: {}", r.status_code)
+        return data
+    except requests.exceptions.Timeout as e:
+        logger.error("Timed out when using google oauth2")
+        return None
+
+    logger.warning("None of the endpoints returned an access token.")
+    return None
 
 def user_from_google_token(token):
     """
@@ -109,11 +126,16 @@ def user_from_google_token(token):
         return user_from_email("okstaff@okpy.org")
     user_data = google_user_data(token)
 
-    if user_data is None:
+    if not user_data or 'email' not in user_data:
         cache.delete_memoized(google_user_data, token)
+        logger.warning("Could not login with oauth. Trying again - {}".format(user_data))
+        user_data = google_user_data(token, timeout=10)
 
-    if not user_data:
+    if not user_data or 'email' not in user_data:
+        cache.delete_memoized(google_user_data, token)
+        logger.warning("Auth Retry failed for token {} - {}".format(token, user_data))
         return None
+
     return user_from_email(user_data['email'])
 
 login_manager = LoginManager()
@@ -181,14 +203,8 @@ def login():
     return google_auth.authorize(callback=url_for('.authorized', _external=True))
 
 @auth.route('/login/authorized/')
-@google_auth.authorized_handler
-def authorized(resp):
-    if isinstance(resp, OAuthException):
-        error = "{0} - {1}".format(resp.data.get('error', 'Unknown Error'),
-                                   resp.data.get('error_description', 'Unknown'))
-        flash(error, "error")
-        # TODO Error Page
-        return redirect("/")
+def authorized():
+    resp = google_auth.authorized_response()
     if resp is None:
         error = "Access denied: reason={0} error={1}".format(
             request.args['error_reason'],
@@ -197,9 +213,20 @@ def authorized(resp):
         flash(error, "error")
         # TODO Error Page
         return redirect("/")
+    if isinstance(resp, OAuthException):
+        error = "{0} - {1}".format(resp.data.get('error', 'Unknown Error'),
+                                   resp.data.get('error_description', 'Unknown'))
+        flash(error, "error")
+        # TODO Error Page
+        return redirect("/")
 
     access_token = resp['access_token']
     user = user_from_google_token(access_token)
+    if not user:
+        logger.warning("Attempt to get user info failed")
+        flash("We could not log you in. Maybe try another email?", 'warning')
+        return redirect("/")
+
     logger.info("Login from {}".format(user.email))
     expires_in = resp.get('expires_in', 0)
     session['token_expiry'] = dt.datetime.now() + dt.timedelta(seconds=expires_in)

@@ -185,9 +185,15 @@
                   <li> <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-bar-chart-o"></i> Detailed Stats
                   </a></li>
-                  <li> <a href="{{ url_for('.autograde', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-send"></i> Autograde
+                  <li> <a href="http://autograder.cs61a.org" target="_blank" type="button">
+                        <i class="fa fa-gear"></i> Configure Autograder
                   </a></li>
+                  <li>
+                    {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde', cid=current_course.id, aid=assignment.id), class_='form') %}
+                        <button type="submit" class="ag-submit-btn" data-confirm="Send all submissions to the autograder?"> <i class="fa fa-send"></i> Queue on Autograder
+                        </button>
+                    {% endcall %}
+                 </li>
                   <li> <a href="{{ url_for('.templates', cid=current_course.id, aid=assignment.id) }}" type="button">
                      <i class="fa fa fa-file-text-o"></i> Edit Assignment Template
                   </a></li>
@@ -204,7 +210,9 @@
                   <li> <a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-gavel"></i> Run MOSS
                   </a></li>
-
+                  <li> <a href="{{ url_for('.start_github_search', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-github"></i> Search Github
+                  </a></li>
                 </ul>
               </div>
               <!-- /.box-body -->

@@ -75,7 +75,8 @@ class OkTestCase(TestCase):
             display_name='Hog',
             due_date=dt.datetime.now(),
             lock_date=dt.datetime.now() + dt.timedelta(days=1),
-            max_group_size=4)
+            max_group_size=4,
+            autograding_key='test')  # AG responds with a 200 if ID = 'test'
         db.session.add(self.assignment)
 
         self.assignment2 = Assignment(

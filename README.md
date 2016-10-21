@@ -1,4 +1,4 @@
-[![Logo](https://raw.githubusercontent.com/Cal-CS-61A-Staff/ok/master/server/static/img/logo-tiny.png)](#) 
+[![Logo](https://raw.githubusercontent.com/Cal-CS-61A-Staff/ok/master/server/static/img/logo-tiny.png)](#)
 =====
 
 The ok.py server collects submissions and displays analysis of student progress
@@ -8,7 +8,7 @@ Contact us to use our hosted service (http://okpy.org) for your course.
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
-[![Build Status](https://travis-ci.org/Cal-CS-61A-Staff/ok.svg?branch=master)](https://travis-ci.org/Cal-CS-61A-Staff/ok)
+[![Build Status](https://circleci.com/gh/Cal-CS-61A-Staff/ok.svg?style=shield)](https://circleci.com/gh/Cal-CS-61A-Staff/ok)
 [![Coverage Status](https://coveralls.io/repos/github/Cal-CS-61A-Staff/ok/badge.svg)](https://coveralls.io/github/Cal-CS-61A-Staff/ok)
 
 View Documentation at [OK Documentation](https://okpy.github.io/documentation)

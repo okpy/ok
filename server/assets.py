@@ -38,6 +38,7 @@ student_js = Bundle(
 
 staff_css = Bundle(
     'css/staff.css',
+    'css/jquery.steps.css',
     filters='cssmin',
     output='public/css/staff.css'
 )
