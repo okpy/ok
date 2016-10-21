@@ -30,3 +30,9 @@
     margin-left: 75px !important;
     margin-right: 0px !important;
 }
+.timeline-later {
+    margin-left: 60px;
+    margin-right: 15px;
+    margin-top: 5px;
+    height: 35px;
+}

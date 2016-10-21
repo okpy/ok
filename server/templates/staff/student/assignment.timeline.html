@@ -26,9 +26,6 @@
     {% include 'alerts.html' %}
 
       <div class="row">
-          <div class="col-sm-12" style="display:none">
-              {{ history }}
-          </div>
           {% for submitter in submitters %}
           <div class="col-md-5">
             <!-- Default box -->
@@ -43,8 +40,8 @@
                       {% for event in timeline %}
                       <!-- timeline item -->
                       <li style="{% if event['backup'].submitter.email == submitter %} visibility: hidden;{% endif %}" >
-                          {% if event['event'] == "later" %}
-                            <i class="fa fa-ellipis-h bg-gray"></i>
+                          {% if event['event'] == "Later" %}
+                            <i class="fa fa-ellipsis-h"></i>
                           {% elif event['event'] == "Started" %}
                             <i class="fa fa-hourglass-start bg-blue"></i>
                           {% elif event['event'] == "Solved" %}
@@ -57,9 +54,13 @@
                             <i class="fa fa-info bg-blue"></i>
                           {% endif %}
                           <!-- timeline icon -->
+                          {% if event['event'] == "Later" %}
+                          <div class="timeline-later">
+                              <p>{{ event['title'] }}</p>
+                          </div>
+                          {% else %}
                           <div class="timeline-item ">
                               <span class="time"><i class="fa fa-clock-o"></i> {{utils.local_time(event['backup'].created, current_course) }}</span>
-
                               <h3 class="timeline-header"><a href="#"> {{ event['title'] }} </a> </h3>
 
                               {% if event['body'] %}
@@ -72,9 +73,10 @@
                               <div class="timeline-footer">
 
                                   <a class="btn btn-primary btn-xs" href="{{ url_for('.grading', bid=event['backup'].id) }}"> Code </a>
-                                  <span class="pull-right"> {{ event['backup'].hashid }} </span>
+                                  <span class="pull-right"> Attempt {{ event['attempt'] }} </span>
                               </div>
                           </div>
+                          {% endif %}
                       </li>
                       <!-- END timeline item -->
                       {% endfor %}

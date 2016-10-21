@@ -15,18 +15,19 @@ from markdown import markdown
 import pytz
 
 import functools
-from collections import namedtuple
+
+from collections import namedtuple, defaultdict
+
 import contextlib
 import csv
 from datetime import datetime as dt
-from datetime import timedelta
 import json
 import logging
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-    HIDDEN_GRADE_TAGS)
+                              HIDDEN_GRADE_TAGS)
 from server.extensions import cache
-from server.utils import (decode_id, encode_id, chunks, generate_number_table,
+from server.utils import (encode_id, chunks, generate_number_table,
                           humanize_name)
 
 logger = logging.getLogger(__name__)
@@ -365,6 +366,84 @@ class Assignment(Model):
     def by_name(name):
         """ Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
+
+    def user_timeline(self, user_id):
+        """ Timeline of user submissions. """
+        user_ids = self.active_user_ids(user_id)
+        analytics = (db.session.query(Backup, Message)
+                       .outerjoin(Message)
+                       .filter(Backup.submitter_id.in_(user_ids),
+                               Backup.assignment_id == self.id,
+                               Message.kind == "analytics")
+                       .order_by(Backup.created.asc())
+                       .all())
+
+        unlock_started_q, started_questions, solved_questions = {}, {}, {}
+        submitter_counts = defaultdict(lambda: 1)
+        history, timeline = [], []
+        last_q = (None, False, 0)  # current_question, is_solved, count
+
+        for backup, message in analytics:
+            contents = message.contents
+            curr_q = contents.get('question', [None])[0]
+            if not curr_q:
+                continue
+            if ('history' not in contents or 'questions' not in contents['history'] or
+                    not isinstance(contents['history']['questions'], dict)):
+                continue
+
+            submitter_counts[backup.submitter.email] += 1
+
+            curr_q_stats = message.contents['history']['questions'].get(curr_q)
+            total_attempt_count = message.contents['history'].get('all_attempts')
+            is_solved = curr_q_stats.get('solved', None)
+
+            if contents.get('unlock'):
+                # Is unlocking.
+                if curr_q not in unlock_started_q:
+                    unlock_started_q[curr_q] = backup.hashid
+                    timeline.append({"event": "Unlock",
+                                     "attempt": total_attempt_count,
+                                     "title": "Started unlocking {}".format(curr_q),
+                                     "backup": backup})
+                if curr_q != last_q[0]:
+                    last_q = (curr_q, is_solved, 0)
+                else:
+                    last_q = (curr_q, is_solved, last_q[2]+1)
+            elif curr_q not in started_questions:
+                started_questions[curr_q] = backup.hashid
+                timeline.append({"event": "Started",
+                                 "title": "Started {}".format(curr_q),
+                                 "attempt": total_attempt_count,
+                                 "backup": backup})
+            elif last_q[0] != curr_q and last_q[0] is not None:
+                # Didn't just start it but did switch questions.
+                timeline.append({"event": "Switched",
+                                 "title": "Switched to {}".format(curr_q),
+                                 "attempt": total_attempt_count,
+                                 "body": "{} Backups Later".format(last_q[2]),
+                                 "backup": backup, "date": backup.created})
+                last_q = (curr_q, is_solved, 1)
+
+            if is_solved and curr_q not in solved_questions:
+                # Just solved a question
+                solved_questions[curr_q] = backup.hashid
+                if last_q[2] > 5:
+                    timeline.append({"event": "Later",
+                                     "title": "{} attempts later".format(last_q[2]),
+                                     "attempt": total_attempt_count,
+                                     "backup": backup})
+
+                timeline.append({"event": "Solved",
+                                 "title": "Solved {}".format(curr_q),
+                                 "attempt": total_attempt_count,
+                                 "backup": backup})
+            else:
+                last_q = (curr_q, is_solved, last_q[2]+1)
+
+            history.append(message.contents)
+
+        return {'submitters': submitter_counts, 'timeline': timeline[::-1]}
 
     def user_status(self, user):
         user_ids = self.active_user_ids(user.id)

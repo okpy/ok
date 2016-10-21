@@ -295,9 +295,6 @@ def create_course():
 @is_staff(course_arg='cid')
 def course(cid):
     return redirect(url_for(".course_assignments", cid=cid))
-    # courses, current_course = get_courses(cid)
-    # return render_template('staff/course/index.html',
-    #                       courses=courses, current_course=current_course)
 
 @admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
@@ -850,79 +847,13 @@ def assignment_timeline(cid, email, aid):
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    user_ids = assign.active_user_ids(student.id)
-
-    analytics = (db.session.query(Backup, Message)
-                       .outerjoin(Message)
-                       .filter(Backup.submitter_id.in_(user_ids),
-                               Backup.assignment_id == assign.id,
-                               Message.kind == "analytics")
-                       .order_by(Backup.created.asc())
-                       .all())
-
-    unlock_started_q = {}
-    started_questions = {}
-    solved_questions = {}
-    submitter_counts = {}
-    history, timeline = [], []
-    last_q = (None, False, 0)
-    for backup, message in analytics:
-        contents = message.contents
-        current_question = contents.get('question', [None])[0]
-        if not current_question:
-            continue
-        if ('history' not in contents or 'questions' not in contents['history'] or
-            type(contents['history']['questions']) != dict):
-            continue
-
-        if backup.submitter.email not in submitter_counts:
-            submitter_counts[backup.submitter.email] = 1
-        else:
-            submitter_counts[backup.submitter.email] += 1
-
-        curr_q_stats = message.contents['history']['questions'].get(current_question)
-        total_attempt_count = message.contents['history'].get('all_attempts')
-        is_solved = curr_q_stats.get('solved', None)
-
-        if contents.get('unlock'):
-            # Is unlocking.
-            if current_question not in unlock_started_q:
-                unlock_started_q[current_question] = backup.hashid
-                timeline.append({"event": "Unlock",
-                                 "title": "Started unlocking {}".format(current_question),
-                                 "backup": backup})
-            if current_question != last_q[0]:
-                last_q = (current_question, is_solved, 0)
-            else:
-                last_q = (current_question, is_solved, last_q[2]+1)
-
-        if current_question not in started_questions:
-            started_questions[current_question] = backup.hashid
-            timeline.append({"event": "Started", "title": "Started {}".format(current_question),
-                             "backup": backup})
-        elif last_q[0] != current_question and last_q[0] is not None:
-            # Didn't just start it but did switch questions.
-            timeline.append({"event": "Switched", "title": "Switched to {}".format(current_question),
-                             "body": "{} Backups Later. Attempt: {}".format(last_q[2], total_attempt_count),
-                             "backup": backup, "date": backup.created})
-            last_q = (current_question, is_solved, 1)
-        if is_solved and current_question not in solved_questions:
-            # Just solved a question
-            solved_questions[current_question] = backup.hashid
-
-            timeline.append({"event": "Solved", "title": "Solved {}".format(current_question),
-                             "body": "{} Backups Later. Attempt: {}".format(last_q[2], total_attempt_count),
-                             "backup": backup})
-        else:
-            last_q = (current_question, is_solved, last_q[2]+1)
-
-        history.append(message.contents)
+    stats = assign.user_timeline(student.id)
 
     return render_template('staff/student/assignment.timeline.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,
-                           submitters=submitter_counts,
-                           history=history, timeline=timeline[::-1])
+                           submitters=stats['submitters'],
+                           timeline=stats['timeline'])
 
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>")
