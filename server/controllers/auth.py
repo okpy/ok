@@ -67,16 +67,6 @@ def check_oauth_token(scopes=None):
     if valid:
         return req
 
-def get_token_if_valid(treshold_min=2):
-    """ Get the current google token if it will continue to be valid for the
-    next TRESHOLD_MIN minutes. Otherwise, return None.
-    """
-    future_usage = dt.datetime.now() + dt.timedelta(minutes=treshold_min)
-    expiry_time = session.get('token_expiry')
-    if expiry_time and expiry_time >= future_usage:
-        return session.get('google_token')
-    return None
-
 def user_from_email(email):
     """Get a User with the given email, or create one."""
     user = User.lookup(email)

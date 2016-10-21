@@ -11,8 +11,7 @@ from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
 
-from server.autograder import autograde_assignment, submit_continous
-from server.controllers.auth import get_token_if_valid
+from server import autograder
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
@@ -239,6 +238,24 @@ def grade(bid):
                             cid=backup.assignment.course_id)
     return redirect(next_page)
 
+@admin.route('/grading/<hashid:bid>/autograde', methods=['POST'])
+@is_staff()
+def autograde_backup(bid):
+    backup = Backup.query.options(db.joinedload('assignment')).get(bid)
+    if not backup:
+        abort(404)
+    if not Backup.can(backup, current_user, 'grade'):
+        flash("You do not have permission to score this assignment.", "warning")
+        abort(401)
+
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        try:
+            autograder.autograde_backup(backup)
+            flash('Submitted to the autograder', 'success')
+        except ValueError as e:
+            flash(str(e), 'error')
+    return redirect(url_for('.grading', bid=bid))
 
 @admin.route("/versions/<name>", methods=['GET', 'POST'])
 @is_staff()
@@ -592,7 +609,7 @@ def assign_grading(cid, aid):
                            form=form)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/autograde",
-             methods=["GET", "POST"])
+             methods=["POST"])
 @is_staff(course_arg='cid')
 def autograde(cid, aid):
     courses, current_course = get_courses(cid)
@@ -600,31 +617,14 @@ def autograde(cid, aid):
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
-    auth_token = get_token_if_valid()
-    form = forms.AutogradeForm()
+    form = forms.CSRFForm()
     if form.validate_on_submit():
-        if hasattr(form, 'token') and form.token.data:
-            token = form.token.data
-        else:
-            token = auth_token
-
-        autopromotion = form.autopromote.data
         try:
-            autograde_assignment(assign, form.autograder_id.data,
-                                 token, autopromotion=autopromotion)
+            autograder.autograde_assignment(assign)
             flash('Submitted to the autograder', 'success')
         except ValueError as e:
             flash(str(e), 'error')
-
-    if not form.token.data and auth_token:
-        form.token.data = auth_token[0]
-
-    if not form.autograder_id.data and assign.autograding_key:
-        form.autograder_id.data = assign.autograding_key
-
-    return render_template('staff/grading/autograde.html',
-                           current_course=current_course,
-                           assignment=assign, form=form)
+    return redirect(url_for('.assignment', cid=cid, aid=aid))
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
              methods=["GET", "POST"])
@@ -1052,7 +1052,7 @@ def staff_submit_backup(cid, email, aid):
                 assign.flag(backup.id, user_ids)
             if assign.autograding_key:
                 try:
-                    submit_continous(backup)
+                    autograder.submit_continous(backup)
                 except ValueError as e:
                     flash('Did not send to autograder: {}'.format(e), 'warning')
 

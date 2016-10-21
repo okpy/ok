@@ -387,7 +387,7 @@ def seed_flags():
                 assignment.flag(chosen.id, user_ids)
 
 def seed_oauth():
-    print("Seeding OAuth")
+    print("Seeding OAuth...")
     client = Client(
         name='Example Application',
         client_id='example-app',
@@ -403,7 +403,6 @@ def seed_oauth():
     )
     db.session.add(client)
     db.session.commit()
-
 
 def seed():
     db.session.add(User(email='okstaff@okpy.org', is_admin=True))

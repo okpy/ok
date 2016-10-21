@@ -3,15 +3,13 @@ import os
 import requests
 import math
 import logging
-import functools
 import tempfile
 import time
 from collections import OrderedDict
 
 import arrow
 
-from server.models import Assignment, Backup, db
-from server.utils import encode_id
+from server.models import Assignment
 from server.extensions import cache
 from server import jobs
 
@@ -214,8 +212,12 @@ def get_online_repos(source, logger, language, access_token,
     for i in range(min(2, len(longest_lines))):
         logger.info("Fetching query {}".format(i))
         res = get_all_results(longest_lines[i], language, logger, access_token)
-        source.extend(res)
-        time.sleep(9)
+        if res is not None:
+            source.extend(res)
+            time.sleep(9)
+        else:
+            logger.warning("Stopping after no results/error from github")
+            break
 
     repos = OrderedDict()
     for repo in source:
