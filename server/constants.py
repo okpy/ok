@@ -16,8 +16,7 @@ VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 GRADE_TAGS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
-              'regrade', 'revision', 'private']
-HIDDEN_GRADE_TAGS = ['autograder', 'revision', 'private']
+              'regrade', 'revision', 'private', 'autograder']
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
 

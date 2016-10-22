@@ -451,6 +451,42 @@ def templates(cid, aid):
                            assignment=assignment, form=form, courses=courses,
                            current_course=current_course)
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/publish",
+                methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def publish_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'publish_scores'):
+        flash('Insufficient permissions', 'error')
+        abort(401)
+
+    form = forms.PublishScoresWithTags()
+    if form.validate_on_submit():
+        tag = form.grades.data
+        hide = form.hide.data
+        if hide:
+            if tag not in assign.published_scores:
+                flash("{visibility} scores for {assignment} already hidden".format(
+                    visibility=tag.title(), assignment=assign.display_name), "success")
+            else:
+                assign.hide_score(tag)
+                flash("Hid {assignment} {visibility} scores".format(
+                    assignment=assign.display_name, visibility=tag.title()), "success")
+        else:
+            if tag in assign.published_scores:
+                flash("{visibility} scores for {assignment} already published".format(
+                    visibility=tag.title(), assignment=assign.display_name), "success")
+            else:
+                assign.publish_score(tag)
+                flash("Published {assignment} {visibility} scores".format(
+                    assignment=assign.display_name, visibility=tag.title()), "success")
+        return redirect(url_for('.publish_scores', cid=cid, aid=aid))
+    return render_template('staff/course/assignment/assignment.publish.html',
+                            assignment=assign, form=form, courses=courses,
+                            current_course=current_course)
+
+
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
 @is_staff(course_arg='cid')
 def export_scores(cid, aid):

@@ -1,5 +1,6 @@
 import csv
 import datetime
+import random
 from io import StringIO
 
 from werkzeug.exceptions import BadRequest
@@ -21,27 +22,30 @@ class TestGrading(OkTestCase):
 
         self.active_user_ids = [self.user1.id, self.user2.id, self.user3.id]
         self.active_staff = [self.staff1, self.staff2]
+        self.active_assignments = [self.assignment, self.assignment2]
 
         Group.invite(self.user1, self.user2, self.assignment)
         group = Group.lookup(self.user1, self.assignment)
         group.accept(self.user2)
 
-        # Creates 5 submissions per user, each spaced two minutes apart
-        time = self.assignment.due_date - datetime.timedelta(minutes=30)
-        num = 0
-        for _ in range(5):
-            for user_id in self.active_user_ids:
-                num += 1
-                time += datetime.timedelta(minutes=2)
-                backup = Backup(submitter_id=user_id,
-                    assignment=self.assignment, submit=True)
-                messages = [Message(kind=k, backup=backup,
-                    contents=m) for k, m in message_dict.items()]
-                backup.created = time
-                db.session.add_all(messages)
-                db.session.add(backup)
-                # Debugging print if tests fails
-                print("User {} | Submission {} | Time {}".format(user_id, num, time))
+        # Creates 5 submissions for each assignment per user, each spaced two minutes apart
+
+        for assign in self.active_assignments:
+            time = assign.due_date - datetime.timedelta(minutes=30)
+            for num in range(5):
+                for user_id in self.active_user_ids:
+                    num += 1
+                    time += datetime.timedelta(minutes=2)
+                    backup = Backup(submitter_id=user_id,
+                        assignment=assign, submit=True)
+                    messages = [Message(kind=k, backup=backup,
+                        contents=m) for k, m in message_dict.items()]
+                    backup.created = time
+                    db.session.add_all(messages)
+                    db.session.add(backup)
+                    # Debugging print if tests fails
+                    # print("User {} | Assignment {} | Submission {} | Time {}".format(
+                    #     user_id, assign.id, num, time))
         db.session.commit()
 
     def _course_submissions_ids(self, assignment):
@@ -180,3 +184,125 @@ class TestGrading(OkTestCase):
             backup_creators.extend(s.backup.owners())
 
         self.assertEquals(len(backup_creators), len(csv_rows) - 1)
+
+
+    def test_publish_grades(self):
+        scores, users = {}, [self.user1, self.user3]
+        for score_kind in ['total', 'composition']:
+            for user in users:
+                for assign in self.active_assignments:
+                    backup = assign.final_submission(assign.active_user_ids(user.id))
+                    duplicate_score = False
+                    for s in backup.scores:
+                        if s.kind == score_kind:
+                            duplicate_score = True
+                    if not duplicate_score:
+                        if score_kind == "composition":
+                            point = random.randrange(2)
+                        else:
+                            point = random.uniform(0, 100)
+                    scores = Score(backup_id=backup.id, kind=score_kind, score=point,
+                                   message="Good work", assignment_id=assign.id,
+                                   grader=self.staff1)
+                    db.session.add(scores)
+        db.session.commit()
+
+
+        def check_visible_scores(user, assignment, hidden=(), visible=()):
+            self.login(user.email)
+            endpoint = '/{}/'.format(assignment.name)
+            r = self.client.get(endpoint)
+            self.assert_200(r)
+            s = r.get_data().decode("utf-8")
+            for score in hidden:
+                self.assertFalse("{}:".format(score) in s)
+            for score in visible:
+                self.assertTrue("{}:".format(score) in s)
+
+        # Checks that by default scores are hidden
+        for user, assign in zip(users, self.active_assignments):
+            check_visible_scores(user, assign, hidden=['Total', 'Composition'])
+
+        # Lab assistants and students cannot make changes
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
+        for email in [self.lab_assistant1.email, self.user1.email]:
+            self.login(email)
+            response = self.client.post(endpoint, data={})
+            self.assertStatus(response, 302)
+
+        # Adding total tag by staff changes score visibility for all users for that assignment
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
+        response = self.client.post(endpoint, data={}, follow_redirects=True)
+        self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'Total') in source)
+        for user in users:
+            check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
+            check_visible_scores(user, self.assignment2, hidden=['Total', 'Composition'])
+
+        # Admin can publish and hide scores
+        self.login('okadmin@okpy.org')
+        endpoint ='/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
+        response = self.client.post(endpoint, data={'grades':'composition'}, follow_redirects=True)
+        self.assert_200(response)
+        for user in users:
+            check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
+            check_visible_scores(user, self.assignment2, hidden=['Total'], visible=['Composition'])
+
+        # Hiding score only affect targetted assignment
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
+        response = self.client.post(endpoint, data={'hide':True}, follow_redirects=True)
+        self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("Hid {} {} scores".format(self.assignment.display_name, 'Total') in source)
+        for user in users:
+            check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
+            check_visible_scores(user, self.assignment2, hidden=['Total'], visible=['Composition'])
+
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
+        response = self.client.post(endpoint, data={}, follow_redirects=True)
+        self.assert_200(response)
+        for user in users:
+            check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
+            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
+
+        # Cannot publish an already published grade
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
+        response = self.client.post(endpoint, data={}, follow_redirects=True)
+        self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("{} scores for {} already published".format('Total', self.assignment2.display_name) in source)
+        for user in users:
+            check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
+            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
+
+        # Cannot hide a nonpublished grade
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
+        response = self.client.post(endpoint, data={"hide":True}, follow_redirects=True)
+        self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("{} scores for {} already hidden".format('Total', self.assignment.display_name) in source)
+        for user in users:
+            check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
+            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
+
+        # If assignment is not visible, still can publish
+        self.assignment.visible = False
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
+        response = self.client.post(endpoint, data={}, follow_redirects=True)
+        self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'Total') in source)
+        for user in users:
+            check_visible_scores(user, self.assignment, visible=['Total'], hidden=['Composition'])
+            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
+
+
+
+

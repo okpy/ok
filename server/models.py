@@ -23,8 +23,7 @@ from datetime import timedelta
 import json
 import logging
 
-from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-    HIDDEN_GRADE_TAGS)
+from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
 from server.utils import (decode_id, encode_id, chunks, generate_number_table,
                           humanize_name)
@@ -275,8 +274,8 @@ class Assignment(Model):
         lock_date - DEADLINE+1 (Hard Deadline for submissions)
         url - cs61a.org/proj/hog/hog.zip
         flagged - User has indicated this one should be graded and not others
+        published_scores - list of grade tags that are published to students
     """
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
@@ -292,12 +291,15 @@ class Assignment(Model):
     autograding_key = db.Column(db.String(255))
     uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
     upload_info = db.Column(db.Text)
+    published_scores = db.Column(StringList, nullable=False, default=[])
 
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
+
     UserAssignment = namedtuple('UserAssignment',
                                 ['assignment', 'subm_time', 'group', 'final_subm'])
+
 
     @hybrid_property
     def active(self):
@@ -315,6 +317,8 @@ class Assignment(Model):
         is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
         if action == "view":
             return is_staff or obj.visible
+        if action == "publish_scores":
+            return is_staff
         return is_staff
 
     @staticmethod
@@ -609,6 +613,17 @@ class Assignment(Model):
         if backup:
             backup.flagged = False
 
+    @transaction
+    def publish_score(self, tag):
+        """Publish student score for the assignment."""
+        self.published_scores = self.published_scores + [tag]
+
+    @transaction
+    def hide_score(self, tag):
+        """Hide student score for the assignment."""
+        self.published_scores = [t for t in self.published_scores if t != tag]
+
+
 
 class Enrollment(Model):
     __tablename__ = 'enrollment'
@@ -792,7 +807,7 @@ class Backup(Model):
         autograder and should not be shown.
         """
         return [s for s in self.scores
-            if s.public and s.kind not in HIDDEN_GRADE_TAGS]
+            if s.public and s.kind in self.assignment.published_scores]
 
     @hybrid_property
     def is_revision(self):
