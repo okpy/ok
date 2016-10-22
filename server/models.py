@@ -317,8 +317,8 @@ class Assignment(Model):
         is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
         if action == "view":
             return is_staff or obj.visible
-        if action == "publish":
-            return is_staff if obj.visible else False
+        if action == "publish_scores":
+            return is_staff
         return is_staff
 
     @staticmethod

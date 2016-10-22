@@ -457,7 +457,7 @@ def templates(cid, aid):
 def publish_scores(cid, aid):
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
-    if not Assignment.can(assign, current_user, 'publish'):
+    if not Assignment.can(assign, current_user, 'publish_scores'):
         flash('Insufficient permissions', 'error')
         abort(401)
     form = forms.PublishScoresWithTags()
