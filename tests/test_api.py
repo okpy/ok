@@ -248,6 +248,38 @@ class TestAuth(OkTestCase):
         self.assertEquals(response.json['data']['count'], 1)
         self.assertEquals(response.json['data']['has_more'], False)
         self.assertEquals(response.json['data']['offset'], 1)
+    
+    def test_export_submissions(self):
+        self._test_backup(True)
+        student = User.lookup(self.user1.email)
+        
+        backup = Backup.query.filter(Backup.submitter_id == student.id).first()
+        endpoint = '/api/v3/assignment/{0}/submissions/'.format(self.assignment.name)
+        
+        response = self.client.get(endpoint)
+        self.assert_403(response)
+
+        self.login(self.staff1.email)
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+        backups = response.json['data']['backups']
+        self.assertEquals(len(backups),1)
+        self.assertEquals(backups[0]['is_late'], False)
+        self.assertEquals(len(backups[0]['group']), 1)
+        self.assertEquals(backups[0]['group'][0]['email'], self.user1.email)
+        self.assertEquals(len(backups[0]['messages']), 1)
+
+        self.assertEquals(response.json['data']['count'], 1)
+        self.assertEquals(response.json['data']['has_more'], False)
+        self.assertEquals(response.json['data']['offset'], 0)
+
+        response = self.client.get(endpoint + '?offset=1')
+        self.assert_200(response)
+        backups = response.json['data']['backups']
+        self.assertEquals(len(backups), 0)
+        self.assertEquals(response.json['data']['count'], 1)
+        self.assertEquals(response.json['data']['has_more'], False)
+        self.assertEquals(response.json['data']['offset'], 1)
 
     def test_assignment_api(self):
         self._test_backup(True)
