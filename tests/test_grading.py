@@ -336,7 +336,10 @@ class TestGrading(OkTestCase):
 
         db.session.commit()
 
-        scores = self.assignment.scores([self.user1.id, self.user2.id])
+        scores = self.assignment.scores(
+            [self.user1.id, self.user2.id],
+            only_published=False,
+        )
         scores.sort(key=lambda score: score.kind)
         self.assertEquals(len(scores), 2)
 
@@ -349,3 +352,16 @@ class TestGrading(OkTestCase):
         self.assertEquals(b_score.kind, 'regrade')
         self.assertEquals(b_score.score, 8)
         self.assertEquals(b_score.backup_id, backups2[4].id)
+
+        scores = self.assignment.scores([self.user1.id, self.user2.id])
+        self.assertEquals(len(scores), 0)  # no scores have been published
+
+        self.assignment.publish_score('composition')
+        scores = self.assignment.scores([self.user1.id, self.user2.id])
+        scores.sort(key=lambda score: score.kind)
+        self.assertEquals(len(scores), 1)
+
+        a_score = scores[0]
+        self.assertEquals(a_score.kind, 'composition')
+        self.assertEquals(a_score.score, 10)
+        self.assertEquals(a_score.backup_id, backups2[2].id)

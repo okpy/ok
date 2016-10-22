@@ -570,7 +570,7 @@ class Assignment(Model):
                       .order_by(Backup.created.desc())
                       .first())
 
-    def scores(self, user_ids):
+    def scores(self, user_ids, only_published=True):
         """Return a list of Scores for this assignment and a group. Only the
         maximum score for each kind is returned. If there is a tie, the more
         recent backup is preferred.
@@ -584,8 +584,11 @@ class Assignment(Model):
             **submitter_id_params,
         }
 
+        score_kinds = self.published_scores if only_published else GRADE_TAGS
+        if not score_kinds:
+            return []  # no published scores
         score_kinds_table = ' UNION '.join(
-            'SELECT "{}" as kind'.format(kind) for kind in GRADE_TAGS
+            'SELECT "{}" as kind'.format(kind) for kind in score_kinds
         )
         submitter_ids = ','.join(':' + param for param in submitter_id_params)
 
