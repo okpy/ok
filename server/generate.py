@@ -10,8 +10,8 @@ import pytz
 
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
-                           GradingTask, Client, Token)
-from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE, OAUTH_SCOPES
+                           GradingTask, Client)
+from server.constants import STUDENT_ROLE, OAUTH_SCOPES
 from server.extensions import cache
 
 original_file = open('tests/files/fizzbuzz_before.py', encoding="utf8").read()
@@ -118,8 +118,8 @@ def gen_assignment(course):
     name = course.offering + '/' + display_name.lower().replace(' ', '')
 
     last_night = (datetime.datetime.utcnow()
-                          .replace(hour=0, minute=0, second=0, microsecond=0) -
-                  datetime.timedelta(seconds=1))
+                          .replace(hour=0, minute=0, second=0, microsecond=0)
+                  - datetime.timedelta(seconds=1))
     last_night = (pytz.timezone("America/Los_Angeles")
                       .localize(last_night)
                       .astimezone(pytz.utc))
@@ -332,10 +332,10 @@ def seed_scores():
     print('Seeding scores...')
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
-        if random.choice([True, False]):
+        if gen_bool():
             score = gen_score(backup, admin, kind='composition')
             db.session.add(score)
-        if random.choice([True, False]):
+        if gen_bool():
             score = gen_score(backup, admin, kind='total')
             db.session.add(score)
     db.session.commit()
