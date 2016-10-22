@@ -807,7 +807,7 @@ class Backup(Model):
         autograder and should not be shown.
         """
         return [s for s in self.scores
-            if s.public and s.kind not in HIDDEN_GRADE_TAGS and s.kind in self.assignment.published_scores]
+            if s.public and s.kind in self.assignment.published_scores]
 
     @hybrid_property
     def is_revision(self):
