@@ -207,7 +207,7 @@ class TestGrading(OkTestCase):
                     db.session.add(scores)
         db.session.commit()
 
-        
+
         def check_visible_scores(user, assignment, hidden=(), visible=()):
             self.login(user.email)
             endpoint = '/{}/'.format(assignment.name)
@@ -233,7 +233,7 @@ class TestGrading(OkTestCase):
         # Adding total tag by staff changes score visibility for all users for that assignment
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
-        response = self.client.post(endpoint, data={})
+        response = self.client.post(endpoint, data={}, follow_redirects=True)
         self.assert_200(response)
         source = response.get_data().decode('utf-8')
         self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'Total') in source)
@@ -244,7 +244,7 @@ class TestGrading(OkTestCase):
         # Admin can publish and hide scores
         self.login('okadmin@okpy.org')
         endpoint ='/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
-        response = self.client.post(endpoint, data={'grades':'composition'})
+        response = self.client.post(endpoint, data={'grades':'composition'}, follow_redirects=True)
         self.assert_200(response)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
@@ -253,7 +253,7 @@ class TestGrading(OkTestCase):
         # Hiding score only affect targetted assignment
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
-        response = self.client.post(endpoint, data={'hide':True})
+        response = self.client.post(endpoint, data={'hide':True}, follow_redirects=True)
         self.assert_200(response)
         source = response.get_data().decode('utf-8')
         self.assertTrue("Hid {} {} scores".format(self.assignment.display_name, 'Total') in source)
@@ -263,7 +263,7 @@ class TestGrading(OkTestCase):
 
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
-        response = self.client.post(endpoint, data={})
+        response = self.client.post(endpoint, data={}, follow_redirects=True)
         self.assert_200(response)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
@@ -272,7 +272,7 @@ class TestGrading(OkTestCase):
         # Cannot publish an already published grade
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
-        response = self.client.post(endpoint, data={})
+        response = self.client.post(endpoint, data={}, follow_redirects=True)
         self.assert_200(response)
         source = response.get_data().decode('utf-8')
         self.assertTrue("{} scores for {} already published".format('Total', self.assignment2.display_name) in source)
@@ -283,7 +283,7 @@ class TestGrading(OkTestCase):
         # Cannot hide a nonpublished grade
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
-        response = self.client.post(endpoint, data={"hide":True})
+        response = self.client.post(endpoint, data={"hide":True}, follow_redirects=True)
         self.assert_200(response)
         source = response.get_data().decode('utf-8')
         self.assertTrue("{} scores for {} already hidden".format('Total', self.assignment.display_name) in source)
@@ -296,8 +296,4 @@ class TestGrading(OkTestCase):
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
         response = self.client.post(endpoint, data={})
-        source = response.get_data().decode('utf-8')
-        self.assertStatus(response, 302)
-        self.assertTrue('Redirecting...' in source)
-        self.assertTrue('/admin/course/{cid}/assignments/{aid}/publish'.format(
-                                                                cid=self.course.id, aid=self.assignment.id) in source)
+        self.assert_401(response)

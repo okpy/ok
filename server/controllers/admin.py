@@ -459,7 +459,7 @@ def publish_scores(cid, aid):
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assign, current_user, 'publish'):
         flash('Insufficient permissions', 'error')
-        return redirect(url_for('.publish_scores', cid=cid, aid=aid))
+        abort(401)
     form = forms.PublishScoresWithTags()
     if form.validate_on_submit():
         tag = form.grades.data
@@ -480,8 +480,7 @@ def publish_scores(cid, aid):
                 assign.publish_score(tag)
                 flash("Published {assignment} {visibility} scores".format(
                     assignment=assign.display_name, visibility=tag.title()), "success")
-            
-
+        return redirect(url_for('.publish_scores', cid=cid, aid=aid))
     return render_template('staff/course/assignment/assignment.publish.html',
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)
