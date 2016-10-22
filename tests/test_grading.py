@@ -291,9 +291,18 @@ class TestGrading(OkTestCase):
             check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
             check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
 
-        # If assignment is not visible, cannot publish
+        # If assignment is not visible, still can publish
         self.assignment.visible = False
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
-        response = self.client.post(endpoint, data={})
-        self.assert_401(response)
+        response = self.client.post(endpoint, data={}, follow_redirects=True)
+        self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'Total') in source)
+        for user in users:
+            check_visible_scores(user, self.assignment, visible=['Total'], hidden=['Composition'])
+            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
+
+
+
+

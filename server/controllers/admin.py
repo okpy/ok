@@ -460,6 +460,7 @@ def publish_scores(cid, aid):
     if not Assignment.can(assign, current_user, 'publish_scores'):
         flash('Insufficient permissions', 'error')
         abort(401)
+
     form = forms.PublishScoresWithTags()
     if form.validate_on_submit():
         tag = form.grades.data
