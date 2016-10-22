@@ -459,7 +459,7 @@ def publish_scores(cid, aid):
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assign, current_user, 'publish'):
         flash('Insufficient permissions', 'error')
-        return abort(401)
+        return redirect(url_for('.publish_scores', cid=cid, aid=aid))
     form = forms.PublishScoresWithTags()
     if form.validate_on_submit():
         tag = form.grades.data
@@ -471,21 +471,18 @@ def publish_scores(cid, aid):
             else:
                 assign.hide_score(tag)
                 flash("Hid {assignment} {visibility} scores".format(
-                    assignment=assign.display_name, visibility=tag), "success")
+                    assignment=assign.display_name, visibility=tag.title()), "success")
         else:
             if tag in assign.published_scores:
                 flash("{visibility} scores for {assignment} already published".format(
                     visibility=tag.title(), assignment=assign.display_name), "success")
-            elif tag == 'revision' and 'composition' not in assign.published_scores:
-                flash("{visibility} scores for {assignment} cannot be published with hidden composition scores".format(
-                    visibility=tag.title(), assignment=assign.display_name), "warning")
             else:
                 assign.publish_score(tag)
                 flash("Published {assignment} {visibility} scores".format(
-                    assignment=assign.display_name, visibility=tag), "success")
+                    assignment=assign.display_name, visibility=tag.title()), "success")
             
 
-    return render_template('staff/course/assignment/assignment_publish.html',
+    return render_template('staff/course/assignment/assignment.publish.html',
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)
 

@@ -236,11 +236,10 @@ class TestGrading(OkTestCase):
         response = self.client.post(endpoint, data={})
         self.assert_200(response)
         source = response.get_data().decode('utf-8')
-        self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'total') in source)
+        self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'Total') in source)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
             check_visible_scores(user, self.assignment2, hidden=['Total', 'Composition'])
-
 
         # Admin can publish and hide scores
         self.login('okadmin@okpy.org')
@@ -256,6 +255,8 @@ class TestGrading(OkTestCase):
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
         response = self.client.post(endpoint, data={'hide':True})
         self.assert_200(response)
+        source = response.get_data().decode('utf-8')
+        self.assertTrue("Hid {} {} scores".format(self.assignment.display_name, 'Total') in source)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
             check_visible_scores(user, self.assignment2, hidden=['Total'], visible=['Composition'])
@@ -295,4 +296,8 @@ class TestGrading(OkTestCase):
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
         response = self.client.post(endpoint, data={})
-        self.assert_401(response)
+        source = response.get_data().decode('utf-8')
+        self.assertStatus(response, 302)
+        self.assertTrue('Redirecting...' in source)
+        self.assertTrue('/admin/course/{cid}/assignments/{aid}/publish'.format(
+                                                                cid=self.course.id, aid=self.assignment.id) in source)

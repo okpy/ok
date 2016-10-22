@@ -274,7 +274,7 @@ class Assignment(Model):
         lock_date - DEADLINE+1 (Hard Deadline for submissions)
         url - cs61a.org/proj/hog/hog.zip
         flagged - User has indicated this one should be graded and not others
-        grade_visibility - grades are either hidden from or certain grades are published to students
+        published_scores - list of grade tags that are published to students
     """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
