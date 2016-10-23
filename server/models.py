@@ -122,7 +122,12 @@ class StringList(types.TypeDecorator):
         return ' '.join(items)
 
     def process_result_value(self, value, dialect):
-        # SQL -> Python
+        """ SQL -> Python
+        Uses shlex.split to handle values with spaces.
+        It's a fragile solution since it will break in some cases.
+        For example if the last character is a backslash or otherwise meaningful
+        to a shell.
+        """
         values = []
         for val in shlex.split(value):
             if " " in val and '"' in val:
