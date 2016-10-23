@@ -299,7 +299,7 @@ class Assignment(Model):
 
 
     UserAssignment = namedtuple('UserAssignment',
-                                ['assignment', 'subm_time', 'group', 'final_subm'])
+        ['assignment', 'subm_time', 'group', 'final_subm', 'scores'])
 
 
     @hybrid_property
@@ -380,13 +380,22 @@ class Assignment(Model):
         """ Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
-    def user_status(self, user):
+    def user_status(self, user, staff_view=False):
+        """Return a summary of an assignment for a user. If STAFF_VIEW is True,
+        return more information that staff can see also.
+        """
         user_ids = self.active_user_ids(user.id)
         final_submission = self.final_submission(user_ids)
         submission_time = final_submission and final_submission.created
         group = Group.lookup(user, self)
-        return self.UserAssignment(self, submission_time, group,
-                                   final_submission)
+        scores = self.scores(user_ids, only_published=not staff_view)
+        return self.UserAssignment(
+            assignment=self,
+            subm_time=submission_time,
+            group=group,
+            final_subm=final_submission,
+            scores=scores,
+        )
 
     def course_submissions(self, include_empty=True):
         """ Return data on all course submissions for all enrolled users
