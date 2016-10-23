@@ -10,7 +10,7 @@ import datetime as dt
 
 from server import utils
 from server.models import Assignment, Course
-from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
+from server.constants import (VALID_ROLES, SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES)
 
@@ -220,7 +220,7 @@ class CSRFForm(BaseForm):
 class GradeForm(BaseForm):
     score = DecimalField('Score', validators=[validators.required()])
     message = TextAreaField('Message', validators=[validators.required()])
-    kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
                        validators=[validators.required()])
 
 class CompositionScoreForm(GradeForm):
@@ -232,7 +232,7 @@ class CompositionScoreForm(GradeForm):
 
 
 class CreateTaskForm(BaseForm):
-    kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
                        validators=[validators.required()], default="composition")
     staff = MultiCheckboxField('Assigned Staff', choices=[],
                                validators=[validators.required()])
@@ -319,7 +319,7 @@ class CourseUpdateForm(BaseForm):
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
 
 class PublishScoresWithTags(BaseForm):
-    grades = SelectField('Publish Grade', choices=[(t, t.title()) for t in GRADE_TAGS], default='total')
+    grades = SelectField('Publish Grade', choices=[(t, t.title()) for t in SCORE_KINDS], default='total')
     hide = BooleanField("Hide", default=False)
 
 

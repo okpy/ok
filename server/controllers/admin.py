@@ -17,7 +17,7 @@ import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                              LAB_ASSISTANT_ROLE, GRADE_TAGS)
+                              LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
 from server.extensions import cache
 import server.forms as forms
@@ -148,7 +148,7 @@ def grading(bid):
     existing = [s for s in backup.scores if not s.archived]
     first_score = existing[0] if existing else None
 
-    if first_score and first_score.kind in GRADE_TAGS:
+    if first_score and first_score.kind in SCORE_KINDS:
         form = forms.GradeForm(kind=first_score.kind)
         form.kind.data = first_score.kind
         form.message.data = first_score.message
