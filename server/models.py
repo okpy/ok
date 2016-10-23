@@ -22,6 +22,7 @@ from datetime import datetime as dt
 from datetime import timedelta
 import json
 import logging
+import shlex
 
 from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
 from server.extensions import cache
@@ -112,12 +113,23 @@ class StringList(types.TypeDecorator):
 
     def process_bind_param(self, string_list, dialect):
         # Python -> SQL
-        return ' '.join(string_list)
+        items = []
+        for item in string_list:
+            if " " in item:
+                items.append('"{}"'.format(item))
+            else:
+                items.append(item)
+        return ' '.join(items)
 
     def process_result_value(self, value, dialect):
         # SQL -> Python
-        return value.split()
-
+        values = []
+        for val in shlex.split(value):
+            if " " in val and '"' in val:
+                values.append(val[1:-1])
+            else:
+                values.append(val)
+        return values
 
 class Model(db.Model):
     """ Timestamps all models, and serializes model objects."""
