@@ -1,5 +1,6 @@
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
+import wtforms
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
                      SelectMultipleField, Field, widgets, validators)
@@ -319,8 +320,11 @@ class CourseUpdateForm(BaseForm):
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
 
 class PublishScoresWithTags(BaseForm):
-    grades = SelectField('Publish Grade', choices=[(t, t.title()) for t in SCORE_KINDS], default='total')
-    hide = BooleanField("Hide", default=False)
+    pass
+
+# add a checkbox for each score kind
+for kind in SCORE_KINDS:
+    setattr(PublishScoresWithTags, kind, BooleanField(kind.title()))
 
 
 ########
