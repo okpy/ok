@@ -34,6 +34,7 @@
 
           </div>
           <div class="box-body">
+            {{ assignment.published_scores }}
               {% call forms.render_form(form, action_url="", action_text='Publish', class_='form', btn_class='ag-submit-btn btn btn-default',) %}
               		{{ forms.render_field(form.grades, label_visible=true) }}
                   {{ forms.render_checkbox_field(form.hide, label_visible=true) }}
