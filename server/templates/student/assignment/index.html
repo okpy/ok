@@ -46,19 +46,19 @@
                   <span>Submitted by {{ final_submission.submitter.email }}</span>
                 </div>
                 <div class="cell-text">
-                  {% if final_submission.visible_grades %}
-                    {% for score in final_submission.visible_grades %}
-                    <h4>
-                      <span class="label label-primary"> {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(30) }}</span>
-                    </h4>
-                    {% endfor %}
+                  {% for score in scores %}
+                  <h4>
+                    <a class="label label-primary" href="{{ url_for('.code', name=assignment.name, submit=score.backup.submit, bid=score.backup_id) }}">
+                      {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(30) }}
+                    </a>
+                  </h4>
                   {% else %}
-                      {% if final_submission.flagged %}
-                        <span>Flagged for Grading. This submission will be graded. </span>
-                      {% else %}
-                        <span><i class="fa fa-clock-o grey"></i> This is the most recent submission. Unless you flag another submission, the most recent submission will be graded </span>
-                      {% endif %}
-                  {% endif %}
+                    {% if final_submission.flagged %}
+                      <span>Flagged for Grading. This submission will be graded. </span>
+                    {% else %}
+                      <span><i class="fa fa-clock-o grey"></i> This is the most recent submission. Unless you flag another submission, the most recent submission will be graded </span>
+                    {% endif %}
+                  {% endfor %}
                 </div>
                 <div class="cell-status">
                   <div class="pull-left">
