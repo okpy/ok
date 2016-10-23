@@ -115,7 +115,7 @@ class StringList(types.TypeDecorator):
         # Python -> SQL
         items = []
         for item in string_list:
-            if " " in item:
+            if " " in item or not item:
                 items.append('"{}"'.format(item))
             else:
                 items.append(item)
