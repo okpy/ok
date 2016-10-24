@@ -461,11 +461,9 @@ def publish_scores(cid, aid):
         flash('Insufficient permissions', 'error')
         abort(401)
 
-    form = forms.PublishScoresWithTags(**{
-        kind: kind in assign.published_scores for kind in SCORE_KINDS
-    })
+    form = forms.PublishScores(obj=assign)
     if form.validate_on_submit():
-        assign.published_scores = [kind for kind in SCORE_KINDS if form.data[kind]]
+        assign.published_scores = form.published_scores.data
         db.session.commit()
         flash(
             "Saved published scores for {}".format(assign.display_name),

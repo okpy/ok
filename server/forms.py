@@ -319,12 +319,11 @@ class CourseUpdateForm(BaseForm):
     active = BooleanField('Activate Course', default=True)
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
 
-class PublishScoresWithTags(BaseForm):
-    pass
-
-# add a checkbox for each score kind
-for kind in SCORE_KINDS:
-    setattr(PublishScoresWithTags, kind, BooleanField(kind.title()))
+class PublishScores(BaseForm):
+    published_scores = MultiCheckboxField(
+        'Published Scores',
+        choices=[(kind, kind.title()) for kind in SCORE_KINDS],
+    )
 
 
 ########

@@ -35,13 +35,7 @@
           </div>
           <div class="box-body">
           {% call forms.render_form(form, action_url="", action_text='Save', class_='form') %}
-              <fieldset>
-              {% for field in form %}
-              {% if field.type !='CSRFTokenField' %}
-                  {{ forms.render_checkbox_field(field, label_visible=true) }}
-              {% endif %}
-              {% endfor %}
-              </fieldset>
+            {{ forms.render_field(form.published_scores, label_visible=false, class_="checkbox-list") }}
           {% endcall %}
           </div>
           <!-- /.box-body -->

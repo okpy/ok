@@ -3,6 +3,7 @@ import datetime
 import random
 from io import StringIO
 
+import werkzeug.datastructures
 from werkzeug.exceptions import BadRequest
 
 from server.constants import SCORE_KINDS
@@ -211,10 +212,10 @@ class TestGrading(OkTestCase):
         def publish_scores(assignment, kinds_to_publish):
             endpoint = '/admin/course/{}/assignments/{}/publish'.format(
                 assignment.course.id, assignment.id)
-            data = {
-                kind: 'y' for kind in SCORE_KINDS
+            data = werkzeug.datastructures.MultiDict(
+                ('published_scores', kind) for kind in SCORE_KINDS
                     if kind.title() in kinds_to_publish
-            }
+            )
             data['csrf_token'] = 'token'  # need at least one form field?
             response = self.client.post(endpoint, data=data, follow_redirects=True)
             self.assert_200(response)
