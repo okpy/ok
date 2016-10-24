@@ -782,6 +782,10 @@ class Backup(Model):
 
     extension = db.Column(db.Boolean(), default=False)
 
+    # The time we should treat this backup as being submitten. If NULL, use
+    # the `created` timestamp instead.
+    submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
+
     submitter = db.relationship("User")
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
