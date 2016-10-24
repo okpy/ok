@@ -160,7 +160,7 @@ def check_version(func):
     return wrapper
 
 
-def make_backup(user, assignment_id, messages, submit):
+def make_backup(user, assignment_id, messages, submit, submission_time=None):
     """
     Create backup with message objects.
 
@@ -168,10 +168,11 @@ def make_backup(user, assignment_id, messages, submit):
     :param assignment: (int) Assignment ID
     :param messages: Data content of backup/submission
     :param submit: Whether this backup is a submission to be graded
+    :param submission_time: Custom submission time for this backup
     :return: (Backup) backup
     """
     backup = models.Backup(submitter=user, assignment_id=assignment_id,
-                           submit=submit)
+                           submit=submit, submission_time=submission_time)
     backup.messages = [models.Message(kind=k, contents=m)
                        for k, m in messages.items()]
     models.db.session.add(backup)

@@ -64,7 +64,12 @@
     {% for value, label, _ in field.iter_choices() %}
         <div class="radio">
             <label>
-                <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}">{{ label }}
+                <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"
+                  {% if field.default == value %}
+                  checked="checked"
+                  {% endif %}
+                >
+                {{ label }}
             </label>
         </div>
     {% endfor %}

@@ -2,7 +2,8 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
-                     SelectMultipleField, Field, widgets, validators)
+                     SelectMultipleField, RadioField, Field,
+                     widgets, validators)
 from flask_wtf.html5 import EmailField
 
 import pytz
@@ -22,6 +23,24 @@ def strip_whitespace(value):
         return value.strip()
     else:
         return value
+
+class OptionalUnless(validators.Optional):
+    '''A validator which makes a field required only if another field is set to
+    a given value.
+
+    Inspired by http://stackoverflow.com/a/8464478
+    '''
+    def __init__(self, other_field_name, other_field_value, *args, **kwargs):
+        self.other_field_name = other_field_name
+        self.other_field_value = other_field_value
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, form, field):
+        other_field = form._fields.get(self.other_field_name)
+        if other_field is None:
+            raise Exception('no field named "%s" in form' % self.other_field_name)
+        if other_field.data != self.other_field_value:
+            super().__call__(form, field)
 
 class MultiCheckboxField(SelectMultipleField):
     """
@@ -241,8 +260,41 @@ class CreateTaskForm(BaseForm):
 
 class UploadSubmissionForm(BaseForm):
     upload_files = FileField('Submission Files', [FileRequired()])
-    flag_submission = BooleanField('Flag this submission for grading',
-                                   default=False)
+    flag_submission = BooleanField(
+        'Flag this submission for grading',
+        default=False,
+    )
+
+class StaffUploadSubmissionForm(UploadSubmissionForm):
+    submission_time = RadioField(
+        'Custom submission time',
+        choices=[
+            ('none', 'Backup creation time'),
+            ('deadline', 'At deadline'),
+            ('early', 'One day early'),
+            ('other', 'Other: '),
+        ],
+        default='none',
+        validators=[validators.required()],
+    )
+    custom_submission_time = DateTimeField(
+        validators=[OptionalUnless('submission_time', 'other')])
+
+    def get_submission_time(self, assignment):
+        choice = self.submission_time.data
+        if choice == 'none':
+            return None
+        elif choice == 'deadline':
+            return assignment.due_date - dt.timedelta(seconds=1)
+        elif choice == 'early':
+            return assignment.due_date - dt.timedelta(days=1, seconds=1)
+        elif choice == 'other':
+            return utils.server_time_obj(
+                self.custom_submission_time.data,
+                assignment.course,
+            )
+        else:
+            raise Exception('Unknown submission time choice {}'.format(choice))
 
 class StaffAddGroupFrom(BaseForm):
     description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""

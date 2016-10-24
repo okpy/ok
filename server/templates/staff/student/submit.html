@@ -1,0 +1,63 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms with context %}
+
+{% block title %} Ok - New Submission for {{ student.identifier }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        New submission for {{ student.identifier }}
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li> <a href="{{ url_for('.student_view', cid=current_course.id, email=student.email) }}"><i class="fa fa-user"></i> {{ student.identifier }} </a></li>
+        <li><a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=assignment.id) }}"><i class="fa fa-inbox"></i> History </a></li>
+        <li class="active"><a href="#"><i class="fa fa-inbox"></i>New Submission</a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+
+    {% include 'alerts.html' %}
+    <div class="row">
+      <div class="col-md-12">
+        <!-- Default box -->
+        <div class="box">
+          <div class="box-body">
+          <p class="upload-directions">
+          {% if assignment.upload_info %}
+           {{ assignment.upload_info }}
+          {% endif %}
+
+          {% if assignment.files %}
+           Required Files: {% for f in assignment.files %} {{ f }} {% endfor %}
+          {% elif not assignment.upload_info  %}
+           Only upload files that you have changed.
+          {% endif %}
+          </p>
+
+          {% call forms.render_form(upload_form, class_='form', enctype="multipart/form-data") %}
+            {{ forms.render_field(upload_form.upload_files, label_visible=true, multiple="", id="file-select") }}
+            <label class="control-label">Submission time: </label>
+            {{ forms.render_radio_field(upload_form.submission_time) }}
+            {{ forms.render_field(
+              upload_form.custom_submission_time,
+              placeholder='YYYY-MM-DD hh:mm:ss',
+              label_visible=false) }}
+            {{ forms.render_checkbox_field(upload_form.flag_submission, label_visible=true) }}
+          {% endcall %}
+
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+      </div>
+    </div>
+  </section>
+{% endblock %}

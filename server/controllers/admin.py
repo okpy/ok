@@ -921,7 +921,6 @@ def student_assignment_detail(cid, email, aid):
                            add_member_form=forms.StaffAddGroupFrom(),
                            paginate=paginate,
                            csrf_form=forms.CSRFForm(),
-                           upload_form=forms.UploadSubmissionForm(),
                            stats=stats,
                            assign_status=assignment_stats)
 
@@ -1022,9 +1021,10 @@ def staff_flag_backup(cid, email, aid):
 
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/submit",
-             methods=["POST"])
+             methods=["GET", "POST"])
 @is_staff(course_arg='cid')
 def staff_submit_backup(cid, email, aid):
+    courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         return abort(404)
@@ -1035,7 +1035,7 @@ def staff_submit_backup(cid, email, aid):
         abort(404)
     user_ids = assign.active_user_ids(student.id)
     # TODO: DRY - Unify with student upload code - should just be a function
-    form = forms.UploadSubmissionForm()
+    form = forms.StaffUploadSubmissionForm()
     if form.validate_on_submit():
         files = request.files.getlist("upload_files")
         if files:
@@ -1060,8 +1060,10 @@ def staff_submit_backup(cid, email, aid):
                            .format(', '.join(missing), ', '.join([t for t in templates]))
                            ), 'danger')
                     return redirect(result_page)
+            submission_time = form.get_submission_time(assign)
             # use student, not current_user
-            backup = ok_api.make_backup(student, assign.id, messages, True)
+            backup = ok_api.make_backup(student, assign.id, messages, True,
+                submission_time=submission_time)
             if form.flag_submission.data:
                 assign.flag(backup.id, user_ids)
             if assign.autograding_key:
@@ -1072,7 +1074,14 @@ def staff_submit_backup(cid, email, aid):
 
             flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
             return redirect(result_page)
-
+    return render_template(
+        'staff/student/submit.html',
+        current_course=current_course,
+        courses=courses,
+        student=student,
+        assignment=assign,
+        upload_form=form,
+    )
 
 ########
 # Jobs #
