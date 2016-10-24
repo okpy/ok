@@ -260,10 +260,6 @@ class CreateTaskForm(BaseForm):
 
 class UploadSubmissionForm(BaseForm):
     upload_files = FileField('Submission Files', [FileRequired()])
-    flag_submission = BooleanField(
-        'Flag this submission for grading',
-        default=False,
-    )
 
 class StaffUploadSubmissionForm(UploadSubmissionForm):
     submission_time = RadioField(

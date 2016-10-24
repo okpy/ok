@@ -53,7 +53,6 @@
                         {% call forms.render_form_full(form, action_url="", class_='form', enctype="multipart/form-data") %}
                             {{ forms.render_field(form.upload_files, label_visible=true, multiple="", id="file-select") }}
                             <br>
-                            {{ forms.render_checkbox_field(form.flag_submission, label_visible=true) }}
                         {% endcall %}
                     </div>
                   </div>

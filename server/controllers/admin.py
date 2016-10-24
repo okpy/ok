@@ -1064,8 +1064,6 @@ def staff_submit_backup(cid, email, aid):
             # use student, not current_user
             backup = ok_api.make_backup(student, assign.id, messages, True,
                 submission_time=submission_time)
-            if form.flag_submission.data:
-                assign.flag(backup.id, user_ids)
             if assign.autograding_key:
                 try:
                     autograder.submit_continous(backup)

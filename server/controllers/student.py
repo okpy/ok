@@ -155,8 +155,6 @@ def submit_assignment(name):
                     return redirect(url_for('.submit_assignment', name=assign.name))
 
             backup = make_backup(current_user, assign.id, messages, True)
-            if form.flag_submission.data:
-                assign.flag(backup.id, user_ids)
             if assign.autograding_key:
                 try:
                     submit_continous(backup)
