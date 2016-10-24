@@ -2,6 +2,7 @@
 Development: self.driver.get_screenshot_as_file('snap.png')
 Docs: http://selenium-python.readthedocs.io/getting-started.html
 """
+import datetime
 import json
 import os
 import signal
@@ -289,6 +290,34 @@ if driver:
             self.assertTrue("Uploaded submission" in self.driver.page_source)
             # Will only pass when there is network connectivity. TODO: Mock external API response
             # self.assertTrue("Did not send to autograder" not in self.driver.page_source)
+
+        def test_staff_submit(self):
+            self._seed_course()
+
+            self._login_as(email=self.staff1.email)
+            self.page_load("{}/admin/course/{}/{}/{}/submit".format(
+                self.get_server_url(),
+                self.course.id,
+                self.user1.email,
+                self.assignment.id,
+            ))
+
+            # Disable the multiple select, PhantomJS doesn't seem to support it
+            # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
+            self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
+            file_input = self.driver.find_element_by_id("file-select")
+            file_input.send_keys(os.path.abspath(__file__))
+
+            # submit early
+            self.driver.find_element_by_css_selector('input[name=submission_time][value=early]').click()
+
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("Uploaded submission" in self.driver.page_source)
+
+            self.assertIn('grading/', self.driver.current_url)
+
+            submission_date = self.assignment.due_date - datetime.timedelta(days=1)
+            self.assertTrue(submission_date.strftime('%a %m/%d') in self.driver.page_source)
 
         def test_login_admin_reject(self):
             self._login(role="student")

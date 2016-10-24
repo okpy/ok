@@ -1067,7 +1067,7 @@ def staff_submit_backup(cid, email, aid):
             creator=current_user,
             assignment=assign,
             submit=True,
-            submission_time=form.get_submission_time(),
+            submission_time=form.get_submission_time(assign),
         )
         if form.upload_files.upload_backup_files(backup):
             db.session.add(backup)
