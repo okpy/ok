@@ -89,10 +89,17 @@
                     <li class="list-group-item"><b>No Scores </b></li>
                   {% endfor %}
                   </ul>
-                  {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}
-                  <button id="autograde-button" class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
-                  </button>
-                  {% endcall %}
+                  <div class="btn-toolbar">
+                    <div class="btn-group">
+                      <a class="btn btn-default" href="#"> <i class="fa fa-edit"></i> Edit Submission </a>
+                    </div>
+                    <div class="btn-group">
+                    {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}
+                      <button id="autograde-button" class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
+                      </button>
+                    {% endcall %}
+                    </div>
+                  </div>
                 </div>
             </div>
             {% macro diff_tab(target_diff_type, text) %}
