@@ -348,6 +348,7 @@ if driver:
             self.page_load(self.get_server_url() + "/admin/grading/" + bid)
             # show the button
             self.driver.find_element_by_id('expand-submission-information').click()
+            time.sleep(0.5)
             self.driver.find_element_by_id('autograde-button').click()
             self.assertIn("Submitted to the autograder", self.driver.page_source)
 
