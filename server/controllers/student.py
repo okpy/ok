@@ -131,39 +131,27 @@ def submit_assignment(name):
 
     form = UploadSubmissionForm()
     if form.validate_on_submit():
-        files = request.files.getlist("upload_files")
-        if files:
-            templates = assign.files
-            messages = {'file_contents': {}}
-            for upload in files:
-                data = upload.read()
-                if len(data) > 2097152:
-                    # File is too large (over 2 MB)
-                    flash("{} is over the maximum file size limit of 2MB".format(upload.filename),
-                          'danger')
-                    return redirect(url_for('.submit_assignment', name=assign.name))
-                messages['file_contents'][upload.filename] = str(data, 'latin1')
-            if templates:
-                missing = []
-                for template in templates:
-                    if template not in messages['file_contents']:
-                        missing.append(template)
-                if missing:
-                    flash(("Missing files: {}. The following files are required: {}"
-                           .format(', '.join(missing), ', '.join([t for t in templates]))
-                           ), 'danger')
-                    return redirect(url_for('.submit_assignment', name=assign.name))
-
-            backup = make_backup(current_user, assign.id, messages, True)
+        backup = Backup(
+            submitter=current_user,
+            assignment=assign,
+            submit=True,
+        )
+        if form.upload_files.upload_backup_files(backup):
+            db.session.add(backup)
+            db.session.commit()
             if assign.autograding_key:
                 try:
                     submit_continous(backup)
                 except ValueError as e:
                     logger.warning('Web submission did not autograde', exc_info=True)
                     flash('Did not send to autograder: {}'.format(e), 'warning')
-
-            flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
-            return redirect(url_for('.assignment', name=assign.name))
+            flash('Uploaded submission', 'success')
+            return redirect(url_for(
+                '.code',
+                name=assign.name,
+                submit=backup.submit,
+                bid=backup.id,
+            ))
 
     return render_template('student/assignment/submit.html', assignment=assign,
                            group=group, course=assign.course, form=form)
