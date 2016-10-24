@@ -776,6 +776,8 @@ class Backup(Model):
     id = db.Column(db.Integer, primary_key=True)
 
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    # NULL if same as submitter
+    creator_id = db.Column(db.ForeignKey("user.id"), nullable=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), nullable=False, default=False)
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
@@ -786,7 +788,8 @@ class Backup(Model):
     # the `created` timestamp instead.
     submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    submitter = db.relationship("User")
+    submitter = db.relationship("User", foreign_keys='Backup.submitter_id')
+    creator = db.relationship("User", foreign_keys='Backup.creator_id')
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
     scores = db.relationship("Score")

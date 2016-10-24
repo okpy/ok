@@ -8,7 +8,6 @@ import logging
 
 from server import highlight, models, utils
 from server.autograder import submit_continous
-from server.controllers.api import make_backup
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.extensions import cache
 from server.forms import CSRFForm, UploadSubmissionForm

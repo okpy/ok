@@ -1037,6 +1037,7 @@ def staff_submit_backup(cid, email, aid):
     if form.validate_on_submit():
         backup = Backup(
             submitter=student,
+            creator=current_user,
             assignment=assign,
             submit=True,
             submission_time=form.get_submission_time(),
