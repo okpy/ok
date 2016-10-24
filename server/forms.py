@@ -294,7 +294,7 @@ class CreateTaskForm(BaseForm):
 class UploadSubmissionForm(BaseForm):
     upload_files = BackupUploadField('Submission Files', [FileRequired()])
 
-class StaffUploadSubmissionForm(UploadSubmissionForm):
+class SubmissionTimeForm(BaseForm):
     submission_time = RadioField(
         'Custom submission time',
         choices=[
@@ -322,10 +322,27 @@ class StaffUploadSubmissionForm(UploadSubmissionForm):
         elif choice == 'other':
             return utils.server_time_obj(
                 self.custom_submission_time.data,
-                backup.assignment.course,
+                assignment.course,
             )
         else:
             raise Exception('Unknown submission time choice {}'.format(choice))
+
+    def set_submission_time(self, backup):
+        assignment = backup.assignment
+        time = backup.submission_time
+        if time is None:
+            self.submission_time.data = 'none'
+        elif time == assignment.due_date - dt.timedelta(seconds=1):
+            self.submission_time.data = 'deadline'
+        elif time == assignment.due_date - dt.timedelta(days=1, seconds=1):
+            self.submission_time.data = 'early'
+        else:
+            self.submission_time.data = 'other'
+            self.custom_submission_time.data = self.utils.local_time_obj(
+                time, assignment.course)
+
+class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
+    pass
 
 class StaffAddGroupFrom(BaseForm):
     description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""

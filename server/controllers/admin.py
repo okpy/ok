@@ -170,6 +170,33 @@ def composition(bid):
         form.score.data = existing.score
     return grading_view(backup, form=form)
 
+@admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
+@is_staff()
+def edit_backup(bid):
+    courses, current_course = get_courses()
+    backup = Backup.query.options(db.joinedload('assignment')).get(bid)
+    if not backup:
+        abort(404)
+    if not Backup.can(backup, current_user, 'grade'):
+        flash("You do not have permission to score this assignment.", "warning")
+        abort(401)
+    form = forms.SubmissionTimeForm()
+    if form.validate_on_submit():
+        backup.submission_time = form.get_submission_time(backup.assignment)
+        db.session.commit()
+        flash('Submission time saved', 'success')
+        return redirect(url_for('.edit_backup', bid=bid))
+    else:
+        form.set_submission_time(backup)
+    return render_template(
+        'staff/grading/edit.html',
+        courses=courses,
+        current_course=current_course,
+        backup=backup,
+        student=backup.submitter,
+        form=form,
+    )
+
 @admin.route('/grading/<hashid:bid>/grade', methods=['POST'])
 @is_staff()
 def grade(bid):

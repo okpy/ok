@@ -91,7 +91,7 @@
                   </ul>
                   <div class="btn-toolbar">
                     <div class="btn-group">
-                      <a class="btn btn-default" href="#"> <i class="fa fa-edit"></i> Edit Submission </a>
+                      <a class="btn btn-default" href="{{ url_for('.edit_backup', bid=backup.id) }}"> <i class="fa fa-edit"></i> Edit Submission </a>
                     </div>
                     <div class="btn-group">
                     {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}

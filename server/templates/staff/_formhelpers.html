@@ -65,7 +65,7 @@
         <div class="radio">
             <label>
                 <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"
-                  {% if field.default == value %}
+                  {% if field.data == value %}
                   checked="checked"
                   {% endif %}
                 >
