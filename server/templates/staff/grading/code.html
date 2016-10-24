@@ -44,41 +44,55 @@
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body" class="spoiler" style="display: none;">
-                    Submitter:
-                    <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
-                       {{ backup.submitter.email }}
-                    </a>
-
+                  <ul class="list-group list-group-unbordered">
+                    <li class="list-group-item">
+                      <b>Submitter: </b>
+                      <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
+                        {{ backup.submitter.email }}
+                      </a>
+                    </li>
+                    <li class="list-group-item">
                     {% if group | length > 1 %}
-                        <br>
-                        Group:
-                        {% for member in group %}
-                            <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
-                               {{ member.email }}
-                            </a>
-                        {% endfor %}
+                      <b>Group: </b>
+                      {% for member in group %}
+                        <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
+                           {{ member.email }}
+                        </a>
+                      {% endfor %}
+                    {% else %}
+                      <b>No Group</b>
                     {% endif %}
-                </div>
-                <div class="box-body no-padding" class="spoiler" style="display: none;">
-                    <ul class="nav nav-pills nav-stacked">
-                        {% if not scores %}
-                        <li><a><b> No Scores </b> <span class="pull-right text-red">Ungraded</span></a></li>
-                        {% else %}
-                        {% for score in scores %}
-                        <li><a><b>{{ score.kind }}</b>:
-                                <pre>{{ score.message }}</pre> from {{ score.grader.email }}
-                                <span class="pull-right text-{{ 'green' if score.public else 'red' }}">{{ score.score | round(3) }} </span>
-                                </a>
-                            </li>
-                        {% endfor %}
-                        {% endif %}
-                    </ul>
-                </div>
-                <div class="box-footer">
-                    {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}
-                    <button id="autograde-button" class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
-                    </button>
-                    {% endcall %}
+                    </li>
+                  {% if backup.creator %}
+                    <li class="list-group-item">
+                      <b>Creator: </b>
+                      {{ backup.creator.email }}
+                    </li>
+                  {% endif %}
+                    <li class="list-group-item">
+                      <b>Creation Time: </b>
+                      {{ utils.local_time(backup.created, backup.assignment.course) }}
+                    </li>
+                  {% if backup.submission_time %}
+                    <li class="list-group-item">
+                      <b>Custom Submission Time: </b>
+                      {{ utils.local_time(backup.submission_time, backup.assignment.course) }}
+                    </li>
+                  {% endif %}
+                  {% for score in scores %}
+                    <li class="list-group-item">
+                      <p><b>{{ score.kind.title() }}: </b>{{ score.score | round(2) }}</p>
+                      <pre>{{ score.message }}</pre>
+                      <p>from {{ score.grader.email }}</p>
+                    </li>
+                  {% else %}
+                    <li class="list-group-item"><b>No Scores </b></li>
+                  {% endfor %}
+                  </ul>
+                  {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}
+                  <button id="autograde-button" class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
+                  </button>
+                  {% endcall %}
                 </div>
             </div>
             {% macro diff_tab(target_diff_type, text) %}
