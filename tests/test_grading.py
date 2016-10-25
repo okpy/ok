@@ -3,8 +3,10 @@ import datetime
 import random
 from io import StringIO
 
+import werkzeug.datastructures
 from werkzeug.exceptions import BadRequest
 
+from server.constants import SCORE_KINDS
 from server.models import db, Backup, Group, Message, GradingTask, Score
 import server.utils as utils
 from server import generate
@@ -207,6 +209,17 @@ class TestGrading(OkTestCase):
                     db.session.add(scores)
         db.session.commit()
 
+        def publish_scores(assignment, kinds_to_publish):
+            endpoint = '/admin/course/{}/assignments/{}/publish'.format(
+                assignment.course.id, assignment.id)
+            data = werkzeug.datastructures.MultiDict(
+                ('published_scores', kind) for kind in SCORE_KINDS
+                    if kind.title() in kinds_to_publish
+            )
+            data['csrf_token'] = 'token'  # need at least one form field?
+            response = self.client.post(endpoint, data=data, follow_redirects=True)
+            self.assert_200(response)
+            return response
 
         def check_visible_scores(user, assignment, hidden=(), visible=()):
             self.login(user.email)
@@ -224,69 +237,40 @@ class TestGrading(OkTestCase):
             check_visible_scores(user, assign, hidden=['Total', 'Composition'])
 
         # Lab assistants and students cannot make changes
-        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
         for email in [self.lab_assistant1.email, self.user1.email]:
             self.login(email)
-            response = self.client.post(endpoint, data={})
-            self.assertStatus(response, 302)
+            response = publish_scores(self.assignment, [])
+            source = response.get_data().decode('utf-8')
+            self.assertIn('You are not on the course staff', source)
 
         # Adding total tag by staff changes score visibility for all users for that assignment
         self.login(self.staff1.email)
-        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
-        response = self.client.post(endpoint, data={}, follow_redirects=True)
-        self.assert_200(response)
+        response = publish_scores(self.assignment, ['Total'])
         source = response.get_data().decode('utf-8')
-        self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'Total') in source)
+        self.assertTrue("Saved published scores for {}".format(self.assignment.display_name) in source)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
             check_visible_scores(user, self.assignment2, hidden=['Total', 'Composition'])
 
         # Admin can publish and hide scores
         self.login('okadmin@okpy.org')
-        endpoint ='/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
-        response = self.client.post(endpoint, data={'grades':'composition'}, follow_redirects=True)
-        self.assert_200(response)
+        response = publish_scores(self.assignment2, ['Composition'])
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Composition'], visible=['Total'])
             check_visible_scores(user, self.assignment2, hidden=['Total'], visible=['Composition'])
 
-        # Hiding score only affect targetted assignment
+        # Hiding score only affect targeted assignment
         self.login(self.staff1.email)
-        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
-        response = self.client.post(endpoint, data={'hide':True}, follow_redirects=True)
-        self.assert_200(response)
+        response = publish_scores(self.assignment, [])
         source = response.get_data().decode('utf-8')
-        self.assertTrue("Hid {} {} scores".format(self.assignment.display_name, 'Total') in source)
+        self.assertTrue("Saved published scores for {}".format(self.assignment.display_name) in source)
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
             check_visible_scores(user, self.assignment2, hidden=['Total'], visible=['Composition'])
 
         self.login(self.staff1.email)
         endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
-        response = self.client.post(endpoint, data={}, follow_redirects=True)
-        self.assert_200(response)
-        for user in users:
-            check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
-            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
-
-        # Cannot publish an already published grade
-        self.login(self.staff1.email)
-        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment2.id)
-        response = self.client.post(endpoint, data={}, follow_redirects=True)
-        self.assert_200(response)
-        source = response.get_data().decode('utf-8')
-        self.assertTrue("{} scores for {} already published".format('Total', self.assignment2.display_name) in source)
-        for user in users:
-            check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
-            check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
-
-        # Cannot hide a nonpublished grade
-        self.login(self.staff1.email)
-        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
-        response = self.client.post(endpoint, data={"hide":True}, follow_redirects=True)
-        self.assert_200(response)
-        source = response.get_data().decode('utf-8')
-        self.assertTrue("{} scores for {} already hidden".format('Total', self.assignment.display_name) in source)
+        response = publish_scores(self.assignment2, ['Composition', 'Total'])
         for user in users:
             check_visible_scores(user, self.assignment, hidden=['Total', 'Composition'])
             check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
@@ -294,15 +278,9 @@ class TestGrading(OkTestCase):
         # If assignment is not visible, still can publish
         self.assignment.visible = False
         self.login(self.staff1.email)
-        endpoint = '/admin/course/{}/assignments/{}/publish'.format(self.course.id, self.assignment.id)
-        response = self.client.post(endpoint, data={}, follow_redirects=True)
-        self.assert_200(response)
+        response = publish_scores(self.assignment, ['Total'])
         source = response.get_data().decode('utf-8')
-        self.assertTrue("Published {} {} scores".format(self.assignment.display_name, 'Total') in source)
+        self.assertTrue("Saved published scores for {}".format(self.assignment.display_name) in source)
         for user in users:
             check_visible_scores(user, self.assignment, visible=['Total'], hidden=['Composition'])
             check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
-
-
-
-
