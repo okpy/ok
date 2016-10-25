@@ -25,7 +25,7 @@ import logging
 import shlex
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-    GRADE_TAGS)
+    SCORE_KINDS)
 from server.extensions import cache
 from server.utils import (decode_id, encode_id, chunks, generate_number_table,
                           humanize_name)
@@ -610,7 +610,7 @@ class Assignment(Model):
             **submitter_id_params,
         }
 
-        score_kinds = self.published_scores if only_published else GRADE_TAGS
+        score_kinds = self.published_scores if only_published else SCORE_KINDS
         if not score_kinds:
             return []  # no published scores
         score_kinds_table = ' UNION '.join(
