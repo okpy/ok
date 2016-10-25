@@ -380,8 +380,6 @@ def assignment(cid, aid):
         return abort(401)
 
     form = forms.AssignmentUpdateForm(obj=assign, course=current_course)
-    stats = Assignment.assignment_stats(assign.id)
-
     if form.validate_on_submit():
         # populate_obj converts back to UTC
         form.populate_obj(assign)
@@ -391,7 +389,7 @@ def assignment(cid, aid):
         flash("Assignment edited successfully.", "success")
 
     return render_template('staff/course/assignment/assignment.html', assignment=assign,
-                           form=form, courses=courses, stats=stats,
+                           form=form, courses=courses,
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/stats")
