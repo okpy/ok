@@ -34,10 +34,9 @@
 
           </div>
           <div class="box-body">
-              {% call forms.render_form(form, action_url="", action_text='Publish', class_='form', btn_class='ag-submit-btn btn btn-default',) %}
-              		{{ forms.render_field(form.grades, label_visible=true) }}
-                  {{ forms.render_checkbox_field(form.hide, label_visible=true) }}
-              {% endcall %}
+          {% call forms.render_form(form, action_url="", action_text='Save', class_='form') %}
+            {{ forms.render_field(form.published_scores, label_visible=false, class_="checkbox-list") }}
+          {% endcall %}
           </div>
           <!-- /.box-body -->
         </div>

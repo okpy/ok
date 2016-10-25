@@ -17,7 +17,7 @@ import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                              LAB_ASSISTANT_ROLE, GRADE_TAGS)
+                              LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
 from server.extensions import cache
 import server.forms as forms
@@ -148,7 +148,7 @@ def grading(bid):
     existing = [s for s in backup.scores if not s.archived]
     first_score = existing[0] if existing else None
 
-    if first_score and first_score.kind in GRADE_TAGS:
+    if first_score and first_score.kind in SCORE_KINDS:
         form = forms.GradeForm(kind=first_score.kind)
         form.kind.data = first_score.kind
         form.message.data = first_score.message
@@ -380,8 +380,6 @@ def assignment(cid, aid):
         return abort(401)
 
     form = forms.AssignmentUpdateForm(obj=assign, course=current_course)
-    stats = Assignment.assignment_stats(assign.id)
-
     if form.validate_on_submit():
         # populate_obj converts back to UTC
         form.populate_obj(assign)
@@ -391,7 +389,7 @@ def assignment(cid, aid):
         flash("Assignment edited successfully.", "success")
 
     return render_template('staff/course/assignment/assignment.html', assignment=assign,
-                           form=form, courses=courses, stats=stats,
+                           form=form, courses=courses,
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/stats")
@@ -461,26 +459,14 @@ def publish_scores(cid, aid):
         flash('Insufficient permissions', 'error')
         abort(401)
 
-    form = forms.PublishScoresWithTags()
+    form = forms.PublishScores(obj=assign)
     if form.validate_on_submit():
-        tag = form.grades.data
-        hide = form.hide.data
-        if hide:
-            if tag not in assign.published_scores:
-                flash("{visibility} scores for {assignment} already hidden".format(
-                    visibility=tag.title(), assignment=assign.display_name), "success")
-            else:
-                assign.hide_score(tag)
-                flash("Hid {assignment} {visibility} scores".format(
-                    assignment=assign.display_name, visibility=tag.title()), "success")
-        else:
-            if tag in assign.published_scores:
-                flash("{visibility} scores for {assignment} already published".format(
-                    visibility=tag.title(), assignment=assign.display_name), "success")
-            else:
-                assign.publish_score(tag)
-                flash("Published {assignment} {visibility} scores".format(
-                    assignment=assign.display_name, visibility=tag.title()), "success")
+        assign.published_scores = form.published_scores.data
+        db.session.commit()
+        flash(
+            "Saved published scores for {}".format(assign.display_name),
+            "success",
+        )
         return redirect(url_for('.publish_scores', cid=cid, aid=aid))
     return render_template('staff/course/assignment/assignment.publish.html',
                             assignment=assign, form=form, courses=courses,
