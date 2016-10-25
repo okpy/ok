@@ -46,12 +46,30 @@ api = restful.Api(endpoints)
 
 API_VERSION = 'v3'
 
+
+def json_field(field):
+    """
+    Parses field or list, or returns appropriate boolean value.
+
+    :param field: (string)
+    :return: (string) parsed JSON
+    """
+    if not field[0] in ['{', '[']:
+        if field == 'false':
+            return False
+        elif field == 'true':
+            return True
+        return field
+    return json.dumps(field)
+
+
 class HashIDField(fields.Raw):
     def format(self, value):
         if type(value) == int:
             return encode_id(value)
         else:
             return decode_id(value)
+
 
 @api.representation('application/json')
 def envelope_api(data, code, headers=None):
@@ -61,7 +79,7 @@ def envelope_api(data, code, headers=None):
 
         data is the object returned by the API.
         code is the HTTP status code as an int
-        message will always be sucess since the request did not fail.
+        message will always be success since the request did not fail.
     """
     message = 'success'
     if 'message' in data:
@@ -165,7 +183,7 @@ def make_backup(user, assignment_id, messages, submit):
     Create backup with message objects.
 
     :param user: (object) caller
-    :param assignment: (int) Assignment ID
+    :param assignment_id: (int) Assignment ID
     :param messages: Data content of backup/submission
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
@@ -195,10 +213,11 @@ def make_score(user, backup, score, message, kind):
 # Schemas #
 ###########
 
-class APISchema():
+
+class APISchema:
     """ APISchema describes the input and output formats for
     resources. The parser deals with arguments to the API.
-    The API responses are marshalled to json through get_fields
+    The API responses are marshaled to json through get_fields
     """
     get_fields = {
         'id': fields.Integer,
@@ -210,6 +229,7 @@ class APISchema():
 
     def parse_args(self):
         return self.parser.parse_args()
+
 
 class MessageSchema(APISchema):
     """ Messages do not have their own API (currently).
@@ -261,8 +281,8 @@ class UserSchema(APISchema):
     }
 
 class CourseEnrollmentSchema(APISchema):
-    get_fields = { role : fields.List(fields.Nested(UserSchema.simple_fields))
-                    for role in VALID_ROLES }
+    get_fields = {role: fields.List(fields.Nested(UserSchema.simple_fields))
+                    for role in VALID_ROLES}
 
 class AssignmentSchema(APISchema):
     get_fields = {
@@ -354,12 +374,12 @@ class BackupSchema(APISchema):
         lock_flag = not assignment['active']
 
         # Do not allow submissions after the lock date
-        elgible_submit = args['submit'] and not lock_flag
-        backup = make_backup(user, assignment['id'], args['messages'],
-                             elgible_submit)
+        eligible_submit = args['submit'] and not lock_flag
+        backup = make_backup(user, assignment['id'], args[
+                             'messages'], eligible_submit)
         if args['submit'] and lock_flag:
-            raise ValueError('Late Submission of {}'.format(args['assignment']))
-        if elgible_submit and assignment['autograding_key']:
+            raise ValueError('Late Submission')
+        if eligible_submit and assignment['autograding_key']:
             submit_continous(backup)
         return backup
 
@@ -456,6 +476,7 @@ class Resource(restful.Resource):
 class PublicResource(Resource):
     method_decorators = []
 
+
 class V3Info(PublicResource):
     def get(self):
         return {
@@ -468,7 +489,7 @@ class V3Info(PublicResource):
 
 # TODO: should be two classes, one for /backups/ and one for /backups/<int:key>/
 class Backup(Resource):
-    """ Submission creation/retrieval resource.
+    """ Submission retrieval resource.
         Authenticated. Permissions: >= User/Staff
         Used by: Ok Client Submission/Exports.
     """
@@ -581,7 +602,7 @@ class Revision(Resource):
 
 
 class ExportBackup(Resource):
-    """ Export backup retreival resource without submitter information.
+    """ Export backup retrieval resource without submitter information.
         Authenticated. Permissions: >= Staff
         Used by: Export Scripts.
     """
@@ -621,8 +642,9 @@ class ExportBackup(Resource):
                 'has_more':  has_more}
         return data
 
-class ExportFinal(Resource):
-    """ Export backup retreival.
+
+class ExportSubmissions(Resource):
+    """ Export backup retrieval.
         Authenticated. Permissions: >= Staff
         Used by: Export Scripts.
     """
@@ -677,6 +699,37 @@ class ExportFinal(Resource):
                 'count': num_subms,
                 'has_more': has_more}
 
+
+class ExportFinal(Resource):
+    """ Export single backup retrieval.
+        Authenticated. Permissions: Creator or Staff
+        Used by: Scripts
+    """
+    schema = BackupSchema()
+    model = models.Assignment
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, aid, email):
+        assign = (self.model.query.filter_by(id=aid)
+                      .one_or_none())
+
+        target = models.User.lookup(email)
+
+        if not assign or not target:
+            if user.is_admin:
+                return restful.abort(404)
+            return restful.abort(403)
+
+        group = assign.active_user_ids(target.id)
+        fs = assign.final_submission(group)
+        if not models.Backup.can(fs, user, 'view'):
+            return restful.abort(403)
+
+        fs.group = [models.User.get_by_id(uid) for uid in group]
+
+        return fs
+
+
 class Enrollment(Resource):
     """ View what courses an email is enrolled in.
         Authenticated. Permissions: >= User or admins.
@@ -710,7 +763,6 @@ class CourseEnrollment(Resource):
     """
     model = models.Course
     schema = CourseEnrollmentSchema()
-
 
     @marshal_with(schema.get_fields)
     def get(self, offering, user):
@@ -891,7 +943,8 @@ ASSIGNMENT_BASE = '/v3/assignment/<assignment_name:name>'
 api.add_resource(Assignment, ASSIGNMENT_BASE)
 api.add_resource(Group, ASSIGNMENT_BASE + '/group/<string:email>')
 api.add_resource(ExportBackup, ASSIGNMENT_BASE + '/export/<string:email>')
-api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
+api.add_resource(ExportSubmissions, ASSIGNMENT_BASE + '/submissions/')
+api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submission/<string:email>')
 
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
