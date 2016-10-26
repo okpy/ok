@@ -706,7 +706,7 @@ class Enrollment(Model):
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'),
-                     default=STUDENT_ROLE, nullable=False)
+                     default=STUDENT_ROLE, nullable=False, index=True)
     sid = db.Column(db.String(255))
     class_account = db.Column(db.String(255))
     section = db.Column(db.String(255))
@@ -833,8 +833,8 @@ class Backup(Model):
     # NULL if same as submitter
     creator_id = db.Column(db.ForeignKey("user.id"), nullable=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submit = db.Column(db.Boolean(), nullable=False, default=False)
-    flagged = db.Column(db.Boolean(), nullable=False, default=False)
+    submit = db.Column(db.Boolean(), nullable=False, default=False, index=True)
+    flagged = db.Column(db.Boolean(), nullable=False, default=False, index=True)
     # The time we should treat this backup as being submitted. If NULL, use
     # the `created` timestamp instead.
     custom_submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -846,10 +846,8 @@ class Backup(Model):
     scores = db.relationship("Score")
     comments = db.relationship("Comment", order_by="Comment.created")
 
-    db.Index('idx_usrBackups', 'submitter_id', 'assignment_id', 'submit', 'flagged')
-    db.Index('idx_usrFlagged', 'submitter_id', 'assignment_id', 'flagged')
-    db.Index('idx_submittedBacks', 'assignment_id', 'submit')
-    db.Index('idx_flaggedBacks', 'assignment_id', 'flagged')
+    # Already have indexes for submitter_id and assignment_id due to FK
+    db.Index('idx_backupCreated', 'created')
 
     @classmethod
     def can(cls, obj, user, action):
@@ -1232,11 +1230,11 @@ class Score(Model):
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
 
-    kind = db.Column(db.String(255), nullable=False)
+    kind = db.Column(db.String(255), nullable=False, index=True)
     score = db.Column(db.Float, nullable=False)
     message = db.Column(mysql.MEDIUMTEXT)
     public = db.Column(db.Boolean, default=True)
-    archived = db.Column(db.Boolean, default=False)
+    archived = db.Column(db.Boolean, default=False, index=True)
 
     backup = db.relationship("Backup")
     grader = db.relationship("User")
