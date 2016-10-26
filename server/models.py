@@ -612,6 +612,9 @@ class Assignment(Model):
         score_kinds = self.published_scores if only_published else SCORE_KINDS
         if not score_kinds:
             return []  # no published scores
+        # TODO: use query to get existing score kinds instead of creating a
+        # table. This approach may be vulerable to SQL injection attacks if we
+        # allow arbitrary score kinds and we're not careful.
         score_kinds_table = ' UNION '.join(
             'SELECT "{}" as kind'.format(kind) for kind in score_kinds
         )
