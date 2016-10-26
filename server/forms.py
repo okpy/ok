@@ -69,7 +69,12 @@ class BackupUploadField(FileField):
                     '{} is larger than the maximum file size '
                     'of 2MB'.format(upload.filename))
                 return False
-            files[upload.filename] = str(data, 'utf-8')
+            try:
+                files[upload.filename] = str(data, 'utf-8')
+            except UnicodeDecodeError:
+                self.errors.append(
+                    '{} is not a UTF-8 text file'.format(upload.filename))
+                return False
         template_files = assignment.files or []
         missing = [
             template for template in template_files
