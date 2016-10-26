@@ -47,6 +47,10 @@ td.slim-cell {
   outline:none;
 }
 
+.score-inline {
+  margin-right: 5px;
+}
+
 /* Blank State from Code Pen */
 .blank-state {
   -moz-border-radius: 4px;

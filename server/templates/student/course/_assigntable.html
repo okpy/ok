@@ -26,7 +26,7 @@
             {% if show_scores %}
             <td>
                 {% for score in scores %}
-                <a class="label label-default" href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}">
+                <a class="label label-default score-inline" href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}">
                     {{ score.kind.title() }}: {{ score.score | round(2) }}
                 </a>
                 {% else %}
@@ -166,9 +166,11 @@
             <div class="cell-text">
                 Scores:
                 {% for score in scores %}
-                   <span><a href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}">
+                   <span>
+                    <a href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}" class="score-inline">
                      <b>{{score.kind}}:</b> {{score.score | round(2)}}
-                   </a></span>
+                    </a>
+                  </span>
                 {% endfor %}
             </div>
             {% elif fs %}
