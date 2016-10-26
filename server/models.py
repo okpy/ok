@@ -706,7 +706,7 @@ class Enrollment(Model):
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'),
-                     default=STUDENT_ROLE, nullable=False)
+                     default=STUDENT_ROLE, nullable=False, index=True)
     sid = db.Column(db.String(255))
     class_account = db.Column(db.String(255))
     section = db.Column(db.String(255))
