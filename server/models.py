@@ -833,8 +833,8 @@ class Backup(Model):
     # NULL if same as submitter
     creator_id = db.Column(db.ForeignKey("user.id"), nullable=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submit = db.Column(db.Boolean(), nullable=False, default=False)
-    flagged = db.Column(db.Boolean(), nullable=False, default=False)
+    submit = db.Column(db.Boolean(), nullable=False, default=False, index=True)
+    flagged = db.Column(db.Boolean(), nullable=False, default=False, index=True)
     # The time we should treat this backup as being submitted. If NULL, use
     # the `created` timestamp instead.
     custom_submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -847,9 +847,7 @@ class Backup(Model):
     comments = db.relationship("Comment", order_by="Comment.created")
 
     # Already have indexes for submitter_id and assignment_id due to FK
-    db.Index('idx_backupFlagged', 'flagged')
     db.Index('idx_backupCreated', 'created')
-    db.Index('idx_backupSubmit', 'submit')
 
     @classmethod
     def can(cls, obj, user, action):
