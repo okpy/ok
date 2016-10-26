@@ -781,9 +781,6 @@ class Backup(Model):
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), nullable=False, default=False)
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
-
-    extension = db.Column(db.Boolean(), default=False)
-
     # The time we should treat this backup as being submitted. If NULL, use
     # the `created` timestamp instead.
     submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
