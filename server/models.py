@@ -439,8 +439,8 @@ class Assignment(Model):
         id  email   name                  group_id group_member group_member_emails
         5   dschmidt1@gmail.com 'david s' 3   5,15 dschmidt1@gmail.com, foo@bar.com
 
-        created id  id submitter_id assignment_id submit  flagged extension
-        2016-09-07 20:22:04 4790    15  1   1   1   0
+        created id  id submitter_id assignment_id submit  flagged
+        2016-09-07 20:22:04 4790    15  1   1   1
         """
         giant_query = """SELECT * FROM
               (SELECT u.id,
@@ -816,10 +816,6 @@ class Backup(Model):
 
     @hybrid_property
     def is_late(self):
-        """ Check for manual extension before checking due date.
-        """
-        if self.extension:
-            return False
         return self.created > self.assignment.due_date
 
     @hybrid_property
