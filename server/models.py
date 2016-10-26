@@ -24,7 +24,8 @@ import json
 import logging
 import shlex
 
-from server.constants import VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE
+from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
+    SCORE_KINDS)
 from server.extensions import cache
 from server.utils import (decode_id, encode_id, chunks, generate_number_table,
                           humanize_name)
@@ -313,10 +314,9 @@ class Assignment(Model):
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
-
-    UserAssignment = namedtuple('UserAssignment',
-                                ['assignment', 'subm_time', 'group', 'final_subm'])
-
+    user_assignment = namedtuple('UserAssignment',
+                                 ['assignment', 'subm_time', 'group',
+                                  'final_subm', 'scores'])
 
     @hybrid_property
     def active(self):
@@ -396,13 +396,22 @@ class Assignment(Model):
         """ Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
-    def user_status(self, user):
+    def user_status(self, user, staff_view=False):
+        """Return a summary of an assignment for a user. If STAFF_VIEW is True,
+        return more information that staff can see also.
+        """
         user_ids = self.active_user_ids(user.id)
         final_submission = self.final_submission(user_ids)
         submission_time = final_submission and final_submission.created
         group = Group.lookup(user, self)
-        return self.UserAssignment(self, submission_time, group,
-                                   final_submission)
+        scores = self.scores(user_ids, only_published=not staff_view)
+        return self.user_assignment(
+            assignment=self,
+            subm_time=submission_time,
+            group=group,
+            final_subm=final_submission,
+            scores=scores,
+        )
 
     def course_submissions(self, include_empty=True):
         """ Return data on all course submissions for all enrolled users
@@ -585,6 +594,51 @@ class Assignment(Model):
                               Backup.assignment_id == self.id)
                       .order_by(Backup.created.desc())
                       .first())
+
+    def scores(self, user_ids, only_published=True):
+        """Return a list of Scores for this assignment and a group. Only the
+        maximum score for each kind is returned. If there is a tie, the more
+        recent backup is preferred.
+        """
+        submitter_id_params = {
+            'submitter_id_' + str(i): user_id
+                for i, user_id in enumerate(user_ids)
+        }
+        params = {
+            'assignment_id': self.id,
+            **submitter_id_params,
+        }
+
+        score_kinds = self.published_scores if only_published else SCORE_KINDS
+        if not score_kinds:
+            return []  # no published scores
+        # TODO: use query to get existing score kinds instead of creating a
+        # table. This approach may be vulerable to SQL injection attacks if we
+        # allow arbitrary score kinds and we're not careful.
+        score_kinds_table = ' UNION '.join(
+            'SELECT "{}" as kind'.format(kind) for kind in score_kinds
+        )
+        submitter_ids = ','.join(':' + param for param in submitter_id_params)
+
+        scores = db.text('''
+        SELECT s.*
+        FROM ({}) as score_kinds, score as s
+        WHERE s.id=(
+            SELECT s.id
+            FROM score as s,
+            (
+                SELECT * from backup
+                WHERE assignment_id = :assignment_id
+                AND submitter_id in ({})
+            ) as b
+            WHERE s.backup_id = b.id
+            AND s.kind = score_kinds.kind
+            AND s.archived = 0
+            ORDER BY s.score DESC, b.created DESC
+            LIMIT 1
+        )
+        '''.format(score_kinds_table, submitter_ids)).bindparams(**params)
+        return Score.query.from_statement(scores).all()
 
     @transaction
     def flag(self, backup_id, member_ids):

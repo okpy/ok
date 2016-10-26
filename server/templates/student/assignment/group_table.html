@@ -1,6 +1,6 @@
 {% import 'student/assignment/_formhelpers.html' as forms %}
 
-<table class="top-align">
+<table class="top-align table-responsive group-table">
   <tbody>
     <tr class="header">
       <th>Email</th>
@@ -76,7 +76,7 @@
       <tr>
         <td><span>{{ current_user.email }}</span></td>
         <td><span> No Group </span></td>
-        <td><span class="tip-trigger"> <div class="tip"> <span> The maximum group size is {{ assignment.max_group_size }}</span> </div> Max Group Size: {{ assignment.max_group_size }} </span></td>
+        <td><span class="tip-trigger"> <div class="tip"> <span> The maximum group size is {{ assignment.max_group_size }}</span> </div> Max Size: {{ assignment.max_group_size }} </span></td>
       </tr>
     {% else %}
       <tr>
