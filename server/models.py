@@ -448,8 +448,8 @@ class Assignment(Model):
         id  email   name                  group_id group_member group_member_emails
         5   dschmidt1@gmail.com 'david s' 3   5,15 dschmidt1@gmail.com, foo@bar.com
 
-        created id  id submitter_id assignment_id submit  flagged extension
-        2016-09-07 20:22:04 4790    15  1   1   1   0
+        created id  id submitter_id assignment_id submit  flagged
+        2016-09-07 20:22:04 4790    15  1   1   1
         """
         giant_query = """SELECT * FROM
               (SELECT u.id,
@@ -830,13 +830,17 @@ class Backup(Model):
     id = db.Column(db.Integer, primary_key=True)
 
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    # NULL if same as submitter
+    creator_id = db.Column(db.ForeignKey("user.id"), nullable=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     submit = db.Column(db.Boolean(), nullable=False, default=False)
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
+    # The time we should treat this backup as being submitted. If NULL, use
+    # the `created` timestamp instead.
+    custom_submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    extension = db.Column(db.Boolean(), default=False)
-
-    submitter = db.relationship("User")
+    submitter = db.relationship("User", foreign_keys='Backup.submitter_id')
+    creator = db.relationship("User", foreign_keys='Backup.creator_id')
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
     scores = db.relationship("Score")
@@ -866,10 +870,6 @@ class Backup(Model):
 
     @hybrid_property
     def is_late(self):
-        """ Check for manual extension before checking due date.
-        """
-        if self.extension:
-            return False
         return self.created > self.assignment.due_date
 
     @hybrid_property
@@ -883,6 +883,12 @@ class Backup(Model):
     @hybrid_property
     def is_revision(self):
         return any(s for s in self.scores if s.kind == "revision")
+
+    @hybrid_property
+    def submission_time(self):
+        if self.custom_submission_time:
+            return self.custom_submission_time
+        return self.created
 
     # @hybrid_property
     # def group(self):

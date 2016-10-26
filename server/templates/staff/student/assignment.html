@@ -150,45 +150,24 @@
             </div>
             <!-- /.box -->
 
-            <!-- Begin Submit -->
-            <div class="box collapsed-box">
+            <!-- Begin Actions -->
+            <div class="box box-solid">
               <div class="box-header with-border">
-                <h3 class="box-title">New Submission</h3>
-                <div class="box-tools pull-right">
-                  <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Expand">
-                    <i class="fa fa-plus"></i></button>
+                <h3 class="box-title">Actions</h3>
+
+                <div class="box-tools">
+                  <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                  </button>
                 </div>
               </div>
-              <div class="box-body">
-              <p class="upload-directions">
-              {% if assignment.upload_info %}
-               {{ assignment.upload_info }}
-              {% endif %}
-
-              {% if assignment.files %}
-               Required Files: {% for f in assignment.files %} {{ f }} {% endfor %}
-              {% elif not assignment.upload_info  %}
-               Only upload files that you have changed.
-              {% endif %}
-              </p>
-
-              {% call forms.render_form(upload_form,
-                                        action_url=url_for('.staff_submit_backup',cid=current_course.id,
-                                                           email=student.email,aid=assignment.id),
-                                        class_='form', enctype="multipart/form-data") %}
-
-                  {{ forms.render_field(upload_form.upload_files, label_visible=true, multiple="", id="file-select") }}
-                  <br>
-                  {{ forms.render_checkbox_field(upload_form.flag_submission, label_visible=true) }}
-              {% endcall %}
-
+              <div class="box-body no-padding">
+                <ul class="nav nav-pills nav-stacked">
+                  <li> <a href="{{ url_for('.staff_submit_backup', cid=current_course.id, email=student.email, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-upload"></i> New Submission
+                  </a></li>
+                </ul>
               </div>
               <!-- /.box-body -->
-              <div class="box-footer">
-
-
-              </div>
-              <!-- /.box-footer-->
             </div>
             <!-- /.box -->
           </div>
