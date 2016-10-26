@@ -465,7 +465,12 @@ def templates(cid, aid):
         if files:
             templates = {}
             for template in files:
-                templates[template.filename] = str(template.read(), 'utf-8')
+                try:
+                    templates[template.filename] = str(template.read(), 'utf-8')
+                except UnicodeDecodeError:
+                    flash(
+                        '{} is not a UTF-8 text file and was '
+                        'not uploaded'.format(template.filename), 'warning')
             assignment.files = templates
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
