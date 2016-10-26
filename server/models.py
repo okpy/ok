@@ -784,7 +784,7 @@ class Backup(Model):
 
     extension = db.Column(db.Boolean(), default=False)
 
-    # The time we should treat this backup as being submitten. If NULL, use
+    # The time we should treat this backup as being submitted. If NULL, use
     # the `created` timestamp instead.
     submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
 
