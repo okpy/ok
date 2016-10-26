@@ -314,10 +314,9 @@ class Assignment(Model):
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
-
-    UserAssignment = namedtuple('UserAssignment',
-        ['assignment', 'subm_time', 'group', 'final_subm', 'scores'])
-
+    user_assignment = namedtuple('UserAssignment',
+                                 ['assignment', 'subm_time', 'group',
+                                  'final_subm', 'scores'])
 
     @hybrid_property
     def active(self):
@@ -406,7 +405,7 @@ class Assignment(Model):
         submission_time = final_submission and final_submission.created
         group = Group.lookup(user, self)
         scores = self.scores(user_ids, only_published=not staff_view)
-        return self.UserAssignment(
+        return self.user_assignment(
             assignment=self,
             subm_time=submission_time,
             group=group,
