@@ -1230,11 +1230,11 @@ class Score(Model):
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
 
-    kind = db.Column(db.String(255), nullable=False)
+    kind = db.Column(db.String(255), nullable=False, index=True)
     score = db.Column(db.Float, nullable=False)
     message = db.Column(mysql.MEDIUMTEXT)
     public = db.Column(db.Boolean, default=True)
-    archived = db.Column(db.Boolean, default=False)
+    archived = db.Column(db.Boolean, default=False, index=True)
 
     backup = db.relationship("Backup")
     grader = db.relationship("User")
