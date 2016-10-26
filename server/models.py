@@ -846,10 +846,10 @@ class Backup(Model):
     scores = db.relationship("Score")
     comments = db.relationship("Comment", order_by="Comment.created")
 
-    db.Index('idx_usrBackups', 'submitter_id', 'assignment_id', 'submit', 'flagged')
-    db.Index('idx_usrFlagged', 'submitter_id', 'assignment_id', 'flagged')
-    db.Index('idx_submittedBacks', 'assignment_id', 'submit')
-    db.Index('idx_flaggedBacks', 'assignment_id', 'flagged')
+    # Already have indexes for submitter_id and assignment_id due to FK
+    db.Index('idx_backupFlagged', 'flagged')
+    db.Index('idx_backupCreated', 'created')
+    db.Index('idx_backupSubmit', 'submit')
 
     @classmethod
     def can(cls, obj, user, action):
