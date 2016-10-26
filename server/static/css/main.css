@@ -25,8 +25,13 @@ pre code  {
 .inline {
   display: inline;
 }
+
 .pace {
   display: none;
+}
+
+.hide-oveflow {
+  overflow: hidden;
 }
 
 td.slim-cell {
@@ -165,6 +170,7 @@ td.slim-cell {
   top:-4px;
   right:-5px;
 }
+
 .disable-animations {
   /* CSS transitions */
   -o-transition-property: none !important;
