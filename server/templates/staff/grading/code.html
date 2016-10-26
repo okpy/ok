@@ -73,10 +73,10 @@
                       <b>Creation Time: </b>
                       {{ utils.local_time(backup.created, backup.assignment.course) }}
                     </li>
-                  {% if backup.submission_time %}
+                  {% if backup.custom_submission_time %}
                     <li class="list-group-item">
                       <b>Custom Submission Time: </b>
-                      {{ utils.local_time(backup.submission_time, backup.assignment.course) }}
+                      {{ utils.local_time(backup.custom_submission_time, backup.assignment.course) }}
                     </li>
                   {% endif %}
                   {% for score in scores %}

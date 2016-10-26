@@ -783,7 +783,7 @@ class Backup(Model):
     flagged = db.Column(db.Boolean(), nullable=False, default=False)
     # The time we should treat this backup as being submitted. If NULL, use
     # the `created` timestamp instead.
-    submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
+    custom_submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
 
     submitter = db.relationship("User", foreign_keys='Backup.submitter_id')
     creator = db.relationship("User", foreign_keys='Backup.creator_id')
@@ -829,6 +829,12 @@ class Backup(Model):
     @hybrid_property
     def is_revision(self):
         return any(s for s in self.scores if s.kind == "revision")
+
+    @hybrid_property
+    def submission_time(self):
+        if self.custom_submission_time:
+            return self.custom_submission_time
+        return self.created
 
     # @hybrid_property
     # def group(self):

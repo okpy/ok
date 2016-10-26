@@ -182,7 +182,7 @@ def edit_backup(bid):
         abort(401)
     form = forms.SubmissionTimeForm()
     if form.validate_on_submit():
-        backup.submission_time = form.get_submission_time(backup.assignment)
+        backup.custom_submission_time = form.get_submission_time(backup.assignment)
         db.session.commit()
         flash('Submission time saved', 'success')
         return redirect(url_for('.edit_backup', bid=bid))
@@ -1053,7 +1053,7 @@ def staff_submit_backup(cid, email, aid):
             creator=current_user,
             assignment=assign,
             submit=True,
-            submission_time=form.get_submission_time(assign),
+            custom_submission_time=form.get_submission_time(assign),
         )
         if form.upload_files.upload_backup_files(backup):
             db.session.add(backup)

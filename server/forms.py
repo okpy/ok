@@ -335,7 +335,7 @@ class SubmissionTimeForm(BaseForm):
 
     def set_submission_time(self, backup):
         assignment = backup.assignment
-        time = backup.submission_time
+        time = backup.custom_submission_time
         if time is None:
             self.submission_time.data = 'none'
         elif time == assignment.due_date - dt.timedelta(seconds=1):
