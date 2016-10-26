@@ -598,23 +598,44 @@ class Assignment(Model):
     def scores(self, user_ids, only_published=True):
         """Return a list of Scores for this assignment and a group. Only the
         maximum score for each kind is returned. If there is a tie, the more
-        recent score is preferred.
+        recent backup is preferred.
         """
-        published_kinds = SCORE_KINDS
-        if only_published:
-            published_kinds = [k for k in published_kinds if k in self.published_scores]
+        submitter_id_params = {
+            'submitter_id_' + str(i): user_id
+                for i, user_id in enumerate(user_ids)
+        }
+        params = {
+            'assignment_id': self.id,
+            **submitter_id_params,
+        }
 
-        t = (db.session.query(Backup.id)
-               .filter(Backup.assignment_id == self.id,
-                       Backup.submitter_id.in_(user_ids))
-               .subquery())
-        query = (db.session.query(Score).options(db.joinedload('backup'))
-                   .filter(Score.backup_id == t.c.id,
-                           Score.archived == 0,
-                           Score.kind.in_(published_kinds))
-                   .group_by(Score.kind)
-                   .order_by(Score.score, Score.created))
-        return query.all()
+        score_kinds = self.published_scores if only_published else SCORE_KINDS
+        if not score_kinds:
+            return []  # no published scores
+        score_kinds_table = ' UNION '.join(
+            'SELECT "{}" as kind'.format(kind) for kind in score_kinds
+        )
+        submitter_ids = ','.join(':' + param for param in submitter_id_params)
+
+        scores = db.text('''
+        SELECT s.*
+        FROM ({}) as score_kinds, score as s
+        WHERE s.id=(
+            SELECT s.id
+            FROM score as s,
+            (
+                SELECT * from backup
+                WHERE assignment_id = :assignment_id
+                AND submitter_id in ({})
+            ) as b
+            WHERE s.backup_id = b.id
+            AND s.kind = score_kinds.kind
+            AND s.archived = 0
+            ORDER BY s.score DESC, b.created DESC
+            LIMIT 1
+        )
+        '''.format(score_kinds_table, submitter_ids)).bindparams(**params)
+        return Score.query.from_statement(scores).all()
 
     @transaction
     def flag(self, backup_id, member_ids):
