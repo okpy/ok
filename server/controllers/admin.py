@@ -856,6 +856,20 @@ def clients():
 
     return render_template('staff/clients.html', clients=clients, form=form)
 
+@admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
+@is_staff()
+def client(client_id):
+    client = Client.query.get(client_id)
+    client.client_secret = utils.generate_secret_key()
+    form = forms.ClientForm(obj=client)
+    if form.validate_on_submit():
+        form.populate_obj(client)
+        db.session.commit()
+        flash('OAuth client "{}" updated'.format(client.name), "success")
+        return redirect(url_for(".clients"))
+
+    return render_template('staff/edit_client.html', client=client, form=form)
+
 ################
 # Student View #
 ################
