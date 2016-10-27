@@ -878,9 +878,9 @@ def student_view(cid, email):
         flash("This email is not enrolled", 'warning')
 
     assignments = {
-        'active': [a.user_status(student) for a in assignments
+        'active': [a.user_status(student, staff_view=True) for a in assignments
                    if a.active],
-        'inactive': [a.user_status(student) for a in assignments
+        'inactive': [a.user_status(student, staff_view=True) for a in assignments
                      if not a.active]
     }
 
@@ -904,7 +904,7 @@ def student_assignment_detail(cid, email, aid):
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    assignment_stats = assign.user_status(student)
+    assignment_stats = assign.user_status(student, staff_view=True)
 
     user_ids = assign.active_user_ids(student.id)
 

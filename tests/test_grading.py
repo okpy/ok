@@ -284,3 +284,66 @@ class TestGrading(OkTestCase):
         for user in users:
             check_visible_scores(user, self.assignment, visible=['Total'], hidden=['Composition'])
             check_visible_scores(user, self.assignment2, visible=['Composition', 'Total'])
+
+    def test_assignment_scores(self):
+        def get_backups(user):
+            return Backup.query.filter_by(
+                submitter=user,
+                assignment=self.assignment,
+            ).all()
+
+        backups1 = get_backups(self.user1)
+        backups2 = get_backups(self.user2)
+
+        def add_score(backup, kind, score, archived=False):
+            score = Score(
+                backup_id=backup.id,
+                assignment_id=backup.assignment_id,
+                kind=kind,
+                score=score,
+                message='Good work',
+                grader_id=self.staff1.id,
+                archived=archived,
+            )
+            db.session.add(score)
+
+        add_score(backups1[0], 'composition', 2)
+        add_score(backups1[0], 'composition', 1000, archived=True)
+        add_score(backups1[4], 'composition', 3)
+        add_score(backups2[2], 'composition', 10)
+
+        add_score(backups2[0], 'regrade', 3)
+        add_score(backups1[2], 'regrade', 8)
+        add_score(backups2[4], 'regrade', 8)
+
+        db.session.commit()
+
+        scores = self.assignment.scores(
+            [self.user1.id, self.user2.id],
+            only_published=False,
+        )
+        scores.sort(key=lambda score: score.kind)
+        self.assertEquals(len(scores), 2)
+
+        a_score = scores[0]
+        self.assertEquals(a_score.kind, 'composition')
+        self.assertEquals(a_score.score, 10)
+        self.assertEquals(a_score.backup_id, backups2[2].id)
+
+        b_score = scores[1]
+        self.assertEquals(b_score.kind, 'regrade')
+        self.assertEquals(b_score.score, 8)
+        self.assertEquals(b_score.backup_id, backups2[4].id)
+
+        scores = self.assignment.scores([self.user1.id, self.user2.id])
+        self.assertEquals(len(scores), 0)  # no scores have been published
+
+        self.assignment.publish_score('composition')
+        scores = self.assignment.scores([self.user1.id, self.user2.id])
+        scores.sort(key=lambda score: score.kind)
+        self.assertEquals(len(scores), 1)
+
+        a_score = scores[0]
+        self.assertEquals(a_score.kind, 'composition')
+        self.assertEquals(a_score.score, 10)
+        self.assertEquals(a_score.backup_id, backups2[2].id)
