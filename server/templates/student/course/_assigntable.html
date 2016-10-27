@@ -1,4 +1,4 @@
-{% macro render_assign(assignments, course, tname="Assignments", empty=False, show_scores=False) %}
+{% macro render_assign(assignments, course, tname="Assignments", empty=False, scores=False) %}
   {% if assignments %}
   <div class="subcontent list hidden-xs hidden-sm">
     <div class="wrap">
@@ -6,7 +6,7 @@
       <table>
         <tr class="header">
           <th class="col-name">Name</th>
-          {% if show_scores %}
+          {% if scores %}
             <th class="col-scores">Scores</th>
           {% else %}
             <th class="col-due-date">Due Date</th>
@@ -14,7 +14,7 @@
           <th class="col-status">Status</th>
           <th class="col-group">Group</th>
         </tr>
-        {% for assign, subm_time, group, fs, scores in assignments %}
+        {% for assign, subm_time, group, fs in assignments %}
         <tr>
           <td>
             <span>
@@ -23,16 +23,36 @@
               </a>
             </span>
           </td>
-            {% if show_scores %}
-            <td>
-                {% for score in scores %}
-                <a class="label label-default score-inline" href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}">
-                    {{ score.kind.title() }}: {{ score.score | round(2) }}
-                </a>
+            {% if scores %}
+                {% set grades = fs.visible_grades %}
+                {% if grades %}
+                <td class="tip-trigger">
+                    <span>
+                    {% for grade in grades %}
+                        {{ grade.kind.title() }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                  <div class="tip group-members">
+                  {% for grade in grades %}
+                    <span><b>{{grade.kind}}:</b> {{grade.score | round(2)}}</span>
+                  {% endfor %}
+                  </div>
+                </span>
+                </td>
+                {% elif subm_time %}
+                <td class="tip-trigger"><span class="no-dash">&mdash;
+                      <div class="tip">
+                        <span>Not released or Ungraded</span>
+                      </div>
+                    </span>
+                </td>
                 {% else %}
-                <span class="no-dash">&mdash;</span>
-                {% endfor %}
-            </td>
+                <td class="tip-trigger"><span class="no-dash">&mdash;
+                      <div class="tip">
+                        <span>No submission to grade</span>
+                      </div>
+                    </span>
+                </td>
+                {% endif %}
             {% else %}
               <td>
               {% if assign.active %}
@@ -138,12 +158,12 @@
   {% endif %}
 {% endmacro %}
 
-{% macro render_assign_mobile(assignments, course, tname="Assignments", admin=False, empty=False, show_scores=False) %}
+{% macro render_assign_mobile(assignments, course, tname="Assignments", admin=False, empty=False, scores=False) %}
   {% if assignments %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
       <h2>{{ tname }}</h2>
-      {% for assign, subm_time, group, fs, scores in assignments %}
+      {% for assign, subm_time, group, fs in assignments %}
       <div class="cell col-xs-12">
         <div class="cell-title">
           <a class="dashed" href="{{ url_for('.assignment', name=assign.name)}}">
@@ -161,18 +181,13 @@
           <span>Did you run --submit<?</span> -->
           {% endif %}
         </div>
-        {% if show_scores %}
-            {% if scores %}
+        {% if scores %}
+            {% set grades = fs.visible_grades %}
+            {% if grades %}
             <div class="cell-text">
-                Scores:
-                {% for score in scores %}
-                   <span>
-                    <a href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}" class="score-inline">
-                     <b>{{score.kind}}:</b> {{score.score | round(2)}}
-                    </a>
-                  </span>
-                {% endfor %}
-            </div>
+                {% for grade in grades %}
+                        <span><b>{{grade.kind}}:</b> {{grade.score | round(2)}}</span>
+                {% endfor %}</div>
             {% elif fs %}
             <div class="cell-text"><span>Scores are not available on OK</span></div>
             {% endif %}

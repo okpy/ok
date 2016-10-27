@@ -25,12 +25,12 @@
         </div>
         <!-- start desktop/tablet version -->
         {{ table.render_assign(active, course=course, tname="Current Assignments", empty=True) }}
-        {{ table.render_assign(inactive, course=course, tname="Past Assignments", show_scores=True) }}
+        {{ table.render_assign(inactive, course=course, tname="Past Assignments", scores=True) }}
 
         <!-- end desktop/tablet version -->
         <!-- start mobile version -->
         {{ table.render_assign_mobile(active, course=course, tname="Current Assignments", empty=True) }}
-        {{ table.render_assign_mobile(inactive,course=course, tname="Past Assignments", show_scores=True) }}
+        {{ table.render_assign_mobile(inactive,course=course, tname="Past Assignments", scores=True) }}
         <!-- end mobile version -->
       </section>
     </main>

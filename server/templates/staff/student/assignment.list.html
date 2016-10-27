@@ -65,13 +65,17 @@
 
                     {% endif %}
                     <td class="scores">
-                    {% for score in item.scores %}
-                        <a href="{{ url_for('.grading', bid=score.backup_id) }}">
-                            <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span>
-                        </a>
+                    {% if item.final_subm and item.final_subm.scores %}
+                        {% for score in item.final_subm.scores %}
+                            {% if not score.archived %}
+                            <a href="{{ url_for('.grading', bid=item.final_subm.id) }}">
+                                <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span>
+                            </a>
+                            {% endif %}
+                        {% endfor %}
                     {% else %}
                     &mdash;
-                    {% endfor %}
+                    {% endif %}
                     </td>
                     <td >
                         <a href="{{url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=item.assignment.id)}}">

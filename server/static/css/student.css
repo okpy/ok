@@ -447,9 +447,6 @@ header .logo {
     outline: none;
     width: 100%;
   }
-  .group-table {
-    border: none !important;
-  }
 
   .invite-input {
     width: 95%;
