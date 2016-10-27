@@ -169,7 +169,7 @@ def gen_backup(user, assignment):
         },
         'analytics': {}
     }
-    submit = gen_bool(0.1)
+    submit = gen_bool(0.3)
     if submit:
         messages['file_contents']['submit'] = ''
     backup = Backup(
@@ -292,10 +292,10 @@ def seed_scores():
     print('Seeding scores...')
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
-        if random.choice([True, False]):
+        if gen_bool(0.6):
              score = gen_score(backup, admin, kind='composition')
              db.session.add(score)
-        if random.choice([True, False]):
+        if gen_bool(0.8):
              score = gen_score(backup, admin, kind='total')
              db.session.add(score)
     db.session.commit()
