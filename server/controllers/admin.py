@@ -921,14 +921,20 @@ def student_commit_overview(cid, email, aid, commit_id):
 
     extra = request.args and ("student_email" in request.args)
     if extra:
-        email = request.args["student_email"]
+        filter_email = request.args["student_email"]
+    else:
+        filter_email = None
 
     student = User.lookup(email)
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    user_ids = {student.id}
-    if not extra:
+    if filter_email:
+        filtered_student = User.lookup(filter_email)
+        if not filtered_student.is_enrolled(cid):
+            flash("Filter e-mail is not entrolled", 'warning')
+        user_ids = {filtered_student.id}
+    else:
         user_ids = assign.active_user_ids(student.id)
 
     assignment_stats = assign.user_status(student)
@@ -1040,7 +1046,8 @@ def student_commit_overview(cid, email, aid, commit_id):
                            num_diffs=len(files_list)-1,
                            start_index=start_index,
                            prev_commit_id = prev_commit_id,
-                           next_commit_id = next_commit_id)
+                           next_commit_id = next_commit_id,
+                           filter_email = email)
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/graph")
 @is_staff(course_arg='cid')

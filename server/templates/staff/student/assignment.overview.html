@@ -191,7 +191,7 @@
             $('.diff-delta-box').eq(backup_number).show();
         }
         else {
-           url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = prev_commit_id)}}"
+           url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = prev_commit_id, student_email = filter_email)}}"
            window.location.assign(url);
         }
     }
@@ -206,7 +206,7 @@
             $('.diff-delta-box').eq(backup_number).show();
         }
         else {
-            url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = next_commit_id)}}"
+            url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = next_commit_id, student_email = filter_email)}}"
             window.location.assign(url);
         }
     }
