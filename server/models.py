@@ -598,47 +598,27 @@ class Assignment(Model):
     def scores(self, user_ids, only_published=True):
         """Return a list of Scores for this assignment and a group. Only the
         maximum score for each kind is returned. If there is a tie, the more
-        recent backup is preferred.
+        recent score is preferred.
         """
-        submitter_id_params = {
-            'submitter_id_' + str(i): user_id
-                for i, user_id in enumerate(user_ids)
-        }
-        params = {
-            'assignment_id': self.id,
-            **submitter_id_params,
-        }
+        scores = Score.query.filter(
+            Score.user_id.in_(user_ids),
+            Score.assignment_id == self.id,
+            Score.archived == False,
+        ).order_by(Score.score.desc(), Score.created.desc())
 
-        score_kinds = self.published_scores if only_published else SCORE_KINDS
-        if not score_kinds:
-            return []  # no published scores
-        # TODO: use query to get existing score kinds instead of creating a
-        # table. This approach may be vulerable to SQL injection attacks if we
-        # allow arbitrary score kinds and we're not careful.
-        score_kinds_table = ' UNION '.join(
-            'SELECT "{}" as kind'.format(kind) for kind in score_kinds
-        )
-        submitter_ids = ','.join(':' + param for param in submitter_id_params)
-
-        scores = db.text('''
-        SELECT s.*
-        FROM ({}) as score_kinds, score as s
-        WHERE s.id=(
-            SELECT s.id
-            FROM score as s,
-            (
-                SELECT * from backup
-                WHERE assignment_id = :assignment_id
-                AND submitter_id in ({})
-            ) as b
-            WHERE s.backup_id = b.id
-            AND s.kind = score_kinds.kind
-            AND s.archived = 0
-            ORDER BY s.score DESC, b.created DESC
-            LIMIT 1
-        )
-        '''.format(score_kinds_table, submitter_ids)).bindparams(**params)
-        return Score.query.from_statement(scores).all()
+        scores_by_kind = {}
+        # keep only first score for each kind
+        for score in scores:
+            if score.kind not in scores_by_kind:
+                scores_by_kind[score.kind] = score
+        max_scores = list(scores_by_kind.values())
+        if only_published:
+            return [
+                score for score in max_scores
+                    if score.kind in self.published_scores
+            ]
+        else:
+            return max_scores
 
     @transaction
     def flag(self, backup_id, member_ids):
