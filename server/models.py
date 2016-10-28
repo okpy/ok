@@ -604,7 +604,7 @@ class Assignment(Model):
             Score.user_id.in_(user_ids),
             Score.assignment_id == self.id,
             Score.archived == False,
-        ).order_by(Score.score.desc(), Score.created.desc())
+        ).order_by(Score.score.desc(), Score.created.desc()).all()
 
         scores_by_kind = {}
         # keep only first score for each kind
