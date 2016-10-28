@@ -297,6 +297,7 @@ class TestGrading(OkTestCase):
 
         def add_score(backup, kind, score, archived=False):
             score = Score(
+                created=backup.created,
                 backup_id=backup.id,
                 assignment_id=backup.assignment_id,
                 kind=kind,
