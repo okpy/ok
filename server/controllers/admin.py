@@ -220,7 +220,7 @@ def grade(bid):
         return grading_view(backup, form=form)
 
     score = Score(backup=backup, grader=current_user,
-                  assignment_id=backup.assignment_id, user=backup.submitter_id)
+                  assignment_id=backup.assignment_id, user_id=backup.submitter_id)
     form.populate_obj(score)
     db.session.add(score)
     db.session.commit()
