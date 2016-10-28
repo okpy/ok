@@ -1130,18 +1130,18 @@ def student_assignment_graph_detail(cid, email, aid):
     group = [User.query.get(o) for o in backups[0].owners()] #TODO
 
     def gen_point(stat):
-        value = stat["lines_changed"]
-        label = "Lines/Minutes Ratio:{0} \n Submitter: {1} \n Commit ID: {2}\n".format(
-            round(stat["lines_time_ratio"], 5), stat["submitter"], stat["commit_id"])
+        value = stat["lines_time_ratio"]
+        label = "Total Lines:{0} \n Submitter: {1} \n Commit ID: {2}\n".format(
+            round(stat["lines_changed"], 5), stat["submitter"], stat["commit_id"])
         url = url_for('.student_commit_overview', 
                 cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
 
         #arbitrary boundaries for color-coding based on ratio, need more data to determine bounds
-        if lines_time_ratio > 9: 
+        if lines_changed > 100: 
             color = 'red'
-        elif lines_time_ratio > 5:
+        elif lines_changed > 50:
             color = 'orange'
-        elif lines_time_ratio > 2:
+        elif lines_changed > 15:
             color = 'blue'
         else:
             color = 'black'
@@ -1162,7 +1162,7 @@ def student_assignment_graph_detail(cid, email, aid):
                             legend_at_bottom=True,
                             pretty_print=True
                             )
-    line_chart.title = 'Lines Changed Across Backups'
+    line_chart.title = 'Lines/Minutes Ratio Across Backups'
     line_chart.add('Backups', points)
     
     return render_template('staff/student/assignment.graph.html',
