@@ -1,6 +1,5 @@
 import collections
 import csv
-import datetime
 from functools import wraps
 from io import StringIO
 
@@ -15,6 +14,7 @@ from pygal.style import CleanStyle
 from server import autograder
 
 import server.controllers.api as ok_api
+import server.controllers.analyze as analyze
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, db)
@@ -1075,87 +1075,8 @@ def student_assignment_graph_detail(cid, email, aid):
                      .order_by(Backup.flagged.desc(), Backup.submit.desc(),
                                Backup.created.desc())).all()
     backups.reverse()
-    stats_list = []
-    # generate statistics for graph
-    for i in range(len(backups)):
-        if not i:
-            continue
-        prev_backup, curr_backup = backups[i - 1], backups[i]
-        prev_code, curr_code = prev_backup.files(), curr_backup.files()
-        prev_analytics = prev_backup and prev_backup.analytics()
-        curr_analytics = curr_backup and curr_backup.analytics()
 
-        # ensure all needed info exists
-        if not (prev_code and curr_code and prev_analytics and curr_analytics):
-            continue
-
-        # get time differences
-        prev_time_string, curr_time_string = prev_analytics.get("time"), curr_analytics.get("time")
-        if not (prev_time_string and curr_time_string):
-            continue
-
-        # find difference in time submitted
-        time_format = "%Y-%m-%d %X"
-        prev_time = datetime.datetime.strptime(prev_time_string.split(".")[0], time_format)
-        curr_time = datetime.datetime.strptime(curr_time_string.split(".")[0], time_format)
-        time_difference = curr_time - prev_time
-        time_difference_in_secs = time_difference.total_seconds()
-
-        if time_difference_in_secs < 0:
-            continue
-
-        # find diffs
-        lines_changed = highlight.diff_lines(prev_code, curr_code)
-        if lines_changed == 0:
-            continue
-
-        
-        # find ratio of lines to nearest minute
-        diff_in_minutes = round(time_difference_in_secs / 60)
-        if diff_in_minutes == 0: # round up for results < minute to avoid division errors
-            diff_in_minutes = 1
-        lines_time_ratio = lines_changed / diff_in_minutes
-
-        backup_stats = {
-            'submitter': curr_backup.submitter.email,
-            'commit_id' : curr_backup.hashid,
-            'lines_changed': lines_changed,
-            'time_difference': time_difference,
-            'lines_changed': lines_changed, 
-            'lines_time_ratio': lines_time_ratio
-        }
-
-        stats_list.append(backup_stats)
-
-    group = [User.query.get(o) for o in backups[0].owners()] #TODO
-
-    def gen_point(stat):
-        value = stat["lines_changed"]
-        label = "Lines/Minutes Ratio:{0} \n Submitter: {1} \n Commit ID: {2}\n".format(
-            round(stat["lines_time_ratio"], 5), stat["submitter"], stat["commit_id"])
-        url = url_for('.student_commit_overview', 
-                cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
-
-        #arbitrary boundaries for color-coding based on ratio, need more data to determine bounds
-        if lines_time_ratio > 9: 
-            color = 'red'
-        elif lines_time_ratio > 5:
-            color = 'orange'
-        elif lines_time_ratio > 2:
-            color = 'blue'
-        else:
-            color = 'black'
-
-        if extra:
-            url += "?student_email=" + email
-        return {
-            "value": value,
-            "label" : label,
-            "xlink": url,
-            "color": color
-        }
-
-    points = [gen_point(stat) for stat in stats_list]
+    points = analyze.get_graph_points(backups, cid, email, aid)
 
     line_chart = pygal.Line(disable_xml_declaration=True,
                             human_readable=True,
@@ -1165,6 +1086,8 @@ def student_assignment_graph_detail(cid, email, aid):
     line_chart.title = 'Lines Changed Across Backups'
     line_chart.add('Backups', points)
     
+    group = [User.query.get(o) for o in backups[0].owners()] #TODO
+
     return render_template('staff/student/assignment.graph.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,
