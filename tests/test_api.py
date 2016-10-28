@@ -203,6 +203,8 @@ class TestAuth(OkTestCase):
         self.assert_200(response)
         backups = response.json['data']['backups']
         self.assertEquals(len(backups), 1)
+        self.assertTrue('submission_time' in backups[0])
+        self.assertEquals(backups[0]['submission_time'], backups[0]['created'])
         self.assertEquals(response.json['data']['count'], 1)
         self.assertEquals(response.json['data']['limit'], 150)
         self.assertEquals(response.json['data']['offset'], 0)

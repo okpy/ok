@@ -300,6 +300,7 @@ class BackupSchema(APISchema):
         'assignment': fields.Nested(AssignmentSchema.simple_fields),
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
+        'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
         'group': fields.List(fields.Nested(UserSchema.simple_fields)),
@@ -309,6 +310,7 @@ class BackupSchema(APISchema):
         'id': HashIDField,
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
+        'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
     }
@@ -470,7 +472,7 @@ class V3Info(PublicResource):
 class Backup(Resource):
     """ Submission creation/retrieval resource.
         Authenticated. Permissions: >= User/Staff
-        Used by: Ok Client Submission/Exports.
+        Used by: Ok Client, Submission/Exports, Autograder
     """
     schema = BackupSchema()
     model = models.Backup
