@@ -1047,7 +1047,7 @@ def student_commit_overview(cid, email, aid, commit_id):
                            start_index=start_index,
                            prev_commit_id = prev_commit_id,
                            next_commit_id = next_commit_id,
-                           filter_email = email)
+                           filter_email = filter_email)
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/graph")
 @is_staff(course_arg='cid')
