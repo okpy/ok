@@ -7,9 +7,7 @@
   <div class="col-md-10 col-md-offset-1">
     {% include 'alerts.html' %}
     <h1 class="title">Automate Grading &amp; Personalize Feedback.</h1>
-
-    <p class="subtitle">Ok autogrades programming assignments, facilitates submission, <br> composition feedback, and analytics for your class.</p>
-
+    <p>Ok autogrades programming assignments, facilitates submission, <br> composition feedback, and analytics for your class.</p>
     {% if config['TESTING_LOGIN'] and (config['ENV'] == 'dev' or config['ENV'] == 'test') %}
       <a data-no-instant href="{{ url_for('auth.testing_login') }}" id="testing-login" class="button">Testing Login</a>
     {% else %}
@@ -17,4 +15,89 @@
     {% endif %}
   </div>
 </div>
+
+<div class="landing row">
+    <div class="col-md-12">
+        <h1>Serving over 2000 students and 2 million submissions.</h1>
+    </div>
+    <div class="col-md-10 col-md-offset-1">
+        <div class="col-md-3 quote">
+            <img src="https://placekitten.com/120">
+        </div>
+        <div class="col-md-3 quote">
+            <img src="https://placekitten.com/120">
+        </div>
+        <div class="col-md-3 quote">
+            <img src="https://placekitten.com/120">
+        </div>
+        <div class="col-md-3 quote">
+            <img src="https://placekitten.com/120">
+        </div>
+    </div>
+</div>
+
+<div class="landing row">
+    <div class="col-md-4 quote text-center">
+        <div class="quote-img">
+            <img src="https://placekitten.com/150">
+        </div>
+        <h2>John DeNero</h2>
+        <p class="subtitle">UC Berkeley</p>
+        <p>John DeNero joined the UC Berkeley CS division faculty in 2014 to focus on undergraduate education in computer science. He received his Masters in Philosophy from Stanford University and his PhD in Electrical Engineering and Computer Science from UC Berkeley in 2010.</p>
+    </div>
+    <div class="col-md-4 quote text-center">
+        <div class="quote-img">
+            <img src="https://placekitten.com/150">
+        </div>
+        <h2>John DeNero</h2>
+        <p class="subtitle">UC Berkeley</p>
+        <p>John DeNero joined the UC Berkeley CS division faculty in 2014 to focus on undergraduate education in computer science. He received his Masters in Philosophy from Stanford University and his PhD in Electrical Engineering and Computer Science from UC Berkeley in 2010.</p>
+    </div>
+    <div class="col-md-4 quote text-center">
+        <div class="quote-img">
+            <img src="https://placekitten.com/150">
+        </div>
+        <h2>John DeNero</h2>
+        <p class="subtitle">UC Berkeley</p>
+        <p>John DeNero joined the UC Berkeley CS division faculty in 2014 to focus on undergraduate education in computer science. He received his Masters in Philosophy from Stanford University and his PhD in Electrical Engineering and Computer Science from UC Berkeley in 2010.</p>
+    </div>
+</div>
+
+<div class="landing row">
+    <div class="col-md-6 center">
+        <h1>Grading done in one click.</h1>
+        <p>John DeNero joined the UC Berkeley CS division faculty in 2014 to focus on undergraduate education in computer science.</p>
+    </div>
+    <div class="col-md-6">
+        <img class="img-responsive" src="{{ url_for('static', filename='img/landing-actions.png') }}">
+    </div>
+</div>
+
+<div class="landing row">
+    <div class="col-md-6">
+        <img class="img-responsive" src="{{ url_for('static', filename='img/landing-comments.png') }}">
+    </div>
+    <div class="col-md-6 center">
+        <h1>Give personalized feedback.</h1>
+        <p>John DeNero joined the UC Berkeley CS division faculty in 2014 to focus on undergraduate education in computer science.</p>
+    </div>
+</div>
+
+<div class="landing row">
+    <div class="col-md-6 center">
+        <h1>Real-time stats for every assignment.</h1>
+        <p>John DeNero joined the UC Berkeley CS division faculty in 2014 to focus on undergraduate education in computer science.</p>
+    </div>
+    <div class="col-md-6">
+        <img class="img-responsive" src="{{ url_for('static', filename='img/landing-stats.png') }}">
+    </div>
+</div>
+
+<div class="landing row">
+    <div class="col-md-12">
+        <h2>Learn more about how Ok can streamline your course.</h2>
+        <a href="mailto://cs61a@berkeley.edu?cc=denero@berkeley.edu&bcc=sumukh@berkeley.edu&subject=Using%20Ok" class="button">Contact us</a>
+    </div>
+</div>
+
 {% endblock content %}

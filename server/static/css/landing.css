@@ -1,3 +1,4 @@
+
 .home header {
     width: 100%;
     padding: 1.5em 0em;
@@ -15,15 +16,34 @@ header .landing-btn {
   color: #666;
 }
 
-.landing {
-  padding-bottom: 100px;
+.landing.gray {
+  background-color: rgba(64, 64, 64, 0.05);
 }
+.landing h1, h2 {
+  font-family:'Quicksand';
+  letter-spacing:-0.1em;
+}
+.landing .subtitle {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.landing .center {
+  margin-top: calc(10% - 72px);
+}
+.landing .quote {
+  padding-top: 2em;
+}
+.landing .quote .quote-img {
+  margin: auto;
+  overflow: hidden;
+  border-radius: 100%;
+  width: 150px;
+}
+
 .footer {
-  padding-left: 50px;
-  padding-right: 50px
-}
-.footer-section {
-  padding-top: 10px;
+  border-top: 1px solid #eee;
+  padding: 2em 0;
+  margin-bottom: 4em;
 }
 
 .container {

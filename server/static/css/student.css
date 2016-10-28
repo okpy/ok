@@ -346,10 +346,6 @@ section {
 .final-no {
   color:#767676;
 }
-.landing .title {
-  font-family:'Quicksand';
-  letter-spacing:-0.1em;
-}
 .home header {
   width:100%;
   padding:2em 3em;
@@ -362,7 +358,7 @@ header .logo {
 .landing {
   width:100%;
   float:left;
-  padding:3em 0 0 0;
+  padding: 3em 0;
   text-align:center;
 }
   .landing h1 {
@@ -375,8 +371,8 @@ header .logo {
     font-weight:300;
     color:#666;
   }
-  .landing p + .button {
-    margin-top:3em;
+  .landing .button {
+    margin-top:2em;
   }
   .button {
     display:inline-block;
