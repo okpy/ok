@@ -124,7 +124,8 @@ curl "https://okpy.org/api/v3/enrollment/example@gmail.com?access_token=test"
                     "active": true,
                     "offering": "ok/test/su16",
                     "id": 2,
-                    "display_name": "OK Sandbox"
+                    "display_name": "OK Sandbox",
+                    "timezone": "America/Los_Angeles"
                 }
             },
         ]
@@ -165,7 +166,8 @@ curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab01"
             "active": true,
             "display_name": "CS 61A",
             "id": 1,
-            "offering": "cal/cs61a/sp16"
+            "offering": "cal/cs61a/sp16",
+            "timezone": "America/Los_Angeles"
         },
         "display_name": "Lab 01",
         "due_date": "2016-09-07T06:59:59",
@@ -408,7 +410,8 @@ response = r.json()
             "id": 1,
             "active": true,
             "display_name": "CS 61A",
-            "offering": "cal/cs61a/su16"
+            "offering": "cal/cs61a/su16",
+            "timezone": "America/Los_Angeles"
         },
         "assignment": "cal/cs61a/su16/sample"
     },
@@ -474,7 +477,13 @@ curl "https://okpy.org/api/v3/backups/aF249e/?access_token=test"
         "is_late": false,
         "assignment": {
             "name": "cal/cs61a/su16/sample",
-            "course": {"id": 1, "active": true, "display_name": "CS 61A", "offering": "cal/cs61a/su16"}
+            "course": {
+                "id": 1,
+                "active": true,
+                "display_name": "CS 61A",
+                "offering": "cal/cs61a/su16",
+                "timezone": "America/Los_Angeles"
+            }
         },
         "id": "aF249e",
         "messages": [
