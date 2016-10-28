@@ -169,7 +169,7 @@ class TestGrading(OkTestCase):
             backup = Backup.query.filter_by(submitter_id=self.user1.id, submit=True).first()
             score = Score(backup_id=backup.id, kind="Composition", score=2.0,
                           message="Good work", assignment_id=self.assignment.id,
-                          grader=self.staff1)
+                          user_id=backup.submitter_id, grader=self.staff1)
             db.session.add(score)
             db.session.commit()
             self.login(self.staff1.email)
@@ -205,7 +205,7 @@ class TestGrading(OkTestCase):
                             point = random.uniform(0, 100)
                     scores = Score(backup_id=backup.id, kind=score_kind, score=point,
                                    message="Good work", assignment_id=assign.id,
-                                   grader=self.staff1)
+                                   user_id=backup.submitter_id, grader=self.staff1)
                     db.session.add(scores)
         db.session.commit()
 
@@ -302,6 +302,7 @@ class TestGrading(OkTestCase):
                 kind=kind,
                 score=score,
                 message='Good work',
+                user_id=backup.submitter_id,
                 grader_id=self.staff1.id,
                 archived=archived,
             )

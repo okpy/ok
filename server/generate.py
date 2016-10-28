@@ -208,6 +208,7 @@ def gen_score(backup, admin, kind="autograder"):
         backup_id=backup.id,
         assignment_id=backup.assignment.id,
         grader_id=admin.id,
+        user_id=backup.submitter_id,
         kind=kind,
         score=score,
         message=loremipsum.get_sentence())

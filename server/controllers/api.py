@@ -184,8 +184,8 @@ def make_score(user, backup, score, message, kind):
         return
 
     score = models.Score(grader_id=user.id, assignment=backup.assignment,
-                         backup=backup, score=score, message=message,
-                         kind=kind)
+                         backup=backup, user_id=backup.submitter_id,
+                         score=score, message=message, kind=kind)
     models.db.session.add(score)
     models.db.session.commit()
     score.archive_duplicates()
