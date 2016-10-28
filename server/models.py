@@ -814,7 +814,7 @@ class Backup(Model):
 
     @hybrid_property
     def is_late(self):
-        return self.created > self.assignment.due_date
+        return self.submission_time > self.assignment.due_date
 
     @hybrid_property
     def visible_grades(self):
