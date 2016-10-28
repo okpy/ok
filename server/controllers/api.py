@@ -491,7 +491,6 @@ class Backup(Resource):
             if user.is_admin:
                 return restful.abort(404)
             return restful.abort(403)
-        # TODO: Check if user is researcher. If so, anonmyize submitter info.
         if not self.model.can(backup, user, 'view'):
             return restful.abort(403)
         backup.group = [models.User.get_by_id(uid) for uid in backup.owners()]
