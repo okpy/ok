@@ -79,7 +79,7 @@ def highlight_diff(filename, a, b, diff_type='short'):
             beginning -= 1        # empty ranges begin at line just before the range
         return '{},{}'.format(beginning, length)
 
-    matcher = difflib.SequenceMatcher(None, a.splitlines(), b.splitlines())
+    matcher = difflib.SequenceMatcher(difflib.IS_CHARACTER_JUNK, a.splitlines(), b.splitlines())
     if diff_type == 'short':
         groups = matcher.get_grouped_opcodes()
     elif diff_type == 'full':
@@ -127,7 +127,7 @@ def diff_lines(files_before, files_after):
     for filename in files_before.keys() | files_after.keys():
         a = files_before.get(filename, '')
         b = files_after.get(filename, '')
-        matcher = difflib.SequenceMatcher(None, a.splitlines(), b.splitlines())
+        matcher = difflib.SequenceMatcher(difflib.IS_CHARACTER_JUNK, a.splitlines(), b.splitlines())
         groups = matcher.get_grouped_opcodes()
         for group in groups:
             for tag, i1, i2, j1, j2 in group:

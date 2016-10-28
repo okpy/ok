@@ -1076,6 +1076,7 @@ def student_assignment_graph_detail(cid, email, aid):
                                Backup.created.desc())).all()
     backups.reverse()
 
+    # get points for graph to plot
     points = analyze.get_graph_points(backups, cid, email, aid)
 
     line_chart = pygal.Line(disable_xml_declaration=True,
@@ -1083,7 +1084,7 @@ def student_assignment_graph_detail(cid, email, aid):
                             legend_at_bottom=True,
                             pretty_print=True
                             )
-    line_chart.title = 'Lines Changed Across Backups'
+    line_chart.title = 'Lines/Minutes Ratio Across Backups'
     line_chart.add('Backups', points)
     
     group = [User.query.get(o) for o in backups[0].owners()] #TODO
