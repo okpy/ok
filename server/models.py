@@ -1229,6 +1229,8 @@ class Score(Model):
     grader_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+    # submitter of score's backup
+    user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
 
     kind = db.Column(db.String(255), nullable=False, index=True)
     score = db.Column(db.Float, nullable=False)
@@ -1237,7 +1239,8 @@ class Score(Model):
     archived = db.Column(db.Boolean, default=False, index=True)
 
     backup = db.relationship("Backup")
-    grader = db.relationship("User")
+    grader = db.relationship("User", foreign_keys='Score.grader_id')
+    user = db.relationship("User", foreign_keys='Score.user_id')
     assignment = db.relationship("Assignment")
 
     export_items = ('assignment_id', 'kind', 'score', 'message',
