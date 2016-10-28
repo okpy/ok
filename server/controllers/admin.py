@@ -8,8 +8,6 @@ from flask import (Blueprint, render_template, flash, redirect, Response,
 from werkzeug.exceptions import BadRequest
 
 from flask_login import current_user, login_required
-import pygal
-from pygal.style import CleanStyle
 
 from server import autograder
 
@@ -1075,18 +1073,7 @@ def student_assignment_graph_detail(cid, email, aid):
                      .order_by(Backup.flagged.desc(), Backup.submit.desc(),
                                Backup.created.desc())).all()
     backups.reverse()
-
-    # get points for graph to plot
-    points = analyze.get_graph_points(backups, cid, email, aid)
-
-    line_chart = pygal.Line(disable_xml_declaration=True,
-                            human_readable=True,
-                            legend_at_bottom=True,
-                            pretty_print=True
-                            )
-    line_chart.title = 'Lines/Minutes Ratio Across Backups'
-    line_chart.add('Backups', points)
-    
+    line_chart = analyze.generate_line_chart(backups, cid, email, aid, extra)    
     group = [User.query.get(o) for o in backups[0].owners()] #TODO
 
     return render_template('staff/student/assignment.graph.html',
@@ -1095,7 +1082,6 @@ def student_assignment_graph_detail(cid, email, aid):
                            add_member_form=forms.StaffAddGroupFrom(),
                            csrf_form=forms.CSRFForm(),
                            upload_form=forms.UploadSubmissionForm(),
-                           stats_list=stats_list,
                            assign_status=assignment_stats,
                            backup=backups[0],
                            group=group,
