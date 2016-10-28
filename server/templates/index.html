@@ -1,13 +1,13 @@
 {% extends "about/base.html" %}
 
-{% block title %}Ok{% endblock %}
+{% block title %}OK{% endblock %}
 
 {% block content %}
 <div class="landing row">
   <div class="col-md-10 col-md-offset-1">
     {% include 'alerts.html' %}
     <h1 class="title">Automate Grading &amp; Personalize Feedback.</h1>
-    <p>Ok autogrades programming assignments, facilitates submission, <br> composition feedback, and analytics for your class.</p>
+    <p>OK autogrades programming assignments, facilitates submission, <br> composition feedback, and analytics for your class.</p>
     {% if config['TESTING_LOGIN'] and (config['ENV'] == 'dev' or config['ENV'] == 'test') %}
       <a data-no-instant href="{{ url_for('auth.testing_login') }}" id="testing-login" class="button">Testing Login</a>
     {% else %}
@@ -18,7 +18,7 @@
 
 <div class="landing row feature-block logo-section">
     <hr>
-     <h2>Used by many courses with millions of submissions</h2>
+     <h2>Used by courses with millions of submissions</h2>
 
     <div class="col-md-10 col-md-offset-1">
 
@@ -27,7 +27,7 @@
         </div>
         <div class="col-sm-3 hidden-xs">
             <a href="http://cs61a.org" target="_blank" >
-                <p class="landing-course-name"> CS61A </p>
+                <p class="landing-course-name"> CS 61A </p>
             </a>
         </div>
         <div class="col-sm-3 hidden-xs">
@@ -37,7 +37,7 @@
         </div>
         <div class="col-sm-3 hidden-xs">
             <a href="http://cs168.io" target="_blank" >
-                <p class="landing-course-name"> CS168 </p>
+                <p class="landing-course-name"> CS 168 </p>
             </a>
         </div>
     </div>
@@ -48,8 +48,8 @@
         <img class="img-responsive select-none" src="{{ url_for('static', filename='img/landing-comments.png') }}">
     </div>
     <div class="col-md-6 center">
-        <h1>Give personalized feedback</h1>
-        <p>View student solutions and leave comments on how to improve their composition. You can put the pen & paper away and digitize feedback.</p>
+        <h1>Personalized feedback</h1>
+        <p>View student solutions and leave comments on how to improve their style. You can put the pen & paper away and digitize feedback.</p>
     </div>
 </div>
 
@@ -72,7 +72,7 @@
 
     <div class="col-md-6 center">
         <h1>Grading with one click</h1>
-        <p>With a language agnostic autograder - you can grade your assignments by simply specifying a command to run. We'll handle the infrastructure so you can focus on teaching.</p>
+        <p>With a language agnostic autograder, you can grade your assignments by simply specifying a command to run. We'll handle the infrastructure so you can focus on teaching.</p>
         <p>OK features plagarism detection that will flag submissions that are plagarized from another student or somewhere on the internet.</p>
     </div>
 </div>
@@ -112,9 +112,9 @@
     <hr>
 
     <div class="col-md-12">
-        <h2>Learn more about how Ok can streamline your course.</h2>
-        <p> OK is an suite of open source software tools to developed to support Computer Science courses. <br> Contact us to see how OK can help streamline assignment submissions.  </p>
-        <a href="mailto://cs61a@berkeley.edu?cc=denero@berkeley.edu&bcc=sumukh@berkeley.edu&subject=Using%20Ok" class="button">Contact us</a>
+        <h2>Learn more about how OK can streamline your course.</h2>
+        <p> OK is an suite of open source software tools to developed to support computer science courses. <br> Contact us to see how OK can help streamline assignment submissions.  </p>
+        <a href="mailto://cs61a@berkeley.edu?cc=denero@berkeley.edu&bcc=sumukh@berkeley.edu&subject=Using%20OK" class="button">Contact us</a>
     </div>
 </div>
 
