@@ -81,7 +81,14 @@
                   {% endif %}
                   {% for score in scores %}
                     <li class="list-group-item">
-                      <p><b>{{ score.kind.title() }}: </b>{{ score.score | round(2) }}</p>
+                      <p>
+                        <b>{{ score.kind.title() }}: </b>{{ score.score | round(2) }}&ensp;
+                        {% if score.kind in backup.assignment.published_scores %}
+                          <span class="label label-success">Published</span>
+                        {% else %}
+                          <span class="label label-default">Unpublished</span>
+                        {% endif %}
+                      </p>
                       <pre>{{ score.message }}</pre>
                       <p>{{ utils.local_time(score.created, backup.assignment.course) }} from {{ score.grader.email }}</p>
                     </li>
