@@ -1,5 +1,7 @@
 import datetime as dt
 import json
+import random
+
 from server.models import (db, Assignment, Backup, Course, User,
                            Version, Group)
 from server.utils import encode_id
@@ -115,6 +117,49 @@ class TestAuth(OkTestCase):
         assert response.json['data'] == {}
         assert response.json['code'] == 404
 
+    def test_aaaget_backup(self):
+        self._test_backup(False)
+
+        backup = Backup.query.first()
+        submission_time = (self.assignment.due_date
+            - dt.timedelta(days=random.randrange(0, 10)))
+        backup.custom_submission_time = submission_time
+
+        response = self.client.get('/api/v3/backups/{}/'.format(backup.hashid))
+        self.assert_200(response)
+
+        course = backup.assignment.course
+        user_json = {
+            "email": backup.submitter.email,
+            "id": encode_id(backup.submitter_id),
+        }
+        assert response.json['data'] == {
+            "submitter": user_json,
+            "submit": backup.submit,
+            "created": backup.created.isoformat(),
+            "submission_time": submission_time.isoformat(),
+            "group": [user_json],
+            "is_late": backup.is_late,
+            "assignment": {
+                "name": backup.assignment.name,
+                "course": {
+                    "id": course.id,
+                    "active": course.active,
+                    "display_name": course.display_name,
+                    "offering": course.offering,
+                    "timezone": course.timezone.zone,
+                },
+            },
+            "id": backup.hashid,
+            "messages": [
+                {
+                    "kind": "file_contents",
+                    "contents": backup.files(),
+                    "created": backup.created.isoformat(),
+                },
+            ],
+        }
+
     def test_bad_hashid(self):
         self.setup_course()
 
@@ -203,6 +248,8 @@ class TestAuth(OkTestCase):
         self.assert_200(response)
         backups = response.json['data']['backups']
         self.assertEquals(len(backups), 1)
+        self.assertTrue('submission_time' in backups[0])
+        self.assertEquals(backups[0]['submission_time'], backups[0]['created'])
         self.assertEquals(response.json['data']['count'], 1)
         self.assertEquals(response.json['data']['limit'], 150)
         self.assertEquals(response.json['data']['offset'], 0)
@@ -467,4 +514,3 @@ class TestAuth(OkTestCase):
         self.login(self.user1.email)
         response = self.client.get(student_endpoint)
         self.assert_403(response)
-
