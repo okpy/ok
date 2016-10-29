@@ -97,6 +97,10 @@
           </li>
         </ul>
 
+        {% for stats in stats_list %}
+            {{stats_box(stats)}}
+        {% endfor %}
+        
         <div class="box">
             <div class="box-body">
                 {% for files in files_list %}
@@ -110,10 +114,6 @@
                 {% endfor %}
             </div>
         </div>
-
-        {% for stats in stats_list %}
-            {{stats_box(stats)}}
-        {% endfor %}
 
         <!-- /.box -->
 

@@ -3,20 +3,29 @@ from flask import url_for
 import pygal
 import server.highlight as highlight
 
+### Common Functions ###
 def get_unique_backups(backups):
     """
     Given a list of backups, only include backups that have changed.
-    Returns a list of (backup, lines_changed) tuples
+    Returns a list of (backup, lines_changed) tuples AND
+    a map from all backup_ids to their "kept" backup_id AND
+    a map from kept backup_ids to their index
     Can assume that for every returned backup:
         - a .files() section exists
         - diff between backup_i and backup_i+1 exists
-    TODO: should cache this?
+    TODO: should CACHE this?
     """
     filtered = []
+    id_map = {} # maps all backup hashid to a kept backup's hashid
+    index_map = {} # maps from all kept backups to its index
+    index = 1
     for i in range(len(backups)):
         # edge case for first backup
         if not i and backups[i] and backups[i].files():
             filtered.append((backups[i], -1))
+            last_unique_id = backups[i].hashid
+            id_map[backups[i].hashid] = last_unique_id
+            index_map[backups[i].hashid] = 0
             continue
 
         prev_backup, curr_backup = backups[i - 1], backups[i]
@@ -24,13 +33,20 @@ def get_unique_backups(backups):
 
         # ensure code exists
         if not (prev_code and curr_code):
+            id_map[curr_backup.hashid] = last_unique_id
             continue
 
         # only keep with diffs
         lines_changed = highlight.diff_lines(prev_code, curr_code)
         if lines_changed:
             filtered.append((curr_backup, lines_changed))
-    return filtered
+            last_unique_id = curr_backup.hashid
+            index_map[curr_backup.hashid] = index
+            index += 1
+        id_map[curr_backup.hashid] = last_unique_id
+
+    assert (len(index_map) == index) #todo remove
+    return filtered, id_map, index_map
 
 def get_time_diff_seconds(analytics1, analytics2):
     """
@@ -47,12 +63,104 @@ def get_time_diff_seconds(analytics1, analytics2):
     time_difference = time2 - time1
     return time_difference.total_seconds()
 
+### Diff Overview Generation ###
+def get_backup_range(backups, commit_id, bound=10):
+    """
+    Naive Implementation
+    Returns a dictionary: {
+        "backups": backups,
+        "prev_commit_id": prev_commit_id,
+        "commit_id": commit_id
+        "next_commit_id": next_commit_id
+    }
+    backups = unique backups `bound` away from backup with `commit_id`
+    prev/next_commit_id = prev/next commit_id not part of backups
+    """
+    unique_backups_tuples, id_map, index_map = get_unique_backups(backups)
+    unique_backups = [backup_tuple[0] for backup_tuple in unique_backups_tuples]
+    # invalid commit_id
+    if commit_id not in id_map:
+        return {}
+
+    # find included commit_id
+    commit_id = id_map[commit_id]
+
+    commit_index = index_map[commit_id]
+
+    # get prev and curr ids
+    prev_commit_id = unique_backups[max(0, commit_index-bound-1)].hashid
+    next_commit_id = unique_backups[min(len(unique_backups)-1, commit_index+bound+1)].hashid
+
+    unique_backups = unique_backups[max(0, commit_index-bound-1)\
+                                    :min(len(unique_backups), commit_index+bound+1)]
+    return {
+        "backups": unique_backups,
+        "prev_commit_id": prev_commit_id,
+        "commit_id": commit_id,
+        "next_commit_id": next_commit_id
+    }
+
+def get_diffs_and_stats(backups):
+    """
+    Given a list of backups, returns 2 lists.
+    A list of diffs, and list of stats corresponding to each diff.
+    Assumptions made on backups: 
+        - all backups have code (.files() is not None)
+        - all backups have unique code
+        - suggested usage: call `get_unique_backups` or `get_backup_range`
+    """
+    files_list, stats_list = [], []
+    for i, backup in enumerate(backups):
+        if not i: # first unique backup => no diff
+            continue
+
+        prev = backups[i - 1].files()
+        curr = backup.files()
+        files = highlight.diff_files(prev, curr, "short")
+        files_list.append(files)
+
+        backup_stats = {
+            'submitter': backup.submitter.email,
+            'commit_id' : backup.hashid,
+            'question': None,
+            'time': None,
+            'passed': None,
+            'failed': None
+        }
+
+        analytics = backup and backup.analytics()
+        grading = backup and backup.grading()
+
+        if analytics:
+            backup_stats['time'] = analytics.get('time')
+
+        if grading:
+            questions = list(grading.keys())
+            question = None
+            passed, failed = 0, 0
+            for question in questions:
+                passed += grading.get(question).get('passed')
+                passed += grading.get(question).get('failed')
+            if len(questions) > 1:
+                question = questions
+
+            backup_stats['question'] = question
+            backup_stats['passed'] = passed
+            backup_stats['failed'] = failed
+        else:
+            unlock = backup.unlocking()
+            backup_stats['question'] = "[Unlocking] " + unlock.split(">")[0]
+
+        stats_list.append(backup_stats)
+    return files_list, stats_list
+
+### Graph Generation ###
 def get_graph_stats(backups):
     """
     Given a list of backups, return a list of statistics for the unique ones
     The len(list) should be 1 less than the number of unique usuable backups
     """
-    unique_backups_tuples = get_unique_backups(backups) # should be cached
+    unique_backups_tuples = get_unique_backups(backups)[0] # should be cached
 
     stats_list = []
     for i in range(len(unique_backups_tuples)):
@@ -124,6 +232,9 @@ def get_graph_points(backups, cid, email, aid, extra):
     return points
 
 def generate_line_chart(backups, cid, email, aid, extra):
+    """
+    Generates a pygal line_chart given a list of backups
+    """
     points = get_graph_points(backups, cid, email, aid, extra)
 
     line_chart = pygal.Line(disable_xml_declaration=True,

@@ -947,90 +947,28 @@ def student_commit_overview(cid, email, aid, commit_id):
                                Backup.created.desc())).all()
     backups.reverse()
 
-    # only keep "near" backups
-    found = False
-    for i, backup in enumerate(backups):
-        backup_commit_id = backup.hashid
-        if backup_commit_id == commit_id:
-            found = True
-            break
+    backup_range = analyze.get_backup_range(backups, commit_id)
 
-    if not found:
+    if not backup_range:
         flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
-        return abort(404)
+        return abort(404) # todo maybe return something else
 
-    bound = 20 #todo maybe change
+    backups = backup_range["backups"]
+    commit_id = backup_range["commit_id"] # relevant commit_id might be different
+    prev_commit_id = backup_range["prev_commit_id"]
+    next_commit_id = backup_range["next_commit_id"]
 
-    # Naive solution for getting the next commit_id URL to load, not considering no-change diffs
-    prev_commit_id = backups[max(0, i-bound-1)].hashid
-    next_commit_id = backups[min(len(backups)-1, i + bound + 1)].hashid
-
-    backups = backups[max(0, i - bound):min(len(backups), i + bound)]
-    start_index = 0
-
-    last_kept_backup = backups[0]
-    files_list, stats_list = [], []
-    for i, backup in enumerate(backups):
-        prev = backups[i - 1].files()
-        curr = backup.files()
-        if not (i and prev and curr):
-            continue
-        files = highlight.diff_files(prev, curr, "short")
-        backup_id = backup.hashid
-
-        # do not add backups with no change in lines except for first backup
-        if not any(files.values()):
-            if commit_id == backup_id:
-                commit_id = last_kept_backup.hashid
-            continue
-
-        last_kept_backup = backup
-
-        files_list.append(files)
-
-        backup_stats = {
-            'submitter': backup.submitter.email,
-            'commit_id' : backup_id,
-            'analytics': backup and backup.analytics(),
-            'grading': backup and backup.grading(),
-            'question': None,
-            'time': None,
-            'passed': None,
-            'failed': None
-        }
-
-        if backup_stats['analytics']:
-            backup_stats['time'] = backup_stats['analytics'].get('time')
-
-        if backup_stats['grading']:
-            questions = list(backup_stats['grading'].keys())
-            question = None
-            passed, failed = 0, 0
-            for question in questions:
-                passed += backup_stats['grading'].get(question).get('passed')
-                passed += backup_stats['grading'].get(question).get('failed')
-            if len(questions) > 1:
-                question = questions
-
-            backup_stats['question'] = question
-            backup_stats['passed'] = passed
-            backup_stats['failed'] = failed
-        else:
-            unlock = backup.unlocking()
-            backup_stats['question'] = unlock
-
-        stats_list.append(backup_stats)
-
+    files_list, stats_list = analyze.get_diffs_and_stats(backups)
 
     # calculate starting diff for template
-    try:
-        start_index = [i for i, stat in enumerate(stats_list) if stat["commit_id"] == commit_id][0]
-    except:
-        # if not in start_index, commit_id leads to no-change diff?
-        flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
-        return abort(404)
 
-    group = [User.query.get(o) for o in backup.owners()]
+    start_index = [i for i, stat in enumerate(stats_list) if stat["commit_id"] == commit_id]
+    if start_index: # edge case for 1st backup; no diff will be found
+        start_index = start_index[0]
+    else:
+        start_index = 0
+
+    group = [User.query.get(o) for o in backups[0].owners()] #todo fix
 
     return render_template('staff/student/assignment.overview.html',
                            courses=courses, current_course=current_course,
