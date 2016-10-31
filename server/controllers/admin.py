@@ -125,7 +125,6 @@ def grading_view(backup, form=None):
             line.comments = comments[(filename, line.line_after)]
 
     group = [User.query.get(o) for o in backup.owners()]
-    scores = [s for s in backup.scores if not s.archived]
     task = backup.grading_tasks
     if task:
         # Choose the first grading_task
@@ -133,7 +132,7 @@ def grading_view(backup, form=None):
 
     return render_template(
         'staff/grading/code.html', courses=courses, assignment=assign,
-        backup=backup, group=group, scores=scores, files=files,
+        backup=backup, group=group, files=files,
         diff_type=diff_type, task=task, form=form
     )
 
