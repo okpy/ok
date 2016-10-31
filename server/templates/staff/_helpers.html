@@ -20,9 +20,16 @@
 {% endmacro %}
 
 {% macro score_pill(score) %}
-  {% set label_class = 'success' if score.kind in score.assignment.published_scores else 'default' %}
   <a href="{{ url_for('.grading', bid=score.backup_id) }}">
-    <span class="label label-{{ label_class }}">{{ score.kind.title() }}: {{ score.score | round(2) }}</span>
+    {% if score.kind in score.assignment.published_scores %}
+      <span class="label label-success" title="Visible to students">{{ score.kind.title() }}: {{ score.score | round(2) }}
+        <i class="fa fa-eye" aria-hidden="true"></i>
+      </span>
+    {% else %}
+      <span class="label label-default" title="Hidden to students">{{ score.kind.title() }}: {{ score.score | round(2) }}
+        <i class="fa fa-eye-slash" aria-hidden="true"></i>
+      </span>
+    {% endif %}
   </a>
 {% endmacro %}
 
