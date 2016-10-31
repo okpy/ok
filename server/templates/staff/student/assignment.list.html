@@ -1,3 +1,5 @@
+{% import 'staff/_helpers.html' as helpers %}
+
 <div class="box">
     <div class="box-header">
         <h3 class="box-title"><span> {{ title }} Assignments </span></h3>
@@ -65,13 +67,7 @@
 
                     {% endif %}
                     <td class="scores">
-                    {% for score in item.scores %}
-                        <a href="{{ url_for('.grading', bid=score.backup_id) }}">
-                            <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span>
-                        </a>
-                    {% else %}
-                    &mdash;
-                    {% endfor %}
+                      {{ helpers.score_pills(item.scores) }}
                     </td>
                     <td >
                         <a href="{{url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=item.assignment.id)}}">
