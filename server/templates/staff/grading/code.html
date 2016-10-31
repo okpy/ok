@@ -34,7 +34,7 @@
         <div class="col-xs-12">
             <div class="box collapsed-box">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Submission Information ({{ scores | length }} Assigned Scores) </h3>
+                    <h3 class="box-title">Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
 
                     <div class="box-tools pull-right">
                         <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
@@ -79,7 +79,7 @@
                       {{ utils.local_time(backup.custom_submission_time, backup.assignment.course) }}
                     </li>
                   {% endif %}
-                  {% for score in scores %}
+                  {% for score in backup.active_scores %}
                     <li class="list-group-item">
                       <p>
                         <b>{{ score.kind.title() }}: </b>{{ score.score | round(2) }}&ensp;
