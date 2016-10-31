@@ -853,12 +853,15 @@ class Backup(Model):
         return self.submission_time > self.assignment.due_date
 
     @hybrid_property
-    def visible_grades(self):
-        """ Return public grades. "Autograder" kind are errors from the
-        autograder and should not be shown.
-        """
+    def active_scores(self):
+        """Return non-archived scores."""
+        return [s for s in self.scores if not s.archived]
+
+    @hybrid_property
+    def published_scores(self):
+        """Return non-archived scores that are published to students."""
         return [s for s in self.scores
-            if s.public and s.kind in self.assignment.published_scores]
+            if not s.archived and s.kind in self.assignment.published_scores]
 
     @hybrid_property
     def is_revision(self):
