@@ -458,6 +458,7 @@ class Assignment(Model):
                                  "title": "Started {}".format(curr_q),
                                  "attempt": total_attempt_count,
                                  "backup": backup})
+                last_q = (curr_q, is_solved, 1)
             elif last_q[0] != curr_q and last_q[0] is not None:
                 # Didn't just start it but did switch questions.
                 timeline.append({"event": "Switched",
@@ -470,9 +471,11 @@ class Assignment(Model):
             if is_solved and curr_q not in solved_questions:
                 # Just solved a question
                 solved_questions[curr_q] = backup.hashid
-                if last_q[2] > 5:
+                attempts_later = last_q[2] - 1
+                if attempts_later > 10:
                     timeline.append({"event": "Later",
-                                     "title": "{} attempts later".format(last_q[2]),
+                                     "title": ("{} attempts on {} after starting"
+                                               .format(attempts_later, curr_q)),
                                      "attempt": total_attempt_count,
                                      "backup": backup})
 
@@ -488,7 +491,6 @@ class Assignment(Model):
                                  "attempt": total_attempt_count,
                                  "title": "Submitted ({})".format(backup.hashid),
                                  "backup": backup})
-
 
             history.append(message.contents)
 
