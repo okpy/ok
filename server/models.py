@@ -16,7 +16,7 @@ import pytz
 
 import functools
 
-from collections import namedtuple, defaultdict
+from collections import namedtuple, Counter
 
 import contextlib
 import csv
@@ -399,7 +399,18 @@ class Assignment(Model):
         return Assignment.query.filter_by(name=name).one_or_none()
 
     def user_timeline(self, user_id):
-        """ Timeline of user submissions. """
+        """ Timeline of user submissions. Returns a dictionary
+        with timeline contents from most recent to oldest.
+        Example Return:
+        {'submitters': {'a@example.com': 40},
+         'timeline': [{
+            'event': ("Unlock"|"Started"|"Switched"|"Later"|"Solved")
+            'attempt': 20,
+            'title': "Started unlocking"
+            'backup': Backup(...)
+         }]
+        }
+        """
         user_ids = self.active_user_ids(user_id)
         analytics = (db.session.query(Backup, Message)
                        .outerjoin(Message)
@@ -410,20 +421,21 @@ class Assignment(Model):
                        .all())
 
         unlock_started_q, started_questions, solved_questions = {}, {}, {}
-        submitter_counts = defaultdict(lambda: 1)
-        history, timeline = [], []
+        history, timeline, submitters = [], [], []
+        # TODO: Make timeline a namedtuple
         last_q = (None, False, 0)  # current_question, is_solved, count
 
         for backup, message in analytics:
             contents = message.contents
-            curr_q = contents.get('question', [None])[0]
-            if not curr_q:
+            working_q = contents.get('question')
+            if not working_q:
                 continue
+            curr_q = working_q[0]
             if ('history' not in contents or 'questions' not in contents['history'] or
                     not isinstance(contents['history']['questions'], dict)):
                 continue
 
-            submitter_counts[backup.submitter.email] += 1
+            submitters.append(backup.submitter.email)
 
             curr_q_stats = message.contents['history']['questions'].get(curr_q)
             total_attempt_count = message.contents['history'].get('all_attempts')
@@ -474,7 +486,7 @@ class Assignment(Model):
 
             history.append(message.contents)
 
-        return {'submitters': submitter_counts,
+        return {'submitters': dict(Counter(submitters)),
                 'timeline': timeline[::-1]}
 
     def user_status(self, user, staff_view=False):
