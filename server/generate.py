@@ -334,11 +334,11 @@ def seed_scores():
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
         if gen_bool(0.6):
-             score = gen_score(backup, admin, kind='composition')
-             db.session.add(score)
+            score = gen_score(backup, admin, kind='composition')
+            db.session.add(score)
         if gen_bool(0.8):
-             score = gen_score(backup, admin, kind='total')
-             db.session.add(score)
+            score = gen_score(backup, admin, kind='total')
+            db.session.add(score)
     db.session.commit()
 
 def seed_queues():
