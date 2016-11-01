@@ -37,16 +37,27 @@
                               </span>
                           </a>
                       </li>
+                      {% if not timeline %}
+                        <li>
+                          <div class="timeline-item">
+                              <div class="timeline-body">
+                                 <p> It doesn't look like there are any analytics messages in the backups to generate a timeline. To learn more about analytics, consult the Ok Client Documentation.</p>
+                              </div>
+                          </div>
+                        </li>
+                      {% endif %}
                       <!-- /.timeline-label -->
                       {% for event in timeline %}
                       <!-- timeline item -->
-                      <li class="{% if event['backup'].submitter.email == submitter %}invisible{% endif %}" >
+                      <li class="{% if event['backup'].submitter.email != submitter %}invisible{% endif %}" >
                           {% if event['event'] == "Later" %}
                             <i class="fa fa-ellipsis-h"></i>
                           {% elif event['event'] == "Started" %}
                             <i class="fa fa-hourglass-start bg-blue"></i>
                           {% elif event['event'] == "Solved" %}
                             <i class="fa fa-check-circle bg-green"></i>
+                          {% elif event['event'] == "Submitted" %}
+                            <i class="fa fa-flag-checkered bg-yellow"></i>
                           {% elif event['event'] == "Switched" %}
                             <i class="fa fa-random bg-green"></i>
                           {% elif event['event'] == "Unlock" %}
@@ -78,6 +89,7 @@
                       </li>
                       <!-- END timeline item -->
                       {% endfor %}
+
                       <li>
                           <i class="fa fa-clock-o bg-gray"></i>
                       </li>

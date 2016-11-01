@@ -404,7 +404,7 @@ class Assignment(Model):
         Example Return:
         {'submitters': {'a@example.com': 40},
          'timeline': [{
-            'event': ("Unlock"|"Started"|"Switched"|"Later"|"Solved")
+            'event': "(Unlock|Started|Switched|Submitted|Later|Solved)"
             'attempt': 20,
             'title': "Started unlocking"
             'backup': Backup(...)
@@ -440,7 +440,6 @@ class Assignment(Model):
             curr_q_stats = message.contents['history']['questions'].get(curr_q)
             total_attempt_count = message.contents['history'].get('all_attempts')
             is_solved = curr_q_stats.get('solved')
-
             if contents.get('unlock'):
                 # Is unlocking.
                 if curr_q not in unlock_started_q:
@@ -483,6 +482,13 @@ class Assignment(Model):
                                  "backup": backup})
             else:
                 last_q = (curr_q, is_solved, last_q[2]+1)
+
+            if backup.submit:
+                timeline.append({"event": "Submitted",
+                                 "attempt": total_attempt_count,
+                                 "title": "Submitted ({})".format(backup.hashid),
+                                 "backup": backup})
+
 
             history.append(message.contents)
 
