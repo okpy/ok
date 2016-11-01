@@ -147,7 +147,7 @@ if driver:
 
         def test_phantom_web(self):
             self.page_load(self.get_server_url())
-            self.assertEquals('Ok', self.driver.title)
+            self.assertEquals("OK", self.driver.title)
             self.driver.find_element_by_id('testing-login').click()
             self.assertIn('Login', self.driver.title)
 
@@ -157,7 +157,7 @@ if driver:
             self.assertIn('Courses | Ok', self.driver.title)
 
             self.driver.find_element_by_id('logout').click()
-            self.assertEquals('Ok', self.driver.title)
+            self.assertEquals("OK", self.driver.title)
 
         def test_student_view(self):
             self._seed_course()

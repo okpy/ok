@@ -1,3 +1,4 @@
+
 .home header {
     width: 100%;
     padding: 1.5em 0em;
@@ -15,15 +16,63 @@ header .landing-btn {
   color: #666;
 }
 
-.landing {
-  padding-bottom: 100px;
+.landing-logo {
+  max-width: 200px;
+  height: 50px;
 }
+
+.landing-course-name {
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.landing.logo-section {
+ padding: 0.5em 0;
+}
+
+.landing.gray {
+  background-color: rgba(64, 64, 64, 0.05);
+}
+.landing h1, h2 {
+  font-family:'Quicksand';
+  letter-spacing:-0.1em;
+}
+
+.feature-block h1 {
+  margin-top: 0;
+}
+
+/* Small devices (tablets, 768px and down) */
+@media (max-width: 768px) {
+  .feature-block h1 {
+    margin-top: 2em;
+  }
+  .landing {
+    padding: 1em 0;
+  }
+}
+
+.landing .subtitle {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.landing .center {
+  margin-top: calc(10% - 72px);
+}
+.landing .quote {
+  padding-top: 2em;
+}
+.landing .quote .quote-img {
+  margin: auto;
+  overflow: hidden;
+  border-radius: 100%;
+  width: 150px;
+}
+
 .footer {
-  padding-left: 50px;
-  padding-right: 50px
-}
-.footer-section {
-  padding-top: 10px;
+  border-top: 1px solid #eee;
+  padding: 2em 0;
+  margin-bottom: 4em;
 }
 
 .container {
