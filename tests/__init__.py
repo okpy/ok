@@ -55,9 +55,10 @@ class OkTestCase(TestCase):
         """Creates:
 
         * A course (self.course)
-        * An assignment (self.assignment) in that course
+        * 2 assignments (self.assignment) in that course
         * 5 users (self.user1, self.user2, etc.) enrolled as students
         * 2 staff members (self.staff1, self.staff2) as TAs
+        * 1 lab assistant (self.lab_assistant1) as lab assistants
         * 1 Admin (okadmin@okpy.org)
         """
         self.admin = User(email='okadmin@okpy.org', is_admin=True)

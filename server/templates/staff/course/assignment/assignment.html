@@ -24,98 +24,6 @@
   <!-- Don't close the content section -->
   <section class="content">
       {% include 'alerts.html' %}
-        <!-- Stats Row -->
-        <div class="row">
-
-            <div class="col-md-3 col-sm-6 col-xs-6">
-              <div class="info-box">
-                <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}">
-                  <span class="info-box-icon bg-green">
-                    <i class="fa fa-inbox"></i>
-                  </span>
-                </a>
-                <div class="info-box-content">
-                  <span class="info-box-text">Submitted</span>
-                  <span class="info-box-number">{{ stats['students_with_subm'] }}</span>
-
-                  <div class="progress">
-                    <div class="progress-bar bg-green" style="width: {{ stats['percent_finished'] | round(1) | int }}%"></div>
-                  </div>
-                  <span class="progress-description">
-                    {{ stats['percent_finished'] | round(1) }}% have submitted
-                  </span>
-                </div>
-                <!-- /.info-box-content -->
-              </div>
-
-            </div>
-
-            <div class="col-md-3 col-sm-6 col-xs-6">
-              <div class="info-box">
-               <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}">
-                <span class="info-box-icon bg-yellow">
-                  <i class="fa fa-folder-open-o"></i>
-                </span>
-               </a>
-                <div class="info-box-content">
-                  <span class="info-box-text">Started</span>
-                  <span class="info-box-number">{{ stats['students_with_subm'] + stats['students_with_backup'] }}</span>
-
-                  <div class="progress">
-                    <div class="progress-bar bg-yellow" style="width: {{ stats['percent_started'] | round(1) | int }}%"></div>
-                  </div>
-                  <span class="progress-description">
-                    {{ stats['percent_started'] | round(1) }}% have started
-                  </span>
-                </div>
-                <!-- /.info-box-content -->
-              </div>
-            </div>
-
-
-            <div class="col-md-3 col-sm-6 col-xs-6">
-              <div class="info-box">
-               <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}">
-                <span class="info-box-icon bg-aqua"><i class="fa fa-file-code-o"></i></span>
-                </a>
-                <div class="info-box-content">
-                  <span class="info-box-text">Unique Submissions</span>
-                  <span class="info-box-number"> {{ stats['unique_submissions'] }}</span>
-                  <span class="progress-description">
-                    (Includes backups)
-                  </span>
-
-                </div>
-                <!-- /.info-box-content -->
-              </div>
-              <!-- /.info-box -->
-            </div>
-            <!-- /.col -->
-            <div class="col-md-3 col-sm-6 col-xs-6">
-              <div class="info-box">
-               <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}">
-                <span class="info-box-icon bg-teal">
-                  <i class="fa fa-users"></i>
-                </span>
-              </a>
-                <div class="info-box-content">
-                  <span class="info-box-text">Active Groups</span>
-                  <span class="info-box-number">{{ stats['active_groups'] }}</span>
-
-                  <div class="progress">
-                    <div class="progress-bar bg-teal" style="width: {{ (stats['percent_groups_active']*100) | round(1) | int }}%"></div>
-                  </div>
-                  <span class="progress-description">
-                    {{ stats['groups'] - stats['active_groups'] }} {{ (stats['groups'] - stats['active_groups']) | pluralize('is', 'are')}} still pending
-                  </span>
-                </div>
-                <!-- /.info-box-content -->
-              </div>
-            </div>
-            <!-- /.col -->
-          </div>
-
-
           <div class="row">
                   <div class="col-md-12">
                     <div class="box">
@@ -130,22 +38,16 @@
                       <div class="box-body">
 
                         <div class="row">
-                          <div class="col-sm-4 col-xs-4">
+                          <div class="col-sm-6 col-xs-6">
                             <div class="description-block border-right">
                               <h5 class="description-header"> {{ utils.local_time(assignment.due_date, current_course)  }} </h5>
                               <span class="description-text">Due Date</span>
                             </div>
                           </div>
-                          <div class="col-sm-4 col-xs-4">
+                          <div class="col-sm-6 col-xs-6">
                             <div class="description-block border-right">
                                 <h5 class="description-header"> {{ utils.local_time(assignment.lock_date, current_course)  }} </h5>
                                 <span class="description-text">Lock Date</span>
-                            </div>
-                          </div>
-                          <div class="col-sm-4 col-xs-4">
-                            <div class="description-block">
-                              <h5 class="description-header">{{ stats['backups'] }}</h5>
-                              <span class="description-text">Total Backups</span>
                             </div>
                           </div>
                         </div>
@@ -197,12 +99,14 @@
                   <li> <a href="{{ url_for('.templates', cid=current_course.id, aid=assignment.id) }}" type="button">
                      <i class="fa fa fa-file-text-o"></i> Edit Assignment Template
                   </a></li>
-
                   <li> <a href="{{ url_for('.assign_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-user-plus"></i> Assign Grading
                   </a></li>
                   <li> <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-inbox"></i> Grading Queues
+                  </a></li>
+                  <li> <a href="{{ url_for('.publish_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-wpforms"></i> Publish Scores
                   </a></li>
                   <li> <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-download"></i> Download Scores

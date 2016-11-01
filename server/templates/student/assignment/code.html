@@ -22,7 +22,7 @@
             </div>
             <h3 class="text-center">Received on {{ utils.local_time(backup.created, course) }} from {{ backup.submitter.email }}</h3>
              {% if backup.scores %}
-                {% for score in backup.visible_grades %}
+                {% for score in backup.published_scores %}
                     <h3 class="text-center">
                       <span class="label label-primary">{{ score.kind.title() }}: {{ score.score | round(2) }}</span>
                     </h3>

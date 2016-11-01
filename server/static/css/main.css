@@ -25,8 +25,13 @@ pre code  {
 .inline {
   display: inline;
 }
+
 .pace {
   display: none;
+}
+
+.hide-oveflow {
+  overflow: hidden;
 }
 
 td.slim-cell {
@@ -45,6 +50,10 @@ td.slim-cell {
   cursor:pointer;
   overflow: hidden;
   outline:none;
+}
+
+.score-inline {
+  margin-right: 5px;
 }
 
 /* Blank State from Code Pen */
@@ -161,6 +170,7 @@ td.slim-cell {
   top:-4px;
   right:-5px;
 }
+
 .disable-animations {
   /* CSS transitions */
   -o-transition-property: none !important;
@@ -180,5 +190,20 @@ td.slim-cell {
 }
 
 .hide-overflow {
-    overflow: hidden;
+  overflow: hidden;
+}
+
+img.desaturate{
+  -webkit-filter: grayscale(100%) contrast(50%);
+  filter: gray;
+  filter: grayscale(100%) contrast(50%);
+}
+
+.select-none {
+  user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }

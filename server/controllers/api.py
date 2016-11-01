@@ -184,8 +184,8 @@ def make_score(user, backup, score, message, kind):
         return
 
     score = models.Score(grader_id=user.id, assignment=backup.assignment,
-                         backup=backup, score=score, message=message,
-                         kind=kind)
+                         backup=backup, user_id=backup.submitter_id,
+                         score=score, message=message, kind=kind)
     models.db.session.add(score)
     models.db.session.commit()
     score.archive_duplicates()
@@ -300,6 +300,7 @@ class BackupSchema(APISchema):
         'assignment': fields.Nested(AssignmentSchema.simple_fields),
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
+        'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
         'group': fields.List(fields.Nested(UserSchema.simple_fields)),
@@ -309,6 +310,7 @@ class BackupSchema(APISchema):
         'id': HashIDField,
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
+        'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
     }
@@ -470,7 +472,7 @@ class V3Info(PublicResource):
 class Backup(Resource):
     """ Submission creation/retrieval resource.
         Authenticated. Permissions: >= User/Staff
-        Used by: Ok Client Submission/Exports.
+        Used by: Ok Client, Submission/Exports, Autograder
     """
     schema = BackupSchema()
     model = models.Backup
@@ -489,7 +491,6 @@ class Backup(Resource):
             if user.is_admin:
                 return restful.abort(404)
             return restful.abort(403)
-        # TODO: Check if user is researcher. If so, anonmyize submitter info.
         if not self.model.can(backup, user, 'view'):
             return restful.abort(403)
         backup.group = [models.User.get_by_id(uid) for uid in backup.owners()]

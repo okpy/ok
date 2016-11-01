@@ -210,7 +210,7 @@ def gen_messages(assignment, seconds_offset):
 def gen_backup(user, assignment):
     seconds_offset = random.randrange(-100000, 100)
     messages = gen_messages(assignment, seconds_offset)
-    submit = gen_bool(0.1)
+    submit = gen_bool(0.3)
     if submit:
         messages['file_contents']['submit'] = ''
     backup = Backup(
@@ -248,6 +248,7 @@ def gen_score(backup, admin, kind="autograder"):
         backup_id=backup.id,
         assignment_id=backup.assignment.id,
         grader_id=admin.id,
+        user_id=backup.submitter_id,
         kind=kind,
         score=score,
         message=loremipsum.get_sentence())
@@ -332,12 +333,12 @@ def seed_scores():
     print('Seeding scores...')
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
-        if gen_bool():
-            score = gen_score(backup, admin, kind='composition')
-            db.session.add(score)
-        if gen_bool():
-            score = gen_score(backup, admin, kind='total')
-            db.session.add(score)
+        if gen_bool(0.6):
+             score = gen_score(backup, admin, kind='composition')
+             db.session.add(score)
+        if gen_bool(0.8):
+             score = gen_score(backup, admin, kind='total')
+             db.session.add(score)
     db.session.commit()
 
 def seed_queues():

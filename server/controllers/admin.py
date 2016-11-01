@@ -18,7 +18,7 @@ from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                              LAB_ASSISTANT_ROLE, GRADE_TAGS)
+                              LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
 from server.extensions import cache
 import server.forms as forms
@@ -126,7 +126,6 @@ def grading_view(backup, form=None):
             line.comments = comments[(filename, line.line_after)]
 
     group = [User.query.get(o) for o in backup.owners()]
-    scores = [s for s in backup.scores if not s.archived]
     task = backup.grading_tasks
     if task:
         # Choose the first grading_task
@@ -134,7 +133,7 @@ def grading_view(backup, form=None):
 
     return render_template(
         'staff/grading/code.html', courses=courses, assignment=assign,
-        backup=backup, group=group, scores=scores, files=files,
+        backup=backup, group=group, files=files,
         diff_type=diff_type, task=task, form=form
     )
 
@@ -149,7 +148,7 @@ def grading(bid):
     existing = [s for s in backup.scores if not s.archived]
     first_score = existing[0] if existing else None
 
-    if first_score and first_score.kind in GRADE_TAGS:
+    if first_score and first_score.kind in SCORE_KINDS:
         form = forms.GradeForm(kind=first_score.kind)
         form.kind.data = first_score.kind
         form.message.data = first_score.message
@@ -170,6 +169,33 @@ def composition(bid):
         form.message.data = existing.message
         form.score.data = existing.score
     return grading_view(backup, form=form)
+
+@admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
+@is_staff()
+def edit_backup(bid):
+    courses, current_course = get_courses()
+    backup = Backup.query.options(db.joinedload('assignment')).get(bid)
+    if not backup:
+        abort(404)
+    if not Backup.can(backup, current_user, 'grade'):
+        flash("You do not have permission to score this assignment.", "warning")
+        abort(401)
+    form = forms.SubmissionTimeForm()
+    if form.validate_on_submit():
+        backup.custom_submission_time = form.get_submission_time(backup.assignment)
+        db.session.commit()
+        flash('Submission time saved', 'success')
+        return redirect(url_for('.edit_backup', bid=bid))
+    else:
+        form.set_submission_time(backup)
+    return render_template(
+        'staff/grading/edit.html',
+        courses=courses,
+        current_course=current_course,
+        backup=backup,
+        student=backup.submitter,
+        form=form,
+    )
 
 @admin.route('/grading/<hashid:bid>/grade', methods=['POST'])
 @is_staff()
@@ -194,7 +220,7 @@ def grade(bid):
         return grading_view(backup, form=form)
 
     score = Score(backup=backup, grader=current_user,
-                  assignment_id=backup.assignment_id)
+                  assignment_id=backup.assignment_id, user_id=backup.submitter_id)
     form.populate_obj(score)
     db.session.add(score)
     db.session.commit()
@@ -378,8 +404,6 @@ def assignment(cid, aid):
         return abort(401)
 
     form = forms.AssignmentUpdateForm(obj=assign, course=current_course)
-    stats = Assignment.assignment_stats(assign.id)
-
     if form.validate_on_submit():
         # populate_obj converts back to UTC
         form.populate_obj(assign)
@@ -389,7 +413,7 @@ def assignment(cid, aid):
         flash("Assignment edited successfully.", "success")
 
     return render_template('staff/course/assignment/assignment.html', assignment=assign,
-                           form=form, courses=courses, stats=stats,
+                           form=form, courses=courses,
                            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/stats")
@@ -438,7 +462,12 @@ def templates(cid, aid):
         if files:
             templates = {}
             for template in files:
-                templates[template.filename] = str(template.read(), 'latin1')
+                try:
+                    templates[template.filename] = str(template.read(), 'utf-8')
+                except UnicodeDecodeError:
+                    flash(
+                        '{} is not a UTF-8 text file and was '
+                        'not uploaded'.format(template.filename), 'warning')
             assignment.files = templates
         cache.delete_memoized(Assignment.name_to_assign_info)
         db.session.commit()
@@ -448,6 +477,30 @@ def templates(cid, aid):
     return render_template('staff/course/assignment/assignment.template.html',
                            assignment=assignment, form=form, courses=courses,
                            current_course=current_course)
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/publish",
+                methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def publish_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'publish_scores'):
+        flash('Insufficient permissions', 'error')
+        abort(401)
+
+    form = forms.PublishScores(obj=assign)
+    if form.validate_on_submit():
+        assign.published_scores = form.published_scores.data
+        db.session.commit()
+        flash(
+            "Saved published scores for {}".format(assign.display_name),
+            "success",
+        )
+        return redirect(url_for('.publish_scores', cid=cid, aid=aid))
+    return render_template('staff/course/assignment/assignment.publish.html',
+                            assignment=assign, form=form, courses=courses,
+                            current_course=current_course)
+
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
 @is_staff(course_arg='cid')
@@ -822,9 +875,9 @@ def student_view(cid, email):
         flash("This email is not enrolled", 'warning')
 
     assignments = {
-        'active': [a.user_status(student) for a in assignments
+        'active': [a.user_status(student, staff_view=True) for a in assignments
                    if a.active],
-        'inactive': [a.user_status(student) for a in assignments
+        'inactive': [a.user_status(student, staff_view=True) for a in assignments
                      if not a.active]
     }
 
@@ -871,7 +924,7 @@ def student_assignment_detail(cid, email, aid):
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    assignment_stats = assign.user_status(student)
+    assignment_stats = assign.user_status(student, staff_view=True)
 
     user_ids = assign.active_user_ids(student.id)
 
@@ -906,7 +959,6 @@ def student_assignment_detail(cid, email, aid):
                            add_member_form=forms.StaffAddGroupFrom(),
                            paginate=paginate,
                            csrf_form=forms.CSRFForm(),
-                           upload_form=forms.UploadSubmissionForm(),
                            stats=stats,
                            assign_status=assignment_stats)
 
@@ -1008,57 +1060,45 @@ def staff_flag_backup(cid, email, aid):
 
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/submit",
-             methods=["POST"])
+             methods=["GET", "POST"])
 @is_staff(course_arg='cid')
 def staff_submit_backup(cid, email, aid):
+    courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         return abort(404)
-    result_page = url_for('.student_assignment_detail', cid=cid,
-                          email=email, aid=aid)
     student = User.lookup(email)
     if not student:
         abort(404)
     user_ids = assign.active_user_ids(student.id)
     # TODO: DRY - Unify with student upload code - should just be a function
-    form = forms.UploadSubmissionForm()
+    form = forms.StaffUploadSubmissionForm()
     if form.validate_on_submit():
-        files = request.files.getlist("upload_files")
-        if files:
-            templates = assign.files
-            messages = {'file_contents': {}}
-            for upload in files:
-                data = upload.read()
-                if len(data) > 2097152:
-                    # File is too large (over 2 MB)
-                    flash(("{} is over the maximum file size limit of 2MB"
-                           .format(upload.filename)),
-                          'danger')
-                    return redirect(result_page)
-                messages['file_contents'][upload.filename] = str(data, 'latin1')
-            if templates:
-                missing = []
-                for template in templates:
-                    if template not in messages['file_contents']:
-                        missing.append(template)
-                if missing:
-                    flash(("Missing files: {}. The following files are required: {}"
-                           .format(', '.join(missing), ', '.join([t for t in templates]))
-                           ), 'danger')
-                    return redirect(result_page)
-            # use student, not current_user
-            backup = ok_api.make_backup(student, assign.id, messages, True)
-            if form.flag_submission.data:
-                assign.flag(backup.id, user_ids)
+        backup = Backup(
+            submitter=student,
+            creator=current_user,
+            assignment=assign,
+            submit=True,
+            custom_submission_time=form.get_submission_time(assign),
+        )
+        if form.upload_files.upload_backup_files(backup):
+            db.session.add(backup)
+            db.session.commit()
             if assign.autograding_key:
                 try:
                     autograder.submit_continous(backup)
                 except ValueError as e:
                     flash('Did not send to autograder: {}'.format(e), 'warning')
-
-            flash("Uploaded submission (ID: {})".format(backup.hashid), 'success')
-            return redirect(result_page)
-
+            flash('Uploaded submission'.format(backup.hashid), 'success')
+            return redirect(url_for('.grading', bid=backup.id))
+    return render_template(
+        'staff/student/submit.html',
+        current_course=current_course,
+        courses=courses,
+        student=student,
+        assignment=assign,
+        upload_form=form,
+    )
 
 ########
 # Jobs #
