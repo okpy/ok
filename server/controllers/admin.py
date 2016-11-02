@@ -104,7 +104,7 @@ def grading_tasks(username=None):
                            queue=queue, remaining=remaining,
                            percent_left=percent_left)
 
-def grading_view(backup, form=None):
+def grading_view(backup, form=None, is_composition=False):
     """ General purpose grading view. Used by routes."""
     courses, current_course = get_courses()
     assign = backup.assignment
@@ -134,7 +134,7 @@ def grading_view(backup, form=None):
     return render_template(
         'staff/grading/code.html', courses=courses, assignment=assign,
         backup=backup, group=group, files=files,
-        diff_type=diff_type, task=task, form=form
+        diff_type=diff_type, task=task, form=form, is_composition=is_composition
     )
 
 @admin.route('/grading/<hashid:bid>')
@@ -168,7 +168,7 @@ def composition(bid):
         form.kind.data = "composition"
         form.message.data = existing.message
         form.score.data = existing.score
-    return grading_view(backup, form=form)
+    return grading_view(backup, form=form, is_composition=True)
 
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
 @is_staff()
