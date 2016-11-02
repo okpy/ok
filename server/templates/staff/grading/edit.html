@@ -1,7 +1,7 @@
 {% extends "staff/base.html" %}
 {% import 'staff/_formhelpers.html' as forms with context %}
 
-{% block title %} Ok - Edit {{ "Submission" if backup.is_submit else "Backup" }} for {{ student.identifier }}{% endblock %}
+{% block title %} Edit {{ backup.assignment.display_name }} {{ "Submission" if backup.is_submit else "Backup" }} - {{ backup.assignment.course.display_name_with_semester }}{% endblock %}
 
 {% block main %}
   <section class="content-header">
