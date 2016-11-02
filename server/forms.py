@@ -344,7 +344,7 @@ class SubmissionTimeForm(BaseForm):
             self.submission_time.data = 'early'
         else:
             self.submission_time.data = 'other'
-            self.custom_submission_time.data = self.utils.local_time_obj(
+            self.custom_submission_time.data = utils.local_time_obj(
                 time, assignment.course)
 
 class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
