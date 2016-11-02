@@ -260,13 +260,10 @@ class UserSchema(APISchema):
         'email': fields.String,
     }
 
-class CourseEnrollmentSchema(APISchema):
-    get_fields = { role : fields.List(fields.Nested(UserSchema.simple_fields))
-                    for role in VALID_ROLES }
-
 class AssignmentSchema(APISchema):
     get_fields = {
         'due_date': fields.DateTime(dt_format='iso8601'),
+        'lock_date': fields.DateTime(dt_format='iso8601'),
         'display_name': fields.String,
         'name': fields.String,
         'max_group_size': fields.Integer,
@@ -275,10 +272,28 @@ class AssignmentSchema(APISchema):
         'files': fields.Raw
     }
 
+    list_fields = {
+        'due_date': fields.DateTime(dt_format='iso8601'),
+        'lock_date': fields.DateTime(dt_format='iso8601'),
+        'display_name': fields.String,
+        'name': fields.String,
+        'max_group_size': fields.Integer,
+        'url': fields.String,
+        'active': fields.String
+    }
+
     simple_fields = {
         'course': fields.Nested(CourseSchema.get_fields),
         'name': fields.String,
     }
+
+class CourseAssignmentSchema(APISchema):
+    get_fields = {'assignments':
+                  fields.List(fields.Nested(AssignmentSchema.list_fields))}
+
+class CourseEnrollmentSchema(APISchema):
+    get_fields = {role: fields.List(fields.Nested(UserSchema.simple_fields))
+                  for role in VALID_ROLES}
 
 
 class GroupSchema(APISchema):
@@ -712,7 +727,6 @@ class CourseEnrollment(Resource):
     model = models.Course
     schema = CourseEnrollmentSchema()
 
-
     @marshal_with(schema.get_fields)
     def get(self, offering, user):
         course = self.model.by_name(offering)
@@ -726,6 +740,20 @@ class CourseEnrollment(Resource):
         for p in course.participations:
             data[p.role].append(p.user)
         return data
+
+class CourseAssignment(PublicResource):
+    """ All assignments for a course.
+    Not authenticated. Permissions: Global
+    """
+    model = models.Course
+    schema = CourseAssignmentSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering):
+        course = self.model.by_name(offering)
+        if course is None:
+            restful.abort(404)
+        return {'assignments': course.assignments}
 
 class Score(Resource):
     """ Score creation.
@@ -894,9 +922,13 @@ api.add_resource(Group, ASSIGNMENT_BASE + '/group/<string:email>')
 api.add_resource(ExportBackup, ASSIGNMENT_BASE + '/export/<string:email>')
 api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 
+# Course Info
+COURSE_BASE = '/v3/course/<offering:offering>'
+api.add_resource(CourseEnrollment, COURSE_BASE + '/enrollment')
+api.add_resource(CourseAssignment, COURSE_BASE + '/assignments')
+
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
-api.add_resource(CourseEnrollment, '/v3/course/<offering:offering>/enrollment')
 api.add_resource(Score, '/v3/score/')
 api.add_resource(User, '/v3/user/', '/v3/user/<string:email>')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')
