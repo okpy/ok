@@ -152,8 +152,44 @@ access_token | None | (Required) Access Token of staff member
 See example response.
 <!-- End Endpoint -->
 
-
 # Assignments
+
+## List Assignments
+>><h4> Example Response </h4>
+> ```
+curl "https://okpy.org/api/v3/course/cal/cs61a/sp16/assignments"
+{
+    "code": 200,
+    "data": {
+        "assignments": [
+        {
+            "active": "True",
+            "display_name": "Scheme",
+            "due_date": "2016-11-07T06:59:59",
+            "lock_date": "2016-11-07T07:14:59",
+            "max_group_size": 2,
+            "name": "cal/cs61a/sp16/scheme",
+            "url": null
+        },
+        ...
+    },
+    "message": "success"
+}
+```
+
+Get assignments for course
+
+#### Permissions
+No authentication required
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/course/<offering:course>/assignments`
+
+#### Query Parameters
+None
+
+#### Response
+See example output.
 
 ## Assignment Info
 >><h4> Example Response </h4>
