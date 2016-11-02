@@ -391,7 +391,7 @@ if driver:
         def test_admin_student_overview(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/course/1/{}".format(self.user1.email))
-            self.assertIn('{} -'.format(self.user1.email), self.driver.title)
+            self.assertIn('{} -'.format(self.user1.identifier), self.driver.title)
             self.assertTrue("Enrolled At" in self.driver.page_source)
 
         def test_admin_student_assign_overview(self):
