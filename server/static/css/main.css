@@ -189,6 +189,10 @@ td.slim-cell {
   animation: none !important;
 }
 
+.hide-overflow {
+  overflow: hidden;
+}
+
 img.desaturate{
   -webkit-filter: grayscale(100%) contrast(50%);
   filter: gray;
@@ -202,5 +206,4 @@ img.desaturate{
   -webkit-user-drag: none;
   -webkit-user-select: none;
   -ms-user-select: none;
-
 }

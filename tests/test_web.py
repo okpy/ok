@@ -388,6 +388,23 @@ if driver:
             self.assertTrue(self.course.offering in self.driver.page_source)
             self.assertTrue('Export Roster' in self.driver.page_source)
 
+        def test_admin_student_overview(self):
+            self._login(role="admin")
+            self.page_load(self.get_server_url() + "/admin/course/1/{}".format(self.user1.email))
+            self.assertIn('Ok -', self.driver.title)
+            self.assertTrue("Enrolled At" in self.driver.page_source)
+
+        def test_admin_student_assign_overview(self):
+            self._login(role="admin")
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}".format(self.user1.email, self.assignment.id))
+            self.assertIn('Ok -', self.driver.title)
+            self.assertTrue("Submission Stats" in self.driver.page_source)
+
+        def test_admin_student_assign_timeline(self):
+            self._login(role="admin")
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/timeline".format(self.user1.email, self.assignment.id))
+            self.assertIn('Timeline', self.driver.title)
+
         def test_queue_create(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/")

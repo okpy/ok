@@ -25,6 +25,20 @@
     margin-right: 20px;
 }
 
+.timeline-later {
+    margin-left: 60px;
+    margin-right: 15px;
+    margin-top: 5px;
+    height: 35px;
+}
+.timeline>.time-label>a>span {
+    font-weight: 600;
+    padding: 5px;
+    display: inline-block;
+    background-color: #fff;
+    border-radius: 4px;
+}
+
 .nav-stacked>li>form>button {
     border-radius: 0;
     border-top: 0;

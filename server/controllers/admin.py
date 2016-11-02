@@ -15,7 +15,8 @@ from server import autograder
 
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, Group, Client, Job, db)
+                           GradingTask, Backup, Score, Group, Client, Job,
+                           Message, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
@@ -337,9 +338,6 @@ def create_course():
 @is_staff(course_arg='cid')
 def course(cid):
     return redirect(url_for(".course_assignments", cid=cid))
-    # courses, current_course = get_courses(cid)
-    # return render_template('staff/course/index.html',
-    #                       courses=courses, current_course=current_course)
 
 @admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
@@ -888,6 +886,29 @@ def student_view(cid, email):
                            student=student, enrollment=enrollment,
                            assignments=assignments)
 
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/timeline")
+@is_staff(course_arg='cid')
+def assignment_timeline(cid, email, aid):
+    courses, current_course = get_courses(cid)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    stats = assign.user_timeline(student.id)
+
+    return render_template('staff/student/assignment.timeline.html',
+                           courses=courses, current_course=current_course,
+                           student=student, assignment=assign,
+                           submitters=stats['submitters'],
+                           timeline=stats['timeline'])
+
+
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>")
 @is_staff(course_arg='cid')
 def student_assignment_detail(cid, email, aid):
@@ -940,6 +961,7 @@ def student_assignment_detail(cid, email, aid):
                            csrf_form=forms.CSRFForm(),
                            stats=stats,
                            assign_status=assignment_stats)
+
 
 ########################
 # Student view actions #
