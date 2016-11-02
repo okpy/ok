@@ -276,7 +276,7 @@ class CSRFForm(BaseForm):
 
 
 class GradeForm(BaseForm):
-    score = DecimalField('Score', validators=[validators.required()])
+    score = DecimalField('Score', validators=[validators.InputRequired()])
     message = TextAreaField('Message', validators=[validators.required()])
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
                        validators=[validators.required()])
