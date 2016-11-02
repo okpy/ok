@@ -32,7 +32,7 @@
 
     <div class="row">
         <div class="col-xs-12">
-            <div class="box {% if is_composition != True %}collapsed-box{% endif %}">
+            <div class="box {% if not is_composition %}collapsed-box{% endif %}">
                 <div class="box-header with-border">
                     <h3 class="box-title">Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
 
