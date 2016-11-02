@@ -341,7 +341,7 @@ class Assignment(Model):
         return is_staff
 
     @staticmethod
-    @cache.memoize(30)
+    @cache.memoize(180)
     def assignment_stats(assign_id, detailed=True):
         assignment = Assignment.query.get(assign_id)
         base_query = Backup.query.filter_by(assignment=assignment)
