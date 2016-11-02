@@ -27,13 +27,12 @@
 
         <div class="subcontent list row">
 
-          <div class="col-md-4 col-sm-12 table-responsive group-table">
+          <div class="col-lg-6 col-md-12 table-responsive group-table">
             <h2> Group </h2>
 
             {% include 'student/assignment/group_table.html' %}
-
           </div>
-          <div class="col-md-4 col-sm-6">
+          <div class="col-lg-3 col-md-6 col-xs-12">
             <h2> Submission </h2>
             {% if final_submission %}
               <div class="cell col-xs-12">
@@ -81,9 +80,8 @@
                 </div>
               </div>
             {% endif %}
-        </div>
-
-          <div class="col-md-4 col-sm-6">
+          </div>
+          <div class="col-lg-3 col-md-6 col-xs-12">
             <h2> Scores </h2>
             <div class="cell col-xs-12 hide-oveflow">
               {% if scores %}
@@ -105,11 +103,6 @@
                   <span> No scores are currently available. </span>
                 </div>
               {% endif %}
-                <div class="cell-status">
-                  <div class="pull-left">
-                  &nbsp;
-                  </div>
-                </div>
 
             </div>
           </div>
