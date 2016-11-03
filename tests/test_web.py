@@ -328,11 +328,11 @@ if driver:
         def test_assignment_info(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/course/1/assignments/1")
-            self.assertIn('Ok -', self.driver.title)
+            self.assertIn('{} -'.format(self.assignment.display_name), self.driver.title)
             self.assertTrue("Hog" in self.driver.page_source)
 
             self.page_load(self.get_server_url() + "/admin/course/1/assignments/1/stats")
-            self.assertIn('Ok -', self.driver.title)
+            self.assertIn('Hog Stats -', self.driver.title)
             self.assertTrue("Hog Stats" in self.driver.page_source)
 
         def test_assignment_send_to_ag(self):
@@ -384,20 +384,20 @@ if driver:
         def test_admin_enrollment(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/course/1/enrollment")
-            self.assertIn('Ok -', self.driver.title)
+            self.assertIn('Enrollment -', self.driver.title)
             self.assertTrue(self.course.offering in self.driver.page_source)
             self.assertTrue('Export Roster' in self.driver.page_source)
 
         def test_admin_student_overview(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/course/1/{}".format(self.user1.email))
-            self.assertIn('Ok -', self.driver.title)
+            self.assertIn('{} -'.format(self.user1.identifier), self.driver.title)
             self.assertTrue("Enrolled At" in self.driver.page_source)
 
         def test_admin_student_assign_overview(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/course/1/{}/{}".format(self.user1.email, self.assignment.id))
-            self.assertIn('Ok -', self.driver.title)
+            self.assertIn('{} -'.format(self.assignment.display_name), self.driver.title)
             self.assertTrue("Submission Stats" in self.driver.page_source)
 
         def test_admin_student_assign_timeline(self):

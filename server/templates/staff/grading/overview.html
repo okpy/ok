@@ -2,7 +2,7 @@
 {% import 'staff/_formhelpers.html' as forms %}
 {% import 'staff/_helpers.html' as helpers %}
 
-{% block title %} Grading Queue {% endblock %}
+{% block title %} Grading Queue - {{ current_course.display_name_with_semester }}{% endblock %}
 
 {% block main %}
   <section class="content-header">
