@@ -32,18 +32,18 @@
 
     <div class="row">
         <div class="col-xs-12">
-            <div class="box {% if not is_composition %}collapsed-box{% endif %}">
+            <div class="box {% if is_composition %}collapsed-box{% endif %}">
                 <div class="box-header with-border">
                     <h3 class="box-title">Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
 
                     <div class="box-tools pull-right">
-                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa {% if is_composition %}fa-minus{% else %}fa-plus{% endif %}"></i>
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa {% if not is_composition %}fa-minus{% else %}fa-plus{% endif %}"></i>
                         </button>
                     </div>
                     <!-- /.box-tools -->
                 </div>
                 <!-- /.box-header -->
-                <div class="box-body" class="spoiler" style="display: {% if is_composition %}block{% else %}none{% endif %};">
+                <div class="box-body" class="spoiler" style="display: {% if not is_composition %}block{% else %}none{% endif %};">
                   <ul class="list-group list-group-unbordered">
                     <li class="list-group-item">
                       <b>Submitter: </b>
