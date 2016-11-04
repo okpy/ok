@@ -949,18 +949,17 @@ def student_commit_overview(cid, email, aid, commit_id):
                                Backup.created.desc())).all()
     backups.reverse()
 
-    backup_range = analyze.get_backup_range(backups, commit_id)
+    diff_dict = analyze.get_diffs(backups, commit_id)
 
-    if not backup_range:
+    if not diff_dict:
         flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
         return abort(404) # todo maybe return something else
 
-    backups = backup_range["backups"]
-    commit_id = backup_range["commit_id"] # relevant commit_id might be different
-    prev_commit_id = backup_range["prev_commit_id"]
-    next_commit_id = backup_range["next_commit_id"]
-
-    files_list, stats_list = analyze.get_diffs_and_stats(backups)
+    stats_list = diff_dict["stats"]
+    files_list = diff_dict["files"]
+    commit_id = diff_dict["commit_id"] # relevant commit_id might be different
+    prev_commit_id = diff_dict["prev_commit_id"]
+    next_commit_id = diff_dict["next_commit_id"]
 
     # calculate starting diff for template
 
