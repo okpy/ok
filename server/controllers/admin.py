@@ -934,8 +934,10 @@ def student_commit_overview(cid, email, aid, commit_id):
         if not filtered_student.is_enrolled(cid):
             flash("Filter e-mail is not entrolled", 'warning')
         user_ids = {filtered_student.id}
+        timeline_stats = assign.user_timeline(filtered_student.id, commit_id)
     else:
         user_ids = assign.active_user_ids(student.id)
+        timeline_stats = assign.user_timeline(student.id, commit_id)
 
     assignment_stats = assign.user_status(student)
 
@@ -985,7 +987,9 @@ def student_commit_overview(cid, email, aid, commit_id):
                            start_index=start_index,
                            prev_commit_id = prev_commit_id,
                            next_commit_id = next_commit_id,
-                           filter_email = filter_email)
+                           filter_email = filter_email,
+                           submitters=timeline_stats['submitters'],
+                           timeline=timeline_stats['timeline'])
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/graph")
 @is_staff(course_arg='cid')

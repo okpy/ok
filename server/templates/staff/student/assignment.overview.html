@@ -92,6 +92,9 @@
           <li class="previous" onclick="scroll_left()">
             <a href="#">Previous</a>
           </li>
+          <li class="timeline_toggle" onclick="toggle_timeline()">
+            <a href="#">Toggle Timeline</a>
+          </li>
           <li class="next" onclick="scroll_right()">
             <a href="#">Next</a>
           </li>
@@ -100,6 +103,70 @@
         {% for stats in stats_list %}
             {{stats_box(stats)}}
         {% endfor %}
+
+        <div class="row">
+          {% for submitter in submitters | sort %}
+          <div class="col-md-5">
+            <!-- Default box -->
+                  <ul class="timeline">
+                      <!-- timeline time label -->
+                      <li class="time-label">
+                          <a href="{{ url_for('.student_view', cid=current_course.id, email=submitter) }}">
+                              <span class="bg-red">
+                                  {{ submitter }} ( {{ submitters[submitter] }} backups)
+                              </span>
+                          </a>
+                      </li>
+                      <!-- /.timeline-label -->
+                      {% for event in timeline %}
+                      <!-- timeline item -->
+                      <li class="{% if event['backup'].submitter.email == submitter %}invisible{% endif %}" >
+                          {% if event['event'] == "Later" %}
+                            <i class="fa fa-ellipsis-h"></i>
+                          {% elif event['event'] == "Started" %}
+                            <i class="fa fa-hourglass-start bg-blue"></i>
+                          {% elif event['event'] == "Solved" %}
+                            <i class="fa fa-check-circle bg-green"></i>
+                          {% elif event['event'] == "Switched" %}
+                            <i class="fa fa-random bg-green"></i>
+                          {% elif event['event'] == "Unlock" %}
+                            <i class="fa fa-unlock bg-green"></i>
+                          {% else %}
+                            <i class="fa fa-info bg-blue"></i>
+                          {% endif %}
+                          <!-- timeline icon -->
+                          {% if event['event'] == "Later" %}
+                          <div class="timeline-later">
+                              <p>{{ event['title'] }}</p>
+                          </div>
+                          {% else %}
+                          <div class="timeline-item ">
+                              <span class="time"><i class="fa fa-clock-o"></i> {{utils.local_time(event['backup'].created, current_course) }}</span>
+                              <h3 class="timeline-header"><a href="#"> {{ event['title'] }} </a> </h3>
+
+                              {% if event['body'] %}
+                              <div class="timeline-body">
+                                 <p>{{ event['body'] }}</p>
+                              </div>
+                              {% endif %}
+                              <div class="timeline-footer">
+                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.grading', bid=event['backup'].id) }}"> Code </a>
+                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.student_commit_overview', cid=current_course.id, email=event['backup'].submitter.email, aid=assignment.id, commit_id=event['backup'].hashid, student_email=event['backup'].submitter.email)}}"> Solo Diff </a>
+                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.student_commit_overview', cid=current_course.id, email=event['backup'].submitter.email, aid=assignment.id, commit_id=event['backup'].hashid)}}"> Combined Diff </a>
+                                  <span class="pull-right"> Attempt {{ event['attempt'] }} </span>
+                              </div>
+                          </div>
+                          {% endif %}
+                      </li>
+                      <!-- END timeline item -->
+                      {% endfor %}
+                      <li>
+                          <i class="fa fa-clock-o bg-gray"></i>
+                      </li>
+                  </ul>
+          </div>
+          {% endfor %}
+        </div>
         
         <div class="box">
             <div class="box-body">
@@ -148,6 +215,7 @@
 {% block page_js %}
 <script type="text/javascript">
     // show only diff 1
+    $('.timeline').hide()
     $('.diff-delta').hide()
     $('.diff-delta-box').hide()
     var backup_number = {{start_index}};
@@ -209,6 +277,10 @@
             url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = next_commit_id, student_email = filter_email)}}"
             window.location.assign(url);
         }
+    }
+
+    function toggle_timeline() {
+        $('.timeline').toggle()
     }
 
 </script>

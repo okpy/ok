@@ -367,7 +367,7 @@ class Assignment(Model):
         """ Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
-    def user_timeline(self, user_id):
+    def user_timeline(self, user_id, current_backup_id=None):
         """ Timeline of user submissions. """
         user_ids = self.active_user_ids(user_id)
         analytics = (db.session.query(Backup, Message)
@@ -382,6 +382,7 @@ class Assignment(Model):
         submitter_counts = defaultdict(lambda: 1)
         history, timeline = [], []
         last_q = (None, False, 0)  # current_question, is_solved, count
+        current_backup_event = None
 
         for backup, message in analytics:
             contents = message.contents
@@ -393,6 +394,14 @@ class Assignment(Model):
                 continue
 
             submitter_counts[backup.submitter.email] += 1
+
+            if current_backup_id and current_backup_id == backup.hashid:
+                current_backup_event = {"event": "current",
+                                        "attempt": total_attempt_count,
+                                        "title": "Current Backup Queried".format(curr_q),
+                                        "backup": backup}
+                timeline.append(current_backup_event)
+                continue
 
             curr_q_stats = message.contents['history']['questions'].get(curr_q)
             total_attempt_count = message.contents['history'].get('all_attempts')
