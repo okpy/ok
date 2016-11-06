@@ -144,11 +144,11 @@ class TestGrading(OkTestCase):
         self.assertEquals(len(tasks), 2)
         self.assertEquals([t.grader.id for t in tasks], [self.staff1.id, self.staff2.id])
 
-        # When only_unassigned is true, it should not add any new backups
+        # All backups have been assigned, so should not add any new backups
         tasks = GradingTask.create_staff_tasks(backups, self.active_staff,
                                                self.assignment.id,
                                                self.assignment.course.id,
-                                               "Composition", True)
+                                               "Composition")
         self.assertEquals(len(tasks), 0)
 
     def test_score_export(self):

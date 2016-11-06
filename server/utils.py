@@ -179,6 +179,8 @@ def send_email(to, subject, body, template='email/notification.html',
         logger.error("Could not send email", exc_info=True)
         return
 
+def ceildiv(a, b):
+    return -(-a // b)
 
 def chunks(l, n):
     """ Divides L into N many chunks, each containing approximately the
@@ -198,7 +200,7 @@ def chunks(l, n):
     length = len(l)
     prev_index = 0
     for i in range(1, n + 1):
-        index = math.ceil((i / n) * length)
+        index = ceildiv(i * length, n)
         yield l[prev_index:index]
         prev_index = index
 

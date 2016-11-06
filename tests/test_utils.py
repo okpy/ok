@@ -31,6 +31,7 @@ class TestUtils(OkTestCase):
                           [4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3])
         self.assertEquals([len(x) for x in utils.chunks(range(253), 13)],
                           [20, 19, 20, 19, 20, 19, 20, 19, 20, 19, 20, 19, 19])
+        self.assertEquals([len(x) for x in utils.chunks(range(960), 48)], [20] * 48)
 
     def test_time(self):
         self.setup_course()

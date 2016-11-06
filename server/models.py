@@ -1458,11 +1458,9 @@ class GradingTask(Model):
 
     @classmethod
     @transaction
-    def create_staff_tasks(cls, backups, staff, assignment_id, course_id, kind,
-                           only_unassigned=False):
-        if only_unassigned:
-            # Filter out backups that have a GradingTasks
-            backups = [b for b in backups if not cls.query.filter_by(backup_id=b).count()]
+    def create_staff_tasks(cls, backups, staff, assignment_id, course_id, kind):
+        # Filter out backups that have a GradingTasks
+        backups = [b for b in backups if not cls.query.filter_by(backup_id=b).count()]
 
         paritions = chunks(list(backups), len(staff))
         tasks = []
