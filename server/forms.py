@@ -294,8 +294,6 @@ class CreateTaskForm(BaseForm):
                        validators=[validators.required()], default="composition")
     staff = MultiCheckboxField('Assigned Staff', choices=[],
                                validators=[validators.required()])
-    only_unassigned = BooleanField('Ignore submissions that already have a grader',
-                                   default=False)
 
 class UploadSubmissionForm(BaseForm):
     upload_files = BackupUploadField('Submission Files', [FileRequired()])
