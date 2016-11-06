@@ -514,3 +514,18 @@ class TestAuth(OkTestCase):
         self.login(self.user1.email)
         response = self.client.get(student_endpoint)
         self.assert_403(response)
+
+    def test_course_assignments(self):
+        self._test_backup(True)
+        student = User.lookup(self.user1.email)
+        courses = student.enrollments()
+        course = courses[0]
+        student_endpoint = '/api/v3/course/cal/cs61a/sp16/assignments'
+        anon_response = self.client.get(student_endpoint)
+        self.assert_200(anon_response)
+        active_assignments = len([a for a in self.course.assignments if a.active])
+        self.assertEquals(active_assignments, len(anon_response.json['data']['assignments']))
+        self.login(self.staff1.email)
+        auth_response = self.client.get(student_endpoint)
+        self.assert_200(auth_response)
+        self.assertEquals(anon_response.json['data'], auth_response.json['data'])
