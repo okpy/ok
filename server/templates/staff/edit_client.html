@@ -1,0 +1,32 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} OAuth Clients {% endblock %}
+
+{% block main %}
+
+
+<div class="row">
+        <div class="col-md-12">
+            <div class="box">
+              <div class="box-header">
+                <h3 class="box-title">Update OAuth Client</h3>
+              </div>
+              <div class="box-body">
+              {% call forms.render_form(form, action_url="", action_text='Update OAuth Client', class_='form') %}
+                {{ forms.render_field(form.name, label_visible=true, placeholder='Ok Client', type='text') }}
+                {{ forms.render_field(form.description, label_visible=true, placeholder='A client for OK', type='text') }}
+                {{ forms.render_field(form.client_id, label_visible=true, placeholder='ok-client', type='text') }}
+                {{ forms.render_field(form.client_secret, label_visible=true, readonly='readonly', type='text') }}
+                {{ forms.render_checkbox_field(form.is_confidential, label_visible=true) }}
+                {{ forms.render_field(form.redirect_uris, placeholder='http://localhost:8000/authorized,https://cs61a.org/oauth/authorized', label_visible=true) }}
+                {{ forms.render_field(form.default_scopes, placeholder='email,all', label_visible=true) }}
+                  
+              {% endcall %}
+           </div>
+       </div>
+     </div>
+</div>
+
+
+{% endblock %}
