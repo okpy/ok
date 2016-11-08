@@ -53,6 +53,16 @@
               </a>
           </th>
         </tr>
+        {% if True %}
+        <tr>
+          <th class="file-blob" colspan=3>
+              <a data-no-instant href="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename) }}">
+                Download Raw File
+              </a>
+              <h6>{{ filename }} is too large to render</h6>
+          </th>
+        </tr>
+        {% endif %}
       </thead>
       <tbody>
         {% for line in lines %}
