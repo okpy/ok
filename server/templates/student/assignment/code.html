@@ -59,8 +59,8 @@
 
         <div class="subcontent list" role="main">
           <div class="wrap">
-            {% for filename, lines in files | dictsort %}
-              {{ diff.source_file(backup, filename, lines) }}
+            {% for filename, file in files | dictsort %}
+              {{ diff.source_file(backup, filename, file) }}
             {% endfor %}
           </div>
         </div>

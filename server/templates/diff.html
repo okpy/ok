@@ -38,7 +38,7 @@
   </div>
 {% endmacro %}
 
-{% macro source_file(backup, filename, lines) %}
+{% macro source_file(backup, filename, file) %}
   <div class="source-file table-responsive"
     data-backup-id={{ utils.encode_id(backup.id) }}
     data-filename={{ filename }}>
@@ -57,19 +57,19 @@
               </a>
           </th>
         </tr>
-        {% if True %}
+        {% if file.too_big %}
         <tr>
           <th class="file-blob" colspan=3>
               <a data-no-instant href="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename, raw=1) }}">
                 View Raw File
               </a>
-              <h6>This file is too large to render</h6>
+              <h6>This file is too large to display</h6>
           </th>
         </tr>
         {% endif %}
       </thead>
       <tbody>
-        {% for line in lines %}
+        {% for line in file.lines %}
           <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
             {% if line.is_diff %}
               {{ line_number(line.line_before) }}

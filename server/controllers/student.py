@@ -200,8 +200,8 @@ def code(name, submit, bid):
         comments[(comment.filename, comment.line)].append(comment)
     # highlight files and add comments
     files = highlight.diff_files(assign.files, backup.files(), diff_type)
-    for filename, lines in files.items():
-        for line in lines:
+    for filename, source_file in files.items():
+        for line in source_file.lines:
             line.comments = comments[(filename, line.line_after)]
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup,
