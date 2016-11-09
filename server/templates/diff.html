@@ -51,6 +51,10 @@
               class="no-dash dl-button source-file-download">
                   <i class="fa fa-download"></i> Download
               </a>
+              <a data-no-instant href="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename, raw=1) }}"
+              class="no-dash dl-button source-file-download">
+                  <i class="fa fa-eye"></i> Raw
+              </a>
           </th>
         </tr>
         {% if True %}
