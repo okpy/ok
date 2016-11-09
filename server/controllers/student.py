@@ -209,7 +209,7 @@ def code(name, submit, bid):
 
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/'
-               '<hashid:bid>/<path:file>')
+               '<hashid:bid>/download/<path:file>')
 @login_required
 def download(name, submit, bid, file):
     backup = Backup.query.get(bid)
