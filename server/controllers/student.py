@@ -208,7 +208,8 @@ def code(name, submit, bid):
         files=files, diff_type=diff_type)
 
 
-@student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/download/<path:file>')
+@student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/'
+               '<hashid:bid>/<path:file>')
 @login_required
 def download(name, submit, bid, file):
     backup = Backup.query.get(bid)
@@ -222,11 +223,18 @@ def download(name, submit, bid, file):
     except KeyError:
         abort(404)
     response = make_response(contents)
-    response.headers["Content-Disposition"] = "attachment; filename={0!s}".format(file)
+
+    content_disposition = "inline" if 'raw' in request.args else "attachment"
+    response.headers["Content-Disposition"] = ("{0}; filename={1!s}"
+                                               .format(content_disposition, file))
+    response.headers["Content-Security-Policy"] = "default-src 'none';"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Content-Type"] = "text/plain; charset=UTF-8"
+
     return response
 
-
-@student.route('/<assignment_name:name>/submissions/<hashid:bid>/flag/', methods=['POST'])
+@student.route('/<assignment_name:name>/submissions/<hashid:bid>/flag/',
+               methods=['POST'])
 @login_required
 def flag(name, bid):
     assign = get_assignment(name)
