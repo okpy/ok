@@ -121,8 +121,8 @@ def grading_view(backup, form=None, is_composition=False):
 
     # highlight files and add comments
     files = highlight.diff_files(assign.files, backup.files(), diff_type)
-    for filename, lines in files.items():
-        for line in lines:
+    for filename, source_file in files.items():
+        for line in source_file.lines:
             line.comments = comments[(filename, line.line_after)]
 
     group = [User.query.get(o) for o in backup.owners()]
