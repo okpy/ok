@@ -16,7 +16,9 @@ VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 SCORE_KINDS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
-               'regrade', 'revision', 'private', 'autograder']
+               'regrade', 'revision',
+               'checkpoint 1', 'checkpoint 2',
+               'private', 'autograder']
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
 
