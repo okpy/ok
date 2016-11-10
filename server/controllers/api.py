@@ -528,7 +528,7 @@ class Backup(Resource):
             'email': current_user.email,
             'key': encode_id(backup.id),
             'url': url_for('student.code', name=assignment.name, submit=backup.submit,
-                           bid=encode_id(backup.id), _external=True),
+                           bid=backup.id, _external=True),
             'course': assignment.course,
             'assignment': assignment.name
         }
@@ -578,14 +578,14 @@ class Revision(Resource):
                     score.archive()
         models.db.session.commit()
         fs_url = url_for('student.code', name=assignment.name, submit=fs.submit,
-                         bid=encode_id(fs.id), _external=True)
+                         bid=fs.id, _external=True)
 
         assignment_creator = models.User.get_by_id(assignment.creator_id)
 
         make_score(assignment_creator, backup, 2.0, "Revision for {}".format(fs_url),
                    "revision")
         backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
-                             bid=encode_id(backup.id), _external=True)
+                             bid=backup.id, _external=True)
 
         return {
             'email': current_user.email,
