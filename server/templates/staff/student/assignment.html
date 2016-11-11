@@ -121,7 +121,8 @@
                 {% if assign_status.group %}
                     {% for member in assign_status.group.members %}
                     {% if member.user.email != student.email %}
-                       <li><a href="#">
+                       <li><a href="{{ url_for('.student_assignment_detail',
+                          cid=current_course.id, email=member.user.email, aid=assignment.id) }}">
                              {{ member.user.identifier }}
                               <span class="pull-right">
                               {% if member.status == 'active' %}
