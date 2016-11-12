@@ -46,5 +46,5 @@ FORBIDDEN_ROUTE_NAMES = [
 ]
 FORBIDDEN_ASSIGNMENT_NAMES = []
 
-# Maximum file size to show in browser, in bytes
-DIFF_SIZE_LIMIT = 256 * 1024  # 256KB
+# Maximum file size to show in browser, in characters
+DIFF_SIZE_LIMIT = 64 * 1024  # 64KB
