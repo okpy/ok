@@ -20,6 +20,7 @@ from server.models import (User, Course, Assignment, Enrollment, Version,
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
+import server.canvas.api as canvas_api
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
@@ -1173,43 +1174,31 @@ def start_test_job(cid):
 @is_staff(course_arg='cid')
 def canvas_course(cid):
     courses, current_course = get_courses(cid)
-    canvas_course = CanvasCourse.query.filter_by(course_id=cid).one_or_none()
+    canvas_course = CanvasCourse.by_course_id(cid)
     if not canvas_course:
-        return redirect(url_for('.new_canvas_course', cid=cid))
+        return redirect(url_for('.edit_canvas_course', cid=cid))
+    external_names = {
+        a['id']: a['name'] for a in canvas_api.get_assignments(canvas_course)
+    }
     return render_template(
         'staff/canvas/index.html',
         courses=courses,
         current_course=current_course,
-    )
-
-@admin.route('/course/<int:cid>/canvas/new/', methods=['GET', 'POST'])
-@is_staff(course_arg='cid')
-def new_canvas_course(cid):
-    courses, current_course = get_courses(cid)
-    form = forms.CanvasCourseForm()
-    if form.validate_on_submit():
-        canvas_course = CanvasCourse(course_id=cid)
-        form.populate_canvas_course(canvas_course)
-        db.session.add(canvas_course)
-        db.session.commit()
-        return redirect(url_for('.canvas_course', cid=cid))
-    return render_template(
-        'staff/canvas/new.html',
-        courses=courses,
-        current_course=current_course,
-        form=form,
+        canvas_course=canvas_course,
+        external_names=external_names,
     )
 
 @admin.route('/course/<int:cid>/canvas/edit/', methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
 def edit_canvas_course(cid):
     courses, current_course = get_courses(cid)
-    canvas_course = CanvasCourse.query.filter_by(course_id=cid).one_or_none()
-    if not canvas_course:
-        return redirect(url_for('.new_canvas_course', cid=cid))
+    canvas_course = CanvasCourse.by_course_id(cid)
+    if canvas_course:
+        canvas_course = CanvasCourse(course_id=cid)
     form = forms.CanvasCourseForm()
     if form.validate_on_submit():
         form.populate_canvas_course(canvas_course)
+        db.session.add(canvas_course)
         db.session.commit()
         flash("Saved bCourses configuration", "success")
         return redirect(url_for('.canvas_course', cid=cid))
@@ -1223,11 +1212,69 @@ def edit_canvas_course(cid):
 @admin.route('/course/<int:cid>/canvas/delete/', methods=['POST'])
 @is_staff(course_arg='cid')
 def delete_canvas_course(cid):
-    form = forms.CSRFForm()
-    if form.validate_on_submit():
-        canvas_course = CanvasCourse.query.filter_by(course_id=cid).one_or_none()
+    if forms.CSRFForm().validate_on_submit():
+        canvas_course = CanvasCourse.by_course_id(cid)
         db.session.delete(canvas_course)
         db.session.commit()
         flash("Deleted bCourses configuration", "success")
         return redirect(url_for('.course', cid=cid))
+    abort(401)
+
+@admin.route('/course/<int:cid>/canvas/assignments/new/',
+    defaults={'canvas_assignment_id': None}, methods=['GET', 'POST'])
+@admin.route('/course/<int:cid>/canvas/assignments/<int:canvas_assignment_id>/edit/',
+    methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def edit_canvas_assignment(cid, canvas_assignment_id):
+    courses, current_course = get_courses(cid)
+    canvas_course = CanvasCourse.by_course_id(cid)
+    if not canvas_course:
+        abort(404)
+    if canvas_assignment_id:
+        canvas_assignment = CanvasAssignment.query.get_or_404(canvas_assignment_id)
+        form = forms.CanvasAssignmentForm(obj=canvas_assignment)
+    else:
+        canvas_assignment = CanvasAssignment(canvas_course_id=canvas_course.id)
+        form = forms.CanvasAssignmentForm()
+    form.external_id.choices = [
+        (a['id'], a['name']) for a in canvas_api.get_assignments(canvas_course)
+    ]
+    form.assignment_id.choices = [
+        (a.id, a.display_name) for a in current_course.assignments
+    ]
+    if form.validate_on_submit():
+        form.populate_obj(canvas_assignment)
+        db.session.add(canvas_assignment)
+        db.session.commit()
+        flash("Saved assignment", "success")
+        return redirect(url_for('.canvas_course', cid=cid))
+    return render_template(
+        'staff/canvas/assignment.html',
+        courses=courses,
+        current_course=current_course,
+        form=form,
+    )
+
+@admin.route('/course/<int:cid>/canvas/assignments/<int:canvas_assignment_id>/delete/',
+    methods=['POST'])
+@is_staff(course_arg='cid')
+def delete_canvas_assignment(cid, canvas_assignment_id):
+    courses, current_course = get_courses(cid)
+    canvas_assignment = CanvasAssignment.query.get_or_404(canvas_assignment_id)
+    if forms.CSRFForm().validate_on_submit():
+        db.session.delete(canvas_assignment)
+        db.session.commit()
+        flash("Removed assignment", "success")
+        return redirect(url_for('.canvas_course', cid=cid))
+    abort(401)
+
+@admin.route('/course/<int:cid>/canvas/assignments/<int:canvas_assignment_id>/upload/',
+    methods=['POST'])
+@is_staff(course_arg='cid')
+def upload_canvas_assignment(cid, canvas_assignment_id):
+    courses, current_course = get_courses(cid)
+    canvas_assignment = CanvasAssignment.query.get_or_404(canvas_assignment_id)
+    if forms.CSRFForm().validate_on_submit():
+        # TODO
+        return redirect(url_for('.canvas_course', cid=cid))
     abort(401)

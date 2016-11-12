@@ -1,12 +1,12 @@
 {% extends "staff/base.html" %}
 {% import 'staff/_formhelpers.html' as forms %}
 
-{% block title %} Set Up bCourses - {{ current_course.display_name_with_semester }}{% endblock %}
+{% block title %} bCourses Assignment - {{ current_course.display_name_with_semester }}{% endblock %}
 
 {% block main %}
 <section class="content-header">
     <h1>
-        {{ current_course.display_name_with_semester }} Set Up bCourses
+        {{ current_course.display_name_with_semester }} bCourses Assignment
         <small>{{ current_course.offering }}</small>
     </h1>
     <ol class="breadcrumb">
@@ -14,8 +14,11 @@
         <li><a href="{{ url_for(".course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
-        <li class="active"><a href="{{ url_for(".canvas_course", cid=current_course.id) }}">
-            <i class="fa fa-address-book"></i>Set Up bCourses
+        <li><a href="{{ url_for(".canvas_course", cid=current_course.id) }}">
+            <i class="fa fa-address-book"></i>bCourses
+        </a></li>
+        <li class="active"><a href="#">
+            <i class="fa fa-address-book"></i>bCourses Assignment
         </a></li>
     </ol>
 </section>
@@ -27,10 +30,9 @@
             <div class="box">
                 <div class="box-body">
                 {% call forms.render_form(form) %}
-                    {{ forms.render_field(form.url, label_visible=true,
-                      placeholder='https://bcourses.berkeley.edu/courses/1234567') }}
-                    {{ forms.render_field(form.access_token, label_visible=true,
-                      placeholder='1234~ABCDEF...') }}
+                    {{ forms.render_field(form.assignment_id, label_visible=true) }}
+                    {{ forms.render_field(form.external_id, label_visible=true) }}
+                    {{ forms.render_field(form.score_kinds, label_visible=true, class_="checkbox-list") }}
                 {% endcall %}
                 </div>
                 <!-- /.box-body -->

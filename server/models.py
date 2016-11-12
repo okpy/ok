@@ -1603,20 +1603,32 @@ class CanvasCourse(Model):
     # Don't export access token
     export_items = ('api_domain', 'external_id', 'course_id')
 
+    @staticmethod
+    def by_course_id(course_id):
+        return CanvasCourse.query.filter_by(course_id=course_id).one_or_none()
+
+    @property
+    def url(self):
+        return 'https://{}/courses/{}'.format(self.api_domain, self.external_id)
+
 class CanvasAssignment(Model):
     id = db.Column(db.Integer, primary_key=True)
     # The ID of the assignment for the Canvas API
     external_id = db.Column(db.Integer, nullable=False)
-    score_kind = db.Column(db.String(255), nullable=False)
+    score_kinds = db.Column(StringList, nullable=False, default=[])
 
     canvas_course_id = db.Column(
         db.Integer, db.ForeignKey('canvas_course.id'),
         index=True, nullable=False,
     )
-    canvas_course = db.relationship('CanvasCourse')
+    canvas_course = db.relationship('CanvasCourse', backref='canvas_assignments')
 
     assignment_id = db.Column(
         db.Integer, db.ForeignKey('assignment.id'),
         index=True, nullable=False,
     )
     assignment = db.relationship('Assignment')
+
+    @property
+    def url(self):
+        return '{}/assignments/{}'.format(self.canvas_course.url, self.external_id)
