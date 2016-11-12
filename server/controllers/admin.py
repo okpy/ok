@@ -16,7 +16,7 @@ from server import autograder
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
-                           Message, db)
+                           Message, CanvasCourse, CanvasAssignment, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
@@ -1164,3 +1164,70 @@ def start_test_job(cid):
             current_course=current_course,
             form=form,
         )
+
+##########
+# Canvas #
+##########
+
+@admin.route('/course/<int:cid>/canvas/')
+@is_staff(course_arg='cid')
+def canvas_course(cid):
+    courses, current_course = get_courses(cid)
+    canvas_course = CanvasCourse.query.filter_by(course_id=cid).one_or_none()
+    if not canvas_course:
+        return redirect(url_for('.new_canvas_course', cid=cid))
+    return render_template(
+        'staff/canvas/index.html',
+        courses=courses,
+        current_course=current_course,
+    )
+
+@admin.route('/course/<int:cid>/canvas/new/', methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def new_canvas_course(cid):
+    courses, current_course = get_courses(cid)
+    form = forms.CanvasCourseForm()
+    if form.validate_on_submit():
+        canvas_course = CanvasCourse(course_id=cid)
+        form.populate_canvas_course(canvas_course)
+        db.session.add(canvas_course)
+        db.session.commit()
+        return redirect(url_for('.canvas_course', cid=cid))
+    return render_template(
+        'staff/canvas/new.html',
+        courses=courses,
+        current_course=current_course,
+        form=form,
+    )
+
+@admin.route('/course/<int:cid>/canvas/edit/', methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def edit_canvas_course(cid):
+    courses, current_course = get_courses(cid)
+    canvas_course = CanvasCourse.query.filter_by(course_id=cid).one_or_none()
+    if not canvas_course:
+        return redirect(url_for('.new_canvas_course', cid=cid))
+    form = forms.CanvasCourseForm()
+    if form.validate_on_submit():
+        form.populate_canvas_course(canvas_course)
+        db.session.commit()
+        flash("Saved bCourses configuration", "success")
+        return redirect(url_for('.canvas_course', cid=cid))
+    return render_template(
+        'staff/canvas/edit.html',
+        courses=courses,
+        current_course=current_course,
+        form=form,
+    )
+
+@admin.route('/course/<int:cid>/canvas/delete/', methods=['POST'])
+@is_staff(course_arg='cid')
+def delete_canvas_course(cid):
+    form = forms.CSRFForm()
+    if form.validate_on_submit():
+        canvas_course = CanvasCourse.query.filter_by(course_id=cid).one_or_none()
+        db.session.delete(canvas_course)
+        db.session.commit()
+        flash("Deleted bCourses configuration", "success")
+        return redirect(url_for('.course', cid=cid))
+    abort(401)

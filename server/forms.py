@@ -8,8 +8,9 @@ from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      widgets, validators)
 from flask_wtf.html5 import EmailField
 
-import pytz
 import datetime as dt
+import pytz
+import re
 
 from server import utils
 from server.models import Assignment, Course, Message
@@ -458,3 +459,25 @@ class GithubSearchRecentForm(BaseForm):
                                 default="Academic Integrity - Please Delete This Repository")
     issue_body = TextAreaField('Issue Body (Optional)', validators=[validators.optional()],
                                description="The strings '{repo}' and '{author}' will be replace with the approriate value")
+
+##########
+# Canvas #
+##########
+
+# e.g. https://bcourses.berkeley.edu/courses/1234567
+CANVAS_COURSE_URL_REGEX = r'^https?://(([a-zA-Z0-9-]+\.)+[a-zA-Z0-9-]+)/courses/(\d+)'
+
+class CanvasCourseForm(BaseForm):
+    url = StringField('bCourses Course URL', validators=[
+        validators.Regexp(CANVAS_COURSE_URL_REGEX, message='Enter a bCourses Course URL'),
+    ])
+    access_token = StringField('Access Token',
+        description='On bCourses, go to Account > Settings > New Access Token',
+        validators=[validators.required()],
+    )
+
+    def populate_canvas_course(self, canvas_course):
+        match = re.search(CANVAS_COURSE_URL_REGEX, self.url.data)
+        canvas_course.api_domain = match.group(1)
+        canvas_course.external_id = int(match.group(3))
+        canvas_course.access_token = self.access_token.data
