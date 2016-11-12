@@ -481,3 +481,14 @@ class CanvasCourseForm(BaseForm):
         canvas_course.api_domain = match.group(1)
         canvas_course.external_id = int(match.group(3))
         canvas_course.access_token = self.access_token.data
+
+class CanvasAssignmentForm(BaseForm):
+    external_id = SelectField('bCourses Assignment',
+        coerce=int, validators=[validators.required()])
+    assignment_id = SelectField('OK Assignment',
+        coerce=int, validators=[validators.required()])
+    score_kinds = MultiCheckboxField(
+        'Scores',
+        description='Maximum score from selected score kinds will be uploaded',
+        choices=[(kind, kind.title()) for kind in SCORE_KINDS],
+    )

@@ -1,7 +1,9 @@
 import requests
 
+from server.extensions import cache
+
 def canvas_api_request(canvas_course, method, endpoint, **kwargs):
-    url = 'https://' + canvas_course.api_domain + endpoint
+    url = 'https://' + canvas_course.api_domain + '/api/v1' + endpoint
     headers = {
         'Accept': 'application/json',
         'Authorization': 'Bearer ' + canvas_course.access_token,
@@ -18,6 +20,15 @@ def score_endpoint(canvas_assignment, enrollment):
         canvas_assignment.external_id,
         enrollment.sid,
     )
+
+@cache.memoize(60)
+def get_assignments(canvas_course):
+    response = canvas_api_request(
+        canvas_course,
+        'GET',
+        '/courses/{}/assignments?per_page=100'.format(canvas_course.external_id),
+    )
+    return response.json()
 
 def get_score(canvas_assignment, enrollment):
     """Get a user's score (as a float) for an assignment. If the user has no
