@@ -65,10 +65,10 @@ class BackupUploadField(FileField):
         files = {}
         for upload in request.files.getlist(self.name):
             data = upload.read()
-            if len(data) > 10 * 1024 * 1024:  # file is too large (over 8 MB)
+            if len(data) > 15 * 1024 * 1024:  # file is too large (over 15 MB)
                 self.errors.append(
                     '{} is larger than the maximum file size '
-                    'of 8MB'.format(upload.filename))
+                    'of 15MB'.format(upload.filename))
                 return False
             try:
                 files[upload.filename] = str(data, 'utf-8')
