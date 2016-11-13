@@ -110,9 +110,15 @@
                 </div>
             </div>
             {% macro diff_tab(target_diff_type, text) %}
+            {% if is_composition %}
+            <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+                <a href="{{ url_for('.composition', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
+            </li>
+            {% else %}
             <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
                 <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
             </li>
+            {% endif %}
             {% endmacro %}
             {% if assignment.files %}
             <ul class="nav nav-tabs nav-justified">
