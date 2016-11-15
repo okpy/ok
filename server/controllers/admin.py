@@ -1202,9 +1202,11 @@ def canvas_course(cid):
 def edit_canvas_course(cid):
     courses, current_course = get_courses(cid)
     canvas_course = CanvasCourse.by_course_id(cid)
+    form = forms.CanvasCourseForm()
     if not canvas_course:
         canvas_course = CanvasCourse(course_id=cid)
-    form = forms.CanvasCourseForm()
+    else:
+        form.url.data = canvas_course.url
     if form.validate_on_submit():
         form.populate_canvas_course(canvas_course)
         db.session.add(canvas_course)
