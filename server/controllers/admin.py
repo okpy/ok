@@ -10,6 +10,7 @@ from werkzeug.exceptions import BadRequest
 from flask_login import current_user, login_required
 import pygal
 from pygal.style import CleanStyle
+import requests.exceptions
 
 from server import autograder
 
@@ -1171,6 +1172,15 @@ def start_test_job(cid):
 # Canvas #
 ##########
 
+def get_external_names(canvas_course):
+    try:
+        return {
+            a['id']: a['name'] for a in canvas_api.get_assignments(canvas_course)
+        }
+    except requests.exceptions.HTTPError as e:
+        flash("Could not retrieve bCourses assignments ({})".format(e.response.status_code), "danger")
+        return {}
+
 @admin.route('/course/<int:cid>/canvas/')
 @is_staff(course_arg='cid')
 def canvas_course(cid):
@@ -1178,9 +1188,7 @@ def canvas_course(cid):
     canvas_course = CanvasCourse.by_course_id(cid)
     if not canvas_course:
         return redirect(url_for('.edit_canvas_course', cid=cid))
-    external_names = {
-        a['id']: a['name'] for a in canvas_api.get_assignments(canvas_course)
-    }
+    external_names = get_external_names(canvas_course)
     return render_template(
         'staff/canvas/index.html',
         courses=courses,
@@ -1237,9 +1245,7 @@ def edit_canvas_assignment(cid, canvas_assignment_id):
     else:
         canvas_assignment = CanvasAssignment(canvas_course_id=canvas_course.id)
         form = forms.CanvasAssignmentForm()
-    form.external_id.choices = [
-        (a['id'], a['name']) for a in canvas_api.get_assignments(canvas_course)
-    ]
+    form.external_id.choices = get_external_names(canvas_course).items()
     form.assignment_id.choices = [
         (a.id, a.display_name) for a in current_course.assignments
     ]

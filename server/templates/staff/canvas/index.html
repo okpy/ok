@@ -55,7 +55,7 @@
                           </td>
                           <td>
                             <a href="{{ canvas_assignment.url }}">
-                              {{ external_names[canvas_assignment.external_id] }}
+                              {{ external_names.get(canvas_assignment.external_id, canvas_assignment.external_id) }}
                             </a>
                           </td>
                           <td>{{ canvas_assignment.score_kinds | join(', ') }}</td>
