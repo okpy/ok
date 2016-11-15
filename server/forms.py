@@ -1,6 +1,7 @@
 from flask import request
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
+import requests.exceptions
 import wtforms
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
@@ -13,7 +14,8 @@ import pytz
 import re
 
 from server import utils
-from server.models import Assignment, Course, Message
+import server.canvas.api as canvas_api
+from server.models import Assignment, Course, Message, CanvasCourse
 from server.constants import (VALID_ROLES, SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES)
@@ -481,6 +483,14 @@ class CanvasCourseForm(BaseForm):
         canvas_course.api_domain = match.group(1)
         canvas_course.external_id = int(match.group(3))
         canvas_course.access_token = self.access_token.data
+
+    def validate_access_token(self, field):
+        try:
+            canvas_course = CanvasCourse()
+            self.populate_canvas_course(canvas_course)
+            canvas_api.get_course(canvas_course)
+        except requests.exceptions.HTTPError as e:
+            field.errors.append('Invalid access token')
 
 class CanvasAssignmentForm(BaseForm):
     external_id = SelectField('bCourses Assignment',

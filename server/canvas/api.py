@@ -10,7 +10,7 @@ def canvas_api_request(canvas_course, method, endpoint, **kwargs):
     }
     response = requests.request(method, url, headers=headers, **kwargs)
     response.raise_for_status()
-    return response
+    return response.json()
 
 def score_endpoint(canvas_assignment, enrollment):
     # We can use the student ID directly here. See
@@ -21,14 +21,20 @@ def score_endpoint(canvas_assignment, enrollment):
         enrollment.sid,
     )
 
+def get_course(canvas_course):
+    return canvas_api_request(
+        canvas_course,
+        'GET',
+        '/courses/{}'.format(canvas_course.external_id),
+    )
+
 @cache.memoize(60)
 def get_assignments(canvas_course):
-    response = canvas_api_request(
+    return canvas_api_request(
         canvas_course,
         'GET',
         '/courses/{}/assignments?per_page=100'.format(canvas_course.external_id),
     )
-    return response.json()
 
 def get_score(canvas_assignment, enrollment):
     """Get a user's score (as a float) for an assignment. If the user has no
@@ -40,7 +46,7 @@ def get_score(canvas_assignment, enrollment):
         'GET',
         score_endpoint(canvas_assignment, enrollment),
     )
-    score = response.json()['score']
+    score = response['score']
     if score is None:
         return 0.0
     else:
