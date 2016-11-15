@@ -30,16 +30,6 @@
                     </a>
                   </li>
                   <li>
-                    <a href="{{ url_for('.course_jobs', cid=course.id) }}">
-                      <i class="fa fa-file-text {% if (request.endpoint == 'admin.jobs' and request.view_args['cid'] == course.id) %}text-blue{% endif %}"></i> Jobs
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('.canvas_course', cid=course.id) }}">
-                      <i class="fa fa-address-book {% if (request.endpoint == 'admin.canvas_course' and request.view_args['cid'] == course.id) %}text-blue{% endif %}"></i> bCourses
-                    </a>
-                  </li>
-                  <li>
                     <a href="{{ url_for('student.course', offering=course.offering) }}">
                       <i class="fa fa-user"></i> Student View
                     </a>
