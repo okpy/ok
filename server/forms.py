@@ -491,4 +491,5 @@ class CanvasAssignmentForm(BaseForm):
         'Scores',
         description='Maximum score from selected score kinds will be uploaded',
         choices=[(kind, kind.title()) for kind in SCORE_KINDS],
+        validators=[validators.required()],
     )
