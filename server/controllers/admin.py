@@ -21,6 +21,7 @@ from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
 import server.canvas.api as canvas_api
+import server.canvas.upload
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
@@ -1275,6 +1276,11 @@ def upload_canvas_assignment(cid, canvas_assignment_id):
     courses, current_course = get_courses(cid)
     canvas_assignment = CanvasAssignment.query.get_or_404(canvas_assignment_id)
     if forms.CSRFForm().validate_on_submit():
-        # TODO
-        return redirect(url_for('.canvas_course', cid=cid))
+        job = jobs.enqueue_job(
+            server.canvas.upload.upload_scores,
+            description='bCourses Upload for {}'.format(canvas_assignment.assignment.display_name),
+            course_id=cid,
+            user_id=current_user.id,
+            canvas_assignment_id=canvas_assignment_id)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     abort(401)
