@@ -21,6 +21,7 @@
                 <th class="sort" data-sort="group">Group</th>
                 <th class="sort" data-sort="submission-time">Time Submitted</th>
                 <th>Final Submission</th>
+                <th>Latest Backup</th>
                 <th class="sort" data-sort="scores">Scores</th>
                 <th>Actions</th>
             </thead>
@@ -66,6 +67,19 @@
                         </td>
 
                     {% endif %}
+
+                    {% if item.latest_backup %}
+                        <td class="latest-backup-id">
+                            <a href="{{ url_for('.grading', bid=item.latest_backup.id) }}" title="Backup created at {{ utils.local_time(item.latest_backup.created, current_course) }}">
+                                {{ item.latest_backup.hashid }}
+                            </a>
+                        </td>
+                    {% else %}
+                        <td class="latest-backup-id">
+                            <i class="fa fa-times-circle text-red" aria-hidden="true"></i>
+                        </td>
+                    {% endif %}
+
                     <td class="scores">
                       {{ helpers.score_pills(item.scores) }}
                     </td>
