@@ -1194,7 +1194,7 @@ def canvas_course(cid):
 def edit_canvas_course(cid):
     courses, current_course = get_courses(cid)
     canvas_course = CanvasCourse.by_course_id(cid)
-    if canvas_course:
+    if not canvas_course:
         canvas_course = CanvasCourse(course_id=cid)
     form = forms.CanvasCourseForm()
     if form.validate_on_submit():
