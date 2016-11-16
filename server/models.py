@@ -318,7 +318,7 @@ class Assignment(Model):
 
     user_assignment = namedtuple('UserAssignment',
                                  ['assignment', 'subm_time', 'group',
-                                  'final_subm', 'scores', 'latest_backup'])
+                                  'final_subm', 'scores'])
 
     @hybrid_property
     def active(self):
@@ -503,7 +503,6 @@ class Assignment(Model):
         """
         user_ids = self.active_user_ids(user.id)
         final_submission = self.final_submission(user_ids)
-        latest_backup = self.backups(user_ids).first()
         submission_time = final_submission and final_submission.created
         group = Group.lookup(user, self)
         scores = self.scores(user_ids, only_published=not staff_view)
@@ -513,7 +512,6 @@ class Assignment(Model):
             group=group,
             final_subm=final_submission,
             scores=scores,
-            latest_backup=latest_backup
         )
 
     def course_submissions(self, include_empty=True):
