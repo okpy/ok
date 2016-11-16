@@ -435,19 +435,20 @@ class Assignment(Model):
                     not isinstance(contents['history']['questions'], dict)):
                 continue
 
+            submitters.append(backup.submitter.email)
+
+            curr_q_stats = message.contents['history']['questions'].get(curr_q)
+            total_attempt_count = message.contents['history'].get('all_attempts')
+            is_solved = curr_q_stats.get('solved')
+
             if current_backup_id and current_backup_id == backup.hashid:
-                current_backup_event = {"event": "current",
+                current_backup_event = {"event": "Current",
                                         "attempt": total_attempt_count,
                                         "title": "Current Backup Queried".format(curr_q),
                                         "backup": backup}
                 timeline.append(current_backup_event)
                 continue
 
-            submitters.append(backup.submitter.email)
-
-            curr_q_stats = message.contents['history']['questions'].get(curr_q)
-            total_attempt_count = message.contents['history'].get('all_attempts')
-            is_solved = curr_q_stats.get('solved')
             if contents.get('unlock'):
                 # Is unlocking.
                 if curr_q not in unlock_started_q:

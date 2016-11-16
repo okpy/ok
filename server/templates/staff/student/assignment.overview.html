@@ -127,10 +127,14 @@
                             <i class="fa fa-hourglass-start bg-blue"></i>
                           {% elif event['event'] == "Solved" %}
                             <i class="fa fa-check-circle bg-green"></i>
+                          {% elif event['event'] == "Submitted" %}
+                            <i class="fa fa-flag-checkered bg-yellow"></i>
                           {% elif event['event'] == "Switched" %}
                             <i class="fa fa-random bg-green"></i>
                           {% elif event['event'] == "Unlock" %}
                             <i class="fa fa-unlock bg-green"></i>
+                          {% elif event['event'] == "Current" %}
+                            <i class="fa fa-arrow-right bg-aqua"></i>
                           {% else %}
                             <i class="fa fa-info bg-blue"></i>
                           {% endif %}
