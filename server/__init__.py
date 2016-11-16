@@ -78,7 +78,7 @@ def create_app(default_config_path=None):
 
             def add_hsts(response):
                 if request.is_secure:
-                    response.headers.setdefault('Strict-Transport-Security', hsts_policy = 'max-age={0}'.format(30))
+                    response.headers.setdefault('Strict-Transport-Security', 'max-age={0}'.format(30))
                 return response
 
             app.before_request(redirect_to_ssl)
