@@ -67,7 +67,7 @@
             <div class="due-dot yellow"></div>
             <div class="due">
               <span class="due-text grey">No Submission</span>
-              <span class="due-date">Backup: {{ utils.local_time(subm_time, course) }}</span>
+              <span class="due-date">Backup: {{ utils.local_time(latest_backup.created, course) }}</span>
             </div>
 
           {% else %}
