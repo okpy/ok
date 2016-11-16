@@ -14,7 +14,7 @@
           <th class="col-status">Status</th>
           <th class="col-group">Group</th>
         </tr>
-        {% for assign, subm_time, group, fs, scores in assignments %}
+        {% for assign, subm_time, group, fs, scores, latest_backup in assignments %}
         <tr>
           <td>
             <span>
@@ -63,7 +63,14 @@
               <span class="due-text green">Submitted</span>
               <span class="due-date">{{ utils.local_time(subm_time, course) }}</span>
             </div>
-            {% else %}
+          {% elif latest_backup %}
+            <div class="due-dot yellow"></div>
+            <div class="due">
+              <span class="due-text grey">No Submission</span>
+              <span class="due-date">Backup: {{ utils.local_time(subm_time, course) }}</span>
+            </div>
+
+          {% else %}
             <div class="due-dot grey"></div>
             <div class="due">
               <span class="due-text grey">No Submission</span>
@@ -143,7 +150,7 @@
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
       <h2>{{ tname }}</h2>
-      {% for assign, subm_time, group, fs, scores in assignments %}
+      {% for assign, subm_time, group, fs, scores, latest_backup in assignments %}
       <div class="cell col-xs-12">
         <div class="cell-title">
           <a class="dashed" href="{{ url_for('.assignment', name=assign.name)}}">
