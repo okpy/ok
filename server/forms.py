@@ -1,16 +1,22 @@
+from flask import request
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
+import requests.exceptions
+import wtforms
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
-                     SelectMultipleField, Field, widgets, validators)
+                     SelectMultipleField, RadioField, Field,
+                     widgets, validators)
 from flask_wtf.html5 import EmailField
 
-import pytz
 import datetime as dt
+import pytz
+import re
 
 from server import utils
-from server.models import Assignment, Course
-from server.constants import (VALID_ROLES, GRADE_TAGS, COURSE_ENDPOINT_FORMAT,
+import server.canvas.api as canvas_api
+from server.models import Assignment, Course, Message, CanvasCourse
+from server.constants import (VALID_ROLES, SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES)
 
@@ -23,6 +29,24 @@ def strip_whitespace(value):
     else:
         return value
 
+class OptionalUnless(validators.Optional):
+    '''A validator which makes a field required only if another field is set to
+    a given value.
+
+    Inspired by http://stackoverflow.com/a/8464478
+    '''
+    def __init__(self, other_field_name, other_field_value, *args, **kwargs):
+        self.other_field_name = other_field_name
+        self.other_field_value = other_field_value
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, form, field):
+        other_field = form._fields.get(self.other_field_name)
+        if other_field is None:
+            raise Exception('no field named "%s" in form' % self.other_field_name)
+        if other_field.data != self.other_field_value:
+            super().__call__(form, field)
+
 class MultiCheckboxField(SelectMultipleField):
     """
     A multiple-select, except displays a list of checkboxes.
@@ -32,6 +56,43 @@ class MultiCheckboxField(SelectMultipleField):
     """
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
+
+class BackupUploadField(FileField):
+    def upload_backup_files(self, backup):
+        """Update a Backup's attributes based on form contents. If successful,
+        return True; otherwise, add errors to the form and return False.
+        """
+        assignment = backup.assignment
+        templates = assignment.files
+
+        files = {}
+        for upload in request.files.getlist(self.name):
+            data = upload.read()
+            if len(data) > 15 * 1024 * 1024:  # file is too large (over 15 MB)
+                self.errors.append(
+                    '{} is larger than the maximum file size '
+                    'of 15MB'.format(upload.filename))
+                return False
+            try:
+                files[upload.filename] = str(data, 'utf-8')
+            except UnicodeDecodeError:
+                self.errors.append(
+                    '{} is not a UTF-8 text file'.format(upload.filename))
+                return False
+        template_files = assignment.files or []
+        missing = [
+            template for template in template_files
+                if template not in files
+        ]
+        if missing:
+            self.errors.append(
+                'Missing files: {}. The following files are required: {}'
+                   .format(', '.join(missing), ', '.join(templates)))
+            return False
+
+        message = Message(kind='file_contents', contents=files)
+        backup.messages.append(message)
+        return True
 
 class CommaSeparatedField(Field):
     widget = widgets.TextInput()
@@ -218,9 +279,9 @@ class CSRFForm(BaseForm):
 
 
 class GradeForm(BaseForm):
-    score = DecimalField('Score', validators=[validators.required()])
+    score = DecimalField('Score', validators=[validators.InputRequired()])
     message = TextAreaField('Message', validators=[validators.required()])
-    kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
                        validators=[validators.required()])
 
 class CompositionScoreForm(GradeForm):
@@ -232,17 +293,63 @@ class CompositionScoreForm(GradeForm):
 
 
 class CreateTaskForm(BaseForm):
-    kind = SelectField('Kind', choices=[(c, c.title()) for c in GRADE_TAGS],
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
                        validators=[validators.required()], default="composition")
     staff = MultiCheckboxField('Assigned Staff', choices=[],
                                validators=[validators.required()])
-    only_unassigned = BooleanField('Ignore submissions that already have a grader',
-                                   default=False)
 
 class UploadSubmissionForm(BaseForm):
-    upload_files = FileField('Submission Files', [FileRequired()])
-    flag_submission = BooleanField('Flag this submission for grading',
-                                   default=False)
+    upload_files = BackupUploadField('Submission Files', [FileRequired()])
+
+class SubmissionTimeForm(BaseForm):
+    submission_time = RadioField(
+        'Custom submission time',
+        choices=[
+            ('none', 'Backup creation time'),
+            ('deadline', 'At deadline'),
+            ('early', 'One day early'),
+            ('other', 'Other: '),
+        ],
+        default='none',
+        validators=[validators.required()],
+    )
+    custom_submission_time = DateTimeField(
+        validators=[OptionalUnless('submission_time', 'other')])
+
+    def get_submission_time(self, assignment):
+        choice = self.submission_time.data
+        if choice == 'none':
+            return None
+        elif choice == 'deadline':
+            return (assignment.due_date
+                - dt.timedelta(seconds=1))
+        elif choice == 'early':
+            return (assignment.due_date
+                - dt.timedelta(days=1, seconds=1))
+        elif choice == 'other':
+            return utils.server_time_obj(
+                self.custom_submission_time.data,
+                assignment.course,
+            )
+        else:
+            raise Exception('Unknown submission time choice {}'.format(choice))
+
+    def set_submission_time(self, backup):
+        assignment = backup.assignment
+        time = backup.custom_submission_time
+        if time is None:
+            self.submission_time.data = 'none'
+        elif time == assignment.due_date - dt.timedelta(seconds=1):
+            self.submission_time.data = 'deadline'
+        elif time == assignment.due_date - dt.timedelta(days=1, seconds=1):
+            self.submission_time.data = 'early'
+        else:
+            self.submission_time.data = 'other'
+            self.custom_submission_time.data = utils.local_time_obj(
+                time, assignment.course)
+
+class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
+    pass
 
 class StaffAddGroupFrom(BaseForm):
     description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""
@@ -318,6 +425,13 @@ class CourseUpdateForm(BaseForm):
     active = BooleanField('Activate Course', default=True)
     timezone = SelectField('Course Timezone', choices=[(t, t) for t in pytz.common_timezones])
 
+class PublishScores(BaseForm):
+    published_scores = MultiCheckboxField(
+        'Published Scores',
+        choices=[(kind, kind.title()) for kind in SCORE_KINDS],
+    )
+
+
 ########
 # Jobs #
 ########
@@ -347,3 +461,45 @@ class GithubSearchRecentForm(BaseForm):
                                 default="Academic Integrity - Please Delete This Repository")
     issue_body = TextAreaField('Issue Body (Optional)', validators=[validators.optional()],
                                description="The strings '{repo}' and '{author}' will be replace with the approriate value")
+
+##########
+# Canvas #
+##########
+
+# e.g. https://bcourses.berkeley.edu/courses/1234567
+CANVAS_COURSE_URL_REGEX = r'^https?://(([a-zA-Z0-9-]+\.)+[a-zA-Z0-9-]+)/courses/(\d+)'
+
+class CanvasCourseForm(BaseForm):
+    url = StringField('bCourses Course URL', validators=[
+        validators.Regexp(CANVAS_COURSE_URL_REGEX, message='Enter a bCourses Course URL'),
+    ])
+    access_token = StringField('Access Token',
+        description='On bCourses, go to Account > Settings > New Access Token',
+        validators=[validators.required()],
+    )
+
+    def populate_canvas_course(self, canvas_course):
+        match = re.search(CANVAS_COURSE_URL_REGEX, self.url.data)
+        canvas_course.api_domain = match.group(1)
+        canvas_course.external_id = int(match.group(3))
+        canvas_course.access_token = self.access_token.data
+
+    def validate_access_token(self, field):
+        try:
+            canvas_course = CanvasCourse()
+            self.populate_canvas_course(canvas_course)
+            canvas_api.get_course(canvas_course)
+        except requests.exceptions.HTTPError as e:
+            field.errors.append('Invalid access token')
+
+class CanvasAssignmentForm(BaseForm):
+    external_id = SelectField('bCourses Assignment',
+        coerce=int, validators=[validators.required()])
+    assignment_id = SelectField('OK Assignment',
+        coerce=int, validators=[validators.required()])
+    score_kinds = MultiCheckboxField(
+        'Scores',
+        description='Maximum score from selected score kinds will be uploaded',
+        choices=[(kind, kind.title()) for kind in SCORE_KINDS],
+        validators=[validators.required()],
+    )

@@ -18,3 +18,25 @@
         <li><a href="{{ url_for(url, page=pg.next_num, **params) }}">»</a></li>
     {% endif %}
 {% endmacro %}
+
+{% macro score_pill(score) %}
+  <a href="{{ url_for('.grading', bid=score.backup_id) }}">
+    {% if score.kind in score.assignment.published_scores %}
+      <span class="label label-success score-inline" title="Visible to students">{{ score.kind.title() }}: {{ score.score | round(2) }}
+        <i class="fa fa-eye" aria-hidden="true"></i>
+      </span>
+    {% else %}
+      <span class="label label-default score-inline" title="Hidden to students">{{ score.kind.title() }}: {{ score.score | round(2) }}
+        <i class="fa fa-eye-slash" aria-hidden="true"></i>
+      </span>
+    {% endif %}
+  </a>
+{% endmacro %}
+
+{% macro score_pills(scores) %}
+  {% for score in scores %}
+    {{ score_pill(score) }}
+  {% else %}
+    &mdash;
+  {% endfor %}
+{% endmacro %}

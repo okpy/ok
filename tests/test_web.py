@@ -2,6 +2,7 @@
 Development: self.driver.get_screenshot_as_file('snap.png')
 Docs: http://selenium-python.readthedocs.io/getting-started.html
 """
+import datetime
 import json
 import os
 import signal
@@ -94,7 +95,7 @@ if driver:
             super(WebTest, self).tearDown()
             self.driver.quit()
 
-        def pageLoad(self, url):
+        def page_load(self, url):
             self.driver.get(url)
 
             # View all requests made by the page
@@ -141,48 +142,48 @@ if driver:
 
         def test_static_pages(self):
             about_url = "{}/about/privacy/".format(self.get_server_url())
-            self.pageLoad(about_url)
+            self.page_load(about_url)
             self.assertIn('Privacy Policy | Ok', self.driver.title)
 
         def test_phantom_web(self):
-            self.pageLoad(self.get_server_url())
-            self.assertEquals('Ok', self.driver.title)
+            self.page_load(self.get_server_url())
+            self.assertEquals("OK", self.driver.title)
             self.driver.find_element_by_id('testing-login').click()
             self.assertIn('Login', self.driver.title)
 
             self.driver.find_element_by_tag_name('button').click()
             self.assertIn('Courses | Ok', self.driver.title)
-            self.pageLoad(self.get_server_url())
+            self.page_load(self.get_server_url())
             self.assertIn('Courses | Ok', self.driver.title)
 
             self.driver.find_element_by_id('logout').click()
-            self.assertEquals('Ok', self.driver.title)
+            self.assertEquals("OK", self.driver.title)
 
         def test_student_view(self):
             self._seed_course()
 
             self._login_as(email=self.user4.email)
 
-            self.pageLoad(self.get_server_url())
+            self.page_load(self.get_server_url())
             self.assertIn('Courses | Ok', self.driver.title)
 
-            self.pageLoad("{}/cal/cs61a/sp16/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/".format(self.get_server_url()))
             self.assertTrue("Current Assignments" in self.driver.page_source)
 
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
 
             self.driver.find_element_by_class_name("view-code").click()
             self.assertTrue("backup.py" in self.driver.page_source)
             # Make sure the XSS attempt didn't work
             self.assertTrue(self.driver.title != '1337 hax0r')
 
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/backups/".format(self.get_server_url()))
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/submissions/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/backups/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/submissions/".format(self.get_server_url()))
 
         def test_student_remove_member(self):
             self._seed_course()
             self._login_as(email=self.user4.email)
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
             self.assertTrue("student1@aol.com" in self.driver.page_source)
 
             # .click will send a sweet alert warning
@@ -202,7 +203,7 @@ if driver:
         def test_web_submit_disabled(self):
             self._seed_course()
             self._login_as(email=self.user4.email)
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
             self.assertTrue("This assignment cannot be submitted online" in self.driver.page_source)
 
         def test_web_submit_no_file(self):
@@ -212,7 +213,7 @@ if driver:
             models.db.session.commit()
 
             self._login_as(email=self.user4.email)
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
 
             # Test with no files
             self.driver.find_element_by_id('new-submission').click()
@@ -227,7 +228,7 @@ if driver:
             models.db.session.commit()
 
             self._login_as(email=self.user4.email)
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
 
             # Disable the multiple select, PhantomJS doesn't seem to support it
             # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
@@ -246,7 +247,7 @@ if driver:
             models.db.session.commit()
 
             self._login_as(email=self.user4.email)
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
 
             # Disable the multiple select, PhantomJS doesn't seem to support it
             # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
@@ -265,7 +266,7 @@ if driver:
             models.db.session.commit()
             self._login_as(email=self.user4.email)
 
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
             self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
             file_input = self.driver.find_element_by_id("file-select")
             file_input.send_keys(os.path.abspath(__file__))
@@ -281,7 +282,7 @@ if driver:
             models.db.session.commit()
             self._login_as(email=self.user4.email)
 
-            self.pageLoad("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
             self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
             file_input = self.driver.find_element_by_id("file-select")
             file_input.send_keys(os.path.abspath(__file__))
@@ -290,20 +291,48 @@ if driver:
             # Will only pass when there is network connectivity. TODO: Mock external API response
             # self.assertTrue("Did not send to autograder" not in self.driver.page_source)
 
+        def test_staff_submit(self):
+            self._seed_course()
+
+            self._login_as(email=self.staff1.email)
+            self.page_load("{}/admin/course/{}/{}/{}/submit".format(
+                self.get_server_url(),
+                self.course.id,
+                self.user1.email,
+                self.assignment.id,
+            ))
+
+            # Disable the multiple select, PhantomJS doesn't seem to support it
+            # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
+            self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
+            file_input = self.driver.find_element_by_id("file-select")
+            file_input.send_keys(os.path.abspath(__file__))
+
+            # submit early
+            self.driver.find_element_by_css_selector('input[name=submission_time][value=early]').click()
+
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("Uploaded submission" in self.driver.page_source)
+
+            self.assertIn('grading/', self.driver.current_url)
+
+            submission_date = self.assignment.due_date - datetime.timedelta(days=1)
+            self.assertTrue(submission_date.strftime('%a %m/%d') in self.driver.page_source)
+
         def test_login_admin_reject(self):
             self._login(role="student")
-            self.pageLoad(self.get_server_url() + "/admin/")
+            self.page_load(self.get_server_url() + "/admin/")
             self.assertTrue("not on the course staff" in self.driver.page_source)
             self.assertIn('Courses | Ok', self.driver.title)
 
         def test_assignment_info(self):
             self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1")
-            self.assertIn('Ok -', self.driver.title)
+            self.page_load(self.get_server_url() + "/admin/course/1/assignments/1")
+            self.assertIn('{} -'.format(self.assignment.display_name), self.driver.title)
             self.assertTrue("Hog" in self.driver.page_source)
 
-            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1/stats")
-            self.assertIn('Ok -', self.driver.title)
+            self.page_load(self.get_server_url() + "/admin/course/1/assignments/1/stats")
+            self.assertIn('Hog Stats -', self.driver.title)
             self.assertTrue("Hog Stats" in self.driver.page_source)
 
         def test_assignment_send_to_ag(self):
@@ -311,7 +340,7 @@ if driver:
             self.assignment.autograding_key = "test" # Autograder will respond with 200
             models.db.session.commit()
 
-            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1")
+            self.page_load(self.get_server_url() + "/admin/course/1/assignments/1")
             self.assertTrue("Queue on Autograder" in self.driver.page_source)
             self.driver.find_element_by_class_name('ag-submit-btn').click()
             time.sleep(0.5)
@@ -323,7 +352,7 @@ if driver:
             self.assignment.autograding_key = ""
             models.db.session.commit()
 
-            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1")
+            self.page_load(self.get_server_url() + "/admin/course/1/assignments/1")
 
             self.assertTrue("Queue on Autograder" in self.driver.page_source)
             self.driver.find_element_by_class_name('ag-submit-btn').submit()
@@ -345,42 +374,40 @@ if driver:
 
             bid = utils.encode_id(backup.id)
 
-            self.pageLoad(self.get_server_url() + "/admin/grading/" + bid)
-            # show the button
-            self.driver.find_element_by_id('expand-submission-information').click()
+            self.page_load(self.get_server_url() + "/admin/grading/" + bid)
             self.driver.find_element_by_id('autograde-button').click()
             self.assertIn("Submitted to the autograder", self.driver.page_source)
 
         def test_admin_enrollment(self):
             self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/course/1/enrollment")
-            self.assertIn('Ok -', self.driver.title)
+            self.page_load(self.get_server_url() + "/admin/course/1/enrollment")
+            self.assertIn('Enrollment -', self.driver.title)
             self.assertTrue(self.course.offering in self.driver.page_source)
             self.assertTrue('Export Roster' in self.driver.page_source)
 
         def test_admin_student_overview(self):
             self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/course/1/{}".format(self.user1.email))
-            self.assertIn('Ok -', self.driver.title)
+            self.page_load(self.get_server_url() + "/admin/course/1/{}".format(self.user1.email))
+            self.assertIn('{} -'.format(self.user1.identifier), self.driver.title)
             self.assertTrue("Enrolled At" in self.driver.page_source)
 
         def test_admin_student_assign_overview(self):
             self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/course/1/{}/{}".format(self.user1.email, self.assignment.id))
-            self.assertIn('Ok -', self.driver.title)
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}".format(self.user1.email, self.assignment.id))
+            self.assertIn('{} -'.format(self.assignment.display_name), self.driver.title)
             self.assertTrue("Submission Stats" in self.driver.page_source)
 
         def test_admin_student_assign_timeline(self):
             self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/course/1/{}/{}/timeline".format(self.user1.email, self.assignment.id))
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/timeline".format(self.user1.email, self.assignment.id))
             self.assertIn('Timeline', self.driver.title)
 
         def test_queue_create(self):
             self._login(role="admin")
-            self.pageLoad(self.get_server_url() + "/admin/")
+            self.page_load(self.get_server_url() + "/admin/")
             # if needed for debug: self.driver.get_screenshot_as_file('staff.png')
 
-            self.pageLoad(self.get_server_url() + "/admin/course/1/assignments/1/queues/new")
+            self.page_load(self.get_server_url() + "/admin/course/1/assignments/1/queues/new")
             self.driver.find_element_by_css_selector('form button.btn-default').click()
             self.assertTrue("Hog" in self.driver.page_source)
             # Ensure tasks were created for two staff members
@@ -395,7 +422,7 @@ if driver:
             login_url = '{}/testing-login/'.format(self.get_server_url())
 
             # Access page while not logged in - should redirect to login
-            self.pageLoad(target_url)
+            self.page_load(target_url)
             self.assertEquals(self.driver.current_url, login_url)
 
             # Login and redirect back to original page
@@ -432,7 +459,7 @@ if driver:
             self._login_as(self.user1.email)
 
             # Start OAuth and click "Confirm"
-            self.pageLoad('{}/oauth/authorize?{}'.format(
+            self.page_load('{}/oauth/authorize?{}'.format(
                 self.get_server_url(),
                 urllib.parse.urlencode({
                     'response_type': 'code',
@@ -448,7 +475,7 @@ if driver:
             self._seed_course()
 
             # Start OAuth - redirects to log in
-            self.pageLoad('{}/oauth/authorize?{}'.format(
+            self.page_load('{}/oauth/authorize?{}'.format(
                 self.get_server_url(),
                 urllib.parse.urlencode({
                     'response_type': 'code',
@@ -476,7 +503,7 @@ if driver:
             self._login_as(self.user1.email)
 
             # Start OAuth and reauthenticate
-            self.pageLoad('{}/oauth/authorize?{}'.format(
+            self.page_load('{}/oauth/authorize?{}'.format(
                 self.get_server_url(),
                 urllib.parse.urlencode({
                     'response_type': 'code',
@@ -506,7 +533,7 @@ if driver:
             jobs_list_url = '{}/admin/course/{}/jobs/'.format(
                 self.get_server_url(), self.course.id)
 
-            self.pageLoad(jobs_list_url + 'test')
+            self.page_load(jobs_list_url + 'test')
             input_element = self.driver.find_element_by_id('duration')
             input_element.clear()
             input_element.send_keys('0')
@@ -518,18 +545,18 @@ if driver:
             self.assertIn('Test Job', self.driver.page_source)
             self.assertIn('Queued', self.driver.page_source)
 
-            self.pageLoad(jobs_list_url)
+            self.page_load(jobs_list_url)
             self.assertIn('Test Job', self.driver.page_source)
             self.assertIn('Queued', self.driver.page_source)
 
             OkTestCase.run_jobs(self)
 
-            self.pageLoad(job_url)
+            self.page_load(job_url)
             self.assertIn('Test Job', self.driver.page_source)
             self.assertIn('Failed', self.driver.page_source)
             self.assertIn('Traceback', self.driver.page_source)
             self.assertIn('ZeroDivisionError', self.driver.page_source)
 
-            self.pageLoad(jobs_list_url)
+            self.page_load(jobs_list_url)
             self.assertIn('Test Job', self.driver.page_source)
             self.assertIn('Failed', self.driver.page_source)

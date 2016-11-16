@@ -2,7 +2,7 @@
 {% import 'staff/_formhelpers.html' as forms with context %}
 {% import 'staff/_helpers.html' as helpers %}
 
-{% block title %} Ok - {{ current_course.display_name_with_semester }}{% endblock %}
+{% block title %} {{ assignment.display_name }} - {{ current_course.display_name_with_semester }}{% endblock %}
 
 {% block main %}
   <section class="content-header">
@@ -81,6 +81,8 @@
               </div>
             </div>
 
+
+            <!-- Begin Actions -->
             <div class="box">
               <div class="box-header with-border">
                 <h3 class="box-title">Actions</h3>
@@ -98,6 +100,8 @@
                   </a></li>
                   <li> <a href="{{ url_for('.student_assignment_graph_detail', cid=current_course.id, email=student.email, aid=assignment.id)}}" type="button">
                         <i class="fa fa-clock-o"></i> View Diff Graph
+                  <li> <a href="{{ url_for('.staff_submit_backup', cid=current_course.id, email=student.email, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-upload"></i> New Submission
                   </a></li>
                 </ul>
               </div>
@@ -120,7 +124,8 @@
                 {% if assign_status.group %}
                     {% for member in assign_status.group.members %}
                     {% if member.user.email != student.email %}
-                       <li><a href="#">
+                       <li><a href="{{ url_for('.student_assignment_detail',
+                          cid=current_course.id, email=member.user.email, aid=assignment.id) }}">
                              {{ member.user.identifier }}
                               <span class="pull-right">
                               {% if member.status == 'active' %}
@@ -172,48 +177,6 @@
               <!-- /.box-footer-->
             </div>
             <!-- /.box -->
-
-            <!-- Begin Submit -->
-            <div class="box collapsed-box">
-              <div class="box-header with-border">
-                <h3 class="box-title">New Submission</h3>
-                <div class="box-tools pull-right">
-                  <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Expand">
-                    <i class="fa fa-plus"></i></button>
-                </div>
-              </div>
-              <div class="box-body">
-              <p class="upload-directions">
-              {% if assignment.upload_info %}
-               {{ assignment.upload_info }}
-              {% endif %}
-
-              {% if assignment.files %}
-               Required Files: {% for f in assignment.files %} {{ f }} {% endfor %}
-              {% elif not assignment.upload_info  %}
-               Only upload files that you have changed.
-              {% endif %}
-              </p>
-
-              {% call forms.render_form(upload_form,
-                                        action_url=url_for('.staff_submit_backup',cid=current_course.id,
-                                                           email=student.email,aid=assignment.id),
-                                        class_='form', enctype="multipart/form-data") %}
-
-                  {{ forms.render_field(upload_form.upload_files, label_visible=true, multiple="", id="file-select") }}
-                  <br>
-                  {{ forms.render_checkbox_field(upload_form.flag_submission, label_visible=true) }}
-              {% endcall %}
-
-              </div>
-              <!-- /.box-body -->
-              <div class="box-footer">
-
-
-              </div>
-              <!-- /.box-footer-->
-            </div>
-            <!-- /.box -->
           </div>
 
           <div class="col-md-9 col-sm-12">
@@ -254,17 +217,7 @@
                              </a>
                             </td>
                             <td>
-                            {% if item.scores %}
-                              {% for score in item.scores %}
-                                {% if not score.archived %}
-                                <a href="{{ url_for('.grading', bid=item.id) }}">
-                                    <span class="label label-default">{{score.kind}}: {{score.score | round(2)}}</span>
-                                </a>
-                                {% endif %}
-                              {% endfor %}
-                            {% else %}
-                            &mdash;
-                            {% endif %}
+                              {{ helpers.score_pills(item.active_scores) }}
                             </td>
                             <td>
                             <div class="btn-group">

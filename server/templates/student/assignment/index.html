@@ -27,14 +27,13 @@
 
         <div class="subcontent list row">
 
-          <div class="col-md-7 col-sm-12">
+          <div class="col-lg-6 col-md-12 table-responsive group-table">
             <h2> Group </h2>
 
             {% include 'student/assignment/group_table.html' %}
-
           </div>
-          <div class="col-md-5 col-sm-12">
-            <h2> Current Submission </h2>
+          <div class="col-lg-3 col-md-6 col-xs-12">
+            <h2> Submission </h2>
             {% if final_submission %}
               <div class="cell col-xs-12">
                 <div class="cell-title">
@@ -44,21 +43,6 @@
                 </div>
                 <div class="cell-text">
                   <span>Submitted by {{ final_submission.submitter.email }}</span>
-                </div>
-                <div class="cell-text">
-                  {% if final_submission.visible_grades %}
-                    {% for score in final_submission.visible_grades %}
-                    <h4>
-                      <span class="label label-primary"> {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(30) }}</span>
-                    </h4>
-                    {% endfor %}
-                  {% else %}
-                      {% if final_submission.flagged %}
-                        <span>Flagged for Grading. This submission will be graded. </span>
-                      {% else %}
-                        <span><i class="fa fa-clock-o grey"></i> This is the most recent submission. Unless you flag another submission, the most recent submission will be graded </span>
-                      {% endif %}
-                  {% endif %}
                 </div>
                 <div class="cell-status">
                   <div class="pull-left">
@@ -96,12 +80,43 @@
                 </div>
               </div>
             {% endif %}
-        </div>
+          </div>
+          <div class="col-lg-3 col-md-6 col-xs-12">
+            <h2> Scores </h2>
+            <div class="cell col-xs-12 hide-oveflow">
+              {% if scores %}
+                    <div class="cell-text">
+                      {% for score in scores %}
+                        <h4>
+                          <a class="label label-primary" href="{{ url_for('.code', name=assignment.name, submit=score.backup.submit, bid=score.backup_id) }}">
+                            <i class="fa fa-tag"> </i> &nbsp;
+                            {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(10) }} - {{ utils.encode_id(score.backup_id) }}
+                            </a>
+                        </h4>
+                      {% endfor %}
+                    </div>
+              {% else %}
+                <div class="cell-title">
+                  <a class="due-text red"> No Scores </a>
+                </div>
+                <div class="cell-text">
+                  <span> No scores are currently available. </span>
+                </div>
+              {% endif %}
+
+            </div>
+          </div>
+
+
       </div>
       {% if assignment.uploads_enabled %}
         <div class="subcontent row">
           <div class="col-xs-12">
-            <a id="new-submission" href="{{url_for('.submit_assignment', name=assignment.name)}}" class="button-large"><i class="fa fa-inbox grey"></i> Create a new submission </a>
+            {% if assignment.active %}
+            <a id="new-submission" href="{{url_for('.submit_assignment', name=assignment.name)}}" class="button-large"><i class="fa fa-inbox grey"></i>
+              Create a new submission
+              </a>
+            {% endif %}
           </div>
         </div>
       {% endif %}

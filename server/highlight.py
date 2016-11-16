@@ -5,6 +5,13 @@ import pygments
 import pygments.lexers
 import pygments.formatters
 
+from server.constants import DIFF_SIZE_LIMIT
+
+class File:
+    def __init__(self, lines, too_big=False):
+        self.lines = lines
+        self.too_big = too_big
+
 class Line:
     def __init__(self, is_diff=True, tag=None,
             line_before=None, line_after=None, contents='', comments=()):
@@ -108,18 +115,23 @@ def highlight_diff(filename, a, b, diff_type='short'):
                 yield from equal(i1, i2, j1, j2)
 
 def diff_files(files_before, files_after, diff_type):
+    files = {}
     if diff_type:
-        files = {}
         for filename in files_before.keys() | files_after.keys():
-            lines = highlight_diff(
-                filename,
-                files_before.get(filename, ''),
-                files_after.get(filename, ''),
-                diff_type)
-            files[filename] = list(lines)
+            before = files_before.get(filename, '')
+            after = files_after.get(filename, '')
+            if len(before) > DIFF_SIZE_LIMIT or len(after) > DIFF_SIZE_LIMIT:
+                files[filename] = File([], too_big=True)
+            else:
+                lines = list(highlight_diff(filename, before, after, diff_type))
+                files[filename] = File(lines)
     else:
-        files = {filename: list(highlight_file(filename, source))
-                 for filename, source in files_after.items()}
+        for filename, source in files_after.items():
+            if len(source) > DIFF_SIZE_LIMIT:
+                files[filename] = File([], too_big=True)
+            else:
+                lines = list(highlight_file(filename, source))
+                files[filename] = File(lines)
     return files
 
 def diff_lines(files_before, files_after):

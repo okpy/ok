@@ -184,8 +184,8 @@ def make_score(user, backup, score, message, kind):
         return
 
     score = models.Score(grader_id=user.id, assignment=backup.assignment,
-                         backup=backup, score=score, message=message,
-                         kind=kind)
+                         backup=backup, user_id=backup.submitter_id,
+                         score=score, message=message, kind=kind)
     models.db.session.add(score)
     models.db.session.commit()
     score.archive_duplicates()
@@ -260,13 +260,10 @@ class UserSchema(APISchema):
         'email': fields.String,
     }
 
-class CourseEnrollmentSchema(APISchema):
-    get_fields = { role : fields.List(fields.Nested(UserSchema.simple_fields))
-                    for role in VALID_ROLES }
-
 class AssignmentSchema(APISchema):
     get_fields = {
         'due_date': fields.DateTime(dt_format='iso8601'),
+        'lock_date': fields.DateTime(dt_format='iso8601'),
         'display_name': fields.String,
         'name': fields.String,
         'max_group_size': fields.Integer,
@@ -275,10 +272,28 @@ class AssignmentSchema(APISchema):
         'files': fields.Raw
     }
 
+    list_fields = {
+        'due_date': fields.DateTime(dt_format='iso8601'),
+        'lock_date': fields.DateTime(dt_format='iso8601'),
+        'display_name': fields.String,
+        'name': fields.String,
+        'max_group_size': fields.Integer,
+        'url': fields.String,
+        'active': fields.String
+    }
+
     simple_fields = {
         'course': fields.Nested(CourseSchema.get_fields),
         'name': fields.String,
     }
+
+class CourseAssignmentSchema(APISchema):
+    get_fields = {'assignments':
+                  fields.List(fields.Nested(AssignmentSchema.list_fields))}
+
+class CourseEnrollmentSchema(APISchema):
+    get_fields = {role: fields.List(fields.Nested(UserSchema.simple_fields))
+                  for role in VALID_ROLES}
 
 
 class GroupSchema(APISchema):
@@ -300,6 +315,7 @@ class BackupSchema(APISchema):
         'assignment': fields.Nested(AssignmentSchema.simple_fields),
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
+        'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
         'group': fields.List(fields.Nested(UserSchema.simple_fields)),
@@ -309,6 +325,7 @@ class BackupSchema(APISchema):
         'id': HashIDField,
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
+        'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
     }
@@ -470,7 +487,7 @@ class V3Info(PublicResource):
 class Backup(Resource):
     """ Submission creation/retrieval resource.
         Authenticated. Permissions: >= User/Staff
-        Used by: Ok Client Submission/Exports.
+        Used by: Ok Client, Submission/Exports, Autograder
     """
     schema = BackupSchema()
     model = models.Backup
@@ -489,7 +506,6 @@ class Backup(Resource):
             if user.is_admin:
                 return restful.abort(404)
             return restful.abort(403)
-        # TODO: Check if user is researcher. If so, anonmyize submitter info.
         if not self.model.can(backup, user, 'view'):
             return restful.abort(403)
         backup.group = [models.User.get_by_id(uid) for uid in backup.owners()]
@@ -512,7 +528,7 @@ class Backup(Resource):
             'email': current_user.email,
             'key': encode_id(backup.id),
             'url': url_for('student.code', name=assignment.name, submit=backup.submit,
-                           bid=encode_id(backup.id), _external=True),
+                           bid=backup.id, _external=True),
             'course': assignment.course,
             'assignment': assignment.name
         }
@@ -562,14 +578,14 @@ class Revision(Resource):
                     score.archive()
         models.db.session.commit()
         fs_url = url_for('student.code', name=assignment.name, submit=fs.submit,
-                         bid=encode_id(fs.id), _external=True)
+                         bid=fs.id, _external=True)
 
         assignment_creator = models.User.get_by_id(assignment.creator_id)
 
         make_score(assignment_creator, backup, 2.0, "Revision for {}".format(fs_url),
                    "revision")
         backup_url = url_for('student.code', name=assignment.name, submit=backup.submit,
-                             bid=encode_id(backup.id), _external=True)
+                             bid=backup.id, _external=True)
 
         return {
             'email': current_user.email,
@@ -711,11 +727,10 @@ class CourseEnrollment(Resource):
     model = models.Course
     schema = CourseEnrollmentSchema()
 
-
     @marshal_with(schema.get_fields)
     def get(self, offering, user):
         course = self.model.by_name(offering)
-        if course == None:
+        if course is None:
             restful.abort(404)
         if not self.model.can(course, user, 'staff'):
             restful.abort(403)
@@ -725,6 +740,20 @@ class CourseEnrollment(Resource):
         for p in course.participations:
             data[p.role].append(p.user)
         return data
+
+class CourseAssignment(PublicResource):
+    """ All assignments for a course.
+    Not authenticated. Permissions: Global
+    """
+    model = models.Course
+    schema = CourseAssignmentSchema()
+
+    @marshal_with(schema.get_fields)
+    def get(self, offering):
+        course = self.model.by_name(offering)
+        if course is None:
+            restful.abort(404)
+        return {'assignments': course.assignments}
 
 class Score(Resource):
     """ Score creation.
@@ -893,9 +922,13 @@ api.add_resource(Group, ASSIGNMENT_BASE + '/group/<string:email>')
 api.add_resource(ExportBackup, ASSIGNMENT_BASE + '/export/<string:email>')
 api.add_resource(ExportFinal, ASSIGNMENT_BASE + '/submissions/')
 
+# Course Info
+COURSE_BASE = '/v3/course/<offering:offering>'
+api.add_resource(CourseEnrollment, COURSE_BASE + '/enrollment')
+api.add_resource(CourseAssignment, COURSE_BASE + '/assignments')
+
 # Other
 api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
-api.add_resource(CourseEnrollment, '/v3/course/<offering:offering>/enrollment')
 api.add_resource(Score, '/v3/score/')
 api.add_resource(User, '/v3/user/', '/v3/user/<string:email>')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')

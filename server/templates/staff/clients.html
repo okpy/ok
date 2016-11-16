@@ -34,7 +34,7 @@
                   {% for client in clients %}
                   <tr>
                     <td>{{ client.name }}</td>
-                    <td>{{ client.client_id }}</td>
+                    <td> <a href="{{ url_for('admin.client',client_id=client.client_id) }}">{{ client.client_id }}</a></td>
                     <td>{{ 'confidential' if client.is_confidential else 'public'}}</td>
                     <td>{{ client.redirect_uris | join(', ') }}</td>
                     <td>{{ client.default_scopes | join(', ') }}</td>

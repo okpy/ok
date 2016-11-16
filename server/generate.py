@@ -10,8 +10,8 @@ import pytz
 
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
-                           GradingTask, Client, Token)
-from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE, OAUTH_SCOPES
+                           GradingTask, Client)
+from server.constants import STUDENT_ROLE, OAUTH_SCOPES
 from server.extensions import cache
 
 original_file = open('tests/files/fizzbuzz_before.py', encoding="utf8").read()
@@ -118,8 +118,8 @@ def gen_assignment(course):
     name = course.offering + '/' + display_name.lower().replace(' ', '')
 
     last_night = (datetime.datetime.utcnow()
-                          .replace(hour=0, minute=0, second=0, microsecond=0) -
-                  datetime.timedelta(seconds=1))
+                          .replace(hour=0, minute=0, second=0, microsecond=0)
+                  - datetime.timedelta(seconds=1))
     last_night = (pytz.timezone("America/Los_Angeles")
                       .localize(last_night)
                       .astimezone(pytz.utc))
@@ -161,55 +161,6 @@ def gen_enrollment(user, course):
         class_account=gen_maybe(class_account, 0.4),
         section=gen_maybe(section, 0.4))
 
-# <<<<<<< HEAD
-# def gen_backup(user, assignment):
-#     fizzbuzz_lines = modified_file.split("\n")
-#     cropped_lines = fizzbuzz_lines[:random.randint(1, len(fizzbuzz_lines))]
-#     cropped_file = "\n".join(cropped_lines)
-
-#     is_passed = random.randint(0, 1)
-#     attempts = random.randint(0, 100)
-#     created = assignment.due_date - datetime.timedelta(seconds=random.randrange(-100000, 100))
-
-#     analytics = {
-#         'history': {
-#             'question': [
-#               'fizzbuzz'
-#             ],
-#             'questions': {
-#               'fizzbuzz': {
-#                 'attempts': attempts,
-#                 'solved': is_passed == 1
-#               }
-#             },
-#             'all_attempts': attempts
-#           },
-#           'unlock': gen_bool(),
-#           'question': [
-#             'fizzbuzz'
-#           ],
-#           'started': {},
-#           'time': str(created)
-#     }
-
-#     grading = {
-#         'fizzbuzz': {
-#             'passed': is_passed,
-#             'locked': 0,
-#             'failed': 1 - is_passed
-#         }
-#     }
-    
-#     messages = {
-#         'file_contents': {
-#             'fizzbuzz.py': cropped_file,
-#             'moby_dick': 'Call me Ishmael.'
-#         },
-#         'analytics': analytics,
-#         'grading': grading
-#     }
-
-# =======
 def gen_messages(assignment, seconds_offset):
     fizzbuzz_lines = modified_file.split("\n")
     random.shuffle(fizzbuzz_lines)
@@ -259,16 +210,11 @@ def gen_messages(assignment, seconds_offset):
 def gen_backup(user, assignment):
     seconds_offset = random.randrange(-100000, 100)
     messages = gen_messages(assignment, seconds_offset)
-# >>>>>>> 80b98cb7e0ea383a869fdcc2ffe295facfe658a6
-    submit = gen_bool(0.1)
+    submit = gen_bool(0.3)
     if submit:
         messages['file_contents']['submit'] = ''
     backup = Backup(
-# <<<<<<< HEAD
-#         created=created,
-# =======
         created=assignment.due_date - datetime.timedelta(seconds=seconds_offset),
-# >>>>>>> 80b98cb7e0ea383a869fdcc2ffe295facfe658a6
         submitter_id=user.id,
         assignment_id=assignment.id,
         submit=submit)
@@ -302,6 +248,7 @@ def gen_score(backup, admin, kind="autograder"):
         backup_id=backup.id,
         assignment_id=backup.assignment.id,
         grader_id=admin.id,
+        user_id=backup.submitter_id,
         kind=kind,
         score=score,
         message=loremipsum.get_sentence())
@@ -386,10 +333,10 @@ def seed_scores():
     print('Seeding scores...')
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
-        if random.choice([True, False]):
+        if gen_bool(0.6):
             score = gen_score(backup, admin, kind='composition')
             db.session.add(score)
-        if random.choice([True, False]):
+        if gen_bool(0.8):
             score = gen_score(backup, admin, kind='total')
             db.session.add(score)
     db.session.commit()
