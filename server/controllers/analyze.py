@@ -125,11 +125,9 @@ def _recent_backup_finder(backups):
                 if time_diff < 0: # curr_analytics - analyics < 0 => too far ahead
                     if partner_index > 0:
                         prev_backup = backups[partner_index-1]
-                        print("selecting:", prev_backup.hashid)
                         return prev_backup, prev_backup.hashid
                     return None, None
             partner_index += 1
-            print("iterating:", backup.hashid)
         return None, None
     return _get_recent_backup
 
