@@ -172,8 +172,9 @@
           {% endfor %}
         </div>
         
-        <div class="box">
-            <div class="box-body">
+        <div class="row">
+            <div class="col-md-6 col-xs-12">
+                <p> Student Diff against previous commit </p>
                 {% for files in files_list %}
                     <div class="subcontent list diff-delta">
                         <div class="wrap">
@@ -184,6 +185,25 @@
                     </div>
                 {% endfor %}
             </div>
+            <div class="col-md-6 col-xs-12">
+                <p> Student Diff against previous partner commit </p>
+                {% for files in partner_files_list %} 
+                    <div class="subcontent list prev-backup">
+                      {% if not files %}
+                      <p> No previous partner commit </p>
+                      {% else %}
+                        <div class="wrap">
+                            {% for filename, lines in files | dictsort %}
+                            {{ diff.source_file(backup, filename, lines) }}
+                            {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="row">
         </div>
 
         <!-- /.box -->
@@ -206,6 +226,7 @@
                     <h1 class="box-title">Diff Information</h1>
                     <p> submitted email = {{stat.submitter}} </p>
                     <p> commit id = {{stat.commit_id}} </p>
+                    <p> partner commit id = {{stat.partner_commit_id}} </p>
                     <p> question = {{stat.question}} </p>
                     <p> time = {{stat.time}} </p>
                     <p> passed = {{stat.passed}} </p>
@@ -222,10 +243,12 @@
     $('.timeline').hide()
     $('.diff-delta').hide()
     $('.diff-delta-box').hide()
+    $('.prev-backup').hide()
     var backup_number = {{start_index}};
     var backup_total = $('.diff-delta').length;
     $('.diff-delta').eq(backup_number).show()
     $('.diff-delta-box').eq(backup_number).show()
+    $('.prev-backup').eq(backup_number).show()
 
     // create buttons
     $(document).ready(function(){
@@ -258,9 +281,11 @@
             // showValue(backup_number - 1);
             $('.diff-delta').eq(backup_number).hide();
             $('.diff-delta-box').eq(backup_number).hide();
+            $('.prev-backup').eq(backup_number).hide();
             backup_number = backup_number - 1;
             $('.diff-delta').eq(backup_number).show();
             $('.diff-delta-box').eq(backup_number).show();
+            $('.prev-backup').eq(backup_number).show();
         }
         else {
            url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = prev_commit_id, student_email = filter_email)}}"
@@ -273,9 +298,11 @@
             // showValue(backup_number + 1);
             $('.diff-delta').eq(backup_number).hide();
             $('.diff-delta-box').eq(backup_number).hide();
+            $('.prev-backup').eq(backup_number).hide();
             backup_number = backup_number + 1;
             $('.diff-delta').eq(backup_number).show();
             $('.diff-delta-box').eq(backup_number).show();
+            $('.prev-backup').eq(backup_number).show();
         }
         else {
             url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = next_commit_id, student_email = filter_email)}}"
