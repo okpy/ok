@@ -1188,12 +1188,17 @@ def canvas_course(cid):
     canvas_course = CanvasCourse.by_course_id(cid)
     if not canvas_course:
         return redirect(url_for('.edit_canvas_course', cid=cid))
+    canvas_assignments = sorted(
+        canvas_course.canvas_assignments,
+        key=lambda ca: ca.assignment.display_name,
+    )
     external_names = get_external_names(canvas_course)
     return render_template(
         'staff/canvas/index.html',
         courses=courses,
         current_course=current_course,
         canvas_course=canvas_course,
+        canvas_assignments=canvas_assignments,
         external_names=external_names,
     )
 
@@ -1247,10 +1252,14 @@ def edit_canvas_assignment(cid, canvas_assignment_id):
     else:
         canvas_assignment = CanvasAssignment(canvas_course_id=canvas_course.id)
         form = forms.CanvasAssignmentForm()
-    form.external_id.choices = get_external_names(canvas_course).items()
-    form.assignment_id.choices = [
-        (a.id, a.display_name) for a in current_course.assignments
-    ]
+    form.external_id.choices = sorted(
+        get_external_names(canvas_course).items(),
+        key=lambda p: p[1],
+    )
+    form.assignment_id.choices = sorted(
+        ((a.id, a.display_name) for a in current_course.assignments),
+        key=lambda p: p[1],
+    )
     if form.validate_on_submit():
         form.populate_obj(canvas_assignment)
         db.session.add(canvas_assignment)

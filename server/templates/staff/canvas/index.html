@@ -46,7 +46,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                      {% for canvas_assignment in canvas_course.canvas_assignments %}
+                      {% for canvas_assignment in canvas_assignments %}
                         <tr>
                           <td>
                             <a href="{{ url_for('.assignment', cid=current_course.id, aid=canvas_assignment.assignment_id) }}">
