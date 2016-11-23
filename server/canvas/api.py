@@ -43,6 +43,7 @@ def get_assignments(canvas_course):
         '/courses/{}/assignments'.format(canvas_course.external_id),
     )
 
+@cache.memoize(300)
 def get_students(canvas_course):
     # https://bcourses.berkeley.edu/doc/api/courses.html#method.courses.users
     return canvas_api_get_list(
