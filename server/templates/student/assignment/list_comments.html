@@ -1,0 +1,20 @@
+{% import 'diff.html' as diff with context %}
+{% if assignment.files %}
+    {% if self.comments() | trim %}
+        <h2 class="label label-info">Grader's comments:</h2>
+        <ul class="list-group">
+        {% block comments %}
+            {% for filename, file in files | dictsort %}
+                {% for line in file.lines if line.comments %}
+                    {% for comment in line.comments if comment.author.email == score.grader.email %}
+                        <a href="#{{ utils.encode_id(comment.id) }}" class="list-group-item list-group-action">
+                            <h4 class="list-group-item-heading">File {{ filename }}, line {{ line.line_after }}.</h4>
+                            <span class="list-group-item-text">{{ diff.render_comment(comment, False) }}</span>
+                        </a>
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+        {% endblock %}
+        </ul>
+    {% endif %}
+{% endif %}

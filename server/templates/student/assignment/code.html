@@ -34,9 +34,12 @@
                     {% else %}
                     <pre class="score-box">{{ score.message }}</pre>
                     {% endif %}
-                {% endfor %}
-              {% endif %}
 
+                    {% if score.kind == "composition" %}
+                        {% include 'student/assignment/list_comments.html' %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
           </div>
           {% include 'alerts.html' %}
         </div>
