@@ -8,8 +8,7 @@
                 {% for line in file.lines if line.comments %}
                     {% for comment in line.comments if comment.author.email == score.grader.email %}
                         <a href="#{{ utils.encode_id(comment.id) }}" class="list-group-item list-group-action">
-                            <h4 class="list-group-item-heading">File {{ filename }}, line {{ line.line_after }}.</h4>
-                            <span class="list-group-item-text">{{ diff.render_comment(comment, False) }}</span>
+                            {{ filename }} at line {{ line.line_after }}: {{ comment.message | truncate(70) }}
                         </a>
                     {% endfor %}
                 {% endfor %}

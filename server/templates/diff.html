@@ -3,9 +3,9 @@
   <td class="line-number" data-line-number="{{ '' if i is none else i }}"></td>
 {% endmacro %}
 
-{% macro render_comment(comment, linkable_id=True) %}
+{% macro render_comment(comment) %}
   <div class="comment"
-    {% if linkable_id %} id="{{ utils.encode_id(comment.id) }}" {% endif %} 
+    id="{{ utils.encode_id(comment.id) }}" 
     data-id="{{ utils.encode_id(comment.id) }}"
     data-message="{{ comment.message }}"
     data-no-instant>
