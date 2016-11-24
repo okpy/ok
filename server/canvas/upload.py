@@ -58,7 +58,8 @@ def upload_scores(canvas_assignment_id):
                 stats['not_changed'] += 1
         logger.info(row_format.format(sid, emails, backup_id, old_score, new_score))
 
-    api.put_scores(canvas_assignment, new_scores)
+    if new_scores:
+        api.put_scores(canvas_assignment, new_scores)
 
     logger.info('{updated} updated, {not_changed} not changed, '
         '{no_scores} no scores'.format(**stats))
