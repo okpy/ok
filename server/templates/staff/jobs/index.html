@@ -104,7 +104,7 @@
       page: 20
     };
     var jobList = new List('job-list', jobOptions);
-    jobList.sort("timestamp", {order: "desc"})
+    jobList.sort('job-id', {order: 'desc'});
     document.getElementById('job-list').style.display = 'block';
 </script>
 {% endblock %}
