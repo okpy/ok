@@ -1286,18 +1286,33 @@ def delete_canvas_assignment(cid, canvas_assignment_id):
         return redirect(url_for('.canvas_course', cid=cid))
     abort(401)
 
+def enqueue_canvas_upload_job(canvas_assignment):
+    return jobs.enqueue_job(
+        server.canvas.upload.upload_scores,
+        description='bCourses Upload for {}'.format(
+            canvas_assignment.assignment.display_name),
+        course_id=canvas_assignment.canvas_course.course_id,
+        user_id=current_user.id,
+        canvas_assignment_id=canvas_assignment.id)
+
 @admin.route('/course/<int:cid>/canvas/assignments/<int:canvas_assignment_id>/upload/',
     methods=['POST'])
 @is_staff(course_arg='cid')
 def upload_canvas_assignment(cid, canvas_assignment_id):
-    courses, current_course = get_courses(cid)
     canvas_assignment = CanvasAssignment.query.get_or_404(canvas_assignment_id)
     if forms.CSRFForm().validate_on_submit():
-        job = jobs.enqueue_job(
-            server.canvas.upload.upload_scores,
-            description='bCourses Upload for {}'.format(canvas_assignment.assignment.display_name),
-            course_id=cid,
-            user_id=current_user.id,
-            canvas_assignment_id=canvas_assignment_id)
+        job = enqueue_canvas_upload_job(canvas_assignment)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    abort(401)
+
+@admin.route('/course/<int:cid>/canvas/upload/', methods=['POST'])
+@is_staff(course_arg='cid')
+def upload_canvas_course(cid):
+    canvas_course = CanvasCourse.by_course_id(cid)
+    if not canvas_course:
+        abort(404)
+    if forms.CSRFForm().validate_on_submit():
+        for canvas_assignment in canvas_course.canvas_assignments:
+            enqueue_canvas_upload_job(canvas_assignment)
+        return redirect(url_for('.course_jobs', cid=cid))
     abort(401)
