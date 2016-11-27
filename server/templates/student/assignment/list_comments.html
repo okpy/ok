@@ -1,19 +1,31 @@
 {% import 'diff.html' as diff with context %}
 {% if assignment.files %}
-    {% if self.comments() | trim %}
-        <h2 class="label label-info">Grader's comments:</h2>
-        <ul class="list-group">
+  {% if self.comments() | trim %}
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Location</th>
+          <th>Comment</th>
+        </tr>
+      </thead>
+      <tbody>
         {% block comments %}
-            {% for filename, file in files | dictsort %}
-                {% for line in file.lines if line.comments %}
-                    {% for comment in line.comments if comment.author.email == score.grader.email %}
-                        <a href="#{{ utils.encode_id(comment.id) }}" class="list-group-item list-group-action">
-                            {{ filename }} at line {{ line.line_after }}: {{ comment.message | truncate(70) }}
-                        </a>
-                    {% endfor %}
-                {% endfor %}
+          {% for filename, file in files | dictsort %}
+            {% for line in file.lines if line.comments %}
+              {% for comment in line.comments if comment.author.email == score.grader.email %}
+                <tr>
+                  <td>
+                    <a href="#{{ utils.encode_id(comment.id) }}">
+                      {{ filename }} on line {{ line.line_after }}
+                    </a>
+                  </td>
+                  <td>{{ comment.message | truncate(70) }}</td>
+                </tr>
+              {% endfor %}
             {% endfor %}
+          {% endfor %}
         {% endblock %}
-        </ul>
-    {% endif %}
+      </tbody>
+    </table>
+  {% endif %}
 {% endif %}
