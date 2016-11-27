@@ -6,13 +6,14 @@
         <tr>
           <th>Location</th>
           <th>Comment</th>
+          <th>Commenter</th>
         </tr>
       </thead>
       <tbody>
         {% block comments %}
           {% for filename, file in files | dictsort %}
             {% for line in file.lines if line.comments %}
-              {% for comment in line.comments if comment.author.email == score.grader.email %}
+              {% for comment in line.comments %}
                 <tr>
                   <td>
                     <a href="#{{ utils.encode_id(comment.id) }}">
@@ -20,6 +21,7 @@
                     </a>
                   </td>
                   <td>{{ comment.message | truncate(70) }}</td>
+                  <td>{{ comment.author.identifier }}</td>
                 </tr>
               {% endfor %}
             {% endfor %}
