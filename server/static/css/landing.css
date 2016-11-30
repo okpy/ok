@@ -31,10 +31,6 @@ header .landing-btn {
   letter-spacing:-0.1em;
 }
 
-.feature-block h1 {
-  margin-top: 0;
-}
-
 /* Small devices (tablets, 768px and down) */
 @media (max-width: 768px) {
   .feature-block h1 {
