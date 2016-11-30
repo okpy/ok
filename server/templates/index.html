@@ -54,12 +54,12 @@
 </div>
 
 <div class="landing row feature-block">
-    <div class="col-md-6 center">
+    <div class="col-md-6 col-md-push-6">
+        <img class="img-responsive select-none" src="{{ url_for('static', filename='img/landing-stats.png') }}">
+    </div>
+    <div class="col-md-6 col-md-pull-6 center">
         <h1>Realtime assignment statistics</h1>
         <p> Find out what questions students are working on, how many students are done, and which students have not started with detailed statistics.</p>
-    </div>
-    <div class="col-md-6">
-        <img class="img-responsive select-none" src="{{ url_for('static', filename='img/landing-stats.png') }}">
     </div>
 </div>
 
@@ -67,7 +67,6 @@
     <div class="col-md-6">
         <img class="img-responsive select-none" src="{{ url_for('static', filename='img/landing-autograde.png') }}">
     </div>
-
     <div class="col-md-6 center">
         <h1>Grading with one click</h1>
         <p>With a language agnostic autograder, you can grade your assignments by simply specifying a command to run. We'll handle the infrastructure so you can focus on teaching.</p>
