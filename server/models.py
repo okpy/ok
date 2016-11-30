@@ -417,7 +417,7 @@ class Assignment(Model):
                        .filter(Backup.submitter_id.in_(user_ids),
                                Backup.assignment_id == self.id,
                                Message.kind == "analytics")
-                       .order_by(Backup.created.desc())
+                       .order_by(Backup.created.asc())
                        .all())
 
         unlock_started_q, started_questions, solved_questions = {}, {}, {}
@@ -495,7 +495,7 @@ class Assignment(Model):
             history.append(message.contents)
 
         return {'submitters': dict(Counter(submitters)),
-                'timeline': timeline[::-1]}
+                'timeline': timeline}
 
     def user_status(self, user, staff_view=False):
         """Return a summary of an assignment for a user. If STAFF_VIEW is True,
