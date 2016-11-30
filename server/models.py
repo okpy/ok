@@ -417,7 +417,7 @@ class Assignment(Model):
                        .filter(Backup.submitter_id.in_(user_ids),
                                Backup.assignment_id == self.id,
                                Message.kind == "analytics")
-                       .order_by(Backup.created.asc())
+                       .order_by(Backup.created.desc())
                        .all())
 
         unlock_started_q, started_questions, solved_questions = {}, {}, {}
