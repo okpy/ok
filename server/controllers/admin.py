@@ -938,6 +938,8 @@ def student_assignment_detail(cid, email, aid):
         return abort(404)
 
     student = User.lookup(email)
+    if not student:
+        abort(404)
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
