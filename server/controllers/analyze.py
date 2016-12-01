@@ -45,7 +45,6 @@ def _get_unique_backups(backups):
             index += 1
         id_map[curr_backup.hashid] = last_unique_id
 
-    assert (len(index_map) == index) #todo remove
     return filtered, id_map, index_map
 
 def _get_time_diff_seconds(analytics1, analytics2):
@@ -121,7 +120,6 @@ def _recent_backup_finder(backups):
             analytics = backup and backup.analytics()
             if analytics:
                 time_diff = _get_time_diff_seconds(analytics, current_analytics)
-                #todo issue w/ backup vs submissions (non chronological order) -stan
                 if time_diff < 0: # curr_analytics - analyics < 0 => too far ahead
                     if partner_index > 0:
                         prev_backup = backups[partner_index-1]
@@ -246,12 +244,6 @@ def _get_graph_stats(backups):
 
         # get time differences
         diff_in_secs = _get_time_diff_seconds(prev_analytics, curr_analytics)
-        if diff_in_secs == None or diff_in_secs < 0:
-            # TODO: issue w/ backup vs submissions (non chronological order) -stan
-            # print(curr_backup.hashid)
-            # print(diff_in_secs)
-            continue
-
         diff_in_mins = diff_in_secs // 60 + 1 # round up
 
         # get ratio between curr_lines_changed and diff_in_mins
