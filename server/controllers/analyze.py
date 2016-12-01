@@ -244,9 +244,9 @@ def _get_graph_stats(backups):
         # get time differences
         diff_in_secs = _get_time_diff_seconds(prev_analytics, curr_analytics)
         if diff_in_secs == None or diff_in_secs < 0:
-            #todo issue w/ backup vs submissions (non chronological order) -stan
-            print(curr_backup.hashid)
-            print(diff_in_secs)
+            # TODO: issue w/ backup vs submissions (non chronological order) -stan
+            # print(curr_backup.hashid)
+            # print(diff_in_secs)
             continue
 
         diff_in_mins = diff_in_secs // 60 + 1 # round up
@@ -254,13 +254,21 @@ def _get_graph_stats(backups):
         # get ratio between curr_lines_changed and diff_in_mins
         lines_time_ratio = curr_lines_changed / diff_in_mins
 
+        # TODO: polish logic for getting question information
+        # Get question student is currently working on
+        contents = curr_backup.analytics()
+        working_q = contents.get('question')
+        if not working_q:
+            curr_q = 'N/A'
+        curr_q = working_q[0]
+
         stats = {
-            'submitter': curr_backup.submitter.email,
             'commit_id' : curr_backup.hashid,
             'lines_changed': curr_lines_changed,
             'diff_in_secs': diff_in_secs,
             'diff_in_mins': diff_in_mins,
-            'lines_time_ratio': lines_time_ratio
+            'lines_time_ratio': lines_time_ratio,
+            'curr_q': curr_q
         }
         stats_list.append(stats)
     return stats_list
@@ -273,8 +281,8 @@ def _get_graph_points(backups, cid, email, aid):
     def gen_point(stat):
         value = stat["lines_time_ratio"]
         lines_changed = round(stat["lines_changed"], 5)
-        label = "Total Lines:{0} \n Submitter: {1} \n Commit ID: {2}\n".format(
-            lines_changed, stat["submitter"], stat["commit_id"])
+        label = "Total Lines:{0} | Commit ID: {1} | Question: {2}".format(
+            lines_changed, stat["commit_id"], stat["curr_q"])
         url = url_for('.student_commit_overview', 
                 cid=cid, email=email, aid=aid, commit_id=stat["commit_id"]) + "?student_email=" + email
 
@@ -311,6 +319,6 @@ def generate_line_chart(backups, cid, email, aid):
                             legend_at_bottom=True,
                             pretty_print=True
                             )
-    line_chart.title = 'Lines/Minutes Ratio Across Backups'
+    line_chart.title = 'Lines/Minutes Ratio Across Backups: {0}'.format(email)
     line_chart.add('Backups', points)
     return line_chart
