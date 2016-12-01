@@ -45,21 +45,11 @@
                         <br>
                         Group:
                         {% for member in group %}
-                            <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
+                            <a>
                                {{ member.email }}
                             </a>
                         {% endfor %}
                         <br>
-                        Search Only:
-                        {% for member in group %}
-                            <a href="{{ url_for('.student_assignment_graph_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id, student_email=member.email)}}">
-                               {{ member.email }}
-                            </a>
-                        {% endfor %}
-                        <br>
-                        <a href="{{ url_for('.student_assignment_graph_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id)}}">
-                        Search Both
-                        </a>
                     {% endif %}
                 </div>
                 <!-- /.box-body -->
@@ -99,9 +89,11 @@
 
         <div class="box-body">
             <div class="row">
-                <div class="col-xs-12">
-                    {{ graph.render() | safe }}
-                </div>
+                {% for graph in graphs %}
+                    <div class="col-xs-12">
+                        {{ graph.render() | safe }}
+                    </div>
+                {% endfor %}
             </div>
         </div>
 

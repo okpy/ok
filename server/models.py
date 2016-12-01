@@ -504,7 +504,7 @@ class Assignment(Model):
             history.append(message.contents)
 
         return {'submitters': dict(Counter(submitters)),
-                'timeline': timeline[::-1]}
+                'timeline': timeline}
 
     def user_status(self, user, staff_view=False):
         """Return a summary of an assignment for a user. If STAFF_VIEW is True,

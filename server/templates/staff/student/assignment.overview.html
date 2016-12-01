@@ -120,7 +120,7 @@
                       <!-- /.timeline-label -->
                       {% for event in timeline %}
                       <!-- timeline item -->
-                      <li class="{% if event['backup'].submitter.email == submitter %}invisible{% endif %}" >
+                      <li class="{% if event['backup'].submitter.email != submitter %}invisible{% endif %}" >
                           {% if event['event'] == "Later" %}
                             <i class="fa fa-ellipsis-h"></i>
                           {% elif event['event'] == "Started" %}
