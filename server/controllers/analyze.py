@@ -128,6 +128,9 @@ def _recent_backup_finder(backups):
                         return prev_backup, prev_backup.hashid
                     return None, None
             partner_index += 1
+        if backup_count:
+            prev_backup = backups[-1]
+            return prev_backup, prev_backup.hashid
         return None, None
     return _get_recent_backup
 

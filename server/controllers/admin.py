@@ -1019,18 +1019,14 @@ def student_commit_overview(cid, email, aid, commit_id):
                                     db.joinedload('submitter'))
                      .filter(Backup.submitter_id.in_(user_ids),
                              Backup.assignment_id == assign.id)
-                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
-                               Backup.created.desc())).all()
-    backups.reverse()
+                     .order_by(Backup.created.asc())).all()
 
     # get partners' backups
     partner_backups = (Backup.query.options(db.joinedload('scores'),
                                     db.joinedload('submitter'))
                      .filter(Backup.submitter_id.in_(partner_ids),
                              Backup.assignment_id == assign.id)
-                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
-                               Backup.created.desc())).all()
-    partner_backups.reverse()
+                     .order_by(Backup.created.asc())).all()
 
     group = [User.query.get(o) for o in backups[0].owners()] #todo fix
 
@@ -1103,9 +1099,7 @@ def student_assignment_graph_detail(cid, email, aid):
                                     db.joinedload('submitter'))
                      .filter(Backup.submitter_id.in_(user_ids),
                              Backup.assignment_id == assign.id)
-                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
-                               Backup.created.desc())).all()
-    backups.reverse()
+                     .order_by(Backup.created.asc())).all()
     line_chart = analyze.generate_line_chart(backups, cid, email, aid, extra)    
     group = [User.query.get(o) for o in backups[0].owners()] #TODO
 
