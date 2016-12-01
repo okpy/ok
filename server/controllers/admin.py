@@ -1087,29 +1087,27 @@ def student_assignment_graph_detail(cid, email, aid):
         flash('Cannot access assignment', 'error')
         return abort(404)
 
-    extra = request.args and ("student_email" in request.args)
-    if extra:
-        email = request.args["student_email"]
-
     student = User.lookup(email)
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    user_ids = {student.id}
-    if not extra:
-        user_ids = assign.active_user_ids(student.id)
+    user_ids = assign.active_user_ids(student.id)
 
     assignment_stats = assign.user_status(student)
 
-    backups = (Backup.query.options(db.joinedload('scores'),
-                                    db.joinedload('submitter'))
-                     .filter(Backup.submitter_id.in_(user_ids),
-                             Backup.assignment_id == assign.id)
-                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
-                               Backup.created.desc())).all()
-    backups.reverse()
-    line_chart = analyze.generate_line_chart(backups, cid, email, aid, extra)    
-    group = [User.query.get(o) for o in backups[0].owners()] #TODO
+    line_charts = []
+    for user_id in user_ids:
+        backups = (Backup.query.options(db.joinedload('scores'),
+                                        db.joinedload('submitter'))
+                         .filter(Backup.submitter_id.in_({user_id}),
+                                 Backup.assignment_id == assign.id)
+                         .order_by(Backup.flagged.desc(), Backup.submit.desc(),
+                                   Backup.created.desc())).all()
+        backups.reverse()
+        line_chart = analyze.generate_line_chart(backups, cid, User.query.get(user_id).email, aid)
+        line_charts.append(line_chart)
+
+    group = [User.query.get(owner) for owner in user_ids] #TODO
 
     return render_template('staff/student/assignment.graph.html',
                            courses=courses, current_course=current_course,
@@ -1120,7 +1118,7 @@ def student_assignment_graph_detail(cid, email, aid):
                            assign_status=assignment_stats,
                            backup=backups[0],
                            group=group,
-                           graph=line_chart)
+                           graphs=line_charts)
 
 ########################
 # Student view actions #

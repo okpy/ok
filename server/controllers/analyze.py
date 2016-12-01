@@ -265,7 +265,7 @@ def _get_graph_stats(backups):
         stats_list.append(stats)
     return stats_list
 
-def _get_graph_points(backups, cid, email, aid, extra):
+def _get_graph_points(backups, cid, email, aid):
     """
     Given a list of backups, forms the points needed for a pygal graph
     """
@@ -276,7 +276,7 @@ def _get_graph_points(backups, cid, email, aid, extra):
         label = "Total Lines:{0} \n Submitter: {1} \n Commit ID: {2}\n".format(
             lines_changed, stat["submitter"], stat["commit_id"])
         url = url_for('.student_commit_overview', 
-                cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
+                cid=cid, email=email, aid=aid, commit_id=stat["commit_id"]) + "?student_email=" + email
 
         #arbitrary boundaries for color-coding based on ratio, need more data to determine bounds
         if lines_changed > 100: 
@@ -288,8 +288,8 @@ def _get_graph_points(backups, cid, email, aid, extra):
         else:
             color = 'black'
 
-        if extra:
-            url += "?student_email=" + email
+        # url += "?student_email=" + email
+
         return {
             "value": value,
             "label" : label,
@@ -300,11 +300,11 @@ def _get_graph_points(backups, cid, email, aid, extra):
     return points
 
 @cache.memoize(1200)
-def generate_line_chart(backups, cid, email, aid, extra):
+def generate_line_chart(backups, cid, email, aid):
     """
     Generates a pygal line_chart given a list of backups
     """
-    points = _get_graph_points(backups, cid, email, aid, extra)
+    points = _get_graph_points(backups, cid, email, aid)
 
     line_chart = pygal.Line(disable_xml_declaration=True,
                             human_readable=True,
