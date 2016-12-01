@@ -1014,7 +1014,9 @@ def student_commit_overview(cid, email, aid, commit_id):
         timeline_stats = assign.user_timeline(student.id, commit_id)
 
     assignment_stats = assign.user_status(student)
+    partner_ids = assign.active_user_ids(student.id) - user_ids
 
+    # get students.id's backups
     backups = (Backup.query.options(db.joinedload('scores'),
                                     db.joinedload('submitter'))
                      .filter(Backup.submitter_id.in_(user_ids),
@@ -1023,7 +1025,18 @@ def student_commit_overview(cid, email, aid, commit_id):
                                Backup.created.desc())).all()
     backups.reverse()
 
-    diff_dict = analyze.get_diffs(backups, commit_id)
+    # get partners' backups
+    partner_backups = (Backup.query.options(db.joinedload('scores'),
+                                    db.joinedload('submitter'))
+                     .filter(Backup.submitter_id.in_(partner_ids),
+                             Backup.assignment_id == assign.id)
+                     .order_by(Backup.flagged.desc(), Backup.submit.desc(),
+                               Backup.created.desc())).all()
+    partner_backups.reverse()
+
+    group = [User.query.get(o) for o in backups[0].owners()] #todo fix
+
+    diff_dict = analyze.get_diffs(backups, commit_id, partner_backups)
 
     if not diff_dict:
         flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
@@ -1031,6 +1044,7 @@ def student_commit_overview(cid, email, aid, commit_id):
 
     stats_list = diff_dict["stats"]
     files_list = diff_dict["files"]
+    partner_files_list = diff_dict["partners"]
     commit_id = diff_dict["commit_id"] # relevant commit_id might be different
     prev_commit_id = diff_dict["prev_commit_id"]
     next_commit_id = diff_dict["next_commit_id"]
@@ -1043,8 +1057,6 @@ def student_commit_overview(cid, email, aid, commit_id):
     else:
         start_index = 0
 
-    group = [User.query.get(o) for o in backups[0].owners()] #todo fix
-
     return render_template('staff/student/assignment.overview.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,
@@ -1055,6 +1067,7 @@ def student_commit_overview(cid, email, aid, commit_id):
                            assign_status=assignment_stats,
                            backup=backups[0],
                            files_list=files_list,
+                           partner_files_list=partner_files_list,
                            group=group,
                            num_diffs=len(files_list)-1,
                            start_index=start_index,

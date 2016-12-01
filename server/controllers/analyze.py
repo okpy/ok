@@ -100,14 +100,46 @@ def _get_backup_range(backups, commit_id, bound):
         "next_commit_id": next_commit_id
     }
 
+def _recent_backup_finder(backups):
+    """
+    Given list of backups, creates a HOF used for finding the most recent backup.
+    """
+    partner_index = 0
+    backup_count = len(backups)
+    def _get_recent_backup(current_analytics):
+        """
+        `current_analytics`: contains the time to find the most recent backup
+        attempts to find a backup b_p such that 
+            "b_p.time" is the largest possible AND
+            "b_p.time" < `current_time`
+        Returns backup b_p, and b_p.hashid or None if nothing is found
+        """
+        nonlocal partner_index
+        while partner_index < backup_count:
+            backup = backups[partner_index]
+
+            analytics = backup and backup.analytics()
+            if analytics:
+                time_diff = _get_time_diff_seconds(analytics, current_analytics)
+                #todo issue w/ backup vs submissions (non chronological order) -stan
+                if time_diff < 0: # curr_analytics - analyics < 0 => too far ahead
+                    if partner_index > 0:
+                        prev_backup = backups[partner_index-1]
+                        return prev_backup, prev_backup.hashid
+                    return None, None
+            partner_index += 1
+        return None, None
+    return _get_recent_backup
+
 @cache.memoize(1200)
-def get_diffs(backups, commit_id, bound=10):
+def get_diffs(backups, commit_id, partner_backups, bound=10):
     """
     Given a list `backups`, a `commit_id`, and `bound`
     Compute the a dict containing diffs/stats of surronding the `commit_id`:
         diff_dict = {
         "stats": stats_list,
         "files": files_list,
+        "partners": partner_files_list,
         "prev_commit_id": prev_commit_id,
         "commit_id": commit_id,
         "next_commit_id": next_commit_id
@@ -124,7 +156,9 @@ def get_diffs(backups, commit_id, bound=10):
     prev_commit_id = backup_dict["prev_commit_id"]
     next_commit_id = backup_dict["next_commit_id"]
 
-    files_list, stats_list = [], []
+    get_recent_backup = _recent_backup_finder(partner_backups)
+    assign_files = backups[0].assignment.files
+    files_list, stats_list, partner_files_list = [], [], []
     for i, backup in enumerate(backups):
         if not i: # first unique backup => no diff
             continue
@@ -137,6 +171,7 @@ def get_diffs(backups, commit_id, bound=10):
         backup_stats = {
             'submitter': backup.submitter.email,
             'commit_id' : backup.hashid,
+            'partner_commit_id': None,
             'question': None,
             'time': None,
             'passed': None,
@@ -146,8 +181,14 @@ def get_diffs(backups, commit_id, bound=10):
         analytics = backup and backup.analytics()
         grading = backup and backup.grading()
 
+        partner_backup_files = None
+
         if analytics:
             backup_stats['time'] = analytics.get('time')
+            partner_backup, partner_backup_id = get_recent_backup(analytics)
+            backup_stats["partner_commit_id"] = partner_backup_id
+            if partner_backup:
+                partner_backup_files = highlight.diff_files(partner_backup.files(), curr, "short")
 
         if grading:
             questions = list(grading.keys())
@@ -167,10 +208,12 @@ def get_diffs(backups, commit_id, bound=10):
             backup_stats['question'] = "[Unlocking] " + unlock.split(">")[0]
 
         stats_list.append(backup_stats)
+        partner_files_list.append(partner_backup_files)
 
     diff_dict = {
         "stats": stats_list,
         "files": files_list,
+        "partners": partner_files_list,
         "prev_commit_id": prev_commit_id,
         "commit_id": commit_id,
         "next_commit_id": next_commit_id
@@ -200,7 +243,8 @@ def _get_graph_stats(backups):
 
         # get time differences
         diff_in_secs = _get_time_diff_seconds(prev_analytics, curr_analytics)
-        if diff_in_secs == None or diff_in_secs < 0: #todo issue w/ backup vs submissions (non chronological order)
+        if diff_in_secs == None or diff_in_secs < 0:
+            #todo issue w/ backup vs submissions (non chronological order) -stan
             print(curr_backup.hashid)
             print(diff_in_secs)
             continue
