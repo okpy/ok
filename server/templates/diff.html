@@ -5,6 +5,7 @@
 
 {% macro render_comment(comment) %}
   <div class="comment"
+    id="{{ utils.encode_id(comment.id) }}" 
     data-id="{{ utils.encode_id(comment.id) }}"
     data-message="{{ comment.message }}"
     data-no-instant>

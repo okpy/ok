@@ -347,7 +347,7 @@ offset | 0 | (Optional) How many recent backups to ignore. An offset of 100 with
 Name | Type | Description
 ---------- | -------
 backups | List |  A list of backup objects, sorted by time (most recent to oldest).
-has_more | Boolean | Indicates whether this response includes the earliest backup.
+has_more | Boolean | Indicates whether this response includes the last backup.
 count | Integer | The count of total backups from this user
 limit | Integer | The value of the limit parameter
 offset | Integer | The value of the limit parameter
@@ -402,7 +402,7 @@ The access_token's user must have at least staff level access to the assignment.
 Parameter | Default | Description
 ---------- | ------- | -------
 access_token | None | (Required) Access Token of staff member
-limit | 150 | (Optional) Number of backups to retrieve in one request. High numbers may result in slower responses.
+limit | 150 | (Optional) Number of backups to retrieve in one request. High numbers may result in slower responses or timeouts.
 offset | 0 | (Optional) How many recent backups to ignore. An offset of 100 with a limit of 150 will provide backup numbers #101 to #250.
 
 
@@ -411,9 +411,9 @@ Name | Type | Description
 ---------- | -------
 backups | List |  A list of backup objects in no particular order
 count | Integer | The count of total backups from this user
-limit | Integer | Unsupported. Value will be 0
-offset | Integer | Unsupported. Value will be 0
-has_more | None | Unsupported. Value will be null
+limit | Integer | The value of the limit parameter
+offset | Integer | The value of the limit parameter
+has_more | Boolean | Indicates whether this response includes the last backup.
 
 # Backups
 

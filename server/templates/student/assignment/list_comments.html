@@ -1,0 +1,33 @@
+{% import 'diff.html' as diff with context %}
+{% if assignment.files %}
+  {% if self.comments() | trim %}
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Location</th>
+          <th>Comment</th>
+          <th>Commenter</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% block comments %}
+          {% for filename, file in files | dictsort %}
+            {% for line in file.lines if line.comments %}
+              {% for comment in line.comments %}
+                <tr>
+                  <td>
+                    <a href="#{{ utils.encode_id(comment.id) }}">
+                      {{ filename }} on line {{ line.line_after }}
+                    </a>
+                  </td>
+                  <td>{{ comment.message | truncate(70) }}</td>
+                  <td>{{ comment.author.identifier }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          {% endfor %}
+        {% endblock %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endif %}
