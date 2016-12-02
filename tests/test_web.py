@@ -402,6 +402,11 @@ if driver:
             self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/timeline".format(self.user1.email, self.assignment.id))
             self.assertIn('Timeline', self.driver.title)
 
+        def test_admin_student_assign_graph(self):
+            self._login(role="admin")
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/graph".format(self.user1.email, self.assignment.id))
+            self.assertIn('Diff Graph', self.driver.title)
+
         def test_queue_create(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/")
