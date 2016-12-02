@@ -62,6 +62,21 @@ def _get_time_diff_seconds(analytics1, analytics2):
     time_difference = time2 - time1
     return time_difference.total_seconds()
 
+def sort_backups(backups):
+    """
+    Given a list of backups, sort by analytics time, mutating the original .
+    If a certains backup has no analytics; it is dropped.
+    """
+    def time_key(backup):
+        analytics = backup and backup.analytics()
+        if analytics:
+            time_string = analytics.get("time")
+            time_format = "%Y-%m-%d %X"
+            time = datetime.datetime.strptime(time_string.split(".")[0], time_format)
+            return time
+        return backup.created
+    backups.sort(key=time_key)
+
 ### Diff Overview Generation ###
 def _get_backup_range(backups, commit_id, bound):
     """
@@ -247,7 +262,8 @@ def _get_graph_stats(backups):
         diff_in_mins = diff_in_secs // 60 + 1 # round up
 
         # get ratio between curr_lines_changed and diff_in_mins
-        lines_time_ratio = curr_lines_changed / max(diff_in_mins, 1)
+        lines_time_ratio = curr_lines_changed / diff_in_mins
+        # lines_time_ratio = curr_lines_changed / max(diff_in_mins, 1)
 
         # TODO: polish logic for getting question information
         # Get question student is currently working on

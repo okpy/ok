@@ -1022,6 +1022,7 @@ def student_commit_overview(cid, email, aid, commit_id):
                      .filter(Backup.submitter_id.in_(user_ids),
                              Backup.assignment_id == assign.id)
                      .order_by(Backup.created.asc())).all()
+    analyze.sort_backups(backups)
 
     # get partners' backups
     partner_backups = (Backup.query.options(db.joinedload('scores'),
@@ -1029,6 +1030,7 @@ def student_commit_overview(cid, email, aid, commit_id):
                      .filter(Backup.submitter_id.in_(partner_ids),
                              Backup.assignment_id == assign.id)
                      .order_by(Backup.created.asc())).all()
+    analyze.sort_backups(partner_backups)
 
     group = [User.query.get(o) for o in backups[0].owners()] #todo fix
 
@@ -1098,6 +1100,7 @@ def student_assignment_graph_detail(cid, email, aid):
                          .filter(Backup.submitter_id.in_({user_id}),
                                  Backup.assignment_id == assign.id)
                          .order_by(Backup.created.asc())).all()
+        analyze.sort_backups(backups)
         line_chart = analyze.generate_line_chart(backups, cid, User.query.get(user_id).email, aid)
         line_charts.append(line_chart)
 
