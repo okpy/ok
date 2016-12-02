@@ -247,7 +247,7 @@ def _get_graph_stats(backups):
         diff_in_mins = diff_in_secs // 60 + 1 # round up
 
         # get ratio between curr_lines_changed and diff_in_mins
-        lines_time_ratio = curr_lines_changed / diff_in_mins
+        lines_time_ratio = curr_lines_changed / max(diff_in_mins, 1)
 
         # TODO: polish logic for getting question information
         # Get question student is currently working on
