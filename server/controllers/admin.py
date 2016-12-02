@@ -1053,6 +1053,15 @@ def student_commit_overview(cid, email, aid, commit_id):
     else:
         start_index = 0
 
+    print(files_list)
+    for files in files_list:
+        for _, _, backup in files:
+            db.session.refresh(backup)
+    for files in partner_files_list: # Entry: (filename, lines, backup) or None
+        if files:
+            for _, _, backup in files:
+                db.session.refresh(backup) # backup entry in tuple
+
     return render_template('staff/student/assignment.overview.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,
@@ -1061,7 +1070,6 @@ def student_commit_overview(cid, email, aid, commit_id):
                            upload_form=forms.UploadSubmissionForm(),
                            stats_list=stats_list,
                            assign_status=assignment_stats,
-                           backup=backups[0],
                            files_list=files_list,
                            partner_files_list=partner_files_list,
                            group=group,
@@ -1110,7 +1118,6 @@ def student_assignment_graph_detail(cid, email, aid):
                            csrf_form=forms.CSRFForm(),
                            upload_form=forms.UploadSubmissionForm(),
                            assign_status=assignment_stats,
-                           backup=backups[0],
                            group=group,
                            graphs=line_charts)
 

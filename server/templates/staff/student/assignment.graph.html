@@ -8,17 +8,17 @@
 <style> .pygal-chart {max-height: 1000px !important;} </style>
 <section class="content-header">
     <h1>
-        {{ backup.assignment.display_name }} Diff Graph
+        {{ assignment.display_name }} Diff Graph
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li><a href="{{ url_for(".course", cid=backup.assignment.course.id) }}">
-            <i class="fa fa-university"></i> {{ backup.assignment.course.offering }}
+        <li><a href="{{ url_for(".course", cid=assignment.course.id) }}">
+            <i class="fa fa-university"></i> {{ assignment.course.offering }}
         </a></li>
-        <li><a href="{{ url_for('.course_assignments', cid=backup.assignment.course.id) }}">
+        <li><a href="{{ url_for('.course_assignments', cid=assignment.course.id) }}">
           <i class="fa fa-list"></i> Assignments</a>
         </li>
-        <li class="active"><a href="{{ url_for('.assignment', cid=backup.assignment.course.id, aid=backup.assignment.id) }}"><i class="fa fa-book"></i> {{ backup.assignment.display_name }}</a></li>
+        <li class="active"><a href="{{ url_for('.assignment', cid=assignment.course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }}</a></li>
     </ol>
 </section>
 

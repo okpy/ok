@@ -7,17 +7,17 @@
 {% block main %}
 <section class="content-header">
     <h1>
-        {{ backup.assignment.display_name }} Diff Overview
+        {{ assignment.display_name }} Diff Overview
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li><a href="{{ url_for(".course", cid=backup.assignment.course.id) }}">
-            <i class="fa fa-university"></i> {{ backup.assignment.course.offering }}
+        <li><a href="{{ url_for(".course", cid=assignment.course.id) }}">
+            <i class="fa fa-university"></i> {{ assignment.course.offering }}
         </a></li>
-        <li><a href="{{ url_for('.course_assignments', cid=backup.assignment.course.id) }}">
+        <li><a href="{{ url_for('.course_assignments', cid=assignment.course.id) }}">
           <i class="fa fa-list"></i> Assignments</a>
         </li>
-        <li class="active"><a href="{{ url_for('.assignment', cid=backup.assignment.course.id, aid=backup.assignment.id) }}"><i class="fa fa-book"></i> {{ backup.assignment.display_name }}</a></li>
+        <li class="active"><a href="{{ url_for('.assignment', cid=assignment.course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }}</a></li>
     </ol>
 </section>
 
@@ -44,7 +44,7 @@
                         <br>
                         Group:
                         {% for member in group %}
-                            <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
+                            <a href="{{ url_for('.student_assignment_detail', cid=assignment.course.id, email=member.email, aid=assignment.id) }}">
                                {{ member.email }}
                             </a>
                         {% endfor %}
@@ -178,7 +178,7 @@
                 {% for files in files_list %}
                     <div class="subcontent list diff-delta">
                         <div class="wrap">
-                            {% for filename, lines in files | dictsort %}
+                            {% for filename, lines, backup in files %}
                             {{ diff.source_file(backup, filename, lines) }}
                             {% endfor %}
                         </div>
@@ -193,7 +193,7 @@
                       <p> No previous partner commit </p>
                       {% else %}
                         <div class="wrap">
-                            {% for filename, lines in files | dictsort %}
+                            {% for filename, lines, backup in files %}
                             {{ diff.source_file(backup, filename, lines) }}
                             {% endfor %}
                         </div>
@@ -288,7 +288,7 @@
             $('.prev-backup').eq(backup_number).show();
         }
         else {
-           url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = prev_commit_id, student_email = filter_email)}}"
+           url = "{{url_for('.student_commit_overview', email = student.email, cid=assignment.course.id, aid=assignment.id, commit_id = prev_commit_id, student_email = filter_email)}}"
            window.location.assign(url);
         }
     }
@@ -305,7 +305,7 @@
             $('.prev-backup').eq(backup_number).show();
         }
         else {
-            url = "{{url_for('.student_commit_overview', email = backup.submitter.email, cid=backup.assignment.course.id, aid=backup.assignment.id, commit_id = next_commit_id, student_email = filter_email)}}"
+            url = "{{url_for('.student_commit_overview', email = student.email, cid=assignment.course.id, aid=assignment.id, commit_id = next_commit_id, student_email = filter_email)}}"
             window.location.assign(url);
         }
     }
