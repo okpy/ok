@@ -255,7 +255,8 @@ def _get_graph_stats(backups):
         working_q = contents.get('question')
         if not working_q:
             curr_q = 'N/A'
-        curr_q = working_q[0]
+        else:
+            curr_q = working_q[0]
 
         stats = {
             'commit_id' : curr_backup.hashid,
