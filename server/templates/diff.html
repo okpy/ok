@@ -97,3 +97,36 @@
     </table>
   </div>
 {% endmacro %}
+
+{% macro diff_lines(file) %}
+  <div class="source-file table-responsive"
+    data-filename={{ filename }}>
+    <table class="highlight">
+      <tbody>
+        {% for line in file.lines %}
+          <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
+            {% if line.is_diff %}
+              {{ line_number(line.line_before) }}
+            {% endif %}
+            {{ line_number(line.line_after) }}
+            <td>
+              {% if line.line_after %}
+                <span class="comment-add"><i class="fa fa-plus"></i></span>
+              {% endif %}
+              <span class="highlight-source">{{ line.contents | safe }}</span>
+            </td>
+          </tr>
+          {% if line.comments %}
+            <tr data-line={{ line.line_after }}>
+              <td class="comment-container" colspan=3>
+                {% for comment in line.comments %}
+                  {{ render_comment(comment) }}
+                {% endfor %}
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endmacro %}

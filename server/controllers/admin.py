@@ -1055,15 +1055,6 @@ def student_commit_overview(cid, email, aid, commit_id):
     else:
         start_index = 0
 
-    print(files_list)
-    for files in files_list:
-        for _, _, backup in files:
-            db.session.refresh(backup)
-    for files in partner_files_list: # Entry: (filename, lines, backup) or None
-        if files:
-            for _, _, backup in files:
-                db.session.refresh(backup) # backup entry in tuple
-
     return render_template('staff/student/assignment.overview.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,

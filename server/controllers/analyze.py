@@ -182,8 +182,7 @@ def get_diffs(backups, commit_id, partner_backups, bound=10):
         prev = backups[i - 1].files()
         curr = backup.files()
         files = highlight.diff_files(prev, curr, "short")
-        files_and_backup = [(filename, lines, backup) for filename, lines in files.items()]
-        files_list.append(files_and_backup)
+        files_list.append(files)
 
         backup_stats = {
             'submitter': backup.submitter.email,
@@ -199,7 +198,6 @@ def get_diffs(backups, commit_id, partner_backups, bound=10):
         grading = backup and backup.grading()
 
         partner_backup_files = None
-        partner_backup = None
 
         if analytics:
             backup_stats['time'] = analytics.get('time')
@@ -226,9 +224,6 @@ def get_diffs(backups, commit_id, partner_backups, bound=10):
             backup_stats['question'] = "[Unlocking] " + unlock.split(">")[0]
 
         stats_list.append(backup_stats)
-        if partner_backup_files:
-            print(partner_backup_files)
-            partner_backup_files = [(filename, lines, partner_backup) for filename, lines in partner_backup_files.items()]
         partner_files_list.append(partner_backup_files)
 
     diff_dict = {

@@ -178,8 +178,8 @@
                 {% for files in files_list %}
                     <div class="subcontent list diff-delta">
                         <div class="wrap">
-                            {% for filename, lines, backup in files %}
-                            {{ diff.source_file(backup, filename, lines) }}
+                            {% for filename, lines in files | dictsort %}
+                            {{ diff.diff_lines(lines) }}
                             {% endfor %}
                         </div>
                     </div>
@@ -193,8 +193,8 @@
                       <p> No previous partner commit </p>
                       {% else %}
                         <div class="wrap">
-                            {% for filename, lines, backup in files %}
-                            {{ diff.source_file(backup, filename, lines) }}
+                            {% for filename, lines in files | dictsort %}
+                            {{ diff.diff_lines(lines) }}
                             {% endfor %}
                         </div>
                       {% endif %}
