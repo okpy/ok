@@ -265,14 +265,16 @@ def _get_graph_stats(backups):
         lines_time_ratio = curr_lines_changed / diff_in_mins
         # lines_time_ratio = curr_lines_changed / max(diff_in_mins, 1)
 
-        # TODO: polish logic for getting question information
-        # Get question student is currently working on
-        contents = curr_backup.analytics()
-        working_q = contents.get('question')
-        if not working_q:
-            curr_q = 'N/A'
-        else:
-            curr_q = working_q[0]
+        # Getting timestamp and question progress from analytics
+        timestamp = 'N/A'
+        if curr_analytics:
+            working_q = curr_analytics.get('question')
+            if not working_q:
+                curr_q = 'N/A'
+            else:
+                curr_q = working_q[0]
+            timestamp = curr_analytics.get('time')
+
 
         stats = {
             'commit_id' : curr_backup.hashid,
@@ -280,7 +282,8 @@ def _get_graph_stats(backups):
             'diff_in_secs': diff_in_secs,
             'diff_in_mins': diff_in_mins,
             'lines_time_ratio': lines_time_ratio,
-            'curr_q': curr_q
+            'curr_q': curr_q,
+            'timestamp': timestamp
         }
         stats_list.append(stats)
     return stats_list
@@ -317,14 +320,15 @@ def _get_graph_points(backups, cid, email, aid):
             "color": color
         }
     points = [gen_point(stat) for stat in stats_list]
-    return points
+    timestamps = [stat['timestamp'] for stat in stats_list]
+    return points, timestamps
 
 @cache.memoize(1200)
 def generate_line_chart(backups, cid, email, aid):
     """
     Generates a pygal line_chart given a list of backups
     """
-    points = _get_graph_points(backups, cid, email, aid)
+    points, timestamps = _get_graph_points(backups, cid, email, aid)
 
     line_chart = pygal.Line(disable_xml_declaration=True,
                             human_readable=True,
@@ -333,4 +337,5 @@ def generate_line_chart(backups, cid, email, aid):
                             )
     line_chart.title = 'Lines/Minutes Ratio Across Backups: {0}'.format(email)
     line_chart.add('Backups', points)
+    line_chart.x_labels = timestamps
     return line_chart
