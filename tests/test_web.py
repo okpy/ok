@@ -419,7 +419,7 @@ if driver:
             models.db.session.commit()
 
             bid = utils.encode_id(backup.id)
-            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/{}/?studentemail={}".format(
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/{}?studentemail={}".format(
                 self.user1.email, self.assignment.id, bid, self.user1.email))
             self.assertIn('Diff Overview', self.driver.title)
 
