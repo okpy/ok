@@ -2,7 +2,7 @@
 {% import 'diff.html' as diff with context %}
 {% import 'staff/_formhelpers.html' as forms %}
 
-{% block title %} OK | Grade {% endblock %}
+{% block title %} {{assignment.display_name}} Diff Graph {% endblock %}
 
 {% block main %}
 <style> .pygal-chart {max-height: 1000px !important;} </style>

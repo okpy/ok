@@ -407,6 +407,22 @@ if driver:
             self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/graph".format(self.user1.email, self.assignment.id))
             self.assertIn('Diff Graph', self.driver.title)
 
+        def test_admin_student_assign_diff_overview(self):
+            self._login(role="admin")
+
+            # find a backup
+            backup = models.Backup(
+                submitter_id=self.user1.id,
+                assignment=self.assignment,
+            )
+            models.db.session.add(backup)
+            models.db.session.commit()
+
+            bid = utils.encode_id(backup.id)
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/{}/?studentemail={}".format(
+                self.user1.email, self.assignment.id, bid, self.user1.email))
+            self.assertIn('Diff Overview', self.driver.title)
+
         def test_queue_create(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/")

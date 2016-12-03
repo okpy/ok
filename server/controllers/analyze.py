@@ -296,7 +296,7 @@ def _get_graph_points(backups, cid, email, aid):
     def gen_point(stat):
         value = stat["lines_time_ratio"]
         lines_changed = round(stat["lines_changed"], 5)
-        label = "Total Lines:{0} | Commit ID: {1} | Question: {2}".format(
+        label = "Lines Changed:{0} | Commit ID: {1} | Question: {2}".format(
             lines_changed, stat["commit_id"], stat["curr_q"])
         url = url_for('.student_commit_overview', 
                 cid=cid, email=email, aid=aid, commit_id=stat["commit_id"]) + "?student_email=" + email
