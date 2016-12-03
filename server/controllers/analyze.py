@@ -19,13 +19,16 @@ def _get_unique_backups(backups):
     id_map = {} # maps all backup hashid to a kept backup's hashid
     index_map = {} # maps from all kept backups to its index
     index = 1
+    first_file_found = False
     for i in range(len(backups)):
-        # edge case for first backup
-        if not i and backups[i] and backups[i].files():
-            filtered.append((backups[i], -1))
-            last_unique_id = backups[i].hashid
-            id_map[backups[i].hashid] = last_unique_id
-            index_map[backups[i].hashid] = 0
+        # edge case for first backup with file
+        if not first_file_found:
+            if backups[i] and backups[i].files():
+                filtered.append((backups[i], -1))
+                last_unique_id = backups[i].hashid
+                id_map[backups[i].hashid] = last_unique_id
+                index_map[backups[i].hashid] = 0
+                first_file_found = True
             continue
 
         prev_backup, curr_backup = backups[i - 1], backups[i]

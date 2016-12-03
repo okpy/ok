@@ -1037,8 +1037,8 @@ def student_commit_overview(cid, email, aid, commit_id):
     diff_dict = analyze.get_diffs(backups, commit_id, partner_backups)
 
     if not diff_dict:
-        flash('Cannot access commit_id: {0}'.format(commit_id), 'error')
-        return abort(404) # todo maybe return something else
+        # should never happen; either no unique backups or wrong commit_id
+        return abort(404)
 
     stats_list = diff_dict["stats"]
     files_list = diff_dict["files"]
