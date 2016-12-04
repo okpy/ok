@@ -36,6 +36,7 @@
             {{ forms.render_field(form.moss_userid) }}
             {{ forms.render_field(form.file_regex, default=".*") }}
             {{ forms.render_field(form.language) }}
+            {{ forms.render_checkbox_field(form.subtract_template) }}
             {% endcall %}
         </div>
       </div>
