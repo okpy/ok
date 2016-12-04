@@ -549,6 +549,58 @@ def export_scores(cid, aid):
     return Response(stream_with_context(generate_csv()), mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores_max")
+@is_staff(course_arg='cid')
+def export_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'export'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+    query = (Score.query.options(db.joinedload('backup'))
+                  .filter_by(assignment=assign, archived=False))
+
+    custom_items = ('time', 'is_late', 'email', 'group')
+    items = custom_items + Enrollment.export_items + Score.export_items
+    highest_seen_score = defaultdict(lambda: defaultdict(lambda: float("-inf")))
+    # Submitter -> Score Kind -> Highest Score 
+
+    def generate_csv():
+        """ Generate csv export of scores for assignment.
+        Num Queries: ~2N queries for N scores.
+        """
+        # Yield Column Info as first row
+        yield ','.join(items) + '\n'
+        for score in query:
+            csv_file = StringIO()
+            csv_writer = csv.DictWriter(csv_file, fieldnames=items)
+            submitters = score.backup.enrollment_info()
+            group = [s.user.email for s in submitters]
+            highest_scores = highest_seen_score[str(group)]
+            if score.score > highest_scores[score.kind] and score.kind != 'autograder':
+                highest_scores[score.kind] = score.score
+                time_str = utils.local_time(score.backup.created, current_course)
+                for submitter in submitters:
+                    data = {'email': submitter.user.email,
+                            'time': time_str,
+                            'is_late': score.backup.is_late,
+                            'group': group}
+                    data.update(submitter.export)
+                    data.update(score.export)
+                    csv_writer.writerow(data)
+                yield csv_file.getvalue()
+            else:
+                continue
+
+    file_name = "{0}.csv".format(assign.name.replace('/', '-'))
+    disposition = 'attachment; filename={0}'.format(file_name)
+
+    # TODO: Remove. For local performance testing.
+    # return render_template('staff/index.html', data=list(generate_csv()))
+    return Response(stream_with_context(generate_csv()), mimetype='text/csv',
+                    headers={'Content-Disposition': disposition})
+
+
 @admin.route("/course/<int:cid>/assignments/<int:aid>/queues")
 @is_staff(course_arg='cid')
 def assignment_queues(cid, aid):
