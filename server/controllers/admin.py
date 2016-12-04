@@ -551,7 +551,7 @@ def export_scores(cid, aid):
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores_max")
 @is_staff(course_arg='cid')
-def export_scores(cid, aid):
+def export_max_scores(cid, aid):
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not Assignment.can(assign, current_user, 'export'):
@@ -562,7 +562,7 @@ def export_scores(cid, aid):
 
     custom_items = ('time', 'is_late', 'email', 'group')
     items = custom_items + Enrollment.export_items + Score.export_items
-    highest_seen_score = defaultdict(lambda: defaultdict(lambda: float("-inf")))
+    highest_seen_score = collections.defaultdict(lambda: collections.defaultdict(lambda: float("-inf")))
     # Submitter -> Score Kind -> Highest Score 
 
     def generate_csv():
