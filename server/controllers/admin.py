@@ -993,33 +993,19 @@ def student_commit_overview(cid, email, aid, commit_id):
         flash('Cannot access assignment', 'error')
         return abort(404)
 
-    extra = request.args and ("student_email" in request.args)
-    if extra:
-        filter_email = request.args["student_email"]
-    else:
-        filter_email = None
-
     student = User.lookup(email)
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    if filter_email:
-        filtered_student = User.lookup(filter_email)
-        if not filtered_student.is_enrolled(cid):
-            flash("Filter e-mail is not entrolled", 'warning')
-        user_ids = {filtered_student.id}
-        timeline_stats = assign.user_timeline(filtered_student.id, commit_id)
-    else:
-        user_ids = assign.active_user_ids(student.id)
-        timeline_stats = assign.user_timeline(student.id, commit_id)
-
+    user_id = {student.id}
+    timeline_stats = assign.user_timeline(student.id, commit_id)
     assignment_stats = assign.user_status(student)
-    partner_ids = assign.active_user_ids(student.id) - user_ids
+    partner_ids = assign.active_user_ids(student.id) - user_id
 
     # get students.id's backups
     backups = (Backup.query.options(db.joinedload('scores'),
                                     db.joinedload('submitter'))
-                     .filter(Backup.submitter_id.in_(user_ids),
+                     .filter(Backup.submitter_id.in_(user_id),
                              Backup.assignment_id == assign.id)
                      .order_by(Backup.created.asc())).all()
     analyze.sort_backups(backups)
@@ -1032,7 +1018,7 @@ def student_commit_overview(cid, email, aid, commit_id):
                      .order_by(Backup.created.asc())).all()
     analyze.sort_backups(partner_backups)
 
-    group = [User.query.get(o) for o in backups[0].owners()] #todo fix
+    group = [User.query.get(o) for o in backups[0].owners()] #Todo (Stan): fix?
 
     diff_dict = analyze.get_diffs(backups, commit_id, partner_backups)
 
@@ -1066,11 +1052,9 @@ def student_commit_overview(cid, email, aid, commit_id):
                            files_list=files_list,
                            partner_files_list=partner_files_list,
                            group=group,
-                           num_diffs=len(files_list)-1,
                            start_index=start_index,
                            prev_commit_id = prev_commit_id,
                            next_commit_id = next_commit_id,
-                           filter_email = filter_email,
                            submitters=timeline_stats['submitters'],
                            timeline=timeline_stats['timeline'])
 

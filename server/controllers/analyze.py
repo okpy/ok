@@ -282,8 +282,6 @@ def _get_graph_stats(backups):
         stats = {
             'commit_id' : curr_backup.hashid,
             'lines_changed': curr_lines_changed,
-            'diff_in_secs': diff_in_secs,
-            'diff_in_mins': diff_in_mins,
             'lines_time_ratio': lines_time_ratio,
             'curr_q': curr_q,
             'timestamp': timestamp
@@ -302,7 +300,7 @@ def _get_graph_points(backups, cid, email, aid):
         label = "Lines Changed:{0} | Commit ID: {1} | Question: {2}".format(
             lines_changed, stat["commit_id"], stat["curr_q"])
         url = url_for('.student_commit_overview', 
-                cid=cid, email=email, aid=aid, commit_id=stat["commit_id"]) + "?student_email=" + email
+                cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
 
         #arbitrary boundaries for color-coding based on ratio, need more data to determine bounds
         if lines_changed > 100: 
@@ -313,8 +311,6 @@ def _get_graph_points(backups, cid, email, aid):
             color = 'blue'
         else:
             color = 'black'
-
-        # url += "?student_email=" + email
 
         return {
             "value": value,

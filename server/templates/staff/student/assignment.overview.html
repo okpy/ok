@@ -155,7 +155,7 @@
                               {% endif %}
                               <div class="timeline-footer">
                                   <a class="btn btn-primary btn-xs" href="{{ url_for('.grading', bid=event['backup'].id) }}"> Code </a>
-                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.student_commit_overview', cid=current_course.id, email=event['backup'].submitter.email, aid=assignment.id, commit_id=event['backup'].hashid, student_email=event['backup'].submitter.email)}}"> Diff View </a>
+                                  <a class="btn btn-primary btn-xs" href="{{ url_for('.student_commit_overview', cid=current_course.id, email=event['backup'].submitter.email, aid=assignment.id, commit_id=event['backup'].hashid)}}"> Diff View </a>
                                   <span class="pull-right"> Attempt {{ event['attempt'] }} </span>
                               </div>
                           </div>
@@ -287,8 +287,10 @@
             $('.prev-backup').eq(backup_number).show();
         }
         else {
-           url = "{{url_for('.student_commit_overview', email = student.email, cid=assignment.course.id, aid=assignment.id, commit_id = prev_commit_id, student_email = filter_email)}}"
-           window.location.assign(url);
+          if (backup_number != {{start_index}}) {
+              url = "{{url_for('.student_commit_overview', email = student.email, cid=assignment.course.id, aid=assignment.id, commit_id = prev_commit_id)}}"
+              window.location.assign(url);
+          }
         }
     }
 
@@ -304,7 +306,8 @@
             $('.prev-backup').eq(backup_number).show();
         }
         else {
-            url = "{{url_for('.student_commit_overview', email = student.email, cid=assignment.course.id, aid=assignment.id, commit_id = next_commit_id, student_email = filter_email)}}"
+            if (backup_number != {{start_index}})
+            url = "{{url_for('.student_commit_overview', email = student.email, cid=assignment.course.id, aid=assignment.id, commit_id = next_commit_id)}}"
             window.location.assign(url);
         }
     }
