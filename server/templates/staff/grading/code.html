@@ -1,7 +1,7 @@
 {% extends "staff/base.html" %}
 {% import 'diff.html' as diff with context %}
 {% import 'staff/_formhelpers.html' as forms %}
-{% import 'staff/_globalhelpers.html' as globals %}
+{% import '_globalhelpers.html' as globals %}
 
 {% block title %} Grade {{ backup.assignment.display_name }} - {{ backup.assignment.course.display_name_with_semester }} {% endblock %}
 
