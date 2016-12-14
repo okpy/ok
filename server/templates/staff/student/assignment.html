@@ -207,11 +207,11 @@
                             <td>
                                 <a href="{{ url_for('.student_view', cid=current_course.id, email=item.submitter.email) }}">{{ item.submitter.email }}</a>
                             </td>
-                            <td> <a href="{{ url_for('.grading', bid=item.id)}}">  {{ item.hashid }}
-                               {% if item.id == assign_status.final_subm.id %}
-                                <i class="fa fa-star text-green" alt="Currently Grading"></i>
-                                {% endif %}
-                             </a>
+                            <td> {% call helpers.backup_link(item.id) %}
+                                 {% if item.id == assign_status.final_subm.id %}
+                                     <i class="fa fa-star text-green" alt="Currently Grading"></i>
+                                 {% endif %}
+                                 {% endcall %}
                             </td>
                             <td>
                               {{ helpers.score_pills(item.active_scores) }}

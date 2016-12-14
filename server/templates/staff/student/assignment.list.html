@@ -54,9 +54,7 @@
                         <td class="submission-time" data-timestamp="{{ item.created }}" data-timestamp="{{ item.subm_time }}">{{ utils.local_time(item.subm_time, current_course) }}
                         </td>
                         <td class="final-subm-id">
-                            <a href="{{ url_for('.grading', bid=item.final_subm.id) }}">
-                                {{ item.final_subm.hashid }}
-                            </a>
+                            {{ helpers.backup_link(item.final_subm.id) }}
                         </td>
                     {% else %}
                         <td class="submission-time" data-timestamp="{{ item.created }}">No Submission
