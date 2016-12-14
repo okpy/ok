@@ -27,8 +27,8 @@ header .landing-btn {
   background-color: rgba(64, 64, 64, 0.05);
 }
 .landing h1, h2 {
-  font-family:'Quicksand';
-  letter-spacing:-0.1em;
+  font-family: 'Quicksand';
+  letter-spacing: -0.05em;
 }
 
 /* Small devices (tablets, 768px and down) */
