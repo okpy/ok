@@ -126,7 +126,7 @@ def _recent_backup_finder(backups):
     def _get_recent_backup(current_analytics):
         """
         `current_analytics`: contains the time to find the most recent backup
-        attempts to find a backup b_p such that 
+        attempts to find a backup b_p such that
             "b_p.time" is the largest possible AND
             "b_p.time" < `current_time`
         Returns backup b_p, and b_p.hashid or None if nothing is found
@@ -299,11 +299,11 @@ def _get_graph_points(backups, cid, email, aid):
         lines_changed = round(stat["lines_changed"], 5)
         label = "Lines Changed: {0} | Commit ID: {1} | Question: {2}".format(
             lines_changed, stat["commit_id"], stat["curr_q"])
-        url = url_for('.student_commit_overview', 
+        url = url_for('.student_commit_overview',
                 cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
 
         #arbitrary boundaries for color-coding based on ratio, need more data to determine bounds
-        if lines_changed > 100: 
+        if lines_changed > 100:
             color = 'red'
         elif lines_changed > 50:
             color = 'orange'

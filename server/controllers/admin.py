@@ -15,10 +15,10 @@ import requests.exceptions
 from server import autograder
 
 import server.controllers.api as ok_api
-import server.controllers.analyze as analyze
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, CanvasCourse, CanvasAssignment, db)
+from server.contrib import analyze
 
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
