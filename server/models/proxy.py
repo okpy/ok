@@ -1,8 +1,6 @@
-import server.models.model
-
 class ModelProxy(object):
     def __getattribute__(self, key):
-        module = server.models.model.__getattribute__(key)
-        return module.__getattribute__(key)
+        import server.models
+        return server.models.__getattribute__(key)
 
 ModelProxy = ModelProxy()
