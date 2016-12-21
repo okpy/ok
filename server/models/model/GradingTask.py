@@ -4,6 +4,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from server.extensions import cache
 from server.models.db import db, Model, transaction
+from server.models import ModelProxy
+
 from server.utils import chunks
 
 class GradingTask(Model):
@@ -91,9 +93,6 @@ class GradingTask(Model):
     @classmethod
     @transaction
     def create_staff_tasks(cls, backups, staff, assignment_id, course_id, kind):
-        # Circular import
-        from server.models import User
-
         # Filter out backups that have a GradingTasks
         backups = [b for b in backups if not cls.query.filter_by(backup_id=b).count()]
 
@@ -104,6 +103,6 @@ class GradingTask(Model):
                 task = cls(kind=kind, backup_id=backup_id, course_id=course_id,
                            assignment_id=assignment_id, grader=grader)
                 tasks.append(task)
-                cache.delete_memoized(User.num_grading_tasks, grader)
+                cache.delete_memoized(ModelProxy.User.num_grading_tasks, grader)
         db.session.add_all(tasks)
         return tasks

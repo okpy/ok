@@ -1,6 +1,8 @@
+import server.models.model
 from server.models.db import db
+from server.models.proxy import ModelProxy
 
-# This is somewhat order sensitive
+# The imports below are order sensitive
 from server.models.model.GradingTask import GradingTask
 from server.models.model.User import User
 from server.models.model.Enrollment import Enrollment

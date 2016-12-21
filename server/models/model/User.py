@@ -6,7 +6,7 @@ from server.utils import humanize_name
 from server.models.db import db, Model
 from server.extensions import cache
 
-from server.models import GradingTask
+from server.models import GradingTask, ModelProxy
 
 class User(Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -20,7 +20,7 @@ class User(Model, UserMixin):
         return '<User {0}>'.format(self.email)
 
     def enrollments(self, roles=None):
-        from server.models import Enrollment  # Cicrular import hack!!!!!
+        Enrollment = ModelProxy.Enrollment
         if roles is None:
             roles = [STUDENT_ROLE]
         query = (Enrollment.query.options(db.joinedload('course'))
