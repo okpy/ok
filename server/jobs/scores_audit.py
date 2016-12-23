@@ -4,7 +4,7 @@ from server import jobs
 from server.models import Assignment, Score, db
 
 @jobs.background_job
-def audit_missing_scores(assign_id, omit_details=('autograder')):
+def audit_missing_scores(assign_id, omit_details=('autograder', 'regrade')):
     logger = jobs.get_job_logger()
 
     assignment = Assignment.query.get(assign_id)
@@ -31,9 +31,9 @@ def audit_missing_scores(assign_id, omit_details=('autograder')):
 
     logger.info("---"*20)
     for score_kind in has_scores:
-        difference = students_with_subms.difference(has_scores[score.kind])
+        difference = students_with_subms.difference(has_scores[score_kind])
         logger.info("Number of students with {} scores is {}".format(score_kind,
-                                                                     len(has_scores[score.kind])))
+                                                                     len(has_scores[score_kind])))
         logger.info("Number of students without {} scores is {}".format(score_kind,
                                                                         len(difference)))
 
