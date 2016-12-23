@@ -28,6 +28,7 @@ import server.forms as forms
 import server.jobs as jobs
 import server.jobs.example as example
 import server.jobs.moss as moss
+import server.jobs.scores_audit as scores_audit
 import server.jobs.github_search as github_search
 
 import server.highlight as highlight
@@ -504,8 +505,55 @@ def publish_scores(cid, aid):
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)
 
-
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
+@is_staff(course_arg='cid')
+def view_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'export'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
+    include_archived = request.args.get('all', False, type=bool)
+    query = (Score.query.options(db.joinedload('backup'), db.joinedload(Score.grader))
+                  .filter_by(assignment=assign))
+
+    if not include_archived:
+        query.filter_by(archived=False)
+    all_scores = query.all()
+
+    score_distribution = collections.defaultdict(list)
+    for score in all_scores:
+        score_distribution[score.kind].append(score.score)
+
+    box_plots = {}
+    for kind, distribution in score_distribution.items():
+        box_plot = pygal.Box()
+        box_plot.title = '{} distribution ({} items)'.format(kind, len(distribution))
+        box_plot.add(kind, distribution)
+        box_plots[kind] = box_plot.render().decode("utf-8")
+
+    return render_template('staff/course/assignment/assignment.scores.html',
+                           assignment=assign, current_course=current_course,
+                           courses=courses, scores=all_scores,
+                           scores_plots=box_plots)
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores/audit")
+@is_staff(course_arg='cid')
+def audit_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'export'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+    job = jobs.enqueue_job(scores_audit.audit_missing_scores,
+                           course_id=current_course.id,
+                           description='Missing scores audit for {}'.format(assign.display_name),
+                           assign_id=assign.id)
+    return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores.csv")
 @is_staff(course_arg='cid')
 def export_scores(cid, aid):
     courses, current_course = get_courses(cid)
