@@ -1,0 +1,203 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms with context%}
+{% import 'staff/_helpers.html' as helpers %}
+
+{% block title %} {{ assignment.display_name }} Stats - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ assignment.display_name }} Stats
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li class="active"><a href="#"><i class="fa fa-bar-chart"></i> Scores </a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+        {% include 'alerts.html' %}
+        <div class="row">
+
+          <div class="col-md-8" style="min-height: 250px">
+            <div class="box box-solid">
+              <div class="box-header">
+                <i class="fa fa-bar-chart-o"></i>
+
+                <h3 class="box-title">{{ assignment.display_name }} Score Distribution</h3>
+
+                <div class="box-tools pull-right">
+                  <button type="button" class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-default btn-sm" data-widget="remove"><i class="fa fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <!-- /.box-header -->
+              <div class="box-body">
+                <div class="row">
+                {% for plot in scores_plots %}
+                  <div class="col-xs-6">
+                  {{ scores_plots[plot] | safe}}
+                  </div>
+                {% endfor %}
+                </div>
+
+                </div>
+                <!-- /.row -->
+              </div>
+              <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+
+          <div class="col-md-4">
+            <div class="box box-solid">
+              <div class="box-header with-border">
+                <h3 class="box-title">Actions</h3>
+
+                <div class="box-tools">
+                  <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="box-body no-padding">
+                <ul class="nav nav-pills nav-stacked">
+                  <li> <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-download"></i> Download Scores
+                  </a></li>
+                  <li> <a href="http://autograder.cs61a.org" target="_blank" type="button">
+                        <i class="fa fa-gear"></i> Go To Autograder
+                  </a></li>
+                  <li> <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-inbox"></i> Grading Queues
+                  </a></li>
+                  <li> <a href="{{ url_for('.publish_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-wpforms"></i> Publish Score Kinds
+                  </a></li>
+                  <li> <a href="{{ url_for('.audit_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-search"></i> Find Submissions Without Scores
+                  </a></li>
+                </ul>
+              </div>
+              <!-- /.box-body -->
+            </div>
+            <!-- /. box -->
+          </div>
+
+        </div>
+
+        <div class="row">
+          <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title"><span> Scores </span></h3>
+
+                    <div class="box-tools">
+                        <div class="pull-left" id="scores-loading">
+                          <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
+                          <span class="sr-only">Loading...</span>
+                        </div>
+
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- /.box-header -->
+                <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="scores-list">
+                    <table class="table table-hover">
+                        <thead>
+                            <th class="sort" data-sort="tag">Score Tag</th>
+                            <th class="sort" data-sort="score">Score</th>
+                            <th data-sort="backup">Backup</th>
+                            <th class="sort" data-sort="timestamp">Timestamp</th>
+                            <th class="sort" data-sort="grader">Grader</th>
+                        </thead>
+
+                        <tbody class="list">
+                            {%- for score in scores %}
+                            <tr>
+                                <td class="tag">
+                                    {{ score.kind }}
+                                </td>
+                                <td class="score">
+                                    {{ score.score }}
+                                </td>
+                                <td class="backup">
+                                  {{ helpers.backup_link(score.backup_id) }}
+                                </td>
+                                <td class="timestamp">
+                                  {{ utils.local_time(score.created, current_course) }}
+                                </td>
+                                <td class="grader">
+                                  {{ score.grader.email }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <!-- Include another header because list.js forces us to include this inside of the tbody -->
+                            <div class="box-header">
+                                <span>
+                                    <div class="pull-left">
+                                        <ul class="pagination pagination-md no-margin pull-right"></ul>
+                                    </div>
+
+                                    <div class="pull-right">
+                                        <div class="input-group input-group-md" style="width: 200px;">
+                                            <input type="text" name="query" class="form-control pull-right search" placeholder="Search">
+                                            <div class="input-group-btn">
+                                                <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+                <div class="box-footer">
+                    <div class="pull-left">
+                    <h5 class="box-title"><span> Total: {{ scores | length }} </span></h5>
+                    </div>
+                    <div class='pull-right'>
+                      <button type="button" class="btn btn-block btn-default btn-sm" onclick="listIncreasePagination(submissionList, 50)">Show 50 more per page</button>
+                    </div>
+                </div>
+
+            </div>
+
+          </div>
+        </div>
+        <!-- /.col -->
+      </div>
+  <!-- </body> do not close body in template-->
+{% endblock %}
+
+{% block page_js %}
+<script>
+
+    var submissionOptions = {
+      valueNames: [ 'tag', 'score', 'timestamp', 'backup', 'grader', 'submitter'],
+      plugins: [ListPagination()],
+      page: 50,
+      indexAsync: true,
+    };
+    var submissionList = new List('scores-list', submissionOptions);
+    submissionList.sort("timestamp", {order: "desc"})
+    document.getElementById('scores-loading').style.display = 'none';
+    document.getElementById('scores-list').style.display = 'block';
+
+</script>
+{% endblock %}
