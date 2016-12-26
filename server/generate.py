@@ -10,8 +10,8 @@ import pytz
 
 from server.models import (db, User, Course, Assignment, Enrollment, Group,
                            Backup, Message, Comment, Version, Score,
-                           GradingTask, Client, Token)
-from server.constants import VALID_ROLES, STUDENT_ROLE, TIMEZONE, OAUTH_SCOPES
+                           GradingTask, Client)
+from server.constants import STUDENT_ROLE, OAUTH_SCOPES
 from server.extensions import cache
 
 original_file = open('tests/files/fizzbuzz_before.py', encoding="utf8").read()
@@ -119,7 +119,7 @@ def gen_assignment(course):
 
     last_night = (datetime.datetime.utcnow()
                           .replace(hour=0, minute=0, second=0, microsecond=0)
-                          - datetime.timedelta(seconds=1))
+                  - datetime.timedelta(seconds=1))
     last_night = (pytz.timezone("America/Los_Angeles")
                       .localize(last_night)
                       .astimezone(pytz.utc))
@@ -161,20 +161,60 @@ def gen_enrollment(user, course):
         class_account=gen_maybe(class_account, 0.4),
         section=gen_maybe(section, 0.4))
 
-def gen_backup(user, assignment):
+def gen_messages(assignment, seconds_offset):
+    fizzbuzz_lines = modified_file.split("\n")
+    random.shuffle(fizzbuzz_lines)
+    shuffled_file = "\n".join(fizzbuzz_lines)
+
+    if seconds_offset < 0:
+        progress = abs(seconds_offset)/100100
+    else:
+        progress = (seconds_offset+100000)/100100
+
+    attempts = int(progress * 100)
+    is_passed = True if progress > 0.75 else False
+
+    created = assignment.due_date - datetime.timedelta(seconds=seconds_offset)
+
     messages = {
         'file_contents': {
-            'fizzbuzz.py': modified_file,
+            'fizzbuzz.py': shuffled_file,
             'moby_dick': 'Call me Ishmael.'
         },
-        'analytics': {}
+        'analytics': {
+            'history': {
+                'question': ['fizzbuzz'],
+                'questions': {
+                    'fizzbuzz': {
+                        'attempts': attempts,
+                        'solved': is_passed
+                    }
+                },
+                'all_attempts': attempts
+            },
+            'unlock': gen_bool(),
+            'question': ['fizzbuzz'],
+            'started': {},
+            'time': str(created),
+        },
+        'grading': {
+            'fizzbuzz': {
+                'passed': is_passed,
+                'locked': 0, 'failed': 1 - is_passed
+            }
+        }
     }
-    submit = gen_bool(0.1)
+    return messages
+
+
+def gen_backup(user, assignment):
+    seconds_offset = random.randrange(-100000, 100)
+    messages = gen_messages(assignment, seconds_offset)
+    submit = gen_bool(0.3)
     if submit:
         messages['file_contents']['submit'] = ''
     backup = Backup(
-        created=assignment.due_date -
-        datetime.timedelta(seconds=random.randrange(-100000, 100)),
+        created=assignment.due_date - datetime.timedelta(seconds=seconds_offset),
         submitter_id=user.id,
         assignment_id=assignment.id,
         submit=submit)
@@ -208,6 +248,7 @@ def gen_score(backup, admin, kind="autograder"):
         backup_id=backup.id,
         assignment_id=backup.assignment.id,
         grader_id=admin.id,
+        user_id=backup.submitter_id,
         kind=kind,
         score=score,
         message=loremipsum.get_sentence())
@@ -292,12 +333,12 @@ def seed_scores():
     print('Seeding scores...')
     admin = User.query.filter_by(is_admin=True).first()
     for backup in Backup.query.filter_by(submit=True).all():
-        if random.choice([True, False]):
-             score = gen_score(backup, admin, kind='composition')
-             db.session.add(score)
-        if random.choice([True, False]):
-             score = gen_score(backup, admin, kind='total')
-             db.session.add(score)
+        if gen_bool(0.6):
+            score = gen_score(backup, admin, kind='composition')
+            db.session.add(score)
+        if gen_bool(0.8):
+            score = gen_score(backup, admin, kind='total')
+            db.session.add(score)
     db.session.commit()
 
 def seed_queues():
@@ -347,7 +388,7 @@ def seed_flags():
                 assignment.flag(chosen.id, user_ids)
 
 def seed_oauth():
-    print("Seeding OAuth")
+    print("Seeding OAuth...")
     client = Client(
         name='Example Application',
         client_id='example-app',
@@ -363,7 +404,6 @@ def seed_oauth():
     )
     db.session.add(client)
     db.session.commit()
-
 
 def seed():
     db.session.add(User(email='okstaff@okpy.org', is_admin=True))

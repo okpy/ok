@@ -15,18 +15,21 @@ from markdown import markdown
 import pytz
 
 import functools
-from collections import namedtuple
+
+from collections import namedtuple, Counter
+
 import contextlib
 import csv
 from datetime import datetime as dt
-from datetime import timedelta
 import json
 import logging
+import shlex
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-    HIDDEN_GRADE_TAGS)
+                              SCORE_KINDS)
+
 from server.extensions import cache
-from server.utils import (decode_id, encode_id, chunks, generate_number_table,
+from server.utils import (encode_id, chunks, generate_number_table,
                           humanize_name)
 
 logger = logging.getLogger(__name__)
@@ -40,6 +43,7 @@ convention = {
 
 metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
+
 
 def transaction(f):
     """ Decorator for database (session) transactions."""
@@ -66,13 +70,16 @@ class Json(types.TypeDecorator):
         # SQL -> Python
         return json.loads(value)
 
+
 @compiles(mysql.MEDIUMBLOB, 'sqlite')
 def ok_blob(element, compiler, **kw):
     return "BLOB"
 
+
 @compiles(mysql.MEDIUMTEXT, 'sqlite')
 def ok_text(element, compiler, **kw):
     return "TEXT"
+
 
 class JsonBlob(types.TypeDecorator):
     impl = mysql.MEDIUMBLOB
@@ -103,16 +110,34 @@ class Timezone(types.TypeDecorator):
         # SQL -> Python
         return pytz.timezone(value)
 
+
 class StringList(types.TypeDecorator):
     impl = types.Text
 
     def process_bind_param(self, string_list, dialect):
         # Python -> SQL
-        return ' '.join(string_list)
+        items = []
+        for item in string_list:
+            if " " in item or not item:
+                items.append('"{}"'.format(item))
+            else:
+                items.append(item)
+        return ' '.join(items)
 
     def process_result_value(self, value, dialect):
-        # SQL -> Python
-        return value.split()
+        """ SQL -> Python
+        Uses shlex.split to handle values with spaces.
+        It's a fragile solution since it will break in some cases.
+        For example if the last character is a backslash or otherwise meaningful
+        to a shell.
+        """
+        values = []
+        for val in shlex.split(value):
+            if " " in val and '"' in val:
+                values.append(val[1:-1])
+            else:
+                values.append(val)
+        return values
 
 class Model(db.Model):
     """ Timestamps all models, and serializes model objects."""
@@ -153,6 +178,7 @@ class Model(db.Model):
             if c.name in dict:
                 setattr(self, c.name, dict[c.name])
         return self
+
 
 class User(Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -206,6 +232,7 @@ class User(Model, UserMixin):
         """ Get a User with the given email address, or None."""
         return User.query.filter_by(email=email).one_or_none()
 
+
 class Course(Model):
     id = db.Column(db.Integer, primary_key=True)
     # offering - E.g., 'cal/cs61a/fa14'
@@ -258,6 +285,7 @@ class Course(Model):
                             .all()
                             )]
 
+
 class Assignment(Model):
     """ Assignments are particular to courses and have unique names.
         name - cal/cs61a/fa14/proj1
@@ -266,8 +294,8 @@ class Assignment(Model):
         lock_date - DEADLINE+1 (Hard Deadline for submissions)
         url - cs61a.org/proj/hog/hog.zip
         flagged - User has indicated this one should be graded and not others
+        published_scores - list of grade tags that are published to students
     """
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
@@ -283,12 +311,14 @@ class Assignment(Model):
     autograding_key = db.Column(db.String(255))
     uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
     upload_info = db.Column(db.Text)
+    published_scores = db.Column(StringList, nullable=False, default=[])
 
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
 
-    UserAssignment = namedtuple('UserAssignment',
-                                ['assignment', 'subm_time', 'group', 'final_subm'])
+    user_assignment = namedtuple('UserAssignment',
+                                 ['assignment', 'subm_time', 'group',
+                                  'final_subm', 'scores'])
 
     @hybrid_property
     def active(self):
@@ -306,10 +336,12 @@ class Assignment(Model):
         is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
         if action == "view":
             return is_staff or obj.visible
+        if action == "publish_scores":
+            return is_staff
         return is_staff
 
     @staticmethod
-    @cache.memoize(30)
+    @cache.memoize(180)
     def assignment_stats(assign_id, detailed=True):
         assignment = Assignment.query.get(assign_id)
         base_query = Backup.query.filter_by(assignment=assignment)
@@ -333,7 +365,7 @@ class Assignment(Model):
         percent_started = ((len(students_with_subms) + len(students_with_backup)) /
                            (total_students or 1)) * 100
         percent_finished = (len(students_with_subms) / (total_students or 1)) * 100
-        active_groups = len(set([g['group_id'] for g in groups if ',' in g['group_member']]))
+        active_groups = len({g['group_id'] for g in groups if ',' in g['group_member']})
 
         stats.update({
             'unique_submissions': len(submissions_id),
@@ -366,13 +398,121 @@ class Assignment(Model):
         """ Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
-    def user_status(self, user):
+    def user_timeline(self, user_id):
+        """ Timeline of user submissions. Returns a dictionary
+        with timeline contents from most recent to oldest.
+        Example Return:
+        {'submitters': {'a@example.com': 40},
+         'timeline': [{
+            'event': "(Unlock|Started|Switched|Submitted|Later|Solved)"
+            'attempt': 20,
+            'title': "Started unlocking"
+            'backup': Backup(...)
+         }]
+        }
+        """
+        user_ids = self.active_user_ids(user_id)
+        analytics = (db.session.query(Backup, Message)
+                       .outerjoin(Message)
+                       .filter(Backup.submitter_id.in_(user_ids),
+                               Backup.assignment_id == self.id,
+                               Message.kind == "analytics")
+                       .order_by(Backup.created.asc())
+                       .all())
+
+        unlock_started_q, started_questions, solved_questions = {}, {}, {}
+        history, timeline, submitters = [], [], []
+        # TODO: Make timeline a namedtuple
+        last_q = (None, False, 0)  # current_question, is_solved, count
+
+        for backup, message in analytics:
+            contents = message.contents
+            working_q = contents.get('question')
+            if not working_q:
+                continue
+            curr_q = working_q[0]
+            if ('history' not in contents or 'questions' not in contents['history'] or
+                    not isinstance(contents['history']['questions'], dict)):
+                continue
+
+            submitters.append(backup.submitter.email)
+
+            curr_q_stats = message.contents['history']['questions'].get(curr_q)
+            total_attempt_count = message.contents['history'].get('all_attempts')
+            is_solved = curr_q_stats.get('solved')
+            if contents.get('unlock'):
+                # Is unlocking.
+                if curr_q not in unlock_started_q:
+                    unlock_started_q[curr_q] = backup.hashid
+                    timeline.append({"event": "Unlock",
+                                     "attempt": total_attempt_count,
+                                     "title": "Started unlocking {}".format(curr_q),
+                                     "backup": backup})
+                if curr_q != last_q[0]:
+                    last_q = (curr_q, is_solved, 0)
+                else:
+                    last_q = (curr_q, is_solved, last_q[2]+1)
+            elif curr_q not in started_questions:
+                started_questions[curr_q] = backup.hashid
+                timeline.append({"event": "Started",
+                                 "title": "Started {}".format(curr_q),
+                                 "attempt": total_attempt_count,
+                                 "backup": backup})
+                last_q = (curr_q, is_solved, 1)
+            elif last_q[0] != curr_q and last_q[0] is not None:
+                # Didn't just start it but did switch questions.
+                timeline.append({"event": "Switched",
+                                 "title": "Switched to {}".format(curr_q),
+                                 "attempt": total_attempt_count,
+                                 "body": "{} Backups Later".format(last_q[2]),
+                                 "backup": backup, "date": backup.created})
+                last_q = (curr_q, is_solved, 1)
+
+            if is_solved and curr_q not in solved_questions:
+                # Just solved a question
+                solved_questions[curr_q] = backup.hashid
+                attempts_later = last_q[2] - 1
+                if attempts_later > 10:
+                    timeline.append({"event": "Later",
+                                     "title": ("{} attempts on {} after starting"
+                                               .format(attempts_later, curr_q)),
+                                     "attempt": total_attempt_count,
+                                     "backup": backup})
+
+                timeline.append({"event": "Solved",
+                                 "title": "Solved {}".format(curr_q),
+                                 "attempt": total_attempt_count,
+                                 "backup": backup})
+            else:
+                last_q = (curr_q, is_solved, last_q[2]+1)
+
+            if backup.submit:
+                timeline.append({"event": "Submitted",
+                                 "attempt": total_attempt_count,
+                                 "title": "Submitted ({})".format(backup.hashid),
+                                 "backup": backup})
+
+            history.append(message.contents)
+
+        return {'submitters': dict(Counter(submitters)),
+                'timeline': timeline}
+
+    def user_status(self, user, staff_view=False):
+        """Return a summary of an assignment for a user. If STAFF_VIEW is True,
+        return more information that staff can see also.
+        """
         user_ids = self.active_user_ids(user.id)
         final_submission = self.final_submission(user_ids)
         submission_time = final_submission and final_submission.created
         group = Group.lookup(user, self)
-        return self.UserAssignment(self, submission_time, group,
-                                   final_submission)
+        scores = self.scores(user_ids, only_published=not staff_view)
+        return self.user_assignment(
+            assignment=self,
+            subm_time=submission_time,
+            group=group,
+            final_subm=final_submission,
+            scores=scores,
+        )
 
     def course_submissions(self, include_empty=True):
         """ Return data on all course submissions for all enrolled users
@@ -409,8 +549,8 @@ class Assignment(Model):
         id  email   name                  group_id group_member group_member_emails
         5   dschmidt1@gmail.com 'david s' 3   5,15 dschmidt1@gmail.com, foo@bar.com
 
-        created id  id submitter_id assignment_id submit  flagged extension
-        2016-09-07 20:22:04 4790    15  1   1   1   0
+        created id  id submitter_id assignment_id submit  flagged
+        2016-09-07 20:22:04 4790    15  1   1   1
         """
         giant_query = """SELECT * FROM
               (SELECT u.id,
@@ -548,13 +688,40 @@ class Assignment(Model):
 
     def revision(self, user_ids):
         """ Return the revision backup for a user, or None."""
-        return (Backup.query.options(db.joinedload(Backup.scores))
-                      .filter(Backup.scores.any(kind="revision",
-                                                archived=False),
-                              Backup.submitter_id.in_(user_ids),
-                              Backup.assignment_id == self.id)
-                      .order_by(Backup.created.desc())
-                      .first())
+        revision_score = Score.query.filter(
+            Score.user_id.in_(user_ids),
+            Score.assignment_id == self.id,
+            Score.kind == "revision",
+            Score.archived == False,
+        ).order_by(Score.created.desc()).first()
+
+        if revision_score:
+            return revision_score.backup
+
+    def scores(self, user_ids, only_published=True):
+        """Return a list of Scores for this assignment and a group. Only the
+        maximum score for each kind is returned. If there is a tie, the more
+        recent score is preferred.
+        """
+        scores = Score.query.filter(
+            Score.user_id.in_(user_ids),
+            Score.assignment_id == self.id,
+            Score.archived == False,
+        ).order_by(Score.score.desc(), Score.created.desc()).all()
+
+        scores_by_kind = {}
+        # keep only first score for each kind
+        for score in scores:
+            if score.kind not in scores_by_kind:
+                scores_by_kind[score.kind] = score
+        max_scores = list(scores_by_kind.values())
+        if only_published:
+            return [
+                score for score in max_scores
+                    if score.kind in self.published_scores
+            ]
+        else:
+            return max_scores
 
     @transaction
     def flag(self, backup_id, member_ids):
@@ -600,6 +767,17 @@ class Assignment(Model):
         if backup:
             backup.flagged = False
 
+    @transaction
+    def publish_score(self, tag):
+        """Publish student score for the assignment."""
+        self.published_scores = self.published_scores + [tag]
+
+    @transaction
+    def hide_score(self, tag):
+        """Hide student score for the assignment."""
+        self.published_scores = [t for t in self.published_scores if t != tag]
+
+
 
 class Enrollment(Model):
     __tablename__ = 'enrollment'
@@ -611,7 +789,7 @@ class Enrollment(Model):
     course_id = db.Column(db.ForeignKey("course.id"), index=True,
                           nullable=False)
     role = db.Column(db.Enum(*VALID_ROLES, name='role'),
-                     default=STUDENT_ROLE, nullable=False)
+                     default=STUDENT_ROLE, nullable=False, index=True)
     sid = db.Column(db.String(255))
     class_account = db.Column(db.String(255))
     section = db.Column(db.String(255))
@@ -717,6 +895,7 @@ class Enrollment(Model):
 
         cache.delete_memoized(User.is_enrolled)
 
+
 class Message(Model):
     __tablename__ = 'message'
     __table_args__ = {'mysql_row_format': 'COMPRESSED'}
@@ -734,35 +913,36 @@ class Backup(Model):
     id = db.Column(db.Integer, primary_key=True)
 
     submitter_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    # NULL if same as submitter
+    creator_id = db.Column(db.ForeignKey("user.id"), nullable=True)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
-    submit = db.Column(db.Boolean(), nullable=False, default=False)
-    flagged = db.Column(db.Boolean(), nullable=False, default=False)
+    submit = db.Column(db.Boolean(), nullable=False, default=False, index=True)
+    flagged = db.Column(db.Boolean(), nullable=False, default=False, index=True)
+    # The time we should treat this backup as being submitted. If NULL, use
+    # the `created` timestamp instead.
+    custom_submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    extension = db.Column(db.Boolean(), default=False)
-
-    submitter = db.relationship("User")
+    submitter = db.relationship("User", foreign_keys='Backup.submitter_id')
+    creator = db.relationship("User", foreign_keys='Backup.creator_id')
     assignment = db.relationship("Assignment")
     messages = db.relationship("Message")
     scores = db.relationship("Score")
     comments = db.relationship("Comment", order_by="Comment.created")
 
-    db.Index('idx_usrBackups', 'submitter_id', 'assignment_id', 'submit', 'flagged')
-    db.Index('idx_usrFlagged', 'submitter_id', 'assignment_id', 'flagged')
-    db.Index('idx_submittedBacks', 'assignment_id', 'submit')
-    db.Index('idx_flaggedBacks', 'assignment_id', 'flagged')
+    # Already have indexes for submitter_id and assignment_id due to FK
+    db.Index('idx_backupCreated', 'created')
 
     @classmethod
     def can(cls, obj, user, action):
         if action == "create":
             return user.is_authenticated
-        if not obj:
+        elif not obj:
             return False
-        if user.is_admin:
+        elif user.is_admin:
             return True
-        if action == "view":
+        elif action == "view" and user.id in obj.owners():
             # Only allow group members to view
-            if user.id in obj.owners():
-                return True
+            return True
         return user.is_enrolled(obj.assignment.course.id, STAFF_ROLES)
 
     @hybrid_property
@@ -771,23 +951,28 @@ class Backup(Model):
 
     @hybrid_property
     def is_late(self):
-        """ Check for manual extension before checking due date.
-        """
-        if self.extension:
-            return False
-        return self.created > self.assignment.due_date
+        return self.submission_time > self.assignment.due_date
 
     @hybrid_property
-    def visible_grades(self):
-        """ Return public grades. "Autograder" kind are errors from the
-        autograder and should not be shown.
-        """
+    def active_scores(self):
+        """Return non-archived scores."""
+        return [s for s in self.scores if not s.archived]
+
+    @hybrid_property
+    def published_scores(self):
+        """Return non-archived scores that are published to students."""
         return [s for s in self.scores
-            if s.public and s.kind not in HIDDEN_GRADE_TAGS]
+            if not s.archived and s.kind in self.assignment.published_scores]
 
     @hybrid_property
     def is_revision(self):
         return any(s for s in self.scores if s.kind == "revision")
+
+    @hybrid_property
+    def submission_time(self):
+        if self.custom_submission_time:
+            return self.custom_submission_time
+        return self.created
 
     # @hybrid_property
     # def group(self):
@@ -1086,6 +1271,7 @@ class Version(Model):
             return version.current_version, version.download_link
         return None, None
 
+
 class Comment(Model):
     """ Composition comments. Line is the line # on the Diff.
     Submission_line is the closest line on the submitted file.
@@ -1123,20 +1309,24 @@ class Comment(Model):
     def formatted(self):
         return markdown(self.message)
 
+
 class Score(Model):
     id = db.Column(db.Integer, primary_key=True)
     grader_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     backup_id = db.Column(db.ForeignKey("backup.id"), nullable=False, index=True)
+    # submitter of score's backup
+    user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
 
-    kind = db.Column(db.String(255), nullable=False)
+    kind = db.Column(db.String(255), nullable=False, index=True)
     score = db.Column(db.Float, nullable=False)
     message = db.Column(mysql.MEDIUMTEXT)
     public = db.Column(db.Boolean, default=True)
-    archived = db.Column(db.Boolean, default=False)
+    archived = db.Column(db.Boolean, default=False, index=True)
 
     backup = db.relationship("Backup")
-    grader = db.relationship("User")
+    grader = db.relationship("User", foreign_keys='Score.grader_id')
+    user = db.relationship("User", foreign_keys='Score.user_id')
     assignment = db.relationship("Assignment")
 
     export_items = ('assignment_id', 'kind', 'score', 'message',
@@ -1182,7 +1372,6 @@ class Score(Model):
         for old_score in existing_scores:
             if old_score.id != self.id:  # Do not archive current score
                 old_score.archive(commit=False)
-
 
 
 class GradingTask(Model):
@@ -1269,11 +1458,9 @@ class GradingTask(Model):
 
     @classmethod
     @transaction
-    def create_staff_tasks(cls, backups, staff, assignment_id, course_id, kind,
-                           only_unassigned=False):
-        if only_unassigned:
-            # Filter out backups that have a GradingTasks
-            backups = [b for b in backups if not cls.query.filter_by(backup_id=b).count()]
+    def create_staff_tasks(cls, backups, staff, assignment_id, course_id, kind):
+        # Filter out backups that have a GradingTasks
+        backups = [b for b in backups if not cls.query.filter_by(backup_id=b).count()]
 
         paritions = chunks(list(backups), len(staff))
         tasks = []
@@ -1285,6 +1472,7 @@ class GradingTask(Model):
                 cache.delete_memoized(User.num_grading_tasks, grader)
         db.session.add_all(tasks)
         return tasks
+
 
 class Client(Model):
     """ OAuth Clients.
@@ -1313,6 +1501,7 @@ class Client(Model):
     def default_redirect_uri(self):
         return self.redirect_uris[0]
 
+
 class Grant(Model):
     id = db.Column(db.Integer, primary_key=True)
 
@@ -1338,6 +1527,7 @@ class Grant(Model):
         db.session.delete(self)
         db.session.commit()
         return self
+
 
 class Token(Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1365,6 +1555,7 @@ class Token(Model):
         db.session.commit()
         return self
 
+
 class Job(Model):
     """ A background job."""
     statuses = ['queued', 'running', 'finished']
@@ -1389,3 +1580,55 @@ class Job(Model):
     description = db.Column(db.Text, nullable=False)
     failed = db.Column(db.Boolean, nullable=False, default=False)
     log = db.Column(mysql.MEDIUMTEXT)  # All output, if the job has finished
+
+##########
+# Canvas #
+##########
+
+class CanvasCourse(Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # The API domain (e.g. bcourses.berkeley.edu or canvas.instructure.com)
+    api_domain = db.Column(db.String(255), nullable=False)
+    # The ID of the course for the Canvas API
+    external_id = db.Column(db.Integer, nullable=False)
+    # API access token
+    access_token = db.Column(db.String(255), nullable=False)
+
+    course_id = db.Column(
+        db.Integer, db.ForeignKey('course.id'),
+        index=True, nullable=False,
+    )
+    course = db.relationship('Course')
+
+    # Don't export access token
+    export_items = ('api_domain', 'external_id', 'course_id')
+
+    @staticmethod
+    def by_course_id(course_id):
+        return CanvasCourse.query.filter_by(course_id=course_id).one_or_none()
+
+    @property
+    def url(self):
+        return 'https://{}/courses/{}'.format(self.api_domain, self.external_id)
+
+class CanvasAssignment(Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # The ID of the assignment for the Canvas API
+    external_id = db.Column(db.Integer, nullable=False)
+    score_kinds = db.Column(StringList, nullable=False, default=[])
+
+    canvas_course_id = db.Column(
+        db.Integer, db.ForeignKey('canvas_course.id'),
+        index=True, nullable=False,
+    )
+    canvas_course = db.relationship('CanvasCourse', backref='canvas_assignments')
+
+    assignment_id = db.Column(
+        db.Integer, db.ForeignKey('assignment.id'),
+        index=True, nullable=False,
+    )
+    assignment = db.relationship('Assignment')
+
+    @property
+    def url(self):
+        return '{}/assignments/{}'.format(self.canvas_course.url, self.external_id)

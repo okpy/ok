@@ -1,12 +1,12 @@
 {% extends "staff/base.html" %}
 {% import 'staff/_formhelpers.html' as forms %}
 
-{% block title %} Autograder | OK {% endblock %}
+{% block title %} Publish Scores - {{ current_course.display_name_with_semester }}{% endblock %}
 
 {% block main %}
   <section class="content-header">
       <h1>
-        Autograde {{ assignment.display_name }}
+        Publish {{ assignment.display_name }} Scores
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
@@ -18,29 +18,25 @@
           <i class="fa fa-list"></i> Assignments</a>
         </li>
         <li class="active"><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }}</a></li>
-        <li class="active"><a href="{{ url_for('.autograde', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-pencil"></i> Autograde</a></li>
-      </ol>
+    	</ol>
   </section>
 
   <section class="content">
 
-      {% include 'alerts.html' %}
+  		{% include 'alerts.html' %}
 
-        <!-- Default box -->
+  		<!-- Default box -->
         <div class="box">
           <div class="box-header with-border">
-            <h3 class="box-title">Send to Autograder</h3>
+            <h3 class="box-title">Publish Scores</h3>
                       <div class="box-tools clearfix">
-            <a href="http://autograder.cs61a.org" target="_blank" class="btn btn-sm btn-info btn-flat pull-left">Go To Autograder</a>
           </div>
 
           </div>
           <div class="box-body">
-              {% call forms.render_form(form, action_url="", action_text='Queue on Autograder', class_='form', btn_class='ag-submit-btn btn btn-default',) %}
-                  {{ forms.render_field(form.token, description=form.description, label_visible=true) }}
-                  {{ forms.render_field(form.autograder_id, label_visible=true) }}
-                  {{ forms.render_checkbox_field(form.autopromote, label_visible=true) }}
-              {% endcall %}
+          {% call forms.render_form(form, action_url="", action_text='Save', class_='form') %}
+            {{ forms.render_field(form.published_scores, label_visible=false, class_="checkbox-list") }}
+          {% endcall %}
           </div>
           <!-- /.box-body -->
         </div>
@@ -48,5 +44,4 @@
 
 
 
-  <!-- </body> do not close body in template-->
 {% endblock %}

@@ -24,62 +24,55 @@ i, br {
   font-size:2em;
   font-weight:300;
 }
-header,.header-bg {
-  height:4em;
-  width:100%;
+header {
   top:0;
   left:0;
+  z-index:30;
+  background-color:rgba(255,255,255,0.25);
+  color:#FFF;
 }
-  header {
-    height:4em;
-    width:100%;
-    float: left;
-    top:0;
-    left:0;
-    z-index:30;
-    background-color:rgba(255,255,255,0.25);
+.header-bg {
+  height:4em;
+  width:100%;
+  z-index:25;
+  background:url('/static/img/header-bg.png') center repeat;
+}
+header span, header a {
+  color:inherit;
+}
+.user-name {
+  margin-right:0.5em;
+}
+.stripes {
+  padding:1.5em 1em;
+  float:left;
+  cursor:pointer;
+}
+.header-text {
+  float:right;
+  padding:1.25em 1em;
+}
+.header-text span {
+  font-family:'Quicksand';
+  font-weight:700;
+  text-transform:uppercase;
+}
+  .user-profile {
+    text-align:right;
+  }
+  .stripe {
+    height:2px;
+    width:20px;
+    background-color:#FFF;
+  }
+  .stripe + .stripe {
+    margin-top:4px;
+  }
+  a.header-text:hover {
     color:#FFF;
+    text-decoration:none;
+    background-color:rgba(255,255,255,0.15)
   }
-  .header-bg {
-    z-index:25;
-    background:url('/static/img/header-bg.png') center repeat;
-  }
-  header span, header a {
-    color:inherit;
-  }
-  .user-name {
-    margin-right:0.5em;
-  }
-  .stripes {
-    padding:1.5em 1em;
-    float:left;
-    cursor:pointer;
-  }
-  .header-text {
-    float:right;
-    padding:1.25em 1em;
-  }
-  .header-text span {
-    font-family:'Quicksand';
-    font-weight:700;
-    text-transform:uppercase;
-  }
-    .user-profile {
-      text-align:right;
-    }
-    .stripe {
-      height:2px;
-      width:20px;
-      background-color:#FFF;
-    }
-    .stripe + .stripe {
-      margin-top:4px;
-    }
-    a.header-text:hover {
-      color:#FFF;
-      text-decoration:none;
-      background-color:rgba(255,255,255,0.15)
-    }
 aside.sidebar {
   background-color:#f6f6f6;
   z-index:10;
@@ -346,28 +339,16 @@ section {
 .final-no {
   color:#767676;
 }
-.landing .title {
-  font-family:'Quicksand';
-  letter-spacing:-0.1em;
-}
-.home header {
-  width:100%;
-  padding:2em 3em;
-  position:relative;
-}
 header .logo {
-  width:3em;
-  margin-top: 4px;
+  width: 3em;
+  margin-top: 2px;
 }
 .landing {
-  width:100%;
-  float:left;
-  padding:3em 0 0 0;
+  padding: 3em 0;
   text-align:center;
 }
   .landing h1 {
     line-height:125%;
-    margin-top:2em;
   }
   .landing p {
     line-height:150%;
@@ -375,8 +356,8 @@ header .logo {
     font-weight:300;
     color:#666;
   }
-  .landing p + .button {
-    margin-top:3em;
+  .landing .button {
+    margin-top:2em;
   }
   .button {
     display:inline-block;
@@ -446,6 +427,9 @@ header .logo {
   .group-action {
     outline: none;
     width: 100%;
+  }
+  .group-table {
+    border: none !important;
   }
 
   .invite-input {

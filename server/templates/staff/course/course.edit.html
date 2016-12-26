@@ -1,7 +1,7 @@
 {% extends "staff/base.html" %}
 {% import 'staff/_formhelpers.html' as forms with context %}
 
-{% block title %} Ok - {{ current_course.display_name_with_semester }}{% endblock %}
+{% block title %} Settings - {{ current_course.display_name_with_semester }}{% endblock %}
 
 {% block main %}
   <section class="content-header">
@@ -24,6 +24,9 @@
         <div class="col-md-6">
           <!-- Default box -->
             <div class="box">
+              <div class="box-header with-border">
+                <h3 class="box-title">Edit {{ current_course.display_name_with_semester }}</h3>
+              </div>
               <div class="box-body">
                 {% call forms.render_form(form, action_url="", action_text='Edit Course', class_='form') %}
                     {{ forms.render_field(form.display_name, label_visible=true, placeholder='CS 61A', type='text') }}
@@ -33,11 +36,36 @@
                     {{ forms.render_checkbox_field(form.active, label_visible=true) }}
                 {% endcall %}
               </div>
+              <!-- /.box-body -->
             </div>
-            <!-- /.box-body -->
-          </div>
-          <!-- /.box -->
+            <!-- /.box -->
         </div>
+        <div class="col-md-6">
+          <!-- Default box -->
+            <div class="box">
+              <div class="box-header with-border">
+                <h3 class="box-title">Links</h3>
+              </div>
+              <div class="box-body no-padding">
+                <ul class="nav nav-pills nav-stacked">
+                  <li>
+                    <a href="{{ url_for('.course_jobs', cid=current_course.id) }}">
+                      <i class="fa fa-file-text"></i> Jobs
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('.canvas_course', cid=current_course.id) }}">
+                      <i class="fa fa-address-book"></i> bCourses
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+      </div>
+  </section>
 
 
 

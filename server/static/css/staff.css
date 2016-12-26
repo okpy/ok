@@ -24,3 +24,49 @@
 .email-reminder {
     margin-right: 20px;
 }
+
+.timeline-later {
+    margin-left: 60px;
+    margin-right: 15px;
+    margin-top: 5px;
+    height: 35px;
+}
+.timeline>.time-label>a>span {
+    font-weight: 600;
+    padding: 5px;
+    display: inline-block;
+    background-color: #fff;
+    border-radius: 4px;
+}
+
+.nav-stacked>li>form>button {
+    border-radius: 0;
+    border-top: 0;
+    border-left: 3px solid transparent;
+    color: #444;
+}
+
+.nav>li>form>button {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+}
+.nav>li>form:hover,.nav>li>form:active,.nav>li>form:focus {
+    color: #444;
+    background: #f7f7f7
+}
+
+.nav-pills>li>form>button>.fa, .nav-pills>li>form>button>.glyphicon, .nav-pills>li>form>button>.ion {
+    margin-right: 5px;
+}
+
+.ag-submit-btn {
+    border: 0;
+    border-left: 3px solid transparent;
+    background-color: transparent;
+    width: 100%;
+    text-align: left;
+}
+.ag-submit-btn:focus {
+	outline: 0;
+}

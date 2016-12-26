@@ -32,6 +32,14 @@ jQuery(document).ready(function($){
      * the editor is for a new comment.
      */
     var editorTemplate = $('#editor-template').html();
+    var markdown = window.markdownit();
+
+    /* Render Markdown content as HTML in the comment editor. */
+    function render(editor) {
+        var content = editor.find('textarea').val();
+        var html = content ? markdown.render(content) : '<p>Nothing to preview</p>';
+        editor.find('.markdown-body').empty().append(html);
+    }
 
     /* Remove a comment or editor and, if necessary, its container. */
     function removeComment(comment) {
@@ -60,6 +68,7 @@ jQuery(document).ready(function($){
         if (editor.length == 0) {
             container.append(editorTemplate);
         }
+        render(container.find('.comment-editor'));
     });
 
     $('body').on('click', '.comment-edit', function (e) {
@@ -69,6 +78,7 @@ jQuery(document).ready(function($){
         editor.find('textarea').val(comment.data('message'));
         comment.before(editor);
         comment.hide();
+        render(editor);
     });
 
     $('body').on('click', '.comment-delete', function (e) {
@@ -92,25 +102,11 @@ jQuery(document).ready(function($){
         });
     });
 
-    $('body').on('click', '.comment-write-tab', function (e) {
-        e.preventDefault();
-        $(this).tab('show');
+    $('body').on('change keyup paste cut', '.comment-write', 
+            debounce(function(e) {
         var editor = $(this).parents('.comment-editor');
-        editor.find('.comment-write').addClass('active');
-        editor.find('.comment-preview').removeClass('active');
-    });
-
-    $('body').on('click', '.comment-preview-tab', function (e) {
-        e.preventDefault();
-        $(this).tab('show');
-        var editor = $(this).parents('.comment-editor');
-        editor.find('.comment-write').removeClass('active');
-        editor.find('.comment-preview').addClass('active');
-
-        var content = editor.find('textarea').val();
-        var html = content ? markdown.toHTML(content) : '<p>Nothing to preview</p>';
-        editor.find('.markdown-body').empty().append(html);
-    });
+        render(editor);
+    }, 75));
 
     $('body').on('click', '.comment-cancel', function(e) {
         e.preventDefault();
@@ -159,4 +155,5 @@ jQuery(document).ready(function($){
             swal('Oops, something went wrong. Try again?', 'error');
         })
     });
+
 });

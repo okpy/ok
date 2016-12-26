@@ -6,12 +6,12 @@
         <li class="header">Home</li>
         <li {% if request.endpoint == "admin.index" %} class="active" {% endif %} >
           <a href="{{ url_for('.index') }}">
-            <i class="fa fa-home"></i> <span>Dashboard</span> </i>
+            <i class="fa fa-home"></i> <span>Dashboard</span>
           </a>
         </li>
         <li {% if request.endpoint == "admin.grading" %} class="active" {% endif %} >
           <a href="{{ url_for('.grading_tasks') }}">
-            <i class="fa fa-inbox"></i> <span>Grading</span> </i>
+            <i class="fa fa-inbox"></i> <span>Grading</span>
             <span class="label label-primary pull-right"> {{ current_user.num_grading_tasks() }}</span>
           </a>
         </li>

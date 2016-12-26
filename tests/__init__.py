@@ -55,9 +55,10 @@ class OkTestCase(TestCase):
         """Creates:
 
         * A course (self.course)
-        * An assignment (self.assignment) in that course
+        * 2 assignments (self.assignment) in that course
         * 5 users (self.user1, self.user2, etc.) enrolled as students
         * 2 staff members (self.staff1, self.staff2) as TAs
+        * 1 lab assistant (self.lab_assistant1) as lab assistants
         * 1 Admin (okadmin@okpy.org)
         """
         self.admin = User(email='okadmin@okpy.org', is_admin=True)
@@ -75,7 +76,8 @@ class OkTestCase(TestCase):
             display_name='Hog',
             due_date=dt.datetime.now(),
             lock_date=dt.datetime.now() + dt.timedelta(days=1),
-            max_group_size=4)
+            max_group_size=4,
+            autograding_key='test')  # AG responds with a 200 if ID = 'test'
         db.session.add(self.assignment)
 
         self.assignment2 = Assignment(

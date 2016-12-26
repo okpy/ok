@@ -1,7 +1,7 @@
 {% extends "staff/base.html" %}
 {% import 'staff/_formhelpers.html' as forms %}
 
-{% block title %} Ok - {{ current_course.display_name_with_semester }} Enrollment{% endblock %}
+{% block title %} Jobs - {{ current_course.display_name_with_semester }}{% endblock %}
 
 {% block main %}
 <section class="content-header">
@@ -33,11 +33,13 @@
               <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="job-list">
                   <table class="table table-hover">
                       <thead>
+                        <tr>
                           <th class="sort" data-sort="job-id">ID</th>
                           <th class="sort" data-sort="description">Description</th>
                           <th class="sort" data-sort="user">User</th>
                           <th class="sort" data-sort="status">Status</th>
                           <th class="sort" data-sort="timestamp">Started</th>
+                        </tr>
                       </thead>
 
                       <tbody class="list">
@@ -99,11 +101,10 @@
     var jobOptions = {
       valueNames: ['job-id', 'description', 'user', 'status', 'timestamp'],
       plugins: [ListPagination()],
-      indexAsync: true,
       page: 20
     };
     var jobList = new List('job-list', jobOptions);
-    jobList.sort("timestamp", {order: "desc"})
+    jobList.sort('job-id', {order: 'desc'});
     document.getElementById('job-list').style.display = 'block';
 </script>
 {% endblock %}

@@ -1,5 +1,6 @@
 {% extends "student/base.html" %}
 {% import 'diff.html' as diff with context %}
+{% import '_globalhelpers.html' as globals %}
 
 {% block title %} Assignment | Ok {% endblock %}
 
@@ -18,11 +19,11 @@
               <span><a href="{{ url_for('.index') }}">Courses</a></span> &raquo;
               <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name_with_semester }}</a></span> &raquo;
               <span><a href="{{ url_for('.assignment', name=assignment.name) }}"> {{ assignment.display_name }}</a></span> &raquo;
-              <span> {{backup_type}} {{ utils.encode_id(backup.id) }} </span>
+              <span> {{backup_type}} {{ globals.backup_style(utils.encode_id(backup.id)) }} </span>
             </div>
             <h3 class="text-center">Received on {{ utils.local_time(backup.created, course) }} from {{ backup.submitter.email }}</h3>
              {% if backup.scores %}
-                {% for score in backup.visible_grades %}
+                {% for score in backup.published_scores %}
                     <h3 class="text-center">
                       <span class="label label-primary">{{ score.kind.title() }}: {{ score.score | round(2) }}</span>
                     </h3>
@@ -34,9 +35,12 @@
                     {% else %}
                     <pre class="score-box">{{ score.message }}</pre>
                     {% endif %}
-                {% endfor %}
-              {% endif %}
 
+                    {% if score.kind == "composition" %}
+                        {% include 'student/assignment/list_comments.html' %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
           </div>
           {% include 'alerts.html' %}
         </div>
@@ -59,8 +63,8 @@
 
         <div class="subcontent list" role="main">
           <div class="wrap">
-            {% for filename, lines in files | dictsort %}
-              {{ diff.source_file(backup, filename, lines) }}
+            {% for filename, file in files | dictsort %}
+              {{ diff.source_file(backup, filename, file) }}
             {% endfor %}
           </div>
         </div>

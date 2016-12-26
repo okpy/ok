@@ -37,6 +37,23 @@ class TestDownload(OkTestCase):
         url = "/{0}/{1}/{2}/download/{3}".format(self.assignment.name, submit_str, encoded_id, filename)
         response = self.client.get(url)
         self.assert_200(response)
+        self.assertTrue('attachment' in response.headers['Content-Disposition'])
+        self.assertEquals(response.headers['Content-Type'], 'text/plain; charset=UTF-8')
+        self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
+        self.assertEqual(contents, response.data.decode('UTF-8'))
+
+    def test_raw(self):
+        filename = "test.py"
+        contents = "x = 4"
+        self._add_file(filename, contents)
+        encoded_id = utils.encode_id(self.backup.id)
+        submit_str = "submissions" if self.backup.submit else "backups"
+        url = "/{0}/{1}/{2}/download/{3}?raw=1".format(self.assignment.name, submit_str, encoded_id, filename)
+        response = self.client.get(url)
+        self.assert_200(response)
+        self.assertTrue('inline' in response.headers['Content-Disposition'])
+        self.assertEquals(response.headers['Content-Type'], 'text/plain; charset=UTF-8')
+        self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
         self.assertEqual(contents, response.data.decode('UTF-8'))
 
     def test_incorrect_hash(self):

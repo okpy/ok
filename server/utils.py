@@ -8,10 +8,12 @@ import random
 import re
 from urllib.parse import urlparse, urljoin
 
-from flask import render_template, url_for
+import bleach
+from flask import render_template, url_for, Markup
 from hashids import Hashids
 import humanize
 from oauthlib.common import generate_token
+import markdown
 from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
@@ -28,8 +30,10 @@ logger = logging.getLogger(__name__)
 # link with an ID in it.
 hashids = Hashids(min_length=6)
 
+
 def encode_id(id_number):
     return hashids.encode(id_number)
+
 
 def decode_id(value):
     numbers = hashids.decode(value)
@@ -37,9 +41,26 @@ def decode_id(value):
         raise ValueError('Could not decode hash {0} into ID'.format(value))
     return numbers[0]
 
+
+def convert_markdown(text):
+    # https://pythonadventures.wordpress.com/tag/markdown/
+    allowed_tags = [
+        'a', 'abbr', 'acronym', 'b',
+        'blockquote', 'code', 'em',
+        'i', 'li', 'ol', 'pre', 'strong',
+        'ul', 'h1', 'h2', 'h3', 'p', 'br', 'ins', 'del',
+    ]
+    unsafe_html = markdown.markdown(
+        text,
+        extensions=["markdown.extensions.fenced_code"],
+    )
+    html = bleach.linkify(bleach.clean(unsafe_html, tags=allowed_tags))
+    return Markup(html)
+
 # Timezones. Be cautious with using tzinfo argument. http://pytz.sourceforge.net/
 # "tzinfo argument of the standard datetime constructors 'does not work'
 # with pytz for many timezones."
+
 
 def local_time(time, course, fmt='%a %m/%d %I:%M %p'):
     """ Format a time string in a course's locale.
@@ -47,11 +68,13 @@ def local_time(time, course, fmt='%a %m/%d %I:%M %p'):
     """
     return local_time_obj(time, course).strftime(fmt)
 
+
 def local_time_obj(time, course):
     """ Get a Datetime object in a course's locale from a TZ Aware DT object."""
     if not time.tzinfo:
         time = pytz.utc.localize(time)
     return time.astimezone(course.timezone)
+
 
 def server_time_obj(time, course):
     """ Convert a datetime object from a course's locale to a UTC
@@ -62,6 +85,7 @@ def server_time_obj(time, course):
     # Store using UTC on the server side.
     return time.astimezone(pytz.utc)
 
+
 def future_time_obj(course, **kwargs):
     """ Get a datetime object representing some timedelta from now with the time
     set at 23:59:59.
@@ -70,14 +94,17 @@ def future_time_obj(course, **kwargs):
     time = dt.time(hour=23, minute=59, second=59, microsecond=0)
     return dt.datetime.combine(date, time)
 
+
 def new_due_date(course):
     """ Return a string representing a new due date next week."""
     return future_time_obj(course, weeks=1).strftime(constants.ISO_DATETIME_FMT)
+
 
 def new_lock_date(course):
     """ Return a string representing a new lock date 8 days from now."""
     return (future_time_obj(course, weeks=1, days=1)
             .strftime(constants.ISO_DATETIME_FMT))
+
 
 def natural_time(date):
     """ Format a human-readable time difference (e.g. "6 days ago")"""
@@ -102,6 +129,7 @@ def is_safe_redirect_url(request, target):
     redirect_url = urlparse(urljoin(request.host_url, target))
     return redirect_url.scheme in ('http', 'https') and \
         host_url.netloc == redirect_url.netloc
+
 
 def random_row(query):
     count = query.count()
@@ -151,6 +179,9 @@ def send_email(to, subject, body, template='email/notification.html',
         logger.error("Could not send email", exc_info=True)
         return
 
+def ceildiv(a, b):
+    return -(-a // b)
+
 def chunks(l, n):
     """ Divides L into N many chunks, each containing approximately the
     same number of elements. Used for GradingTask distribution.
@@ -169,7 +200,7 @@ def chunks(l, n):
     length = len(l)
     prev_index = 0
     for i in range(1, n + 1):
-        index = math.ceil((i / n) * length)
+        index = ceildiv(i * length, n)
         yield l[prev_index:index]
         prev_index = index
 
@@ -190,15 +221,17 @@ def generate_csv(query, items, selector_fn):
         csv_writer.writerow(data)
         yield csv_file.getvalue()
 
+
 def is_valid_endpoint(endpoint, valid_format):
     """ Validates an endpoint name against a regex pattern VALID_FORMAT. """
     r = re.compile(valid_format)
-    is_forbidden = any([endpoint.startswith(name) for name
-                        in constants.FORBIDDEN_ROUTE_NAMES])
+    is_forbidden = any(
+        endpoint.startswith(name) for name in constants.FORBIDDEN_ROUTE_NAMES)
     if r.match(endpoint) is not None and not is_forbidden:
         # Ensure that the name does not begin with forbidden names
         return True
     return False
+
 
 def pluralize(number, singular='', plural='s'):
     """ Pluralize filter for Jinja.
@@ -209,9 +242,11 @@ def pluralize(number, singular='', plural='s'):
     else:
         return plural
 
+
 def generate_secret_key(length=31):
     """ Generates a random secret, as a string."""
     return generate_token(length=length)
+
 
 def generate_number_table(num):
     """ Generate a table of number with column name pos.

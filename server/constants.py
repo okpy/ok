@@ -15,9 +15,10 @@ ROLE_DISPLAY_NAMES = {
 VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
-GRADE_TAGS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
-              'regrade', 'revision', 'private']
-HIDDEN_GRADE_TAGS = ['autograder', 'revision', 'private']
+SCORE_KINDS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
+               'regrade', 'revision',
+               'checkpoint 1', 'checkpoint 2',
+               'private', 'autograder']
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
 
@@ -44,3 +45,6 @@ FORBIDDEN_ROUTE_NAMES = [
     'testing-login',
 ]
 FORBIDDEN_ASSIGNMENT_NAMES = []
+
+# Maximum file size to show in browser, in characters
+DIFF_SIZE_LIMIT = 64 * 1024  # 64KB

@@ -124,7 +124,8 @@ curl "https://okpy.org/api/v3/enrollment/example@gmail.com?access_token=test"
                     "active": true,
                     "offering": "ok/test/su16",
                     "id": 2,
-                    "display_name": "OK Sandbox"
+                    "display_name": "OK Sandbox",
+                    "timezone": "America/Los_Angeles"
                 }
             },
         ]
@@ -151,8 +152,44 @@ access_token | None | (Required) Access Token of staff member
 See example response.
 <!-- End Endpoint -->
 
-
 # Assignments
+
+## List Assignments
+>><h4> Example Response </h4>
+> ```
+curl "https://okpy.org/api/v3/course/cal/cs61a/sp16/assignments"
+{
+    "code": 200,
+    "data": {
+        "assignments": [
+        {
+            "active": "True",
+            "display_name": "Scheme",
+            "due_date": "2016-11-07T06:59:59",
+            "lock_date": "2016-11-07T07:14:59",
+            "max_group_size": 2,
+            "name": "cal/cs61a/sp16/scheme",
+            "url": null
+        },
+        ...
+    },
+    "message": "success"
+}
+```
+
+Get assignments for course
+
+#### Permissions
+No authentication required
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/course/<offering:course>/assignments`
+
+#### Query Parameters
+None
+
+#### Response
+See example output.
 
 ## Assignment Info
 >><h4> Example Response </h4>
@@ -165,7 +202,8 @@ curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab01"
             "active": true,
             "display_name": "CS 61A",
             "id": 1,
-            "offering": "cal/cs61a/sp16"
+            "offering": "cal/cs61a/sp16",
+            "timezone": "America/Los_Angeles"
         },
         "display_name": "Lab 01",
         "due_date": "2016-09-07T06:59:59",
@@ -277,7 +315,8 @@ curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab00/export/email@berke
                 ],
                 "is_late": true,
                 "submit": false,
-                "created": "2016-06-26T09:50:31"
+                "created": "2016-06-26T09:50:31",
+                "submission_time": "2016-06-26T09:50:31"
             },
         ],
         "limit": 2,
@@ -308,7 +347,7 @@ offset | 0 | (Optional) How many recent backups to ignore. An offset of 100 with
 Name | Type | Description
 ---------- | -------
 backups | List |  A list of backup objects, sorted by time (most recent to oldest).
-has_more | Boolean | Indicates whether this response includes the earliest backup.
+has_more | Boolean | Indicates whether this response includes the last backup.
 count | Integer | The count of total backups from this user
 limit | Integer | The value of the limit parameter
 offset | Integer | The value of the limit parameter
@@ -323,6 +362,7 @@ curl "https://okpy.org/api/v3/assignment/cal/cs61a/sp16/lab00/submissions?access
 "backups": [{
     "id": "14a8r3",
     "created": "2016-06-20T12:58:30",
+    "submission_time": "2016-06-20T12:58:30",
     "submit": true,
     "is_late": false,
     "group": [{ "id": "lejRe2",  "email": "email@berkeley.edu" },
@@ -362,7 +402,7 @@ The access_token's user must have at least staff level access to the assignment.
 Parameter | Default | Description
 ---------- | ------- | -------
 access_token | None | (Required) Access Token of staff member
-limit | 150 | (Optional) Number of backups to retrieve in one request. High numbers may result in slower responses.
+limit | 150 | (Optional) Number of backups to retrieve in one request. High numbers may result in slower responses or timeouts.
 offset | 0 | (Optional) How many recent backups to ignore. An offset of 100 with a limit of 150 will provide backup numbers #101 to #250.
 
 
@@ -371,9 +411,9 @@ Name | Type | Description
 ---------- | -------
 backups | List |  A list of backup objects in no particular order
 count | Integer | The count of total backups from this user
-limit | Integer | Unsupported. Value will be 0
-offset | Integer | Unsupported. Value will be 0
-has_more | None | Unsupported. Value will be null
+limit | Integer | The value of the limit parameter
+offset | Integer | The value of the limit parameter
+has_more | Boolean | Indicates whether this response includes the last backup.
 
 # Backups
 
@@ -406,7 +446,8 @@ response = r.json()
             "id": 1,
             "active": true,
             "display_name": "CS 61A",
-            "offering": "cal/cs61a/su16"
+            "offering": "cal/cs61a/su16",
+            "timezone": "America/Los_Angeles"
         },
         "assignment": "cal/cs61a/su16/sample"
     },
@@ -465,13 +506,20 @@ curl "https://okpy.org/api/v3/backups/aF249e/?access_token=test"
         "submitter": { "email": "test@berkeley.edu", "id": "a4r4gd"},
         "submit": false,
         "created": "2016-06-21T03:05:53"
+        "submission_time": "2016-06-21T03:05:53"
         "group": [
             {"email": "test@berkeley.edu","id": "a4r4gd"}
         ],
         "is_late": false,
         "assignment": {
             "name": "cal/cs61a/su16/sample",
-            "course": {"id": 1, "active": true, "display_name": "CS 61A", "offering": "cal/cs61a/su16"}
+            "course": {
+                "id": 1,
+                "active": true,
+                "display_name": "CS 61A",
+                "offering": "cal/cs61a/su16",
+                "timezone": "America/Los_Angeles"
+            }
         },
         "id": "aF249e",
         "messages": [
@@ -503,6 +551,8 @@ access_token | None | (Required) Access Token of submitter
 
 #### Response
 See example
+
+`submission_time` differs from `created` when staff have manually overriden the submission time. The `submission_time` property should always be used if calculating late penalties.
 
 ## Comments
 >><h4> Example Request </h4>
@@ -549,7 +599,7 @@ line | Integer | (Required) Line number on the backup to place comment.
 message | String | (Required) Comment contents as raw Markdown text. New lines require `\n`.
 
 #### Response
-No `data` is returned. 
+No `data` is returned.
 
 # Users
 
