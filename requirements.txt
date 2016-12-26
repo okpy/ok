@@ -40,7 +40,8 @@ https://github.com/Sumukh/oauthlib/archive/master.zip
 
 https://github.com/lepture/flask-oauthlib/archive/e1bb478b2015239dd12f1d3ee13fb2627a5a3407.zip
 
-Flask-WTF==0.13.1
+Flask-WTF==0.12
+# Flask-WTF==0.13.1
 Flask-RESTful==0.3.5
 Flask-Testing>=0.5.0,<1.0
 Flask-RQ==0.2
