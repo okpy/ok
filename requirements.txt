@@ -32,8 +32,7 @@ oauthlib==2.0.1
 # OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
 https://github.com/lepture/flask-oauthlib/archive/d62bf665fa2a4ab71327cd665334fdec25ade116.zip
 
-Flask-WTF==0.12
-# Flask-WTF==0.13.1
+Flask-WTF==0.13.1
 Flask-RESTful==0.3.5
 Flask-Testing>=0.5.0,<1.0
 Flask-RQ==0.2

@@ -1,13 +1,12 @@
 from flask import request
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 import requests.exceptions
-import wtforms
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
                      SelectMultipleField, RadioField, Field,
                      widgets, validators)
-from flask_wtf.html5 import EmailField
+from wtforms.fields.html5 import EmailField
 
 import datetime as dt
 import pytz
@@ -16,7 +15,7 @@ import re
 from server import utils
 import server.canvas.api as canvas_api
 from server.models import Assignment, Course, Message, CanvasCourse
-from server.constants import (VALID_ROLES, SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
+from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES)
 
@@ -109,7 +108,7 @@ class CommaSeparatedField(Field):
         else:
             self.data = []
 
-class BaseForm(Form):
+class BaseForm(FlaskForm):
 
     class Meta:
 
