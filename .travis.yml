@@ -6,7 +6,7 @@ services:
   - docker
   - redis
 python:
-    - "3.5"
+    - "3.6"
 env:
   global:
      - OK_ENV=test
