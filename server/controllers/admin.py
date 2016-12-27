@@ -846,6 +846,7 @@ def enrollment_csv(cid):
 @admin.route("/clients/", methods=['GET', 'POST'])
 @is_staff()
 def clients():
+    courses, current_course = get_courses()
     clients = Client.query.all()
     form = forms.ClientForm(client_secret=utils.generate_secret_key())
     if form.validate_on_submit():
@@ -857,11 +858,13 @@ def clients():
         flash('OAuth client "{}" added'.format(client.name), "success")
         return redirect(url_for(".clients"))
 
-    return render_template('staff/clients.html', clients=clients, form=form)
+    return render_template('staff/clients.html', clients=clients, form=form, courses=courses)
 
 @admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
 @is_staff()
 def client(client_id):
+    courses, current_course = get_courses()
+
     client = Client.query.get(client_id)
     form = forms.EditClientForm(obj=client)
     if form.validate_on_submit():
@@ -876,7 +879,7 @@ def client(client_id):
         db.session.commit()
         flash(flash_msg, "success")
         return redirect(url_for(".clients"))
-    return render_template('staff/edit_client.html', client=client, form=form)
+    return render_template('staff/edit_client.html', client=client, form=form, courses=courses)
 
 ################
 # Student View #
