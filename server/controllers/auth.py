@@ -162,7 +162,8 @@ def load_user_from_request(request):
 @login_manager.unauthorized_handler
 def unauthorized():
     session['after_login'] = request.url
-    return redirect(url_for('auth.login'))
+    login_hint = request.args.get('login_hint')
+    return redirect(url_for('auth.login', login_hint=login_hint))
 
 def authorize_user(user):
     if user is None:
@@ -200,7 +201,9 @@ def login():
     """
     if use_testing_login():
         return redirect(url_for('.testing_login'))
-    return google_auth.authorize(callback=url_for('.authorized', _external=True))
+    return google_auth.authorize(
+        callback=url_for('.authorized', _external=True),
+        login_hint=request.args.get('login_hint'))
 
 @auth.route('/login/authorized/')
 def authorized():
