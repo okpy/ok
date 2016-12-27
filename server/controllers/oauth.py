@@ -138,7 +138,10 @@ def revoke_token():
 
 @oauth.route('/oauth/errors')
 def oauth_errors():
-    error = request.args.get('error', 'Unknown Error')
-    description = request.args.get('error_description', 'No details available')
+    error = request.args.get('error')
+    if error:
+        # 'access_denied' -> 'Access Denied'
+        error = error.replace('_', ' ').title()
+    description = request.args.get('error_description')
     return render_template('errors/generic.html',
                            error=error, description=description), 400
