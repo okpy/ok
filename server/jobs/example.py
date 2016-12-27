@@ -11,4 +11,4 @@ def test_job(duration=0, should_fail=False):
     if should_fail:
         1/0
     logger.info('Finished!')
-    return "Waited for {} seconds".format(duration)
+    return "Waited for <b>{}</b> seconds!".format(duration)
