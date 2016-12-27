@@ -67,7 +67,7 @@
                                {% if not job.result %}
                                   &mdash;
                                {% elif job.result_kind == "link" %}
-                                <a href="{{ job.result }}" target="_blank"  class="btn btn-default btn-sm"> {{ job.result | truncate(70, True) }} </a>
+                                <a href="{{ job.result }}" target="_blank"> {{ job.result | truncate(70, True) }} </a>
                                {% elif job.result_kind == "string" %}
                                  {{ job.result | truncate(70, True) }}
                                {% elif job.result_kind == "html" %}
