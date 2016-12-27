@@ -377,8 +377,8 @@ class ClientForm(BaseForm):
         default=True)
 
     redirect_uris = CommaSeparatedField(
-        'Redirect URIs',
-        description='Comma-separated list.')
+        'Allowed Redirect URIs',
+        description='Comma-separated list. Redirects to localhost and 127.0.0.1 are always allowed.')
 
     default_scopes = CommaSeparatedField(
         'Default Scope',
