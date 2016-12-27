@@ -27,7 +27,7 @@ import shlex
 import urllib.parse
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-                              SCORE_KINDS)
+                              SCORE_KINDS, OAUTH_OUT_OF_BAND_URI)
 
 from server.extensions import cache
 from server.utils import (encode_id, chunks, generate_number_table,
@@ -1503,6 +1503,8 @@ class Client(Model):
         return self.redirect_uris[0]
 
     def validate_redirect_uri(self, redirect_uri):
+        if redirect_uri == OAUTH_OUT_OF_BAND_URI:
+            return True
         # always allow loopback hosts
         parse_result = urllib.parse.urlparse(redirect_uri)
         if parse_result.hostname in ('localhost', '127.0.0.1'):
