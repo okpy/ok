@@ -863,14 +863,19 @@ def clients():
 @is_staff()
 def client(client_id):
     client = Client.query.get(client_id)
-    client.client_secret = utils.generate_secret_key()
-    form = forms.ClientForm(obj=client)
+    form = forms.EditClientForm(obj=client)
     if form.validate_on_submit():
         form.populate_obj(client)
+        if form.roll_secret.data:
+            client.client_secret = utils.generate_secret_key()
+            flash_msg = ('OAuth client "{}" updated with new secret: "{}"'
+                         .format(client.name, client.client_secret))
+        else:
+            flash_msg = ('OAuth client "{}" updated without changing the secret'
+                         .format(client.name))
         db.session.commit()
-        flash('OAuth client "{}" updated'.format(client.name), "success")
+        flash(flash_msg, "success")
         return redirect(url_for(".clients"))
-
     return render_template('staff/edit_client.html', client=client, form=form)
 
 ################
