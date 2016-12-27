@@ -10,14 +10,14 @@
       {% include 'alerts.html' %}
       <h1 class="title">Authorize {{client.name}}</h1>
       <h2><a name="policy" id="policy"></a>{{client.name}} wants to access your OK Account</h2>
-      {% if client.description %}
       <blockquote>
         <p><strong>You are logged in as {{ current_user.email }}. <br> Not you?
         <a id="reauthenticate-button" data-no-instant href="{{ url_for('.reauthenticate', **dict(request.uri_query_params)) }}">Use a different account</a></strong></p>
       </blockquote>
-      {% endif %}
 
+      {% if client.description %}
       <p>{{ client.description}} </p>
+      {% endif %}
 
       <p>This will grant {{client.name}} access to: </p>
       <ul class="list-group">
