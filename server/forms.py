@@ -384,6 +384,16 @@ class ClientForm(BaseForm):
         'Default Scope',
         description='Comma-separated list. Valid scopes are "email" and "all".')
 
+class EditClientForm(ClientForm):
+    roll_secret = BooleanField(
+        'Change the secret?',
+        description='Should the secret be changed? If checked, the new value will appear after submission',
+        default=False)
+    client_secret = HiddenField(
+        'Placeholder for secret',
+        description="Do not fill out or render.",
+        validators=[validators.optional()])
+
 
 class NewCourseForm(BaseForm):
     offering = StringField('Offering (example: cal/cs61a/sp16)',
