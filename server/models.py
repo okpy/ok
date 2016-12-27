@@ -24,6 +24,7 @@ from datetime import datetime as dt
 import json
 import logging
 import shlex
+import urllib.parse
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
                               SCORE_KINDS)
@@ -1501,6 +1502,12 @@ class Client(Model):
     def default_redirect_uri(self):
         return self.redirect_uris[0]
 
+    def validate_redirect_uri(self, redirect_uri):
+        # always allow loopback hosts
+        parse_result = urllib.parse.urlparse(redirect_uri)
+        if parse_result.hostname in ('localhost', '127.0.0.1'):
+            return True
+        return redirect_uri in self.redirect_uris
 
 class Grant(Model):
     id = db.Column(db.Integer, primary_key=True)
