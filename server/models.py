@@ -849,7 +849,7 @@ class Enrollment(Model):
         new_users = []
         existing_user_count = 0
         for usr in entries:
-            email, name, sid, login, section = usr
+            email, name, sid, login, section = [x.strip() for x in usr]
             usr_obj = User.lookup(email)
             user_info = {
                 "sid": sid,
