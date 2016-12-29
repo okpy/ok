@@ -1,0 +1,19 @@
+{% extends "student/base.html" %}
+
+{% block body %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-3">
+      <a href="{{ url_for('student.index') }}">
+        <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo select-none">
+      </a>
+    </div>
+    <div class="oauth col-md-6">
+      {% include 'alerts.html' %}
+      {% block content %}
+      {% endblock content %}
+    </div>
+  </div>
+  {% include 'footer.html' %}
+</div>
+{% endblock %}
