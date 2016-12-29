@@ -1,15 +1,9 @@
 .oauth {
-    text-align: left;
-    padding-top: 0;
-    padding: 0;
-}
-.oauth-button-block {
-    padding-left: 20px;
-    padding-right: 20px;
     padding-bottom: 15px;
 }
-.oauth-allow-btn {
-}
-.oauth-deny-btn {
 
+.logo {
+    display: block;
+    margin: 8px auto 0px auto;
+    height: 50px;
 }

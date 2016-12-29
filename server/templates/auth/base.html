@@ -3,12 +3,12 @@
 {% block body %}
 <div class="container">
   <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-2">
       <a href="{{ url_for('student.index') }}">
         <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo select-none">
       </a>
     </div>
-    <div class="oauth col-md-6">
+    <div class="oauth col-md-8">
       {% include 'alerts.html' %}
       {% block content %}
       {% endblock content %}

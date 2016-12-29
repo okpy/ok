@@ -64,10 +64,6 @@ header .landing-btn {
   margin-bottom: 4em;
 }
 
-.container {
-  margin-top: 0px;
-}
-
 .landing-btn:hover{
 	background-color:#DDDDDD;
 }
