@@ -1,3 +1,24 @@
+.container {
+  min-height: 100%;
+  /* equal to footer height */
+  margin: 0 auto -70px;
+}
+
+/* https://css-tricks.com/snippets/css/sticky-footer/ */
+.page-wrap:after {
+  content: "";
+  display: block;
+}
+
+.footer, .page-wrap:after {
+  height: 70px;  /* 40 + 15 + 15 */
+}
+
+.footer {
+  border-top: 1px solid #eee;
+  padding: 15px 0;
+}
+
 .block {
   display: block;
 }

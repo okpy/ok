@@ -58,12 +58,6 @@ header .landing-btn {
   width: 150px;
 }
 
-.footer {
-  border-top: 1px solid #eee;
-  padding: 2em 0;
-  margin-bottom: 4em;
-}
-
 .landing-btn:hover{
 	background-color:#DDDDDD;
 }
