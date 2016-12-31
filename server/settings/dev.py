@@ -20,4 +20,11 @@ RQ_POLL_INTERVAL = 2000
 
 MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # Max Upload Size is 8MB
 
+STORAGE_PROVIDER = 'LOCAL'
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.path.abspath("./local-storage")
+
+if not os.path.exists(STORAGE_CONTAINER):
+    os.makedirs(STORAGE_CONTAINER)
+
 GOOGLE_CONSUMER_KEY = ''

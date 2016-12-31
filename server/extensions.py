@@ -3,7 +3,7 @@ from flask_wtf.csrf import CsrfProtect
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_assets import Environment
 from flask_oauthlib.provider import OAuth2Provider
-
+from flask_cloudy import Storage
 from raven.contrib.flask import Sentry
 
 # Setup flask cache
@@ -16,6 +16,9 @@ oauth_provider = OAuth2Provider()
 
 # init flask assets
 assets_env = Environment()
+
+# Cloud Storage Library
+storage = Storage()
 
 debug_toolbar = DebugToolbarExtension()
 

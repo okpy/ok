@@ -23,6 +23,13 @@ SQLALCHEMY_DATABASE_URI = db_url
 WTF_CSRF_CHECK_DEFAULT = False
 WTF_CSRF_ENABLED = False
 
+STORAGE_PROVIDER = 'LOCAL'
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.path.abspath("./local-storage")
+
+if not os.path.exists(STORAGE_CONTAINER):
+    os.makedirs(STORAGE_CONTAINER)
+
 CACHE_TYPE = 'simple'
 
 RQ_DEFAULT_HOST = REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')

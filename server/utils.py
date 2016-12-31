@@ -10,6 +10,7 @@ from urllib.parse import urlparse, urljoin
 
 import bleach
 from flask import render_template, url_for, Markup
+from flask_cloudy import get_file_extension, ALL_EXTENSIONS
 from hashids import Hashids
 import humanize
 from oauthlib.common import generate_token
@@ -18,7 +19,7 @@ from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
 
-from server.extensions import cache
+from server.extensions import storage
 from server import constants
 
 sg = sendgrid.SendGridClient(
@@ -253,3 +254,21 @@ def generate_number_table(num):
     Used in models.Assignment.mysql_course_submissions_query
     """
     return ' UNION '.join('SELECT {} as pos'.format(i) for i in range(1, num + 1))
+
+def upload_file(file, container=None, name=None, prefix=None, overwrite=False):
+    """ A utility function to get around having to specify
+    what file extensions are allowed.
+    """
+    extension = get_file_extension(file)
+    allowed_extensions = ALL_EXTENSIONS
+    if extension not in ALL_EXTENSIONS:
+        allowed_extensions = ALL_EXTENSIONS + [extension]
+
+    if not container:
+        upload = storage.upload(file, name=name, prefix=prefix, overwrite=overwrite,
+                                allowed_extensions=allowed_extensions)
+    else:
+        with storage.use(container) as c:
+            upload = c.upload(file, name=name, prefix=prefix, overwrite=overwrite,
+                              allowed_extensions=allowed_extensions)
+    return upload

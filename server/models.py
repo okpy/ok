@@ -29,7 +29,7 @@ import urllib.parse
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
                               SCORE_KINDS)
 
-from server.extensions import cache
+from server.extensions import cache, storage
 from server.utils import (encode_id, chunks, generate_number_table,
                           humanize_name)
 
@@ -1643,3 +1643,72 @@ class CanvasAssignment(Model):
     @property
     def url(self):
         return '{}/assignments/{}'.format(self.canvas_course.url, self.external_id)
+
+#########
+# Files #
+#########
+
+class ExternalFile(Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    # Bucket/Folder that the file is stored in
+    container = db.Column(db.String(255), nullable=False)
+    filename = db.Column(db.String(512), nullable=False)
+
+    object_name = db.Column(db.String(512), nullable=False)
+
+    is_staff = db.Column(db.Boolean, nullable=False)
+    deleted = db.Column(db.Boolean, default=False)
+
+    course_id = db.Column(
+        db.Integer, db.ForeignKey('course.id'), index=True, nullable=False
+    )
+    course = db.relationship('Course')
+
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id'), index=True, nullable=False
+    )
+    user = db.relationship('User')
+
+    assignment_id = db.Column(
+        db.Integer, db.ForeignKey('assignment.id'), index=True
+    )
+    assignment = db.relationship('Assignment')
+
+    @property
+    def object(self):
+        with storage.use(self.container) as container:
+            return container.get(self.object_name)
+
+    def delete(self):
+        self.object.delete()
+        self.deleted = True
+        db.session.commit()
+
+    @classmethod
+    def can(cls, obj, user, action):
+        if not user:
+            return False
+        if user.is_admin:
+            return True
+
+        # Files that don't exist
+        if not obj and action == "create":
+            return True
+        elif not obj:
+            return False
+        is_staff_member = user.is_enrolled(obj.course_id, STAFF_ROLES)
+
+        # Staff can see staff & student files
+        if is_staff_member:
+            return True
+        elif obj.is_staff:
+            return False
+
+        # Student files are visible to the creators and group members
+        if user.id == obj.user_id:
+            return True
+        elif obj.assignment_id:
+            group_members = obj.assignment.active_user_ids(obj.user_id)
+            return user.id in group_members
+        return False

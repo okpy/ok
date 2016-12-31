@@ -48,6 +48,12 @@ RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
 REDIS_PORT = 6379
 RQ_POLL_INTERVAL = 2000
 
+STORAGE_PROVIDER = 'LOCAL'
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.path.abspath("./local-storage")
+
+if not os.path.exists(STORAGE_CONTAINER):
+    os.makedirs(STORAGE_CONTAINER)
 try:
     os.environ["GOOGLE_ID"]
     os.environ["GOOGLE_SECRET"]

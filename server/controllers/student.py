@@ -9,7 +9,6 @@ import logging
 from server import highlight, models, utils
 from server.autograder import submit_continous
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
-from server.extensions import cache
 from server.forms import CSRFForm, UploadSubmissionForm
 from server.models import User, Course, Assignment, Group, Backup, db
 from server.utils import (is_safe_redirect_url, group_action_email,
@@ -18,7 +17,6 @@ from server.utils import (is_safe_redirect_url, group_action_email,
 logger = logging.getLogger(__name__)
 
 student = Blueprint('student', __name__)
-
 
 def check_enrollment(course):
     enrolled = current_user.is_enrolled(course.id)
@@ -175,7 +173,6 @@ def list_backups(name, submit):
     return render_template('student/assignment/list.html', course=assign.course,
                            assignment=assign, paginate=paginate, submit=submit,
                            csrf_form=csrf_form)
-
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/<hashid:bid>/')
 @login_required

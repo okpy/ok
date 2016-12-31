@@ -42,6 +42,13 @@ WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # Max Upload Size is 10MB
 
+STORAGE_PROVIDER = 'LOCAL'
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.path.abspath("./local-storage")
+
+if not os.path.exists(STORAGE_CONTAINER):
+    os.makedirs(STORAGE_CONTAINER)
+
 try:
     os.environ["GOOGLE_ID"]
     os.environ["GOOGLE_SECRET"]
