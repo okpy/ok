@@ -1,5 +1,7 @@
 import tempfile
+import logging
 
+import libcloud
 from flask import Blueprint, url_for, redirect, send_from_directory, abort
 from flask_login import login_required, current_user
 
@@ -8,13 +10,25 @@ from server.models import ExternalFile
 
 files = Blueprint('files', __name__)
 
+logger = logging.getLogger(__name__)
+
 @files.route("/files/<hashid:file_id>")
 @login_required
 def file_url(file_id):
     ext_file = ExternalFile.query.filter_by(id=file_id, deleted=False).first()
     if not ext_file or not ExternalFile.can(ext_file, current_user, 'download'):
         return abort(404)
-    storage_obj = ext_file.object
+    try:
+        storage_obj = ext_file.object
+    except libcloud.common.types.InvalidCredsError as e:
+        logger.warning("Could not get file {0} - {1}".format(file_id, ext_file.filename),
+                       exc_info=True)
+        storage_obj = None
+        raise e
+
+    if storage_obj is None:
+        return abort(404, "File does not exist")
+
     # Do not use .download_url for local storage.
     if "local" in storage.driver.name.lower():
         return redirect(url_for('.send_file', file_id=ext_file.id))
