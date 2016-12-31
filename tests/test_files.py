@@ -51,6 +51,21 @@ class TestFile(OkTestCase):
         self.assertEquals(file_obj.name, self.file1.object_name)
         self.assertEquals(file_obj.hash, self.upload1.hash)
 
+    def test_duplicate(self):
+        file_obj = self.file1.object
+        duplicate_obj = utils.upload_file(CWD + "/files/fizzbuzz_after.py", name='fizz.txt')
+        self.assertEquals(file_obj.driver.key, duplicate_obj.driver.key)
+        self.assertNotEquals(file_obj.name, duplicate_obj.name)
+        duplicate_obj.delete()
+
+    def test_prefix(self):
+        file_obj = self.file1.object
+        prefix_obj = utils.upload_file(CWD + "/files/fizzbuzz_after.py", name='fizz.txt', prefix='test/')
+        self.assertEquals(file_obj.driver.key, prefix_obj.driver.key)
+        self.assertEquals(file_obj.name, self.file1.object_name)
+        self.assertEquals(prefix_obj.name, 'test/fizz.txt')
+        prefix_obj.delete()
+
     def test_permission(self):
         # Students can not access files of staff
         self.assertTrue(ExternalFile.can(self.file1, self.staff1, 'download'))
@@ -86,7 +101,6 @@ class TestFile(OkTestCase):
         self.assertTrue(ExternalFile.can(self.file1, self.staff1, 'delete'))
         self.file1.delete()
         self.assertTrue(self.file1.deleted)
-
 
     def test_web_download(self):
         self.login(self.staff1.email)
