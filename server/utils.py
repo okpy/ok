@@ -263,6 +263,8 @@ def upload_file(file, container=None, name=None, prefix=None, overwrite=False):
     allowed_extensions = ALL_EXTENSIONS
     if extension not in ALL_EXTENSIONS:
         allowed_extensions = ALL_EXTENSIONS + [extension]
+        logging.info("Allowing custom extension type {0} for file with name: {1}"
+                     .format(extension, file))
 
     if not container:
         upload = storage.upload(file, name=name, prefix=prefix, overwrite=overwrite,
