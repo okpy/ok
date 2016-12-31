@@ -260,4 +260,7 @@ def search_similar_repos(access_token=None, assignment_id=None,
             repo_name = recent_repos[repo]['repository']['full_name']
             file_github_issue(repo_name, logger, access_token, issue_title, issue_body)
 
-    return "Found {} recent repos and {} total repos".format(len(recent_repos), len(repos))
+    stats = "Found {} recent repos and {} total repos".format(len(recent_repos),
+                                                              len(repos))
+    logger.info(stats)
+    return stats

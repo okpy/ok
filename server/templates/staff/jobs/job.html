@@ -45,6 +45,17 @@
             {% elif job.status == 'finished' %}
               <dd>{{ 'Failed' if job.failed else 'Finished' }}</dd>
             {% endif %}
+            <dt>Result</dt>
+            {% if not job.result %}
+              <dd> &mdash; </dd>
+            {% elif job.result_kind == "link" %}
+              <dd> <a href="{{ job.result }}" target="_blank">Go to {{   job.result  | truncate(70, True) }} </a>
+              </dd> <br/>
+            {% elif job.result_kind == "string" %}
+              <dd> {{ job.result | truncate(255) }} </dd> <br/>
+            {% elif job.result_kind == "html" %}
+             <dd> {{ job.result | safe }} </dd> <br/>
+            {% endif %}
             {% if job.log %}
               <dt>Log</dt>
               <dd><pre>{{ job.log }}</pre></dd>

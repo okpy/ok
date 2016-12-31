@@ -1566,6 +1566,7 @@ class Token(Model):
 class Job(Model):
     """ A background job."""
     statuses = ['queued', 'running', 'finished']
+    result_kinds = ['html', 'string', 'link']
 
     id = db.Column(db.Integer, primary_key=True)
     updated = db.Column(db.DateTime(timezone=True), onupdate=db.func.now())
@@ -1586,7 +1587,10 @@ class Job(Model):
     # Human-readable description of the job
     description = db.Column(db.Text, nullable=False)
     failed = db.Column(db.Boolean, nullable=False, default=False)
-    log = db.Column(mysql.MEDIUMTEXT)  # All output, if the job has finished
+    log = db.Column(mysql.MEDIUMTEXT)  # Log output, if the job has finished
+
+    result_kind = db.Column(db.Enum(*result_kinds, name='result_kind'), default='string')
+    result = db.Column(mysql.MEDIUMTEXT)  # Final output, if the job did not crash
 
 ##########
 # Canvas #

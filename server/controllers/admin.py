@@ -1168,7 +1168,8 @@ def start_test_job(cid):
             description='Test Job',
             course_id=cid,
             duration=form.duration.data,
-            should_fail=form.should_fail.data)
+            should_fail=form.should_fail.data,
+            result_kind='html')
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         return render_template(
