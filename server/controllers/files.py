@@ -39,7 +39,7 @@ def file_url(file_id):
 @login_required
 def send_file(file_id):
     """ Serve file by downloading it into a local directory.
-    Generally only used by local file system
+    Used primarily when storing files locally.
     """
     ext_file = ExternalFile.query.get(file_id)
     if not ext_file or not ExternalFile.can(ext_file, current_user, 'download'):
