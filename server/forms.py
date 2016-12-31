@@ -447,6 +447,7 @@ class PublishScores(BaseForm):
 
 class TestJobForm(BaseForm):
     should_fail = BooleanField('Divide By Zero', default=False)
+    make_file = BooleanField('Create a file', default=True)
     duration = IntegerField('Duration (seconds)', default=2)
 
 class MossSubmissionForm(BaseForm):

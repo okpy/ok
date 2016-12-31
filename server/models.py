@@ -1653,7 +1653,7 @@ class ExternalFile(Model):
     id = db.Column(db.Integer, primary_key=True)
     # Bucket/Folder that the file is stored in
     container = db.Column(db.String(255), nullable=False)
-    filename = db.Column(db.String(512), nullable=False)
+    filename = db.Column(db.String(1024), nullable=False)
 
     object_name = db.Column(db.String(512), nullable=False)
 

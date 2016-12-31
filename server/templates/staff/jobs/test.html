@@ -31,6 +31,7 @@
           {% call forms.render_form(form, action_text='Start Test Job') %}
             {{ forms.render_field(form.duration) }}
             {{ forms.render_checkbox_field(form.should_fail) }}
+            {{ forms.render_checkbox_field(form.make_file) }}
           {% endcall %}
         </div>
       </div>
