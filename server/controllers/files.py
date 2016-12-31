@@ -37,4 +37,7 @@ def send_file(file_id):
         response = send_from_directory(tmp_dir, storage_obj.name)
         response.headers["Content-Security-Policy"] = "default-src 'none';"
         response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Content-Disposition"] = ("attachment; filename={0!s}"
+                                                   .format(ext_file.filename))
+
         return response

@@ -97,6 +97,8 @@ class TestFile(OkTestCase):
         self.assertRedirects(response, redirect_url)
         download = self.client.get(redirect_url)
 
+        self.assertEquals("attachment; filename={0!s}".format(self.file1.filename),
+                          response.headers['Content-Disposition'])
         self.assertEquals(download.headers['Content-Type'], 'text/plain; charset=utf-8')
         self.assertEquals(download.headers['X-Content-Type-Options'], 'nosniff')
         self.assertEqual(self.fizz_contents, download.data.decode('UTF-8'))
@@ -110,7 +112,8 @@ class TestFile(OkTestCase):
         response = self.client.get(url)
         self.assertRedirects(response, redirect_url)
         download = self.client.get(redirect_url)
-
+        self.assertEquals("attachment; filename={0!s}".format(self.file2.filename),
+                          response.headers['Content-Disposition'])
         self.assertEquals(download.headers['Content-Type'], 'image/svg+xml')
         self.assertEquals(download.headers['X-Content-Type-Options'], 'nosniff')
 
