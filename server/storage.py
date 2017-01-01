@@ -21,9 +21,9 @@ class Storage:
             self.init_app(app)
 
     def init_app(self, app):
-        key = app.config.get('STORAGE_KEY', None)
-        secret = app.config.get('STORAGE_SECRET', None)
-        self.container_name = app.config.get('STORAGE_CONTAINER', None)
+        key = app.config.get('STORAGE_KEY')
+        secret = app.config.get('STORAGE_SECRET')
+        self.container_name = app.config.get('STORAGE_CONTAINER')
         self.provider_name = app.config.get('STORAGE_PROVIDER', 'LOCAL')
 
         self.provider = get_provider(self.provider_name)
@@ -80,7 +80,7 @@ class Storage:
         expires = (dt.datetime.now() + dt.timedelta(seconds=timeout)).strftime("%s")
 
         if 's3' in driver_name or 'google' in driver_name:
-            _keyIdName = "AWSAccessKeyId" if "s3" in driver_name else "GoogleAccessId"
+            keyIdName = "AWSAccessKeyId" if "s3" in driver_name else "GoogleAccessId"
         else:
             raise Exception('Provider {} does not support blob urls'.format(driver_name))
 
@@ -89,7 +89,7 @@ class Storage:
         hmac_obj = hmac.new(self.driver.secret.encode('utf-8'), s2s, hashlib.sha1)
         encoded_sig = base64.encodestring(hmac_obj.digest()).strip()
         params = {
-            _keyIdName: self.driver.key,
+            keyIdName: self.driver.key,
             "Expires": expires,
             "Signature": encoded_sig
         }
