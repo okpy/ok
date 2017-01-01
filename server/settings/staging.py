@@ -42,11 +42,13 @@ WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # Max Upload Size is 10MB
 
-STORAGE_PROVIDER = 'LOCAL'
+STORAGE_PROVIDER = os.environ.get('STORAGE_PROVIDER',  'LOCAL')
 STORAGE_SERVER = False
-STORAGE_CONTAINER = os.path.abspath("./local-storage")
+STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',  'ok-v3-user-files')
+STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '')
 
-if not os.path.exists(STORAGE_CONTAINER):
+if STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(STORAGE_CONTAINER):
     os.makedirs(STORAGE_CONTAINER)
 
 try:

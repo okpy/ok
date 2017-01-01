@@ -80,12 +80,12 @@ class Storage:
         """
         driver_name = self.driver.name.lower()
         if 's3' in driver_name:
-            base_url = 'https://%s' % self.driver.connection.host
+            base_url = 'https://%s'.format(self.driver.connection.host)
             url = urljoin(base_url, object_path)
         elif 'google' in driver_name:
             url = urljoin('https://storage.googleapis.com', object_path)
         elif 'azure' in driver_name:
-            base_url = ('https://%s.blob.core.windows.net' % self.driver.key)
+            base_url = 'https://%s.blob.core.windows.net'.format(self.driver.key)
             url = urljoin(base_url, object_path)
         else:
             raise Exception('Unsupported Storage Driver for URL')
@@ -103,9 +103,9 @@ class Storage:
         if 's3' in driver_name or 'google' in driver_name:
             keyIdName = "AWSAccessKeyId" if "s3" in driver_name else "GoogleAccessId"
         else:
-            raise Exception('Provider {} does not support blob urls'.format(driver_name))
+            raise Exception('{0} does not support signed urls'.format(driver_name))
 
-        obj_path = "{}/{}".format(self.container.name, obj_name)
+        obj_path = "{0}/{1}".format(self.container.name, obj_name)
         s2s = ("GET\n\n\n{expires}\n/{object_name}"
                .format(expires=expires, object_name=obj_path).encode('utf-8'))
         hmac_obj = hmac.new(self.driver.secret.encode('utf-8'), s2s, hashlib.sha1)
