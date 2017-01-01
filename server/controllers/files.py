@@ -30,11 +30,7 @@ def file_url(file_id):
 
     # Do not use .download_url for local storage.
     if "local" in storage.driver.name.lower():
-        def streamer(stream):
-            for data in stream:
-                yield data
-
-        response = Response(streamer(storage.get_object_stream(storage_obj)),
+        response = Response(storage.get_object_stream(storage_obj),
                             mimetype=ext_file.mimetype)
         response.headers["Content-Security-Policy"] = "default-src 'none';"
         response.headers["X-Content-Type-Options"] = "nosniff"
