@@ -22,7 +22,7 @@ class TestFile(OkTestCase):
             self.file1 = ExternalFile.upload(f, name='fizz.txt',
                                                user_id=self.staff1.id,
                                                course_id=self.course.id)
-            self.blob1 = self.file1.object
+            self.blob1 = self.file1.object()
 
 
         with open(CWD + "/../server/static/img/logo.svg", 'rb') as f:
@@ -30,7 +30,7 @@ class TestFile(OkTestCase):
                                                user_id=self.user1.id,
                                                course_id=self.course.id,
                                                assignment_id=self.assignment.id)
-            self.blob2 = self.file1.object
+            self.blob2 = self.file1.object()
 
         db.session.add_all([self.file1, self.file2])
         db.session.commit()
@@ -53,7 +53,7 @@ class TestFile(OkTestCase):
             duplicate = ExternalFile.upload(f, name='fizz.txt',
                                                user_id=self.staff1.id,
                                                course_id=self.course.id)
-            duplicate_obj = duplicate.object
+            duplicate_obj = duplicate.object()
 
         self.assertEquals(self.blob1.driver.key, duplicate_obj.driver.key)
         self.assertEquals(self.file1.filename, duplicate.filename)
@@ -66,7 +66,7 @@ class TestFile(OkTestCase):
                                                user_id=self.staff1.id,
                                                prefix='test/',
                                                course_id=self.course.id)
-            prefix_obj = prefix.object
+            prefix_obj = prefix.object()
 
         self.assertEquals(self.blob1.driver.key, prefix_obj.driver.key)
         self.assertEquals(self.blob1.container.name, prefix.container)
@@ -81,7 +81,7 @@ class TestFile(OkTestCase):
                                                user_id=self.staff1.id,
                                                prefix='test/../../',
                                                course_id=self.course.id)
-            prefix_obj = prefix.object
+            prefix_obj = prefix.object()
 
         self.assertEquals(self.blob1.driver.key, prefix_obj.driver.key)
         self.assertEquals(self.blob1.container.name, prefix.container)

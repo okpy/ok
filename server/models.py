@@ -1675,7 +1675,6 @@ class ExternalFile(Model):
     )
     assignment = db.relationship('Assignment')
 
-    @property
     def object(self):
         return storage.get_blob(self.object_name, self.container)
 
@@ -1687,7 +1686,7 @@ class ExternalFile(Model):
         return guess[0]
 
     def delete(self):
-        self.object.delete()
+        self.object().delete()
         self.deleted = True
         db.session.commit()
 

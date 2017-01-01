@@ -19,7 +19,7 @@ def file_url(file_id):
         abort(404)
 
     try:
-        storage_obj = ext_file.object
+        storage_obj = ext_file.object()
     except libcloud.common.types.InvalidCredsError as e:
         logger.warning("Could not get file {0} - {1}".format(file_id, ext_file.filename),
                        exc_info=True)
