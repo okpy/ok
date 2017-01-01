@@ -1,6 +1,9 @@
 import os
 import hashlib
 
+from libcloud.storage.types import ObjectDoesNotExistError
+import pytest
+
 from tests import OkTestCase
 
 from server.models import db, Group, Course, ExternalFile, User
@@ -15,56 +18,87 @@ class TestFile(OkTestCase):
         super(TestFile, self).setUp()
         self.setup_course()
 
-        self.upload1 = utils.upload_file(CWD + "/files/fizzbuzz_after.py", name='fizz.txt')
         with open(CWD + "/files/fizzbuzz_after.py", 'rb') as f:
-            self.fizz_contents = f.read().decode('UTF-8')
+            self.file1 = ExternalFile.upload(f, name='fizz.txt',
+                                               user_id=self.staff1.id,
+                                               course_id=self.course.id)
+            self.blob1 = self.file1.object
 
-        self.file1 = ExternalFile(
-            container=self.upload1.container.driver.key,
-            filename='fizz.txt',
-            object_name=self.upload1.name,
-            course_id=self.course.id,
-            user_id=self.staff1.id,
-            is_staff=True)
 
-        self.upload2 = utils.upload_file(CWD + "/../server/static/img/logo.svg", name='ok.svg')
-
-        self.file2 = ExternalFile(
-            container=self.upload2.container.driver.key,
-            filename='ok.svg',
-            object_name=self.upload2.name,
-            course_id=self.course.id,
-            assignment_id=self.assignment.id,
-            user_id=self.user1.id,
-            is_staff=False)
+        with open(CWD + "/../server/static/img/logo.svg", 'rb') as f:
+            self.file2 = ExternalFile.upload(f, name='ok.svg',
+                                               user_id=self.user1.id,
+                                               course_id=self.course.id,
+                                               assignment_id=self.assignment.id)
+            self.blob2 = self.file1.object
 
         db.session.add_all([self.file1, self.file2])
         db.session.commit()
 
     def teardown_method(self, test_method):
-        self.upload1.delete()
-        self.upload2.delete()
+        self.blob1.delete()
+        self.blob2.delete()
 
     def test_simple(self):
-        file_obj = self.file1.object
-        self.assertEquals(file_obj.driver.key, self.file1.container)
-        self.assertEquals(file_obj.name, self.file1.object_name)
-        self.assertEquals(file_obj.hash, self.upload1.hash)
+        self.assertEquals(self.blob1.driver.key, storage.driver.key)
+        self.assertEquals(self.blob1.container.name, storage.container_name)
+        self.assertEquals(self.blob1.container.name, self.file1.container)
+        self.assertEquals(self.blob1.name, self.file1.object_name)
+        blob_stream = storage.get_object_stream(self.blob1)
+        with open(CWD + "/files/fizzbuzz_after.py", 'rb') as f:
+            self.assertEquals(b''.join(blob_stream), f.read())
 
-    def test_duplicate(self):
-        file_obj = self.file1.object
-        duplicate_obj = utils.upload_file(CWD + "/files/fizzbuzz_after.py", name='fizz.txt')
-        self.assertEquals(file_obj.driver.key, duplicate_obj.driver.key)
-        self.assertNotEquals(file_obj.name, duplicate_obj.name)
+    def test_duplicate_overwrite(self):
+        with open(CWD + "/files/fizzbuzz_after.py", 'rb') as f:
+            duplicate = ExternalFile.upload(f, name='fizz.txt',
+                                               user_id=self.staff1.id,
+                                               course_id=self.course.id)
+            duplicate_obj = duplicate.object
+
+        self.assertEquals(self.blob1.driver.key, duplicate_obj.driver.key)
+        self.assertEquals(self.file1.filename, duplicate.filename)
+        self.assertEquals(self.blob1.name, duplicate_obj.name)
         duplicate_obj.delete()
 
     def test_prefix(self):
-        file_obj = self.file1.object
-        prefix_obj = utils.upload_file(CWD + "/files/fizzbuzz_after.py", name='fizz.txt', prefix='test/')
-        self.assertEquals(file_obj.driver.key, prefix_obj.driver.key)
-        self.assertEquals(file_obj.name, self.file1.object_name)
-        self.assertEquals(prefix_obj.name, 'test/fizz.txt')
+        with open(CWD + "/files/fizzbuzz_after.py", 'rb') as f:
+            prefix = ExternalFile.upload(f, name='fizz.txt',
+                                               user_id=self.staff1.id,
+                                               prefix='test/',
+                                               course_id=self.course.id)
+            prefix_obj = prefix.object
+
+        self.assertEquals(self.blob1.driver.key, prefix_obj.driver.key)
+        self.assertEquals(self.blob1.container.name, prefix.container)
+        self.assertEquals(self.blob1.name, self.file1.object_name)
+        self.assertEquals(prefix_obj.name, 'test_fizz.txt')
+        self.assertEquals(prefix.filename, 'fizz.txt')
         prefix_obj.delete()
+
+    def test_malicious_directory_traversal(self):
+        with open(CWD + "/files/fizzbuzz_after.py", 'rb') as f:
+            prefix = ExternalFile.upload(f, name='fizz.txt',
+                                               user_id=self.staff1.id,
+                                               prefix='test/../../',
+                                               course_id=self.course.id)
+            prefix_obj = prefix.object
+
+        self.assertEquals(self.blob1.driver.key, prefix_obj.driver.key)
+        self.assertEquals(self.blob1.container.name, prefix.container)
+        self.assertEquals(self.blob1.name, self.file1.object_name)
+        self.assertEquals(prefix_obj.name, 'test_.._.._fizz.txt')
+        self.assertEquals(prefix.filename, 'fizz.txt')
+        prefix_obj.delete()
+
+    def test_malicious_local_get_blob(self):
+        with pytest.raises(ObjectDoesNotExistError):
+            blob = storage.get_blob(obj_name='../README.md')
+
+        with pytest.raises(ObjectDoesNotExistError):
+            blob = storage.get_blob(obj_name='/bin/bash')
+
+        with pytest.raises(ObjectDoesNotExistError):
+            blob = storage.get_blob(obj_name='foobar.txt')
 
     def test_permission(self):
         # Students can not access files of staff
@@ -106,30 +140,25 @@ class TestFile(OkTestCase):
         self.login(self.staff1.email)
         encoded_id = utils.encode_id(self.file1.id)
         url = "/files/{0}".format(encoded_id)
-        redirect_url = "/files/{0}/download".format(encoded_id)
         response = self.client.get(url)
-        self.assertRedirects(response, redirect_url)
-        download = self.client.get(redirect_url)
-
+        self.assert200(response)
         self.assertEquals("attachment; filename={0!s}".format(self.file1.filename),
-                          download.headers.get('Content-Disposition'))
-        self.assertEquals(download.headers['Content-Type'], 'text/plain; charset=utf-8')
-        self.assertEquals(download.headers['X-Content-Type-Options'], 'nosniff')
-        self.assertEqual(self.fizz_contents, download.data.decode('UTF-8'))
-
+                          response.headers.get('Content-Disposition'))
+        self.assertEquals(response.headers['Content-Type'], 'text/plain; charset=utf-8')
+        self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
+        with open(CWD + "/files/fizzbuzz_after.py", 'r') as f:
+            self.assertEqual(f.read(), response.data.decode('UTF-8'))
 
     def test_binary_download(self):
         self.login(self.staff1.email)
         encoded_id = utils.encode_id(self.file2.id)
         url = "/files/{0}".format(encoded_id)
-        redirect_url = "/files/{0}/download".format(encoded_id)
         response = self.client.get(url)
-        self.assertRedirects(response, redirect_url)
-        download = self.client.get(redirect_url)
+        self.assert200(response)
         self.assertEquals("attachment; filename={0!s}".format(self.file2.filename),
-                          download.headers.get('Content-Disposition'))
-        self.assertEquals(download.headers['Content-Type'], 'image/svg+xml')
-        self.assertEquals(download.headers['X-Content-Type-Options'], 'nosniff')
+                          response.headers.get('Content-Disposition'))
+        self.assertEquals(response.headers['Content-Type'], 'image/svg+xml')
+        self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
 
     def test_unauth_download(self):
         self.login(self.user1.email)

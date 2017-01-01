@@ -1,9 +1,9 @@
 import time
-import tempfile
+import io
 
 from server import jobs
-from server.models import ExternalFile, db
-from server.utils import upload_file, encode_id
+from server.models import ExternalFile
+from server.utils import encode_id
 
 @jobs.background_job
 def test_job(duration=0, should_fail=False, make_file=False):
@@ -14,23 +14,14 @@ def test_job(duration=0, should_fail=False, make_file=False):
     if should_fail:
         1/0
     if make_file:
-        with tempfile.NamedTemporaryFile() as tf:
-            for _ in range(duration):
-                tf.write('Hello world!\n'.encode('utf-8'))
-            tf.flush()
-            upload = upload_file(tf.name, name='temp.txt', prefix='jobs/example/')
-            container = upload.container.name or upload.container.driver.key
-            logger.info("Container: {}. Saved as: {}".format(container, upload.name))
-            file = ExternalFile(
-                container=container,
-                filename='temp.txt',
-                object_name=upload.name,
-                course_id=1,
-                user_id=1,
-                is_staff=True)
-            db.session.add(file)
-            db.session.commit()
-            logger.info('File: /files/{0}'.format(encode_id(file.id)))
-
+        data = io.BytesIO(b'print("Hello World")\n'*duration)
+        upload = ExternalFile.upload(data, user_id=1, course_id=1,
+                                     name='temp.py', prefix='jobs/example/')
+        logger.info("Saved as: {}".format(upload.object_name))
+        logger.info('File ID: {0}'.format(encode_id(upload.id)))
+        msg = ("Waited for <a href='/files/{0}'> {1} seconds </a>"
+               .format(encode_id(upload.id), duration))
+    else:
+        msg = "Waited for <b>{}</b> seconds!".format(duration)
     logger.info('Finished!')
-    return "Waited for <b>{}</b> seconds!".format(duration)
+    return msg

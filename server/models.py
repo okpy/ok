@@ -25,6 +25,7 @@ import json
 import logging
 import shlex
 import urllib.parse
+import mimetypes
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
                               SCORE_KINDS)
@@ -1676,13 +1677,35 @@ class ExternalFile(Model):
 
     @property
     def object(self):
-        with storage.use(self.container) as container:
-            return container.get(self.object_name)
+        return storage.get_blob(self.object_name, self.container)
+
+    @property
+    def mimetype(self):
+        guess = mimetypes.guess_type(self.filename)
+        if not guess[0]:
+            return 'application/octet-stream'
+        return guess[0]
 
     def delete(self):
         self.object.delete()
         self.deleted = True
         db.session.commit()
+
+    @staticmethod
+    def upload(iterable, user_id, name, is_staff=True, course_id=None,
+               assignment_id=None, **kwargs):
+        object = storage.upload(iterable, name=name, **kwargs)
+        external_file = ExternalFile(
+            container=storage.container_name,
+            filename=name,
+            object_name=object.name,
+            course_id=course_id,
+            assignment_id=assignment_id,
+            user_id=user_id,
+            is_staff=False)
+        db.session.add(external_file)
+        db.session.commit()
+        return external_file
 
     @classmethod
     def can(cls, obj, user, action):
