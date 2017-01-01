@@ -29,7 +29,7 @@ def file_url(file_id):
         abort(404, "File does not exist")
 
     # Do not use .download_url for local storage.
-    if "local" in storage.driver.name.lower():
+    if storage.provider == libcloud.storage.types.Provider.LOCAL:
         response = Response(storage.get_object_stream(storage_obj),
                             mimetype=ext_file.mimetype)
         response.headers["Content-Security-Policy"] = "default-src 'none';"
@@ -38,4 +38,4 @@ def file_url(file_id):
                                                    .format(ext_file.filename))
         return response
     else:
-        return redirect(storage.get_blob_url(storage_obj))
+        return redirect(storage.get_blob_url(storage_obj.name))

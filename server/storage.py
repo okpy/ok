@@ -3,7 +3,7 @@ import hmac
 import hashlib
 import base64
 import datetime as dt
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin
 
 from werkzeug.utils import secure_filename
 from libcloud.storage.types import Provider
@@ -63,7 +63,6 @@ class Storage:
         return obj
 
     def get_blob(self, obj_name, container_name=None):
-        print(container_name)
         if container_name is None:
             container_name = self.container_name
         if self.provider == Provider.LOCAL:
@@ -73,9 +72,31 @@ class Storage:
         return self.driver.get_object(container_name=container_name,
                                       object_name=obj_name)
 
-    def get_blob_url(self, obj_name, container_name, timeout=60):
+    def get_url(self, object_path):
+        """
+        Return the unsigned URL of the object
+        :param secure: bool - To use https
+        :return: str
+        """
+        driver_name = self.driver.name.lower()
+        if 's3' in driver_name:
+            base_url = 'https://%s' % self.driver.connection.host
+            url = urljoin(base_url, object_path)
+        elif 'google' in driver_name:
+            url = urljoin('https://storage.googleapis.com', object_path)
+        elif 'azure' in driver_name:
+            base_url = ('https://%s.blob.core.windows.net' % self.driver.key)
+            url = urljoin(base_url, object_path)
+        else:
+            raise Exception('Unsupported Storage Driver for URL')
+
+        return url
+
+    def get_blob_url(self, obj_name, container_name=None, timeout=60):
         """ Mostly from https://github.com/mardix/flask-cloudy/blob/master/flask_cloudy.py
         """
+        if container_name is None:
+            container_name = self.container_name
         driver_name = self.driver.name.lower()
         expires = (dt.datetime.now() + dt.timedelta(seconds=timeout)).strftime("%s")
 
@@ -84,8 +105,9 @@ class Storage:
         else:
             raise Exception('Provider {} does not support blob urls'.format(driver_name))
 
+        obj_path = "{}/{}".format(self.container.name, obj_name)
         s2s = ("GET\n\n\n{expires}\n/{object_name}"
-               .format(expires=expires, object_name=obj_name).encode('utf-8'))
+               .format(expires=expires, object_name=obj_path).encode('utf-8'))
         hmac_obj = hmac.new(self.driver.secret.encode('utf-8'), s2s, hashlib.sha1)
         encoded_sig = base64.encodestring(hmac_obj.digest()).strip()
         params = {
@@ -93,8 +115,9 @@ class Storage:
             "Expires": expires,
             "Signature": encoded_sig
         }
-        urlkv = urlencode(params)
-        return "{0}?{1}".format(self.secure_url, urlkv)
+        url_kv = urlencode(params)
+        secure_url = self.get_url(obj_path)
+        return "{0}?{1}".format(secure_url, url_kv)
 
     def get_object_stream(self, object):
         """ Data stream of the libcloud object.

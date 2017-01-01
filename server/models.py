@@ -1657,8 +1657,8 @@ class ExternalFile(Model):
     filename = db.Column(db.String(1024), nullable=False)
     object_name = db.Column(db.String(1024), nullable=False)
 
-    is_staff = db.Column(db.Boolean, nullable=False)
-    deleted = db.Column(db.Boolean, default=False)
+    staff_file = db.Column(db.Boolean, nullable=False)
+    deleted = db.Column(db.Boolean, nullable=False, default=False)
 
     course_id = db.Column(
         db.Integer, db.ForeignKey('course.id'), index=True, nullable=False
@@ -1692,7 +1692,7 @@ class ExternalFile(Model):
         db.session.commit()
 
     @staticmethod
-    def upload(iterable, user_id, name, is_staff=True, course_id=None,
+    def upload(iterable, user_id, name, staff_file=True, course_id=None,
                assignment_id=None, **kwargs):
         object = storage.upload(iterable, name=name, **kwargs)
         external_file = ExternalFile(
@@ -1702,7 +1702,7 @@ class ExternalFile(Model):
             course_id=course_id,
             assignment_id=assignment_id,
             user_id=user_id,
-            is_staff=False)
+            staff_file=False)
         db.session.add(external_file)
         db.session.commit()
         return external_file
@@ -1724,7 +1724,7 @@ class ExternalFile(Model):
         # Staff can see staff & student files
         if is_staff_member:
             return True
-        elif obj.is_staff:
+        elif obj.staff_file:
             return False
 
         # Student files are visible to the creators and group members
