@@ -8,7 +8,9 @@
         <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo select-none">
       </a>
     </div>
-    <div class="oauth col-md-8">
+  </div>
+  <div class="row">
+    <div class="oauth col-md-8 col-md-offset-2">
       {% include 'alerts.html' %}
       {% block content %}
       {% endblock content %}
