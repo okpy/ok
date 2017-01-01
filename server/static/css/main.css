@@ -5,12 +5,12 @@
 }
 
 /* https://css-tricks.com/snippets/css/sticky-footer/ */
-.page-wrap:after {
+.container:after {
   content: "";
   display: block;
 }
 
-.footer, .page-wrap:after {
+.footer, .container:after {
   height: 70px;  /* 40 + 15 + 15 */
 }
 
