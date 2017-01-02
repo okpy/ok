@@ -1,11 +1,14 @@
 import datetime as dt
+import functools
 import logging
+import urllib.parse
 
 from flask import (Blueprint, flash, redirect, render_template,
-                   request, session, url_for, jsonify)
+                   request, session, url_for, jsonify, make_response)
 
 from flask_login import current_user, login_required, logout_user
 
+from server.constants import OAUTH_OUT_OF_BAND_URI
 from server.models import db, Client, Token, Grant
 from server.extensions import csrf, oauth_provider
 from server.controllers.auth import csrf_check
@@ -75,9 +78,31 @@ def save_token(token, orequest, *args, **kwargs):
     db.session.commit()
     return tok
 
+def intercept_out_of_band_redirect(f):
+    """Wraps the authorize route below. If it returns a redirect to
+    OAUTH_OUT_OF_BAND_URI, display the code or errors in the browser instead
+    of redirecting to the client.
+    """
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        response = make_response(f(*args, **kwargs))
+        if response.status_code == 302:
+            o = urllib.parse.urlparse(response.headers['Location'])
+            if o.scheme + ':' + o.path == OAUTH_OUT_OF_BAND_URI:
+                query = {k: v for k, v in urllib.parse.parse_qsl(o.query)}
+                code = query.get('code')
+                if code:
+                    client_id = request.form.get('client_id')
+                    return redirect(url_for('.oauth_code', client_id=client_id, code=code))
+                else:
+                    return redirect(url_for('.oauth_errors', **query))
+        return response
+    return wrapper
+
 @oauth.route('/oauth/authorize', methods=['GET', 'POST'])
-@oauth_provider.authorize_handler
 @login_required
+@intercept_out_of_band_redirect
+@oauth_provider.authorize_handler
 def authorize(*args, **kwargs):
     # Only CSRF protect this route.
     csrf_check()
@@ -90,6 +115,13 @@ def authorize(*args, **kwargs):
 
     confirm = request.form.get('confirm', 'no')
     return confirm == 'yes'
+
+@oauth.route('/oauth/code')
+def oauth_code():
+    client_id = request.args.get('client_id')
+    client = Client.query.filter_by(client_id=client_id).first()
+    code = request.args.get('code')
+    return render_template('auth/code.html', client=client, code=code)
 
 @oauth.route('/oauth/reauthenticate')
 def reauthenticate():
@@ -110,7 +142,10 @@ def revoke_token():
 
 @oauth.route('/oauth/errors')
 def oauth_errors():
-    error = request.args.get('error', 'Unknown Error')
-    description = request.args.get('error_description', 'No details available')
+    error = request.args.get('error')
+    if error:
+        # 'access_denied' -> 'Access Denied'
+        error = error.replace('_', ' ').title()
+    description = request.args.get('error_description')
     return render_template('errors/generic.html',
                            error=error, description=description), 400

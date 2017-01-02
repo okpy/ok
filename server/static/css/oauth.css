@@ -16,6 +16,11 @@
     height: 50px;
 }
 
+.tooltip-inner {
+    max-width: none;
+    white-space: nowrap;
+}
+
 /* Small devices (568px and below) */
 @media (max-width: 568px) {
 	.oauth h3 {
