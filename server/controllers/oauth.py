@@ -96,9 +96,9 @@ def intercept_out_of_band_redirect(f):
     return wrapper
 
 @oauth.route('/oauth/authorize', methods=['GET', 'POST'])
+@login_required
 @intercept_out_of_band_redirect
 @oauth_provider.authorize_handler
-@login_required
 def authorize(*args, **kwargs):
     # Only CSRF protect this route.
     csrf_check()
