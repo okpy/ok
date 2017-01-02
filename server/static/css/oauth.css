@@ -1,3 +1,6 @@
+.oauth {
+    padding-bottom: 15px;
+}
 .container {
   min-height: 100%;
   /* equal to footer height */
@@ -6,10 +9,6 @@
 
 .footer, .container:after {
   height: 70px;  /* 40 + 15 + 15 */
-}
-
-.oauth {
-    padding-bottom: 15px;
 }
 
 .logo {
