@@ -79,6 +79,10 @@ def save_token(token, orequest, *args, **kwargs):
     return tok
 
 def intercept_out_of_band_redirect(f):
+    """Wraps the authorize route below. If it returns a redirect to
+    OAUTH_OUT_OF_BAND_URI, display the code or errors in the browser instead
+    of redirecting to the client.
+    """
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         response = make_response(f(*args, **kwargs))
