@@ -2,10 +2,10 @@
 
 {% block body %}
 <div class="container">
-  <div class="row">
-    <div class="col-md-2">
-      <a href="{{ url_for('student.index') }}">
-        <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" class="logo select-none">
+  <div class="row row-centered">
+    <div class="col-centered">
+      <a href="{{ url_for('student.index') }}" title="Ok Homepage">
+        <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" alt="Ok Logo" class="logo select-none">
       </a>
     </div>
   </div>

@@ -4,6 +4,28 @@
 
 .logo {
     display: block;
-    margin: 8px auto 0px auto;
     height: 50px;
+}
+.row-centered {
+    text-align:center;
+}
+.col-centered {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-4px;
+}
+
+
+/* Small devices (568px and below) */
+@media (max-width: 568px) {
+	.oauth h3 {
+		/* Reduce Bootstrap Margin for H3 */
+		margin-top: 0px;
+	}
+	.oauth strong {
+		font-size: 14px;
+	}
 }
