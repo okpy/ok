@@ -9,12 +9,18 @@ landing_css = Bundle(
 common_css = Bundle(
     'css/helper.css',
     'css/main.css',
-    'css/oauth.css',
     'css/highlight.css',
     'css/code.css',
     'css/swal-theme.css',
     filters='cssmin',
     output='public/css/common.css'
+)
+
+oauth_css = Bundle(
+    'css/oauth.css',
+    'css/landing.css',
+    filters='cssmin',
+    output='public/css/oauth.css'
 )
 
 common_js = Bundle(

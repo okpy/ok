@@ -1,15 +1,28 @@
 .oauth {
-    text-align: left;
-    padding-top: 0;
-    padding: 0;
-}
-.oauth-button-block {
-    padding-left: 20px;
-    padding-right: 20px;
     padding-bottom: 15px;
 }
-.oauth-allow-btn {
+.container {
+  min-height: 100%;
+  /* equal to footer height */
+  margin: 0 auto -70px;
 }
-.oauth-deny-btn {
 
+.footer, .container:after {
+  height: 70px;  /* 40 + 15 + 15 */
+}
+
+.logo {
+    display: block;
+    height: 50px;
+}
+
+/* Small devices (568px and below) */
+@media (max-width: 568px) {
+	.oauth h3 {
+		/* Reduce Bootstrap Margin for H3 */
+		margin-top: 0px;
+	}
+	.oauth strong {
+		font-size: 14px;
+	}
 }
