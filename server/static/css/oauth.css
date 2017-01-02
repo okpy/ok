@@ -1,3 +1,13 @@
+.container {
+  min-height: 100%;
+  /* equal to footer height */
+  margin: 0 auto -70px;
+}
+
+.footer, .container:after {
+  height: 70px;  /* 40 + 15 + 15 */
+}
+
 .oauth {
     padding-bottom: 15px;
 }
@@ -17,7 +27,6 @@
     /* inline-block space fix */
     margin-right:-4px;
 }
-
 
 /* Small devices (568px and below) */
 @media (max-width: 568px) {
