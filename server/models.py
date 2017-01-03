@@ -817,17 +817,10 @@ class Enrollment(Model):
     @staticmethod
     @transaction
     def enroll_from_form(cid, form):
-        usr = User.lookup(form.email.data)
-        if usr:
-            form.populate_obj(usr)
-        else:
-            usr = User()
-            form.populate_obj(usr)
-            db.session.add(usr)
-        db.session.commit()
         role = form.role.data
         info = {
-            'id': usr.id,
+            'email': form.email.data,
+            'name': form.name.data,
             'sid': form.sid.data,
             'class_account': form.secondary.data,
             'section': form.section.data
@@ -845,57 +838,49 @@ class Enrollment(Model):
         enrollment_info = []
         rows = form.csv.data.splitlines()
         role = form.role.data
-        entries = list(csv.reader(rows))
-        new_users = []
-        existing_user_count = 0
-        for usr in entries:
-            email, name, sid, login, section = [x.strip() for x in usr]
-            usr_obj = User.lookup(email)
-            user_info = {
-                "sid": sid,
-                "class_account": login,
-                "section": section
-            }
-            if not usr_obj:
-                usr_obj = User(email=email, name=name)
-                new_users.append(usr_obj)
-            else:
-                usr_obj.name = name
-                existing_user_count += 1
-            user_info['id'] = usr_obj
-            enrollment_info.append(user_info)
-
-        db.session.add_all(new_users)
-        db.session.commit()
-        for info in enrollment_info:
-            info['id'] = info['id'].id
-        Enrollment.create(cid, enrollment_info, role)
-        return len(new_users), existing_user_count
+        for entry in csv.reader(rows):
+            entry = [x.strip() for x in entry]
+            enrollment_info.append({
+                'email': entry[0],
+                'name': entry[1],
+                'sid': entry[2],
+                'class_account': entry[3],
+                'section': entry[4],
+            })
+        return Enrollment.create(cid, enrollment_info, role)
 
     @staticmethod
     @transaction
-    def create(cid, enrollment_info=None, role=STUDENT_ROLE):
-        if enrollment_info is None:
-            enrollment_info = []
-        new_records = []
+    def create(cid, enrollment_info, role=STUDENT_ROLE):
+        """ENROLLMENT_INFO is a sequence of dictionaries with the keys
+        'email', 'name', 'sid', 'class_account', and 'section'.
+        Returns two integers, the number of enrollments created and the number
+        of enrollments updated.
+        """
+        created = 0
+        updated = 0
         for info in enrollment_info:
-            usr_id, sid = info['id'], info['sid']
-            class_account, section = info['class_account'], info['section']
-            record = Enrollment.query.filter_by(user_id=usr_id,
+            email, name = info['email'], info['name']
+            user = User.lookup(email)
+            if user:
+                user.name = name
+            else:
+                user = User(name=name, email=email)
+                db.session.add(user)
+            record = Enrollment.query.filter_by(user_id=user.id,
                                                 course_id=cid).one_or_none()
             if not record:
-                record = Enrollment(course_id=cid, user_id=usr_id)
-                new_records.append(record)
-
+                record = Enrollment(course_id=cid, user_id=user.id)
+                created += 1
+            else:
+                updated += 1
             record.role = role
-            record.sid = sid
-            record.class_account = class_account
-            record.section = section
-
-        db.session.add_all(new_records)
-
+            record.sid = info['sid']
+            record.class_account = info['class_account']
+            record.section = info['section']
+            db.session.add(record)
         cache.delete_memoized(User.is_enrolled)
-
+        return created, updated
 
 class Message(Model):
     __tablename__ = 'message'

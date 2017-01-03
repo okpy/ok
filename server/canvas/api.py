@@ -49,7 +49,10 @@ def get_students(canvas_course):
     return canvas_api_get_list(
         canvas_course,
         '/courses/{}/users'.format(canvas_course.external_id),
-        params={'enrollment_type': 'student'},
+        params={
+            'enrollment_type[]': 'student',
+            'include[]': 'email',
+        },
     )
 
 def score_endpoint(canvas_assignment, enrollment):
