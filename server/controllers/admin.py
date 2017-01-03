@@ -793,7 +793,7 @@ def enrollment(cid):
 def unenrollment(cid, user_id):
     user = User.query.filter_by(id=user_id).one_or_none()
     if user:
-        enrollment = user.is_enrolled(cid);
+        enrollment = user.is_enrolled(cid)
         if enrollment:
             enrollment.unenroll()
             flash("{email} has been unenrolled".format(email=user.email), "success")
