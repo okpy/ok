@@ -812,7 +812,7 @@ def batch_enroll(cid):
     batch_form = forms.BatchEnrollmentForm()
     if batch_form.validate_on_submit():
         new, updated = Enrollment.enroll_from_csv(cid, batch_form)
-        msg = ("Added {new}, Updated {old} {role} enrollments"
+        msg = ("Added {new}, updated {old} {role} enrollments"
                .format(new=new, role=batch_form.role.data, old=updated))
         flash(msg, "success")
         return redirect(url_for(".enrollment", cid=cid))
@@ -1326,4 +1326,28 @@ def upload_canvas_course(cid):
         for canvas_assignment in canvas_course.canvas_assignments:
             enqueue_canvas_upload_job(canvas_assignment)
         return redirect(url_for('.course_jobs', cid=cid))
+    abort(401)
+
+@admin.route('/course/<int:cid>/canvas/enroll/', methods=['POST'])
+@is_staff(course_arg='cid')
+def enroll_canvas_course(cid):
+    canvas_course = CanvasCourse.by_course_id(cid)
+    if not canvas_course:
+        abort(404)
+    if forms.CSRFForm().validate_on_submit():
+        enrollment_info = []
+        for student in canvas_api.get_students(canvas_course):
+            enrollment_info.append({
+                'email': student['email'],
+                'name': student['name'],
+                'sid': student['sis_user_id'],
+                'class_account': '',
+                'section': '',
+            })
+        created, updated = Enrollment.create(cid, enrollment_info)
+        flash(
+            'Added {new}, updated {old} student enrollments'.format(
+                new=created, old=updated),
+            'success')
+        return redirect(url_for('.enrollment', cid=cid))
     abort(401)
