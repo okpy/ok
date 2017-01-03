@@ -22,7 +22,7 @@ from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
 import server.canvas.api as canvas_api
-import server.canvas.upload
+import server.canvas.jobs
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
@@ -1299,7 +1299,7 @@ def delete_canvas_assignment(cid, canvas_assignment_id):
 
 def enqueue_canvas_upload_job(canvas_assignment):
     return jobs.enqueue_job(
-        server.canvas.upload.upload_scores,
+        server.canvas.jobs.upload_scores,
         description='bCourses Upload for {}'.format(
             canvas_assignment.assignment.display_name),
         course_id=canvas_assignment.canvas_course.course_id,
@@ -1335,19 +1335,11 @@ def enroll_canvas_course(cid):
     if not canvas_course:
         abort(404)
     if forms.CSRFForm().validate_on_submit():
-        enrollment_info = []
-        for student in canvas_api.get_students(canvas_course):
-            enrollment_info.append({
-                'email': student['email'],
-                'name': student['name'],
-                'sid': student['sis_user_id'],
-                'class_account': '',
-                'section': '',
-            })
-        created, updated = Enrollment.create(cid, enrollment_info)
-        flash(
-            'Added {new}, updated {old} student enrollments'.format(
-                new=created, old=updated),
-            'success')
-        return redirect(url_for('.enrollment', cid=cid))
+        job = jobs.enqueue_job(
+            server.canvas.jobs.enroll_students,
+            description='Enroll students from bCourses',
+            course_id=cid,
+            user_id=current_user.id,
+            canvas_course_id=canvas_course.id)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     abort(401)
