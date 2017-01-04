@@ -149,3 +149,11 @@ def oauth_errors():
     description = request.args.get('error_description')
     return render_template('errors/generic.html',
                            error=error, description=description), 400
+
+@oauth.route('/client/login/')
+def client_login():
+    return redirect(url_for('.authorize',
+        client_id='ok-client',
+        redirect_uri=OAUTH_OUT_OF_BAND_URI,
+        response_type='code',
+        scope='all'))
