@@ -983,9 +983,9 @@ def student_assignment_detail(cid, email, aid):
                            stats=stats,
                            assign_status=assignment_stats)
 
-@admin.route("/course/<int:cid>/<string:email>/<int:aid>/<string:commit_id>")
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/<string:backup_id>")
 @is_staff(course_arg='cid')
-def student_commit_overview(cid, email, aid, commit_id):
+def student_backups_overview(cid, email, aid, backup_id):
     courses, current_course = get_courses(cid)
 
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
@@ -998,7 +998,7 @@ def student_commit_overview(cid, email, aid, commit_id):
         flash("This user is not enrolled", 'warning')
 
     user_id = {student.id}
-    timeline_stats = assign.user_timeline(student.id, commit_id)
+    timeline_stats = assign.user_timeline(student.id, backup_id)
     assignment_stats = assign.user_status(student)
     partner_ids = assign.active_user_ids(student.id) - user_id
 
@@ -1008,7 +1008,7 @@ def student_commit_overview(cid, email, aid, commit_id):
                      .filter(Backup.submitter_id.in_(user_id),
                              Backup.assignment_id == assign.id)
                      .order_by(Backup.created.asc())).all()
-    analyze.sort_backups(backups)
+    analyze.sort_by_client_time(backups)
 
     # get partners' backups
     partner_backups = (Backup.query.options(db.joinedload('scores'),
@@ -1016,26 +1016,26 @@ def student_commit_overview(cid, email, aid, commit_id):
                      .filter(Backup.submitter_id.in_(partner_ids),
                              Backup.assignment_id == assign.id)
                      .order_by(Backup.created.asc())).all()
-    analyze.sort_backups(partner_backups)
+    analyze.sort_by_client_time(partner_backups)
 
-    group = [User.query.get(o) for o in backups[0].owners()] #Todo (Stan): fix?
-
-    diff_dict = analyze.get_diffs(backups, commit_id, partner_backups)
+    diff_dict = analyze.get_diffs(backups, backup_id, partner_backups)
 
     if not diff_dict:
-        # should never happen; either no unique backups or wrong commit_id
+        # should never happen; either no unique backups or wrong backup_id
         return abort(404)
+
+    group = [User.query.get(o) for o in backups[0].owners()] #Todo (Stan): fix?
 
     stats_list = diff_dict["stats"]
     files_list = diff_dict["files"]
     partner_files_list = diff_dict["partners"]
-    commit_id = diff_dict["commit_id"] # relevant commit_id might be different
-    prev_commit_id = diff_dict["prev_commit_id"]
-    next_commit_id = diff_dict["next_commit_id"]
+    backup_id = diff_dict["backup_id"] # relevant backup_id might be different
+    prev_backup_id = diff_dict["prev_backup_id"]
+    next_backup_id = diff_dict["next_backup_id"]
 
     # calculate starting diff for template
 
-    start_index = [i for i, stat in enumerate(stats_list) if stat["commit_id"] == commit_id]
+    start_index = [i for i, stat in enumerate(stats_list) if stat["backup_id"] == backup_id]
     if start_index: # edge case for 1st backup; no diff will be found
         start_index = start_index[0]
     else:
@@ -1053,8 +1053,8 @@ def student_commit_overview(cid, email, aid, commit_id):
                            partner_files_list=partner_files_list,
                            group=group,
                            start_index=start_index,
-                           prev_commit_id = prev_commit_id,
-                           next_commit_id = next_commit_id,
+                           prev_backup_id = prev_backup_id,
+                           next_backup_id = next_backup_id,
                            submitters=timeline_stats['submitters'],
                            timeline=timeline_stats['timeline'])
 
@@ -1072,8 +1072,10 @@ def student_assignment_graph_detail(cid, email, aid):
     if not student.is_enrolled(cid):
         flash("This user is not enrolled", 'warning')
 
-    user_ids = assign.active_user_ids(student.id)
-
+    user_ids = list(assign.active_user_ids(student.id))
+    user_ids.remove(student.id) # should always exist
+    user_ids.insert(0, student.id) # insert to front of list
+    
     assignment_stats = assign.user_status(student)
 
     line_charts = []
@@ -1083,7 +1085,7 @@ def student_assignment_graph_detail(cid, email, aid):
                          .filter(Backup.submitter_id.in_({user_id}),
                                  Backup.assignment_id == assign.id)
                          .order_by(Backup.created.asc())).all()
-        analyze.sort_backups(backups)
+        analyze.sort_by_client_time(backups)
         line_chart = analyze.generate_line_chart(backups, cid, User.query.get(user_id).email, aid)
         line_charts.append(line_chart)
 

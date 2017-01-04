@@ -65,7 +65,7 @@ def _get_time_diff_seconds(analytics1, analytics2):
     time_difference = time2 - time1
     return time_difference.total_seconds()
 
-def sort_backups(backups):
+def sort_by_client_time(backups):
     """
     Given a list of backups, sort by analytics time, mutating the original .
     If a certains backup has no analytics; it is dropped.
@@ -81,40 +81,40 @@ def sort_backups(backups):
     backups.sort(key=time_key)
 
 ### Diff Overview Generation ###
-def _get_backup_range(backups, commit_id, bound):
+def _get_backup_range(backups, backup_id, bound):
     """
     Naive Implementation
     Returns a dictionary: {
         "backups": backups,
-        "prev_commit_id": prev_commit_id,
-        "commit_id": commit_id
-        "next_commit_id": next_commit_id
+        "prev_backup_id": prev_backup_id,
+        "backup_id": backup_id
+        "next_backup_id": next_backup_id
     }
-    backups = unique backups `bound` away from backup with `commit_id`
-    prev/next_commit_id = prev/next commit_id not part of backups
+    backups = unique backups `bound` away from backup with `backup_id`
+    prev/next_backup_id = prev/next backup_id not part of backups
     """
     unique_backups_tuples, id_map, index_map = _get_unique_backups(backups)
     unique_backups = [backup_tuple[0] for backup_tuple in unique_backups_tuples]
-    # invalid commit_id
-    if commit_id not in id_map:
+    # invalid backup_id
+    if backup_id not in id_map:
         return {}
 
-    # find included commit_id
-    commit_id = id_map[commit_id]
+    # find included backup_id
+    backup_id = id_map[backup_id]
 
-    commit_index = index_map[commit_id]
+    backup_index = index_map[backup_id]
 
     # get prev and curr ids
-    prev_commit_id = unique_backups[max(0, commit_index-bound-1)].hashid
-    next_commit_id = unique_backups[min(len(unique_backups)-1, commit_index+bound+1)].hashid
+    prev_backup_id = unique_backups[max(0, backup_index-bound-1)].hashid
+    next_backup_id = unique_backups[min(len(unique_backups)-1, backup_index+bound+1)].hashid
 
-    unique_backups = unique_backups[max(0, commit_index-bound-1)\
-                                    :min(len(unique_backups), commit_index+bound+1)]
+    unique_backups = unique_backups[max(0, backup_index-bound-1)\
+                                    :min(len(unique_backups), backup_index+bound+1)]
     return {
         "backups": unique_backups,
-        "prev_commit_id": prev_commit_id,
-        "commit_id": commit_id,
-        "next_commit_id": next_commit_id
+        "prev_backup_id": prev_backup_id,
+        "backup_id": backup_id,
+        "next_backup_id": next_backup_id
     }
 
 def _recent_backup_finder(backups):
@@ -129,7 +129,7 @@ def _recent_backup_finder(backups):
         attempts to find a backup b_p such that
             "b_p.time" is the largest possible AND
             "b_p.time" < `current_time`
-        Returns backup b_p, and b_p.hashid or None if nothing is found
+        Returns backup b_p or None if nothing is found
         """
         nonlocal partner_index
         while partner_index < backup_count:
@@ -141,39 +141,39 @@ def _recent_backup_finder(backups):
                 if time_diff < 0: # curr_analytics - analyics < 0 => too far ahead
                     if partner_index > 0:
                         prev_backup = backups[partner_index-1]
-                        return prev_backup, prev_backup.hashid
-                    return None, None
+                        return prev_backup
+                    return None
             partner_index += 1
         if backup_count:
             prev_backup = backups[-1]
-            return prev_backup, prev_backup.hashid
-        return None, None
+            return prev_backup
+        return None
     return _get_recent_backup
 
 @cache.memoize(1200)
-def get_diffs(backups, commit_id, partner_backups, bound=10):
+def get_diffs(backups, backup_id, partner_backups, bound=10):
     """
-    Given a list `backups`, a `commit_id`, and `bound`
-    Compute the a dict containing diffs/stats of surronding the `commit_id`:
+    Given a list `backups`, a `backup_id`, and `bound`
+    Compute the a dict containing diffs/stats of surronding the `backup_id`:
         diff_dict = {
         "stats": stats_list,
         "files": files_list,
         "partners": partner_files_list,
-        "prev_commit_id": prev_commit_id,
-        "commit_id": commit_id,
-        "next_commit_id": next_commit_id
+        "prev_backup_id": prev_backup_id,
+        "backup_id": backup_id,
+        "next_backup_id": next_backup_id
     }
-    return {} if `commit_id` not found
+    return {} if `backup_id` not found
     """
-    backup_dict = _get_backup_range(backups, commit_id, bound)
+    backup_dict = _get_backup_range(backups, backup_id, bound)
 
     if not backup_dict:
         return {}
 
     backups = backup_dict["backups"]
-    commit_id = backup_dict["commit_id"] # relevant commit_id might be different
-    prev_commit_id = backup_dict["prev_commit_id"]
-    next_commit_id = backup_dict["next_commit_id"]
+    backup_id = backup_dict["backup_id"] # relevant backup_id might be different
+    prev_backup_id = backup_dict["prev_backup_id"]
+    next_backup_id = backup_dict["next_backup_id"]
 
     get_recent_backup = _recent_backup_finder(partner_backups)
     assign_files = backups[0].assignment.files
@@ -189,8 +189,10 @@ def get_diffs(backups, commit_id, partner_backups, bound=10):
 
         backup_stats = {
             'submitter': backup.submitter.email,
-            'commit_id' : backup.hashid,
-            'partner_commit_id': None,
+            'backup_id' : backup.hashid,
+            'bid': backup.id,
+            'partner_backup_id': None,
+            'partner_bid': None,
             'question': None,
             'time': None,
             'passed': None,
@@ -204,8 +206,10 @@ def get_diffs(backups, commit_id, partner_backups, bound=10):
 
         if analytics:
             backup_stats['time'] = analytics.get('time')
-            partner_backup, partner_backup_id = get_recent_backup(analytics)
-            backup_stats["partner_commit_id"] = partner_backup_id
+            partner_backup = get_recent_backup(analytics)
+            if partner_backup:
+                backup_stats["partner_backup_id"] = partner_backup.hashid
+                backup_stats["partner_bid"] = partner_backup.id
             if partner_backup:
                 partner_backup_files = highlight.diff_files(partner_backup.files(), curr, "short")
 
@@ -233,9 +237,9 @@ def get_diffs(backups, commit_id, partner_backups, bound=10):
         "stats": stats_list,
         "files": files_list,
         "partners": partner_files_list,
-        "prev_commit_id": prev_commit_id,
-        "commit_id": commit_id,
-        "next_commit_id": next_commit_id
+        "prev_backup_id": prev_backup_id,
+        "backup_id": backup_id,
+        "next_backup_id": next_backup_id
     }
     return diff_dict
 
@@ -280,7 +284,7 @@ def _get_graph_stats(backups):
 
 
         stats = {
-            'commit_id' : curr_backup.hashid,
+            'backup_id' : curr_backup.hashid,
             'lines_changed': curr_lines_changed,
             'lines_time_ratio': lines_time_ratio,
             'curr_q': curr_q,
@@ -297,10 +301,10 @@ def _get_graph_points(backups, cid, email, aid):
     def gen_point(stat):
         value = stat["lines_time_ratio"]
         lines_changed = round(stat["lines_changed"], 5)
-        label = "Lines Changed: {0} | Commit ID: {1} | Question: {2}".format(
-            lines_changed, stat["commit_id"], stat["curr_q"])
-        url = url_for('.student_commit_overview',
-                cid=cid, email=email, aid=aid, commit_id=stat["commit_id"])
+        label = "Lines Changed: {0} | Backup ID: {1} | Question: {2}".format(
+            lines_changed, stat["backup_id"], stat["curr_q"])
+        url = url_for('.student_backups_overview',
+                cid=cid, email=email, aid=aid, backup_id=stat["backup_id"])
 
         #arbitrary boundaries for color-coding based on ratio, need more data to determine bounds
         if lines_changed > 100:

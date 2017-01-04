@@ -8,17 +8,18 @@
 <style> .pygal-chart {max-height: 1000px !important;} </style>
 <section class="content-header">
     <h1>
-        {{ assignment.display_name }} Diff Graph
+    {{ student.identifier }}'s {{ assignment.display_name }}
     </h1>
     <ol class="breadcrumb">
-        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li><a href="{{ url_for(".course", cid=assignment.course.id) }}">
-            <i class="fa fa-university"></i> {{ assignment.course.offering }}
-        </a></li>
-        <li><a href="{{ url_for('.course_assignments', cid=assignment.course.id) }}">
-          <i class="fa fa-list"></i> Assignments</a>
-        </li>
-        <li class="active"><a href="{{ url_for('.assignment', cid=assignment.course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }}</a></li>
+    <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+        <i class="fa fa-university"></i> {{ current_course.offering }}
+    </a></li>
+    <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+      <i class="fa fa-list"></i> Assignments</a>
+    </li>
+    <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+    <li> <a href="{{ url_for('.student_view', cid=current_course.id, email=student.email) }}"><i class="fa fa-user"></i> {{ student.identifier }} </a></li>
+    <li class="active"><a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=assignment.id) }}"><i class="fa fa-inbox"></i> History </a></li>
     </ol>
 </section>
 
@@ -42,60 +43,30 @@
                 <!-- /.box-header -->
                 <div class="box-body" class="spoiler">
                     {% if group %}
-                        <br>
-                        Group:
-                        {% for member in group %}
-                            <a>
-                               {{ member.email }}
-                            </a>
-                        {% endfor %}
+                        <b>Group: </b>
+                          {% for member in group %}
+                              <a href="{{ url_for('.student_assignment_detail', cid=assignment.course.id, email=member.email, aid=assignment.id) }}">
+                                 {{ member.email }}
+                              </a>
+                          {% endfor %}
                         <br>
                     {% endif %}
                 </div>
                 <!-- /.box-body -->
             </div>
         </div>
-        <div class="col-md-6 col-xs-12">
-            <!-- /.box -->
-            <div class="box collapsed-box">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Scores ({{ scores | length }}) </h3>
-
-                    <div class="box-tools pull-right">
-                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
-                        </button>
-                    </div>
-                    <!-- /.box-tools -->
-                </div>
-                <!-- /.box-header -->
-                <div class="box-body no-padding" class="spoiler" style="display: none;">
-                    <ul class="nav nav-pills nav-stacked" >
-                        {% if not scores %}
-                        <li><a href="#"><b> No Scores </b> <span class="pull-right text-red">Ungraded</span></a></li>
-                        {% else %}
-                        {% for score in scores %}
-                            <li><a href="#"><b>{{ score.kind }}</b>: "{{ score.message | truncate(20) }}" from {{ score.grader.email }}
-                                <span class="pull-right text-{{ 'green' if score.public else 'red' }}">{{ score.score | round(3) }} </span>
-                                </a>
-                            </li>
-                        {% endfor %}
-                        {% endif %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
             <!-- /.widget-user -->
-        </div>
+    </div>
 
-        <div class="box-body">
-            <div class="row">
-                {% for graph in graphs %}
-                    <div class="col-xs-12">
-                        {{ graph.render() | safe }}
-                    </div>
-                {% endfor %}
-            </div>
+    <div class="box-body">
+        <div class="row">
+            {% for graph in graphs %}
+                <div class="col-xs-8 centered">
+                    {{ graph.render() | safe }}
+                </div>
+            {% endfor %}
         </div>
+    </div>
 
         <!-- </section> do not close the content section -->
 
