@@ -1004,48 +1004,37 @@ class Backup(Model):
 
     def files(self):
         """ Return a dictionary of filenames to contents."""
-        message = Message.query.filter_by(
-            backup_id=self.id,
-            kind='file_contents').first()
-        if message:
-            contents = dict(message.contents)
-            # submit is not a real file, but the client sends it anyway
-            contents.pop('submit', None)
-            return contents
-        else:
-            return {}
+        for message in self.messages:
+            if message.kind == 'file_contents':
+                contents = dict(message.contents)
+                # submit is not a real file, but the client sends it anyway
+                contents.pop('submit', None)
+                return contents
+        return {}
 
     def analytics(self):
         """ Return a dictionary of analytics."""
-        message = Message.query.filter_by(
-            backup_id=self.id,
-            kind='analytics').first()
-        if message:
-            return dict(message.contents)
-        else:
-            return {}
+        for message in self.messages:
+            if message.kind == 'analytics':
+                return dict(message.contents)
+        return {}
 
     def grading(self):
         """ Return a dictionary of grading stats."""
-        message = Message.query.filter_by(
-            backup_id=self.id,
-            kind='grading').first()
-        if message:
-            return dict(message.contents)
-        else:
-            return {}
+        for message in self.messages:
+            if message.kind == 'grading':
+                return dict(message.contents)
+        return {}
 
     def unlocking(self):
         """ Return a string for which question the student is unlocking."""
-        message = Message.query.filter_by(
-            backup_id=self.id,
-            kind='unlock').first()
-        if message and len(message.contents):
-            dict_form = dict(message.contents[0])
-            case = dict_form["case_id"]
-            return case
-        else:
-            return "Unknown Question"
+        for message in self.messages:
+            if message.kind == 'unlock':
+                if len(message.contents):
+                    dict_form = dict(message.contents[0])
+                    case = dict_form["case_id"]
+                    return case
+        return "Unknown Question"
 
     @staticmethod
     @cache.memoize(120)

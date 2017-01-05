@@ -983,7 +983,7 @@ def student_assignment_detail(cid, email, aid):
                            stats=stats,
                            assign_status=assignment_stats)
 
-@admin.route("/course/<int:cid>/<string:email>/<int:aid>/<string:backup_id>")
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/<hashid:backup_id>")
 @is_staff(course_arg='cid')
 def student_backups_overview(cid, email, aid, backup_id):
     courses, current_course = get_courses(cid)
@@ -999,11 +999,10 @@ def student_backups_overview(cid, email, aid, backup_id):
 
     user_id = {student.id}
     timeline_stats = assign.user_timeline(student.id, backup_id)
-    assignment_stats = assign.user_status(student)
     partner_ids = assign.active_user_ids(student.id) - user_id
 
     # get students.id's backups
-    backups = (Backup.query.options(db.joinedload('scores'),
+    backups = (Backup.query.options(db.joinedload('messages'),
                                     db.joinedload('submitter'))
                      .filter(Backup.submitter_id.in_(user_id),
                              Backup.assignment_id == assign.id)
@@ -1011,7 +1010,7 @@ def student_backups_overview(cid, email, aid, backup_id):
     analyze.sort_by_client_time(backups)
 
     # get partners' backups
-    partner_backups = (Backup.query.options(db.joinedload('scores'),
+    partner_backups = (Backup.query.options(db.joinedload('messages'),
                                     db.joinedload('submitter'))
                      .filter(Backup.submitter_id.in_(partner_ids),
                              Backup.assignment_id == assign.id)
@@ -1019,9 +1018,8 @@ def student_backups_overview(cid, email, aid, backup_id):
     analyze.sort_by_client_time(partner_backups)
 
     diff_dict = analyze.get_diffs(backups, backup_id, partner_backups)
-
     if not diff_dict:
-        # should never happen; either no unique backups or wrong backup_id
+        # either no unique backups or wrong backup_id
         return abort(404)
 
     group = [User.query.get(o) for o in backups[0].owners()] #Todo (Stan): fix?
@@ -1035,24 +1033,17 @@ def student_backups_overview(cid, email, aid, backup_id):
 
     # calculate starting diff for template
 
-    start_index = [i for i, stat in enumerate(stats_list) if stat["backup_id"] == backup_id]
+    start_index = [i for i, stat in enumerate(stats_list) if stat["bid"] == backup_id]
     if start_index: # edge case for 1st backup; no diff will be found
         start_index = start_index[0]
     else:
         start_index = 0
-
     return render_template('staff/student/assignment.overview.html',
-                           courses=courses, current_course=current_course,
+                           current_course=current_course,
                            student=student, assignment=assign,
-                           add_member_form=forms.StaffAddGroupFrom(),
-                           csrf_form=forms.CSRFForm(),
-                           upload_form=forms.UploadSubmissionForm(),
-                           stats_list=stats_list,
-                           assign_status=assignment_stats,
-                           files_list=files_list,
+                           stats_list=stats_list, files_list=files_list,
                            partner_files_list=partner_files_list,
-                           group=group,
-                           start_index=start_index,
+                           group=group, start_index=start_index,
                            prev_backup_id = prev_backup_id,
                            next_backup_id = next_backup_id,
                            submitters=timeline_stats['submitters'],
@@ -1076,15 +1067,23 @@ def student_assignment_graph_detail(cid, email, aid):
     user_ids.remove(student.id) # should always exist
     user_ids.insert(0, student.id) # insert to front of list
     
-    assignment_stats = assign.user_status(student)
-
     line_charts = []
-    for user_id in user_ids:
-        backups = (Backup.query.options(db.joinedload('scores'),
+
+    all_backups = (Backup.query.options(db.joinedload('messages'),
                                         db.joinedload('submitter'))
-                         .filter(Backup.submitter_id.in_({user_id}),
+                         .filter(Backup.submitter_id.in_(set(user_ids)),
                                  Backup.assignment_id == assign.id)
                          .order_by(Backup.created.asc())).all()
+    all_backups_dict = {}
+
+    for backup in all_backups:
+        if backup.submitter_id not in all_backups_dict:
+            all_backups_dict[backup.submitter_id] = [backup]
+        else:
+            all_backups_dict[backup.submitter_id].append(backup)
+
+    for user_id in user_ids:
+        backups = all_backups_dict[user_id]
         analyze.sort_by_client_time(backups)
         line_chart = analyze.generate_line_chart(backups, cid, User.query.get(user_id).email, aid)
         line_charts.append(line_chart)
@@ -1092,12 +1091,8 @@ def student_assignment_graph_detail(cid, email, aid):
     group = [User.query.get(owner) for owner in user_ids] #TODO
 
     return render_template('staff/student/assignment.graph.html',
-                           courses=courses, current_course=current_course,
+                           current_course=current_course,
                            student=student, assignment=assign,
-                           add_member_form=forms.StaffAddGroupFrom(),
-                           csrf_form=forms.CSRFForm(),
-                           upload_form=forms.UploadSubmissionForm(),
-                           assign_status=assignment_stats,
                            group=group,
                            graphs=line_charts)
 

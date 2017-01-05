@@ -25,9 +25,9 @@ def _get_unique_backups(backups):
         if not first_file_found:
             if backups[i] and backups[i].files():
                 filtered.append((backups[i], -1))
-                last_unique_id = backups[i].hashid
-                id_map[backups[i].hashid] = last_unique_id
-                index_map[backups[i].hashid] = 0
+                last_unique_id = backups[i].id
+                id_map[backups[i].id] = last_unique_id
+                index_map[backups[i].id] = 0
                 first_file_found = True
             continue
 
@@ -36,17 +36,17 @@ def _get_unique_backups(backups):
 
         # ensure code exists
         if not (prev_code and curr_code):
-            id_map[curr_backup.hashid] = last_unique_id
+            id_map[curr_backup.id] = last_unique_id
             continue
 
         # only keep with diffs
         lines_changed = highlight.diff_lines(prev_code, curr_code)
         if lines_changed:
             filtered.append((curr_backup, lines_changed))
-            last_unique_id = curr_backup.hashid
-            index_map[curr_backup.hashid] = index
+            last_unique_id = curr_backup.id
+            index_map[curr_backup.id] = index
             index += 1
-        id_map[curr_backup.hashid] = last_unique_id
+        id_map[curr_backup.id] = last_unique_id
 
     return filtered, id_map, index_map
 
@@ -105,8 +105,8 @@ def _get_backup_range(backups, backup_id, bound):
     backup_index = index_map[backup_id]
 
     # get prev and curr ids
-    prev_backup_id = unique_backups[max(0, backup_index-bound-1)].hashid
-    next_backup_id = unique_backups[min(len(unique_backups)-1, backup_index+bound+1)].hashid
+    prev_backup_id = unique_backups[max(0, backup_index-bound-1)].id
+    next_backup_id = unique_backups[min(len(unique_backups)-1, backup_index+bound+1)].id
 
     unique_backups = unique_backups[max(0, backup_index-bound-1)\
                                     :min(len(unique_backups), backup_index+bound+1)]
@@ -156,7 +156,7 @@ def get_diffs(backups, backup_id, partner_backups, bound=10):
     Given a list `backups`, a `backup_id`, and `bound`
     Compute the a dict containing diffs/stats of surronding the `backup_id`:
         diff_dict = {
-        "stats": stats_list,
+        "stats": diff_stats_list,
         "files": files_list,
         "partners": partner_files_list,
         "prev_backup_id": prev_backup_id,
@@ -166,7 +166,6 @@ def get_diffs(backups, backup_id, partner_backups, bound=10):
     return {} if `backup_id` not found
     """
     backup_dict = _get_backup_range(backups, backup_id, bound)
-
     if not backup_dict:
         return {}
 
@@ -177,7 +176,7 @@ def get_diffs(backups, backup_id, partner_backups, bound=10):
 
     get_recent_backup = _recent_backup_finder(partner_backups)
     assign_files = backups[0].assignment.files
-    files_list, stats_list, partner_files_list = [], [], []
+    files_list, diff_stats_list, partner_files_list = [], [], []
     for i, backup in enumerate(backups):
         if not i: # first unique backup => no diff
             continue
@@ -230,11 +229,11 @@ def get_diffs(backups, backup_id, partner_backups, bound=10):
             unlock = backup.unlocking()
             backup_stats['question'] = "[Unlocking] " + unlock.split(">")[0]
 
-        stats_list.append(backup_stats)
+        diff_stats_list.append(backup_stats)
         partner_files_list.append(partner_backup_files)
 
     diff_dict = {
-        "stats": stats_list,
+        "stats": diff_stats_list,
         "files": files_list,
         "partners": partner_files_list,
         "prev_backup_id": prev_backup_id,
@@ -250,7 +249,7 @@ def _get_graph_stats(backups):
     The len(list) should be 1 less than the number of unique usuable backups
     """
     unique_backups_tuples = _get_unique_backups(backups)[0]
-    stats_list = []
+    graph_stats_list = []
     for i in range(len(unique_backups_tuples)):
         if not i: # first unique backup => no diff
             continue
@@ -284,27 +283,28 @@ def _get_graph_stats(backups):
 
 
         stats = {
-            'backup_id' : curr_backup.hashid,
+            'bid' : curr_backup.id,
+            'backup_id': curr_backup.hashid,
             'lines_changed': curr_lines_changed,
             'lines_time_ratio': lines_time_ratio,
             'curr_q': curr_q,
             'timestamp': timestamp
         }
-        stats_list.append(stats)
-    return stats_list
+        graph_stats_list.append(stats)
+    return graph_stats_list
 
 def _get_graph_points(backups, cid, email, aid):
     """
     Given a list of backups, forms the points needed for a pygal graph
     """
-    stats_list = _get_graph_stats(backups)
+    graph_stats_list = _get_graph_stats(backups)
     def gen_point(stat):
         value = stat["lines_time_ratio"]
         lines_changed = round(stat["lines_changed"], 5)
         label = "Lines Changed: {0} | Backup ID: {1} | Question: {2}".format(
             lines_changed, stat["backup_id"], stat["curr_q"])
         url = url_for('.student_backups_overview',
-                cid=cid, email=email, aid=aid, backup_id=stat["backup_id"])
+                cid=cid, email=email, aid=aid, backup_id=stat["bid"])
 
         #arbitrary boundaries for color-coding based on ratio, need more data to determine bounds
         if lines_changed > 100:
@@ -322,8 +322,8 @@ def _get_graph_points(backups, cid, email, aid):
             "xlink": url,
             "color": color
         }
-    points = [gen_point(stat) for stat in stats_list]
-    timestamps = [stat['timestamp'] for stat in stats_list]
+    points = [gen_point(stat) for stat in graph_stats_list]
+    timestamps = [stat['timestamp'] for stat in graph_stats_list]
     return points, timestamps
 
 @cache.memoize(1200)
