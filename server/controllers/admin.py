@@ -1083,7 +1083,9 @@ def student_assignment_graph_detail(cid, email, aid):
             all_backups_dict[backup.submitter_id].append(backup)
 
     for user_id in user_ids:
-        backups = all_backups_dict[user_id]
+        backups = []
+        if user_id in all_backups_dict:
+            backups = all_backups_dict[user_id]
         analyze.sort_by_client_time(backups)
         line_chart = analyze.generate_line_chart(backups, cid, User.query.get(user_id).email, aid)
         line_charts.append(line_chart)

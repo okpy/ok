@@ -209,7 +209,6 @@ def get_diffs(backups, backup_id, partner_backups, bound=10):
             if partner_backup:
                 backup_stats["partner_backup_id"] = partner_backup.hashid
                 backup_stats["partner_bid"] = partner_backup.id
-            if partner_backup:
                 partner_backup_files = highlight.diff_files(partner_backup.files(), curr, "short")
 
         if grading:

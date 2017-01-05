@@ -1029,11 +1029,10 @@ class Backup(Model):
     def unlocking(self):
         """ Return a string for which question the student is unlocking."""
         for message in self.messages:
-            if message.kind == 'unlock':
-                if len(message.contents):
-                    dict_form = dict(message.contents[0])
-                    case = dict_form["case_id"]
-                    return case
+            if message.kind == 'unlock' and len(message.contents):
+                dict_form = dict(message.contents[0])
+                case = dict_form["case_id"]
+                return case
         return "Unknown Question"
 
     @staticmethod
