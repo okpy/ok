@@ -1,13 +1,12 @@
 from flask import request
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 import requests.exceptions
-import wtforms
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
                      SelectMultipleField, RadioField, Field,
                      widgets, validators)
-from flask_wtf.html5 import EmailField
+from wtforms.fields.html5 import EmailField
 
 import datetime as dt
 import pytz
@@ -16,9 +15,10 @@ import re
 from server import utils
 import server.canvas.api as canvas_api
 from server.models import Assignment, Course, Message, CanvasCourse
-from server.constants import (VALID_ROLES, SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
+from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
-                              COMMON_LANGUAGES, ROLE_DISPLAY_NAMES)
+                              COMMON_LANGUAGES, ROLE_DISPLAY_NAMES,
+                              OAUTH_OUT_OF_BAND_URI)
 
 import csv
 import logging
@@ -109,7 +109,7 @@ class CommaSeparatedField(Field):
         else:
             self.data = []
 
-class BaseForm(Form):
+class BaseForm(FlaskForm):
 
     class Meta:
 
@@ -378,12 +378,23 @@ class ClientForm(BaseForm):
         default=True)
 
     redirect_uris = CommaSeparatedField(
-        'Redirect URIs',
-        description='Comma-separated list.')
+        'Allowed Redirect URIs',
+        description='Comma-separated list. Redirects to localhost and 127.0.0.1 are always allowed. '
+            'Redirects to {} will display the code in the browser instead of redirecting.'.format(OAUTH_OUT_OF_BAND_URI))
 
     default_scopes = CommaSeparatedField(
         'Default Scope',
         description='Comma-separated list. Valid scopes are "email" and "all".')
+
+class EditClientForm(ClientForm):
+    roll_secret = BooleanField(
+        'Change the secret?',
+        description='Should the secret be changed? If checked, the new value will appear after submission',
+        default=False)
+    client_secret = HiddenField(
+        'Placeholder for secret',
+        description="Do not fill out or render.",
+        validators=[validators.optional()])
 
 
 class NewCourseForm(BaseForm):

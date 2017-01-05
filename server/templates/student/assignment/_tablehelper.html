@@ -1,4 +1,5 @@
 {% import 'student/assignment/_formhelpers.html' as forms %}
+{% import '_globalhelpers.html' as globals %}
 
 {% macro render_subms(subms, course, flagged, flag_form, tname="Submissions", empty=True) %}
   {% if subms %}
@@ -16,7 +17,7 @@
         <tr>
           <td>
             <a href="{{ url_for('.code', name=assignment.name, bid=subm.id, submit=subm.submit)}}" data-no-instant>
-              Submission {{ subm.hashid }}
+              Submission {{ globals.backup_style(subm.hashid) }}
             </a>
           </td>
           <td>
@@ -85,7 +86,7 @@
         <tr>
           <td>
             <a href="{{ url_for('.code', name=assignment.name, bid=backup.id, submit=backup.submit)}}" data-no-instant>
-              Backup {{ backup.hashid }}
+              Backup {{ globals.backup_style(backup.hashid) }}
             </a>
           </td>
           <td>

@@ -1,0 +1,50 @@
+{% extends "auth/base.html" %}
+
+{% block title %}Authorization Code for {{ client.name }} | Ok{% endblock %}
+
+{% block content %}
+<h3 class="title">Authorization Code for {{ client.name }}</h3>
+<p>Paste the following code into your terminal.</p>
+<form>
+  <div class="input-group">
+    <input type="text" id="code" class="form-control" value="{{ code }}" readonly="">
+    <span class="input-group-btn">
+      <button class="btn btn-default" type="button" id="copy-button"
+          data-toggle="tooltip" data-placement="bottom"
+          title="Copy to clipboard">
+        Copy
+      </button>
+    </span>
+  </div>
+</form>
+{% endblock content %}
+
+{% block page_js %}
+<script type='text/javascript'>
+  var input = $('#code');
+  var button = $('#copy-button');
+
+  function selectInput() {
+    input[0].setSelectionRange(0, input[0].value.length);
+    input.focus();
+  }
+  selectInput();
+
+  button.tooltip({html: true});
+  button.bind('click', function() {
+    selectInput();
+    message = 'Copy with Ctrl+C or ⌘C';
+    try {
+      var success = document.execCommand('copy');
+      if (success) {
+        message = 'Copied!';
+      }
+    } catch (err) {}
+    button.attr('title', message)
+        .tooltip('fixTitle')
+        .tooltip('show')
+        .attr('title', 'Copy to clipboard')
+        .tooltip('fixTitle');
+  });
+</script>
+{% endblock %}

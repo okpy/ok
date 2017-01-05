@@ -24,7 +24,7 @@ from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
 import server.canvas.api as canvas_api
-import server.canvas.upload
+import server.canvas.jobs
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
@@ -795,7 +795,7 @@ def enrollment(cid):
 def unenrollment(cid, user_id):
     user = User.query.filter_by(id=user_id).one_or_none()
     if user:
-        enrollment = user.is_enrolled(cid);
+        enrollment = user.is_enrolled(cid)
         if enrollment:
             enrollment.unenroll()
             flash("{email} has been unenrolled".format(email=user.email), "success")
@@ -814,7 +814,7 @@ def batch_enroll(cid):
     batch_form = forms.BatchEnrollmentForm()
     if batch_form.validate_on_submit():
         new, updated = Enrollment.enroll_from_csv(cid, batch_form)
-        msg = ("Added {new}, Updated {old} {role} enrollments"
+        msg = ("Added {new}, updated {old} {role} enrollments"
                .format(new=new, role=batch_form.role.data, old=updated))
         flash(msg, "success")
         return redirect(url_for(".enrollment", cid=cid))
@@ -848,6 +848,7 @@ def enrollment_csv(cid):
 @admin.route("/clients/", methods=['GET', 'POST'])
 @is_staff()
 def clients():
+    courses, current_course = get_courses()
     clients = Client.query.all()
     form = forms.ClientForm(client_secret=utils.generate_secret_key())
     if form.validate_on_submit():
@@ -859,21 +860,28 @@ def clients():
         flash('OAuth client "{}" added'.format(client.name), "success")
         return redirect(url_for(".clients"))
 
-    return render_template('staff/clients.html', clients=clients, form=form)
+    return render_template('staff/clients.html', clients=clients, form=form, courses=courses)
 
 @admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
 @is_staff()
 def client(client_id):
+    courses, current_course = get_courses()
+
     client = Client.query.get(client_id)
-    client.client_secret = utils.generate_secret_key()
-    form = forms.ClientForm(obj=client)
+    form = forms.EditClientForm(obj=client)
     if form.validate_on_submit():
         form.populate_obj(client)
+        if form.roll_secret.data:
+            client.client_secret = utils.generate_secret_key()
+            flash_msg = ('OAuth client "{}" updated with new secret: "{}"'
+                         .format(client.name, client.client_secret))
+        else:
+            flash_msg = ('OAuth client "{}" updated without changing the secret'
+                         .format(client.name))
         db.session.commit()
-        flash('OAuth client "{}" updated'.format(client.name), "success")
+        flash(flash_msg, "success")
         return redirect(url_for(".clients"))
-
-    return render_template('staff/edit_client.html', client=client, form=form)
+    return render_template('staff/edit_client.html', client=client, form=form, courses=courses)
 
 ################
 # Student View #
@@ -1276,7 +1284,8 @@ def start_test_job(cid):
             description='Test Job',
             course_id=cid,
             duration=form.duration.data,
-            should_fail=form.should_fail.data)
+            should_fail=form.should_fail.data,
+            result_kind='html')
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         return render_template(
@@ -1406,7 +1415,7 @@ def delete_canvas_assignment(cid, canvas_assignment_id):
 
 def enqueue_canvas_upload_job(canvas_assignment):
     return jobs.enqueue_job(
-        server.canvas.upload.upload_scores,
+        server.canvas.jobs.upload_scores,
         description='bCourses Upload for {}'.format(
             canvas_assignment.assignment.display_name),
         course_id=canvas_assignment.canvas_course.course_id,
@@ -1433,4 +1442,20 @@ def upload_canvas_course(cid):
         for canvas_assignment in canvas_course.canvas_assignments:
             enqueue_canvas_upload_job(canvas_assignment)
         return redirect(url_for('.course_jobs', cid=cid))
+    abort(401)
+
+@admin.route('/course/<int:cid>/canvas/enroll/', methods=['POST'])
+@is_staff(course_arg='cid')
+def enroll_canvas_course(cid):
+    canvas_course = CanvasCourse.by_course_id(cid)
+    if not canvas_course:
+        abort(404)
+    if forms.CSRFForm().validate_on_submit():
+        job = jobs.enqueue_job(
+            server.canvas.jobs.enroll_students,
+            description='Enroll students from bCourses',
+            course_id=cid,
+            user_id=current_user.id,
+            canvas_course_id=canvas_course.id)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     abort(401)

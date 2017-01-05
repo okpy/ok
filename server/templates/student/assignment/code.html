@@ -1,5 +1,6 @@
 {% extends "student/base.html" %}
 {% import 'diff.html' as diff with context %}
+{% import '_globalhelpers.html' as globals %}
 
 {% block title %} Assignment | Ok {% endblock %}
 
@@ -18,7 +19,7 @@
               <span><a href="{{ url_for('.index') }}">Courses</a></span> &raquo;
               <span><a href="{{ url_for('.course', offering=course.offering) }}"> {{ course.display_name_with_semester }}</a></span> &raquo;
               <span><a href="{{ url_for('.assignment', name=assignment.name) }}"> {{ assignment.display_name }}</a></span> &raquo;
-              <span> {{backup_type}} {{ utils.encode_id(backup.id) }} </span>
+              <span> {{backup_type}} {{ globals.backup_style(utils.encode_id(backup.id)) }} </span>
             </div>
             <h3 class="text-center">Received on {{ utils.local_time(backup.created, course) }} from {{ backup.submitter.email }}</h3>
              {% if backup.scores %}

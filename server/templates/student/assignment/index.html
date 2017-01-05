@@ -1,6 +1,7 @@
 {% extends "student/base.html" %}
 {% import 'student/assignment/_tablehelper.html' as table with context %}
 {% import 'student/assignment/_formhelpers.html' as forms %}
+{% import '_globalhelpers.html' as globals %}
 
 {% block title %} Assignment | Ok {% endblock %}
 
@@ -90,7 +91,7 @@
                         <h4>
                           <a class="label label-primary" href="{{ url_for('.code', name=assignment.name, submit=score.backup.submit, bid=score.backup_id) }}">
                             <i class="fa fa-tag"> </i> &nbsp;
-                            {{ score.kind.title() }}: {{ score.score | round(2) }} - {{ score.message | truncate(10) }} - {{ utils.encode_id(score.backup_id) }}
+                            {{ score.kind.title() }}: {{ score.score | round(2) }} ({{ globals.backup_style(utils.encode_id(score.backup_id)) }})
                             </a>
                         </h4>
                       {% endfor %}

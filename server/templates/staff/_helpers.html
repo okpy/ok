@@ -1,3 +1,5 @@
+{% import '_globalhelpers.html' as globals %}
+
 {% macro paginate(pg, url, page, params={}) %}
     {% if pg.has_prev %}
     <li><a href="{{ url_for(url, page=pg.prev_num, **params) }}">«</a></li>
@@ -39,4 +41,11 @@
   {% else %}
     &mdash;
   {% endfor %}
+{% endmacro %}
+
+{% macro backup_link(backup_id) %}
+    <a href="{{ url_for('.grading', bid=backup_id) }}">
+        {{ globals.backup_style(utils.encode_id(backup_id)) }}
+        {% if caller %} {{ caller() }} {% endif %}
+    </a>
 {% endmacro %}

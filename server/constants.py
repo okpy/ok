@@ -21,6 +21,7 @@ SCORE_KINDS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
                'private', 'autograder']
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
+OAUTH_OUT_OF_BAND_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
 COMMON_LANGUAGES = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
 

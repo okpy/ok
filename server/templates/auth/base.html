@@ -1,0 +1,28 @@
+{% extends "student/base.html" %}
+
+{% block css %}
+  {{ super() }}
+  {% assets "oauth_css" %}
+    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class="row row-centered">
+    <div class="col-centered">
+      <a href="{{ url_for('student.index') }}" title="Ok Homepage">
+        <img src="{{ url_for('static', filename='img/logo-tiny.svg') }}" alt="Ok Logo" class="logo select-none">
+      </a>
+    </div>
+  </div>
+  <div class="row">
+    <div class="oauth col-md-8 col-md-offset-2">
+      {% include 'alerts.html' %}
+      {% block content %}
+      {% endblock content %}
+    </div>
+  </div>
+</div>
+{% include 'footer.html' %}
+{% endblock %}

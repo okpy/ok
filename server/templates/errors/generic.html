@@ -174,11 +174,8 @@
 		<!-- doesn't use context_content because it's ALWAYS the same thing -->
     <p>
         {% if description %}
-        Details: {{ description }}
-        {% else %}
-        Unknown Error
+        {{ description }} <br/>
         {% endif %}
-        <br/>
       If you think something is broken, contact your course staff.
     </p>
 	</div>

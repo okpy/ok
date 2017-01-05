@@ -116,7 +116,11 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
         try:
             process = subprocess.check_output(shlex.split(command),
                                               stderr=subprocess.STDOUT)
-            logger.info(process.decode("utf-8"))
+            moss_output = process.decode("utf-8")
+            logger.info(moss_output)
+            last_line = moss_output
+            if 'moss.stanford' in last_line:
+                return last_line
         except subprocess.CalledProcessError as e:
             logger.warning("There was an error running the Moss Upload.")
             logger.info("{}".format(e.output.decode('utf-8')))

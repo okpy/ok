@@ -1,3 +1,8 @@
+.footer {
+  border-top: 1px solid #eee;
+  padding: 15px 0;
+}
+
 .button {
   background: #468dc6;
 }
@@ -27,8 +32,8 @@ header .landing-btn {
   background-color: rgba(64, 64, 64, 0.05);
 }
 .landing h1, h2 {
-  font-family:'Quicksand';
-  letter-spacing:-0.1em;
+  font-family: 'Quicksand';
+  letter-spacing: -0.05em;
 }
 
 /* Small devices (tablets, 768px and down) */
@@ -56,16 +61,6 @@ header .landing-btn {
   overflow: hidden;
   border-radius: 100%;
   width: 150px;
-}
-
-.footer {
-  border-top: 1px solid #eee;
-  padding: 2em 0;
-  margin-bottom: 4em;
-}
-
-.container {
-  margin-top: 0px;
 }
 
 .landing-btn:hover{

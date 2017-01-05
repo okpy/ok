@@ -4,7 +4,7 @@ import requests.exceptions
 
 from server import constants, jobs
 from server.canvas import api
-from server.models import CanvasAssignment, Enrollment
+from server.models import CanvasAssignment, CanvasCourse, Enrollment
 from server.utils import encode_id
 
 @jobs.background_job
@@ -61,5 +61,30 @@ def upload_scores(canvas_assignment_id):
     if new_scores:
         api.put_scores(canvas_assignment, new_scores)
 
-    logger.info('{updated} updated, {not_changed} not changed, '
-        '{no_scores} no scores'.format(**stats))
+    stats = ('{updated} updated, {not_changed} not changed, '
+             '{no_scores} no scores'.format(**stats))
+    logger.info(stats)
+    return stats
+
+@jobs.background_job
+def enroll_students(canvas_course_id):
+    logger = jobs.get_job_logger()
+    row_format = '{email!s:<35} {name!s:<35} {sid!s:<11}'
+    canvas_course = CanvasCourse.query.get(canvas_course_id)
+    enrollment_info = []
+    logger.info(row_format.format(email='EMAIL', name='NAME', sid='SID'))
+    for student in api.get_students(canvas_course):
+        info = {
+            'email': student['email'],
+            'name': student['name'],
+            'sid': student['sis_user_id'],
+            'class_account': '',
+            'section': '',
+        }
+        logger.info(row_format.format(**info))
+        enrollment_info.append(info)
+    created, updated = Enrollment.create(canvas_course.course_id, enrollment_info)
+    message = 'Added {new}, updated {old} student enrollments'.format(
+        new=created, old=updated)
+    logger.info(message)
+    return message

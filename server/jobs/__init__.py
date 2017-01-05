@@ -50,14 +50,16 @@ def background_job(f):
 
         logger.setLevel(logging.INFO)
         logger.addHandler(handler)
+        return_value = None
 
         try:
-            f(*args, **kwargs)
+            return_value = f(*args, **kwargs)
         except:
             job.failed = True
             logger.exception('Job failed')
 
         job.status = 'finished'
+        job.result = return_value
         job.log = handler.contents
         stream.close()
         db.session.commit()
@@ -65,7 +67,8 @@ def background_job(f):
     return job_handler
 
 def enqueue_job(func, *args,
-        description=None, course_id=None, user_id=None, timeout=300, **kwargs):
+                description=None, course_id=None, user_id=None, timeout=300,
+                result_kind='string', **kwargs):
     if not description:
         raise ValueError('Description required to start background job')
     if not course_id:
@@ -78,6 +81,7 @@ def enqueue_job(func, *args,
         user_id=user_id,
         name=func.__name__,
         description=description,
+        result_kind=result_kind
     )
     db.session.add(job)
     db.session.commit()

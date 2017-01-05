@@ -35,9 +35,10 @@
                       <thead>
                         <tr>
                           <th class="sort" data-sort="job-id">ID</th>
-                          <th class="sort" data-sort="description">Description</th>
-                          <th class="sort" data-sort="user">User</th>
                           <th class="sort" data-sort="status">Status</th>
+                          <th class="sort" data-sort="description">Description</th>
+                          <th class="sort" data-sort="result"> Result </th>
+                          <th class="sort" data-sort="user">User</th>
                           <th class="sort" data-sort="timestamp">Started</th>
                         </tr>
                       </thead>
@@ -50,8 +51,6 @@
                                       Job {{ job.id }}
                                   </a>
                               </td>
-                              <td class="description">{{ job.description }}</td>
-                              <td class="user">{{ job.user.email }}</td>
                               <td class="status">
                                 {% if job.status == 'queued' %}
                                 <span class="label label-info">Queued</span>
@@ -63,6 +62,20 @@
                                 <span class="label label-success">Finished</span>
                                 {% endif %}
                               </td>
+                              <td class="description">{{ job.description }}</td>
+                              <td class="result">
+                               {% if not job.result %}
+                                  &mdash;
+                               {% elif job.result_kind == "link" %}
+                                <a href="{{ job.result }}" target="_blank"> {{ job.result | truncate(70, True) }} </a>
+                               {% elif job.result_kind == "string" %}
+                                 {{ job.result | truncate(70, True) }}
+                               {% elif job.result_kind == "html" %}
+                                <a href="{{ url_for('.course_job', cid=current_course.id, job_id=job.id) }}"  class="btn btn-default btn-sm"> View Output </a>
+                               {% endif %}
+                              </td>
+
+                              <td class="user">{{ job.user.email }}</td>
                               <td class="timestamp" data-timestamp="{{ job.created }}">{{ utils.local_time_obj(job.created, current_course) }}</td>
                           </tr>
                           {% endfor %}
