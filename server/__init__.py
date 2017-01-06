@@ -1,5 +1,4 @@
 import os
-import logging
 
 from flask import Flask, render_template, g, request
 from flask_rq import RQ
@@ -7,7 +6,7 @@ from flask_wtf.csrf import CsrfProtect
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from werkzeug.contrib.fixers import ProxyFix
 
-from server import assets, converters, utils
+from server import assets, converters, logging, utils
 from server.forms import CSRFForm
 from server.models import db
 from server.controllers.about import about
@@ -59,10 +58,6 @@ def create_app(default_config_path=None):
                     public_dsn=sentry.client.get_public_dsn('https')
                 ), 500
 
-        # In production mode, add log handler to sys.stderr.
-        app.logger.addHandler(logging.StreamHandler())
-        app.logger.setLevel(logging.INFO)
-
     @app.errorhandler(404)
     def not_found_error(error):
         if request.path.startswith("/api"):
@@ -87,6 +82,9 @@ def create_app(default_config_path=None):
 
     # Flask-Login manager
     login_manager.init_app(app)
+
+    # Set up logging
+    logging.init_app(app)
 
     # Import and register the different asset bundles
     assets_env.init_app(app)
