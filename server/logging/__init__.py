@@ -1,6 +1,9 @@
 import logging
 
 from flask import request
+from flask_login import current_user
+
+logger = logging.getLogger(__name__)
 
 REQUEST_LOG_VARIABLE = 'okpy.log'
 
@@ -33,3 +36,7 @@ def init_app(app):
     @app.before_request
     def start_request_log():
         request.environ[REQUEST_LOG_VARIABLE] = RequestLog()
+
+        # Log info about every request
+        if current_user.is_authenticated:
+            logger.info('User: %s', current_user.email)
