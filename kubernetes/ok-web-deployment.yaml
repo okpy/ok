@@ -73,3 +73,5 @@ spec:
             secretKeyRef:
               name: ok-services
               key: sendgrid-key
+        - name: GOOGLE_LOG_NAME
+          value: ok-web
