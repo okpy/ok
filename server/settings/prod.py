@@ -3,19 +3,13 @@
 """
 import os
 import sys
-import binascii
 
 from server.settings import RAVEN_IGNORE_EXCEPTIONS
-
-default_secret = binascii.hexlify(os.urandom(24))
 
 ENV = 'prod'
 PREFERRED_URL_SCHEME = 'https'
 
-if not os.getenv('SECRET_KEY'):
-    print("The secret key is not set!!")
-
-SECRET_KEY = os.getenv('SECRET_KEY', default_secret)
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = False
 ASSETS_DEBUG = False
