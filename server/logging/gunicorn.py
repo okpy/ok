@@ -75,6 +75,10 @@ class Logger(gunicorn.glogging.Logger):
     def access(self, resp, req, environ, request_time):
         super().access(resp, req, environ, request_time)
 
+        # Ignore health check
+        if environ['PATH_INFO'] == '/healthz':
+            return
+
         # See gunicorn/glogging.py
         status = resp.status
         if isinstance(status, str):
