@@ -18,7 +18,12 @@ spec:
         image: cs61a/ok-server
         imagePullPolicy: Always
         livenessProbe:
-          # an http probe
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+        readinessProbe:
           httpGet:
             path: /healthz
             port: 5000
