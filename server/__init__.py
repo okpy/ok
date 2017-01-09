@@ -64,6 +64,10 @@ def create_app(default_config_path=None):
             return api.handle_error(error)
         return render_template('errors/404.html'), 404
 
+    @app.route("/healthz")
+    def health_check():
+        return 'OK'
+
     # initialize the cache
     cache.init_app(app)
 
