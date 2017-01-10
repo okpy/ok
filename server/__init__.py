@@ -44,19 +44,22 @@ def create_app(default_config_path=None):
             'Check that the OK_SERVER_CONFIG environment variable is set.')
     app.config.from_pyfile(config_path)
 
-    # Senty Error Reporting & Other Prod Changes
-    sentry_dsn = os.getenv('SENTRY_DSN')
-    if not app.debug:
-        app.wsgi_app = ProxyFix(app.wsgi_app)
-        if sentry_dsn:
-            sentry.init_app(app, dsn=sentry_dsn)
+    # Set REMOTE_ADDR for proxies
+    num_proxies = app.config.get('NUM_PROXIES', 0)
+    if num_proxies:
+        app.wsgi_app = ProxyFix(app.wsgi_app, num_proxies=num_proxies)
 
-            @app.errorhandler(500)
-            def internal_server_error(error):
-                return render_template('errors/500.html',
-                    event_id=g.sentry_event_id,
-                    public_dsn=sentry.client.get_public_dsn('https')
-                ), 500
+    # Sentry Error Reporting
+    sentry_dsn = os.getenv('SENTRY_DSN')
+    if not app.debug and sentry_dsn:
+        sentry.init_app(app, dsn=sentry_dsn)
+
+        @app.errorhandler(500)
+        def internal_server_error(error):
+            return render_template('errors/500.html',
+                event_id=g.sentry_event_id,
+                public_dsn=sentry.client.get_public_dsn('https')
+            ), 500
 
     @app.errorhandler(404)
     def not_found_error(error):

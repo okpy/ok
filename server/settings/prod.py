@@ -15,6 +15,11 @@ DEBUG = False
 ASSETS_DEBUG = False
 TESTING_LOGIN = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
+# The Google Cloud load balancer behaves like two proxies: one with the external
+# fowarding rule IP, and one with an internal IP.
+# See https://cloud.google.com/compute/docs/load-balancing/http/#target_proxies
+# Including Nginx too makes 3 proxies.
+NUM_PROXIES = 3
 
 db_url = os.getenv('DATABASE_URL')
 if db_url:
