@@ -3,3 +3,14 @@
     float: right;
     margin-top: 10px;
 }
+.notebook-pad pre {
+    background: #f5f2f0;
+    padding: 1em;
+    margin: .5em 0;
+    overflow: auto;
+    border: none;
+}
+.nb-output {
+    overflow: inherit !important;
+    width: inherit !important;
+}
