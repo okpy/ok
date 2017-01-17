@@ -80,9 +80,9 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                 logger.info("{} didn't have any file contents".format(backup.hashid))
                 continue
             contents = file_contents[0].contents
-            dest_dir = "{}/".format(os.path.join(tmp_dir, backup.hashid))
+            dest_dir = os.path.join(tmp_dir, backup.hashid)
 
-            if not os.path.exists(dest_dir):
+            if not os.path.isdir(dest_dir):
                 os.makedirs(dest_dir)
 
             for file in contents:
@@ -99,7 +99,7 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                     contents[file] = ''.join(added)
 
                 if match_pattern.match(file):
-                    with open(dest_dir + file, 'w') as f:
+                    with open(os.path.join(dest_dir, file), 'w') as f:
                         f.write(contents[file])
                 else:
                     ignored_files.add(file)
