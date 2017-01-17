@@ -61,7 +61,7 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
 
         template_files = []
         for template in assign.files:
-            dest = "{}/{}".format(tmp_dir, template)
+            dest = os.path.join(tmp_dir, template)
             with open(dest, 'w') as f:
                 f.write(assign.files[template])
             template_files.append(template)
@@ -80,7 +80,7 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                 logger.info("{} didn't have any file contents".format(backup.hashid))
                 continue
             contents = file_contents[0].contents
-            dest_dir = "{}/{}/".format(tmp_dir, backup.hashid)
+            dest_dir = "{}/".format(os.path.join(tmp_dir, backup.hashid))
 
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
@@ -91,8 +91,10 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                 if subtract_template and file in assign.files:
                     # Compare to template and only include lines that new
                     template, source = assign.files[file], contents[file]
-                    d = difflib.Differ()
-                    diff = d.compare(template.splitlines(True), source.splitlines(True))
+                    d = difflib.Differ(linejunk=difflib.IS_LINE_JUNK,
+                                       charjunk=difflib.IS_CHARACTER_JUNK)
+                    diff = d.compare(template.splitlines(keepends=True),
+                                     source.splitlines(keepends=True))
                     added = [line[1:] for line in diff if line[0] == '+']
                     contents[file] = ''.join(added)
 
