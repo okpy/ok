@@ -9,7 +9,9 @@ import pygments.formatters
 from server.constants import DIFF_SIZE_LIMIT
 
 class File:
-    def __init__(self, name, lines, source, too_big=False):
+    def __init__(self, name, lines=None, source='', too_big=False):
+        if lines is None:
+            lines = []
         self.lines = lines
         self.name = name.lower()
         self.too_big = too_big
@@ -126,14 +128,14 @@ def diff_files(files_before, files_after, diff_type):
             before = files_before.get(filename, '')
             after = files_after.get(filename, '')
             if len(before) > DIFF_SIZE_LIMIT or len(after) > DIFF_SIZE_LIMIT:
-                files[filename] = File(filename, [], after, too_big=True)
+                files[filename] = File(filename, source=after, too_big=True)
             else:
                 lines = list(highlight_diff(filename, before, after, diff_type))
                 files[filename] = File(filename, lines, after)
     else:
         for filename, source in files_after.items():
             if len(source) > DIFF_SIZE_LIMIT:
-                files[filename] = File(filename, [], too_big=True)
+                files[filename] = File(filename, too_big=True)
             else:
                 lines = list(highlight_file(filename, source))
                 files[filename] = File(filename, lines, source)
