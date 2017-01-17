@@ -5,7 +5,7 @@
 
 {% macro render_comment(comment) %}
   <div class="comment"
-    id="{{ utils.encode_id(comment.id) }}" 
+    id="{{ utils.encode_id(comment.id) }}"
     data-id="{{ utils.encode_id(comment.id) }}"
     data-message="{{ comment.message }}"
     data-no-instant>
@@ -39,6 +39,50 @@
   </div>
 {% endmacro %}
 
+{% macro render_source(file) %}
+    {% for line in file.lines %}
+      <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
+        {% if line.is_diff %}
+          {{ line_number(line.line_before) }}
+        {% endif %}
+        {{ line_number(line.line_after) }}
+        <td>
+          {% if line.line_after %}
+            <span class="comment-add"><i class="fa fa-plus"></i></span>
+          {% endif %}
+          <span class="highlight-source">{{ line.contents | safe }}</span>
+        </td>
+      </tr>
+      {% if line.comments %}
+        <tr data-line={{ line.line_after }}>
+          <td class="comment-container" colspan=3>
+            {% for comment in line.comments %}
+              {{ render_comment(comment) }}
+            {% endfor %}
+          </td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+{% endmacro %}
+
+{% macro render_notebook(file) %}
+<tr id="{{ file.name }}-spinner">
+    <th class="file-blob" colspan=3>
+        <i class="fa fa-circle-o-notch fa-spin fa-2x fa-fw"></i>
+        <h6>Rendering Notebook</h6>
+    </th>
+</tr>
+
+<tr>
+    <td>
+        <div class="notebook-pad" id="{{ file.name }}-notebook" data-filename="{{ file.name }}"
+             data-url="{{ url_for('student.download', name=backup.assignment.name, submit=backup.submit, bid=backup.id, file=filename, raw=1) }}">
+             test
+        </div>
+    </td>
+</tr>
+{% endmacro %}
+
 {% macro source_file(backup, filename, file) %}
   <div class="source-file table-responsive"
     data-backup-id={{ utils.encode_id(backup.id) }}
@@ -70,30 +114,12 @@
         {% endif %}
       </thead>
       <tbody>
-        {% for line in file.lines %}
-          <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
-            {% if line.is_diff %}
-              {{ line_number(line.line_before) }}
-            {% endif %}
-            {{ line_number(line.line_after) }}
-            <td>
-              {% if line.line_after %}
-                <span class="comment-add"><i class="fa fa-plus"></i></span>
-              {% endif %}
-              <span class="highlight-source">{{ line.contents | safe }}</span>
-            </td>
-          </tr>
-          {% if line.comments %}
-            <tr data-line={{ line.line_after }}>
-              <td class="comment-container" colspan=3>
-                {% for comment in line.comments %}
-                  {{ render_comment(comment) }}
-                {% endfor %}
-              </td>
-            </tr>
-          {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+      {% if file.extension == ".ipynb" %}
+        {{ render_notebook(file) }}
+      {% else %}
+        {{ render_source(file) }}
+      {% endif %}
+    </tbody>
+  </table>
+</div>
 {% endmacro %}

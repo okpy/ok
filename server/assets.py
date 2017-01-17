@@ -12,6 +12,8 @@ common_css = Bundle(
     'css/highlight.css',
     'css/code.css',
     'css/swal-theme.css',
+    'css/notebook.css',
+    'lib/notebookjs/notebook.css',
     filters='cssmin',
     output='public/css/common.css'
 )
@@ -25,6 +27,8 @@ oauth_css = Bundle(
 
 common_js = Bundle(
     'js/main.js',
+    'js/notebook.js',
+    'lib/notebookjs/notebook.min.js',
     filters='jsmin',
     output='public/js/common.js'
 )

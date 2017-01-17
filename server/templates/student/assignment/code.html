@@ -75,3 +75,29 @@
       {{ diff.editor_template() }}
     </script>
 {% endblock %}
+
+{% block page_js %}
+<script>
+var ipy_files = {
+    {% for filename, file in files | dictsort %}
+        {% if '.ipynb' in filename %}
+            {{ filename.lower() | tojson }} : {{ file.source | tojson }},
+        {% endif %}
+    {% endfor %}
+}
+for (var ipy_file in ipy_files) {
+  // Delete the placeholder
+  $('[id="' + ipy_file + '-spinner'  + '"]').remove();
+  var notebookContainer = document.getElementById(ipy_file + '-notebook');
+  notebook = renderNotebook(ipy_files[ipy_file]);
+  while (notebookContainer.hasChildNodes()) {
+      notebookContainer.removeChild(notebookContainer.lastChild);
+  }
+  notebookContainer.appendChild(notebook);
+
+  $('[id="' + ipy_file + '-notebook'  + '"]').append(notebook)
+}
+
+
+</script>
+{% endblock %}
