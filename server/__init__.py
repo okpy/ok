@@ -1,5 +1,4 @@
 import os
-import logging
 
 from flask import Flask, render_template, g, request
 from flask_rq import RQ
@@ -7,7 +6,7 @@ from flask_wtf.csrf import CsrfProtect
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from werkzeug.contrib.fixers import ProxyFix
 
-from server import assets, converters, utils
+from server import assets, converters, logging, utils
 from server.forms import CSRFForm
 from server.models import db
 from server.controllers.about import about
@@ -45,29 +44,32 @@ def create_app(default_config_path=None):
             'Check that the OK_SERVER_CONFIG environment variable is set.')
     app.config.from_pyfile(config_path)
 
-    # Senty Error Reporting & Other Prod Changes
+    # Set REMOTE_ADDR for proxies
+    num_proxies = app.config.get('NUM_PROXIES', 0)
+    if num_proxies:
+        app.wsgi_app = ProxyFix(app.wsgi_app, num_proxies=num_proxies)
+
+    # Sentry Error Reporting
     sentry_dsn = os.getenv('SENTRY_DSN')
-    if not app.debug:
-        app.wsgi_app = ProxyFix(app.wsgi_app)
-        if sentry_dsn:
-            sentry.init_app(app, dsn=sentry_dsn)
+    if not app.debug and sentry_dsn:
+        sentry.init_app(app, dsn=sentry_dsn)
 
-            @app.errorhandler(500)
-            def internal_server_error(error):
-                return render_template('errors/500.html',
-                    event_id=g.sentry_event_id,
-                    public_dsn=sentry.client.get_public_dsn('https')
-                ), 500
-
-        # In production mode, add log handler to sys.stderr.
-        app.logger.addHandler(logging.StreamHandler())
-        app.logger.setLevel(logging.INFO)
+        @app.errorhandler(500)
+        def internal_server_error(error):
+            return render_template('errors/500.html',
+                event_id=g.sentry_event_id,
+                public_dsn=sentry.client.get_public_dsn('https')
+            ), 500
 
     @app.errorhandler(404)
     def not_found_error(error):
         if request.path.startswith("/api"):
             return api.handle_error(error)
         return render_template('errors/404.html'), 404
+
+    @app.route("/healthz")
+    def health_check():
+        return 'OK'
 
     # initialize the cache
     cache.init_app(app)
@@ -87,6 +89,9 @@ def create_app(default_config_path=None):
 
     # Flask-Login manager
     login_manager.init_app(app)
+
+    # Set up logging
+    logging.init_app(app)
 
     # Import and register the different asset bundles
     assets_env.init_app(app)

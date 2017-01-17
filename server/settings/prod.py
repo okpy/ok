@@ -3,24 +3,23 @@
 """
 import os
 import sys
-import binascii
 
 from server.settings import RAVEN_IGNORE_EXCEPTIONS
-
-default_secret = binascii.hexlify(os.urandom(24))
 
 ENV = 'prod'
 PREFERRED_URL_SCHEME = 'https'
 
-if not os.getenv('SECRET_KEY'):
-    print("The secret key is not set!!")
-
-SECRET_KEY = os.getenv('SECRET_KEY', default_secret)
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = False
 ASSETS_DEBUG = False
 TESTING_LOGIN = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
+# The Google Cloud load balancer behaves like two proxies: one with the external
+# fowarding rule IP, and one with an internal IP.
+# See https://cloud.google.com/compute/docs/load-balancing/http/#target_proxies
+# Including Nginx too makes 3 proxies.
+NUM_PROXIES = 3
 
 db_url = os.getenv('DATABASE_URL')
 if db_url:

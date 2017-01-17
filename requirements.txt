@@ -64,6 +64,9 @@ markdown>=2.6,<2.7
 pygal>=2.3,<2.4
 bleach==1.5.0
 
+# Logging
+gcloud==0.18.3
+
 # Development
 Flask-DebugToolbar==0.10.0
 Flask-Script==2.0.5
