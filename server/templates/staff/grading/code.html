@@ -167,3 +167,19 @@
 
     <!-- </body> do not close body in template-->
     {% endblock %}
+
+{% block page_js %}
+    <script>
+    var ipyFiles = {
+        {% for filename, file in files | dictsort %}
+            {% if '.ipynb' in filename %}
+                {{ filename.lower() | tojson }} : {{ file.source | tojson }},
+            {% endif %}
+        {% endfor %}
+    }
+
+    $(document).ready(function() {
+        displayNotebooks(ipyFiles)
+    })
+    </script>
+{% endblock %}
