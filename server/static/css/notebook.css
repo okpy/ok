@@ -14,3 +14,6 @@
     overflow: inherit !important;
     width: inherit !important;
 }
+.nb-markdown-cell {
+    font-family: Helvetica Neue, Helvetica, sans-serif;
+}
