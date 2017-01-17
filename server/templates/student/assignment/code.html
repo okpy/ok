@@ -80,7 +80,7 @@
 <script>
 var ipyFiles = {
     {% for filename, file in files | dictsort %}
-        {% if '.ipynb' in filename %}
+        {% if file.extension == ".ipynb" %}
             {{ filename.lower() | tojson }} : {{ file.source | tojson }},
         {% endif %}
     {% endfor %}
