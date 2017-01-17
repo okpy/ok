@@ -1,0 +1,5 @@
+.notebook-pad {
+    width: calc(100% - 5em);
+    float: right;
+    margin-top: 10px;
+}
