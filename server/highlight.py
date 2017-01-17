@@ -37,7 +37,7 @@ def highlight(filename, source):
 
     highlighted = pygments.highlight(source, lexer,
                                      pygments.formatters.HtmlFormatter(nowrap=True))
-    return highlighted.splitlines()
+    return highlighted.splitlines(keepends=True)
 
 def highlight_file(filename, source):
     """Given a source file, generate a sequence of (line index, HTML) pairs."""
