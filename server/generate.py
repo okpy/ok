@@ -16,6 +16,7 @@ from server.extensions import cache
 
 original_file = open('tests/files/fizzbuzz_before.py', encoding="utf8").read()
 modified_file = open('tests/files/fizzbuzz_after.py', encoding="utf8").read()
+ipython_file = open('tests/files/notebook.ipynb', encoding="utf8").read()
 
 def weighted_choice(choices):
     # http://stackoverflow.com/a/3679747
@@ -130,6 +131,8 @@ def gen_assignment(course):
         datetime.timedelta(days=1)
     ])
 
+    support_online = gen_bool(0.5)
+
     return Assignment(
         name=name,
         course_id=course.id,
@@ -138,7 +141,8 @@ def gen_assignment(course):
         lock_date=lock_date,
         max_group_size=weighted_choice([(1, 20), (2, 70), (3, 10)]),
         revisions_allowed=gen_bool(0.3),
-        files={'fizzbuzz.py': original_file})
+        uploads_enabled=support_online,
+        files={'fizzbuzz.py': original_file} if support_online else None)
 
 def gen_enrollment(user, course):
     role = weighted_choice([
@@ -204,6 +208,9 @@ def gen_messages(assignment, seconds_offset):
             }
         }
     }
+    if assignment.uploads_enabled:
+        messages['file_contents']['notebook.ipynb'] = ipython_file
+
     return messages
 
 
