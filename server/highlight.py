@@ -27,12 +27,13 @@ def highlight(filename, source):
     if not source:
         return []  # pygments does not play nice with empty files
     try:
-        highlighted = pygments.highlight(source,
-            pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False),
-            pygments.formatters.HtmlFormatter(nowrap=True))
+        lexer = pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False)
     except pygments.util.ClassNotFound:
-        highlighted = source
-    return highlighted.splitlines(keepends=True)
+        lexer = pygments.lexers.TextLexer(stripnl=False)
+
+    highlighted = pygments.highlight(source, lexer,
+                                     pygments.formatters.HtmlFormatter(nowrap=True))
+    return highlighted.splitlines()
 
 def highlight_file(filename, source):
     """Given a source file, generate a sequence of (line index, HTML) pairs."""
