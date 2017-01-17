@@ -2,7 +2,11 @@ function initalizeNotebookMarkdown() {
     // Customize the markdown function
     var mdRenderer = window.markdownit({
         html: true
-    }).enable('image').use(window.markdownitSanitizer).use(window.markdownItAnchor)
+    }).enable('image').use(window.markdownitSanitizer)
+                      .use(window.markdownItAnchor, {
+                        'permalink': true,
+
+                      })
 
     nb.markdown = function (text) {
         return mdRenderer.render(text)
