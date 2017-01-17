@@ -49,3 +49,4 @@ FORBIDDEN_ASSIGNMENT_NAMES = []
 
 # Maximum file size to show in browser, in characters
 DIFF_SIZE_LIMIT = 64 * 1024  # 64KB
+SOURCE_SIZE_LIMIT = 2 * 1024 * 1024 # 2MB
