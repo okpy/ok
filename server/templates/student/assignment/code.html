@@ -85,9 +85,17 @@ var ipy_files = {
         {% endif %}
     {% endfor %}
 }
+// Customize the markdown function
+var mdRenderer = window.markdownit({
+    html: true
+}).enable('image').use(window.markdownitSanitizer, {})
+
+function renderMd(text) {
+    return mdRenderer.render(text)
+}
+nb.markdown = renderMd;
+nb.ansi = ansi_up.ansi_to_html
 for (var ipy_file in ipy_files) {
-  // Delete the placeholder
-  $('[id="' + ipy_file + '-spinner'  + '"]').remove();
   var notebookContainer = document.getElementById(ipy_file + '-notebook');
   notebook = renderNotebook(ipy_files[ipy_file]);
   while (notebookContainer.hasChildNodes()) {

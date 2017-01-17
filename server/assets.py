@@ -29,6 +29,7 @@ common_js = Bundle(
     'js/main.js',
     'js/notebook.js',
     'lib/notebookjs/notebook.min.js',
+    'lib/notebookjs/ansi_up.min.js',
     filters='jsmin',
     output='public/js/common.js'
 )

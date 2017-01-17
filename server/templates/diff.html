@@ -66,13 +66,6 @@
 {% endmacro %}
 
 {% macro render_notebook(file) %}
-<tr id="{{ file.name }}-spinner">
-    <th class="file-blob" colspan=3>
-        <i class="fa fa-circle-o-notch fa-spin fa-2x fa-fw"></i>
-        <h6>Rendering Notebook</h6>
-    </th>
-</tr>
-
 <tr>
     <td>
         <div class="notebook-pad" id="{{ file.name }}-notebook" data-filename="{{ file.name }}"
