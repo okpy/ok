@@ -61,6 +61,9 @@ student_js = Bundle(
 )
 
 staff_css = Bundle(
+    'https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/css/AdminLTE.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/css/skins/skin-black-light.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.css',
     'css/staff.css',
     'css/jquery.steps.css',
     filters='cssmin',
@@ -68,6 +71,10 @@ staff_css = Bundle(
 )
 
 staff_js = Bundle(
+    'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/js/app.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/list.js/1.2.0/list.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js',
     'js/staff.js',
     'js/comments.js',
     'lib/listjs/list.pagination.js',
