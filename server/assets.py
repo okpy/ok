@@ -1,5 +1,8 @@
 from flask_assets import Bundle
 
+# NOTE: try to avoid use minified libraries here. We'll get better stack traces
+# when debugging, and we'll minify them in production anyway.
+
 landing_css = Bundle(
     'css/landing.css',
     filters='cssmin',
@@ -7,6 +10,10 @@ landing_css = Bundle(
 )
 
 common_css = Bundle(
+    'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css',
+    'https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700',
+    'https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css',
     'css/helper.css',
     'css/main.css',
     'css/highlight.css',
@@ -26,6 +33,12 @@ oauth_css = Bundle(
 )
 
 common_js = Bundle(
+    'https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.js',
+    'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.0.1/markdown-it.js',
+    'https://cdn.rawgit.com/svbergerem/markdown-it-sanitizer/master/dist/markdown-it-sanitizer.js',
+    'https://wzrd.in/standalone/markdown-it-anchor@latest',
     'js/main.js',
     'js/notebook.js',
     'lib/notebookjs/notebook.min.js',
