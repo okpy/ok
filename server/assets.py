@@ -71,6 +71,8 @@ staff_js = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.3.6/js/app.js',
     'https://cdnjs.cloudflare.com/ajax/libs/list.js/1.2.0/list.js',
     'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jquery-steps/1.1.0/jquery.steps.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.15.1/jquery.validate.js',
     'js/staff.js',
     'lib/listjs/list.pagination.js',
     'lib/pygal/pygal-tooltips.min.js',
