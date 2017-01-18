@@ -12,7 +12,7 @@
   {{ js_asset("student_js") }}
 
   {% if debug %}
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tota11y/0.1.5/tota11y.min.js"></script>
+    {{ js_asset("debug_js") }}
   {% endif %}
 
   {% if instantclick %}

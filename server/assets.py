@@ -3,6 +3,11 @@ from flask_assets import Bundle
 # NOTE: try to avoid use minified libraries here. We'll get better stack traces
 # when debugging, and we'll minify them in production anyway.
 
+debug_js = Bundle(
+    'https://cdnjs.cloudflare.com/ajax/libs/tota11y/0.1.5/tota11y.js',
+    output='public/js/debug.js'
+)
+
 landing_css = Bundle(
     'css/landing.css',
     filters='cssmin',
