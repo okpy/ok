@@ -80,7 +80,7 @@ staff_js = Bundle(
 
 code_css = Bundle(
     'css/notebook.css',
-    'lib/notebookjs/notebook.css',
+    'https://cdn.rawgit.com/jsvine/nbpreview/9da3f2da/css/vendor/notebook.css',
     filters='cssmin',
     output='public/css/code.css'
 )
@@ -88,8 +88,8 @@ code_css = Bundle(
 code_js = Bundle(
     'js/comments.js',
     'js/notebook.js',
-    'lib/notebookjs/notebook.min.js',
-    'lib/notebookjs/ansi_up.min.js',
+    'https://cdn.rawgit.com/jsvine/notebookjs/97cf1b37/notebook.js',
+    'https://cdn.rawgit.com/drudru/ansi_up/32a3c2de/ansi_up.js',
     filters='jsmin',
     output='public/js/code.js'
 )
