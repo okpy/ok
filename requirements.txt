@@ -22,6 +22,10 @@ WTForms>=2.0,<3.0
 
 # Flask Extensions
 Flask-Assets>=0.12,<0.12.99
+
+# Branch that contains a Unicode bug fix - use until https://github.com/miracle2k/webassets/pull/482 is published
+https://github.com/okpy/webassets/archive/978b8063ce80c7f91c6bf080872dafe4eecf2454.zip
+
 Flask-Caching>=1.1
 Flask-Login==0.3.2
 
