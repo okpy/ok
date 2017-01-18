@@ -168,7 +168,16 @@
     <!-- </body> do not close body in template-->
     {% endblock %}
 
+{% block page_css %}
+  {% assets "code_css" %}
+    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
+{% endblock %}
+
 {% block page_js %}
+  {% assets "code_js" %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
     <script>
     var ipyFiles = {
         {% for filename, file in files | dictsort %}

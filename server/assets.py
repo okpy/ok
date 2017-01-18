@@ -19,8 +19,6 @@ common_css = Bundle(
     'css/highlight.css',
     'css/code.css',
     'css/swal-theme.css',
-    'css/notebook.css',
-    'lib/notebookjs/notebook.css',
     filters='cssmin',
     output='public/css/common.css'
 )
@@ -41,9 +39,6 @@ common_js = Bundle(
     'https://wzrd.in/standalone/markdown-it-anchor@latest',
     'https://cdn.ravenjs.com/2.1.0/raven.js',
     'js/main.js',
-    'js/notebook.js',
-    'lib/notebookjs/notebook.min.js',
-    'lib/notebookjs/ansi_up.min.js',
     filters='jsmin',
     output='public/js/common.js'
 )
@@ -57,7 +52,6 @@ student_css = Bundle(
 student_js = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/instantclick/3.0.1/instantclick.js',
     'js/student.js',
-    'js/comments.js',
     filters='jsmin',
     output='public/js/student.js'
 )
@@ -78,9 +72,24 @@ staff_js = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/list.js/1.2.0/list.js',
     'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js',
     'js/staff.js',
-    'js/comments.js',
     'lib/listjs/list.pagination.js',
     'lib/pygal/pygal-tooltips.min.js',
     filters='jsmin',
     output='public/js/staff.js'
+)
+
+code_css = Bundle(
+    'css/notebook.css',
+    'lib/notebookjs/notebook.css',
+    filters='cssmin',
+    output='public/css/code.css'
+)
+
+code_js = Bundle(
+    'js/comments.js',
+    'js/notebook.js',
+    'lib/notebookjs/notebook.min.js',
+    'lib/notebookjs/ansi_up.min.js',
+    filters='jsmin',
+    output='public/js/code.js'
 )
