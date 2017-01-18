@@ -30,6 +30,10 @@
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
+    {% if not debug %}
+      <script type="text/javascript">Raven.config('https://60bdf8d6337a463b858a14b2221c080c@sentry.cs61a.org/3').install() </script>
+    {% endif %}
+
     {% block js %}
     {% endblock %}
 

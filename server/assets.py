@@ -39,6 +39,7 @@ common_js = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.0.1/markdown-it.js',
     'https://cdn.rawgit.com/svbergerem/markdown-it-sanitizer/master/dist/markdown-it-sanitizer.js',
     'https://wzrd.in/standalone/markdown-it-anchor@latest',
+    'https://cdn.ravenjs.com/2.1.0/raven.js',
     'js/main.js',
     'js/notebook.js',
     'lib/notebookjs/notebook.min.js',
