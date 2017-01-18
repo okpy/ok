@@ -54,6 +54,7 @@ student_css = Bundle(
 )
 
 student_js = Bundle(
+    'https://cdnjs.cloudflare.com/ajax/libs/instantclick/3.0.1/instantclick.js',
     'js/student.js',
     'js/comments.js',
     filters='jsmin',
