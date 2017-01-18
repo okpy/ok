@@ -1,15 +1,11 @@
 {% extends "base.html" %}
 
 {% block css %}
-  {% assets "staff_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-  {% endassets %}
+  {{ css_asset("staff_css") }}
 {% endblock %}
 
 {% block js %}
-  {% assets "staff_js" %}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  {{ js_asset("staff_js") }}
 
   {% block page_js %}
   {% endblock %}

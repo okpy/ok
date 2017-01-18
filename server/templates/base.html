@@ -1,3 +1,16 @@
+
+{% macro css_asset(asset_name) %}
+  {% assets asset_name %}
+    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+  {% endassets %}
+{% endmacro %}
+
+{% macro js_asset(asset_name) %}
+  {% assets asset_name %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+{% endmacro %}
+
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
@@ -14,9 +27,7 @@
     {% include "icons.html" %}
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    {% assets "common_css" %}
-      <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-    {% endassets %}
+    {{ css_asset("common_css") }}
 
     {% block css %}
     {% endblock %}
@@ -26,9 +37,7 @@
     {% block body %}
     {% endblock %}
 
-    {% assets "common_js" %}
-      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
+    {{ js_asset("common_js") }}
 
     {% if not debug %}
       <script type="text/javascript">Raven.config('https://60bdf8d6337a463b858a14b2221c080c@sentry.cs61a.org/3').install() </script>

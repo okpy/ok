@@ -2,9 +2,7 @@
 
 {% block css %}
   {{ super() }}
-  {% assets "oauth_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-  {% endassets %}
+  {{ css_asset("oauth_css") }}
 {% endblock %}
 
 {% block body %}

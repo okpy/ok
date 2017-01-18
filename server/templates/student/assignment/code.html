@@ -77,15 +77,11 @@
 {% endblock %}
 
 {% block page_css %}
-  {% assets "code_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-  {% endassets %}
+  {{ css_asset("code_css") }}
 {% endblock %}
 
 {% block page_js %}
-  {% assets "code_js" %}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  {{ js_asset("code_js") }}
 <script>
 var ipyFiles = {
     {% for filename, file in files | dictsort %}

@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
 {% block css %}
-  {% assets "student_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-  {% endassets %}
+  {{ css_asset("student_css") }}
 
   {% block page_css %}
   {% endblock %}
@@ -11,9 +9,7 @@
 {% endblock %}
 
 {% block js %}
-  {% assets "student_js" %}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  {{ js_asset("student_js") }}
 
   {% if debug %}
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tota11y/0.1.5/tota11y.min.js"></script>
