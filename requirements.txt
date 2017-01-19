@@ -26,9 +26,8 @@ Flask-Cache==0.13.1
 Flask-Login==0.3.2
 
 # File Storage
-# Use custom version until https://github.com/mardix/flask-cloudy/pull/17 is merged
-https://github.com/okpy/flask-cloudy/archive/master.zip
-# Flask-Cloudy==0.15
+lockfile==0.10.2 # For local storage
+apache-libcloud==1.5.0
 
 # OAuth
 
