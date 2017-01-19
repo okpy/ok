@@ -1657,7 +1657,7 @@ class ExternalFile(Model):
     filename = db.Column(db.String(1024), nullable=False)
     object_name = db.Column(db.String(1024), nullable=False)
 
-    staff_file = db.Column(db.Boolean, nullable=False)
+    staff_file = db.Column(db.Boolean, nullable=False, index=True)
     deleted = db.Column(db.Boolean, nullable=False, default=False)
 
     course_id = db.Column(

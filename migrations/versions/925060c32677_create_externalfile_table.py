@@ -36,6 +36,7 @@ def upgrade():
     op.create_index(op.f('ix_external_file_assignment_id'), 'external_file', ['assignment_id'], unique=False)
     op.create_index(op.f('ix_external_file_course_id'), 'external_file', ['course_id'], unique=False)
     op.create_index(op.f('ix_external_file_user_id'), 'external_file', ['user_id'], unique=False)
+    op.create_index(op.f('ix_external_file_staff_file'), 'external_file', ['staff_file'], unique=False)
     # ### end Alembic commands ###
 
 
@@ -44,5 +45,6 @@ def downgrade():
     op.drop_index(op.f('ix_external_file_user_id'), table_name='external_file')
     op.drop_index(op.f('ix_external_file_course_id'), table_name='external_file')
     op.drop_index(op.f('ix_external_file_assignment_id'), table_name='external_file')
+    op.drop_index(op.f('ix_external_file_staff_file'), table_name='external_file')
     op.drop_table('external_file')
     # ### end Alembic commands ###
