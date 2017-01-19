@@ -10,21 +10,6 @@ jQuery(document).ready(function($){
         }
     });
 
-    $('.remove-confirm').on('click',function(e){
-        e.preventDefault();
-        var form = $(this).parents('form');
-        var info = form[0][1].value;
-        swal({
-            title: "Just double checking",
-            text: "Are you sure you want to remove " + info + " from the group?",
-            showCancelButton: true,
-            confirmButtonText: "Yes, I'm sure!",
-            closeOnConfirm: true
-        }, function(isConfirm){
-            if (isConfirm) form.submit();
-        });
-    })
-
     /* Comments
      *
      * Comments are rendered server-side, but the comment editor is client-side.
@@ -102,7 +87,7 @@ jQuery(document).ready(function($){
         });
     });
 
-    $('body').on('change keyup paste cut', '.comment-write', 
+    $('body').on('change keyup paste cut', '.comment-write',
             debounce(function(e) {
         var editor = $(this).parents('.comment-editor');
         render(editor);
