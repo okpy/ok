@@ -97,7 +97,7 @@ code_css = Bundle(
 code_js = Bundle(
     'js/comments.js',
     'js/notebook.js',
-    'lib/notebook.js',
+    'lib/notebookjs/notebook.js',
     'https://cdn.rawgit.com/drudru/ansi_up/32a3c2de/ansi_up.js',
     filters='jsmin',
     output='public/js/code.js'
