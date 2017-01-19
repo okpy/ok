@@ -22,8 +22,6 @@ common_css = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.css',
     'css/helper.css',
     'css/main.css',
-    'css/highlight.css',
-    'css/code.css',
     'css/swal-theme.css',
     filters='cssmin',
     output='public/css/common.css'
@@ -88,8 +86,10 @@ staff_js = Bundle(
 )
 
 code_css = Bundle(
-    'css/notebook.css',
     'https://cdn.rawgit.com/jsvine/nbpreview/9da3f2da/css/vendor/notebook.css',
+    'css/code.css',
+    'css/highlight.css',
+    'css/notebook.css',
     filters='cssmin',
     output='public/css/code.css'
 )
