@@ -3,6 +3,8 @@ import hmac
 import hashlib
 import base64
 import datetime as dt
+import random
+import string
 from urllib.parse import urlencode, urljoin
 
 from werkzeug.utils import secure_filename
@@ -14,6 +16,21 @@ def get_provider(name):
         return getattr(Provider, name.upper())
     else:
         raise AttributeError('Provider {} is unknown'.format(name))
+
+def sanitize_filename(fname, prefix=False):
+    """ Sanitize filename and add random prefix to file to
+    handle duplicate names and potentially empty sequences from secure_filename
+    """
+    random_prefix = ''.join([random.choice(string.ascii_letters + string.digits)
+                             for n in range(5)])
+    secured_name = secure_filename(fname)
+    if not secured_name:
+        return random_prefix
+    elif prefix:
+        return "{0}-{1}".format(random_prefix, secured_name)
+    else:
+        return secured_name
+
 
 class Storage:
     def __init__(self, app=None):
@@ -42,6 +59,7 @@ class Storage:
     def upload(self, iterator, name=None, container=None, prefix=""):
         """ Upload (and overwrite) files on storage provider.
         To avoid overwriting files see `_safe_object_name` in Flask-Cloudy.
+        or use sanitize_filename(name, prefix=True).
         File Names will always be sanitized to prevent directory traversal.
         """
         if container is None:
@@ -49,14 +67,13 @@ class Storage:
         else:
             container = self.driver.get_container(container_name=container)
 
-        obj_name = secure_filename(name)
+        obj_name = sanitize_filename(name)
         if self.provider == Provider.LOCAL:
             prefixed_name = prefix.lstrip("/") + obj_name
             # No folders locally to prevent directory traversal.
-            obj_name = secure_filename(prefixed_name)
+            obj_name = sanitize_filename(prefixed_name)
         elif prefix:
-            obj_name = prefix.lstrip("/") + name
-
+            obj_name = prefix.lstrip("/") + obj_name
         obj = self.driver.upload_object_via_stream(iterator=iterator,
                                                    container=container,
                                                    object_name=obj_name)

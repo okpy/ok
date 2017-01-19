@@ -17,11 +17,12 @@ logger = logging.getLogger(__name__)
 def file_url(file_id):
     ext_file = ExternalFile.query.filter_by(id=file_id, deleted=False).first()
     if not ext_file or not ExternalFile.can(ext_file, current_user, 'download'):
+        logger.info("Access file without permission by {0}".format(current_user.email))
         abort(404)
 
     try:
         storage_obj = ext_file.object()
-    except libcloud.common.types.InvalidCredsError as e:
+    except libcloud.common.types.InvalidCredsError:
         logger.warning("Could not get file {0} - {1}".format(file_id, ext_file.filename),
                        exc_info=True)
         storage_obj = None

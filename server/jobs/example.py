@@ -6,7 +6,7 @@ from server.utils import encode_id
 
 def data(duration):
     for _ in range(duration):
-        yield 'print("Hello World")\n'
+        yield b'print("Hello World")\n'
 
 @jobs.background_job
 def test_job(duration=0, should_fail=False, make_file=False):
