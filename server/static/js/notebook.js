@@ -11,7 +11,14 @@ function initalizeNotebookMarkdown() {
     nb.markdown = function (text) {
         return mdRenderer.render(text)
     };
+
     nb.ansi = ansi_up.ansi_to_html
+
+    nb.display.html = nb.display.md_html
+    nb.display["text/html"] =  nb.display.md_html;
+    nb.display.javascript = nb.display.md_html;
+    nb.display["application/javascript"] = nb.display.md_html;
+
 }
 
 function renderNotebook(ipynb) {
