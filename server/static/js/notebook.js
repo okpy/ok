@@ -15,9 +15,9 @@ function initalizeNotebookMarkdown() {
     nb.ansi = ansi_up.ansi_to_html
 
     nb.display.html = nb.display.md_html
-    nb.display["text/html"] =  nb.display.html;
-    nb.display.javascript = nb.display.html;
-    nb.display["application/javascript"] = nb.display.html;
+    nb.display["text/html"] =  nb.display.md_html;
+    nb.display.javascript = nb.display.md_html;
+    nb.display["application/javascript"] = nb.display.md_html;
 
 }
 
