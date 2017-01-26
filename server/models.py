@@ -915,6 +915,7 @@ class Backup(Model):
     messages = db.relationship("Message")
     scores = db.relationship("Score")
     comments = db.relationship("Comment", order_by="Comment.created")
+    external_files = db.relationship("ExternalFile")
 
     # Already have indexes for submitter_id and assignment_id due to FK
     db.Index('idx_backupCreated', 'created')
@@ -993,7 +994,7 @@ class Backup(Model):
         else:
             return {}
 
-    def external_files(self):
+    def external_files_dict(self):
         """ Return a dictionary of filenames to contents."""
         external = ExternalFile.query.filter_by(backup_id=self.id).all()
         return {f.filename: f for f in external}
@@ -1681,6 +1682,10 @@ class ExternalFile(Model):
         if not guess[0]:
             return 'application/octet-stream'
         return guess[0]
+
+    @property
+    def download_link(self):
+        return '/files/{}'.format(encode_id(self.id))
 
     def delete(self):
         self.object().delete()

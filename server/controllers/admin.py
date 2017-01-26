@@ -117,7 +117,7 @@ def grading_view(backup, form=None, is_composition=False):
     if not assign.files and diff_type:
         diff_type = None
 
-    external_files = backup.external_files()
+    external_files = backup.external_files_dict()
 
     # sort comments by (filename, line)
     comments = collections.defaultdict(list)

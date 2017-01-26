@@ -219,7 +219,7 @@ def list_backups(name, submit):
 def code(name, submit, bid):
     assign = get_assignment(name)
     backup = Backup.query.get(bid)
-    external_files = backup.external_files()
+    external_files = backup.external_files_dict()
 
     if not (backup and Backup.can(backup, current_user, "view")):
         abort(404)
