@@ -19,7 +19,7 @@ from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, CanvasCourse, CanvasAssignment, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                              LAB_ASSISTANT_ROLE, SCORE_KINDS, ERROR_SCORE_KINDS)
+                              LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
 import server.canvas.api as canvas_api
 import server.canvas.jobs
