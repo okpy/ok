@@ -5,12 +5,14 @@ from werkzeug.exceptions import BadRequest
 
 import collections
 import logging
+import os
+import time
 
 from server import highlight, models, utils
 from server.autograder import submit_continous
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
 from server.forms import CSRFForm, UploadSubmissionForm
-from server.models import User, Course, Assignment, Group, Backup, db
+from server.models import User, Course, Assignment, Group, Backup, Message, ExternalFile, db
 from server.utils import (is_safe_redirect_url, group_action_email,
                           invite_email, send_email)
 
@@ -120,7 +122,8 @@ def submit_assignment(name):
     group = Group.lookup(current_user, assign)
     user_ids = assign.active_user_ids(current_user.id)
     fs = assign.final_submission(user_ids)
-
+    form = UploadSubmissionForm()
+    print(form.upload_files.name)
     if not assign.uploads_enabled:
         flash("This assignment cannot be submitted online", 'warning')
         return redirect(url_for('.assignment', name=assign.name))
@@ -128,32 +131,68 @@ def submit_assignment(name):
         flash("It's too late to submit this assignment", 'warning')
         return redirect(url_for('.assignment', name=assign.name))
 
-    form = UploadSubmissionForm()
-    if form.validate_on_submit():
+
+    if request.method == "POST":
         backup = Backup(
             submitter=current_user,
             assignment=assign,
             submit=True,
         )
-        if form.upload_files.upload_backup_files(backup):
-            db.session.add(backup)
-            db.session.commit()
-            if assign.autograding_key:
-                try:
-                    submit_continous(backup)
-                except ValueError as e:
-                    logger.warning('Web submission did not autograde', exc_info=True)
-                    flash('Did not send to autograder: {}'.format(e), 'warning')
-            flash('Uploaded submission', 'success')
-            return redirect(url_for(
-                '.code',
-                name=assign.name,
-                submit=backup.submit,
-                bid=backup.id,
-            ))
+        assignment = backup.assignment
+        templates = assignment.files
+
+        files, binary_files = {}, {}
+
+        sorted_uploads = sorted(list(request.files.items()), key=lambda x: x[0])
+        uploads = [v[1] for v in sorted_uploads]
+        full_path_names = [v for v in request.form.listvalues()][0]
+
+        template_files = assign.files or []
+        file_names = [os.path.split(f)[1] for f in full_path_names]
+        missing = [
+            template for template in template_files
+                if template not in file_names
+        ]
+        if missing:
+            abort(400,
+                'Missing files: {}. The following files are required: {}'
+                    .format(', '.join(missing), ', '.join(templates)))
+            abort(400, 'Missing Files')
+
+        backup_folder_postfix = time.time()
+        for full_path, upload in zip(full_path_names, uploads):
+            data = upload.read()
+            if len(data) > 15 * 1024 * 1024:  # file is too large (over 15 MB)
+                # TODO: Try uploading files to cloud storage under 20MB if we have enough time.
+                abort(400,
+                    '{} is larger than the maximum file size '
+                    'of 15MB'.format(full_path))
+            try:
+                files[full_path] = str(data, 'utf-8')
+            except UnicodeDecodeError:
+                upload.stream.seek(0) # We've already read data, so reset before uploading
+                bin_file = ExternalFile.upload(upload.stream, current_user.id, full_path,
+                                               prefix="uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix),
+                                               course_id=assign.course.id, assignment_id=assign.id)
+                binary_files[upload.filename] = bin_file
+                bin_file.backup = backup
+                db.session.add(bin_file)
+
+        message = Message(kind='file_contents', contents=files)
+        backup.messages.append(message)
+
+        db.session.add(backup)
+        db.session.commit()
+        flash('Uploaded submission', 'success')
+        return redirect(url_for(
+            '.code',
+            name=assign.name,
+            submit=backup.submit,
+            bid=backup.id,
+        ))
 
     return render_template('student/assignment/submit.html', assignment=assign,
-                           group=group, course=assign.course, form=form)
+                           group=group, course=assign.course)
 
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/')

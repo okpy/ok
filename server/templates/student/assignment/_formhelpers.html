@@ -84,9 +84,9 @@
 {%- endmacro %}
 
 
-{% macro render_form_full(form, action_url='', action_text='Submit', class_='', btn_class='btn btn-default', enctype="application/x-www-form-urlencoded") -%}
+{% macro render_form_full(form, action_url='', action_text='Submit', class_='', id='', btn_class='btn btn-default', enctype="application/x-www-form-urlencoded") -%}
 
-    <form method="POST" action="{{ action_url }}" role="form" class="{{ class_ }}" enctype="{{ enctype }}">
+    <form method="POST" action="{{ action_url }}" role="form" class="{{ class_ }}" {% if id %} id="{{ id }}" {% endif %} enctype="{{ enctype }}">
         {{ form.hidden_tag() if form.hidden_tag }}
         {% if caller %}
             {{ caller() }}
