@@ -117,6 +117,8 @@ def grading_view(backup, form=None, is_composition=False):
     if not assign.files and diff_type:
         diff_type = None
 
+    external_files = backup.external_files()
+
     # sort comments by (filename, line)
     comments = collections.defaultdict(list)
     for comment in backup.comments:
@@ -136,7 +138,7 @@ def grading_view(backup, form=None, is_composition=False):
 
     return render_template(
         'staff/grading/code.html', courses=courses, assignment=assign,
-        backup=backup, group=group, files=files,
+        backup=backup, group=group, files=files, external_files=external_files,
         diff_type=diff_type, task=task, form=form, is_composition=is_composition
     )
 

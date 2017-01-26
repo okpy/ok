@@ -216,7 +216,7 @@ class AssignmentUpdateForm(AssignmentForm):
 
 
 class AssignmentTemplateForm(BaseForm):
-    template_files = FileField('Template Files', [FileRequired()])
+    template_files = FileField('Template Files')
 
 
 class EnrollmentForm(BaseForm):

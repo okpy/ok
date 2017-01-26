@@ -2,7 +2,7 @@ import logging
 
 import libcloud
 
-from flask import Blueprint, redirect, Response, abort
+from flask import Blueprint, redirect, request, Response, abort
 from flask_login import login_required, current_user
 
 from server.extensions import storage
@@ -40,4 +40,10 @@ def file_url(file_id):
                                                    .format(ext_file.filename))
         return response
     else:
-        return redirect(storage.get_blob_url(storage_obj.name))
+        postpend = ''
+        if request.args.get('raw'):
+            postpend = '&response-content-type={}'.format(ext_file.mimetype)
+        elif request.args.get('download'):
+            postpend = '&response-content-disposition=attachment; filename={0!s}'.format('ext_file.filename')
+        url = storage.get_blob_url(storage_obj.name)
+        return redirect(url + postpend)

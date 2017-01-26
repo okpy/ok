@@ -993,6 +993,11 @@ class Backup(Model):
         else:
             return {}
 
+    def external_files(self):
+        """ Return a dictionary of filenames to contents."""
+        external = ExternalFile.query.filter_by(backup_id=self.id).all()
+        return {f.filename: f for f in external}
+
     def analytics(self):
         """ Return a dictionary of filenames to contents."""
         message = Message.query.filter_by(

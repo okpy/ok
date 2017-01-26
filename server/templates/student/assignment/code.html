@@ -66,6 +66,9 @@
             {% for filename, file in files | dictsort %}
               {{ diff.source_file(backup, filename, file) }}
             {% endfor %}
+            {% for filename, file in external_files | dictsort %}
+              {{ diff.external_file(backup, filename, file) }}
+            {% endfor %}
           </div>
         </div>
       </section>

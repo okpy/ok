@@ -1,5 +1,5 @@
 from flask import (Blueprint, render_template, flash, request, redirect,
-                   url_for, abort, make_response)
+                   url_for, abort, make_response, jsonify)
 from flask_login import login_required, current_user
 from werkzeug.exceptions import BadRequest
 
@@ -122,8 +122,6 @@ def submit_assignment(name):
     group = Group.lookup(current_user, assign)
     user_ids = assign.active_user_ids(current_user.id)
     fs = assign.final_submission(user_ids)
-    form = UploadSubmissionForm()
-    print(form.upload_files.name)
     if not assign.uploads_enabled:
         flash("This assignment cannot be submitted online", 'warning')
         return redirect(url_for('.assignment', name=assign.name))
@@ -139,11 +137,12 @@ def submit_assignment(name):
             submit=True,
         )
         assignment = backup.assignment
-        templates = assignment.files
+        templates = assignment.files or []
 
         files, binary_files = {}, {}
 
-        sorted_uploads = sorted(list(request.files.items()), key=lambda x: x[0])
+        sorted_uploads = sorted(list(request.files.items()), key=lambda x: int(x[0][x[0].find('[')+1:-1]))
+
         uploads = [v[1] for v in sorted_uploads]
         full_path_names = [v for v in request.form.listvalues()][0]
 
@@ -154,19 +153,20 @@ def submit_assignment(name):
                 if template not in file_names
         ]
         if missing:
-            abort(400,
-                'Missing files: {}. The following files are required: {}'
-                    .format(', '.join(missing), ', '.join(templates)))
-            abort(400, 'Missing Files')
+            return jsonify({
+                'error': ('Missing files: {}. The following files are required: {}'
+                          .format(', '.join(missing), ', '.join(template_files)))
+            }), 400
 
         backup_folder_postfix = time.time()
+
         for full_path, upload in zip(full_path_names, uploads):
             data = upload.read()
             if len(data) > 15 * 1024 * 1024:  # file is too large (over 15 MB)
                 # TODO: Try uploading files to cloud storage under 20MB if we have enough time.
-                abort(400,
-                    '{} is larger than the maximum file size '
-                    'of 15MB'.format(full_path))
+                return jsonify({
+                  'error': '{} is larger than the maximum file size of 15MB'.format(full_path)
+                }), 400
             try:
                 files[full_path] = str(data, 'utf-8')
             except UnicodeDecodeError:
@@ -183,13 +183,14 @@ def submit_assignment(name):
 
         db.session.add(backup)
         db.session.commit()
-        flash('Uploaded submission', 'success')
-        return redirect(url_for(
+        return jsonify({
+            'backup': backup.hashid,
+            'url': url_for(
             '.code',
             name=assign.name,
             submit=backup.submit,
             bid=backup.id,
-        ))
+        )})
 
     return render_template('student/assignment/submit.html', assignment=assign,
                            group=group, course=assign.course)
@@ -218,6 +219,7 @@ def list_backups(name, submit):
 def code(name, submit, bid):
     assign = get_assignment(name)
     backup = Backup.query.get(bid)
+    external_files = backup.external_files()
 
     if not (backup and Backup.can(backup, current_user, "view")):
         abort(404)
@@ -239,9 +241,10 @@ def code(name, submit, bid):
     for filename, source_file in files.items():
         for line in source_file.lines:
             line.comments = comments[(filename, line.line_after)]
+
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup,
-        files=files, diff_type=diff_type)
+        files=files, external_files=external_files, diff_type=diff_type)
 
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/'
