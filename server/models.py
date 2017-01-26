@@ -1662,6 +1662,11 @@ class ExternalFile(Model):
     )
     assignment = db.relationship('Assignment')
 
+    backup_id = db.Column(
+        db.Integer, db.ForeignKey('backup.id'), index=True
+    )
+    backup = db.relationship('Backup')
+
     def object(self):
         return storage.get_blob(self.object_name, self.container)
 

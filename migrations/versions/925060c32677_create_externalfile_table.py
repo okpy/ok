@@ -28,11 +28,14 @@ def upgrade():
     sa.Column('course_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('assignment_id', sa.Integer(), nullable=True),
+    sa.Column('backup_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['backup_id'], ['backup.id'], name=op.f('fk_external_file_backup_id_assignment')),
     sa.ForeignKeyConstraint(['assignment_id'], ['assignment.id'], name=op.f('fk_external_file_assignment_id_assignment')),
     sa.ForeignKeyConstraint(['course_id'], ['course.id'], name=op.f('fk_external_file_course_id_course')),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_external_file_user_id_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_external_file'))
     )
+    op.create_index(op.f('ix_external_file_backup_id'), 'external_file', ['backup_id'], unique=False)
     op.create_index(op.f('ix_external_file_assignment_id'), 'external_file', ['assignment_id'], unique=False)
     op.create_index(op.f('ix_external_file_course_id'), 'external_file', ['course_id'], unique=False)
     op.create_index(op.f('ix_external_file_user_id'), 'external_file', ['user_id'], unique=False)
