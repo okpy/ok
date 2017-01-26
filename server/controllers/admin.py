@@ -524,7 +524,7 @@ def view_scores(cid, aid):
 
     score_distribution = collections.defaultdict(list)
     for score in all_scores:
-        if score.kind.lower() in ERROR_SCORE_KINDS:
+        if score.kind.lower() == 'error':
             continue
         score_distribution[score.kind].append(score.score)
 
