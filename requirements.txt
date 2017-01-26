@@ -29,6 +29,10 @@ https://github.com/okpy/webassets/archive/978b8063ce80c7f91c6bf080872dafe4eecf24
 Flask-Caching>=1.1
 Flask-Login==0.3.2
 
+# File Storage
+lockfile==0.10.2 # For local storage
+apache-libcloud==1.5.0
+
 # OAuth
 
 oauthlib==2.0.1

@@ -48,6 +48,12 @@ RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
 REDIS_PORT = 6379
 RQ_POLL_INTERVAL = 2000
 
+STORAGE_PROVIDER = os.environ.get('STORAGE_PROVIDER',  'GOOGLE_STORAGE')
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',  'ok-v3-user-files')
+STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '')
+
 try:
     os.environ["GOOGLE_ID"]
     os.environ["GOOGLE_SECRET"]
