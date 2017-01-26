@@ -19,7 +19,7 @@ from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, CanvasCourse, CanvasAssignment, db)
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
-                              LAB_ASSISTANT_ROLE, SCORE_KINDS)
+                              LAB_ASSISTANT_ROLE, SCORE_KINDS, ERROR_SCORE_KINDS)
 
 import server.canvas.api as canvas_api
 import server.canvas.jobs
@@ -516,7 +516,7 @@ def view_scores(cid, aid):
 
     include_archived = request.args.get('all', False, type=bool)
     query = (Score.query.options(db.joinedload('backup'), db.joinedload(Score.grader))
-                  .filter_by(assignment=assign))
+                        .filter_by(assignment=assign))
 
     if not include_archived:
         query.filter_by(archived=False)
@@ -524,19 +524,33 @@ def view_scores(cid, aid):
 
     score_distribution = collections.defaultdict(list)
     for score in all_scores:
+        if score.kind.lower() in ERROR_SCORE_KINDS:
+            continue
         score_distribution[score.kind].append(score.score)
 
-    box_plots = {}
+    histograms = {}
     for kind, distribution in score_distribution.items():
-        box_plot = pygal.Box()
-        box_plot.title = '{} distribution ({} items)'.format(kind, len(distribution))
-        box_plot.add(kind, distribution)
-        box_plots[kind] = box_plot.render().decode("utf-8")
+        score_counts = collections.Counter(distribution)
+        histogram = pygal.Histogram()
+        histogram.title = '{} distribution ({} items)'.format(kind, len(distribution))
+
+        count = collections.Counter(distribution)
+        bin_size = 0.5 if max(distribution) < 2 else 1
+        points, current_bin = [], 0
+        for score in sorted(count):
+            # Find all scores within the current bin
+            if score >= current_bin:
+                num_scores = sum([count[x] for x in count if score <= x < score + bin_size ])
+                points.append((num_scores, score, score+bin_size))
+                current_bin = score + bin_size
+
+        histogram.add(kind, points)
+        histograms[kind] = histogram.render().decode("utf-8")
 
     return render_template('staff/course/assignment/assignment.scores.html',
                            assignment=assign, current_course=current_course,
                            courses=courses, scores=all_scores,
-                           scores_plots=box_plots)
+                           scores_plots=histograms)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores/audit")
 @is_staff(course_arg='cid')

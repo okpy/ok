@@ -15,10 +15,12 @@ ROLE_DISPLAY_NAMES = {
 VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
+
+ERROR_SCORE_KINDS = ['autograder', 'error']
 SCORE_KINDS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
-               'regrade', 'revision',
-               'checkpoint 1', 'checkpoint 2',
-               'private', 'autograder']
+               'regrade', 'revision', 'checkpoint 1', 'checkpoint 2',
+               'private'] + ERROR_SCORE_KINDS
+
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
 OAUTH_OUT_OF_BAND_URI = 'urn:ietf:wg:oauth:2.0:oob'
