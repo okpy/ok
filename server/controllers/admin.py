@@ -528,29 +528,21 @@ def view_scores(cid, aid):
             continue
         score_distribution[score.kind].append(score.score)
 
-    histograms = {}
+    bar_charts = {}
     for kind, distribution in score_distribution.items():
         score_counts = collections.Counter(distribution)
-        histogram = pygal.Histogram()
-        histogram.title = '{} distribution ({} items)'.format(kind, len(distribution))
-
-        count = collections.Counter(distribution)
-        bin_size = 0.5 if max(distribution) < 2 else 1
-        points, current_bin = [], 0
-        for score in sorted(count):
-            # Find all scores within the current bin
-            if score >= current_bin:
-                num_scores = sum([count[x] for x in count if score <= x < score + bin_size ])
-                points.append((num_scores, score, score+bin_size))
-                current_bin = score + bin_size
-
-        histogram.add(kind, points)
-        histograms[kind] = histogram.render().decode("utf-8")
+        distinct_scores = sorted(score_counts)
+        bar_chart = pygal.Bar()
+        bar_chart.title = '{} distribution ({} items)'.format(kind, len(distribution))
+        bar_chart.x_labels = [str(x) for x in distinct_scores]
+        points = [score_counts.get(x) for x in distinct_scores]
+        bar_chart.add(kind, points)
+        bar_charts[kind] = bar_chart.render().decode("utf-8")
 
     return render_template('staff/course/assignment/assignment.scores.html',
                            assignment=assign, current_course=current_course,
                            courses=courses, scores=all_scores,
-                           scores_plots=histograms)
+                           scores_plots=bar_charts)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores/audit")
 @is_staff(course_arg='cid')
