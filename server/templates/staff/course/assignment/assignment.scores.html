@@ -44,11 +44,9 @@
               <!-- /.box-header -->
               <div class="box-body">
                 <div class="row">
-                {% for plot in scores_plots %}
-                  <div class="col-xs-6">
-                  {{ scores_plots[plot] | safe}}
+                  <div class="col-xs-12">
+                  {{ scores_plot | safe}}
                   </div>
-                {% endfor %}
                 </div>
 
                 </div>

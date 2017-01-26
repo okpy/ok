@@ -524,25 +524,24 @@ def view_scores(cid, aid):
 
     score_distribution = collections.defaultdict(list)
     for score in all_scores:
-        if score.kind.lower() == 'error':
-            continue
         score_distribution[score.kind].append(score.score)
 
-    bar_charts = {}
+    distinct_scores = set(sum(score_distribution.values(), []))
+    sorted_scores = sorted(list(distinct_scores))
+
+    bar_chart = pygal.Bar()
+    bar_chart.x_labels = [str(x) for x in sorted_scores]
+
     for kind, distribution in score_distribution.items():
         score_counts = collections.Counter(distribution)
-        distinct_scores = sorted(score_counts)
-        bar_chart = pygal.Bar()
-        bar_chart.title = '{} distribution ({} items)'.format(kind, len(distribution))
-        bar_chart.x_labels = [str(x) for x in distinct_scores]
-        points = [score_counts.get(x) for x in distinct_scores]
-        bar_chart.add(kind, points)
-        bar_charts[kind] = bar_chart.render().decode("utf-8")
+        bar_chart.add(kind, [score_counts.get(x) for x in sorted_scores])
+
+    bar_chart = bar_chart.render().decode("utf-8")
 
     return render_template('staff/course/assignment/assignment.scores.html',
                            assignment=assign, current_course=current_course,
                            courses=courses, scores=all_scores,
-                           scores_plots=bar_charts)
+                           scores_plot=bar_chart)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores/audit")
 @is_staff(course_arg='cid')
