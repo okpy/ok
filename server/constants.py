@@ -21,6 +21,7 @@ SCORE_KINDS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
                'private', 'autograder']
 API_PREFIX = '/api'
 OAUTH_SCOPES = ['all', 'email']
+OAUTH_OUT_OF_BAND_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
 COMMON_LANGUAGES = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
 
@@ -48,3 +49,4 @@ FORBIDDEN_ASSIGNMENT_NAMES = []
 
 # Maximum file size to show in browser, in characters
 DIFF_SIZE_LIMIT = 64 * 1024  # 64KB
+SOURCE_SIZE_LIMIT = 2 * 1024 * 1024 # 2MB

@@ -4,13 +4,15 @@ import shlex
 import glob
 import tempfile
 import re
+import difflib
 
 from server.models import Assignment, Backup, db
 from server.utils import encode_id
 from server import jobs
 
 @jobs.background_job
-def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=None):
+def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=None,
+                   subtract_template=False):
     logger = jobs.get_job_logger()
     logger.info('Starting MOSS Export...')
 
@@ -57,6 +59,20 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
         match_pattern = re.compile(file_regex)
         ignored_files = set()
 
+        template_files = []
+        for template in assign.files:
+            dest = os.path.join(tmp_dir, template)
+            with open(dest, 'w') as f:
+                f.write(assign.files[template])
+            template_files.append(template)
+        logger.info("Using template files: {}".format(' '.join(template_files)))
+
+        if subtract_template:
+            logger.info("Subtract Template Enabled: Not sending templates through MOSS")
+            templates = ''
+        else:
+            templates = ' '.join(["-b {file}".format(file=f) for f in template_files])
+
         for backup in backup_query:
             # Write file into file
             file_contents = [m for m in backup.messages if m.kind == 'file_contents']
@@ -64,17 +80,26 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                 logger.info("{} didn't have any file contents".format(backup.hashid))
                 continue
             contents = file_contents[0].contents
-            dest_dir = "{}/{}/".format(tmp_dir, backup.hashid)
+            dest_dir = os.path.join(tmp_dir, backup.hashid)
 
-            if not os.path.exists(dest_dir):
+            if not os.path.isdir(dest_dir):
                 os.makedirs(dest_dir)
 
             for file in contents:
                 if file == 'submit':  # ignore fake file from ok-client
                     continue
+                if subtract_template and file in assign.files:
+                    # Compare to template and only include lines that new
+                    template, source = assign.files[file], contents[file]
+                    d = difflib.Differ(linejunk=difflib.IS_LINE_JUNK,
+                                       charjunk=difflib.IS_CHARACTER_JUNK)
+                    diff = d.compare(template.splitlines(keepends=True),
+                                     source.splitlines(keepends=True))
+                    added = [line[1:] for line in diff if line[0] == '+']
+                    contents[file] = ''.join(added)
 
                 if match_pattern.match(file):
-                    with open(dest_dir + file, 'w') as f:
+                    with open(os.path.join(dest_dir, file), 'w') as f:
                         f.write(contents[file])
                 else:
                     ignored_files.add(file)
@@ -90,18 +115,6 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                                                                        ignored_files))
         else:
             logger.info("Regex {} has captured all possible files".format(file_regex))
-
-        template_files = []
-        for template in assign.files:
-            dest = "{}/{}".format(tmp_dir, template)
-            with open(dest, 'w') as f:
-                f.write(assign.files[template])
-
-            template_files.append(template)
-
-        logger.info("Using template files: {}".format(' '.join(template_files)))
-
-        templates = ' '.join(["-b {file}".format(file=f) for f in template_files])
 
         if not all_student_files:
             raise Exception("Did not match any files")

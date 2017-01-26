@@ -1,0 +1,26 @@
+.notebook-pad {
+    width: calc(100% - 5em);
+    float: right;
+    margin-top: 10px;
+}
+.notebook-pad pre {
+    background: #f5f2f0;
+    padding: 1em;
+    margin: .5em 0;
+    overflow: auto;
+    border: none;
+}
+.nb-output {
+    overflow: inherit !important;
+    width: inherit !important;
+}
+
+.nb-markdown-cell * {
+    font-family: Helvetica Neue, Helvetica, sans-serif !important;
+}
+
+.notebook-pad .header-anchor {
+    text-decoration: none;
+    padding: 0 5px;
+    font-size: 75%;
+}

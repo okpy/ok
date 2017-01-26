@@ -155,9 +155,6 @@ def load_user_from_request(request):
     if oauth_token:
         oauth_token.user.scopes = oauth_token.access_token.scopes
         return oauth_token.user
-    # Fallback to Google Auth
-    token = request.args.get('access_token')
-    return user_from_google_token(token)
 
 @login_manager.unauthorized_handler
 def unauthorized():

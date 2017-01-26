@@ -94,7 +94,7 @@ class TestHighlight(OkTestCase):
 
     def test_no_highlight(self):
         filename = 'data'
-        source = 'It was the best of times, it was the worst of times, ...'
+        source = 'It was the best of times, it was the worst of times, ...\n'
 
         source_lines = source.splitlines(keepends=True)
         highlighted = list(highlight.highlight_file(filename, source))

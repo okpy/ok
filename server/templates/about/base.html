@@ -2,9 +2,7 @@
 
 {% block css %}
   {{ super() }}
-  {% assets "landing_css" %}
-    <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
-  {% endassets %}
+  {{ css_asset("landing_css") }}
 {% endblock %}
 
 {% block body %}
@@ -29,6 +27,6 @@
   </header>
   {% block content %}
   {% endblock content %}
-  {% include 'footer.html' %}
 </div>
+{% include 'footer.html' %}
 {% endblock %}

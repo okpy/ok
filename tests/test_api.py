@@ -37,19 +37,6 @@ class TestAuth(OkTestCase):
             'submit': submit,
         }
 
-        response = self.client.post('/api/v3/backups/?client_version=v1.4.0',
-            data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')])
-        self.assert_403(response)
-        assert response.json['data'] == {
-            'supplied': 'v1.4.0',
-            'correct': 'v1.5.0',
-            'download_link': "http://localhost/ok"
-        }
-        assert 'Incorrect client version' in response.json['message']
-        backup = Backup.query.filter(Backup.submitter_id == user.id).all()
-        assert backup == []
-
         response = self.client.post('/api/v3/backups/?client_version=v1.5.0',
             data=json.dumps(data),
             headers=[('Content-Type', 'application/json')])

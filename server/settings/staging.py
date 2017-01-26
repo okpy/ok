@@ -3,16 +3,14 @@
 """
 import os
 import sys
-import binascii
 
 from server.settings import RAVEN_IGNORE_EXCEPTIONS
-
-default_secret = binascii.hexlify(os.urandom(24))
 
 ENV = 'staging'
 PREFERRED_URL_SCHEME = 'https'
 
-SECRET_KEY = os.getenv('SECRET_KEY', default_secret)
+SECRET_KEY = os.getenv('SECRET_KEY')
+
 CACHE_TYPE = 'simple'
 
 DEBUG = False

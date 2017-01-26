@@ -17,7 +17,8 @@ import server.canvas.api as canvas_api
 from server.models import Assignment, Course, Message, CanvasCourse
 from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
-                              COMMON_LANGUAGES, ROLE_DISPLAY_NAMES)
+                              COMMON_LANGUAGES, ROLE_DISPLAY_NAMES,
+                              OAUTH_OUT_OF_BAND_URI)
 
 import csv
 import logging
@@ -378,7 +379,8 @@ class ClientForm(BaseForm):
 
     redirect_uris = CommaSeparatedField(
         'Allowed Redirect URIs',
-        description='Comma-separated list. Redirects to localhost and 127.0.0.1 are always allowed.')
+        description='Comma-separated list. Redirects to localhost and 127.0.0.1 are always allowed. '
+            'Redirects to {} will display the code in the browser instead of redirecting.'.format(OAUTH_OUT_OF_BAND_URI))
 
     default_scopes = CommaSeparatedField(
         'Default Scope',
@@ -440,7 +442,6 @@ class PublishScores(BaseForm):
         choices=[(kind, kind.title()) for kind in SCORE_KINDS],
     )
 
-
 ########
 # Jobs #
 ########
@@ -456,6 +457,8 @@ class MossSubmissionForm(BaseForm):
     file_regex = StringField('Regex for submitted files', default='.*',
                              validators=[validators.required()])
     language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+    subtract_template = BooleanField('Subtract Template', default=False,
+                                     description="Only send the changes from the template to MOSS")
 
 class GithubSearchRecentForm(BaseForm):
     access_token = StringField('Github Access Token',
