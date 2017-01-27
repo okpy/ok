@@ -83,3 +83,7 @@ header .landing-btn {
   text-align: left;
   padding-top: 0;
 }
+
+.pill-button {
+  border-color: #337ab7;
+}

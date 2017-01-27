@@ -1,0 +1,82 @@
+{% extends "about/base.html" %}
+
+{% block title %}OK Publications{% endblock %}
+
+{% block content %}
+
+<div class="landing row feature-block logo-section" style="padding-bottom: 1em">
+    <h2>Publications using OK </h2>
+    <p> Instructors often use their course data to research the effectiveness of assignments.
+        <br> Here's are some of things instructors have published with the help of OK </p>
+</div>
+
+<div class="landing row feature-block">
+    <div class="col-md-6" >
+        <img class="img-responsive select-none" src="https://ocf.berkeley.edu/~sumukh/img/fuzz-testing.png">
+    </div>
+    <div class="col-md-6">
+        <h2>Fuzz Testing Projects In Massive Courses</h2>
+        <p>Fuzz-testing projects discovered errors in 50% of students that instructor created tests missed.</p>
+        <span>Sumukh Sridhara, Brian Hou, Jeffrey Lu, and John DeNero. 2016. Fuzz Testing Projects in Massive Courses. In Proceedings of the Third (2016) ACM Conference on Learning @ Scale (L@S '16). ACM, New York, NY, USA, 361-367. DOI: <a href="http://dx.doi.org/10.1145/2876034.2876050"> http://dx.doi.org/10.1145/2876034.2876050</a> </span>
+        <br> <br/>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">Paper</a>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">ACM Link</a>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">Video</a>
+    </div>
+</div>
+<div class="landing row feature-block">
+    <div class="col-md-6 center">
+        <h2>Course Delivery as a Software Problem</h2>
+        <p>This talk describes how the OK software suite has helped <a href="http://cs61a.org">CS 61A </a> scale to 1600 students in one lecture section..</p>
+        <span>John DeNero, EECS Colloqium Invited Talk - October 19, 2016 </span>
+        <br> <br>
+        <a class="btn pill pill-button btn-rounded" href="https://www.youtube.com/watch?v=polTBnMXGQI">Video</a>
+        <a class="btn pill pill-button btn-rounded" href="http://lecture.cs61a.org/static/talk.pdf">Slides</a>
+    </div>
+    <div class="col-md-6" >
+        <img class="img-responsive select-none" src="{{ url_for('static', filename='img/landing-comments.png') }}">
+    </div>
+</div>
+<div class="landing row feature-block">
+    <div class="col-md-6" >
+        <img class="img-responsive select-none" src="{{ url_for('static', filename='img/landing-comments.png') }}">
+    </div>
+
+    <div class="col-md-6">
+        <h2>Kristin Unlocking</h2>
+        <p>This talk describes how the OK software suite has helped <a href="http://cs61a.org">CS 61A </a> scale to 1600 students in one lecture section..</p>
+        <span>Sumukh Sridhara, Brian Hou, Jeffrey Lu, and John DeNero. 2016. Fuzz Testing Projects in Massive Courses. In Proceedings of the Third (2016) ACM Conference on Learning @ Scale (L@S '16). ACM, New York, NY, USA, 361-367. DOI: <a href="http://dx.doi.org/10.1145/2876034.2876050"> http://dx.doi.org/10.1145/2876034.2876050</a> </span>
+        <br> <br>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">Paper</a>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">ACM Link</a>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">Video</a>
+    </div>
+</div>
+<div class="landing row feature-block">
+
+    <div class="col-md-6">
+        <h2>Gustavo Hints</h2>
+        <p>This talk describes how the OK software suite has helped <a href="http://cs61a.org">CS 61A </a> scale to 1600 students in one lecture section..</p>
+        <span>Sumukh Sridhara, Brian Hou, Jeffrey Lu, and John DeNero. 2016. Fuzz Testing Projects in Massive Courses. In Proceedings of the Third (2016) ACM Conference on Learning @ Scale (L@S '16). ACM, New York, NY, USA, 361-367. DOI: <a href="http://dx.doi.org/10.1145/2876034.2876050"> http://dx.doi.org/10.1145/2876034.2876050</a> </span>
+        <br> <br>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">Paper</a>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">ACM Link</a>
+        <a class="btn pill pill-button btn-rounded" href="http://denero.org/content/pubs/las16_sridhara_fuzz.pdf">Video</a>
+    </div>
+    <div class="col-md-6" >
+        <img class="img-responsive select-none" src="{{ url_for('static', filename='img/landing-comments.png') }}">
+    </div>
+
+</div>
+
+<div class="landing row">
+    <hr>
+
+    <div class="col-md-12">
+        <h2>Learn more about how OK can streamline your course.</h2>
+        <p> OK is an suite of open source software tools to developed to support computer science courses. <br> Contact us to see how OK can help streamline assignment submissions.  </p>
+        <a href="mailto://cs61a@berkeley.edu?cc=denero@berkeley.edu&bcc=sumukh@berkeley.edu&subject=Using%20OK" class="button">Contact us</a>
+    </div>
+</div>
+
+{% endblock content %}
