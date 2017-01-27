@@ -287,6 +287,14 @@ class Course(Model):
                             .all()
                             )]
 
+    def get_participants(self, roles):
+        return [e for e in (Enrollment.query
+                            .options(db.joinedload('user'))
+                            .filter(Enrollment.role.in_(roles),
+                                    Enrollment.course == self)
+                            .all()
+                            )]
+
 
 class Assignment(Model):
     """ Assignments are particular to courses and have unique names.
