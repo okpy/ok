@@ -41,7 +41,7 @@ def file_url(file_id):
                                                    .format(basename))
         return response
     else:
-        postpend = '?'
+        postpend = '&'
         if request.args.get('raw'):
             postpend += urlencode({'response-content-type': ext_file.mimetype})
         elif request.args.get('download'):
