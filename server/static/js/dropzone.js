@@ -19,7 +19,7 @@ function initDropzone(elem, token) {
             $('.dz-hidden-input').attr('webkitdirectory', 'true')
             submitButton.addEventListener("click", function() {
                 Pace.track( function () {
-                    myDropzsone.processQueue(); // Tell Dropzone to process all queued files.
+                    myDropzone.processQueue(); // Tell Dropzone to process all queued files.
                 });
             })
 

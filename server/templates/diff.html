@@ -94,17 +94,14 @@
               </a>
           </th>
         </tr>
-        {% if 'image/' not in file.mimetype %}
-        {% endif %}
       </thead>
       <tbody>
-        {% if 'image/' in file.mimetype %}
+        {% if file.mimetype.startswith('image') %}
         <tr>
             <td>
                 <img class="source-inline-image" style="display: block; margin: 0 auto;" src="{{ url_for('files.file_url', file_id=file.id) }}">
             </td>
         </tr>
-
         {% else %}
         <tr>
           <th class="file-blob" colspan=3>
@@ -114,7 +111,6 @@
               <h6>This file could not be displayed</h6>
           </th>
         </tr>
-
         {% endif %}
     </tbody>
   </table>
