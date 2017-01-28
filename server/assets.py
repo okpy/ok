@@ -61,12 +61,14 @@ dropzone_js = Bundle(
 
 student_css = Bundle(
     'css/student.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/themes/blue/pace-theme-loading-bar.css',
     filters='cssmin',
     output='public/css/student.css'
 )
 
 student_js = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/instantclick/3.0.1/instantclick.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.js',
     'js/student.js',
     filters='jsmin',
     output='public/js/student.js'

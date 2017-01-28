@@ -1,7 +1,7 @@
 .dropzone {
     margin-bottom: 3rem;
     min-height: 200px;
-    border: 2px dashed #578300;
+    border: 2px dashed rgba(0, 0, 0, 0.3);
     border-radius: 5px;
 
 }

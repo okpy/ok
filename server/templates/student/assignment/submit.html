@@ -36,7 +36,8 @@
                     <div class="cell-text">
                         <label for="upload_files" class="control-label"><label for="upload_files">Submission Files</label></label>
 
-                      <form action="./submit" method="POST" class="dropzone"  id="myDropzone" enctype="multipart/form-data">
+                      <form action="{{ url_for('.submit_assignment', name=assignment.name) }}"
+                            method="POST" class="dropzone"  id="myDropzone" enctype="multipart/form-data">
                         <div class="dz-message" data-dz-message>
                           Drop files/folders here or click to upload.<br />
                           <span class="note needsclick">
@@ -49,7 +50,6 @@
                             {% elif not assignment.upload_info  %}
                               Only upload files that you have changed.
                             {% endif %}
-
                           </span>
 
                         </div>
@@ -63,24 +63,23 @@
         </div>
       </section>
     </main>
-<div id="dz-preview-template" style="display: none;">
-  <div class="dz-preview dz-file-preview">
-    <div class="dz-image"><img data-dz-thumbnail /></div>
-    <div class="dz-details">
-      <div class="dz-filename"><span data-dz-name></span></div>
-      <div class="dz-size"><span data-dz-size></span></div>
+    <div id="dz-preview-template" style="display: none;">
+      <div class="dz-preview dz-file-preview">
+        <div class="dz-image"><img data-dz-thumbnail /></div>
+        <div class="dz-details">
+          <div class="dz-filename"><span data-dz-name></span></div>
+          <div class="dz-size"><span data-dz-size></span></div>
+        </div>
+        <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+        <div class="dz-error-message"><span data-dz-errormessage></span></div>
+        <div class="dz-success-mark">
+            <span class="green">&nbsp;✔</span>
+        </div>
+        <div class="dz-error-mark">
+              <span class="red large">&nbsp;✘</span>
+        </div>
+      </div>
     </div>
-    <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-    <div class="dz-error-message"><span data-dz-errormessage></span></div>
-    <div class="dz-success-mark">
-        <span class="green">&nbsp;✔</span>
-    </div>
-    <div class="dz-error-mark">
-          <span class="red large">&nbsp;✘</span>
-    </div>
-  </div>
-
-</div>
 
 {% endblock %}
 

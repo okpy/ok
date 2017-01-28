@@ -10,7 +10,7 @@ import time
 
 from server import highlight, models, utils
 from server.autograder import submit_continous
-from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
+from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_FILE_SIZE
 from server.forms import CSRFForm, UploadSubmissionForm
 from server.models import User, Course, Assignment, Group, Backup, Message, ExternalFile, db
 from server.utils import (is_safe_redirect_url, group_action_email,
@@ -141,17 +141,27 @@ def submit_assignment(name):
 
         files, binary_files = {}, {}
 
-        sorted_uploads = sorted(list(request.files.items()), key=lambda x: int(x[0][x[0].find('[')+1:-1]))
+        def extract_file_index(file_ind):
+            """ Get the index of of file objects. Used because
+            request.files.getlist() does not handle uniquely indexed
+            lists.
+            >>> extract_file_index('file[12'])
+            12
+            """
+            brace_loc = file_ind.find('[')
+            index_str = file_ind[brace_loc+1:-1]
+            return int(index_str)
 
+
+        # A list of one element lists
+        sorted_uploads = sorted(list(request.files.items()),
+                                key=lambda x: extract_file_index(x[0]))
         uploads = [v[1] for v in sorted_uploads]
-        full_path_names = [v for v in request.form.listvalues()][0]
+        full_path_names = list(request.form.listvalues())[0]
 
         template_files = assign.files or []
         file_names = [os.path.split(f)[1] for f in full_path_names]
-        missing = [
-            template for template in template_files
-                if template not in file_names
-        ]
+        missing = [t for t in template_files if t not in file_names]
         if missing:
             return jsonify({
                 'error': ('Missing files: {}. The following files are required: {}'
@@ -162,18 +172,19 @@ def submit_assignment(name):
 
         for full_path, upload in zip(full_path_names, uploads):
             data = upload.read()
-            if len(data) > 15 * 1024 * 1024:  # file is too large (over 15 MB)
-                # TODO: Try uploading files to cloud storage under 20MB if we have enough time.
+            if len(data) > MAX_UPLOAD_FILE_SIZE:  # file is too large (over 15 MB)
                 return jsonify({
-                  'error': '{} is larger than the maximum file size of 15MB'.format(full_path)
+                  'error': ('{} is larger than the maximum file size of {}MB'
+                            .format(full_path, MAX_UPLOAD_FILE_SIZE))
                 }), 400
             try:
                 files[full_path] = str(data, 'utf-8')
             except UnicodeDecodeError:
                 upload.stream.seek(0) # We've already read data, so reset before uploading
+                dest_folder = "uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix)
                 bin_file = ExternalFile.upload(upload.stream, current_user.id, full_path,
-                                               prefix="uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix),
-                                               course_id=assign.course.id, assignment_id=assign.id)
+                                               prefix=dest_folder, course_id=assign.course.id,
+                                               assignment_id=assign.id)
                 binary_files[upload.filename] = bin_file
                 bin_file.backup = backup
                 db.session.add(bin_file)
