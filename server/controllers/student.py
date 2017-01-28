@@ -139,7 +139,7 @@ def submit_assignment(name):
         assignment = backup.assignment
         templates = assignment.files or []
 
-        files, binary_files = {}, {}
+        files = {}
 
         def extract_file_index(file_ind):
             """ Get the index of of file objects. Used because
@@ -180,13 +180,11 @@ def submit_assignment(name):
             try:
                 files[full_path] = str(data, 'utf-8')
             except UnicodeDecodeError:
-                upload.stream.seek(0) # We've already read data, so reset before uploading
+                # upload.stream.seek(0) # We've already read data, so reset before uploading
                 dest_folder = "uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix)
-                bin_file = ExternalFile.upload(upload.stream, current_user.id, full_path,
+                bin_file = ExternalFile.upload([data], current_user.id, full_path,
                                                prefix=dest_folder, course_id=assign.course.id,
-                                               assignment_id=assign.id)
-                binary_files[upload.filename] = bin_file
-                bin_file.backup = backup
+                                               backup=backup, assignment_id=assign.id)
                 db.session.add(bin_file)
 
         message = Message(kind='file_contents', contents=files)
@@ -196,12 +194,9 @@ def submit_assignment(name):
         db.session.commit()
         return jsonify({
             'backup': backup.hashid,
-            'url': url_for(
-            '.code',
-            name=assign.name,
-            submit=backup.submit,
-            bid=backup.id,
-        )})
+            'url': url_for('.code', name=assign.name, submit=backup.submit,
+                           bid=backup.id)
+        })
 
     return render_template('student/assignment/submit.html', assignment=assign,
                            group=group, course=assign.course)
@@ -230,7 +225,6 @@ def list_backups(name, submit):
 def code(name, submit, bid):
     assign = get_assignment(name)
     backup = Backup.query.get(bid)
-    external_files = backup.external_files_dict()
 
     if not (backup and Backup.can(backup, current_user, "view")):
         abort(404)
@@ -253,9 +247,12 @@ def code(name, submit, bid):
         for line in source_file.lines:
             line.comments = comments[(filename, line.line_after)]
 
+    for filename, ex_file in backup.external_files_dict().items():
+        files[filename] = ex_file
+
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup,
-        files=files, external_files=external_files, diff_type=diff_type)
+        files=files, diff_type=diff_type)
 
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/'

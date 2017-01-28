@@ -39,6 +39,16 @@
   </div>
 {% endmacro %}
 
+{% macro render_files(backup, files) %}
+    {% for filename, file in files | dictsort %}
+        {% if file.lines %}
+              {{ source_file(backup, filename, file) }}
+        {% else %}
+              {{ external_file(backup, filename, file) }}
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+
 {% macro render_source(file) %}
     {% for line in file.lines %}
       <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>

@@ -995,7 +995,7 @@ class Backup(Model):
             return {}
 
     def external_files_dict(self):
-        """ Return a dictionary of filenames to contents."""
+        """ Return a dictionary of filenames to ExternalFile objects """
         external = ExternalFile.query.filter_by(backup_id=self.id).all()
         return {f.filename: f for f in external}
 
@@ -1694,7 +1694,7 @@ class ExternalFile(Model):
 
     @staticmethod
     def upload(iterable, user_id, name, staff_file=True, course_id=None,
-               assignment_id=None, **kwargs):
+               assignment_id=None, backup=None, **kwargs):
         object = storage.upload(iterable, name=name, **kwargs)
         external_file = ExternalFile(
             container=storage.container_name,
@@ -1703,6 +1703,7 @@ class ExternalFile(Model):
             course_id=course_id,
             assignment_id=assignment_id,
             user_id=user_id,
+            backup=backup,
             staff_file=False)
         db.session.add(external_file)
         db.session.commit()

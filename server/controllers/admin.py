@@ -117,8 +117,6 @@ def grading_view(backup, form=None, is_composition=False):
     if not assign.files and diff_type:
         diff_type = None
 
-    external_files = backup.external_files_dict()
-
     # sort comments by (filename, line)
     comments = collections.defaultdict(list)
     for comment in backup.comments:
@@ -129,6 +127,8 @@ def grading_view(backup, form=None, is_composition=False):
     for filename, source_file in files.items():
         for line in source_file.lines:
             line.comments = comments[(filename, line.line_after)]
+    for filename, ex_file in backup.external_files_dict().items():
+        files[filename] = ex_file
 
     group = [User.query.get(o) for o in backup.owners()]
     task = backup.grading_tasks
@@ -136,11 +136,9 @@ def grading_view(backup, form=None, is_composition=False):
         # Choose the first grading_task
         task = task[0]
 
-    return render_template(
-        'staff/grading/code.html', courses=courses, assignment=assign,
-        backup=backup, group=group, files=files, external_files=external_files,
-        diff_type=diff_type, task=task, form=form, is_composition=is_composition
-    )
+    return render_template('staff/grading/code.html', courses=courses, assignment=assign,
+                           backup=backup, group=group, files=files, diff_type=diff_type,
+                           task=task, form=form, is_composition=is_composition)
 
 @admin.route('/grading/<hashid:bid>')
 @is_staff()
