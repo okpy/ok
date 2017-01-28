@@ -23,20 +23,8 @@
         </div>
 
         <div class="subcontent list row">
-            <div class="col-md-6 col-sm-12 col-md-offset-3"
-            <p class="upload-directions">
-            {% if assignment.upload_info %}
-             {{ assignment.upload_info }}
-            {% endif %}
-
-            {% if assignment.files %}
-             Required Files: {% for f in assignment.files %} {{ f }} {% endfor %}
-            {% elif not assignment.upload_info  %}
-             Only upload files that you have changed.
-            {% endif %}
-            </p>
-
-                  <div class="cell col-xs-12">
+            <div class="col-md-12 col-sm-12 ">
+                  <div class="cell col-xs-12 upload-cell">
                     <div class="cell-title">
                       <a  class="due-text green">
                         New {{ assignment.display_name }} Submission
@@ -46,14 +34,63 @@
                         <span><i class="fa fa-clock-o grey"></i> Due: {{  utils.local_time(assignment.due_date, course) }}  </span>
                     </div>
                     <div class="cell-text">
-                        {% call forms.render_form_full(form, action_url="", class_='form', enctype="multipart/form-data") %}
-                            {{ forms.render_field(form.upload_files, label_visible=true, multiple="", id="file-select") }}
-                            <br>
-                        {% endcall %}
+                        <label for="upload_files" class="control-label"><label for="upload_files">Submission Files</label></label>
+
+                      <form action="{{ url_for('.submit_assignment', name=assignment.name) }}"
+                            method="POST" class="dropzone"  id="myDropzone" enctype="multipart/form-data">
+                        <div class="dz-message" data-dz-message>
+                          Drop files/folders here or click to upload.<br />
+                          <span class="note needsclick">
+                            {% if assignment.upload_info %}
+                              {{ assignment.upload_info }} <br/>
+                            {% endif %}
+
+                            {% if assignment.files %}
+                              Required Files: {% for f in assignment.files %} {{ f }} {% endfor %}
+                            {% elif not assignment.upload_info  %}
+                              Only upload files that you have changed.
+                            {% endif %}
+                          </span>
+
+                        </div>
+
+
+                      </form>
+                      <button type="submit" id="dzSubmit" class="btn btn-default submit-btn">Submit </button>
                     </div>
                   </div>
             </div>
         </div>
       </section>
     </main>
+    <div id="dz-preview-template" style="display: none;">
+      <div class="dz-preview dz-file-preview">
+        <div class="dz-image"><img data-dz-thumbnail /></div>
+        <div class="dz-details">
+          <div class="dz-filename"><span data-dz-name></span></div>
+          <div class="dz-size"><span data-dz-size></span></div>
+        </div>
+        <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+        <div class="dz-error-message"><span data-dz-errormessage></span></div>
+        <div class="dz-success-mark">
+            <span class="green">&nbsp;✔</span>
+        </div>
+        <div class="dz-error-mark">
+              <span class="red large">&nbsp;✘</span>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
+
+{% block page_css %}
+  {{ css_asset("dropzone_css") }}
+{% endblock %}
+
+{% block page_js %}
+  {{ js_asset("dropzone_js") }}
+
+  <script>
+    initDropzone('#mydropzone', "{{ csrf_token() }}");
+  </script>
 {% endblock %}

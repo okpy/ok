@@ -33,6 +33,7 @@ dist
 *.ok_messages
 kubernetes/*
 documentation
+local-storage/*
 
 *.coverage
 *.coveralls.yml

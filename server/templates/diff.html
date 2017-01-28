@@ -39,6 +39,16 @@
   </div>
 {% endmacro %}
 
+{% macro render_files(backup, files) %}
+    {% for filename, file in files | dictsort %}
+        {% if file.lines %}
+              {{ source_file(backup, filename, file) }}
+        {% else %}
+              {{ external_file(backup, filename, file) }}
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+
 {% macro render_source(file) %}
     {% for line in file.lines %}
       <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
@@ -74,6 +84,49 @@
     </td>
 </tr>
 {% endmacro %}
+
+{% macro external_file(backup, filename, file) %}
+  <div class="source-file table-responsive"
+    data-backup-id={{ utils.encode_id(backup.id) }}
+    data-filename={{ filename }}>
+    <table class="highlight">
+      <thead>
+        <tr>
+          <th class="source-file-header" colspan=3>
+              <div class="source-file-name fixed-width-font">{{ filename }}</div>
+              <a data-no-instant href="{{ url_for('files.file_url', file_id=file.id, download=1) }}"
+              class="no-dash dl-button source-file-download">
+                  <i class="fa fa-download"></i> Download
+              </a>
+              <a data-no-instant href="{{ url_for('files.file_url', file_id=file.id, raw=1) }}"
+              class="no-dash dl-button source-file-download">
+                  <i class="fa fa-eye"></i> Raw
+              </a>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if file.mimetype.startswith('image') %}
+        <tr>
+            <td>
+                <img class="source-inline-image" style="display: block; margin: 0 auto;" src="{{ url_for('files.file_url', file_id=file.id) }}">
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+          <th class="file-blob" colspan=3>
+              <a data-no-instant href="{{ url_for('files.file_url', file_id=file.id) }}">
+                Download File
+              </a>
+              <h6>This file could not be displayed</h6>
+          </th>
+        </tr>
+        {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
+
 
 {% macro source_file(backup, filename, file) %}
   <div class="source-file table-responsive"

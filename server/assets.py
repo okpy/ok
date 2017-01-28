@@ -19,7 +19,6 @@ common_css = Bundle(
     'https://fonts.googleapis.com/css?family=Quicksand:400,700,300|Lato:300,400,700',
     'https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.css',
     'https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.css',
     'css/helper.css',
     'css/main.css',
     'css/swal-theme.css',
@@ -41,11 +40,25 @@ common_js = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.0.1/markdown-it.js',
     'https://cdn.rawgit.com/svbergerem/markdown-it-sanitizer/6efc1722/dist/markdown-it-sanitizer.js',
     'https://wzrd.in/standalone/markdown-it-anchor@2.6.0',
-    'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js',
     'https://cdn.ravenjs.com/2.1.0/raven.js',
     'js/main.js',
     filters='jsmin',
     output='public/js/common.js'
+)
+
+dropzone_css = Bundle(
+    'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/themes/blue/pace-theme-loading-bar.css',
+    'css/dropzone.css',
+    filters='cssmin',
+    output='public/css/dropzone.css'
+)
+dropzone_js = Bundle(
+    'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.js',
+    'js/dropzone.js',
+    filters='jsmin',
+    output='public/js/dropzone.js'
 )
 
 student_css = Bundle(

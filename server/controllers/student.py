@@ -1,16 +1,18 @@
 from flask import (Blueprint, render_template, flash, request, redirect,
-                   url_for, abort, make_response)
+                   url_for, abort, make_response, jsonify)
 from flask_login import login_required, current_user
 from werkzeug.exceptions import BadRequest
 
 import collections
 import logging
+import os
+import time
 
 from server import highlight, models, utils
 from server.autograder import submit_continous
-from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE
+from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_FILE_SIZE
 from server.forms import CSRFForm, UploadSubmissionForm
-from server.models import User, Course, Assignment, Group, Backup, db
+from server.models import User, Course, Assignment, Group, Backup, Message, ExternalFile, db
 from server.utils import (is_safe_redirect_url, group_action_email,
                           invite_email, send_email)
 
@@ -120,7 +122,6 @@ def submit_assignment(name):
     group = Group.lookup(current_user, assign)
     user_ids = assign.active_user_ids(current_user.id)
     fs = assign.final_submission(user_ids)
-
     if not assign.uploads_enabled:
         flash("This assignment cannot be submitted online", 'warning')
         return redirect(url_for('.assignment', name=assign.name))
@@ -128,32 +129,77 @@ def submit_assignment(name):
         flash("It's too late to submit this assignment", 'warning')
         return redirect(url_for('.assignment', name=assign.name))
 
-    form = UploadSubmissionForm()
-    if form.validate_on_submit():
+
+    if request.method == "POST":
         backup = Backup(
             submitter=current_user,
             assignment=assign,
             submit=True,
         )
-        if form.upload_files.upload_backup_files(backup):
-            db.session.add(backup)
-            db.session.commit()
-            if assign.autograding_key:
-                try:
-                    submit_continous(backup)
-                except ValueError as e:
-                    logger.warning('Web submission did not autograde', exc_info=True)
-                    flash('Did not send to autograder: {}'.format(e), 'warning')
-            flash('Uploaded submission', 'success')
-            return redirect(url_for(
-                '.code',
-                name=assign.name,
-                submit=backup.submit,
-                bid=backup.id,
-            ))
+        assignment = backup.assignment
+        templates = assignment.files or []
+
+        files = {}
+
+        def extract_file_index(file_ind):
+            """ Get the index of of file objects. Used because
+            request.files.getlist() does not handle uniquely indexed
+            lists.
+            >>> extract_file_index('file[12'])
+            12
+            """
+            brace_loc = file_ind.find('[')
+            index_str = file_ind[brace_loc+1:-1]
+            return int(index_str)
+
+
+        # A list of one element lists
+        sorted_uploads = sorted(list(request.files.items()),
+                                key=lambda x: extract_file_index(x[0]))
+        uploads = [v[1] for v in sorted_uploads]
+        full_path_names = list(request.form.listvalues())[0]
+
+        template_files = assign.files or []
+        file_names = [os.path.split(f)[1] for f in full_path_names]
+        missing = [t for t in template_files if t not in file_names]
+        if missing:
+            return jsonify({
+                'error': ('Missing files: {}. The following files are required: {}'
+                          .format(', '.join(missing), ', '.join(template_files)))
+            }), 400
+
+        backup_folder_postfix = time.time()
+
+        for full_path, upload in zip(full_path_names, uploads):
+            data = upload.read()
+            if len(data) > MAX_UPLOAD_FILE_SIZE:  # file is too large (over 15 MB)
+                return jsonify({
+                  'error': ('{} is larger than the maximum file size of {}MB'
+                            .format(full_path, MAX_UPLOAD_FILE_SIZE))
+                }), 400
+            try:
+                files[full_path] = str(data, 'utf-8')
+            except UnicodeDecodeError:
+                upload.stream.seek(0) # We've already read data, so reset before uploading
+                dest_folder = "uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix)
+                bin_file = ExternalFile.upload(upload.stream, current_user.id, full_path,
+                                               prefix=dest_folder, course_id=assign.course.id,
+                                               backup=backup, assignment_id=assign.id)
+                db.session.add(bin_file)
+
+        message = Message(kind='file_contents', contents=files)
+        backup.messages.append(message)
+
+        db.session.add(backup)
+        db.session.commit()
+        return jsonify({
+            'backup': backup.hashid,
+            'url': url_for('.code', name=assign.name, submit=backup.submit,
+                           bid=backup.id)
+        })
 
     return render_template('student/assignment/submit.html', assignment=assign,
-                           group=group, course=assign.course, form=form)
+                           group=group, course=assign.course)
 
 
 @student.route('/<assignment_name:name>/<bool(backups, submissions):submit>/')
@@ -200,6 +246,10 @@ def code(name, submit, bid):
     for filename, source_file in files.items():
         for line in source_file.lines:
             line.comments = comments[(filename, line.line_after)]
+
+    for filename, ex_file in backup.external_files_dict().items():
+        files[filename] = ex_file
+
     return render_template('student/assignment/code.html',
         course=assign.course, assignment=assign, backup=backup,
         files=files, diff_type=diff_type)
