@@ -15,7 +15,6 @@ function initDropzone(elem, token) {
         },
         init: function() {
             var submitButton = document.querySelector("#dzSubmit")
-            myDropzone = this; // closure
             $('.dz-hidden-input').attr('webkitdirectory', 'true')
             submitButton.addEventListener("click", function() {
                 Pace.track( function () {
