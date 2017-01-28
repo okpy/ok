@@ -18,7 +18,7 @@ RUN ./manage.py assets build
 CMD nginx && \
     env PYTHONPATH=$PYTHONPATH:$PWD gunicorn \
         --logger-class server.logging.gunicorn.Logger \
-        --timeout 45 \
+        --timeout 60 \
         --bind unix:/tmp/server.sock \
         --workers 3 \
         wsgi:app

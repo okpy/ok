@@ -180,9 +180,9 @@ def submit_assignment(name):
             try:
                 files[full_path] = str(data, 'utf-8')
             except UnicodeDecodeError:
-                # upload.stream.seek(0) # We've already read data, so reset before uploading
+                upload.stream.seek(0) # We've already read data, so reset before uploading
                 dest_folder = "uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix)
-                bin_file = ExternalFile.upload(iter(data), current_user.id, full_path,
+                bin_file = ExternalFile.upload(upload.stream, current_user.id, full_path,
                                                prefix=dest_folder, course_id=assign.course.id,
                                                backup=backup, assignment_id=assign.id)
                 db.session.add(bin_file)
