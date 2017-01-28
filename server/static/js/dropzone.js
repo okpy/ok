@@ -16,6 +16,8 @@ function initDropzone(elem, token) {
         init: function() {
             var submitButton = document.querySelector("#dzSubmit")
             $('.dz-hidden-input').attr('webkitdirectory', 'true')
+            var myDropzone = this; // closure
+
             submitButton.addEventListener("click", function() {
                 Pace.track( function () {
                     myDropzone.processQueue(); // Tell Dropzone to process all queued files.
