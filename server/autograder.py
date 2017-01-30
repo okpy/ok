@@ -25,7 +25,7 @@ def send_autograder(endpoint, data):
                       data=json.dumps(data), headers=headers, timeout=8)
 
     if r.status_code == requests.codes.ok:
-        return {'status': True, 'message': 'OK'}
+        return r.json()
     else:
         error_message = 'The autograder rejected your request. {0}'.format(
             r.text)
@@ -34,6 +34,9 @@ def send_autograder(endpoint, data):
         raise ValueError(error_message)
 
 def send_batch(assignment, backup_ids, priority='default'):
+    """Send a batch of backups to the autograder, returning a dict mapping
+    backup ID -> autograder job ID.
+    """
     if not assignment.autograding_key:
         raise ValueError('Assignment has no autograder key')
 
@@ -62,7 +65,7 @@ def send_batch(assignment, backup_ids, priority='default'):
     db.session.add(token)
     db.session.commit()
 
-    return send_autograder('/api/ok/v3/grade/batch', {
+    response_json = send_autograder('/api/ok/v3/grade/batch', {
         'subm_ids': [utils.encode_id(bid) for bid in backup_ids],
         'assignment': assignment.autograding_key,
         'access_token': token.access_token,
@@ -70,6 +73,7 @@ def send_batch(assignment, backup_ids, priority='default'):
         'backup_url': url_for('api.backup', _external=True),
         'ok-server-version': 'v3',
     })
+    return dict(zip(backup_ids, response_json['jobs']))
 
 def autograde_assignment(assignment):
     """Autograde all enrolled students for this assignment.
@@ -81,7 +85,9 @@ def autograde_assignment(assignment):
     return send_batch(assignment, backup_ids)
 
 def autograde_backup(backup):
-    return send_batch(backup.assignment, [backup.id], priority='high')
+    """Autograde a backup, returning and autograder job ID."""
+    jobs = send_batch(backup.assignment, [backup.id], priority='high')
+    return jobs[backup.id]
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)
