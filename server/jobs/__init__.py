@@ -30,17 +30,17 @@ class JobLogHandler(logging.StreamHandler):
     def contents(self):
         return self.stream.getvalue()
 
-def get_job_id():
+def get_current_job():
     rq_job = rq.get_current_job(connection=get_connection())
-    return rq_job.id
+    return Job.query.get(rq_job.id)
 
 def get_job_logger():
-    return logging.getLogger('{}.job_{}'.format(__name__, get_job_id()))
+    return logging.getLogger('{}.job_{}'.format(__name__, get_current_job().id))
 
 def background_job(f):
     @functools.wraps(f)
     def job_handler(*args, **kwargs):
-        job = Job.query.get(get_job_id())
+        job = get_current_job()
         job.status = 'running'
         db.session.commit()
 

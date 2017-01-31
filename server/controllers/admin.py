@@ -280,7 +280,8 @@ def autograde_backup(bid):
     form = forms.CSRFForm()
     if form.validate_on_submit():
         try:
-            autograder.autograde_backup(backup)
+            token = autograder.create_autograder_token()
+            autograder.autograde_backup(token, backup.assignment, backup.id)
             flash('Submitted to the autograder', 'success')
         except ValueError as e:
             flash(str(e), 'error')

@@ -7,7 +7,6 @@ import collections
 import enum
 import time
 
-from flask_login import current_user
 import datetime
 import json
 import requests
@@ -34,14 +33,7 @@ def send_autograder(endpoint, data):
                                                          error_message))
         raise ValueError(error_message)
 
-def send_batch(assignment, backup_ids, priority='default'):
-    """Send a batch of backups to the autograder, returning a dict mapping
-    backup ID -> autograder job ID.
-    """
-    if not assignment.autograding_key:
-        raise ValueError('Assignment has no autograder key')
-
-    # Create an access token for this run
+def create_autograder_token(user_id):
     autograder_client = Client.query.get('autograder')
     if not autograder_client:
         autograder_client = Client(
@@ -57,7 +49,7 @@ def send_batch(assignment, backup_ids, priority='default'):
         db.session.commit()
     token = Token(
         client=autograder_client,
-        user=current_user,
+        user_id=user_id,
         token_type='bearer',
         access_token=oauthlib.common.generate_token(),
         expires=datetime.datetime.utcnow() + datetime.timedelta(hours=2),
@@ -65,6 +57,14 @@ def send_batch(assignment, backup_ids, priority='default'):
     )
     db.session.add(token)
     db.session.commit()
+    return token
+
+def send_batch(token, assignment, backup_ids, priority='default'):
+    """Send a batch of backups to the autograder, returning a dict mapping
+    backup ID -> autograder job ID.
+    """
+    if not assignment.autograding_key:
+        raise ValueError('Assignment has no autograder key')
 
     response_json = send_autograder('/api/ok/v3/grade/batch', {
         'subm_ids': [utils.encode_id(bid) for bid in backup_ids],
@@ -75,10 +75,10 @@ def send_batch(assignment, backup_ids, priority='default'):
     })
     return dict(zip(backup_ids, response_json['jobs']))
 
-def autograde_backup(backup):
+def autograde_backup(token, assignment, backup_id):
     """Autograde a backup, returning and autograder job ID."""
-    jobs = send_batch(backup.assignment, [backup], priority='high')
-    return jobs[backup]
+    jobs = send_batch(token, assignment, [backup_id], priority='high')
+    return jobs[backup_id]
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)
@@ -140,10 +140,11 @@ def autograde_assignment(assignment_id):
     assignment = Assignment.query.get(assignment_id)
     course_submissions = assignment.course_submissions(include_empty=False)
     backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
+    token = create_autograder_token(jobs.get_current_job().user_id)
 
     # start by sending a batch of all backups
     start_time = time.time()
-    job_ids = send_batch(assignment, backup_ids)
+    job_ids = send_batch(token, assignment, backup_ids)
     tasks = [
         GradingTask(
             status=GradingStatus.PENDING,
@@ -163,7 +164,7 @@ def autograde_assignment(assignment_id):
             task.status = GradingStatus.FAILED
         else:
             task.status = GradingStatus.PENDING
-            task.job_id = autograde_backup(task.backup_id)
+            task.job_id = autograde_backup(token, assignment, task.backup_id)
             task.retries += 1
             task.start_time = time.time()
 
