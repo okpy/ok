@@ -3,6 +3,9 @@
 This module interfaces the OK Server with Autopy. The actual autograding happens
 in a sandboxed environment.
 """
+import collections
+import enum
+import time
 
 from flask_login import current_user
 import datetime
@@ -11,9 +14,8 @@ import requests
 import logging
 import oauthlib.common
 
-import server.constants as constants
-from server.models import User, Backup, Client, Token, db
-import server.utils as utils
+from server import constants, jobs, utils
+from server.models import User, Assignment, Backup, Client, Score, Token, db
 
 logger = logging.getLogger(__name__)
 
@@ -73,19 +75,10 @@ def send_batch(assignment, backup_ids, priority='default'):
     })
     return dict(zip(backup_ids, response_json['jobs']))
 
-def autograde_assignment(assignment):
-    """Autograde all enrolled students for this assignment.
-
-    @assignment: Assignment object
-    """
-    course_submissions = assignment.course_submissions(include_empty=False)
-    backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
-    return send_batch(assignment, backup_ids)
-
 def autograde_backup(backup):
     """Autograde a backup, returning and autograder job ID."""
-    jobs = send_batch(backup.assignment, [backup.id], priority='high')
-    return jobs[backup.id]
+    jobs = send_batch(backup.assignment, [backup], priority='high')
+    return jobs[backup]
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)
@@ -109,3 +102,110 @@ def submit_continous(backup):
         raise ValueError("User is not enrolled and cannot be autograded")
 
     return send_autograder('/api/file/grade/continous', data)
+
+def check_job_results(job_ids):
+    """Given a list of autograder job IDs, return a dict mapping job IDs to
+    either null (if the job does not exist) of a dict with keys
+        status: one of 'queued', 'finished', 'failed', 'started', 'deferred'
+        result: string
+    """
+    return send_autograder('/results', job_ids)
+
+GradingStatus = enum.Enum('GradingStatus', [
+    'PENDING',  # a job is running
+    'WAITING',  # the last job has finished, and we are waiting for a score
+    'DONE',     # we have a score
+    'FAILED',   # we could not get a score after several retries
+])
+
+class GradingTask:
+    def __init__(self, status, backup_id, job_id, retries, start_time, end_time):
+        self.status = status
+        self.backup_id = backup_id
+        self.job_id = job_id
+        self.retries = retries
+        self.start_time = start_time
+        self.end_time = end_time
+
+MAX_RETRIES = 3     # maximum number of times to retry a score
+JOB_TIMEOUT = 10    # time to wait for an autograder job, in seconds
+SCORE_TIMEOUT = 10  # time to wait for a score, in seconds
+POLL_INTERVAL = 5   # how often to poll the autograder, in seconds
+
+@jobs.background_job
+def autograde_assignment(assignment_id):
+    """Autograde all enrolled students for this assignment."""
+    logger = jobs.get_job_logger()
+
+    assignment = Assignment.query.get(assignment_id)
+    course_submissions = assignment.course_submissions(include_empty=False)
+    backup_ids = set(fs['backup']['id'] for fs in course_submissions if fs['backup'])
+
+    # start by sending a batch of all backups
+    start_time = time.time()
+    job_ids = send_batch(assignment, backup_ids)
+    tasks = [
+        GradingTask(
+            status=GradingStatus.PENDING,
+            backup_id=backup_id,
+            job_id=job_id,
+            retries=0,
+            start_time=start_time,
+            end_time=None,
+        )
+        for backup_id, job_id in job_ids.items()
+    ]
+
+    def retry_task(task):
+        if task.retries >= MAX_RETRIES:
+            logger.error('Did not receive a score for backup {} after {} retries'.format(
+                utils.encode_id(task.backup_id), MAX_RETRIES))
+            task.status = GradingStatus.FAILED
+        else:
+            task.status = GradingStatus.PENDING
+            task.job_id = autograde_backup(task.backup_id)
+            task.retries += 1
+            task.start_time = time.time()
+
+    while True:
+        time.sleep(POLL_INTERVAL)
+        now = time.time()
+        results = check_job_results(list(job_ids))
+
+        done = True
+        for task in tasks:
+            hashid = utils.encode_id(task.backup_id)
+            if task.status == GradingStatus.PENDING:
+                done = False
+                result = results[task.job_id]
+                if result and result.status == 'finished':
+                    logger.info('Autograder job {} for backup {} finished'.format(
+                        task.job_id, hashid))
+                    task.status = GradingStatus.WAITING
+                    task.end_time = now
+                elif now > task.start_time + JOB_TIMEOUT:
+                    logger.warning('Autograder job {} took longer than {} seconds, retrying'.format(
+                        task.job_id, JOB_TIMEOUT))
+                    retry_task(task)
+            elif task.status == GradingStatus.WAITING:
+                done = False
+                score = Score.query.filter_by(
+                    Score.backup_id == task.backup_id,
+                    Score.archived == False,
+                    Score.created > datetime.datetime.fromtimestamp(start_time)
+                ).first()
+                if score:
+                    logger.info('Received score for backup {}'.format(
+                        hashid))
+                    task.status = GradingStatus.DONE
+                elif now > task.end_time + SCORE_TIMEOUT:
+                    logger.warning('Did not receive score for backup {} in {} seconds, retrying'.format(
+                        hashid, SCORE_TIMEOUT))
+                    retry_task(task)
+        if done:
+            break
+
+    # report summary
+    statuses = collections.Counter(task.status for task in tasks)
+    return '{} graded, {} failed'.format(
+        statuses[GradingStatus.DONE], statuses[GradingStatus.FAILED])

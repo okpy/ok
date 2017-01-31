@@ -675,11 +675,14 @@ def autograde(cid, aid):
         return abort(404)
     form = forms.CSRFForm()
     if form.validate_on_submit():
-        try:
-            autograder.autograde_assignment(assign)
-            flash('Submitted to the autograder', 'success')
-        except ValueError as e:
-            flash(str(e), 'error')
+        job = jobs.enqueue_job(
+            autograder.autograde_assignment,
+            description='Autograde {}'.format(assign.display_name),
+            timeout=1800,
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     return redirect(url_for('.assignment', cid=cid, aid=aid))
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
