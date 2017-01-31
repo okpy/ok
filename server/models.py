@@ -1683,10 +1683,6 @@ class ExternalFile(Model):
             return 'application/octet-stream'
         return guess[0]
 
-    @property
-    def download_link(self):
-        return '/files/{}'.format(encode_id(self.id))
-
     def delete(self):
         self.object().delete()
         self.deleted = True
