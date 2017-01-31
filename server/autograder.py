@@ -4,7 +4,6 @@ This module interfaces the OK Server with Autopy. The actual autograding happens
 in a sandboxed environment.
 """
 
-from flask import url_for
 from flask_login import current_user
 import datetime
 import json
@@ -70,7 +69,6 @@ def send_batch(assignment, backup_ids, priority='default'):
         'assignment': assignment.autograding_key,
         'access_token': token.access_token,
         'priority': priority,
-        'backup_url': url_for('api.backup', _external=True),
         'ok-server-version': 'v3',
     })
     return dict(zip(backup_ids, response_json['jobs']))
