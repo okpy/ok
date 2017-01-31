@@ -4,14 +4,14 @@ This module interfaces the OK Server with Autopy. The actual autograding happens
 in a sandboxed environment.
 """
 import collections
+import datetime
 import enum
+import json
+import logging
 import time
 
-import datetime
-import json
-import requests
-import logging
 import oauthlib.common
+import requests
 
 from server import constants, jobs, utils
 from server.models import User, Assignment, Backup, Client, Score, Token, db
@@ -112,29 +112,46 @@ def check_job_results(job_ids):
     return send_autograder('/results', job_ids)
 
 GradingStatus = enum.Enum('GradingStatus', [
-    'PENDING',  # a job is running
+    'QUEUED',   # a job is queued
+    'RUNNING',  # a job is running
     'WAITING',  # the last job has finished, and we are waiting for a score
     'DONE',     # we have a score
     'FAILED',   # we could not get a score after several retries
 ])
 
 class GradingTask:
-    def __init__(self, status, backup_id, job_id, retries, start_time, end_time):
+    def __init__(self, status, backup_id, job_id, retries):
         self.status = status
         self.backup_id = backup_id
         self.job_id = job_id
         self.retries = retries
-        self.start_time = start_time
-        self.end_time = end_time
+        self.status_change_time = time.time()
 
-MAX_RETRIES = 3     # maximum number of times to retry a score
-JOB_TIMEOUT = 10    # time to wait for an autograder job, in seconds
-SCORE_TIMEOUT = 10  # time to wait for a score, in seconds
-POLL_INTERVAL = 5   # how often to poll the autograder, in seconds
+    def set_status(self, status):
+        self.status = status
+        self.status_change_time = time.time()
+
+    def expired(self, timeout):
+        """Returns True if it has been at least TIMEOUT seconds since the last
+        status change.
+        """
+        return time.time() > self.status_change_time + timeout
+
+MAX_RETRIES = 3           # maximum number of times to retry a score
+QUEUED_TIMEOUT = 30 * 60  # maximum time or an autograder job to be queued for, in seconds
+RUNNING_TIMEOUT = 5 * 60  # time to wait for an autograder job to run, in seconds
+WAITING_TIMEOUT = 2 * 60  # time to wait for a score, in seconds
+POLL_INTERVAL = 10        # how often to poll the autograder, in seconds
 
 @jobs.background_job
 def autograde_assignment(assignment_id):
-    """Autograde all enrolled students for this assignment."""
+    """Autograde all enrolled students for this assignment.
+
+    We set up a state machine for each backup to check its progress through
+    the autograder. If any step takes too long, we'll retry autograding that
+    backup. Ultimately, a backup is considered done when we confirm that
+    we've received a new score, or if we have reached the retry limit.
+    """
     logger = jobs.get_job_logger()
 
     assignment = Assignment.query.get(assignment_id)
@@ -147,66 +164,84 @@ def autograde_assignment(assignment_id):
     job_ids = send_batch(token, assignment, backup_ids)
     tasks = [
         GradingTask(
-            status=GradingStatus.PENDING,
+            status=GradingStatus.QUEUED,
             backup_id=backup_id,
             job_id=job_id,
             retries=0,
-            start_time=start_time,
-            end_time=None,
         )
         for backup_id, job_id in job_ids.items()
     ]
+    num_tasks = len(tasks)
 
     def retry_task(task):
         if task.retries >= MAX_RETRIES:
             logger.error('Did not receive a score for backup {} after {} retries'.format(
                 utils.encode_id(task.backup_id), MAX_RETRIES))
-            task.status = GradingStatus.FAILED
+            task.set_status(GradingStatus.FAILED)
         else:
-            task.status = GradingStatus.PENDING
+            task.set_status(GradingStatus.QUEUED)
             task.job_id = autograde_backup(token, assignment, task.backup_id)
             task.retries += 1
-            task.start_time = time.time()
 
     while True:
         time.sleep(POLL_INTERVAL)
-        now = time.time()
-        results = check_job_results(list(job_ids))
+        results = check_job_results([task.job_id for task in tasks])
 
-        done = True
+        graded = len([task for task in tasks
+            if task.status in (GradingStatus.DONE, GradingStatus.FAILED)])
+        logger.info('Graded {:>4}/{} ({:>5.1f}%)'.format(
+            graded, num_tasks, 100 * graded / num_tasks))
+        if graded == num_tasks:
+            break
+
         for task in tasks:
             hashid = utils.encode_id(task.backup_id)
-            if task.status == GradingStatus.PENDING:
-                done = False
+            if task.status == GradingStatus.QUEUED:
                 result = results[task.job_id]
-                if result and result.status == 'finished':
-                    logger.info('Autograder job {} for backup {} finished'.format(
+                if not result:
+                    logger.warning('Autograder job {} disappeared, retrying'.format(task.job_id))
+                    retry_task(task)
+                elif result['status'] != 'queued':
+                    logger.debug('Autograder job {} for backup {} started'.format(
                         task.job_id, hashid))
-                    task.status = GradingStatus.WAITING
-                    task.end_time = now
-                elif now > task.start_time + JOB_TIMEOUT:
-                    logger.warning('Autograder job {} took longer than {} seconds, retrying'.format(
-                        task.job_id, JOB_TIMEOUT))
+                    task.set_status(GradingStatus.RUNNING)
+                elif task.expired(QUEUED_TIMEOUT):
+                    logger.warning('Autograder job {} queued longer than {} seconds, retrying'.format(
+                        task.job_id, QUEUED_TIMEOUT))
+                    retry_task(task)
+            elif task.status == GradingStatus.RUNNING:
+                result = results[task.job_id]
+                if not result:
+                    logger.warning('Autograder job {} disappeared, retrying'.format(task.job_id))
+                    retry_task(task)
+                elif result['status'] == 'finished':
+                    logger.debug('Autograder job {} for backup {} finished'.format(
+                        task.job_id, hashid))
+                    task.set_status(GradingStatus.WAITING)
+                elif result['status'] == 'failed':
+                    logger.warning('Autograder job {} failed, retrying'.format(task.job_id))
+                    retry_task(task)
+                elif task.expired(RUNNING_TIMEOUT):
+                    logger.warning('Autograder job {} running longer than {} seconds, retrying'.format(
+                        task.job_id, RUNNING_TIMEOUT))
                     retry_task(task)
             elif task.status == GradingStatus.WAITING:
-                done = False
-                score = Score.query.filter_by(
+                score = Score.query.filter(
                     Score.backup_id == task.backup_id,
                     Score.archived == False,
                     Score.created > datetime.datetime.fromtimestamp(start_time)
                 ).first()
                 if score:
-                    logger.info('Received score for backup {}'.format(
-                        hashid))
-                    task.status = GradingStatus.DONE
-                elif now > task.end_time + SCORE_TIMEOUT:
+                    logger.debug('Received score for backup {}'.format(hashid))
+                    task.set_status(GradingStatus.DONE)
+                elif task.expired(WAITING_TIMEOUT):
                     logger.warning('Did not receive score for backup {} in {} seconds, retrying'.format(
-                        hashid, SCORE_TIMEOUT))
+                        hashid, WAITING_TIMEOUT))
                     retry_task(task)
-        if done:
-            break
 
     # report summary
     statuses = collections.Counter(task.status for task in tasks)
-    return '{} graded, {} failed'.format(
+    message = '{} graded, {} failed'.format(
         statuses[GradingStatus.DONE], statuses[GradingStatus.FAILED])
+    logger.info(message)
+    return message

@@ -679,7 +679,7 @@ def autograde(cid, aid):
         job = jobs.enqueue_job(
             autograder.autograde_assignment,
             description='Autograde {}'.format(assign.display_name),
-            timeout=1800,
+            timeout=2 * 60 * 60,  # 2 hours
             course_id=cid,
             user_id=current_user.id,
             assignment_id=assign.id)
