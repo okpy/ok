@@ -78,7 +78,7 @@ def get_courses(cid=None):
     matching_courses = [c for c in courses if c.id == cid]
     if len(matching_courses) == 0:
         abort(401)
-    current_course = matching_courses[0]
+    current_course = max(matching_courses, lambda course: course.created)
     return courses, current_course
 
 
@@ -87,7 +87,7 @@ def get_courses(cid=None):
 def index():
     courses, current_course = get_courses()
     if courses:
-        return redirect(url_for(".course_assignments", cid=[c.id for c in courses if c.active][0]))
+        return redirect(url_for(".course_assignments", cid=current_course.id))
     return render_template('staff/index.html', courses=courses)
 
 @admin.route('/grading')
