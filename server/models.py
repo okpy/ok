@@ -196,9 +196,11 @@ class User(Model, UserMixin):
     def enrollments(self, roles=None):
         if roles is None:
             roles = [STUDENT_ROLE]
-        query = (Enrollment.query.options(db.joinedload('course'))
+        query = (Enrollment.query.join(Enrollment.course)
+                           .options(db.contains_eager(Enrollment.course))
                            .filter(Enrollment.user_id == self.id)
-                           .filter(Enrollment.role.in_(roles)))
+                           .filter(Enrollment.role.in_(roles))
+                           .order_by(Course.created.desc()))
         return query.all()
 
     @cache.memoize(120)
