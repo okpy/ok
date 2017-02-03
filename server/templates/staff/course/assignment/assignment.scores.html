@@ -27,35 +27,6 @@
         {% include 'alerts.html' %}
         <div class="row">
 
-          <div class="col-md-8" style="min-height: 250px">
-            <div class="box box-solid">
-              <div class="box-header">
-                <i class="fa fa-bar-chart-o"></i>
-
-                <h3 class="box-title">{{ assignment.display_name }} Score Distribution</h3>
-
-                <div class="box-tools pull-right">
-                  <button type="button" class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-default btn-sm" data-widget="remove"><i class="fa fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <!-- /.box-header -->
-              <div class="box-body">
-                <div class="row">
-                  <div class="col-xs-12">
-                  {{ scores_plot | safe}}
-                  </div>
-                </div>
-
-                </div>
-                <!-- /.row -->
-              </div>
-              <!-- /.box-body -->
-            </div>
-            <!-- /.box -->
-
           <div class="col-md-4">
             <div class="box box-solid">
               <div class="box-header with-border">
@@ -88,12 +59,38 @@
               <!-- /.box-body -->
             </div>
             <!-- /. box -->
+
+          <div class="box box-solid">
+            <div class="box-header">
+              <i class="fa fa-bar-chart-o"></i>
+
+              <h3 class="box-title">{{ assignment.display_name }} Score Distribution</h3>
+
+              <div class="box-tools pull-right">
+                <button type="button" class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i>
+                </button>
+                <button type="button" class="btn btn-default btn-sm" data-widget="remove"><i class="fa fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body">
+              <div class="row">
+                {% for kind in score_plots %}
+                <div class="col-xs-12">
+                {{ score_plots[kind] | safe}}
+                </div>
+                {% endfor %}
+              </div>
+              <!-- /.row -->
+            </div>
+            <!-- /.box-body -->
           </div>
+          <!-- /.box -->
 
         </div>
 
-        <div class="row">
-          <div class="col-xs-12">
+        <div class="col-xs-8">
             <div class="box">
                 <div class="box-header">
                     <h3 class="box-title"><span> Scores </span></h3>
@@ -176,7 +173,6 @@
 
             </div>
 
-          </div>
         </div>
         <!-- /.col -->
       </div>
