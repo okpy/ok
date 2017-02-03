@@ -6,3 +6,5 @@ spec:
   backend:
     serviceName: ok-staging-direct
     servicePort: 80
+  tls:
+  - secretName: ok-staging-cs61a-org-tls
