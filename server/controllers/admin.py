@@ -804,19 +804,9 @@ def enrollment(cid):
         flash("Added {email} as {role}".format(
             email=email, role=role), "success")
 
-    students = (Enrollment.query.options(db.joinedload('user'))
-                .filter_by(course_id=cid, role=STUDENT_ROLE)
-                .order_by(Enrollment.created.desc())
-                .all())
-
-    staff = (Enrollment.query.options(db.joinedload('user'))
-             .filter(Enrollment.course_id == cid, Enrollment.role.in_(STAFF_ROLES))
-             .all())
-
-    lab_assistants = (Enrollment.query.options(db.joinedload('user'))
-                      .filter_by(course_id=cid, role=LAB_ASSISTANT_ROLE)
-                      .order_by(Enrollment.created.desc())
-                      .all())
+    students = course.get_students()
+    staff = course.get_staff()
+    lab_assistants = course.get_participants([LAB_ASSISTANT_ROLE])
 
     return render_template('staff/course/enrollment/enrollment.html',
                            enrollments=students, staff=staff,

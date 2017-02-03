@@ -281,21 +281,18 @@ class Course(Model):
             course=self
         ).count() > 0
 
-    def get_staff(self):
-        return [e for e in (Enrollment.query
-                            .options(db.joinedload('user'))
-                            .filter(Enrollment.role.in_(STAFF_ROLES),
-                                    Enrollment.course == self)
-                            .all()
-                            )]
-
     def get_participants(self, roles):
-        return [e for e in (Enrollment.query
-                            .options(db.joinedload('user'))
-                            .filter(Enrollment.role.in_(roles),
-                                    Enrollment.course == self)
-                            .all()
-                            )]
+        return (Enrollment.query
+                          .options(db.joinedload('user'))
+                          .filter(Enrollment.role.in_(roles),
+                                  Enrollment.course == self)
+                          .all())
+
+    def get_staff(self):
+        return self.get_participants(STAFF_ROLES)
+
+    def get_students(self):
+        return self.get_participants([STUDENT_ROLE])
 
 
 class Assignment(Model):

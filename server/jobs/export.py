@@ -81,7 +81,7 @@ def write_anon_backups(zf, logger, assignment, student, seen):
 
 def export_loop(bio, zf, logger, assignment, anonymize):
     course = assignment.course
-    enrollments = course.get_participants(['student']) # TODO: use constants
+    enrollments = course.get_students()
     seen = set()
     num_students = len(enrollments)
     for index, student in enumerate(enrollments):
