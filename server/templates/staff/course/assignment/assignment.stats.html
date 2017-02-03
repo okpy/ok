@@ -342,7 +342,10 @@
                     <h5 class="box-title"><span> Total: {{ submissions | length }} </span></h5>
                     </div>
                     <div class='pull-right'>
-                      <button type="button" class="btn btn-block btn-default btn-sm" onclick="listIncreasePagination(submissionList, 50)">Show 50 more per page</button>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-default btn-sm" onclick="listIncreasePagination(submissionList, 50)">Show 50 more per page</button>
+                        <button type="button" class="btn btn-default btn-sm" onclick="listIncreasePagination(submissionList, submissionList.items.length)">Show All</button>
+                      </div>
                     </div>
                 </div>
 

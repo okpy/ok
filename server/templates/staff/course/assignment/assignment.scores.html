@@ -25,20 +25,47 @@
 
   <section class="content">
         {% include 'alerts.html' %}
-        <div class="row">
 
-          <div class="col-md-4">
+        {% if score_plots %}
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="box box-solid">
+                    <div class="box-header">
+                    <i class="fa fa-bar-chart-o"></i>
+
+                    <h3 class="box-title">{{ assignment.display_name }} Score Distribution</h3>
+
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                    <div class="row">
+                        {% for kind in score_plots %}
+                        <div class="col-sm-12 col-md-6">
+                            {{ score_plots[kind] | safe}}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- /.row -->
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+                <!-- /.box -->
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+          <div class="col-sm-12">
             <div class="box box-solid">
               <div class="box-header with-border">
                 <h3 class="box-title">Actions</h3>
-
-                <div class="box-tools">
-                  <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
-                  </button>
-                </div>
               </div>
-              <div class="box-body no-padding">
-                <ul class="nav nav-pills nav-stacked">
+              <div class="box-body">
+                <ul class="nav nav-pills">
                   <li> <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-download"></i> Download Scores
                   </a></li>
@@ -59,38 +86,11 @@
               <!-- /.box-body -->
             </div>
             <!-- /. box -->
-
-          <div class="box box-solid">
-            <div class="box-header">
-              <i class="fa fa-bar-chart-o"></i>
-
-              <h3 class="box-title">{{ assignment.display_name }} Score Distribution</h3>
-
-              <div class="box-tools pull-right">
-                <button type="button" class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i>
-                </button>
-                <button type="button" class="btn btn-default btn-sm" data-widget="remove"><i class="fa fa-times"></i>
-                </button>
-              </div>
-            </div>
-            <!-- /.box-header -->
-            <div class="box-body">
-              <div class="row">
-                {% for kind in score_plots %}
-                <div class="col-xs-12">
-                {{ score_plots[kind] | safe}}
-                </div>
-                {% endfor %}
-              </div>
-              <!-- /.row -->
-            </div>
-            <!-- /.box-body -->
-          </div>
-          <!-- /.box -->
-
         </div>
+        </div>
+        <div class="row">
 
-        <div class="col-xs-8">
+        <div class="col-sm-12 col-md-12">
             <div class="box">
                 <div class="box-header">
                     <h3 class="box-title"><span> Scores </span></h3>
@@ -166,8 +166,11 @@
                     <div class="pull-left">
                     <h5 class="box-title"><span> Total: {{ scores | length }} </span></h5>
                     </div>
-                    <div class='pull-right'>
-                      <button type="button" class="btn btn-block btn-default btn-sm" onclick="listIncreasePagination(submissionList, 50)">Show 50 more per page</button>
+                  <div class='pull-right'>
+                        <div class="btn-group">
+                        <button type="button" class="btn btn-default btn-sm" onclick="listIncreasePagination(submissionList, 50)">Show 50 more per page</button>
+                        <button type="button" class="btn btn-default btn-sm" onclick="listIncreasePagination(submissionList, submissionList.items.length)">Show All</button>
+                        </div>
                     </div>
                 </div>
 

@@ -526,17 +526,17 @@ def view_scores(cid, aid):
     for score in all_scores:
         score_distribution[score.kind].append(score.score)
 
-    distinct_scores = set(sum(score_distribution.values(), []))
-    sorted_scores = sorted(list(distinct_scores))
+    bar_charts = collections.OrderedDict()
+    sorted_kinds = sorted(score_distribution, reverse=True,
+                          key=lambda x: len(score_distribution[x]))
 
-    bar_charts = {}
-
-    for kind, distribution in score_distribution.items():
-        score_counts = collections.Counter(distribution)
+    for kind in sorted_kinds:
+        score_values = score_distribution[kind]
+        score_counts = collections.Counter(score_values)
         bar_chart = pygal.Bar()
-        bar_chart.title = '{} distribution ({} items)'.format(kind, len(distribution))
-        bar_chart.add(kind, [score_counts.get(x) for x in sorted_scores])
-        bar_chart.x_labels = [str(x) for x in sorted_scores]
+        bar_chart.title = '{} distribution ({} items)'.format(kind, len(score_values))
+        bar_chart.add(kind, [score_counts.get(x) for x in score_counts])
+        bar_chart.x_labels = [str(x) for x in score_counts]
         bar_charts[kind] = bar_chart.render().decode("utf-8")
 
 
