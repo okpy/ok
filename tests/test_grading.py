@@ -151,9 +151,15 @@ class TestGrading(OkTestCase):
                                                "Composition")
         self.assertEquals(len(tasks), 0)
 
-    def test_score_export(self):
+    def test_view_scores(self):
         self.login(self.staff1.email)
         endpoint = '/admin/course/1/assignments/1/scores'
+        response = self.client.get(endpoint)
+        self.assert_200(response)
+
+    def test_score_export(self):
+        self.login(self.staff1.email)
+        endpoint = '/admin/course/1/assignments/1/scores.csv'
         response = self.client.get(endpoint)
         self.assert_200(response)
         # No Scores
@@ -174,7 +180,7 @@ class TestGrading(OkTestCase):
             db.session.commit()
             self.login(self.staff1.email)
 
-        endpoint = '/admin/course/1/assignments/1/scores'
+        endpoint = '/admin/course/1/assignments/1/scores.csv'
         response = self.client.get(endpoint)
         self.assert_200(response)
         csv_rows = list(csv.reader(StringIO(str(response.data, 'utf-8'))))
