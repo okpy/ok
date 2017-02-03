@@ -1714,7 +1714,7 @@ class ExternalFile(Model):
             assignment_id=assignment_id,
             user_id=user_id,
             backup=backup,
-            staff_file=False)
+            staff_file=staff_file)
         db.session.add(external_file)
         db.session.commit()
         return external_file

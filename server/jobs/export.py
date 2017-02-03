@@ -26,28 +26,28 @@ def anonymize_backup(back, course, logger):
             return {'submitter': student_hash(user_email)}
     return data
 
-def write_final_submission(bio, zf, logger, assignment, index, student, seen, percent):
+def write_final_submission(zf, logger, assignment, student, seen):
     """ Get the final submission STUDENT and write it into the zipfile ZF. """
-    stats = assignment.user_status(student.user)
-    course = assignment.course
+    student_user = student.user
+    stats = assignment.user_status(student_user)
     backup = stats.final_subm
     if not backup:
         return
     if stats.group:
-        group_emails = [m.user.email for m in stats.group.members]
+        group_emails = [User.email_by_id(m.user_id) for m in stats.group.members]
     else:
-        group_emails = [student.user.email]
+        group_emails = [student_user.email]
     group_str = '-'.join(sorted(group_emails))
     if group_str in seen:
         return
     seen.add(group_str)
     folder = "{}/{}/{}".format(assignment.name.replace('/', '-'),
                                group_str, backup.hashid)
-
+    course = assignment.course
     dump_info = {
         'group': group_emails,
         'scores': [s.export for s in stats.scores],
-        'submitter': backup.submitter.email,
+        'submitter': User.email_by_id(backup.submitter_id),
         'subm_time_local': local_time(stats.subm_time, course)
     }
     if backup.custom_submission_time:
@@ -59,13 +59,9 @@ def write_final_submission(bio, zf, logger, assignment, index, student, seen, pe
         # Write the file to the in-memory zip
         zf.writestr("{}/{}".format(folder, name), contents)
 
-    if round(percent, 0) % 5 == 0:
-        logger.info(("{}% complete ({} students processed)"
-                        .format(round(percent, 3), index+1)))
 
-def write_anon_backups(bio, zf, logger, assignment, index, student, seen, percent):
+def write_anon_backups(zf, logger, assignment, student, seen):
     """ Get all backups for STUDENT and write it into the zipfile ZF. """
-    course = assignment.course
     if student.user.id in seen:
         return
     group_ids = assignment.active_user_ids(student.user.id)
@@ -76,17 +72,12 @@ def write_anon_backups(bio, zf, logger, assignment, index, student, seen, percen
                              Backup.assignment_id == assignment.id)
                      .order_by(Backup.created.desc()))
 
-    student_history = [anonymize_backup(back, course, logger) for back in backups]
+    course = assignment.course
+    student_history = [anonymize_backup(b, course, logger) for b in backups]
 
     zf.writestr("anon-{}/{}/backups.json".format(assignment.name.replace('/', '-'),
-                                                student_hash(student.user.email)),
+                                                 student_hash(student.user.email)),
                 json.dumps(student_history))
-    # Provide progress report
-    if round(percent, 0) % 5 == 0:
-        logger.info(("{}% complete ({} students processed)"
-                        .format(round(percent, 3), index+1)))
-
-
 
 def export_loop(bio, zf, logger, assignment, anonymize):
     course = assignment.course
@@ -94,11 +85,17 @@ def export_loop(bio, zf, logger, assignment, anonymize):
     seen = set()
     num_students = len(enrollments)
     for index, student in enumerate(enrollments):
-        percent_complete = ((index+1)/num_students) * 100
         if anonymize:
-            write_anon_backups(bio, zf, logger, assignment, index, student, seen, percent_complete)
+            write_anon_backups(zf, logger, assignment, student, seen)
         else:
-            write_final_submission(bio, zf, logger, assignment, index, student, seen, percent_complete)
+            write_final_submission(zf, logger, assignment, student, seen)
+
+        # Rough progress report
+        percent_complete = ((index+1)/num_students) * 100
+        if round(percent_complete, 1) % 5 == 0:
+            logger.info(("{}% complete ({} of {} students processed)"
+                         .format(round(percent_complete, 1), index+1,
+                                 num_students)))
 
 
 @jobs.background_job
