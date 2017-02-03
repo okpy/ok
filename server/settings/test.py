@@ -4,7 +4,7 @@ ENV = 'test'
 SECRET_KEY = os.getenv('OK_SESSION_KEY', 'testkey')
 
 DEBUG = False
-ASSETS_DEBUG = False
+ASSETS_DEBUG = True
 TESTING_LOGIN = True
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 INSTANTCLICK = False
@@ -22,6 +22,13 @@ SQLALCHEMY_DATABASE_URI = db_url
 
 WTF_CSRF_CHECK_DEFAULT = False
 WTF_CSRF_ENABLED = False
+
+STORAGE_PROVIDER = 'LOCAL'
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.path.abspath("./local-storage")
+
+if not os.path.exists(STORAGE_CONTAINER):
+    os.makedirs(STORAGE_CONTAINER)
 
 CACHE_TYPE = 'simple'
 

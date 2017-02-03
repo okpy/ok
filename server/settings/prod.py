@@ -38,7 +38,7 @@ OAUTH2_PROVIDER_TOKEN_EXPIRES_IN = 28800
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 
-MAX_CONTENT_LENGTH = 15 * 1024 * 1024  # Max Upload Size is 10MB
+MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # Max Upload Size is 20
 
 CACHE_TYPE = 'redis'
 CACHE_KEY_PREFIX = 'ok-web'
@@ -47,6 +47,12 @@ RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
     os.getenv('REDIS_HOST', 'redis-master')
 REDIS_PORT = 6379
 RQ_POLL_INTERVAL = 2000
+
+STORAGE_PROVIDER = os.environ.get('STORAGE_PROVIDER',  'GOOGLE_STORAGE')
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',  'ok-v3-user-files')
+STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '')
 
 try:
     os.environ["GOOGLE_ID"]

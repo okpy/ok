@@ -33,7 +33,7 @@ def send_autograder(endpoint, data):
                                                          error_message))
         raise ValueError(error_message)
 
-def send_batch(assignment, backup_ids):
+def send_batch(assignment, backup_ids, priority='default'):
     if not assignment.autograding_key:
         raise ValueError('Assignment has no autograder key')
 
@@ -66,7 +66,7 @@ def send_batch(assignment, backup_ids):
         'subm_ids': [utils.encode_id(bid) for bid in backup_ids],
         'assignment': assignment.autograding_key,
         'access_token': token.access_token,
-        'priority': 'default',
+        'priority': priority,
         'backup_url': url_for('api.backup', _external=True),
         'ok-server-version': 'v3',
     })
@@ -81,7 +81,7 @@ def autograde_assignment(assignment):
     return send_batch(assignment, backup_ids)
 
 def autograde_backup(backup):
-    return send_batch(backup.assignment, [backup.id])
+    return send_batch(backup.assignment, [backup.id], priority='high')
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)

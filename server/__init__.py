@@ -2,7 +2,6 @@ import os
 
 from flask import Flask, render_template, g, request
 from flask_rq import RQ
-from flask_wtf.csrf import CsrfProtect
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from werkzeug.contrib.fixers import ProxyFix
 
@@ -17,6 +16,7 @@ from server.controllers.auth import auth, login_manager
 from server.controllers.oauth import oauth
 from server.controllers.student import student
 from server.controllers.queue import queue
+from server.controllers.files import files
 from server.constants import API_PREFIX
 
 from server.extensions import (
@@ -24,8 +24,8 @@ from server.extensions import (
     cache,
     csrf,
     debug_toolbar,
-    oauth_provider,
-    sentry
+    sentry,
+    storage
 )
 
 def create_app(default_config_path=None):
@@ -86,10 +86,11 @@ def create_app(default_config_path=None):
     # initialize SQLAlchemy
     db.init_app(app)
 
-
     # Flask-Login manager
     login_manager.init_app(app)
 
+    # initalize cloud storage
+    storage.init_app(app)
     # Set up logging
     logging.init_app(app)
 
@@ -122,6 +123,7 @@ def create_app(default_config_path=None):
 
     csrf.exempt(oauth)
     app.register_blueprint(oauth)
+    app.register_blueprint(files)
 
     app.register_blueprint(student)
 

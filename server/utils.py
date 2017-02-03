@@ -1,7 +1,6 @@
 import csv
 import datetime as dt
 import logging
-import math
 from io import StringIO
 import os
 import random
@@ -18,7 +17,6 @@ from pynliner import fromString as emailFormat
 import pytz
 import sendgrid
 
-from server.extensions import cache
 from server import constants
 
 sg = sendgrid.SendGridClient(
