@@ -119,7 +119,6 @@ def export_assignment(assignment_id, anonymized):
     if not Assignment.can(assignment, requesting_user, "download"):
         raise Exception("{} does not have enough permission"
                         .format(requesting_user.email))
-    logger.info('Starting...')
     if anonymized:
         logger.info("Starting anonymized backup")
     else:
