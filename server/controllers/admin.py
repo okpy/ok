@@ -756,7 +756,7 @@ def start_github_search(cid, aid):
 @admin.route('/course/<int:cid>/assignments/<int:aid>/export/',
              methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
-def export_assign(cid, aid):
+def export_submissions(cid, aid):
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):

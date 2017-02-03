@@ -21,7 +21,7 @@
         <li><a href="{{ url_for(".course_jobs", cid=current_course.id) }}">
             <i class="fa fa-list"></i>Jobs
         </a></li>
-        <li class="active"><a href="{{ url_for('.export_assign', cid=current_course.id, aid=assignment.id) }}">
+        <li class="active"><a href="{{ url_for('.export_submissions', cid=current_course.id, aid=assignment.id) }}">
             <i class="fa fa-file-text"></i>Export</a>
         </li>
     </ol>
