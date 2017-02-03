@@ -763,8 +763,8 @@ def export_submissions(cid, aid):
         return abort(404)
     form = forms.ExportAssignment()
     if form.validate_on_submit():
-        if form.anonmyize.data:
-            description = 'Anonmyized Export'
+        if form.anonymize.data:
+            description = 'Anonymized Export'
         else:
             description = 'Final Submission Export'
 
@@ -775,7 +775,7 @@ def export_submissions(cid, aid):
             user_id=current_user.id,
             course_id=cid,
             assignment_id=aid,
-            anonymized=form.anonmyize.data,
+            anonymized=form.anonymize.data,
             result_kind='link')
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
