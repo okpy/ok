@@ -216,6 +216,13 @@ class EnrollmentSchema(APISchema):
         'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
     }
 
+class FileSchema(APISchema):
+    get_fields = {
+        'id': HashIDField,
+        'mimetype': fields.String,
+        'download_link': fields.String,
+        'filename': fields.String
+    }
 
 class UserSchema(APISchema):
     get_fields = {
@@ -289,12 +296,14 @@ class BackupSchema(APISchema):
         'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
+        'external_files': fields.List(fields.Nested(FileSchema.get_fields)),
         'group': fields.List(fields.Nested(UserSchema.simple_fields)),
     }
 
     export_fields = {
         'id': HashIDField,
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
+        'external_files': fields.List(fields.Nested(FileSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
         'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,

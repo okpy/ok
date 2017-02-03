@@ -134,9 +134,7 @@
 
                     <div class="subcontent list">
                         <div class="wrap">
-                            {% for filename, file in files | dictsort %}
-                            {{ diff.source_file(backup, filename, file) }}
-                            {% endfor %}
+                            {{ diff.render_files(backup, files) }}
                         </div>
                     </div>
                 </div>

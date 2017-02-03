@@ -114,7 +114,7 @@
         <div class="subcontent row">
           <div class="col-xs-12">
             {% if assignment.active %}
-            <a id="new-submission" href="{{url_for('.submit_assignment', name=assignment.name)}}" class="button-large"><i class="fa fa-inbox grey"></i>
+            <a id="new-submission" data-no-instant href="{{url_for('.submit_assignment', name=assignment.name)}}" class="button-large"><i class="fa fa-inbox grey"></i>
               Create a new submission
               </a>
             {% endif %}

@@ -1,3 +1,4 @@
+
 .block {
   display: block;
 }
@@ -20,10 +21,6 @@ pre code  {
 
 .inline {
   display: inline;
-}
-
-.pace {
-  display: none;
 }
 
 .hide-oveflow {
@@ -202,4 +199,10 @@ img.desaturate{
   -webkit-user-drag: none;
   -webkit-user-select: none;
   -ms-user-select: none;
+}
+
+.swal-custom-icon {
+  display: block;
+  margin: 0px auto;
+  color: #717171;
 }

@@ -104,7 +104,7 @@ class TestAuth(OkTestCase):
         assert response.json['data'] == {}
         assert response.json['code'] == 404
 
-    def test_aaaget_backup(self):
+    def test_get_backup(self):
         self._test_backup(False)
 
         backup = Backup.query.first()
@@ -127,6 +127,7 @@ class TestAuth(OkTestCase):
             "submission_time": submission_time.isoformat(),
             "group": [user_json],
             "is_late": backup.is_late,
+            "external_files": [],
             "assignment": {
                 "name": backup.assignment.name,
                 "course": {

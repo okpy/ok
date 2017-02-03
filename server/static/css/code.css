@@ -288,3 +288,11 @@ table.highlight tr:last-child td.comment-container {
     padding: 0.5em 0.75em;
     font-size: 0.9em;
 }
+
+.source-inline-image {
+  max-height: 300px;
+  display: block;
+  margin: 0 auto;
+  padding: 20px;
+  max-height: 300px;
+}

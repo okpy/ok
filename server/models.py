@@ -196,9 +196,11 @@ class User(Model, UserMixin):
     def enrollments(self, roles=None):
         if roles is None:
             roles = [STUDENT_ROLE]
-        query = (Enrollment.query.options(db.joinedload('course'))
+        query = (Enrollment.query.join(Enrollment.course)
+                           .options(db.contains_eager(Enrollment.course))
                            .filter(Enrollment.user_id == self.id)
-                           .filter(Enrollment.role.in_(roles)))
+                           .filter(Enrollment.role.in_(roles))
+                           .order_by(Course.created.desc()))
         return query.all()
 
     @cache.memoize(120)
@@ -923,6 +925,7 @@ class Backup(Model):
     messages = db.relationship("Message")
     scores = db.relationship("Score")
     comments = db.relationship("Comment", order_by="Comment.created")
+    external_files = db.relationship("ExternalFile")
 
     # Already have indexes for submitter_id and assignment_id due to FK
     db.Index('idx_backupCreated', 'created')
@@ -1000,6 +1003,11 @@ class Backup(Model):
             return contents
         else:
             return {}
+
+    def external_files_dict(self):
+        """ Return a dictionary of filenames to ExternalFile objects """
+        external = ExternalFile.query.filter_by(backup_id=self.id).all()
+        return {f.filename: f for f in external}
 
     def analytics(self):
         """ Return a dictionary of filenames to contents."""
@@ -1685,6 +1693,10 @@ class ExternalFile(Model):
             return 'application/octet-stream'
         return guess[0]
 
+    @property
+    def download_link(self):
+        return '/files/{}'.format(encode_id(self.id))
+
     def delete(self):
         self.object().delete()
         self.deleted = True
@@ -1692,7 +1704,7 @@ class ExternalFile(Model):
 
     @staticmethod
     def upload(iterable, user_id, name, staff_file=True, course_id=None,
-               assignment_id=None, **kwargs):
+               assignment_id=None, backup=None, **kwargs):
         object = storage.upload(iterable, name=name, **kwargs)
         external_file = ExternalFile(
             container=storage.container_name,
@@ -1701,6 +1713,7 @@ class ExternalFile(Model):
             course_id=course_id,
             assignment_id=assignment_id,
             user_id=user_id,
+            backup=backup,
             staff_file=False)
         db.session.add(external_file)
         db.session.commit()

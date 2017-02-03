@@ -1,8 +1,9 @@
 import logging
-
+import os
+from urllib.parse import urlencode
 import libcloud
 
-from flask import Blueprint, redirect, Response, abort
+from flask import Blueprint, redirect, request, Response, abort
 from flask_login import login_required, current_user
 
 from server.extensions import storage
@@ -29,7 +30,7 @@ def file_url(file_id):
 
     if storage_obj is None:
         abort(404, "File does not exist")
-
+    basename = os.path.basename(ext_file.filename)
     # Do not use .download_url for local storage.
     if storage.provider == libcloud.storage.types.Provider.LOCAL:
         response = Response(storage.get_object_stream(storage_obj),
@@ -37,7 +38,14 @@ def file_url(file_id):
         response.headers["Content-Security-Policy"] = "default-src 'none';"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Content-Disposition"] = ("attachment; filename={0!s}"
-                                                   .format(ext_file.filename))
+                                                   .format(basename))
         return response
     else:
-        return redirect(storage.get_blob_url(storage_obj.name))
+        postpend = '&'
+        if request.args.get('raw'):
+            postpend += urlencode({'response-content-type': ext_file.mimetype})
+        elif request.args.get('download'):
+            postpend += urlencode({'response-content-disposition': 'attachment',
+                                  'filename': basename})
+        url = storage.get_blob_url(storage_obj.name)
+        return redirect(url + postpend)
