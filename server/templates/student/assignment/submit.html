@@ -39,7 +39,7 @@
                       <form action="{{ url_for('.submit_assignment', name=assignment.name) }}"
                             method="POST" class="dropzone"  id="myDropzone" enctype="multipart/form-data">
                         <div class="dz-message" data-dz-message>
-                          Drop files/folders here or click to upload.<br />
+                          Drag files/folders here or click to upload files.<br />
                           <span class="note needsclick">
                             {% if assignment.upload_info %}
                               {{ assignment.upload_info }} <br/>

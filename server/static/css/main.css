@@ -200,3 +200,9 @@ img.desaturate{
   -webkit-user-select: none;
   -ms-user-select: none;
 }
+
+.swal-custom-icon {
+  display: block;
+  margin: 0px auto;
+  color: #717171;
+}

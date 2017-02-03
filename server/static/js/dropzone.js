@@ -15,8 +15,11 @@ function initDropzone(elem, token) {
         },
         init: function() {
             var submitButton = document.querySelector("#dzSubmit")
-            $('.dz-hidden-input').attr('webkitdirectory', 'true')
-            var myDropzone = this; // closure
+
+            // Do not enable folder upload since that prevents choosing files indvidually
+            // $('.dz-hidden-input').attr('webkitdirectory', 'true')
+
+            var myDropzone = this; // reference for closure
 
             submitButton.addEventListener("click", function() {
                 Pace.track( function () {
@@ -50,6 +53,11 @@ function initDropzone(elem, token) {
                     }
                 }
                 $("#dzSubmit").addClass('disabled');
+                window.swal({
+                    title: '<i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw swal-custom-icon blue"></i>',
+                    text: 'Uploading. Please wait for confirmation.',
+                    html: true
+                })
             });
 
             this.on("successmultiple", function(files, response) {
