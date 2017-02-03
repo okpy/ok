@@ -133,72 +133,72 @@ if driver:
             self.assertEqual(response.status_code, 200)
 
         # def test_api_is_up_and_running(self):
-        #     api_url = "{}/api/v3/".format(self.get_server_url())
-        #     response = requests.get(api_url)
-        #     self.assertEqual(response.status_code, 200)
-        #     data = response.json()
-        #     self.assertEqual(data['message'], 'success')
-        #     self.assertEqual(data['data']['version'], 'v3')
+            api_url = "{}/api/v3/".format(self.get_server_url())
+            response = requests.get(api_url)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data['message'], 'success')
+            self.assertEqual(data['data']['version'], 'v3')
 
-        # def test_static_pages(self):
-        #     about_url = "{}/about/privacy/".format(self.get_server_url())
-        #     self.page_load(about_url)
-        #     self.assertIn('Privacy Policy | Ok', self.driver.title)
+        def test_static_pages(self):
+            about_url = "{}/about/privacy/".format(self.get_server_url())
+            self.page_load(about_url)
+            self.assertIn('Privacy Policy | Ok', self.driver.title)
 
-        # def test_phantom_web(self):
-        #     self.page_load(self.get_server_url())
-        #     self.assertEquals("OK", self.driver.title)
-        #     self.driver.find_element_by_id('testing-login').click()
-        #     self.assertIn('Login', self.driver.title)
+        def test_phantom_web(self):
+            self.page_load(self.get_server_url())
+            self.assertEquals("OK", self.driver.title)
+            self.driver.find_element_by_id('testing-login').click()
+            self.assertIn('Login', self.driver.title)
 
-        #     self.driver.find_element_by_tag_name('button').click()
-        #     self.assertIn('Courses | Ok', self.driver.title)
-        #     self.page_load(self.get_server_url())
-        #     self.assertIn('Courses | Ok', self.driver.title)
+            self.driver.find_element_by_tag_name('button').click()
+            self.assertIn('Courses | Ok', self.driver.title)
+            self.page_load(self.get_server_url())
+            self.assertIn('Courses | Ok', self.driver.title)
 
-        #     self.driver.find_element_by_id('logout').click()
-        #     self.assertEquals("OK", self.driver.title)
+            self.driver.find_element_by_id('logout').click()
+            self.assertEquals("OK", self.driver.title)
 
-        # def test_student_view(self):
-        #     self._seed_course()
+        def test_student_view(self):
+            self._seed_course()
 
-        #     self._login_as(email=self.user4.email)
+            self._login_as(email=self.user4.email)
 
-        #     self.page_load(self.get_server_url())
-        #     self.assertIn('Courses | Ok', self.driver.title)
+            self.page_load(self.get_server_url())
+            self.assertIn('Courses | Ok', self.driver.title)
 
-        #     self.page_load("{}/cal/cs61a/sp16/".format(self.get_server_url()))
-        #     self.assertTrue("Current Assignments" in self.driver.page_source)
+            self.page_load("{}/cal/cs61a/sp16/".format(self.get_server_url()))
+            self.assertTrue("Current Assignments" in self.driver.page_source)
 
-        #     self.page_load("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
 
-        #     self.driver.find_element_by_class_name("view-code").click()
-        #     self.assertTrue("backup.py" in self.driver.page_source)
-        #     # Make sure the XSS attempt didn't work
-        #     self.assertTrue(self.driver.title != '1337 hax0r')
+            self.driver.find_element_by_class_name("view-code").click()
+            self.assertTrue("backup.py" in self.driver.page_source)
+            # Make sure the XSS attempt didn't work
+            self.assertTrue(self.driver.title != '1337 hax0r')
 
-        #     self.page_load("{}/cal/cs61a/sp16/proj1/backups/".format(self.get_server_url()))
-        #     self.page_load("{}/cal/cs61a/sp16/proj1/submissions/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/backups/".format(self.get_server_url()))
+            self.page_load("{}/cal/cs61a/sp16/proj1/submissions/".format(self.get_server_url()))
 
-        # def test_student_remove_member(self):
-        #     self._seed_course()
-        #     self._login_as(email=self.user4.email)
-        #     self.page_load("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
-        #     self.assertTrue("student1@aol.com" in self.driver.page_source)
+        def test_student_remove_member(self):
+            self._seed_course()
+            self._login_as(email=self.user4.email)
+            self.page_load("{}/cal/cs61a/sp16/proj1/".format(self.get_server_url()))
+            self.assertTrue("student1@aol.com" in self.driver.page_source)
 
-        #     # .click will send a sweet alert warning
-        #     self.driver.find_element_by_id("remove-member").click()
-        #     self.assertTrue("Are you sure" in self.driver.page_source)
+            # .click will send a sweet alert warning
+            self.driver.find_element_by_id("remove-member").click()
+            self.assertTrue("Are you sure" in self.driver.page_source)
 
-        #     self.driver.find_element_by_id("remove-member").submit()
-        #     self.assertTrue("student1@aol.com" not in self.driver.page_source)
-        #     self.assertTrue("No Submission" in self.driver.page_source)
+            self.driver.find_element_by_id("remove-member").submit()
+            self.assertTrue("student1@aol.com" not in self.driver.page_source)
+            self.assertTrue("No Submission" in self.driver.page_source)
 
-        # def test_student_invalid_hash(self):
-        #     self._seed_course()
-        #     self._login_as(email=self.user4.email)
-        #     self.driver.get("{}/cal/cs61a/sp16/proj1/xyz".format(self.get_server_url()))
-        #     self.assertIn('404', self.driver.title)
+        def test_student_invalid_hash(self):
+            self._seed_course()
+            self._login_as(email=self.user4.email)
+            self.driver.get("{}/cal/cs61a/sp16/proj1/xyz".format(self.get_server_url()))
+            self.assertIn('404', self.driver.title)
 
         def test_web_submit_disabled(self):
             self._seed_course()
@@ -297,34 +297,34 @@ if driver:
             # Will only pass when there is network connectivity. TODO: Mock external API response
             # self.assertTrue("Did not send to autograder" not in self.driver.page_source)
 
-        def test_staff_submit(self):
-            self._seed_course()
+        # def test_staff_submit(self):
+        #     self._seed_course()
 
-            self._login_as(email=self.staff1.email)
-            self.page_load("{}/admin/course/{}/{}/{}/submit".format(
-                self.get_server_url(),
-                self.course.id,
-                self.user1.email,
-                self.assignment.id,
-            ))
+        #     self._login_as(email=self.staff1.email)
+        #     self.page_load("{}/admin/course/{}/{}/{}/submit".format(
+        #         self.get_server_url(),
+        #         self.course.id,
+        #         self.user1.email,
+        #         self.assignment.id,
+        #     ))
 
-            # Disable the multiple select, PhantomJS doesn't seem to support it
-            # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
-            self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
-            self.driver.execute_script("document.getElementById('file-select').removeAttribute('webkitdirectory')")
-            file_input = self.driver.find_element_by_id("file-select")
-            file_input.send_keys(os.path.abspath(__file__))
+        #     # Disable the multiple select, PhantomJS doesn't seem to support it
+        #     # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
+        #     self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
+        #     self.driver.execute_script("document.getElementById('file-select').removeAttribute('webkitdirectory')")
+        #     file_input = self.driver.find_element_by_id("file-select")
+        #     file_input.send_keys(os.path.abspath(__file__))
 
-            # submit early
-            self.driver.find_element_by_css_selector('input[name=submission_time][value=early]').click()
+        #     # submit early
+        #     self.driver.find_element_by_css_selector('input[name=submission_time][value=early]').click()
 
-            self.driver.find_element_by_class_name('submit-btn').click()
-            self.assertTrue("Uploaded submission" in self.driver.page_source)
+        #     self.driver.find_element_by_class_name('submit-btn').click()
+        #     self.assertTrue("Uploaded submission" in self.driver.page_source)
 
-            self.assertIn('grading/', self.driver.current_url)
+        #     self.assertIn('grading/', self.driver.current_url)
 
-            submission_date = self.assignment.due_date - datetime.timedelta(days=1)
-            self.assertTrue(submission_date.strftime('%a %m/%d') in self.driver.page_source)
+        #     submission_date = self.assignment.due_date - datetime.timedelta(days=1)
+        #     self.assertTrue(submission_date.strftime('%a %m/%d') in self.driver.page_source)
 
         def test_login_admin_reject(self):
             self._login(role="student")
@@ -559,7 +559,10 @@ if driver:
             OkTestCase.run_jobs(self)
 
             self.page_load(job_url)
+            # Refresh the page again to simulate refresh
+            self.page_load(job_url)
             self.assertIn('Test Job', self.driver.page_source)
+
             self.assertIn('Failed', self.driver.page_source)
             self.assertIn('Traceback', self.driver.page_source)
             self.assertIn('ZeroDivisionError', self.driver.page_source)
