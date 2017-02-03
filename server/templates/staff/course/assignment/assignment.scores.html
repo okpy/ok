@@ -96,10 +96,12 @@
                     <h3 class="box-title"><span> Scores </span></h3>
 
                     <div class="box-tools">
+                        {% if scores %}
                         <div class="pull-left" id="scores-loading">
                           <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
                           <span class="sr-only">Loading...</span>
                         </div>
+                        {% endif %}
 
                         <div class="box-tools pull-right">
                             <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
