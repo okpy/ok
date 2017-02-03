@@ -29,6 +29,7 @@ import server.jobs as jobs
 import server.jobs.example as example
 import server.jobs.moss as moss
 import server.jobs.github_search as github_search
+import server.jobs.export as export
 
 import server.highlight as highlight
 import server.utils as utils
@@ -752,6 +753,42 @@ def start_github_search(cid, aid):
         )
 
 
+@admin.route('/course/<int:cid>/assignments/<int:aid>/export/',
+             methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def export_assign(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+    form = forms.ExportAssignment()
+    if form.validate_on_submit():
+        if form.anonmyize.data:
+            description = 'Anonmyized Export'
+        else:
+            description = 'Final Submission Export'
+
+        job = jobs.enqueue_job(
+            export.export_assignment,
+            description='{} for {}'.format(description, assign.name),
+            timeout=600,
+            user_id=current_user.id,
+            course_id=cid,
+            assignment_id=aid,
+            anonymized=form.anonmyize.data,
+            result_kind='link')
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/export.html',
+            courses=courses,
+            assignment=assign,
+            current_course=current_course,
+            form=form,
+        )
+
+
+
 ##############
 # Enrollment #
 ##############
@@ -989,7 +1026,6 @@ def student_assignment_detail(cid, email, aid):
                            csrf_form=forms.CSRFForm(),
                            stats=stats,
                            assign_status=assignment_stats)
-
 
 ########################
 # Student view actions #

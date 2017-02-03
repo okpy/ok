@@ -475,6 +475,11 @@ class GithubSearchRecentForm(BaseForm):
     issue_body = TextAreaField('Issue Body (Optional)', validators=[validators.optional()],
                                description="The strings '{repo}' and '{author}' will be replace with the approriate value")
 
+class ExportAssignment(BaseForm):
+    anonmyize = BooleanField('Anonymize', default=False,
+                             description="Enable to make an anonmyized research export of all backups")
+
+
 ##########
 # Canvas #
 ##########
