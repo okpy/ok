@@ -804,9 +804,9 @@ def enrollment(cid):
         flash("Added {email} as {role}".format(
             email=email, role=role), "success")
 
-    students = course.get_students()
-    staff = course.get_staff()
-    lab_assistants = course.get_participants([LAB_ASSISTANT_ROLE])
+    students = current_course.get_students()
+    staff = current_course.get_staff()
+    lab_assistants = current_course.get_participants([LAB_ASSISTANT_ROLE])
 
     return render_template('staff/course/enrollment/enrollment.html',
                            enrollments=students, staff=staff,
