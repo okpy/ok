@@ -15,8 +15,11 @@ function initDropzone(elem, token) {
         },
         init: function() {
             var submitButton = document.querySelector("#dzSubmit")
-            $('.dz-hidden-input').attr('webkitdirectory', 'true')
-            var myDropzone = this; // closure
+
+            // Do not enable folder upload since that prevents choosing files indvidually
+            // $('.dz-hidden-input').attr('webkitdirectory', 'true')
+
+            var myDropzone = this; // reference for closure
 
             submitButton.addEventListener("click", function() {
                 Pace.track( function () {
