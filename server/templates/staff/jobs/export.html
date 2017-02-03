@@ -10,9 +10,9 @@
         <small>{{ current_course.offering }}</small>
     </h1>
     <ol class="breadcrumb">
-        <li><a href="{{ url_for(" .index ") }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="{{ url_for('.index') }}"><i class="fa fa-dashboard"></i> Home</a></li>
         <li>
-            <a href="{{ url_for(" .course ", cid=current_course.id) }}">
+            <a href="{{ url_for('.course', cid=current_course.id) }}">
                 <i class="fa fa-university"></i> {{ current_course.offering }}
             </a>
         </li>
@@ -22,7 +22,7 @@
         </li>
         <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
         <li>
-            <a href="{{ url_for(" .course_jobs ", cid=current_course.id) }}">
+            <a href="{{ url_for('.course_jobs', cid=current_course.id) }}">
                 <i class="fa fa-list"></i>Jobs
             </a>
         </li>
@@ -42,7 +42,9 @@
                     <h3 class="box-title">Export {{ assignment.display_name }} </h3>
                 </div>
                 <div class="box-body">
-                    {% call forms.render_form(form, action_text='Start Export') %} {{ forms.render_checkbox_field(form.anonymize) }} {% endcall %}
+                    {% call forms.render_form(form, action_text='Start Export') %}
+                      {{ forms.render_checkbox_field(form.anonymize) }}
+                    {% endcall %}
                 </div>
             </div>
         </div>
