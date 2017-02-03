@@ -21,6 +21,7 @@ class TestFile(OkTestCase):
         with open(CWD + "/files/fizzbuzz_after.py", 'rb') as f:
             self.file1 = ExternalFile.upload(f, name='fizz.txt',
                                                user_id=self.staff1.id,
+                                               staff_file=True,
                                                course_id=self.course.id)
             self.blob1 = self.file1.object()
 
@@ -29,6 +30,7 @@ class TestFile(OkTestCase):
             self.file2 = ExternalFile.upload(f, name='ok.svg',
                                                user_id=self.user1.id,
                                                course_id=self.course.id,
+                                               staff_file=False,
                                                assignment_id=self.assignment.id)
             self.blob2 = self.file1.object()
 
