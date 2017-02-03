@@ -53,6 +53,11 @@ function initDropzone(elem, token) {
                     }
                 }
                 $("#dzSubmit").addClass('disabled');
+                window.swal({
+                    title: '<i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw swal-custom-icon blue"></i>',
+                    text: 'Uploading. Please wait for confirmation.',
+                    html: true
+                })
             });
 
             this.on("successmultiple", function(files, response) {
