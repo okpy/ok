@@ -174,8 +174,12 @@
     </div>
 {% endmacro %}
 
+{% block page_css %}
+  {{ css_asset("code_css") }}
+{% endblock %}
 
 {% block page_js %}
+    {{ js_asset("code_js") }}
 <script type="text/javascript">
     // show only diff 1
     var backup_number = {{start_index}};
