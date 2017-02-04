@@ -4,7 +4,7 @@ from server import jobs
 from server.models import Assignment, Score, db
 
 @jobs.background_job
-def audit_missing_scores(assign_id, omit_details=('autograder', 'regrade')):
+def audit_missing_scores(assign_id):
     logger = jobs.get_job_logger()
 
     assignment = Assignment.query.get(assign_id)
@@ -37,6 +37,10 @@ def audit_missing_scores(assign_id, omit_details=('autograder', 'regrade')):
         logger.info("Number of students without {} scores is {}".format(score_kind,
                                                                         len(difference)))
 
-        if difference and score_kind not in omit_details:
+        if difference and len(difference) < 200:
             logger.info("Students without {} scores: {}".format(score_kind, ', '.join(difference)))
+        elif len(difference) >= 200:
+            # Avoid creating very long lines.
+            logger.info("{} students do not have {} scores. Here are a few: {}"
+                        .format(len(difference), score_kind, ', '.join(difference[:200])))
         logger.info("---"*20)
