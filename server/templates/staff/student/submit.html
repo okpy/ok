@@ -43,7 +43,7 @@
           </p>
 
           {% call forms.render_form(upload_form, class_='form', enctype="multipart/form-data") %}
-            {{ forms.render_field(upload_form.upload_files, label_visible=true, multiple="", id="file-select") }}
+            {{ forms.render_field(upload_form.upload_files, label_visible=true, multiple="", id="file-select", webkitdirectory='true') }}
             <label class="control-label">Submission time: </label>
             {{ forms.render_radio_field(upload_form.submission_time) }}
             {{ forms.render_field(

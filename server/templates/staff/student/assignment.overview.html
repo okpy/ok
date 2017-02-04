@@ -58,7 +58,7 @@
       </div>
       {% endfor %}
     </div>
-    
+
     <div class="row">
         <div class="col-md-6 col-xs-12">
             <p> Student Diff against previous backup </p>
@@ -66,7 +66,7 @@
                 <div class="subcontent list diff-delta hidden">
                     <div class="wrap">
                         {% for filename, lines in files | dictsort %}
-                        {{ diff.diff_lines(lines) }}
+                          {{ diff_lines(lines) }}
                         {% endfor %}
                     </div>
                 </div>
@@ -74,14 +74,14 @@
         </div>
         <div class="col-md-6 col-xs-12">
             <p> Student Diff against previous partner backup </p>
-            {% for files in partner_files_list %} 
+            {% for files in partner_files_list %}
                 <div class="subcontent list prev-backup hidden">
                   {% if not files %}
                   <p> No previous partner backup </p>
                   {% else %}
                     <div class="wrap">
                         {% for filename, lines in files | dictsort %}
-                        {{ diff.diff_lines(lines) }}
+                          {{ diff_lines(lines) }}
                         {% endfor %}
                     </div>
                   {% endif %}
@@ -101,6 +101,17 @@
 
     <!-- </body> do not close body in template-->
     {% endblock %}
+
+{% macro diff_lines(file) %}
+  <div class="source-file table-responsive"
+    data-filename="{{ file.name }}">
+    <table class="highlight">
+      <tbody>
+        {{ diff.render_source(file) }}
+      </tbody>
+    </table>
+  </div>
+{% endmacro %}
 
 {% macro stats_box(stat) %}
     <div class="row diff-delta-box hidden">
@@ -145,15 +156,15 @@
                       {% endif %}
                     </li>
                     <li class="list-group-item">
-                      <b> Question : </b> 
+                      <b> Question : </b>
                       {{stat.question}}
                     </li>
                     <li class="list-group-item">
-                      <b> Time Submitted: </b> 
+                      <b> Time Submitted: </b>
                       {{stat.time}}
                     </li>
                     <li class="list-group-item">
-                      <b> Number of Tests Passed: </b> 
+                      <b> Number of Tests Passed: </b>
                       {{stat.passed}}
                     </li>
                   </ul>

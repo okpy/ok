@@ -3,16 +3,14 @@
 """
 import os
 import sys
-import binascii
 
 from server.settings import RAVEN_IGNORE_EXCEPTIONS
-
-default_secret = binascii.hexlify(os.urandom(24))
 
 ENV = 'staging'
 PREFERRED_URL_SCHEME = 'https'
 
-SECRET_KEY = os.getenv('SECRET_KEY', default_secret)
+SECRET_KEY = os.getenv('SECRET_KEY')
+
 CACHE_TYPE = 'simple'
 
 DEBUG = False
@@ -41,6 +39,15 @@ SQLALCHEMY_DATABASE_URI = db_url
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # Max Upload Size is 10MB
+
+STORAGE_PROVIDER = os.environ.get('STORAGE_PROVIDER',  'LOCAL')
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',  'ok-v3-user-files')
+STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '')
+
+if STORAGE_PROVIDER == 'LOCAL' and not os.path.exists(STORAGE_CONTAINER):
+    os.makedirs(STORAGE_CONTAINER)
 
 try:
     os.environ["GOOGLE_ID"]

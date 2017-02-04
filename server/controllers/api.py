@@ -131,35 +131,6 @@ def check_scopes(func):
         return func(*args, **kwargs)
     return wrapper
 
-def check_version(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        supplied = request.args.get('client_version')
-        # ok-client doesn't send client_name right now
-        client = request.args.get('client_name', 'ok-client')
-        current_version, download_link = models.Version.get_current_version(
-            client)
-        if not supplied or supplied == current_version:
-            return func(*args, **kwargs)
-
-        message = ("Incorrect client version. Supplied version was {}. " +
-                   "Correct version is {}.").format(supplied, current_version)
-        data = {
-            'supplied': supplied,
-            'correct': current_version,
-            'download_link': download_link
-        }
-
-        response = jsonify(**{
-            'status': 403,
-            'message': message,
-            'data': data
-        })
-        response.status_code = 403
-        return response
-    return wrapper
-
-
 def make_backup(user, assignment_id, messages, submit):
     """
     Create backup with message objects.
@@ -245,6 +216,13 @@ class EnrollmentSchema(APISchema):
         'courses': fields.List(fields.Nested(ParticipationSchema.get_fields))
     }
 
+class FileSchema(APISchema):
+    get_fields = {
+        'id': HashIDField,
+        'mimetype': fields.String,
+        'download_link': fields.String,
+        'filename': fields.String
+    }
 
 class UserSchema(APISchema):
     get_fields = {
@@ -318,12 +296,14 @@ class BackupSchema(APISchema):
         'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
         'submit': fields.Boolean,
+        'external_files': fields.List(fields.Nested(FileSchema.get_fields)),
         'group': fields.List(fields.Nested(UserSchema.simple_fields)),
     }
 
     export_fields = {
         'id': HashIDField,
         'messages': fields.List(fields.Nested(MessageSchema.get_fields)),
+        'external_files': fields.List(fields.Nested(FileSchema.get_fields)),
         'created': fields.DateTime(dt_format='iso8601'),
         'submission_time': fields.DateTime(dt_format='iso8601'),
         'is_late': fields.Boolean,
@@ -454,7 +434,7 @@ class CommentSchema(APISchema):
 
 class Resource(restful.Resource):
     version = 'v3'
-    method_decorators = [check_scopes, authenticate, check_version]
+    method_decorators = [check_scopes, authenticate]
     required_scopes = {}
     # applies to all inherited resources
 

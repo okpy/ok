@@ -129,6 +129,8 @@ def grading_view(backup, form=None, is_composition=False):
     for filename, source_file in files.items():
         for line in source_file.lines:
             line.comments = comments[(filename, line.line_after)]
+    for filename, ex_file in backup.external_files_dict().items():
+        files[filename] = ex_file
 
     group = [User.query.get(o) for o in backup.owners()]
     task = backup.grading_tasks
@@ -136,11 +138,9 @@ def grading_view(backup, form=None, is_composition=False):
         # Choose the first grading_task
         task = task[0]
 
-    return render_template(
-        'staff/grading/code.html', courses=courses, assignment=assign,
-        backup=backup, group=group, files=files,
-        diff_type=diff_type, task=task, form=form, is_composition=is_composition
-    )
+    return render_template('staff/grading/code.html', courses=courses, assignment=assign,
+                           backup=backup, group=group, files=files, diff_type=diff_type,
+                           task=task, form=form, is_composition=is_composition)
 
 @admin.route('/grading/<hashid:bid>')
 @is_staff()
@@ -705,7 +705,8 @@ def start_moss_job(cid, aid):
             assignment_id=assign.id,
             moss_id=form.moss_userid.data,
             file_regex=form.file_regex.data or '*',
-            language=form.language.data)
+            language=form.language.data,
+            subtract_template=form.subtract_template.data)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         return render_template(
@@ -1284,6 +1285,7 @@ def start_test_job(cid):
             description='Test Job',
             course_id=cid,
             duration=form.duration.data,
+            make_file=form.make_file.data,
             should_fail=form.should_fail.data,
             result_kind='html')
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))

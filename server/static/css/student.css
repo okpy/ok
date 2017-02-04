@@ -460,6 +460,10 @@ header .logo {
 .cell {
   padding:2em;
 }
+.upload-cell {
+  background-color: #f6f6f6;
+}
+
 .cell:nth-child(even) {
   background-color:#f6f6f6;
 }

@@ -18,9 +18,14 @@ spec:
         image: cs61a/ok-server
         imagePullPolicy: Always
         livenessProbe:
-          # an http probe
           httpGet:
-            path: /
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /healthz
             port: 5000
           initialDelaySeconds: 5
           timeoutSeconds: 1
@@ -58,6 +63,20 @@ spec:
             secretKeyRef:
               name: ok-login
               key: google-secret
+        - name: STORAGE_PROVIDER
+          value: GOOGLE_STORAGE
+        - name: STORAGE_CONTAINER
+          value: ok-v3-user-files
+        - name: STORAGE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ok-storage
+              key: storage-key
+        - name: STORAGE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ok-storage
+              key: storage-secret
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
@@ -73,3 +92,5 @@ spec:
             secretKeyRef:
               name: ok-services
               key: sendgrid-key
+        - name: GOOGLE_LOG_NAME
+          value: ok-web

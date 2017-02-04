@@ -1,0 +1,31 @@
+.dropzone {
+    margin-bottom: 3rem;
+    min-height: 200px;
+    border: 2px dashed rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+
+}
+
+.dropzone .dz-message { font-weight: 400; font-size: 1.1em; text-align: center; margin: 2em 0;}
+.dropzone .dz-message .note { font-size: 0.9em; font-weight: 200; display: block; margin-top: 1.4rem; }
+.dropzone.dz-clickable {
+    cursor: pointer;
+}
+
+.dropzone .dz-progress {
+    margin-top: 5px !important;
+}
+.dropzone .dz-preview .dz-error-message {
+    top: 150px!important;
+}
+
+.dropzone .dz-success-mark {
+    font-size: 200%;
+    text-align: center;
+    margin-left: -15px !important;
+}
+.dropzone .dz-error-mark {
+    font-size: 200%;
+    margin-left: -15px !important;
+    text-align: center;
+}

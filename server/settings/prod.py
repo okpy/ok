@@ -3,24 +3,23 @@
 """
 import os
 import sys
-import binascii
 
 from server.settings import RAVEN_IGNORE_EXCEPTIONS
-
-default_secret = binascii.hexlify(os.urandom(24))
 
 ENV = 'prod'
 PREFERRED_URL_SCHEME = 'https'
 
-if not os.getenv('SECRET_KEY'):
-    print("The secret key is not set!!")
-
-SECRET_KEY = os.getenv('SECRET_KEY', default_secret)
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = False
 ASSETS_DEBUG = False
 TESTING_LOGIN = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
+# The Google Cloud load balancer behaves like two proxies: one with the external
+# fowarding rule IP, and one with an internal IP.
+# See https://cloud.google.com/compute/docs/load-balancing/http/#target_proxies
+# Including Nginx too makes 3 proxies.
+NUM_PROXIES = 3
 
 db_url = os.getenv('DATABASE_URL')
 if db_url:
@@ -39,7 +38,7 @@ OAUTH2_PROVIDER_TOKEN_EXPIRES_IN = 28800
 WTF_CSRF_CHECK_DEFAULT = True
 WTF_CSRF_ENABLED = True
 
-MAX_CONTENT_LENGTH = 15 * 1024 * 1024  # Max Upload Size is 10MB
+MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # Max Upload Size is 20
 
 CACHE_TYPE = 'redis'
 CACHE_KEY_PREFIX = 'ok-web'
@@ -48,6 +47,12 @@ RQ_DEFAULT_HOST = REDIS_HOST = CACHE_REDIS_HOST = \
     os.getenv('REDIS_HOST', 'redis-master')
 REDIS_PORT = 6379
 RQ_POLL_INTERVAL = 2000
+
+STORAGE_PROVIDER = os.environ.get('STORAGE_PROVIDER',  'GOOGLE_STORAGE')
+STORAGE_SERVER = False
+STORAGE_CONTAINER = os.environ.get('STORAGE_CONTAINER',  'ok-v3-user-files')
+STORAGE_KEY = os.environ.get('STORAGE_KEY', '')
+STORAGE_SECRET = os.environ.get('STORAGE_SECRET', '')
 
 try:
     os.environ["GOOGLE_ID"]

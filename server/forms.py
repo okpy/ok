@@ -442,13 +442,13 @@ class PublishScores(BaseForm):
         choices=[(kind, kind.title()) for kind in SCORE_KINDS],
     )
 
-
 ########
 # Jobs #
 ########
 
 class TestJobForm(BaseForm):
     should_fail = BooleanField('Divide By Zero', default=False)
+    make_file = BooleanField('Create a file', default=True)
     duration = IntegerField('Duration (seconds)', default=2)
 
 class MossSubmissionForm(BaseForm):
@@ -457,6 +457,8 @@ class MossSubmissionForm(BaseForm):
     file_regex = StringField('Regex for submitted files', default='.*',
                              validators=[validators.required()])
     language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+    subtract_template = BooleanField('Subtract Template', default=False,
+                                     description="Only send the changes from the template to MOSS")
 
 class GithubSearchRecentForm(BaseForm):
     access_token = StringField('Github Access Token',

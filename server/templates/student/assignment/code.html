@@ -63,9 +63,7 @@
 
         <div class="subcontent list" role="main">
           <div class="wrap">
-            {% for filename, file in files | dictsort %}
-              {{ diff.source_file(backup, filename, file) }}
-            {% endfor %}
+            {{ diff.render_files(backup, files) }}
           </div>
         </div>
       </section>
@@ -74,4 +72,25 @@
       <!-- Comment Box Template, IE does not support <template> -->
       {{ diff.editor_template() }}
     </script>
+{% endblock %}
+
+{% block page_css %}
+  {{ css_asset("code_css") }}
+{% endblock %}
+
+{% block page_js %}
+  {{ js_asset("code_js") }}
+<script>
+var ipyFiles = {
+    {% for filename, file in files | dictsort %}
+        {% if file.extension == ".ipynb" %}
+            {{ filename.lower() | tojson }} : {{ file.source | tojson }},
+        {% endif %}
+    {% endfor %}
+}
+
+$(document).ready(function() {
+    displayNotebooks(ipyFiles)
+})
+</script>
 {% endblock %}

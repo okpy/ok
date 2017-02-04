@@ -15,7 +15,13 @@ RUN mv docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 RUN ./manage.py assets build
 
-CMD nginx; gunicorn --timeout 45 --bind unix:/tmp/server.sock wsgi:app --workers 3
+CMD nginx && \
+    env PYTHONPATH=$PYTHONPATH:$PWD gunicorn \
+        --logger-class server.logging.gunicorn.Logger \
+        --timeout 45 \
+        --bind unix:/tmp/server.sock \
+        --workers 3 \
+        wsgi:app
 
 RUN rm -rf /var/cache/apk/*
 

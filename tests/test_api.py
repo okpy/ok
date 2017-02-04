@@ -37,19 +37,6 @@ class TestAuth(OkTestCase):
             'submit': submit,
         }
 
-        response = self.client.post('/api/v3/backups/?client_version=v1.4.0',
-            data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')])
-        self.assert_403(response)
-        assert response.json['data'] == {
-            'supplied': 'v1.4.0',
-            'correct': 'v1.5.0',
-            'download_link': "http://localhost/ok"
-        }
-        assert 'Incorrect client version' in response.json['message']
-        backup = Backup.query.filter(Backup.submitter_id == user.id).all()
-        assert backup == []
-
         response = self.client.post('/api/v3/backups/?client_version=v1.5.0',
             data=json.dumps(data),
             headers=[('Content-Type', 'application/json')])
@@ -117,7 +104,7 @@ class TestAuth(OkTestCase):
         assert response.json['data'] == {}
         assert response.json['code'] == 404
 
-    def test_aaaget_backup(self):
+    def test_get_backup(self):
         self._test_backup(False)
 
         backup = Backup.query.first()
@@ -140,6 +127,7 @@ class TestAuth(OkTestCase):
             "submission_time": submission_time.isoformat(),
             "group": [user_json],
             "is_late": backup.is_late,
+            "external_files": [],
             "assignment": {
                 "name": backup.assignment.name,
                 "course": {

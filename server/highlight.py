@@ -1,3 +1,4 @@
+import os
 import difflib
 import itertools
 
@@ -5,16 +6,19 @@ import pygments
 import pygments.lexers
 import pygments.formatters
 
-from server.constants import DIFF_SIZE_LIMIT
+from server.constants import DIFF_SIZE_LIMIT, SOURCE_SIZE_LIMIT
 
 class File:
-    def __init__(self, lines, too_big=False):
+    def __init__(self, name, lines=(), source='', too_big=False):
         self.lines = lines
+        self.name = name.lower()
         self.too_big = too_big
+        self.source = source
+        _, self.extension = os.path.splitext(self.name)
 
 class Line:
     def __init__(self, is_diff=True, tag=None,
-            line_before=None, line_after=None, contents='', comments=()):
+                 line_before=None, line_after=None, contents='', comments=()):
         self.is_diff = is_diff
         self.tag = tag
         self.line_before = line_before
@@ -27,11 +31,12 @@ def highlight(filename, source):
     if not source:
         return []  # pygments does not play nice with empty files
     try:
-        highlighted = pygments.highlight(source,
-            pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False),
-            pygments.formatters.HtmlFormatter(nowrap=True))
+        lexer = pygments.lexers.guess_lexer_for_filename(filename, source, stripnl=False)
     except pygments.util.ClassNotFound:
-        highlighted = source
+        lexer = pygments.lexers.TextLexer(stripnl=False)
+
+    highlighted = pygments.highlight(source, lexer,
+                                     pygments.formatters.HtmlFormatter(nowrap=True))
     return highlighted.splitlines(keepends=True)
 
 def highlight_file(filename, source):
@@ -121,17 +126,17 @@ def diff_files(files_before, files_after, diff_type):
             before = files_before.get(filename, '')
             after = files_after.get(filename, '')
             if len(before) > DIFF_SIZE_LIMIT or len(after) > DIFF_SIZE_LIMIT:
-                files[filename] = File([], too_big=True)
+                files[filename] = File(filename, source=after, too_big=True)
             else:
                 lines = list(highlight_diff(filename, before, after, diff_type))
-                files[filename] = File(lines)
+                files[filename] = File(filename, lines, after)
     else:
         for filename, source in files_after.items():
-            if len(source) > DIFF_SIZE_LIMIT:
-                files[filename] = File([], too_big=True)
+            if len(source) > SOURCE_SIZE_LIMIT:
+                files[filename] = File(filename, too_big=True)
             else:
                 lines = list(highlight_file(filename, source))
-                files[filename] = File(lines)
+                files[filename] = File(filename, lines, source)
     return files
 
 def diff_lines(files_before, files_after):
