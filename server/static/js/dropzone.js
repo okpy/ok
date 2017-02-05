@@ -8,7 +8,7 @@ function initDropzone(elem, token) {
         clickable: true,
         parallelUploads: 200,
         maxFiles: 200,
-        maxFilesize: 10, // MB
+        maxFilesize: 15, // MB
         previewTemplate: document.getElementById('dz-preview-template').innerHTML,
         headers: {
             'X-CSRFToken': token
