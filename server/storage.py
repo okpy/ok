@@ -44,14 +44,18 @@ class Storage:
         self.provider_name = app.config.get('STORAGE_PROVIDER', 'LOCAL')
 
         self.provider = get_provider(self.provider_name)
+        driver_cls = get_driver(self.provider)
 
         if self.provider == Provider.LOCAL:
             if not os.path.exists(self.container_name):
                 os.makedirs(self.container_name)
             key = self.container_name
             self.container_name = ''  # Container name represents a child folder.
+        elif self.provider == Provider.GOOGLE_STORAGE:
+            # Enable chunked uploads for performance improvement
+            # Filed Issue: https://issues.apache.org/jira/browse/LIBCLOUD-895
+            driver_cls.supports_chunked_encoding = True
 
-        driver_cls = get_driver(self.provider)
         self.driver = driver_cls(key, secret)
         # Also test credentials by getting the container
         self.container = self.driver.get_container(container_name=self.container_name)
