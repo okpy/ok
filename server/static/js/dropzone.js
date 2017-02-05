@@ -22,9 +22,7 @@ function initDropzone(elem, token) {
             var myDropzone = this; // reference for closure
 
             submitButton.addEventListener("click", function() {
-                Pace.track( function () {
-                    myDropzone.processQueue(); // Tell Dropzone to process all queued files.
-                });
+                myDropzone.processQueue(); // Tell Dropzone to process all queued files.
             })
 
             this.on("addedfile", function(file) {
