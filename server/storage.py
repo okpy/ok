@@ -3,6 +3,7 @@ import hmac
 import hashlib
 import base64
 import datetime as dt
+import logging
 import random
 import string
 from urllib.parse import urlencode, urljoin
@@ -10,6 +11,8 @@ from urllib.parse import urlencode, urljoin
 from werkzeug.utils import secure_filename
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
+
+logger = logging.getLogger(__name__)
 
 def get_provider(name):
     if hasattr(Provider, name.upper()):
@@ -78,9 +81,11 @@ class Storage:
             obj_name = sanitize_filename(prefixed_name)
         elif prefix:
             obj_name = prefix.lstrip("/") + obj_name
+        logger.info("Beginning upload of {}".format(name))
         obj = self.driver.upload_object_via_stream(iterator=iterator,
                                                    container=container,
                                                    object_name=obj_name)
+        logger.info("Completed upload of {}".format(name))
         return obj
 
     def get_blob(self, obj_name, container_name=None):
