@@ -26,7 +26,7 @@ def send_autograder(endpoint, data):
 
     if r.status_code == requests.codes.ok:
         if r.text == "OK":  # e.g. when the token is "test"
-            return {}
+            return None
         return r.json()
     else:
         error_message = 'The autograder rejected your request. {0}'.format(
@@ -75,8 +75,11 @@ def send_batch(token, assignment, backup_ids, priority='default'):
         'priority': priority,
         'ok-server-version': 'v3',
     })
-    return dict(zip(backup_ids, response_json['jobs']))
-
+    if response_json:
+        return dict(zip(backup_ids, response_json['jobs']))
+    else:
+        return {}
+    
 def autograde_backup(token, assignment, backup_id):
     """Autograde a backup, returning and autograder job ID."""
     jobs = send_batch(token, assignment, [backup_id], priority='high')
