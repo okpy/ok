@@ -352,19 +352,7 @@ if driver:
             self.driver.find_element_by_class_name('ag-submit-btn').click()
             time.sleep(0.5)
             self.driver.find_element_by_class_name('confirm').click()
-            self.assertTrue("Submitted to the autograder" in self.driver.page_source)
-
-        def test_assignment_send_to_ag_with_no_token(self):
-            self._login(role="admin")
-            self.assignment.autograding_key = ""
-            models.db.session.commit()
-
-            self.page_load(self.get_server_url() + "/admin/course/1/assignments/1")
-
-            self.assertTrue("Queue on Autograder" in self.driver.page_source)
-            self.driver.find_element_by_class_name('ag-submit-btn').submit()
-            self.assertTrue("Assignment has no autograder key" in self.driver.page_source)
-            self.assertTrue("Submitted to the autograder" not in self.driver.page_source)
+            self.assertIn('Autograde {}'.format(self.assignment.display_name), self.driver.page_source)
 
         def test_assignment_send_backup_to_ag(self):
             self._login(role="admin")
