@@ -25,6 +25,8 @@ def send_autograder(endpoint, data):
                       data=json.dumps(data), headers=headers, timeout=8)
 
     if r.status_code == requests.codes.ok:
+        if r.text == "OK":  # e.g. when the token is "test"
+            return {}
         return r.json()
     else:
         error_message = 'The autograder rejected your request. {0}'.format(
@@ -78,7 +80,7 @@ def send_batch(token, assignment, backup_ids, priority='default'):
 def autograde_backup(token, assignment, backup_id):
     """Autograde a backup, returning and autograder job ID."""
     jobs = send_batch(token, assignment, [backup_id], priority='high')
-    return jobs[backup_id]
+    return jobs.get(backup_id)
 
 def submit_continous(backup):
     """ Intended for continous grading (email with results on submit)
