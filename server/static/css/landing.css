@@ -44,6 +44,9 @@ header .landing-btn {
   .landing {
     padding: 1em 0;
   }
+  .btn-group {
+    padding-bottom: 1em;
+  }
 }
 
 .landing .subtitle {
