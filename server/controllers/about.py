@@ -6,7 +6,7 @@ about = Blueprint('about', __name__)
 def privacy():
     return render_template('about/privacy.html')
 
-@about.route('/research/')
+@about.route('/publications/')
 def research():
-    return render_template('about/research.html')
+    return render_template('about/publications.html')
 
