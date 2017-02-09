@@ -514,12 +514,12 @@ def view_scores(cid, aid):
         flash('Insufficient permissions', 'error')
         return abort(401)
 
-    include_archived = request.args.get('all', False, type=bool)
+    include_all = request.args.get('all', False, type=bool)
     query = (Score.query.options(db.joinedload('backup'), db.joinedload(Score.grader))
                         .filter_by(assignment=assign))
 
-    if not include_archived:
-        query.filter_by(archived=False)
+    if not include_all:
+        query = query.filter_by(archived=False)
     all_scores = query.all()
 
     score_distribution = collections.defaultdict(list)
