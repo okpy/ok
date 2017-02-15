@@ -3,6 +3,7 @@ import hmac
 import hashlib
 import base64
 import datetime as dt
+import logging
 import random
 import string
 from urllib.parse import urlencode, urljoin
@@ -10,6 +11,8 @@ from urllib.parse import urlencode, urljoin
 from werkzeug.utils import secure_filename
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
+
+logger = logging.getLogger(__name__)
 
 def get_provider(name):
     if hasattr(Provider, name.upper()):
@@ -44,14 +47,18 @@ class Storage:
         self.provider_name = app.config.get('STORAGE_PROVIDER', 'LOCAL')
 
         self.provider = get_provider(self.provider_name)
+        driver_cls = get_driver(self.provider)
 
         if self.provider == Provider.LOCAL:
             if not os.path.exists(self.container_name):
                 os.makedirs(self.container_name)
             key = self.container_name
             self.container_name = ''  # Container name represents a child folder.
+        elif self.provider == Provider.GOOGLE_STORAGE:
+            # Enable chunked uploads for performance improvement
+            # Filed Issue: https://issues.apache.org/jira/browse/LIBCLOUD-895
+            driver_cls.supports_chunked_encoding = True
 
-        driver_cls = get_driver(self.provider)
         self.driver = driver_cls(key, secret)
         # Also test credentials by getting the container
         self.container = self.driver.get_container(container_name=self.container_name)
@@ -74,9 +81,11 @@ class Storage:
             obj_name = sanitize_filename(prefixed_name)
         elif prefix:
             obj_name = prefix.lstrip("/") + obj_name
+        logger.info("Beginning upload of {}".format(name))
         obj = self.driver.upload_object_via_stream(iterator=iterator,
                                                    container=container,
                                                    object_name=obj_name)
+        logger.info("Completed upload of {}".format(name))
         return obj
 
     def get_blob(self, obj_name, container_name=None):

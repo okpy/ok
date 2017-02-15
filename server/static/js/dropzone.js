@@ -8,7 +8,7 @@ function initDropzone(elem, token) {
         clickable: true,
         parallelUploads: 200,
         maxFiles: 200,
-        maxFilesize: 10, // MB
+        maxFilesize: 25, // MB
         previewTemplate: document.getElementById('dz-preview-template').innerHTML,
         headers: {
             'X-CSRFToken': token
@@ -22,9 +22,7 @@ function initDropzone(elem, token) {
             var myDropzone = this; // reference for closure
 
             submitButton.addEventListener("click", function() {
-                Pace.track( function () {
-                    myDropzone.processQueue(); // Tell Dropzone to process all queued files.
-                });
+                myDropzone.processQueue(); // Tell Dropzone to process all queued files.
             })
 
             this.on("addedfile", function(file) {

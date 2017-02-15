@@ -402,7 +402,7 @@ class Assignment(Model):
         """ Return assignment object when given a name."""
         return Assignment.query.filter_by(name=name).one_or_none()
 
-    def user_timeline(self, user_id):
+    def user_timeline(self, user_id, current_backup_id=None):
         """ Timeline of user submissions. Returns a dictionary
         with timeline contents from most recent to oldest.
         Example Return:
@@ -444,6 +444,15 @@ class Assignment(Model):
             curr_q_stats = message.contents['history']['questions'].get(curr_q)
             total_attempt_count = message.contents['history'].get('all_attempts')
             is_solved = curr_q_stats.get('solved')
+
+            if current_backup_id and current_backup_id == backup.hashid:
+                current_backup_event = {"event": "Current",
+                                        "attempt": total_attempt_count,
+                                        "title": "Current Backup Queried".format(curr_q),
+                                        "backup": backup}
+                timeline.append(current_backup_event)
+                continue
+
             if contents.get('unlock'):
                 # Is unlocking.
                 if curr_q not in unlock_started_q:
@@ -985,16 +994,13 @@ class Backup(Model):
 
     def files(self):
         """ Return a dictionary of filenames to contents."""
-        message = Message.query.filter_by(
-            backup_id=self.id,
-            kind='file_contents').first()
-        if message:
-            contents = dict(message.contents)
-            # submit is not a real file, but the client sends it anyway
-            contents.pop('submit', None)
-            return contents
-        else:
-            return {}
+        for message in self.messages:
+            if message.kind == 'file_contents':
+                contents = dict(message.contents)
+                # submit is not a real file, but the client sends it anyway
+                contents.pop('submit', None)
+                return contents
+        return {}
 
     def external_files_dict(self):
         """ Return a dictionary of filenames to ExternalFile objects """
@@ -1002,14 +1008,27 @@ class Backup(Model):
         return {f.filename: f for f in external}
 
     def analytics(self):
-        """ Return a dictionary of filenames to contents."""
-        message = Message.query.filter_by(
-            backup_id=self.id,
-            kind='analytics').first()
-        if message:
-            return dict(message.contents)
-        else:
-            return {}
+        """ Return a dictionary of analytics."""
+        for message in self.messages:
+            if message.kind == 'analytics':
+                return dict(message.contents)
+        return {}
+
+    def grading(self):
+        """ Return a dictionary of grading stats."""
+        for message in self.messages:
+            if message.kind == 'grading':
+                return dict(message.contents)
+        return {}
+
+    def unlocking(self):
+        """ Return a string for which question the student is unlocking."""
+        for message in self.messages:
+            if message.kind == 'unlock' and len(message.contents):
+                dict_form = dict(message.contents[0])
+                case = dict_form["case_id"]
+                return case
+        return "Unknown Question"
 
     @staticmethod
     @cache.memoize(120)

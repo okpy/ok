@@ -1,0 +1,74 @@
+{% extends "staff/base.html" %}
+{% import 'diff.html' as diff with context %}
+
+{% block title %} {{assignment.display_name}} Diff Graph {% endblock %}
+
+{% block main %}
+<style> .pygal-chart {max-height: 1000px !important;} </style>
+<section class="content-header">
+    <h1>
+    {{ student.identifier }}'s {{ assignment.display_name }}
+    </h1>
+    <ol class="breadcrumb">
+    <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+        <i class="fa fa-university"></i> {{ current_course.offering }}
+    </a></li>
+    <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+      <i class="fa fa-list"></i> Assignments</a>
+    </li>
+    <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+    <li> <a href="{{ url_for('.student_view', cid=current_course.id, email=student.email) }}"><i class="fa fa-user"></i> {{ student.identifier }} </a></li>
+    <li class="active"><a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=assignment.id) }}"><i class="fa fa-inbox"></i> History </a></li>
+    </ol>
+</section>
+
+<section class="content">
+    {% include 'alerts.html' %}
+
+    <!-- Default box -->
+    <!-- Content Box -->
+    <div class="row">
+        <div class="col-md-6 col-xs-12">
+            <div class="box box-default collapsed-box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Submitter Information</h3>
+
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                    <!-- /.box-tools -->
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" class="spoiler">
+                    {% if group %}
+                        <b>Group: </b>
+                          {% for member in group %}
+                              <a href="{{ url_for('.student_assignment_detail', cid=assignment.course.id, email=member.email, aid=assignment.id) }}">
+                                 {{ member.email }}
+                              </a>
+                          {% endfor %}
+                        <br>
+                    {% endif %}
+                </div>
+                <!-- /.box-body -->
+            </div>
+        </div>
+            <!-- /.widget-user -->
+    </div>
+
+    <div class="box-body">
+        <div class="row">
+            {% for graph in graphs %}
+                <div class="col-xs-8 centered">
+                    {{ graph.render() | safe }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+        <!-- </section> do not close the content section -->
+
+        <!-- </body> do not close body in template-->
+        {% endblock %}
+

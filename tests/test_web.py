@@ -352,19 +352,7 @@ if driver:
             self.driver.find_element_by_class_name('ag-submit-btn').click()
             time.sleep(0.5)
             self.driver.find_element_by_class_name('confirm').click()
-            self.assertTrue("Submitted to the autograder" in self.driver.page_source)
-
-        def test_assignment_send_to_ag_with_no_token(self):
-            self._login(role="admin")
-            self.assignment.autograding_key = ""
-            models.db.session.commit()
-
-            self.page_load(self.get_server_url() + "/admin/course/1/assignments/1")
-
-            self.assertTrue("Queue on Autograder" in self.driver.page_source)
-            self.driver.find_element_by_class_name('ag-submit-btn').submit()
-            self.assertTrue("Assignment has no autograder key" in self.driver.page_source)
-            self.assertTrue("Submitted to the autograder" not in self.driver.page_source)
+            self.assertIn('Autograde {}'.format(self.assignment.display_name), self.driver.page_source)
 
         def test_assignment_send_backup_to_ag(self):
             self._login(role="admin")
@@ -408,6 +396,47 @@ if driver:
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/timeline".format(self.user1.email, self.assignment.id))
             self.assertIn('Timeline', self.driver.title)
+
+        def test_admin_student_assign_graph(self):
+            self._login(role="admin")
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/graph".format(self.user1.email, self.assignment.id))
+            self.assertIn('Diff Graph', self.driver.title)
+
+        def _gen_backup(self, user, assignment, text, seconds_offset):
+            def gen_messages(assignment):
+                created = assignment.due_date - datetime.timedelta(seconds=seconds_offset)
+                messages = {
+                    'file_contents': {
+                        'fizz.py': text,
+                    },
+                    'analytics': {
+                        'question': ['fizz'],
+                        'time': str(created)
+                    }
+                }
+                return messages
+            messages = gen_messages(assignment)
+            backup = models.Backup(
+                created=assignment.due_date - datetime.timedelta(seconds=seconds_offset),
+                submitter_id=user.id,
+                assignment_id=assignment.id)
+            backup.messages = [models.Message(kind=k, contents=m) for k, m in messages.items()]
+            return backup
+
+        def test_admin_student_assign_diff_overview(self):
+            self._login(role="admin")
+
+            backups = []
+            for _ in range(3):
+                backup = self._gen_backup(self.user1, self.assignment, "hello{}".format(_), _)
+                backups.append(backup)
+                models.db.session.add(backup)
+            models.db.session.commit()
+            bid = utils.encode_id(backups[0].id)
+
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/{}?student_email={}".format(
+                self.user1.email, self.assignment.id, bid, self.user1.email))
+            self.assertIn('Diff Overview', self.driver.title)
 
         def test_queue_create(self):
             self._login(role="admin")
