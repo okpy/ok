@@ -1,14 +1,3 @@
-window.paceOptions = {
-  startOnPageLoad: false,
-  ajax: {
-    trackMethods: ['GET', 'POST', 'DELETE', 'PUT'],
-    trackWebSockets: true,
-    ignoreURLs: []
-  },
-  restartOnPushState: false,
-  eventLag: false // disabled
-};
-
 if (typeof HTMLElement.prototype.removeClass !== "function") {
     HTMLElement.prototype.removeClass = function(remove) {
         var newClassName = "";

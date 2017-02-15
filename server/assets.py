@@ -48,14 +48,12 @@ common_js = Bundle(
 
 dropzone_css = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/themes/blue/pace-theme-loading-bar.css',
     'css/dropzone.css',
     filters='cssmin',
     output='public/css/dropzone.css'
 )
 dropzone_js = Bundle(
     'https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.js',
     'js/dropzone.js',
     filters='jsmin',
     output='public/js/dropzone.js'
@@ -110,7 +108,7 @@ code_css = Bundle(
 code_js = Bundle(
     'js/comments.js',
     'js/notebook.js',
-    'https://cdn.rawgit.com/okpy/notebookjs/6821d77a/notebook.js',
+    'https://cdn.rawgit.com/okpy/notebookjs/ce53691/notebook.js',
     'https://cdn.rawgit.com/drudru/ansi_up/32a3c2de/ansi_up.js',
     filters='jsmin',
     output='public/js/code.js'

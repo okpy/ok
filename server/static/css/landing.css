@@ -44,6 +44,9 @@ header .landing-btn {
   .landing {
     padding: 1em 0;
   }
+  .btn-group {
+    padding-bottom: 1em;
+  }
 }
 
 .landing .subtitle {
@@ -82,4 +85,8 @@ header .landing-btn {
 .privacy {
   text-align: left;
   padding-top: 0;
+}
+
+.pill-button {
+  border-color: #337ab7;
 }

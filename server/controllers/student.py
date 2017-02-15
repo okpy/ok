@@ -172,10 +172,10 @@ def submit_assignment(name):
 
         for full_path, upload in zip(full_path_names, uploads):
             data = upload.read()
-            if len(data) > MAX_UPLOAD_FILE_SIZE:  # file is too large (over 15 MB)
+            if len(data) > MAX_UPLOAD_FILE_SIZE:  # file is too large (over 25 MB)
                 return jsonify({
-                  'error': ('{} is larger than the maximum file size of {}MB'
-                            .format(full_path, MAX_UPLOAD_FILE_SIZE))
+                  'error': ('{} is larger than the maximum file size of {} MB'
+                            .format(full_path, MAX_UPLOAD_FILE_SIZE/1024/1024))
                 }), 400
             try:
                 files[full_path] = str(data, 'utf-8')

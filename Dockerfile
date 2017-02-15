@@ -19,7 +19,6 @@ CMD nginx && \
     env PYTHONPATH=$PYTHONPATH:$PWD gunicorn \
         --logger-class server.logging.gunicorn.Logger \
         --timeout 60 \
-        --threads 2 \
         --bind unix:/tmp/server.sock \
         --workers 3 \
         wsgi:app
