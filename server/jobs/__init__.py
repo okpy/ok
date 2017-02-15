@@ -37,10 +37,6 @@ def get_current_job():
 def get_job_logger():
     return logging.getLogger('{}.job_{}'.format(__name__, get_current_job().id))
 
-def get_job_creator():
-    job = Job.query.get(get_job_id())
-    return job.user
-
 def background_job(f):
     @functools.wraps(f)
     def job_handler(*args, **kwargs):

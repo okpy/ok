@@ -110,7 +110,7 @@ def export_assignment(assignment_id, anonymized):
     logger = jobs.get_job_logger()
 
     assignment = Assignment.query.get(assignment_id)
-    requesting_user = jobs.get_job_creator()
+    requesting_user = jobs.get_current_job().user
 
     if not assignment:
         logger.warning("No assignment found")
