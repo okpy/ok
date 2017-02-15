@@ -41,6 +41,7 @@ def audit_missing_scores(assign_id):
             logger.info("Students without {} scores: {}".format(score_kind, ', '.join(difference)))
         elif len(difference) >= 200:
             # Avoid creating very long lines.
+            subset = list(difference)[:200]
             logger.info("{} students do not have {} scores. Here are a few: {}"
-                        .format(len(difference), score_kind, ', '.join(difference[:200])))
+                        .format(len(difference), score_kind, ', '.join(subset)))
         logger.info("---"*20)
