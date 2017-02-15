@@ -18,6 +18,8 @@ import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, CanvasCourse, CanvasAssignment, db)
+from server.contrib import analyze
+
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
 
@@ -994,6 +996,120 @@ def student_assignment_detail(cid, email, aid):
                            stats=stats,
                            assign_status=assignment_stats)
 
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/<hashid:backup_id>")
+@is_staff(course_arg='cid')
+def student_backups_overview(cid, email, aid, backup_id):
+    courses, current_course = get_courses(cid)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    user_id = {student.id}
+    timeline_stats = assign.user_timeline(student.id, backup_id)
+    partner_ids = assign.active_user_ids(student.id) - user_id
+
+    # get students.id's backups
+    backups = (Backup.query.options(db.joinedload('messages'),
+                                    db.joinedload('submitter'))
+                     .filter(Backup.submitter_id.in_(user_id),
+                             Backup.assignment_id == assign.id)
+                     .order_by(Backup.created.asc())).all()
+    analyze.sort_by_client_time(backups)
+
+    # get partners' backups
+    partner_backups = (Backup.query.options(db.joinedload('messages'),
+                                    db.joinedload('submitter'))
+                     .filter(Backup.submitter_id.in_(partner_ids),
+                             Backup.assignment_id == assign.id)
+                     .order_by(Backup.created.asc())).all()
+    analyze.sort_by_client_time(partner_backups)
+
+    diff_dict = analyze.get_diffs(backups, backup_id, partner_backups)
+    if not diff_dict:
+        # either no unique backups or wrong backup_id
+        return abort(404)
+
+    group = [User.query.get(o) for o in backups[0].owners()] #Todo (Stan): fix?
+
+    stats_list = diff_dict["stats"]
+    files_list = diff_dict["files"]
+    partner_files_list = diff_dict["partners"]
+    backup_id = diff_dict["backup_id"] # relevant backup_id might be different
+    prev_backup_id = diff_dict["prev_backup_id"]
+    next_backup_id = diff_dict["next_backup_id"]
+
+    # calculate starting diff for template
+
+    start_index = [i for i, stat in enumerate(stats_list) if stat["bid"] == backup_id]
+    if start_index: # edge case for 1st backup; no diff will be found
+        start_index = start_index[0]
+    else:
+        start_index = 0
+    return render_template('staff/student/assignment.overview.html',
+                           current_course=current_course,
+                           student=student, assignment=assign,
+                           stats_list=stats_list, files_list=files_list,
+                           partner_files_list=partner_files_list,
+                           group=group, start_index=start_index,
+                           prev_backup_id = prev_backup_id,
+                           next_backup_id = next_backup_id,
+                           submitters=timeline_stats['submitters'],
+                           timeline=timeline_stats['timeline'])
+
+@admin.route("/course/<int:cid>/<string:email>/<int:aid>/graph")
+@is_staff(course_arg='cid')
+def student_assignment_graph_detail(cid, email, aid):
+    courses, current_course = get_courses(cid)
+
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    student = User.lookup(email)
+    if not student.is_enrolled(cid):
+        flash("This user is not enrolled", 'warning')
+
+    user_ids = list(assign.active_user_ids(student.id))
+    user_ids.remove(student.id) # should always exist
+    user_ids.insert(0, student.id) # insert to front of list
+    
+    line_charts = []
+
+    all_backups = (Backup.query.options(db.joinedload('messages'),
+                                        db.joinedload('submitter'))
+                         .filter(Backup.submitter_id.in_(set(user_ids)),
+                                 Backup.assignment_id == assign.id)
+                         .order_by(Backup.created.asc())).all()
+    all_backups_dict = {}
+
+    for backup in all_backups:
+        if backup.submitter_id not in all_backups_dict:
+            all_backups_dict[backup.submitter_id] = [backup]
+        else:
+            all_backups_dict[backup.submitter_id].append(backup)
+
+    for user_id in user_ids:
+        backups = []
+        if user_id in all_backups_dict:
+            backups = all_backups_dict[user_id]
+        analyze.sort_by_client_time(backups)
+        line_chart = analyze.generate_line_chart(backups, cid, User.query.get(user_id).email, aid)
+        line_charts.append(line_chart)
+
+    group = [User.query.get(owner) for owner in user_ids] #TODO
+
+    return render_template('staff/student/assignment.graph.html',
+                           current_course=current_course,
+                           student=student, assignment=assign,
+                           group=group,
+                           graphs=line_charts)
 
 ########################
 # Student view actions #

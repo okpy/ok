@@ -397,6 +397,47 @@ if driver:
             self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/timeline".format(self.user1.email, self.assignment.id))
             self.assertIn('Timeline', self.driver.title)
 
+        def test_admin_student_assign_graph(self):
+            self._login(role="admin")
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/graph".format(self.user1.email, self.assignment.id))
+            self.assertIn('Diff Graph', self.driver.title)
+
+        def _gen_backup(self, user, assignment, text, seconds_offset):
+            def gen_messages(assignment):
+                created = assignment.due_date - datetime.timedelta(seconds=seconds_offset)
+                messages = {
+                    'file_contents': {
+                        'fizz.py': text,
+                    },
+                    'analytics': {
+                        'question': ['fizz'],
+                        'time': str(created)
+                    }
+                }
+                return messages
+            messages = gen_messages(assignment)
+            backup = models.Backup(
+                created=assignment.due_date - datetime.timedelta(seconds=seconds_offset),
+                submitter_id=user.id,
+                assignment_id=assignment.id)
+            backup.messages = [models.Message(kind=k, contents=m) for k, m in messages.items()]
+            return backup
+
+        def test_admin_student_assign_diff_overview(self):
+            self._login(role="admin")
+
+            backups = []
+            for _ in range(3):
+                backup = self._gen_backup(self.user1, self.assignment, "hello{}".format(_), _)
+                backups.append(backup)
+                models.db.session.add(backup)
+            models.db.session.commit()
+            bid = utils.encode_id(backups[0].id)
+
+            self.page_load(self.get_server_url() + "/admin/course/1/{}/{}/{}?student_email={}".format(
+                self.user1.email, self.assignment.id, bid, self.user1.email))
+            self.assertIn('Diff Overview', self.driver.title)
+
         def test_queue_create(self):
             self._login(role="admin")
             self.page_load(self.get_server_url() + "/admin/")

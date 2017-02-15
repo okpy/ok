@@ -1,0 +1,263 @@
+{% extends "staff/base.html" %}
+{% import 'diff.html' as diff with context %}
+
+{% block title %} {{ assignment.display_name }} Diff Overview {% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+      {{ student.identifier }}'s {{ assignment.display_name }}
+    </h1>
+    <ol class="breadcrumb">
+      <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+          <i class="fa fa-university"></i> {{ current_course.offering }}
+      </a></li>
+      <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+        <i class="fa fa-list"></i> Assignments</a>
+      </li>
+      <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+      <li> <a href="{{ url_for('.student_view', cid=current_course.id, email=student.email) }}"><i class="fa fa-user"></i> {{ student.identifier }} </a></li>
+      <li class="active"><a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=student.email, aid=assignment.id) }}"><i class="fa fa-inbox"></i> History </a></li>
+    </ol>
+</section>
+
+<section class="content">
+    {% include 'alerts.html' %}
+
+    <ul class="pager">
+      <li class="previous" onclick="scroll_left()">
+        <a href="#">Previous</a>
+      </li>
+      <li class="timeline_toggle" onclick="toggle_timeline()">
+        <a href="#">Toggle Timeline</a>
+      </li>
+      <li class="next" onclick="scroll_right()">
+        <a href="#">Next</a>
+      </li>
+    </ul>
+
+    {% for stats in stats_list %}
+        {{stats_box(stats)}}
+    {% endfor %}
+
+    <div class="row">
+      {% for submitter in submitters | sort %}
+      <div class="col-md-5">
+        <!-- Default box -->
+              <ul class="timeline hidden">
+                  <!-- timeline time label -->
+                  <li class="time-label">
+                      <a href="{{ url_for('.student_view', cid=current_course.id, email=submitter) }}">
+                          <span class="bg-red">
+                              {{ submitter }} ( {{ submitters[submitter] }} backups)
+                          </span>
+                      </a>
+                  </li>
+                  {{ diff.render_timeline(timeline, submitter) }}
+              </ul>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 col-xs-12">
+            <p> Student Diff against previous backup </p>
+            {% for files in files_list %}
+                <div class="subcontent list diff-delta hidden">
+                    <div class="wrap">
+                        {% for filename, lines in files | dictsort %}
+                          {{ diff_lines(lines) }}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="col-md-6 col-xs-12">
+            <p> Student Diff against previous partner backup </p>
+            {% for files in partner_files_list %}
+                <div class="subcontent list prev-backup hidden">
+                  {% if not files %}
+                  <p> No previous partner backup </p>
+                  {% else %}
+                    <div class="wrap">
+                        {% for filename, lines in files | dictsort %}
+                          {{ diff_lines(lines) }}
+                        {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- /.box -->
+
+    <script type="text/template" id="editor-template">
+        {{ diff.editor_template() }}
+    </script>
+
+    <!-- /.box -->
+    <!-- </section> do not close the content section -->
+
+    <!-- </body> do not close body in template-->
+    {% endblock %}
+
+{% macro diff_lines(file) %}
+  <div class="source-file table-responsive"
+    data-filename="{{ file.name }}">
+    <table class="highlight">
+      <tbody>
+        {{ diff.render_source(file) }}
+      </tbody>
+    </table>
+  </div>
+{% endmacro %}
+
+{% macro stats_box(stat) %}
+    <div class="row diff-delta-box hidden">
+        <div class="col-md-12 col-xs-1">
+            <div class="box box-default collapsed-box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Diff Information </h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                    <!-- /.box-tools -->
+                </div>
+                <div class="box-body" class="spoiler" style="display:block">
+                  <ul class="list-group list-group-unbordered">
+                    <li class="list-group-item">
+                      <b>Group: </b>
+                      {% for member in group %}
+                          <a href="{{ url_for('.student_assignment_detail', cid=assignment.course.id, email=member.email, aid=assignment.id) }}">
+                             {{ member.email }}
+                          </a>
+                      {% endfor %}
+                    </li>
+                    <li class="list-group-item">
+                      <b> Submitted Email: </b>
+                      {{stat.submitter}}
+                    </li>
+                    <li class="list-group-item">
+                      <b> Backup ID: </b>
+                      <a href="{{ url_for('.grading', bid=stat.bid)}}">
+                      {{stat.backup_id}}
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                      <b> Partner's most recent Backup ID: </b>
+                      {% if stat.partner_backup_id %}
+                        <a href="{{ url_for('.grading', bid=stat.partner_bid)}}">
+                        {{stat.partner_backup_id}}
+                        </a>
+                      {% else %}
+                        None
+                      {% endif %}
+                    </li>
+                    <li class="list-group-item">
+                      <b> Question : </b>
+                      {{stat.question}}
+                    </li>
+                    <li class="list-group-item">
+                      <b> Time Submitted: </b>
+                      {{stat.time}}
+                    </li>
+                    <li class="list-group-item">
+                      <b> Number of Tests Passed: </b>
+                      {{stat.passed}}
+                    </li>
+                  </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% block page_css %}
+  {{ css_asset("code_css") }}
+{% endblock %}
+
+{% block page_js %}
+    {{ js_asset("code_js") }}
+<script type="text/javascript">
+    // show only diff 1
+    var backup_number = {{start_index}};
+    var backup_total = $('.diff-delta').length;
+    $('.diff-delta').eq(backup_number).removeClass("hidden");
+    $('.diff-delta-box').eq(backup_number).removeClass("hidden");
+    $('.prev-backup').eq(backup_number).removeClass("hidden");
+
+    // create buttons
+    $(document).ready(function(){
+        $('#prev').click(function(){
+            scroll_left()
+        });
+        $('#next').click(function(){
+            scroll_right()
+        });
+    });
+
+    // bind arrow keys
+    $(document).keydown(function(e) {
+    switch(e.which) {
+        case 37: // left
+        scroll_left()
+        break;
+
+        case 39: // right
+        scroll_right()
+        break;
+
+        default: return; // exit this handler for other keys
+    }
+    e.preventDefault(); // prevent the default action (scroll / move caret)
+});
+
+    function scroll_left() {
+        if (backup_number > 0) {
+            // showValue(backup_number - 1);
+            $('.diff-delta').eq(backup_number).addClass("hidden");
+            $('.diff-delta-box').eq(backup_number).addClass("hidden");
+            $('.prev-backup').eq(backup_number).addClass("hidden");
+            backup_number = backup_number - 1;
+            $('.diff-delta').eq(backup_number).removeClass("hidden");
+            $('.diff-delta-box').eq(backup_number).removeClass("hidden");
+            $('.prev-backup').eq(backup_number).removeClass("hidden");
+        }
+        else {
+          if (backup_number != {{start_index}}) {
+              url = "{{url_for('.student_backups_overview', email = student.email, cid=assignment.course.id, aid=assignment.id, backup_id = prev_backup_id)}}"
+              window.location.assign(url);
+          }
+        }
+    }
+
+    function scroll_right() {
+        if (backup_number < backup_total - 1) {
+            // showValue(backup_number + 1);
+            $('.diff-delta').eq(backup_number).addClass("hidden");
+            $('.diff-delta-box').eq(backup_number).addClass("hidden");
+            $('.prev-backup').eq(backup_number).addClass("hidden");
+            backup_number = backup_number + 1;
+            $('.diff-delta').eq(backup_number).removeClass("hidden");
+            $('.diff-delta-box').eq(backup_number).removeClass("hidden");
+            $('.prev-backup').eq(backup_number).removeClass("hidden");
+        }
+        else {
+            if (backup_number != {{start_index}})
+            url = "{{url_for('.student_backups_overview', email = student.email, cid=assignment.course.id, aid=assignment.id, backup_id = next_backup_id)}}"
+            window.location.assign(url);
+        }
+    }
+
+    function toggle_timeline() {
+        if ($('.timeline').hasClass("hidden")) {
+          $('.timeline').removeClass("hidden");
+        } else {
+          $('.timeline').addClass("hidden");
+        }
+    }
+
+</script>
+{% endblock %}
