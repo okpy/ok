@@ -30,6 +30,7 @@ import server.forms as forms
 import server.jobs as jobs
 import server.jobs.example as example
 import server.jobs.moss as moss
+import server.jobs.scores_audit as scores_audit
 import server.jobs.github_search as github_search
 
 import server.highlight as highlight
@@ -507,8 +508,64 @@ def publish_scores(cid, aid):
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)
 
-
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
+@is_staff(course_arg='cid')
+def view_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'export'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
+    include_all = request.args.get('all', False, type=bool)
+    query = (Score.query.options(db.joinedload('backup'), db.joinedload(Score.grader))
+                        .filter_by(assignment=assign))
+
+    if not include_all:
+        query = query.filter_by(archived=False)
+    all_scores = query.all()
+
+    score_distribution = collections.defaultdict(list)
+    for score in all_scores:
+        score_distribution[score.kind].append(score.score)
+
+    bar_charts = collections.OrderedDict()
+    sorted_kinds = sorted(score_distribution, reverse=True,
+                          key=lambda x: len(score_distribution[x]))
+    for kind in sorted_kinds:
+        score_values = score_distribution[kind]
+        score_counts = collections.Counter(score_values)
+        bar_chart = pygal.Bar(show_legend=False, x_labels_major_count=6, margin=0,
+                              height=400, show_minor_x_labels=False, truncate_label=5)
+        bar_chart.fill = True
+        bar_chart.title = '{} distribution ({} items)'.format(kind, len(score_values))
+        bar_chart.add(kind, [score_counts.get(x) for x in sorted(score_counts)])
+        bar_chart.x_labels = [x for x in sorted(score_counts)]
+
+        bar_charts[kind] = bar_chart.render().decode("utf-8")
+
+
+    return render_template('staff/course/assignment/assignment.scores.html',
+                           assignment=assign, current_course=current_course,
+                           courses=courses, scores=all_scores,
+                           score_plots=bar_charts)
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores/audit")
+@is_staff(course_arg='cid')
+def audit_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'export'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+    job = jobs.enqueue_job(scores_audit.audit_missing_scores,
+                           course_id=current_course.id,
+                           description='Missing scores audit for {}'.format(assign.display_name),
+                           assign_id=assign.id)
+    return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores.csv")
 @is_staff(course_arg='cid')
 def export_scores(cid, aid):
     courses, current_course = get_courses(cid)
