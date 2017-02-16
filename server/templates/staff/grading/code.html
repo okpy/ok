@@ -90,7 +90,7 @@
                           <span class="label label-default">Unpublished</span>
                         {% endif %}
                       </p>
-                      <pre>{{ score.message }}</pre>
+                      <pre class="score-box">{{ score.message }}</pre>
                       <p>{{ utils.local_time(score.created, backup.assignment.course) }} from {{ score.grader.email }}</p>
                     </li>
                   {% else %}

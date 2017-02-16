@@ -278,6 +278,10 @@ table.highlight tr:last-child td.comment-container {
   color: #777;
 }
 
+.score-box {
+  max-height: 200px;
+}
+
 .dl-button {
     background-color: #eee;
     color: #6c6c6c;
