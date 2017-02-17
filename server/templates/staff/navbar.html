@@ -66,26 +66,26 @@
           <ul class="dropdown-menu" role="menu">
             <li>
               <a href="{{ url_for('.course', cid=current_course.id) }}">
-                <i class="fa fa fa-university {% if (request.endpoint == " admin.course
-                  " and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
+                <i class="fa fa fa-university {% if (request.endpoint == 'admin.course' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
                   Dashboard
               </a>
             </li>
             <li>
               <a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
-                <i class="fa fa-book {% if (request.endpoint == " admin.course_assignments
-                  " and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
+                <i class="fa fa-book {% if (request.endpoint == 'admin.course_assignments' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
                   Assignments
               </a>
             </li>
             <li>
               <a href="{{ url_for('.enrollment', cid=current_course.id) }}">
-                <i class="fa fa-list {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>                Enrollment
+                <i class="fa fa-list {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
+                Enrollment
               </a>
             </li>
             <li>
               <a href="{{ url_for('.course_settings', cid=current_course.id) }}">
-                <i class="fa fa-cogs {% if (request.endpoint == 'admin.course_settings' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>                Settings
+                <i class="fa fa-cogs {% if (request.endpoint == 'admin.course_settings' and request.view_args['cid'] == current_course.id) %} text-blue{% endif %}"></i>
+                Settings
               </a>
             </li>
             <li class="divider"></li>
