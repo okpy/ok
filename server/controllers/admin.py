@@ -89,9 +89,9 @@ def get_courses(cid=None):
 @is_staff()
 def index():
     courses, current_course = get_courses()
-    if courses:
+    if courses and not current_user.admin:
         return redirect(url_for(".course_assignments", cid=courses[0].id))
-    return render_template('staff/index.html', courses=courses)
+    return redirect(url_for(".list_courses"))
 
 @admin.route('/grading')
 @is_staff()
