@@ -53,9 +53,17 @@ def index():
     if current_user.is_authenticated:
         enrollments = current_user.enrollments(VALID_ROLES)
         student_enrollments = [e for e in enrollments if e.role == STUDENT_ROLE]
+        staff_enrollments = [e.course for e in enrollments if e.role in STAFF_ROLES]
+
+        # If not a student elsewhere - send staff members directly the admin view
+        if current_user.is_admin or (staff_enrollments and not student_enrollments):
+            if len(staff_enrollments) == 1:
+                return redirect(url_for('admin.course', cid=staff_enrollments[0].course.id))
+            return redirect(url_for('admin.list_courses'))
+
         all_courses = Course.query.all()
         courses = {
-            'instructor': [e.course for e in enrollments if e.role in STAFF_ROLES],
+            'instructor': staff_enrollments,
             'current': [e.course for e in student_enrollments if e.course.active],
             'past': [e.course for e in student_enrollments if not e.course.active],
             'all': all_courses,
