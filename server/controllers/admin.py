@@ -318,6 +318,20 @@ def client_version(name):
 ##########
 # Course #
 ##########
+@admin.route("/course/")
+@is_staff()
+def list_courses():
+    courses, current_course = get_courses()
+    active_courses = [c for c in courses if c.active]
+    inactive_courses = [c for c in courses if not c.active]
+    other_courses = [c for c in Course.query.all() if c not in courses]
+
+    return render_template('staff/course/course.list.html',
+    current_course=current_course, courses=courses,
+                           active_courses=active_courses,
+                           inactive_courses=inactive_courses,
+                           other_courses=other_courses)
+
 @admin.route("/course/new", methods=['GET', 'POST'])
 @is_staff()
 def create_course():

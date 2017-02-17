@@ -1,0 +1,125 @@
+{% set logout %}
+    <a>
+      <form method="POST" action="{{ url_for('auth.logout' )}}" role="form" class="inline">
+        <div style="display:none;"><input id="csrf_token" name="csrf_token" type="hidden" value="{{ csrf_token() }}"></div>
+        <button class="plain-btn" style="padding: 0;" type="submit">
+                    <span>Logout</span>
+                  </button>
+      </form>
+    </a>
+{% endset %}
+
+{% set api_dropdown %}
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">API <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="{{ url_for('.clients') }}">OAuth Clients</a></li>
+            <li><a href="{{ url_for('.client_version', name='ok-client') }}">OK Client Version</a></li>
+            <li class="divider"></li>
+            <li><a href="https://ok-oauth.app.cs61a.org">Access Token</a></li>
+            <li class="divider"></li>
+            <li><a href="http://okpy.github.io/documentation">Documentation</a></li>
+          </ul>
+{% endset %}
+
+<nav class="navbar navbar-static-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <a href="{{ url_for('admin.index') }}" class="navbar-brand">
+        <b>ok</b>
+      </a>
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+                <i class="fa fa-bars"></i>
+              </button>
+    </div>
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse pull-left" id="navbar-collapse">
+      <ul class="nav navbar-nav">
+
+        {% if current_user.num_grading_tasks() %}
+          <li {% if request.endpoint=="admin.grading_tasks" %} class="active" {% endif %}>
+            <a href="{{ url_for('.grading_tasks') }}">Grading <span class="label label-primary pull-right"> {{ current_user.num_grading_tasks() }}</span> </a>
+          </li>
+        {% endif %}
+
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown"> Courses <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+
+            {% for course in courses %}
+              {% if course.active %}
+              <li><a href="{{ url_for('.course', cid=course.id) }}">
+                    {{ course.display_name_with_semester | truncate(20, True) }}
+                   </a>
+              </li>
+              {% endif %}
+            {% endfor %}
+            <li class="divider"></li>
+            <li><a href="{{ url_for('.list_courses') }}"><i class="fa fa-list"></i>View All Courses</a></li>
+            <li class="divider"></li>
+            <li><a href="{{ url_for('.create_course') }}"><i class="fa fa-plus"></i> Create New Course</a></li>
+          </ul>
+        </li>
+        <!-- Current Course Actions -->
+        {% if current_course %}
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown"> {{ current_course.display_name_with_semester | truncate(15, True) }} <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li>
+              <a href="{{ url_for('.course', cid=current_course.id) }}">
+                <i class="fa fa fa-university {% if (request.endpoint == " admin.course
+                  " and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
+                  Dashboard
+              </a>
+            </li>
+            <li>
+              <a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+                <i class="fa fa-book {% if (request.endpoint == " admin.course_assignments
+                  " and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
+                  Assignments
+              </a>
+            </li>
+            <li>
+              <a href="{{ url_for('.enrollment', cid=current_course.id) }}">
+                <i class="fa fa-list {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>                Enrollment
+              </a>
+            </li>
+            <li>
+              <a href="{{ url_for('.course_settings', cid=current_course.id) }}">
+                <i class="fa fa-cogs {% if (request.endpoint == 'admin.course_settings' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>                Settings
+              </a>
+            </li>
+            <li class="divider"></li>
+            <li>
+              <a href="{{ url_for('student.course', offering=current_course.offering) }}">
+                <i class="fa fa-user"></i> Student View
+              </a>
+            </li>
+          </ul>
+        </li>
+        {% endif %}
+        <!-- Only show these in small screen sizes -->
+        <li class="dropdown hidden-sm visible-xs-block">
+          {{ api_dropdown }}
+        </li>
+        <li>
+        <li class="hidden-sm visible-xs-block">
+          {{ logout }}
+        </li>
+      </ul>
+    </div>
+    <!-- /.navbar-collapse -->
+    <!-- Navbar Right Menu -->
+    <div class="navbar-custom-menu navbar-collapse hidden-xs">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+          {{ api_dropdown }}
+        </li>
+        <li>
+          {{ logout }}
+        </li>
+      </ul>
+    </div>
+    <!-- /.navbar-custom-menu -->
+  </div>
+  <!-- /.container -->
+</nav>
