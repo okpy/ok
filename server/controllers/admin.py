@@ -89,7 +89,7 @@ def get_courses(cid=None):
 @is_staff()
 def index():
     courses, current_course = get_courses()
-    if courses and not current_user.admin:
+    if courses and not current_user.is_admin:
         return redirect(url_for(".course_assignments", cid=courses[0].id))
     return redirect(url_for(".list_courses"))
 
