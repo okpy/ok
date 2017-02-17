@@ -32,7 +32,7 @@
     {% block css %}
     {% endblock %}
   </head>
-  <body class="skin-blue layout-top-nav">
+  <body {% block body_attrs %}{% endblock %}>
 
     {% block body %}
     {% endblock %}
