@@ -117,10 +117,7 @@ if driver:
             self.assertIn('Login', self.driver.title)
 
             self.driver.find_element_by_id(role).click()
-            if role in STAFF_ROLES:
-                self.assertIn('All Courses', self.driver.title)
-            else:
-                self.assertIn('Courses | Ok', self.driver.title)
+            self.assertIn('Courses', self.driver.title)
 
 
         def _login_as(self, email=None):
