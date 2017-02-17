@@ -48,7 +48,7 @@
             {% for course in courses %}
               {% if course.active %}
               <li><a href="{{ url_for('.course', cid=course.id) }}">
-                    {{ course.display_name_with_semester | truncate(20, True) }}
+                    {{ course.display_name_with_semester | truncate(30, True) }}
                    </a>
               </li>
               {% endif %}
@@ -62,7 +62,7 @@
         <!-- Current Course Actions -->
         {% if current_course %}
         <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown"> {{ current_course.display_name_with_semester | truncate(15, True) }} <span class="caret"></span></a>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown"> {{ current_course.display_name_with_semester | truncate(30, True) }} <span class="caret"></span></a>
           <ul class="dropdown-menu" role="menu">
             <li>
               <a href="{{ url_for('.course', cid=current_course.id) }}">
