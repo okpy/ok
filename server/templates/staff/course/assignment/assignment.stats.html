@@ -11,7 +11,6 @@
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
         <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
@@ -19,7 +18,7 @@
           <i class="fa fa-list"></i> Assignments</a>
         </li>
         <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
-        <li class="active"><a href="#"><i class="fa fa-bar-chart"></i> Stats </a></li>
+        <li class="active hidden-xs"><a href="#"><i class="fa fa-bar-chart"></i> Stats </a></li>
       </ol>
   </section>
 

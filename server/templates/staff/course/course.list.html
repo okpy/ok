@@ -54,7 +54,6 @@
         All Courses
       </h1>
       <ol class="breadcrumb">
-        <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
         <li class="active"><a href="#"><i class="fa fa-list"></i> All Courses </a></li>
       </ol>
   </section>
@@ -67,7 +66,7 @@
           <div class="box-header with-border">
             <h3 class="box-title">Current Courses</h3>
             <div class="box-tools pull-right">
-              <a class="btn btn-primary" href="{{url_for('.create_course')}}">
+              <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.create_course')}}">
                 <i class="fa fa-plus"></i> Create Course
               </a>
             </div>

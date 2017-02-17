@@ -10,7 +10,6 @@
         Edit {{ "submission" if backup.is_submit else "backup" }} for {{ student.identifier }}
       </h1>
       <ol class="breadcrumb">
-          <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
           <li><a href="{{ url_for(".course", cid=backup.assignment.course.id) }}">
               <i class="fa fa-university"></i> {{ backup.assignment.course.offering }}
           </a></li>

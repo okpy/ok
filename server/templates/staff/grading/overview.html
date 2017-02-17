@@ -16,7 +16,6 @@
         </h1>
       {% endif %}
       <ol class="breadcrumb">
-        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
         {% if assignment %}
           <li><a href="{{ url_for(".course", cid=current_course.id) }}">
               <i class="fa fa-university"></i> {{ current_course.offering }}
