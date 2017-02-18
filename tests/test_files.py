@@ -176,7 +176,7 @@ class TestFile(OkTestCase):
     def test_binary_api_download(self):
         self.login(self.staff1.email)
         encoded_id = utils.encode_id(self.file2.id)
-        url = "/api/file/{0}".format(encoded_id)
+        url = "/api/v3/file/{0}".format(encoded_id)
         self.assertEquals(self.file2.download_link, url)
         response = self.client.get(url)
         self.assert200(response)

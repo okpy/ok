@@ -507,9 +507,7 @@ curl "https://okpy.org/api/v3/backups/aF249e/?access_token=test"
         "submit": false,
         "created": "2016-06-21T03:05:53"
         "submission_time": "2016-06-21T03:05:53"
-        "group": [
-            {"email": "test@berkeley.edu","id": "a4r4gd"}
-        ],
+        "group": [{"email": "test@berkeley.edu","id": "a4r4gd"}],
         "is_late": false,
         "assignment": {
             "name": "cal/cs61a/su16/sample",
@@ -518,24 +516,26 @@ curl "https://okpy.org/api/v3/backups/aF249e/?access_token=test"
                 "active": true,
                 "display_name": "CS 61A",
                 "offering": "cal/cs61a/su16",
-                "timezone": "America/Los_Angeles"
-            }
+                "timezone": "America/Los_Angeles"}
         },
         "id": "aF249e",
-        "messages": [
-            {"kind": "file_contents",
-             "contents": {
-                 "lab00.py": "def add(x, y): pass"
-             },
-             "created": "2016-06-21T03:05:52"}
-        ]
+        "messages": [{
+            "kind": "file_contents",
+             "contents": {"lab00.py": "def add(x, y): pass"},
+             "created": "2016-06-21T03:05:52"
+        }],
+        "external_files": [{
+            "mimetype": "application/zip",
+            "filename": "submit_test_abc.zip",
+            "download_link": "/api/v3/file/1abcdef",
+            "id": "1abcdef"
+        }],
+
     },
     "code": 200,
     "message": "success"
 }
 ```
-
-
 View a specific backup
 
 #### Permissions
@@ -706,6 +706,29 @@ Parameter | Type | Description
 ---------- | ------- | -------
 success | Boolean | Whether the score was added
 message | String | More details about the success state
+
+## Files
+>><h4> Example Response </h4>
+> ```
+curl "https://okpy.org/api/v3/files/a1b2cd"
+Redirect to https://storage.cloud.google.com/...
+}```
+
+Download a file.
+
+#### Permissions
+Requires an access token. The access token must belong to someone in the submitter's group or a member of course staff.
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/files/<hashid:file_id>`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of staff member
+
+#### Response
+Returns a redirect or a file response as an attachment.
 
 # Errors
 
