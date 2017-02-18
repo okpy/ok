@@ -10,7 +10,7 @@
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="url_for('.list_courses')"><i class="fa fa-list"></i> Courses </a></li>
+        <li><a href="{{ url_for('.list_courses') }}"><i class="fa fa-list"></i> Courses </a></li>
         <li class="active"><a href="{{ url_for("admin.course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
