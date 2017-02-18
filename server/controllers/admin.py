@@ -610,6 +610,7 @@ def send_scores_job(cid, aid):
             score_tags=form.kinds.data)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
+        form.kinds.data = assign.published_scores
         return render_template(
             'staff/jobs/notify_scores.html',
             courses=courses,
@@ -1188,7 +1189,7 @@ def student_assignment_graph_detail(cid, email, aid):
     user_ids = list(assign.active_user_ids(student.id))
     user_ids.remove(student.id) # should always exist
     user_ids.insert(0, student.id) # insert to front of list
-    
+
     line_charts = []
 
     all_backups = (Backup.query.options(db.joinedload('messages'),

@@ -473,7 +473,7 @@ class GithubSearchRecentForm(BaseForm):
     issue_title = StringField('Issue Title (Optional)', validators=[validators.optional()],
                                 default="Academic Integrity - Please Delete This Repository")
     issue_body = TextAreaField('Issue Body (Optional)', validators=[validators.optional()],
-                               description="The strings '{repo}' and '{author}' will be replace with the appropriate value")
+                               description="The strings '{repo}' and '{author}' will be replaced with the appropriate value")
 
 class EmailScoresForm(BaseForm):
     subject = StringField('Subject', validators=[validators.required()])
