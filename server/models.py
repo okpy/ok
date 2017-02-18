@@ -275,6 +275,25 @@ class Course(Model):
             semester = "Summer"
         return self.display_name + " ({0} 20{1})".format(semester, year)
 
+    def statistics(self):
+        assignments = self.assignments
+        active_assignments = [x for x in assignments if x.active]
+        inactive_assignments = [x for x in assignments if not x.active]
+
+        backup_count_query = (Backup.query.join(Backup.assignment)
+                                    .filter(Assignment.course == self))
+
+        count_by_role = Counter([x.role for x in self.participations])
+
+        return {
+            'active_assignments': len(active_assignments),
+            'inactive_assignments': len(inactive_assignments),
+            'backup_count': backup_count_query.count(),
+            'submit_count': backup_count_query.filter(Backup.submit == True).count(),
+            'enrollment_counts': dict(count_by_role)
+        }
+
+
     def is_enrolled(self, user):
         return Enrollment.query.filter_by(
             user=user,

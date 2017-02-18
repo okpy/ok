@@ -1,0 +1,192 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms with context %}
+
+{% block title %} {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ current_course.display_name_with_semester }} Dashboard
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="url_for('.list_courses')"><i class="fa fa-list"></i> Courses </a></li>
+        <li class="active"><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+      {% include 'alerts.html' %}
+      <div class="row">
+
+            <div class="col-md-4 col-sm-4 col-xs-12">
+              <div class="info-box">
+                <span class="info-box-icon bg-blue"><i class="fa fa-users"></i></span>
+
+                <div class="info-box-content">
+                  <span class="info-box-text">Enrollment</span>
+                  <span class="info-box-number">{{ stats['enrollment_counts'].get('student', 0) }} <small>students </small></span>
+                  <span class="info-box-number">{{ stats['enrollment_counts'].get('staff', 0) }} <small>staff </small></span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-12">
+              <div class="info-box">
+                <span class="info-box-icon bg-black"><i class="fa fa-terminal"></i></span>
+
+                <div class="info-box-content">
+                  <span class="info-box-text">Assignments</span>
+                  <span class="info-box-number">{{ stats['active_assignments'] }}  <small>active </small> </span>
+                  <span class="info-box-number">{{ stats['inactive_assignments'] }}  <small>locked </small> </span>
+
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-12">
+              <div class="info-box">
+                <span class="info-box-icon bg-green"><i class="fa fa-file-code-o"></i></span>
+
+                <div class="info-box-content">
+                  <span class="info-box-text">Backups</span>
+                  <span class="info-box-number">{{ '{:,d}'.format(stats['backup_count']) }}  <small>backups </small> </span>
+                  <span class="info-box-number"> {{ '{:,d}'.format(stats['submit_count'])  }}  <small>submits </small> </span>
+
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+      </div>
+      <div class="row">
+
+        <div class="col-md-3 col-sm-12">
+          <!-- Default box -->
+            <div class="box">
+              <div class="box-header">
+                <h3 class="box-title">Quick Links</h3>
+              </div>
+              <div class="box-body no-padding">
+                <ul class="nav nav-pills nav-stacked">
+                  <li>
+                    <a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+                      <i class="fa fa-list"></i>
+                        Assignments
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('.new_assignment', cid=current_course.id) }}">
+                      <i class="fa fa-plus"></i>
+                        Create Assignment
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('.enrollment', cid=current_course.id) }}">
+                      <i class="fa fa-users"></i>
+                      Enrollment
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('.course_jobs', cid=current_course.id) }}">
+                      <i class="fa fa-tasks"></i>
+                      Jobs
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('.canvas_course', cid=current_course.id) }}">
+                      <i class="fa fa-address-book"></i>
+                      bCourses
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('.course_settings', cid=current_course.id) }}">
+                      <i class="fa fa-cogs"></i>
+                      Settings
+                    </a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('student.course', offering=current_course.offering) }}">
+                      <i class="fa fa-eye"></i> Student View
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://okpy.github.io/documentation/">
+                      <i class="fa fa-book"></i>
+                      Documentation
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.youtube.com/embed/-EWJ6s2_cPE/">
+                      <i class="fa fa-youtube"></i>
+                      Demo Video
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/Cal-CS-61A-Staff/ok/issues">
+                      <i class="fa fa-github"></i>
+                      GitHub Issues
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+        <div class="col-md-9 col-sm-12">
+          {% if students %}
+            {% with title="Students",roster=students %}
+              {% include 'staff/course/enrollment/enrollment.list.html' %}
+            {% endwith %}
+          {% else %}
+
+            <div class="box">
+              <div class="box-header with-border">
+                <h3 class="box-title">Welcome to OK!</h3>
+                <div class="box-tools pull-right">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-default btn-lrg" title="Enroll Students">
+                        <i class="fa fa-plus"></i>&nbsp; Enroll Students
+                      </button>
+                      <button type="button" class="btn btn-default btn-lrg" title="Enroll Students">
+                        <i class="fa fa-code"></i>&nbsp; Create Assignment
+                      </button>
+                    </div>
+                </div>
+              </div>
+              <div class="box-body">
+                <div class="col-xs-12">
+                  <iframe width="100%" height="400" src="https://www.youtube.com/embed/-EWJ6s2_cPE" frameborder="0" allowfullscreen></iframe>
+                </div>
+              </div>
+              <!-- /.box-body -->
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- </body> do not close body in template-->
+{% endblock %}
+{% block page_js %}
+<script>
+    {% if students %}
+    var studentOptions = {
+      valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
+      plugins: [ListPagination()],
+      indexAsync: true,
+      page: 7
+    };
+    var studentList = new List('Students-list', studentOptions);
+    studentList.sort("timestamp", {order: "desc"})
+    document.getElementById('Students-list').style.display = 'block';
+    {% endif %}
+</script>
+{% endblock %}

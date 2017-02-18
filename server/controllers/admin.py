@@ -358,7 +358,17 @@ def create_course():
 @admin.route("/course/<int:cid>/")
 @is_staff(course_arg='cid')
 def course(cid):
-    return redirect(url_for(".course_assignments", cid=cid))
+    courses, current_course = get_courses(cid)
+    students = (Enrollment.query
+                          .options(db.joinedload('user'))
+                          .filter(Enrollment.role == STUDENT_ROLE,
+                                  Enrollment.course == current_course)
+                            .all())
+
+    return render_template('staff/course/course.html', courses=courses,
+                           students=students,
+                           stats=current_course.statistics(),
+                           current_course=current_course)
 
 @admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')

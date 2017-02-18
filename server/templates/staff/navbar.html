@@ -72,13 +72,13 @@
             </li>
             <li>
               <a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
-                <i class="fa fa-book {% if (request.endpoint == 'admin.course_assignments' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
+                <i class="fa fa-list {% if (request.endpoint == 'admin.course_assignments' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
                   Assignments
               </a>
             </li>
             <li>
               <a href="{{ url_for('.enrollment', cid=current_course.id) }}">
-                <i class="fa fa-list {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
+                <i class="fa fa-group {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
                 Enrollment
               </a>
             </li>
@@ -91,7 +91,7 @@
             <li class="divider"></li>
             <li>
               <a href="{{ url_for('student.course', offering=current_course.offering) }}">
-                <i class="fa fa-user"></i> Student View
+                <i class="fa fa-eye"></i> Student View
               </a>
             </li>
           </ul>
