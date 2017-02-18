@@ -584,13 +584,13 @@ def send_scores_job(cid, aid):
                             " those scores and try again").format(kind.title()),
                       'error')
 
-            return render_template(
-                'staff/jobs/notify_scores.html',
-                courses=courses,
-                current_course=current_course,
-                assignment=assign,
-                form=form,
-            )
+                return render_template(
+                    'staff/jobs/notify_scores.html',
+                    courses=courses,
+                    current_course=current_course,
+                    assignment=assign,
+                    form=form,
+                )
 
 
         description = ("Email {assign} scores ({tags})"
