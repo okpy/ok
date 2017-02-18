@@ -32,6 +32,7 @@
     <div class="col-md-12">
       <div class="box">
         <div class="box-body">
+          <p> Each course is allocated 4,000 emails per month. Contact us if you anticipate exceeding that limit. </p>
           {% call forms.render_form(form, action_text='Send Emails') %}
             {{ forms.render_field(form.subject, placeholder=assignment.display_name + " Scores" ) }}
             {{ forms.render_field(form.body) }}
