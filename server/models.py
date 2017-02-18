@@ -283,14 +283,16 @@ class Course(Model):
         backup_count_query = (Backup.query.join(Backup.assignment)
                                     .filter(Assignment.course == self))
 
-        count_by_role = Counter([x.role for x in self.participations])
+        count_by_role = dict(Counter([x.role for x in self.participations]))
+
+        count_by_role['all_staff'] = sum(count_by_role.get(x, 0) for x in STAFF_ROLES)
 
         return {
             'active_assignments': len(active_assignments),
             'inactive_assignments': len(inactive_assignments),
             'backup_count': backup_count_query.count(),
             'submit_count': backup_count_query.filter(Backup.submit == True).count(),
-            'enrollment_counts': dict(count_by_role)
+            'enrollment_counts': count_by_role
         }
 
 
