@@ -28,11 +28,8 @@ import server.canvas.jobs
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
-import server.jobs.example as example
-import server.jobs.moss as moss
-import server.jobs.scores_audit as scores_audit
-import server.jobs.github_search as github_search
-import server.jobs.scores_notify as scores_notify
+from server.jobs import (example, moss, scores_audit, github_search,
+                         scores_notify)
 
 import server.highlight as highlight
 import server.utils as utils
