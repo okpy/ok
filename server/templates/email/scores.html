@@ -1,0 +1,31 @@
+{% extends "email/base.html" %}
+
+{% block body %}
+
+{% if title %}
+    <h3> {{ title }} </h3>
+{% endif %}
+
+<p> {{ body }} </p>
+
+{% for score in scores %}
+  <p> {{ score.kind | title }} Score: <strong> {{ score.score }} </strong> </p>
+  {% if score.message %}
+      <p> Score Message: </p>
+      <pre class="score-box"> {{ score.message |  truncate(1000, True) }} </pre>
+  {% endif %}
+{% endfor %}
+
+{% if link and link_text %}
+<!-- button -->
+<table class="btn-primary" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td>
+      <a href="{{link}}">{{link_text}}</a>
+    </td>
+  </tr>
+</table>
+{% endif %}
+<!-- /button -->
+
+{% endblock %}

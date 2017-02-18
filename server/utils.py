@@ -15,12 +15,12 @@ from oauthlib.common import generate_token
 import markdown
 from pynliner import fromString as emailFormat
 import pytz
+
 import sendgrid
+import sendgrid.helpers.mail as sg_helpers
 
 from server import constants
 
-sg = sendgrid.SendGridClient(
-    os.getenv('SENDGRID_KEY'), None, raise_errors=True)
 logger = logging.getLogger(__name__)
 
 # ID hashing configuration.
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 # link with an ID in it.
 hashids = Hashids(min_length=6)
 
+sg = sendgrid.SendGridAPIClient(apikey=os.getenv('SENDGRID_KEY'))
 
 def encode_id(id_number):
     return hashids.encode(id_number)
@@ -152,30 +153,45 @@ def invite_email(member, recipient, assignment):
                link_text=link_text, link=link)
 
 
-def send_email(to, subject, body, template='email/notification.html',
-               link=None, link_text="Sign in"):
+def send_email(to, subject, body, cc=(), from_name='Ok',
+               link=None, link_text="Sign in",
+               template='email/notification.html', reply_to=None, **kwargs):
     """ Send an email using sendgrid.
-    Usage: send_email('student@okpy.org', 'Hey from OK', 'hi')
+    Usage: send_email('student@okpy.org', 'Hey from OK', 'hi',
+                      cc=['test@example.com'], reply_to='ta@cs61a.org')
     """
     if not link:
         link = url_for('student.index', _external=True)
+
     html = render_template(template, subject=subject, body=body,
-                           link=link, link_text=link_text)
-    message = sendgrid.Mail(
-        to=to,
-        from_name="Okpy.org",
-        from_email="no-reply@okpy.org",
-        subject=subject,
-        html=emailFormat(html),
-        text=body)
+                           link=link, link_text=link_text, **kwargs)
+    mail = sg_helpers.Mail()
+    mail.set_from(sg_helpers.Email('no-reply@okpy.org', from_name))
+    mail.set_subject(subject)
+    mail.add_content(sg_helpers.Content("text/html", emailFormat(html)))
+
+    if reply_to:
+        mail.set_reply_to(sg_helpers.Email(reply_to))
+
+    personalization = sg_helpers.Personalization()
+    personalization.add_to(sg_helpers.Email(to))
+    for recipient in cc:
+        personalization.add_cc(sg_helpers.Email(recipient))
+
+    mail.add_personalization(personalization)
 
     try:
-        status, msg = sg.send(message)
-        return status
-    except (sendgrid.SendGridClientError, sendgrid.SendGridServerError,
-            TypeError, ValueError):
-        logger.error("Could not send email", exc_info=True)
-        return
+        response = sg.client.mail.send.post(request_body=mail.get())
+    except urllib.error.HTTPError:
+        logger.error("Could not send the email", exc_info=True)
+        return False
+
+
+    if response.status_code != 202:
+        logger.error("Could not send email: {} - {}"
+                     .format(response.status_code, response.body))
+        return False
+    return True
 
 def ceildiv(a, b):
     return -(-a // b)
