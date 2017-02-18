@@ -1706,7 +1706,7 @@ class ExternalFile(Model):
 
     @property
     def download_link(self):
-        return '/files/{}'.format(encode_id(self.id))
+        return '/api/v3/file/{}'.format(encode_id(self.id))
 
     def delete(self):
         self.object().delete()

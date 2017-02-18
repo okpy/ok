@@ -23,11 +23,13 @@ import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
 from flask_restful.representations.json import output_json
 
-from server.extensions import cache
-from server.utils import encode_id, decode_id
-import server.models as models
 from server.autograder import submit_continous
+
 from server.constants import STAFF_ROLES, VALID_ROLES
+from server.controllers import files
+from server.extensions import cache
+import server.models as models
+from server.utils import encode_id, decode_id
 
 endpoints = Blueprint('api', __name__)
 endpoints.config = {}
@@ -863,7 +865,7 @@ class User(Resource):
         restful.abort(403)
 
 class Comment(Resource):
-    """ Create comments programatically.
+    """ Create comments programmatically.
         Authenticated. Permissions: >= Student/Staff
         Used by: Third Party Composition Review
     """
@@ -884,6 +886,17 @@ class Comment(Resource):
             restful.abort(403)
 
         return self.schema.store_comment(user, backup)
+
+class File(Resource):
+    """ Redirect (or download) a file. No Schema due to redirect
+        Authenticated. Permissions: >= User/Staff
+        Used by: Course Scripts.
+    """
+    schema = None
+    model = models.ExternalFile
+
+    def get(self, user, file_id):
+        return files.file_download(file_id, user)
 
 # Endpoints
 api.add_resource(V3Info, '/v3/')
@@ -912,3 +925,4 @@ api.add_resource(Enrollment, '/v3/enrollment/<string:email>/')
 api.add_resource(Score, '/v3/score/')
 api.add_resource(User, '/v3/user/', '/v3/user/<string:email>')
 api.add_resource(Version, '/v3/version/', '/v3/version/<string:name>')
+api.add_resource(File, '/v3/file/<hashid:file_id>')
