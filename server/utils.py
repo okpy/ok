@@ -5,6 +5,7 @@ from io import StringIO
 import os
 import random
 import re
+import urllib
 from urllib.parse import urlparse, urljoin
 
 import bleach
