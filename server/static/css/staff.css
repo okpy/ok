@@ -10,6 +10,14 @@
     padding: 1em;
 }
 
+.info-box-number small {
+    font-weight: normal;
+}
+.sort-padding {
+    /*  Ensure that the sort icon has enough room */
+    min-width: 90px;
+}
+
 .checkbox-list {
     height: 100%;
     border: none;

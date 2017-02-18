@@ -14,6 +14,7 @@ from flask_testing import LiveServerTestCase
 from selenium import webdriver
 
 from server import create_app, models, utils
+from server.constants import STAFF_ROLES
 
 from tests import OkTestCase
 
@@ -116,7 +117,8 @@ if driver:
             self.assertIn('Login', self.driver.title)
 
             self.driver.find_element_by_id(role).click()
-            self.assertIn('Courses | Ok', self.driver.title)
+            self.assertNotIn('Login', self.driver.title)
+
 
         def _login_as(self, email=None):
             self.driver.get(self.get_server_url() + "/testing-login/")
@@ -126,7 +128,7 @@ if driver:
             input_element.send_keys(email)
             input_element.submit()
 
-            self.assertIn('Courses | Ok', self.driver.title)
+            self.assertNotIn('Login', self.driver.title)
 
         def test_server_is_up_and_running(self):
             response = requests.get(self.get_server_url())

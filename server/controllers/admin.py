@@ -28,11 +28,8 @@ import server.canvas.jobs
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
-import server.jobs.example as example
-import server.jobs.moss as moss
-import server.jobs.scores_audit as scores_audit
-import server.jobs.github_search as github_search
-import server.jobs.scores_notify as scores_notify
+from server.jobs import (example, moss, scores_audit, github_search,
+                         scores_notify)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -90,9 +87,9 @@ def get_courses(cid=None):
 @is_staff()
 def index():
     courses, current_course = get_courses()
-    if courses:
+    if courses and not current_user.is_admin:
         return redirect(url_for(".course_assignments", cid=courses[0].id))
-    return render_template('staff/index.html', courses=courses)
+    return redirect(url_for(".list_courses"))
 
 @admin.route('/grading')
 @is_staff()
@@ -319,6 +316,20 @@ def client_version(name):
 ##########
 # Course #
 ##########
+@admin.route("/course/")
+@is_staff()
+def list_courses():
+    courses, current_course = get_courses()
+    active_courses = [c for c in courses if c.active]
+    inactive_courses = [c for c in courses if not c.active]
+    other_courses = [c for c in Course.query.all() if c not in courses]
+
+    return render_template('staff/course/course.list.html',
+    current_course=current_course, courses=courses,
+                           active_courses=active_courses,
+                           inactive_courses=inactive_courses,
+                           other_courses=other_courses)
+
 @admin.route("/course/new", methods=['GET', 'POST'])
 @is_staff()
 def create_course():
@@ -345,7 +356,17 @@ def create_course():
 @admin.route("/course/<int:cid>/")
 @is_staff(course_arg='cid')
 def course(cid):
-    return redirect(url_for(".course_assignments", cid=cid))
+    courses, current_course = get_courses(cid)
+    students = (Enrollment.query
+                          .options(db.joinedload('user'))
+                          .filter(Enrollment.role == STUDENT_ROLE,
+                                  Enrollment.course == current_course)
+                            .all())
+
+    return render_template('staff/course/course.html', courses=courses,
+                           students=students,
+                           stats=current_course.statistics(),
+                           current_course=current_course)
 
 @admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')

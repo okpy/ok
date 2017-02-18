@@ -10,14 +10,13 @@
         <small id="course-offering">{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="{{ url_for("admin.index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
         <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
           <i class="fa fa-list"></i> Assignments</a>
         </li>
-        <li class="active"><a href="#"><i class="fa fa-plus"></i> New Assignment</a></li>
+        <li class="active hidden-xs"><a href="#"><i class="fa fa-plus"></i> New Assignment</a></li>
       </ol>
   </section>
 
