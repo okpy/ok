@@ -80,6 +80,9 @@
                   <li> <a href="{{ url_for('.audit_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-search"></i> Find Submissions Without Scores
                   </a></li>
+                  <li> <a href="{{ url_for('.send_scores_job', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-envelope"></i> Send Score Emails
+                  </a></li>
                 </ul>
               </div>
               <!-- /.box-body -->

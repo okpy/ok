@@ -79,6 +79,12 @@
                       {{ utils.local_time(backup.custom_submission_time, backup.assignment.course) }}
                     </li>
                   {% endif %}
+                    <li class="list-group-item">
+                      <b>Student URL: </b>
+                      {% with student_url = url_for('student.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit, _external=True) %}
+                      <a href="{{ student_url }}"> {{ student_url }} </a>
+                      {% endwith %}
+                    </li>
                   {% for score in backup.active_scores %}
                     <li class="list-group-item">
                       <p>
@@ -89,7 +95,7 @@
                           <span class="label label-default">Unpublished</span>
                         {% endif %}
                       </p>
-                      <pre>{{ score.message }}</pre>
+                      <pre class="score-box">{{ score.message }}</pre>
                       <p>{{ utils.local_time(score.created, backup.assignment.course) }} from {{ score.grader.email }}</p>
                     </li>
                   {% else %}

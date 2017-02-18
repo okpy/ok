@@ -55,7 +55,7 @@ pytz==2016.10
 arrow
 
 # Emailing
-sendgrid==1.5.20
+sendgrid==3.6.3
 pynliner<1.0
 
 # Autograder Interface

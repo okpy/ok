@@ -32,6 +32,7 @@ import server.jobs.example as example
 import server.jobs.moss as moss
 import server.jobs.scores_audit as scores_audit
 import server.jobs.github_search as github_search
+import server.jobs.scores_notify as scores_notify
 
 import server.highlight as highlight
 import server.utils as utils
@@ -588,6 +589,60 @@ def audit_scores(cid, aid):
                            assign_id=assign.id)
     return redirect(url_for('.course_job', cid=cid, job_id=job.id))
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores/notify",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def send_scores_job(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.EmailScoresForm()
+    if form.validate_on_submit():
+
+        for kind in form.kinds.data:
+            if kind not in assign.published_scores:
+                flash(("{0} scores are not visible to students. Please publish "
+                            " those scores and try again").format(kind.title()),
+                      'error')
+
+                return render_template(
+                    'staff/jobs/notify_scores.html',
+                    courses=courses,
+                    current_course=current_course,
+                    assignment=assign,
+                    form=form,
+                )
+
+
+        description = ("Email {assign} scores ({tags})"
+                       .format(assign=assign.display_name,
+                               tags=', '.join([k.title() for k in form.kinds.data])))
+        job = jobs.enqueue_job(
+            scores_notify.email_scores,
+            description=description,
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id,
+            subject=form.subject.data,
+            reply_to=form.reply_to.data,
+            body=form.body.data,
+            dry_run=form.dry_run.data,
+            score_tags=form.kinds.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        form.kinds.data = assign.published_scores
+        return render_template(
+            'staff/jobs/notify_scores.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
+
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores.csv")
 @is_staff(course_arg='cid')
@@ -628,8 +683,6 @@ def export_scores(cid, aid):
     file_name = "{0}.csv".format(assign.name.replace('/', '-'))
     disposition = 'attachment; filename={0}'.format(file_name)
 
-    # TODO: Remove. For local performance testing.
-    # return render_template('staff/index.html', data=list(generate_csv()))
     return Response(stream_with_context(generate_csv()), mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
