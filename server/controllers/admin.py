@@ -91,7 +91,7 @@ def get_courses(cid=None):
 def index():
     courses, current_course = get_courses()
     if courses:
-        return redirect(url_for(".course_assignments", cid=courses[0].id))
+        return redirect(url_for(".course_assignments", cid=[c.id for c in courses if c.active][0]))
     return render_template('staff/index.html', courses=courses)
 
 @admin.route('/grading')
