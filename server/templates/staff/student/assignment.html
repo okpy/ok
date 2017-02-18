@@ -6,7 +6,7 @@
 
 {% block main %}
   <section class="content-header">
-      <h1>
+      <h1 class="pii">
         {{ student.identifier }}'s {{ assignment.display_name }}
       </h1>
       <ol class="breadcrumb">
@@ -125,7 +125,7 @@
                 {% if assign_status.group %}
                     {% for member in assign_status.group.members %}
                     {% if member.user.email != student.email %}
-                       <li><a href="{{ url_for('.student_assignment_detail',
+                       <li><a class="pii" href="{{ url_for('.student_assignment_detail',
                           cid=current_course.id, email=member.user.email, aid=assignment.id) }}">
                              {{ member.user.identifier }}
                               <span class="pull-right">
@@ -157,7 +157,7 @@
                     {% call forms.render_form_bare(csrf_form, action_url=url_for('.staff_group_remove', cid=current_course.id, email=student.email,
                     aid=assignment.id), class_='') %}
                       <input class="hidden" name="target" value="{{ member.user.email }}" type="hidden"></input>
-                      <button class="btn btn-default group-action btn-block hide-overflow"  type="submit" value="remove">
+                      <button class="pii btn btn-default group-action btn-block hide-overflow"  type="submit" value="remove">
                           <i class="fa fa-minus-circle "></i>
                            Remove {{ member.user.email }}
                       </button>
@@ -209,7 +209,7 @@
                             </td>
                             <td> {{ utils.local_time(item.created, current_course) }} </td>
                             <td>
-                                <a href="{{ url_for('.student_view', cid=current_course.id, email=item.submitter.email) }}">{{ item.submitter.email }}</a>
+                                <a class="pii" href="{{ url_for('.student_view', cid=current_course.id, email=item.submitter.email) }}">{{ item.submitter.email }}</a>
                             </td>
                             <td> {% call helpers.backup_link(item.id) %}
                                  {% if item.id == assign_status.final_subm.id %}

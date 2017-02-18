@@ -7,7 +7,7 @@
 {% block main %}
   <section class="content-header">
       <h1>
-        Edit {{ "submission" if backup.is_submit else "backup" }} for {{ student.identifier }}
+        Edit {{ "submission" if backup.is_submit else "backup" }} for <span class="pii">{{ student.identifier }}</span>
       </h1>
       <ol class="breadcrumb">
           <li><a href="{{ url_for(".course", cid=backup.assignment.course.id) }}">

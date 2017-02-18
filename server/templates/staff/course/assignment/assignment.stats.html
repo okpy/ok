@@ -256,8 +256,8 @@
                         <tbody class="list">
                             {%- for item in submissions %}
                             <tr>
-                                <td class="identifier" data-email="{{item['user']['email']}}" data-name="{{item['user']['name']}}">
-                                <a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=item['user']['email'], aid=assignment.id)}}">
+                                <td class="identifier pii" data-email="{{item['user']['email']}}" data-name="{{item['user']['name']}}">
+                                <a class="pii" href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=item['user']['email'], aid=assignment.id)}}">
                                     {{ item['user']['email'] }}
                                     <!-- {{ item['user']['name'] }}-->
                                 </a>
@@ -268,7 +268,7 @@
                                       {% set user_list = item['group']['group_member_emails'] %}
                                       {% for member in user_list %}
                                         {% if member != item['user']['email'] %}
-                                        <a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=member, aid=assignment.id) }}">
+                                        <a class="pii" href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=member, aid=assignment.id) }}">
                                         {{ member }}
                                         </a>
                                         {% endif %}

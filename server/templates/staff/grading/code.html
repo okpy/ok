@@ -47,7 +47,7 @@
                   <ul class="list-group list-group-unbordered">
                     <li class="list-group-item">
                       <b>Submitter: </b>
-                      <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
+                      <a class="pii" href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
                         {{ backup.submitter.email }}
                       </a>
                     </li>
@@ -55,7 +55,7 @@
                     {% if group | length > 1 %}
                       <b>Group: </b>
                       {% for member in group %}
-                        <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
+                        <a class="pii" href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
                            {{ member.email }}
                         </a>
                       {% endfor %}
@@ -64,7 +64,7 @@
                     {% endif %}
                     </li>
                   {% if backup.creator %}
-                    <li class="list-group-item">
+                    <li class="list-group-item pii">
                       <b>Creator: </b>
                       {{ backup.creator.email }}
                     </li>

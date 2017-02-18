@@ -28,16 +28,16 @@
                 {%- for item in roster %}
                 <tr>
                     <td class="email">
-                        <a href="{{ url_for('.student_view', cid=current_course.id, email=item.user.email) }}">
+                        <a class="pii" href="{{ url_for('.student_view', cid=current_course.id, email=item.user.email) }}">
                             {{ item.user.email }}
                         </a>
                     </td>
-                    <td class="name">{{ utils.humanize_name(item.user.name) }}</td>
-                    <td class="sid">{{ item.sid }}</td>
-                    <td class="secondary">{{ item.class_account }}</td>
+                    <td class="name pii">{{ utils.humanize_name(item.user.name) }}</td>
+                    <td class="sid pii">{{ item.sid }}</td>
+                    <td class="secondary pii">{{ item.class_account }}</td>
                     <td class="role"><span class="label label-success">{{item.role | title }}</span></td>
                     <td class="timestamp" data-timestamp="{{ item.created }}">{{ utils.local_time_obj(item.created, current_course) }}</td>
-                    <td class="section">{{item.section}}</td>
+                    <td class="section pii">{{item.section}}</td>
                     {% if unenroll_form %}
                     <td class="unenroll">
                         {% call forms.render_form_bare(unenroll_form, action_url=url_for('.unenrollment', cid=current_course.id, user_id=item.user.id), class_='form') %}
