@@ -484,7 +484,7 @@ class EmailScoresForm(BaseForm):
                           description="What email should replies be sent to?",
                           validators=[validators.required(), validators.email()])
     dry_run = BooleanField('Dry Run Mode', default=True,
-                           description="Only send a few to your inbox.")
+                           description="Don't send emails to students; instead, send a few examples to your email.")
     kinds = MultiCheckboxField(
         'Scores Tags',
         choices=[(kind, kind.title()) for kind in SCORE_KINDS],

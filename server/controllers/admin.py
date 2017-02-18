@@ -577,9 +577,13 @@ def send_scores_job(cid, aid):
 
     form = forms.EmailScoresForm()
     if form.validate_on_submit():
+
+        description = ("Email {assign} scores ({tags})"
+                       .format(assign=assign.display_name,
+                               tags=', '.join([k.title() for k in form.kinds.data])))
         job = jobs.enqueue_job(
             scores_notify.email_scores,
-            description='Emails for {} scores'.format(assign.display_name),
+            description=description,
             timeout=600,
             course_id=cid,
             user_id=current_user.id,
