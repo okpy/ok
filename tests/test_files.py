@@ -149,10 +149,35 @@ class TestFile(OkTestCase):
         with open(CWD + "/files/fizzbuzz_after.py", 'r') as f:
             self.assertEqual(f.read(), response.data.decode('UTF-8'))
 
+    def test_api_download(self):
+        self.login(self.staff1.email)
+        encoded_id = utils.encode_id(self.file1.id)
+        url = "/api/v3/file/{0}".format(encoded_id)
+        response = self.client.get(url)
+        self.assert200(response)
+        self.assertEquals("attachment; filename={0!s}".format(self.file1.filename),
+                          response.headers.get('Content-Disposition'))
+        self.assertEquals(response.headers['Content-Type'], 'text/plain; charset=utf-8')
+        self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
+        with open(CWD + "/files/fizzbuzz_after.py", 'r') as f:
+            self.assertEqual(f.read(), response.data.decode('UTF-8'))
+
     def test_binary_download(self):
         self.login(self.staff1.email)
         encoded_id = utils.encode_id(self.file2.id)
         url = "/files/{0}".format(encoded_id)
+        response = self.client.get(url)
+        self.assert200(response)
+        self.assertEquals("attachment; filename={0!s}".format(self.file2.filename),
+                          response.headers.get('Content-Disposition'))
+        self.assertEquals(response.headers['Content-Type'], 'image/svg+xml')
+        self.assertEquals(response.headers['X-Content-Type-Options'], 'nosniff')
+
+    def test_binary_api_download(self):
+        self.login(self.staff1.email)
+        encoded_id = utils.encode_id(self.file2.id)
+        url = "/api/v3/file/{0}".format(encoded_id)
+        self.assertEquals(self.file2.download_link, url)
         response = self.client.get(url)
         self.assert200(response)
         self.assertEquals("attachment; filename={0!s}".format(self.file2.filename),
@@ -167,9 +192,20 @@ class TestFile(OkTestCase):
         response = self.client.get(url)
         self.assert404(response)
 
+        # Should also fail via the API
+        url = "/api/v3/file/{0}".format(encoded_id)
+        response = self.client.get(url)
+        self.assert404(response)
+
     def test_notfound(self):
         self.login(self.user1.email)
         encoded_id = utils.encode_id(self.file2.id * 50)
+
         url = "/files/{0}".format(encoded_id)
+        response = self.client.get(url)
+        self.assert404(response)
+
+        # Should also fail via the API
+        url = "/api/v3/file/{0}".format(encoded_id)
         response = self.client.get(url)
         self.assert404(response)
