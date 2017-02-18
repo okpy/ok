@@ -1,5 +1,7 @@
 import time
 
+from flask import url_for
+
 from server import jobs
 from server.models import ExternalFile
 from server.utils import encode_id
@@ -21,8 +23,8 @@ def test_job(duration=0, should_fail=False, make_file=False):
                                      name='temp.okfile', prefix='jobs/example/')
         logger.info("Saved as: {}".format(upload.object_name))
         logger.info('File ID: {0}'.format(encode_id(upload.id)))
-        msg = ("Waited for <a href='/files/{0}'> {1} seconds </a>"
-               .format(encode_id(upload.id), duration))
+        msg = ("Waited for <a href='{0}'> {1} seconds </a>"
+               .format(url_for('files.file_url', file_id=upload.id), duration))
     else:
         msg = "Waited for <b>{}</b> seconds!".format(duration)
     logger.info('Finished!')
