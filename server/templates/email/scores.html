@@ -12,7 +12,7 @@
   <p> {{ score.kind | title }} Score: <strong> {{ score.score }} </strong> </p>
   {% if score.message %}
       <p> Score Message: </p>
-      <pre class="score-box"> {{ score.message |  truncate(1000, True) }} </pre>
+      <pre class="score-box">{{ score.message |  truncate(1000, True) }}</pre>
   {% endif %}
 {% endfor %}
 
