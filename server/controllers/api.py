@@ -664,6 +664,8 @@ class ExportFinal(Resource):
                 'group': [models.User.get_by_id(uid) for uid in backup.owners()],
                 'assignment': assign,
                 'is_late': backup.is_late,
+                'external_files': backup.external_files,
+                'submission_time': backup.submission_time,
                 'submitter': backup.submitter,
                 'messages': backup.messages
             })
