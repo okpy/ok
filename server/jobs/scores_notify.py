@@ -22,12 +22,6 @@ def email_scores(assignment_id, score_tags, subject, body,
                                 Enrollment.course == assign.course)
                         .all())]
 
-    for kind in score_tags:
-        if kind not in assign.published_scores:
-            log.warning(("{0} scores are not visible to students. "
-                         " Please publish them and try again").format(kind))
-            return "Not sent - {} is not published".format(kind)
-
     email_counter = 0
     seen_ids = set()
     for student in students:

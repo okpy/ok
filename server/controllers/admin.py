@@ -578,6 +578,21 @@ def send_scores_job(cid, aid):
     form = forms.EmailScoresForm()
     if form.validate_on_submit():
 
+        for kind in form.kinds.data:
+            if kind not in assign.published_scores:
+                flash(("{0} scores are not visible to students. Please publish "
+                            " those scores and try again").format(kind.title()),
+                      'error')
+
+            return render_template(
+                'staff/jobs/notify_scores.html',
+                courses=courses,
+                current_course=current_course,
+                assignment=assign,
+                form=form,
+            )
+
+
         description = ("Email {assign} scores ({tags})"
                        .format(assign=assign.display_name,
                                tags=', '.join([k.title() for k in form.kinds.data])))
