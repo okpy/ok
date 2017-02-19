@@ -178,6 +178,9 @@ def autograde_assignment(assignment_id):
     ]
     num_tasks = len(tasks)
 
+    if not num_tasks:
+        return "No submissions to grade"
+
     def retry_task(task):
         if task.retries >= MAX_RETRIES:
             logger.error('Did not receive a score for backup {} after {} retries'.format(
