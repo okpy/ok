@@ -9,8 +9,6 @@ import rq
 
 from server.models import db, Job
 
-URGENT_LEVEL = 50
-
 class JobLogHandler(logging.StreamHandler):
     """Stream log contents to buffer and to DB. """
     def __init__(self, stream, job, log_every=10):
@@ -24,7 +22,7 @@ class JobLogHandler(logging.StreamHandler):
         self.counter += 1
         super().handle(record)
         print(record.message)
-        if record.levelno >= URGENT_LEVEL or not (self.counter % self.log_every):
+        if record.levelno >= logging.CRITICAL or not (self.counter % self.log_every):
             self.job.log = self.contents
             db.session.commit()
 

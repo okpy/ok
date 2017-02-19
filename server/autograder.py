@@ -198,8 +198,8 @@ def autograde_assignment(assignment_id):
         graded = len([task for task in tasks
             if task.status in (GradingStatus.DONE, GradingStatus.FAILED)])
 
-        logger.log(jobs.URGENT_LEVEL, 'Graded {:>4}/{} ({:>5.1f}%)'.format(
-                    graded, num_tasks, 100 * graded / num_tasks))
+        logger.critical('Graded {:>4}/{} ({:>5.1f}%)'.format(
+                        graded, num_tasks, 100 * graded / num_tasks))
 
         if graded == num_tasks:
             break
