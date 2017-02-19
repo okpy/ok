@@ -18,7 +18,7 @@ class JobLogHandler(logging.StreamHandler):
         self.counter = 0
         self.log_every = log_every
 
-    def handle(self, record, force=True):
+    def handle(self, record):
         self.counter += 1
         super().handle(record)
         print(record.message)
