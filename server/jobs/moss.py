@@ -124,7 +124,7 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
                    .format(lang=language, templates=templates,
                            folder=' '.join(all_student_files)))
 
-        logger.log(jobs.URGENT_LEVEL, "Running {}".format(command[:100] + ' ...'))
+        logger.critical("Running {}".format(command[:100] + ' ...'))
 
         try:
             process = subprocess.check_output(shlex.split(command),
