@@ -1302,6 +1302,8 @@ def create_extension(cid, aid):
             emails = ', '.join([u.email for u in ext.members()])
             flash("Granted a extension on {} for {} ".format(assign.display_name,
                                                              emails), 'success')
+            return redirect(url_for('.list_extensions', cid=cid))
+
     return render_template('staff/course/extension/extension.new.html',
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)

@@ -1802,7 +1802,7 @@ class Extension(Model):
     db.UniqueConstraint('assignment_id', 'user_id')
 
     def members(self):
-        members = self.assignment.active_user_ids(student.id)
+        members = self.assignment.active_user_ids(self.user_id)
         return User.query.filter(User.id.in_(members)).all()
 
     @property
