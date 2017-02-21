@@ -50,8 +50,7 @@ class TestExtension(OkTestCase):
         ext = Extension(assignment=assignment, user=user,
                               custom_submission_time=custom_time,
                               expires=dt.datetime.utcnow() + dt.timedelta(days=1),
-                              message='They are good students Brent!',
-                              creator=self.staff1)
+                              staff=self.staff1)
         db.session.add(ext)
         db.session.commit()
         return ext
