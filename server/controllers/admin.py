@@ -620,7 +620,7 @@ def send_scores_job(cid, aid):
         job = jobs.enqueue_job(
             scores_notify.email_scores,
             description=description,
-            timeout=600,
+            timeout=3600,
             course_id=cid,
             user_id=current_user.id,
             assignment_id=assign.id,
