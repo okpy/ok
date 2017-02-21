@@ -1778,3 +1778,52 @@ class ExternalFile(Model):
             group_members = obj.assignment.active_user_ids(obj.user_id)
             return user.id in group_members
         return False
+
+##############
+# Extensions #
+##############
+
+class Extension(Model):
+    """ Extensions allows students to submit after the deadline.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    creator_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
+    user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(mysql.MEDIUMTEXT)
+
+    expires = db.Column(db.DateTime(timezone=True), nullable=True)
+    custom_submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
+
+    creator = db.relationship("User", foreign_keys='Extension.creator_id')
+    user = db.relationship("User", foreign_keys='Extension.user_id')
+    assignment = db.relationship("Assignment")
+
+    db.UniqueConstraint('assignment_id', 'user_id')
+
+    def members(self):
+        members = self.assignment.active_user_ids(student.id)
+        return User.query.filter(User.id.in_(members)).all()
+
+    @hybrid_property
+    def course(self):
+        return self.assignment.course
+
+    @classmethod
+    def get_extension(cls, student, assignment):
+        """ Returns the extension if the student has an extension """
+        group_members = assignment.active_user_ids(student.id)
+        extension = cls.query.filter(cls.assignment == assignment,
+                                     cls.expires >= dt.utcnow(),
+                                     cls.user_id.in_(group_members)).first()
+        if not extension:
+            return False
+        return extension
+
+    @classmethod
+    def can(cls, obj, user, action):
+        if not user:
+            return False
+        if user.is_admin:
+            return True
+        return user.is_enrolled(obj.course, STAFF_ROLES)

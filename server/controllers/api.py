@@ -357,7 +357,15 @@ class BackupSchema(APISchema):
         backup = make_backup(user, assignment['id'], args['messages'],
                              elgible_submit)
         if args['submit'] and lock_flag:
-            raise ValueError('Late Submission of {}'.format(args['assignment']))
+            # Check for extensions
+            assign_obj = models.Assignment.by_name(args['assignment'])
+            extension = models.Extension.get_extension(user, assign_obj)
+            if extension:
+                backup.submit = True
+                backup.custom_submission_time = extension.custom_submission_time
+                elgible_submit = True
+            else:
+                raise ValueError('Late Submission of {}'.format(args['assignment']))
         if elgible_submit and assignment['autograding_key']:
             submit_continous(backup)
         return backup
