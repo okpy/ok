@@ -14,7 +14,6 @@ class TestExtension(OkTestCase):
     def set_offset(self, offset):
         self.assignment.due_date = self.assignment.due_date + dt.timedelta(hours=offset)
         self.assignment.lock_date = self.assignment.lock_date + dt.timedelta(days=offset)
-        db.session.commit()
 
     def _submit_to_api(self, user, success):
         self.login(user.email)
@@ -149,3 +148,26 @@ class TestExtension(OkTestCase):
         ext.expires = dt.datetime.utcnow() - dt.timedelta(days=1)
         # But not after the extension has expired
         self._submit_to_api(self.user1, False)
+
+    def test_submit_between_due_and_lock(self):
+        """ Extensions should also change the custom submission time
+        when submitted after the due date but before the lock date.
+        """
+        self.assignment.due_date = dt.datetime.utcnow() + dt.timedelta(hours=-1)
+        self.assignment.lock_date = dt.datetime.utcnow() + dt.timedelta(hours=1)
+
+        Group.force_add(self.staff1, self.user1, self.user2, self.assignment)
+
+        # User 1 is allowed to submit since it's between due and lock date
+        self._submit_to_api(self.user1, True)
+        first_back = Backup.query.filter(Backup.submitter_id == self.user1.id,
+                                         Backup.submit == True).first()
+        self.assertIsNone(first_back.custom_submission_time)
+        ext = self._make_ext(self.assignment, self.user1)
+        self._submit_to_api(self.user2, True)
+
+        second_back = Backup.query.filter(Backup.submitter_id == self.user2.id,
+                                          Backup.submit == True).first()
+        # The submission from User 2 should have a custom submission time
+        self.assertEquals(second_back.custom_submission_time, ext.custom_submission_time)
+

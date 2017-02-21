@@ -20,7 +20,7 @@ from collections import namedtuple, Counter
 
 import contextlib
 import csv
-from datetime import datetime as dt
+import datetime as dt
 import json
 import logging
 import shlex
@@ -347,7 +347,7 @@ class Assignment(Model):
 
     @hybrid_property
     def active(self):
-        return dt.utcnow() <= self.lock_date
+        return dt.datetime.utcnow() <= self.lock_date
 
     @classmethod
     def can(cls, obj, user, action):
@@ -1787,7 +1787,7 @@ class Extension(Model):
     """ Extensions allows students to submit after the deadline.
     """
     id = db.Column(db.Integer, primary_key=True)
-    creator_id = db.Column(db.ForeignKey("user.id"), nullable=False)
+    staff_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
     user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     message = db.Column(mysql.MEDIUMTEXT)
@@ -1795,7 +1795,7 @@ class Extension(Model):
     expires = db.Column(db.DateTime(timezone=True), nullable=True)
     custom_submission_time = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    creator = db.relationship("User", foreign_keys='Extension.creator_id')
+    staff = db.relationship("User", foreign_keys='Extension.staff_id')
     user = db.relationship("User", foreign_keys='Extension.user_id')
     assignment = db.relationship("Assignment")
 
@@ -1804,6 +1804,10 @@ class Extension(Model):
     def members(self):
         members = self.assignment.active_user_ids(student.id)
         return User.query.filter(User.id.in_(members)).all()
+
+    @property
+    def active(self):
+        return dt.datetime.utcnow() <= self.expires
 
     @hybrid_property
     def course(self):
@@ -1814,7 +1818,7 @@ class Extension(Model):
         """ Returns the extension if the student has an extension """
         group_members = assignment.active_user_ids(student.id)
         extension = cls.query.filter(cls.assignment == assignment,
-                                     cls.expires >= dt.utcnow(),
+                                     cls.expires >= dt.datetime.utcnow(),
                                      cls.user_id.in_(group_members)).first()
         if not extension:
             return False

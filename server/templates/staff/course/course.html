@@ -92,6 +92,12 @@
                     </a>
                   </li>
                   <li>
+                    <a href="{{ url_for('.list_extensions', cid=current_course.id) }}">
+                      <i class="fa fa-calendar"></i>
+                      Extensions
+                    </a>
+                  </li>
+                  <li>
                     <a href="{{ url_for('.course_jobs', cid=current_course.id) }}">
                       <i class="fa fa-tasks"></i>
                       Jobs
@@ -182,7 +188,7 @@
       valueNames: ['email', 'name', 'sid', 'secondary', 'role', 'timestamp', 'section'],
       plugins: [ListPagination()],
       indexAsync: true,
-      page: 7
+      page: 8
     };
     var studentList = new List('Students-list', studentOptions);
     studentList.sort("timestamp", {order: "desc"})

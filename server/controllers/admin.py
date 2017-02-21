@@ -1,5 +1,6 @@
 import collections
 import csv
+import datetime as dt
 from functools import wraps
 from io import StringIO
 
@@ -17,12 +18,12 @@ from server import autograder
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
-                           Message, CanvasCourse, CanvasAssignment, db)
+                           Message, CanvasCourse, CanvasAssignment,
+                           Extension, db)
 from server.contrib import analyze
 
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
-
 import server.canvas.api as canvas_api
 import server.canvas.jobs
 from server.extensions import cache
@@ -529,6 +530,10 @@ def publish_scores(cid, aid):
     return render_template('staff/course/assignment/assignment.publish.html',
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)
+
+##########
+# Scores #
+##########
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
 @is_staff(course_arg='cid')
@@ -1241,6 +1246,89 @@ def student_assignment_graph_detail(cid, email, aid):
                            student=student, assignment=assign,
                            group=group,
                            graphs=line_charts)
+##############
+# Extensions #
+##############
+@admin.route("/course/<int:cid>/extensions")
+@is_staff(course_arg='cid')
+def list_extensions(cid):
+    courses, current_course = get_courses(cid)
+
+    extensions = (Extension.query.join(Extension.assignment)
+                           .options(db.joinedload('user'),
+                                    db.joinedload('staff'),
+                                    db.joinedload('assignment'))
+                           .filter(Assignment.course_id == cid).all())
+
+    csrf_form = forms.CSRFForm()
+    return render_template('staff/course/extension/extension.list.html',
+                            courses=courses, current_course=current_course,
+                            extensions=extensions, csrf_form=csrf_form)
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/extension",
+                methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def create_extension(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'edit'):
+        flash('Insufficient permissions', 'error')
+        abort(401)
+
+    form = forms.ExtensionForm()
+    if request.method == "GET":
+        # Prefill fields if not set
+        form.submission_time.default = 'deadline'
+        form.process() # Update defaults & choices
+        if not form.email.data:
+            form.email.data = request.args.get('email')
+        if not form.expires.data:
+            extra_week = assign.due_date + dt.timedelta(days=7)
+            form.expires.data = utils.local_time_obj(extra_week, current_course)
+
+    if form.validate_on_submit():
+        student = User.lookup(form.email.data)
+        if Extension.get_extension(student, assign):
+            flash("{} already has an extension".format(form.email.data), 'error')
+        else:
+            expires = utils.server_time_obj(form.expires.data, current_course)
+            custom_time = form.get_submission_time(assign)
+
+            ext = Extension(staff=current_user, assignment=assign, user=student,
+                            message=form.reason.data, expires=expires,
+                            custom_submission_time=custom_time)
+            db.session.add(ext)
+            db.session.commit()
+            emails = ', '.join([u.email for u in ext.members()])
+            flash("Granted a extension on {} for {} ".format(assign.display_name,
+                                                             emails), 'success')
+    return render_template('staff/course/extension/extension.new.html',
+                            assignment=assign, form=form, courses=courses,
+                            current_course=current_course)
+
+@admin.route("/course/<int:cid>/extensions/<hashid:ext_id>",
+             methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def edit_extension(cid, ext_id):
+    courses, current_course = get_courses(cid)
+    if not Extension.can(extension, current_user, 'edit'):
+        abort(401)
+
+
+@admin.route("/course/<int:cid>/extensions/<hashid:ext_id>/delete", methods=['POST'])
+@is_staff(course_arg='cid')
+def delete_extension(cid, ext_id):
+    extension = Extension.query.get_or_404(ext_id)
+    if not Extension.can(extension, current_user, 'delete'):
+        abort(401)
+
+    if forms.CSRFForm().validate_on_submit():
+        db.session.delete(extension)
+        db.session.commit()
+        flash("Revoked extension", "success")
+        return redirect(url_for('.list_extensions', cid=cid))
+    abort(401)
+
 
 ########################
 # Student view actions #
@@ -1378,6 +1466,7 @@ def staff_submit_backup(cid, email, aid):
         assignment=assign,
         upload_form=form,
     )
+
 
 ########
 # Jobs #

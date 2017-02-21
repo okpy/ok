@@ -1,0 +1,59 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+
+{% block title %} Grant Extension - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        Grant Extension for {{ assignment.display_name }}
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }}</a></li>
+        <li class="active hidden-xs"><a href="{{ url_for('.create_extension', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-life-ring"></i>Grant Extension</a></li>
+    	</ol>
+  </section>
+
+  <section class="content">
+
+  		{% include 'alerts.html' %}
+
+  		<!-- Default box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Grant {{ assignment.display_name }} Extension</h3>
+                <div class="box-tools clearfix">
+                </div>
+          </div>
+          <div class="box-body">
+           <p> By granting an extension, the student (and their group members) can continue to submit. </p>
+
+          {% call forms.render_form(form, action_url=url_for('.create_extension', cid=current_course.id, aid=assignment.id),
+                                    action_text='Grant Extension', class_='form') %}
+            {{ forms.render_field(form.email, placeholder="student@example.com") }}
+            {{ forms.render_field(form.expires, placeholder='YYYY-MM-DD hh:mm:ss',) }}
+            {{ forms.render_field(form.reason, placeholder="Beacuse ...") }}
+            <label class="control-label">Custom Submission Time: </label>
+            <p class="help-block">This overrides the submission time of late submissions</p>
+            {{ forms.render_radio_field(form.submission_time) }}
+            {{ forms.render_field(
+              form.custom_submission_time,
+              placeholder='YYYY-MM-DD hh:mm:ss',
+              label_visible=false) }}
+
+          {% endcall %}
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+
+
+
+{% endblock %}
