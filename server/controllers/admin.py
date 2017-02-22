@@ -735,7 +735,6 @@ def assignment_single_queue(cid, aid, uid):
     tasks_query = GradingTask.query.filter_by(assignment=assignment,
                                               grader_id=uid)
     queue = (tasks_query.options(db.joinedload('assignment'))
-                        .order_by(GradingTask.score_id.desc())
                         .order_by(GradingTask.created.asc())
                         .paginate(page=page, per_page=20))
 
