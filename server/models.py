@@ -4,7 +4,7 @@ from werkzeug.exceptions import BadRequest
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
-from sqlalchemy import PrimaryKeyConstraint, MetaData, types
+from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint, MetaData, types
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -1784,8 +1784,12 @@ class ExternalFile(Model):
 ##############
 
 class Extension(Model):
-    """ Extensions allows students to submit after the deadline.
-    """
+    """ Extensions allows students to submit after the deadline. """
+    __tablename__ = 'extension'
+    __table_args__ = (
+        UniqueConstraint('assignment_id', 'user_id'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     staff_id = db.Column(db.ForeignKey("user.id"), nullable=False)
     assignment_id = db.Column(db.ForeignKey("assignment.id"), nullable=False)
@@ -1798,8 +1802,6 @@ class Extension(Model):
     staff = db.relationship("User", foreign_keys='Extension.staff_id')
     user = db.relationship("User", foreign_keys='Extension.user_id')
     assignment = db.relationship("Assignment")
-
-    db.UniqueConstraint('assignment_id', 'user_id')
 
     def members(self):
         members = self.assignment.active_user_ids(self.user_id)
