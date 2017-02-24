@@ -30,7 +30,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['staff_id'], ['user.id'], name=op.f('fk_extension_staff_id_user')),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_extension_user_id_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_extension')),
-    sa.UniqueConstraint('assignment_id', 'user_id', name=op.f('uq_extension_assignment_id'))
+    sa.UniqueConstraint('assignment_id', 'user_id', name=op.f('uq_extension_assignment_id_user_id'))
     )
     # ### end Alembic commands ###
 
