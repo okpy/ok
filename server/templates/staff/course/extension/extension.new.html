@@ -6,37 +6,32 @@
 {% block main %}
   <section class="content-header">
       <h1>
-        Grant Extension for {{ assignment.display_name }}
+        Grant Extension for {{ current_course.display_name_with_semester }}
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
         <li><a href="{{ url_for(".course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
-        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
-          <i class="fa fa-list"></i> Assignments</a>
-        </li>
-        <li><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }}</a></li>
-        <li class="active hidden-xs"><a href="{{ url_for('.create_extension', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-life-ring"></i>Grant Extension</a></li>
+        <li><a href="{{ url_for('.list_extensions', cid=current_course.id) }}"><i class="fa fa-life-ring"></i>Extensions</a></li>
+        <li class="active hidden-xs"><a href="{{ url_for('.create_extension', cid=current_course.id) }}"><i class="fa fa-plus"></i>Grant Extension</a></li>
     	</ol>
   </section>
 
   <section class="content">
-
   		{% include 'alerts.html' %}
-
-  		<!-- Default box -->
         <div class="box">
           <div class="box-header with-border">
-            <h3 class="box-title">Grant {{ assignment.display_name }} Extension</h3>
+            <h3 class="box-title">New Extension</h3>
                 <div class="box-tools clearfix">
                 </div>
           </div>
           <div class="box-body">
            <p> By granting an extension, the student (and their group members) can continue to submit. </p>
 
-          {% call forms.render_form(form, action_url=url_for('.create_extension', cid=current_course.id, aid=assignment.id),
+          {% call forms.render_form(form, action_url=url_for('.create_extension', cid=current_course.id),
                                     action_text='Grant Extension', class_='form') %}
+            {{ forms.render_field(form.assignment_id) }}
             {{ forms.render_field(form.email, placeholder="student@example.com") }}
             {{ forms.render_field(form.expires, placeholder='YYYY-MM-DD hh:mm:ss',) }}
             {{ forms.render_field(form.reason, placeholder="Beacuse ...") }}
@@ -52,8 +47,9 @@
           </div>
           <!-- /.box-body -->
         </div>
-        <!-- /.box -->
 
 
+  </section>
 
+  <!-- </body> do not close body in template-->
 {% endblock %}

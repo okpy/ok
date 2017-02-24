@@ -1817,12 +1817,9 @@ class Extension(Model):
     def get_extension(cls, student, assignment):
         """ Returns the extension if the student has an extension """
         group_members = assignment.active_user_ids(student.id)
-        extension = cls.query.filter(cls.assignment == assignment,
-                                     cls.expires >= dt.datetime.utcnow(),
-                                     cls.user_id.in_(group_members)).first()
-        if not extension:
-            return False
-        return extension
+        return cls.query.filter(cls.assignment == assignment,
+                                cls.expires >= dt.datetime.utcnow(),
+                                cls.user_id.in_(group_members)).first()
 
     @classmethod
     def can(cls, obj, user, action):

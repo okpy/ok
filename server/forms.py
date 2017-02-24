@@ -352,6 +352,7 @@ class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
     pass
 
 class ExtensionForm(SubmissionTimeForm):
+    assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])
     expires = DateTimeField('Extension Expiry', validators=[validators.required()])
     email = EmailField('Student Email',
                        validators=[validators.required(), validators.email()])

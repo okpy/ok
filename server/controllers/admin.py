@@ -1259,37 +1259,40 @@ def list_extensions(cid):
                                     db.joinedload('staff'),
                                     db.joinedload('assignment'))
                            .filter(Assignment.course_id == cid).all())
-
     csrf_form = forms.CSRFForm()
-    return render_template('staff/course/extension/extension.list.html',
+    return render_template('staff/course/extension/extensions.html',
                             courses=courses, current_course=current_course,
                             extensions=extensions, csrf_form=csrf_form)
 
-@admin.route("/course/<int:cid>/assignments/<int:aid>/extension",
+@admin.route("/course/<int:cid>/extensions/new",
                 methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
-def create_extension(cid, aid):
+def create_extension(cid):
     courses, current_course = get_courses(cid)
-    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
-    if not Assignment.can(assign, current_user, 'edit'):
-        flash('Insufficient permissions', 'error')
-        abort(401)
 
     form = forms.ExtensionForm()
+    form.assignment_id.choices = sorted(
+        ((a.id, a.display_name) for a in current_course.assignments),
+        key=lambda a: a[1],
+    )
+
     if request.method == "GET":
         # Prefill fields if not set
         form.submission_time.default = 'deadline'
+        if not form.assignment_id.data:
+            form.assignment_id.default = request.args.get('aid')
         form.process() # Update defaults & choices
         if not form.email.data:
             form.email.data = request.args.get('email')
         if not form.expires.data:
-            extra_week = assign.due_date + dt.timedelta(days=7)
-            form.expires.data = utils.local_time_obj(extra_week, current_course)
+            extra_week =  utils.local_time_obj(dt.datetime.utcnow(), current_course) + dt.timedelta(days=7)
+            form.expires.data = extra_week.replace(hour=23, minute=59, second=59)
 
     if form.validate_on_submit():
+        assign = Assignment.query.filter_by(id=form.assignment_id.data).one_or_none()
         student = User.lookup(form.email.data)
         if Extension.get_extension(student, assign):
-            flash("{} already has an extension".format(form.email.data), 'error')
+            flash("{} already has an extension".format(form.email.data), 'danger')
         else:
             expires = utils.server_time_obj(form.expires.data, current_course)
             custom_time = form.get_submission_time(assign)
@@ -1305,17 +1308,8 @@ def create_extension(cid, aid):
             return redirect(url_for('.list_extensions', cid=cid))
 
     return render_template('staff/course/extension/extension.new.html',
-                            assignment=assign, form=form, courses=courses,
-                            current_course=current_course)
-
-@admin.route("/course/<int:cid>/extensions/<hashid:ext_id>",
-             methods=['GET', 'POST'])
-@is_staff(course_arg='cid')
-def edit_extension(cid, ext_id):
-    courses, current_course = get_courses(cid)
-    if not Extension.can(extension, current_user, 'edit'):
-        abort(401)
-
+                           form=form, courses=courses,
+                           current_course=current_course)
 
 @admin.route("/course/<int:cid>/extensions/<hashid:ext_id>/delete", methods=['POST'])
 @is_staff(course_arg='cid')
