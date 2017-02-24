@@ -1362,9 +1362,9 @@ def staff_submit_backup(cid, email, aid):
         if form.upload_files.upload_backup_files(backup):
             db.session.add(backup)
             db.session.commit()
-            if assign.autograding_key:
+            if assign.autograding_key and assign.continuous_autograding:
                 try:
-                    autograder.submit_continous(backup)
+                    autograder.submit_continuous(backup)
                 except ValueError as e:
                     flash('Did not send to autograder: {}'.format(e), 'warning')
             flash('Uploaded submission'.format(backup.hashid), 'success')
