@@ -54,9 +54,9 @@ def write_final_submission(zf, logger, assignment, student, seen):
         dump_info['custom_time_local'] = local_time(backup.custom_submission_time,
                                                     course)
 
-    zf.writestr("{}/info.json".format(folder), json.dumps(dump_info))
+    zf.writestr("{}/info.json".format(folder), json.dumps(dump_info).encode('utf-8'))
     for name, contents in backup.files().items():
-        zf.writestr("{}/{}".format(folder, name), contents)
+        zf.writestr("{}/{}".format(folder, name), contents.encode('utf-8'))
 
 
 def write_anon_backups(zf, logger, assignment, student, seen):
@@ -76,7 +76,7 @@ def write_anon_backups(zf, logger, assignment, student, seen):
 
     zf.writestr("anon-{}/{}/backups.json".format(assignment.name.replace('/', '-'),
                                                  student_hash(student.user.email)),
-                json.dumps(student_history))
+                json.dumps(student_history).encode('utf-8'))
 
 def export_loop(zf, logger, assignment, anonymize):
     course = assignment.course
