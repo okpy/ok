@@ -413,8 +413,8 @@ class ClientForm(BaseForm):
         # if our validators do not pass
         if not super(ClientForm, self).validate():
             return False
-        existingClient = Client.query.filter_by(client_id=self.client_id.data).first()
-        if existingClient:
+        existing_client = Client.query.filter_by(client_id=self.client_id.data).first()
+        if existing_client:
             self.client_id.errors.append('That client ID already exists')
             return False
         return True
