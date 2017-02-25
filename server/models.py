@@ -302,13 +302,18 @@ class Course(Model):
             course=self
         ).count() > 0
 
+    def get_participants(self, roles):
+        return (Enrollment.query
+                          .options(db.joinedload('user'))
+                          .filter(Enrollment.role.in_(roles),
+                                  Enrollment.course == self)
+                          .all())
+
     def get_staff(self):
-        return [e for e in (Enrollment.query
-                            .options(db.joinedload('user'))
-                            .filter(Enrollment.role.in_(STAFF_ROLES),
-                                    Enrollment.course == self)
-                            .all()
-                            )]
+        return self.get_participants(STAFF_ROLES)
+
+    def get_students(self):
+        return self.get_participants([STUDENT_ROLE])
 
 
 class Assignment(Model):
@@ -1747,7 +1752,7 @@ class ExternalFile(Model):
             assignment_id=assignment_id,
             user_id=user_id,
             backup=backup,
-            staff_file=False)
+            staff_file=staff_file)
         db.session.add(external_file)
         db.session.commit()
         return external_file

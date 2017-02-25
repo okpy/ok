@@ -200,7 +200,8 @@ def submit_assignment(name):
                 upload.stream.seek(0) # We've already read data, so reset before uploading
                 dest_folder = "uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix)
                 bin_file = ExternalFile.upload(upload.stream, current_user.id, full_path,
-                                               prefix=dest_folder, course_id=assign.course.id,
+                                               staff_file=False, prefix=dest_folder,
+                                               course_id=assign.course.id,
                                                backup=backup, assignment_id=assign.id)
                 db.session.add(bin_file)
 

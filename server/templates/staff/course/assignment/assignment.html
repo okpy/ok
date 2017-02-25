@@ -110,6 +110,9 @@
                   <li> <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-inbox"></i> Grading Queues
                   </a></li>
+                  <li> <a href="{{ url_for('.export_submissions', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-file-archive-o"></i> Download Submissions
+                  </a></li>
                   <li> <a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-gavel"></i> Run MOSS
                   </a></li>

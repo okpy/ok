@@ -514,6 +514,11 @@ class EmailScoresForm(BaseForm):
     )
 
 
+class ExportAssignment(BaseForm):
+    anonymize = BooleanField('Anonymize', default=False,
+                             description="Enable to remove identifying information from submissions")
+
+
 ##########
 # Canvas #
 ##########
