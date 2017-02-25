@@ -63,7 +63,7 @@ class Storage:
         # Also test credentials by getting the container
         self.container = self.driver.get_container(container_name=self.container_name)
 
-    def upload(self, iterator, name=None, container=None, prefix=""):
+    def upload(self, iterable, name=None, container=None, prefix=""):
         """ Upload (and overwrite) files on storage provider.
         To avoid overwriting files see `_safe_object_name` in Flask-Cloudy.
         or use sanitize_filename(name, prefix=True).
@@ -82,7 +82,7 @@ class Storage:
         elif prefix:
             obj_name = prefix.lstrip("/") + obj_name
         logger.info("Beginning upload of {}".format(name))
-        obj = self.driver.upload_object_via_stream(iterator=iterator,
+        obj = self.driver.upload_object_via_stream(iterator=iter(iterable),
                                                    container=container,
                                                    object_name=obj_name)
         logger.info("Completed upload of {}".format(name))
