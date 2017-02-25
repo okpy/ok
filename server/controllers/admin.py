@@ -905,7 +905,7 @@ def export_submissions(cid, aid):
 
         job = jobs.enqueue_job(
             export.export_assignment,
-            description='{} for {}'.format(description, assign.name),
+            description='{} for {}'.format(description, assign.display_name),
             timeout=600,
             user_id=current_user.id,
             course_id=cid,
