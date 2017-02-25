@@ -16,6 +16,7 @@ API.py - /api/{version}/endpoints
     api.add_resource(UserAPI, '/v3/user')
 """
 from functools import wraps
+from datetime import datetime as dt
 
 from flask import Blueprint, jsonify, request, url_for
 from flask_login import current_user
@@ -351,13 +352,23 @@ class BackupSchema(APISchema):
         if not assignment:
             raise ValueError('Assignment does not exist')
         lock_flag = not assignment['active']
+        past_due = dt.utcnow() > assignment['due_date']
 
         # Do not allow submissions after the lock date
         eligible_submit = args['submit'] and not lock_flag
         backup = make_backup(user, assignment['id'], args['messages'],
                              eligible_submit)
-        if args['submit'] and lock_flag:
-            raise ValueError('Late Submission of {}'.format(args['assignment']))
+        if args['submit'] and past_due:
+            assign_obj = models.Assignment.by_name(args['assignment'])
+            extension = models.Extension.get_extension(user, assign_obj)
+            # Submissions after the deadline with an extension are allowed
+            if extension:
+                backup.submit = True  # Need to set if the assignment is inactive
+                backup.custom_submission_time = extension.custom_submission_time
+                eligible_submit = True
+            elif lock_flag:
+                raise ValueError('Late Submission of {}'.format(args['assignment']))
+
         if (eligible_submit and assignment['autograding_key']
                 and assignment['continuous_autograding']):
             submit_continuous(backup)

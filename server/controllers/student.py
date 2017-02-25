@@ -12,7 +12,8 @@ from server import highlight, models, utils
 from server.autograder import submit_continuous
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_FILE_SIZE
 from server.forms import CSRFForm, UploadSubmissionForm
-from server.models import User, Course, Assignment, Group, Backup, Message, ExternalFile, db
+from server.models import (User, Course, Assignment, Group, Backup, Message,
+                           ExternalFile, Extension, db)
 from server.utils import (is_safe_redirect_url, group_action_email,
                           invite_email, send_email)
 
@@ -136,10 +137,13 @@ def submit_assignment(name):
     if not assign.uploads_enabled:
         flash("This assignment cannot be submitted online", 'warning')
         return redirect(url_for('.assignment', name=assign.name))
-    if not assign.active:
-        flash("It's too late to submit this assignment", 'warning')
-        return redirect(url_for('.assignment', name=assign.name))
 
+    extension = None # No need for an extension
+    if not assign.active:
+        extension = Extension.get_extension(user, assign)
+        if not extension:
+            flash("It's too late to submit this assignment", 'warning')
+            return redirect(url_for('.assignment', name=assign.name))
 
     if request.method == "POST":
         backup = Backup(
@@ -148,8 +152,10 @@ def submit_assignment(name):
             submit=True,
         )
         assignment = backup.assignment
-        templates = assignment.files or []
+        if extension:
+            backup.custom_submission_time = extension.custom_submission_time
 
+        templates = assignment.files or []
         files = {}
 
         def extract_file_index(file_ind):
