@@ -367,8 +367,8 @@ def seed_groups():
     for assign in Assignment.query.all():
         if assign.max_group_size < 2 or not assign.active:
             continue
-        enrollments = Enrollment.query.filter_by(course=assign.course,
-                                                 role=STUDENT_ROLE).all()
+        enrollments = assign.course.get_students()
+
         students = [s.user for s in enrollments]
         while len(students) > 1:
             member, invitee = random.sample(students, 2)

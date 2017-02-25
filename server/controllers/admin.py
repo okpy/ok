@@ -1,5 +1,6 @@
 import collections
 import csv
+import datetime as dt
 from functools import wraps
 from io import StringIO
 
@@ -17,18 +18,18 @@ from server import autograder
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
-                           Message, CanvasCourse, CanvasAssignment, db)
+                           Message, CanvasCourse, CanvasAssignment,
+                           Extension, db)
 from server.contrib import analyze
 
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
-
 import server.canvas.api as canvas_api
 import server.canvas.jobs
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
-from server.jobs import (example, moss, scores_audit, github_search,
+from server.jobs import (example, export, moss, scores_audit, github_search,
                          scores_notify)
 
 import server.highlight as highlight
@@ -530,6 +531,10 @@ def publish_scores(cid, aid):
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)
 
+##########
+# Scores #
+##########
+
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
 @is_staff(course_arg='cid')
 def view_scores(cid, aid):
@@ -888,6 +893,42 @@ def start_github_search(cid, aid):
         )
 
 
+@admin.route('/course/<int:cid>/assignments/<int:aid>/export/',
+             methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def export_submissions(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+    form = forms.ExportAssignment()
+    if form.validate_on_submit():
+        if form.anonymize.data:
+            description = 'Anonymized Export'
+        else:
+            description = 'Final Submission Export'
+
+        job = jobs.enqueue_job(
+            export.export_assignment,
+            description='{} for {}'.format(description, assign.display_name),
+            timeout=3600,
+            user_id=current_user.id,
+            course_id=cid,
+            assignment_id=aid,
+            anonymized=form.anonymize.data,
+            result_kind='link')
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/export.html',
+            courses=courses,
+            assignment=assign,
+            current_course=current_course,
+            form=form,
+        )
+
+
+
 ##############
 # Enrollment #
 ##############
@@ -903,19 +944,9 @@ def enrollment(cid):
         flash("Added {email} as {role}".format(
             email=email, role=role), "success")
 
-    students = (Enrollment.query.options(db.joinedload('user'))
-                .filter_by(course_id=cid, role=STUDENT_ROLE)
-                .order_by(Enrollment.created.desc())
-                .all())
-
-    staff = (Enrollment.query.options(db.joinedload('user'))
-             .filter(Enrollment.course_id == cid, Enrollment.role.in_(STAFF_ROLES))
-             .all())
-
-    lab_assistants = (Enrollment.query.options(db.joinedload('user'))
-                      .filter_by(course_id=cid, role=LAB_ASSISTANT_ROLE)
-                      .order_by(Enrollment.created.desc())
-                      .all())
+    students = current_course.get_students()
+    staff = current_course.get_staff()
+    lab_assistants = current_course.get_participants([LAB_ASSISTANT_ROLE])
 
     return render_template('staff/course/enrollment/enrollment.html',
                            enrollments=students, staff=staff,
@@ -1240,6 +1271,85 @@ def student_assignment_graph_detail(cid, email, aid):
                            student=student, assignment=assign,
                            group=group,
                            graphs=line_charts)
+##############
+# Extensions #
+##############
+@admin.route("/course/<int:cid>/extensions")
+@is_staff(course_arg='cid')
+def list_extensions(cid):
+    courses, current_course = get_courses(cid)
+
+    extensions = (Extension.query.join(Extension.assignment)
+                           .options(db.joinedload('user'),
+                                    db.joinedload('staff'),
+                                    db.joinedload('assignment'))
+                           .filter(Assignment.course_id == cid).all())
+    csrf_form = forms.CSRFForm()
+    return render_template('staff/course/extension/extensions.html',
+                            courses=courses, current_course=current_course,
+                            extensions=extensions, csrf_form=csrf_form)
+
+@admin.route("/course/<int:cid>/extensions/new",
+                methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def create_extension(cid):
+    courses, current_course = get_courses(cid)
+
+    form = forms.ExtensionForm()
+    form.assignment_id.choices = sorted(
+        ((a.id, a.display_name) for a in current_course.assignments),
+        key=lambda a: a[1],
+    )
+
+    if request.method == "GET":
+        # Prefill fields if not set
+        form.submission_time.default = 'deadline'
+        if not form.assignment_id.data:
+            form.assignment_id.default = request.args.get('aid')
+        form.process() # Update defaults & choices
+        if not form.email.data:
+            form.email.data = request.args.get('email')
+        if not form.expires.data:
+            extra_week =  utils.local_time_obj(dt.datetime.utcnow(), current_course) + dt.timedelta(days=7)
+            form.expires.data = extra_week.replace(hour=23, minute=59, second=59)
+
+    if form.validate_on_submit():
+        assign = Assignment.query.filter_by(id=form.assignment_id.data).one_or_none()
+        student = User.lookup(form.email.data)
+        if Extension.get_extension(student, assign):
+            flash("{} already has an extension".format(form.email.data), 'danger')
+        else:
+            expires = utils.server_time_obj(form.expires.data, current_course)
+            custom_time = form.get_submission_time(assign)
+
+            ext = Extension(staff=current_user, assignment=assign, user=student,
+                            message=form.reason.data, expires=expires,
+                            custom_submission_time=custom_time)
+            db.session.add(ext)
+            db.session.commit()
+            emails = ', '.join([u.email for u in ext.members()])
+            flash("Granted a extension on {} for {} ".format(assign.display_name,
+                                                             emails), 'success')
+            return redirect(url_for('.list_extensions', cid=cid))
+
+    return render_template('staff/course/extension/extension.new.html',
+                           form=form, courses=courses,
+                           current_course=current_course)
+
+@admin.route("/course/<int:cid>/extensions/<hashid:ext_id>/delete", methods=['POST'])
+@is_staff(course_arg='cid')
+def delete_extension(cid, ext_id):
+    extension = Extension.query.get_or_404(ext_id)
+    if not Extension.can(extension, current_user, 'delete'):
+        abort(401)
+
+    if forms.CSRFForm().validate_on_submit():
+        db.session.delete(extension)
+        db.session.commit()
+        flash("Revoked extension", "success")
+        return redirect(url_for('.list_extensions', cid=cid))
+    abort(401)
+
 
 ########################
 # Student view actions #
@@ -1362,9 +1472,9 @@ def staff_submit_backup(cid, email, aid):
         if form.upload_files.upload_backup_files(backup):
             db.session.add(backup)
             db.session.commit()
-            if assign.autograding_key:
+            if assign.autograding_key and assign.continuous_autograding:
                 try:
-                    autograder.submit_continous(backup)
+                    autograder.submit_continuous(backup)
                 except ValueError as e:
                     flash('Did not send to autograder: {}'.format(e), 'warning')
             flash('Uploaded submission'.format(backup.hashid), 'success')
@@ -1377,6 +1487,7 @@ def staff_submit_backup(cid, email, aid):
         assignment=assign,
         upload_form=form,
     )
+
 
 ########
 # Jobs #

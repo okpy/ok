@@ -14,7 +14,7 @@ import re
 
 from server import utils
 import server.canvas.api as canvas_api
-from server.models import Assignment, Client, Course, Message, CanvasCourse
+from server.models import Assignment, User, Client, Course, Message, CanvasCourse
 from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES,
@@ -151,6 +151,8 @@ class AssignmentForm(BaseForm):
     revisions_allowed = BooleanField('Enable Revisions', default=False,
                                      validators=[validators.optional()])
     autograding_key = StringField('Autograder Key', [validators.optional()])
+    continuous_autograding = BooleanField('Send Submissions to Autograder Immediately',
+                                         [validators.optional()])
     uploads_enabled = BooleanField('Enable Web Uploads', default=False,
                                    validators=[validators.optional()])
     upload_info = StringField('Upload Instructions',
@@ -351,6 +353,27 @@ class SubmissionTimeForm(BaseForm):
 class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
     pass
 
+class ExtensionForm(SubmissionTimeForm):
+    assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])
+    expires = DateTimeField('Extension Expiry', validators=[validators.required()])
+    email = EmailField('Student Email',
+                       validators=[validators.required(), validators.email()])
+    reason = StringField('Justification',
+                         description="Why are you granting this extension?",
+                         validators=[validators.optional()])
+
+    def validate(self):
+        check_validate = super(ExtensionForm, self).validate()
+        # if our validators do not pass
+        if not check_validate:
+            return False
+        user = User.lookup(self.email.data)
+        if not user:
+            message = "{} does not have an OK account".format(self.email.data)
+            self.email.errors.append(message)
+            return False
+        return check_validate
+
 class StaffAddGroupFrom(BaseForm):
     description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""
 
@@ -517,6 +540,11 @@ class EmailScoresForm(BaseForm):
     )
 
 
+class ExportAssignment(BaseForm):
+    anonymize = BooleanField('Anonymize', default=False,
+                             description="Enable to remove identifying information from submissions")
+
+
 ##########
 # Canvas #
 ##########
@@ -558,3 +586,4 @@ class CanvasAssignmentForm(BaseForm):
         choices=[(kind, kind.title()) for kind in SCORE_KINDS],
         validators=[validators.required()],
     )
+

@@ -78,3 +78,12 @@
 .ag-submit-btn:focus {
 	outline: 0;
 }
+
+.table-empty-state-heading {
+    padding-top: 20px;
+    text-align: center;
+}
+.table-empty-state-details {
+    padding-bottom: 20px;
+    text-align: center;
+}

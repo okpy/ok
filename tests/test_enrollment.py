@@ -161,12 +161,8 @@ class TestEnrollment(OkTestCase):
         assert enrollment.role == info.get('role')
 
     def remove_lab_assistants(self):
-        [db.session.delete(e) for e in (Enrollment.query
-                            .options(db.joinedload('user'))
-                            .filter_by(role = LAB_ASSISTANT_ROLE,
-                                    course_id = self.course.id)
-                            .all()
-                            )]
+        for e in self.course.get_participants([LAB_ASSISTANT_ROLE]):
+            db.session.delete(e)
         db.session.commit()
 
     def test_lab_assistant_enroll_web(self):

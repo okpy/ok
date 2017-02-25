@@ -9,10 +9,11 @@ import os
 import time
 
 from server import highlight, models, utils
-from server.autograder import submit_continous
+from server.autograder import submit_continuous
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_FILE_SIZE
 from server.forms import CSRFForm, UploadSubmissionForm
-from server.models import User, Course, Assignment, Group, Backup, Message, ExternalFile, db
+from server.models import (User, Course, Assignment, Group, Backup, Message,
+                           ExternalFile, Extension, db)
 from server.utils import (is_safe_redirect_url, group_action_email,
                           invite_email, send_email)
 
@@ -128,6 +129,7 @@ def assignment(name):
 @student.route('/<assignment_name:name>/submit', methods=['GET', 'POST'])
 @login_required
 def submit_assignment(name):
+    # TODO: Unify student & staff upload.
     assign = get_assignment(name)
     group = Group.lookup(current_user, assign)
     user_ids = assign.active_user_ids(current_user.id)
@@ -135,10 +137,13 @@ def submit_assignment(name):
     if not assign.uploads_enabled:
         flash("This assignment cannot be submitted online", 'warning')
         return redirect(url_for('.assignment', name=assign.name))
-    if not assign.active:
-        flash("It's too late to submit this assignment", 'warning')
-        return redirect(url_for('.assignment', name=assign.name))
 
+    extension = None # No need for an extension
+    if not assign.active:
+        extension = Extension.get_extension(user, assign)
+        if not extension:
+            flash("It's too late to submit this assignment", 'warning')
+            return redirect(url_for('.assignment', name=assign.name))
 
     if request.method == "POST":
         backup = Backup(
@@ -147,8 +152,10 @@ def submit_assignment(name):
             submit=True,
         )
         assignment = backup.assignment
-        templates = assignment.files or []
+        if extension:
+            backup.custom_submission_time = extension.custom_submission_time
 
+        templates = assignment.files or []
         files = {}
 
         def extract_file_index(file_ind):
@@ -193,7 +200,8 @@ def submit_assignment(name):
                 upload.stream.seek(0) # We've already read data, so reset before uploading
                 dest_folder = "uploads/{}/{}/{}/".format(assign.name, current_user.id, backup_folder_postfix)
                 bin_file = ExternalFile.upload(upload.stream, current_user.id, full_path,
-                                               prefix=dest_folder, course_id=assign.course.id,
+                                               staff_file=False, prefix=dest_folder,
+                                               course_id=assign.course.id,
                                                backup=backup, assignment_id=assign.id)
                 db.session.add(bin_file)
 
@@ -202,6 +210,14 @@ def submit_assignment(name):
 
         db.session.add(backup)
         db.session.commit()
+
+        # Send to continuous autograder
+        if assign.autograding_key and assign.continuous_autograding:
+            try:
+                autograder.submit_continuous(backup)
+            except ValueError as e:
+                flash('Did not send to autograder: {}'.format(e), 'warning')
+
         return jsonify({
             'backup': backup.hashid,
             'url': url_for('.code', name=assign.name, submit=backup.submit,
