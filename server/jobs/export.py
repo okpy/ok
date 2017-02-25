@@ -1,9 +1,9 @@
-import io
-import zipfile
+import datetime as dt
+import hashlib
 import json
 import time
-import hashlib
-import datetime as dt
+
+import zipstream
 
 from server import jobs
 from server.models import Assignment, ExternalFile, Group, Backup, User
@@ -56,7 +56,6 @@ def write_final_submission(zf, logger, assignment, student, seen):
 
     zf.writestr("{}/info.json".format(folder), json.dumps(dump_info))
     for name, contents in backup.files().items():
-        # Write the file to the in-memory zip
         zf.writestr("{}/{}".format(folder, name), contents)
 
 
@@ -79,7 +78,7 @@ def write_anon_backups(zf, logger, assignment, student, seen):
                                                  student_hash(student.user.email)),
                 json.dumps(student_history))
 
-def export_loop(bio, zf, logger, assignment, anonymize):
+def export_loop(zf, logger, assignment, anonymize):
     course = assignment.course
     enrollments = course.get_students()
     seen = set()
@@ -124,20 +123,15 @@ def export_assignment(assignment_id, anonymized):
     else:
         logger.info("Start final submission export")
     course = assignment.course
-    with io.BytesIO() as bio:
-        # Get a handle to the in-memory zip in append mode
-        with zipfile.ZipFile(bio, "w", zipfile.ZIP_DEFLATED, False) as zf:
-            zf.external_attr = 0o655 << 16
-            export_loop(bio, zf, logger, assignment, anonymized)
-            created_time = local_time(dt.datetime.now(), course, fmt='%m-%d-%I-%M-%p')
-            zip_name = '{}_{}.zip'.format(assignment.name.replace('/', '-'), created_time)
+    zf = zipstream.ZipFile()
+    export_loop(zf, logger, assignment, anonymized)
+    created_time = local_time(dt.datetime.now(), course, fmt='%m-%d-%I-%M-%p')
+    zip_name = '{}_{}.zip'.format(assignment.name.replace('/', '-'), created_time)
 
-        bio.seek(0)
-        # Close zf handle to finish writing zipfile
-        logger.info("Uploading...")
-        upload = ExternalFile.upload(bio, user_id=requesting_user.id, name=zip_name,
-                                        course_id=course.id,
-                                        prefix='research/exports/{}/'.format(course.offering))
+    logger.info("Uploading...")
+    upload = ExternalFile.upload(zf, user_id=requesting_user.id, name=zip_name,
+                                    course_id=course.id,
+                                    prefix='research/exports/{}/'.format(course.offering))
 
     logger.info("Saved as: {0}".format(upload.object_name))
     msg = "/files/{0}".format(encode_id(upload.id))
