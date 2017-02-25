@@ -1,9 +1,9 @@
 import datetime as dt
 import hashlib
+import io
 import json
 import time
-
-import zipstream
+import zipfile
 
 from server import jobs
 from server.models import Assignment, ExternalFile, Group, Backup, User
@@ -54,9 +54,10 @@ def write_final_submission(zf, logger, assignment, student, seen):
         dump_info['custom_time_local'] = local_time(backup.custom_submission_time,
                                                     course)
 
-    zf.writestr("{}/info.json".format(folder), json.dumps(dump_info).encode('utf-8'))
+    zf.writestr("{}/info.json".format(folder), json.dumps(dump_info))
     for name, contents in backup.files().items():
-        zf.writestr("{}/{}".format(folder, name), contents.encode('utf-8'))
+        # Write the file to the in-memory zip
+        zf.writestr("{}/{}".format(folder, name), contents)
 
 
 def write_anon_backups(zf, logger, assignment, student, seen):
@@ -76,9 +77,9 @@ def write_anon_backups(zf, logger, assignment, student, seen):
 
     zf.writestr("anon-{}/{}/backups.json".format(assignment.name.replace('/', '-'),
                                                  student_hash(student.user.email)),
-                json.dumps(student_history).encode('utf-8'))
+                json.dumps(student_history))
 
-def export_loop(zf, logger, assignment, anonymize):
+def export_loop(bio, zf, logger, assignment, anonymize):
     course = assignment.course
     enrollments = course.get_students()
     seen = set()
@@ -123,15 +124,20 @@ def export_assignment(assignment_id, anonymized):
     else:
         logger.info("Start final submission export")
     course = assignment.course
-    zf = zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED)
-    export_loop(zf, logger, assignment, anonymized)
-    created_time = local_time(dt.datetime.now(), course, fmt='%m-%d-%I-%M-%p')
-    zip_name = '{}_{}.zip'.format(assignment.name.replace('/', '-'), created_time)
+    with io.BytesIO() as bio:
+        # Get a handle to the in-memory zip in append mode
+        with zipfile.ZipFile(bio, "w", zipfile.ZIP_DEFLATED, False) as zf:
+            zf.external_attr = 0o655 << 16
+            export_loop(bio, zf, logger, assignment, anonymized)
+            created_time = local_time(dt.datetime.now(), course, fmt='%m-%d-%I-%M-%p')
+            zip_name = '{}_{}.zip'.format(assignment.name.replace('/', '-'), created_time)
 
-    logger.info("Uploading...")
-    upload = ExternalFile.upload(zf, user_id=requesting_user.id, name=zip_name,
-                                    course_id=course.id,
-                                    prefix='research/exports/{}/'.format(course.offering))
+        bio.seek(0)
+        # Close zf handle to finish writing zipfile
+        logger.info("Uploading...")
+        upload = ExternalFile.upload(bio, user_id=requesting_user.id, name=zip_name,
+                                        course_id=course.id,
+                                        prefix='research/exports/{}/'.format(course.offering))
 
     logger.info("Saved as: {0}".format(upload.object_name))
     msg = "/files/{0}".format(encode_id(upload.id))
