@@ -493,7 +493,7 @@ class EmailScoresForm(BaseForm):
 
 class ExportAssignment(BaseForm):
     anonymize = BooleanField('Anonymize', default=False,
-                             description="Enable to make an anonymized research export of all backups")
+                             description="Enable to remove identifying information from submissions")
 
 
 ##########
