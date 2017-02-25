@@ -1051,6 +1051,9 @@ class Backup(Model):
                 return case
         return "Unknown Question"
 
+    def moss_results(self):
+        return MossResult.query.filter(or_(submissionA=self, submissionB=self))
+
     @staticmethod
     @cache.memoize(120)
     def statistics(self):
@@ -1627,6 +1630,24 @@ class Job(Model):
 
     result_kind = db.Column(db.Enum(*result_kinds, name='result_kind'), default='string')
     result = db.Column(mysql.MEDIUMTEXT)  # Final output, if the job did not crash
+
+################
+# Moss Results #
+################
+
+class MossResult(Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    submissionA_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    submissionB_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    similarityA = db.Column(db.Integer, nullable=False)
+    similarityB = db.Column(db.Integer, nullable=False)
+    matchesA = db.Column(JsonBlob, nullable=False)
+    matchesB = db.Column(JsonBlob, nullable=False)
+
+    submissionA = db.relationship("Backup", foreign_keys='MossResult.submissionA_id')
+    submissionB = db.relationship("Backup", foreign_keys='MossResult.submissionB_id')
+
 
 ##########
 # Canvas #
