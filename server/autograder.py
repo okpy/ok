@@ -79,13 +79,13 @@ def send_batch(token, assignment, backup_ids, priority='default'):
         return dict(zip(backup_ids, response_json['jobs']))
     else:
         return {}
-    
+
 def autograde_backup(token, assignment, backup_id):
     """Autograde a backup, returning and autograder job ID."""
     jobs = send_batch(token, assignment, [backup_id], priority='high')
     return jobs.get(backup_id)
 
-def submit_continous(backup):
+def submit_continuous(backup):
     """ Intended for continous grading (email with results on submit)
     """
     email = backup.submitter.email

@@ -6,7 +6,13 @@
     <h3> {{ title }} </h3>
 {% endif %}
 
-<p> {{ body }} </p>
+{% if body %}
+<p>
+  {% for line in body.split('\n') %}
+   {{ line }} <br>
+  {% endfor %}
+</p>
+{% endif %}
 
 {% for score in scores %}
   <p> {{ score.kind | title }} Score: <strong> {{ score.score }} </strong> </p>

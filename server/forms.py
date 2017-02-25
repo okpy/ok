@@ -136,7 +136,7 @@ class AssignmentForm(BaseForm):
 
     display_name = StringField('Display Name',
                                validators=[validators.required()])
-    name = StringField('Offering (example: cal/cs61a/fa16/proj01)',
+    name = StringField('Endpoint (example: cal/cs61a/fa16/proj01)',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
                              validators=[validators.required()])
@@ -151,6 +151,8 @@ class AssignmentForm(BaseForm):
     revisions_allowed = BooleanField('Enable Revisions', default=False,
                                      validators=[validators.optional()])
     autograding_key = StringField('Autograder Key', [validators.optional()])
+    continuous_autograding = BooleanField('Send Submissions to Autograder Immediately',
+                                         [validators.optional()])
     uploads_enabled = BooleanField('Enable Web Uploads', default=False,
                                    validators=[validators.optional()])
     upload_info = StringField('Upload Instructions',
@@ -180,13 +182,13 @@ class AssignmentForm(BaseForm):
 
         if not has_course_endpoint or not is_valid_endpoint:
             self.name.errors.append(
-                'The name should be of the form {0}/<name>'.format(self.course.offering))
+                'The endpoint should be of the form {0}/<name>'.format(self.course.offering))
             return False
 
         # If the name is changed, ensure assignment offering is unique
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn:
-            self.name.errors.append('That offering already exists')
+            self.name.errors.append('That endpoint already exists')
             return False
         return True
 

@@ -34,7 +34,7 @@
                   {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog',
                                         required="required", type='text', id="display-name") }}
                   {{ forms.render_field(form.name, label_visible=true, value=current_course.offering + '/',
-                                        placeholder='cal/cs61a/fa16/hog', type='text', id="assignment-offering") }}
+                                        placeholder='cal/cs61a/fa16/hog', type='text', id="assignment-name") }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
                 </fieldset>
                 <h3>Deadlines</h3>
@@ -46,6 +46,7 @@
                 <fieldset>
                     {{ forms.render_checkbox_field(form.visible, label_visible=true) }}
                     {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
+                    {{ forms.render_checkbox_field(form.continuous_autograding, label_visible=true) }}
                     {{ forms.render_checkbox_field(form.revisions_allowed, label_visible=true) }}
                     {{ forms.render_checkbox_field(form.uploads_enabled, label_visible=true) }}
                     {{ forms.render_field(form.upload_info, label_visible=true, placeholder='Upload the following files: test.py', type='text') }}
@@ -86,10 +87,10 @@ function registerDisplayName(courseOffering) {
     $('#display-name').on('change, keyup', debounce(function () {
         if (!nameTweaked) {
             displayName = $('#display-name').val().toLowerCase().split(' ').join('')
-            $('#assignment-offering').val(courseOffering + '/' + displayName)
+            $('#assignment-name').val(courseOffering + '/' + displayName)
         }
     }, 25))
-    $('#assignment-offering').keyup(function () {
+    $('#assignment-name').keyup(function () {
         nameTweaked = true;
     })
 }

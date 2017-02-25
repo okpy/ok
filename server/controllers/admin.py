@@ -625,7 +625,7 @@ def send_scores_job(cid, aid):
         job = jobs.enqueue_job(
             scores_notify.email_scores,
             description=description,
-            timeout=600,
+            timeout=3600,
             course_id=cid,
             user_id=current_user.id,
             assignment_id=assign.id,
@@ -740,7 +740,6 @@ def assignment_single_queue(cid, aid, uid):
     tasks_query = GradingTask.query.filter_by(assignment=assignment,
                                               grader_id=uid)
     queue = (tasks_query.options(db.joinedload('assignment'))
-                        .order_by(GradingTask.score_id.asc())
                         .order_by(GradingTask.created.asc())
                         .paginate(page=page, per_page=20))
 
@@ -1447,9 +1446,9 @@ def staff_submit_backup(cid, email, aid):
         if form.upload_files.upload_backup_files(backup):
             db.session.add(backup)
             db.session.commit()
-            if assign.autograding_key:
+            if assign.autograding_key and assign.continuous_autograding:
                 try:
-                    autograder.submit_continous(backup)
+                    autograder.submit_continuous(backup)
                 except ValueError as e:
                     flash('Did not send to autograder: {}'.format(e), 'warning')
             flash('Uploaded submission'.format(backup.hashid), 'success')
