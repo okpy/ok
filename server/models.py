@@ -334,6 +334,7 @@ class Assignment(Model):
     max_group_size = db.Column(db.Integer(), nullable=False, default=1)
     revisions_allowed = db.Column(db.Boolean(), nullable=False, default=False)
     autograding_key = db.Column(db.String(255))
+    continuous_autograding = db.Column(db.Boolean(), default=False)
     uploads_enabled = db.Column(db.Boolean(), nullable=False, default=False)
     upload_info = db.Column(db.Text)
     published_scores = db.Column(StringList, nullable=False, default=[])

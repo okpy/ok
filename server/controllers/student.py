@@ -9,7 +9,7 @@ import os
 import time
 
 from server import highlight, models, utils
-from server.autograder import submit_continous
+from server.autograder import submit_continuous
 from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_FILE_SIZE
 from server.forms import CSRFForm, UploadSubmissionForm
 from server.models import User, Course, Assignment, Group, Backup, Message, ExternalFile, db
@@ -128,6 +128,7 @@ def assignment(name):
 @student.route('/<assignment_name:name>/submit', methods=['GET', 'POST'])
 @login_required
 def submit_assignment(name):
+    # TODO: Unify student & staff upload.
     assign = get_assignment(name)
     group = Group.lookup(current_user, assign)
     user_ids = assign.active_user_ids(current_user.id)
@@ -202,6 +203,14 @@ def submit_assignment(name):
 
         db.session.add(backup)
         db.session.commit()
+
+        # Send to continuous autograder
+        if assign.autograding_key and assign.continuous_autograding:
+            try:
+                autograder.submit_continuous(backup)
+            except ValueError as e:
+                flash('Did not send to autograder: {}'.format(e), 'warning')
+
         return jsonify({
             'backup': backup.hashid,
             'url': url_for('.code', name=assign.name, submit=backup.submit,

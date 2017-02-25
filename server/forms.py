@@ -151,6 +151,8 @@ class AssignmentForm(BaseForm):
     revisions_allowed = BooleanField('Enable Revisions', default=False,
                                      validators=[validators.optional()])
     autograding_key = StringField('Autograder Key', [validators.optional()])
+    continuous_autograding = BooleanField('Send Submissions to Autograder Immediately',
+                                         [validators.optional()])
     uploads_enabled = BooleanField('Enable Web Uploads', default=False,
                                    validators=[validators.optional()])
     upload_info = StringField('Upload Instructions',

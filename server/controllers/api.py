@@ -23,7 +23,7 @@ import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
 from flask_restful.representations.json import output_json
 
-from server.autograder import submit_continous
+from server.autograder import submit_continuous
 
 from server.constants import STAFF_ROLES, VALID_ROLES
 from server.controllers import files
@@ -353,13 +353,14 @@ class BackupSchema(APISchema):
         lock_flag = not assignment['active']
 
         # Do not allow submissions after the lock date
-        elgible_submit = args['submit'] and not lock_flag
+        eligible_submit = args['submit'] and not lock_flag
         backup = make_backup(user, assignment['id'], args['messages'],
-                             elgible_submit)
+                             eligible_submit)
         if args['submit'] and lock_flag:
             raise ValueError('Late Submission of {}'.format(args['assignment']))
-        if elgible_submit and assignment['autograding_key']:
-            submit_continous(backup)
+        if (eligible_submit and assignment['autograding_key']
+                and assignment['continuous_autograding']):
+            submit_continuous(backup)
         return backup
 
 
