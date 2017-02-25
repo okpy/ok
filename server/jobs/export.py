@@ -123,7 +123,7 @@ def export_assignment(assignment_id, anonymized):
     else:
         logger.info("Start final submission export")
     course = assignment.course
-    zf = zipstream.ZipFile(mode='w', compression=ZIP_DEFLATED)
+    zf = zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED)
     export_loop(zf, logger, assignment, anonymized)
     created_time = local_time(dt.datetime.now(), course, fmt='%m-%d-%I-%M-%p')
     zip_name = '{}_{}.zip'.format(assignment.name.replace('/', '-'), created_time)
