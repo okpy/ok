@@ -32,7 +32,7 @@
     {% block css %}
     {% endblock %}
   </head>
-  <body>
+  <body {% block body_attrs %}{% endblock %}>
 
     {% block body %}
     {% endblock %}

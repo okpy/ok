@@ -1,12 +1,12 @@
 {% extends "staff/base.html" %}
 {% import "staff/_formhelpers.html" as forms %}
 
-{% block title %} MOSS -  {{ current_course.display_name_with_semester }} {% endblock %}
+{% block title %} Email {{ assignment.display_name }} scores {% endblock %}
 
 {% block main %}
 <section class="content-header">
     <h1>
-        {{ current_course.display_name_with_semester }} Jobs
+        Email {{ assignment.display_name }} Scores
         <small>{{ current_course.offering }}</small>
     </h1>
     <ol class="breadcrumb">
@@ -20,8 +20,8 @@
         <li><a href="{{ url_for(".course_jobs", cid=current_course.id) }}">
             <i class="fa fa-list"></i>Jobs
         </a></li>
-        <li class="active"><a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}">
-            <i class="fa fa-file-text"></i>Start Moss Job</a>
+        <li class="active"><a href="#">
+            <i class="fa fa-inbox"></i>Notify Students</a>
         </li>
     </ol>
 </section>
@@ -31,11 +31,13 @@
     <div class="col-md-12">
       <div class="box">
         <div class="box-body">
-          {% call forms.render_form(form, action_text='Start Moss Upload') %}
-            {{ forms.render_field(form.moss_userid) }}
-            {{ forms.render_field(form.file_regex, default=".*") }}
-            {{ forms.render_field(form.language) }}
-            {{ forms.render_checkbox_field(form.subtract_template) }}
+          <p> Each course is allocated 4,000 emails per month. Contact us if you anticipate exceeding that limit. </p>
+          {% call forms.render_form(form, action_text='Send Emails') %}
+            {{ forms.render_field(form.subject, value=assignment.display_name + " Scores" ) }}
+            {{ forms.render_field(form.body) }}
+            {{ forms.render_field(form.reply_to) }}
+            {{ forms.render_checkbox_field(form.kinds) }}
+            {{ forms.render_checkbox_field(form.dry_run) }}
             {% endcall %}
         </div>
       </div>

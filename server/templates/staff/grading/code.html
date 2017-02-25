@@ -16,7 +16,6 @@
         {% endif %}
     </h1>
     <ol class="breadcrumb">
-        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
         <li><a href="{{ url_for(".course", cid=backup.assignment.course.id) }}">
             <i class="fa fa-university"></i> {{ backup.assignment.course.offering }}
         </a></li>
@@ -80,6 +79,12 @@
                       {{ utils.local_time(backup.custom_submission_time, backup.assignment.course) }}
                     </li>
                   {% endif %}
+                    <li class="list-group-item">
+                      <b>Student URL: </b>
+                      {% with student_url = url_for('student.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit, _external=True) %}
+                      <a href="{{ student_url }}"> {{ student_url }} </a>
+                      {% endwith %}
+                    </li>
                   {% for score in backup.active_scores %}
                     <li class="list-group-item">
                       <p>
@@ -90,7 +95,7 @@
                           <span class="label label-default">Unpublished</span>
                         {% endif %}
                       </p>
-                      <pre>{{ score.message }}</pre>
+                      <pre class="score-box">{{ score.message }}</pre>
                       <p>{{ utils.local_time(score.created, backup.assignment.course) }} from {{ score.grader.email }}</p>
                     </li>
                   {% else %}

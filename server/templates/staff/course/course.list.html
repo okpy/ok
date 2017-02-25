@@ -1,0 +1,119 @@
+{% extends "staff/base.html" %}
+
+{% block title %} All Courses {% endblock %}
+
+{% macro courses_table(courses, staff=True) %}
+    <table class="table table-striped">
+        <tbody><tr>
+            <th>Name</th>
+            <th>Offering</th>
+            <th>Institution</th>
+            <th>Status</th>
+            <th>Timezone</th>
+            <th>Actions</th>
+        </tr>
+
+        {% for course in courses %}
+        <tr>
+            <td>
+                {% if staff %}
+                    <a href="{{ url_for('.course', cid=course.id) }}">{{ course.display_name }}</a>
+                {% else %}
+                    <a href="{{ url_for('student.course', offering=course.offering) }}">{{ course.display_name }}</a>
+                {% endif %}
+            </td>
+            <td>{{ course.offering }}</td>
+            <td>{{ course.institution }}</td>
+            <td>
+                {% if course.active %}
+                <span class="label label-success">Active</span>
+                {% else %}
+                <span class="label label-info">Inactive</span>
+                {% endif %}
+            </td>
+            <td>{{ course.timezone }}</td>
+            <td>
+                {% if staff %}
+                <div class="btn-group">
+                    <a href="{{ url_for('.course', cid=course.id) }}" class="btn btn-sm btn-flat btn-default">View</a>
+                    <a href="{{ url_for('.course_settings', cid=course.id) }}" class="btn btn-sm btn-flat btn-default">Edit</a>
+                </div>
+                {% else %}
+                    <a href="{{ url_for('student.course', offering=course.offering) }}" class="btn btn-sm btn-flat btn-default">Student Interface</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        All Courses
+      </h1>
+      <ol class="breadcrumb">
+        <li class="active"><a href="#"><i class="fa fa-list"></i> All Courses </a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+        {% include 'alerts.html' %}
+
+        <!-- Default box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Current Courses</h3>
+            <div class="box-tools pull-right">
+              <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.create_course')}}">
+                <i class="fa fa-plus"></i> Create Course
+              </a>
+            </div>
+          </div>
+          <div class="box-body table-responsive no-padding">
+              {{ courses_table(active_courses) }}
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+
+        {% if inactive_courses %}
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Past Courses</h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                <i class="fa fa-minus"></i></button>
+            </div>
+          </div>
+          <div class="box-body table-responsive no-padding">
+              {{ courses_table(inactive_courses) }}
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+        {% endif %}
+
+        {% if other_courses %}
+        <!-- Default box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Other Courses</h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                <i class="fa fa-minus"></i></button>
+            </div>
+          </div>
+          <div class="box-body table-responsive no-padding">
+              {{ courses_table(other_courses, staff=False) }}
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+        {% endif %}
+
+
+
+  <!-- </body> do not close body in template-->
+{% endblock %}

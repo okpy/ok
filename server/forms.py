@@ -136,7 +136,7 @@ class AssignmentForm(BaseForm):
 
     display_name = StringField('Display Name',
                                validators=[validators.required()])
-    name = StringField('Offering (example: cal/cs61a/fa16/proj01)',
+    name = StringField('Endpoint (example: cal/cs61a/fa16/proj01)',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
                              validators=[validators.required()])
@@ -180,13 +180,13 @@ class AssignmentForm(BaseForm):
 
         if not has_course_endpoint or not is_valid_endpoint:
             self.name.errors.append(
-                'The name should be of the form {0}/<name>'.format(self.course.offering))
+                'The endpoint should be of the form {0}/<name>'.format(self.course.offering))
             return False
 
         # If the name is changed, ensure assignment offering is unique
         assgn = Assignment.query.filter_by(name=self.name.data).first()
         if assgn:
-            self.name.errors.append('That offering already exists')
+            self.name.errors.append('That endpoint already exists')
             return False
         return True
 
@@ -473,7 +473,23 @@ class GithubSearchRecentForm(BaseForm):
     issue_title = StringField('Issue Title (Optional)', validators=[validators.optional()],
                                 default="Academic Integrity - Please Delete This Repository")
     issue_body = TextAreaField('Issue Body (Optional)', validators=[validators.optional()],
-                               description="The strings '{repo}' and '{author}' will be replace with the approriate value")
+                               description="The strings '{repo}' and '{author}' will be replaced with the appropriate value")
+
+class EmailScoresForm(BaseForm):
+    subject = StringField('Subject', validators=[validators.required()])
+    body = TextAreaField('Body', validators=[validators.required()],
+                       description="Is there anything the students need to know about the scores?",
+                       default="An instructor has published scores. If you have questions, please contact the course staff")
+    reply_to = EmailField('Reply To Address', default="no-reply@okpy.org",
+                          description="What email should replies be sent to?",
+                          validators=[validators.required(), validators.email()])
+    dry_run = BooleanField('Dry Run Mode', default=True,
+                           description="Don't send emails to students; instead, send a few examples to your email.")
+    kinds = MultiCheckboxField(
+        'Scores Tags',
+        choices=[(kind, kind.title()) for kind in SCORE_KINDS],
+    )
+
 
 class ExportAssignment(BaseForm):
     anonymize = BooleanField('Anonymize', default=False,

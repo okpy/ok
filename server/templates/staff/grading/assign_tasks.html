@@ -10,7 +10,6 @@
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
         <li><a href="{{ url_for(".course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
@@ -40,6 +39,7 @@
               {% call forms.render_form(form, action_url="", action_text='Assign Grading Tasks',
                                           class_='form') %}
                   {{ forms.render_field(form.staff, label_visible=true, class_="checkbox-list") }}
+                  {{ forms.render_field(form.kind, label_visible=true) }}
               {% endcall %}
           </div>
           <!-- /.box-body -->

@@ -275,6 +275,27 @@ class Course(Model):
             semester = "Summer"
         return self.display_name + " ({0} 20{1})".format(semester, year)
 
+    def statistics(self):
+        assignments = self.assignments
+        active_assignments = [x for x in assignments if x.active]
+        inactive_assignments = [x for x in assignments if not x.active]
+
+        backup_count_query = (Backup.query.join(Backup.assignment)
+                                    .filter(Assignment.course == self))
+
+        count_by_role = dict(Counter([x.role for x in self.participations]))
+
+        count_by_role['all_staff'] = sum(count_by_role.get(x, 0) for x in STAFF_ROLES)
+
+        return {
+            'active_assignments': len(active_assignments),
+            'inactive_assignments': len(inactive_assignments),
+            'backup_count': backup_count_query.count(),
+            'submit_count': backup_count_query.filter(Backup.submit == True).count(),
+            'enrollment_counts': count_by_role
+        }
+
+
     def is_enrolled(self, user):
         return Enrollment.query.filter_by(
             user=user,
@@ -1711,7 +1732,7 @@ class ExternalFile(Model):
 
     @property
     def download_link(self):
-        return '/files/{}'.format(encode_id(self.id))
+        return '/api/v3/file/{}'.format(encode_id(self.id))
 
     def delete(self):
         self.object().delete()

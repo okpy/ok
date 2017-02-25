@@ -17,11 +17,11 @@
                 <th class="sort" data-sort="email">User</th>
                 <th class="sort" data-sort="name">Name</th>
                 <th class="sort" data-sort="sid">SID</th>
-                <th class="sort" data-sort="secondary">Secondary ID</th>
+                <th class="sort sort-padding" data-sort="secondary">Course ID</th>
                 <th class="sort" data-sort="role">Role</th>
-                <th class="sort" data-sort="timestamp">Enrolled At</th>
-                <th class="sort" data-sort="section">Section</th>
-                <th data-sort="unenroll">Action</th>
+                <th class="sort sort-padding" data-sort="timestamp">Enrolled At</th>
+                <th class="sort sort-padding" data-sort="section">Section</th>
+                {% if unenroll_form %} <th data-sort="unenroll">Action</th> {% endif %}
             </thead>
 
             <tbody class="list">
@@ -38,11 +38,13 @@
                     <td class="role"><span class="label label-success">{{item.role | title }}</span></td>
                     <td class="timestamp" data-timestamp="{{ item.created }}">{{ utils.local_time_obj(item.created, current_course) }}</td>
                     <td class="section">{{item.section}}</td>
+                    {% if unenroll_form %}
                     <td class="unenroll">
                         {% call forms.render_form_bare(unenroll_form, action_url=url_for('.unenrollment', cid=current_course.id, user_id=item.user.id), class_='form') %}
                             <button class='btn btn-sm btn-danger' data-confirm='Are you sure you want to unenroll {{ item.user.email }} from {{ current_course.display_name }}?'><i class='fa fa-trash-o'></i></button>
                         {% endcall %}
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
                 <!-- Include another header because list.js forces us to include this inside of the tbody -->
@@ -62,7 +64,6 @@
                         </div>
                     </span>
                 </div>
-
             </tbody>
         </table>
     </div>

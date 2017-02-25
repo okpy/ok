@@ -55,7 +55,7 @@ pytz==2016.10
 arrow
 
 # Emailing
-sendgrid==1.5.20
+sendgrid==3.6.3
 pynliner<1.0
 
 # Autograder Interface
@@ -76,7 +76,7 @@ bleach==1.5.0
 gcloud==0.18.3
 
 # Development
-Flask-DebugToolbar==0.10.0
+Flask-DebugToolbar==0.10.1
 Flask-Script==2.0.5
 mccabe==0.5.3
 flake8>=2.5.4

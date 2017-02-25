@@ -10,14 +10,13 @@
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="{{ url_for(".index") }}"><i class="fa fa-dashboard"></i> Home</a></li>
         <li><a href="{{ url_for(".course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
           <i class="fa fa-list"></i> Assignments</a>
         </li>
-        <li class="active"><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li class="active hidden-xs"><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
       </ol>
   </section>
 
@@ -87,6 +86,9 @@
                   <li> <a href="{{ url_for('.assignment_stats', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-bar-chart-o"></i> Detailed Stats
                   </a></li>
+                  <li> <a href="{{ url_for('.view_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-eye"></i> View Scores
+                  </a></li>
                   <li> <a href="http://autograder.cs61a.org" target="_blank" type="button">
                         <i class="fa fa-gear"></i> Configure Autograder
                   </a></li>
@@ -104,12 +106,6 @@
                   </a></li>
                   <li> <a href="{{ url_for('.assignment_queues', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-inbox"></i> Grading Queues
-                  </a></li>
-                  <li> <a href="{{ url_for('.publish_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-wpforms"></i> Publish Scores
-                  </a></li>
-                  <li> <a href="{{ url_for('.export_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
-                        <i class="fa fa-download"></i> Download Scores
                   </a></li>
                   <li> <a href="{{ url_for('.export_submissions', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-file-archive-o"></i> Download Submissions

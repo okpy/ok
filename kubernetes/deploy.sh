@@ -1,5 +1,6 @@
 #!/bin/bash
 # Deploy to Kubernetes from docker image ID.
+# A dash character is used to signify staging/testing builds
 
 # Confirm from: http://stackoverflow.com/a/1885534/411514
 tag_name=$1
@@ -11,10 +12,16 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
     echo "Building the image"
     docker build -t cs61a/ok-server:$tag_name .
-    docker tag cs61a/ok-server:$tag_name cs61a/ok-server:latest
     docker push cs61a/ok-server:$tag_name
-    echo "Done building. Running git tag "$tag_name
-    git tag $tag_name -m "Deploy of $tag_name"
+
+    if [[ ${tag_name} != *"-"* ]]; then
+        docker tag cs61a/ok-server:$tag_name cs61a/ok-server:latest
+        docker push cs61a/ok-server:latest
+        echo "Running git tag " $tag_name " . Be sure to run git push --tags"
+        git tag $tag_name -m "Deploy of $tag_name"
+    fi
+
+    echo "Done building "$tag_name
 fi
 
 echo "Deploying image cs61a/ok-server:"$tag_name

@@ -13,12 +13,10 @@ files = Blueprint('files', __name__)
 
 logger = logging.getLogger(__name__)
 
-@files.route("/files/<hashid:file_id>")
-@login_required
-def file_url(file_id):
+def file_download(file_id, user):
     ext_file = ExternalFile.query.filter_by(id=file_id, deleted=False).first()
-    if not ext_file or not ExternalFile.can(ext_file, current_user, 'download'):
-        logger.info("Access file without permission by {0}".format(current_user.email))
+    if not ext_file or not ExternalFile.can(ext_file, user, 'download'):
+        logger.info("Access file without permission by {0}".format(user.email))
         abort(404)
 
     try:
@@ -49,3 +47,8 @@ def file_url(file_id):
                                   'filename': basename})
         url = storage.get_blob_url(storage_obj.name)
         return redirect(url + postpend)
+
+@files.route("/files/<hashid:file_id>")
+@login_required
+def file_url(file_id):
+    return file_download(file_id, current_user)

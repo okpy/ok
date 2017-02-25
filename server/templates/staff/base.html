@@ -16,38 +16,27 @@
 
 {% endblock %}
 
+{% block body_attrs %}class="skin-black-light layout-top-nav layout-fixed"{% endblock %}
+
 {% block body %}
-      <div class="wrapper skin-black-light layout-fixed">
-        <header class="main-header">
-          <!-- Logo -->
-          <a href="{{ url_for('admin.index') }}" class="logo">
-            <!-- mini logo for sidebar mini 50x50 pixels -->
-            <span class="logo-mini"><b>ok</b></span>
-            <!-- logo for regular state and mobile devices -->
-            <span class="logo-lg"><b>ok</b></span>
-          </a>
-          <!-- Header Navbar: style can be found in header.less -->
-          <nav class="navbar navbar-static-top" role="navigation">
-            <!-- Sidebar toggle button-->
-            <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
-              <span class="sr-only">Toggle navigation</span>
-            </a>
+<div class="wrapper">
+  <header class="main-header">
+    {% include 'staff/navbar.html' %}
+  </header>
 
-          </nav>
-        </header>
-
-        {% include 'staff/sidebar.html' %}
-
-      <div class="content-wrapper disable-animations">
-        {% block main %}
-        {% endblock %}
-      </div>
-
-      <footer class="main-footer">
-          <strong> {{ current_user.email }}  </strong>
-          <div class="pull-right hidden-xs">
-            <b>Ok Server v3</b> <a href="http://github.com/Cal-CS-61A-Staff">Documentation</a>
-          </div>
-        </footer>
-      </div>
+  <div class="content-wrapper disable-animations">
+      <div class="container">
+      {% block main %}
+      {% endblock %}
+    </div>
+  </div>
+  <footer class="main-footer">
+    <div class="container">
+      <b>Ok v3</b>
+      <div class="pull-right">
+          <strong> {{ current_user.email }} </strong>
+        </div>
+    </div>
+  </footer>
+</div>
 {% endblock %}

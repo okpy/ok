@@ -248,7 +248,7 @@ def gen_score(backup, admin, kind="autograder"):
     if kind == "composition":
         score = random.randrange(2)
     else:
-        score = random.uniform(0, 100)
+        score = round(random.uniform(0, 20), 1)
 
     return Score(
         created=created,

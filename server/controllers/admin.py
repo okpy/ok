@@ -28,7 +28,8 @@ import server.canvas.jobs
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
-from server.jobs import example, export, github_search, moss
+from server.jobs import (example, export, moss, scores_audit, github_search,
+                         scores_notify)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -86,9 +87,9 @@ def get_courses(cid=None):
 @is_staff()
 def index():
     courses, current_course = get_courses()
-    if courses:
+    if courses and not current_user.is_admin:
         return redirect(url_for(".course_assignments", cid=courses[0].id))
-    return render_template('staff/index.html', courses=courses)
+    return redirect(url_for(".list_courses"))
 
 @admin.route('/grading')
 @is_staff()
@@ -315,6 +316,20 @@ def client_version(name):
 ##########
 # Course #
 ##########
+@admin.route("/course/")
+@is_staff()
+def list_courses():
+    courses, current_course = get_courses()
+    active_courses = [c for c in courses if c.active]
+    inactive_courses = [c for c in courses if not c.active]
+    other_courses = [c for c in Course.query.all() if c not in courses]
+
+    return render_template('staff/course/course.list.html',
+    current_course=current_course, courses=courses,
+                           active_courses=active_courses,
+                           inactive_courses=inactive_courses,
+                           other_courses=other_courses)
+
 @admin.route("/course/new", methods=['GET', 'POST'])
 @is_staff()
 def create_course():
@@ -341,7 +356,17 @@ def create_course():
 @admin.route("/course/<int:cid>/")
 @is_staff(course_arg='cid')
 def course(cid):
-    return redirect(url_for(".course_assignments", cid=cid))
+    courses, current_course = get_courses(cid)
+    students = (Enrollment.query
+                          .options(db.joinedload('user'))
+                          .filter(Enrollment.role == STUDENT_ROLE,
+                                  Enrollment.course == current_course)
+                            .all())
+
+    return render_template('staff/course/course.html', courses=courses,
+                           students=students,
+                           stats=current_course.statistics(),
+                           current_course=current_course)
 
 @admin.route("/course/<int:cid>/settings", methods=['GET', 'POST'])
 @is_staff(course_arg='cid')
@@ -505,8 +530,118 @@ def publish_scores(cid, aid):
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)
 
-
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
+@is_staff(course_arg='cid')
+def view_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'export'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
+    include_all = request.args.get('all', False, type=bool)
+    query = (Score.query.options(db.joinedload('backup'), db.joinedload(Score.grader))
+                        .filter_by(assignment=assign))
+
+    if not include_all:
+        query = query.filter_by(archived=False)
+    all_scores = query.all()
+
+    score_distribution = collections.defaultdict(list)
+    for score in all_scores:
+        score_distribution[score.kind].append(score.score)
+
+    bar_charts = collections.OrderedDict()
+    sorted_kinds = sorted(score_distribution, reverse=True,
+                          key=lambda x: len(score_distribution[x]))
+    for kind in sorted_kinds:
+        score_values = score_distribution[kind]
+        score_counts = collections.Counter(score_values)
+        bar_chart = pygal.Bar(show_legend=False, x_labels_major_count=6, margin=0,
+                              height=400, show_minor_x_labels=False, truncate_label=5)
+        bar_chart.fill = True
+        bar_chart.title = '{} distribution ({} items)'.format(kind, len(score_values))
+        bar_chart.add(kind, [score_counts.get(x) for x in sorted(score_counts)])
+        bar_chart.x_labels = [x for x in sorted(score_counts)]
+
+        bar_charts[kind] = bar_chart.render().decode("utf-8")
+
+
+    return render_template('staff/course/assignment/assignment.scores.html',
+                           assignment=assign, current_course=current_course,
+                           courses=courses, scores=all_scores,
+                           score_plots=bar_charts)
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores/audit")
+@is_staff(course_arg='cid')
+def audit_scores(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not Assignment.can(assign, current_user, 'export'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+    job = jobs.enqueue_job(scores_audit.audit_missing_scores,
+                           course_id=current_course.id,
+                           description='Missing scores audit for {}'.format(assign.display_name),
+                           assign_id=assign.id)
+    return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores/notify",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def send_scores_job(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.EmailScoresForm()
+    if form.validate_on_submit():
+
+        for kind in form.kinds.data:
+            if kind not in assign.published_scores:
+                flash(("{0} scores are not visible to students. Please publish "
+                            " those scores and try again").format(kind.title()),
+                      'error')
+
+                return render_template(
+                    'staff/jobs/notify_scores.html',
+                    courses=courses,
+                    current_course=current_course,
+                    assignment=assign,
+                    form=form,
+                )
+
+
+        description = ("Email {assign} scores ({tags})"
+                       .format(assign=assign.display_name,
+                               tags=', '.join([k.title() for k in form.kinds.data])))
+        job = jobs.enqueue_job(
+            scores_notify.email_scores,
+            description=description,
+            timeout=3600,
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id,
+            subject=form.subject.data,
+            reply_to=form.reply_to.data,
+            body=form.body.data,
+            dry_run=form.dry_run.data,
+            score_tags=form.kinds.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        form.kinds.data = assign.published_scores
+        return render_template(
+            'staff/jobs/notify_scores.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
+
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/scores.csv")
 @is_staff(course_arg='cid')
 def export_scores(cid, aid):
     courses, current_course = get_courses(cid)
@@ -545,8 +680,6 @@ def export_scores(cid, aid):
     file_name = "{0}.csv".format(assign.name.replace('/', '-'))
     disposition = 'attachment; filename={0}'.format(file_name)
 
-    # TODO: Remove. For local performance testing.
-    # return render_template('staff/index.html', data=list(generate_csv()))
     return Response(stream_with_context(generate_csv()), mimetype='text/csv',
                     headers={'Content-Disposition': disposition})
 
@@ -602,7 +735,6 @@ def assignment_single_queue(cid, aid, uid):
     tasks_query = GradingTask.query.filter_by(assignment=assignment,
                                               grader_id=uid)
     queue = (tasks_query.options(db.joinedload('assignment'))
-                        .order_by(GradingTask.score_id.asc())
                         .order_by(GradingTask.created.asc())
                         .paginate(page=page, per_page=20))
 
