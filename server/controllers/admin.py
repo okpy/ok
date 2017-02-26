@@ -17,7 +17,8 @@ from server import autograder
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
-                           Message, CanvasCourse, CanvasAssignment, db)
+                           Message, CanvasCourse, CanvasAssignment, MossResult,
+                           db)
 from server.contrib import analyze
 
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
@@ -850,6 +851,24 @@ def start_moss_job(cid, aid):
             assignment=assign,
             form=form,
         )
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/moss-results",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def view_moss_results(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+    moss_resultsA = MossResult.query.join(MossResult.submissionA).filter_by(assignment_id = assign.id).all()
+    moss_resultsB = MossResult.query.join(MossResult.submissionB).filter_by(assignment_id = assign.id).all()
+    moss_results = moss_resultsA + moss_resultsB
+    moss_results = list(set(moss_results))
+    return render_template('staff/course/assignment/assignment.moss.html',
+                           assignment=assign, moss_results=moss_results,
+                           courses=courses, current_course=current_course)
+
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/github",
              methods=["GET", "POST"])

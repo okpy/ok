@@ -1,0 +1,135 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms with context%}
+{% import 'staff/_helpers.html' as helpers %}
+
+{% block title %} {{ assignment.display_name }} Moss Results - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ assignment.display_name }} Moss Results
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li class="active hidden-xs"><a href="#"><i class="fa fa-bar-chart"></i> Moss Results </a></li>
+      </ol>
+  </section>
+
+  <section class="content">
+    {% include 'alerts.html' %}
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title"><span> Moss Results</span></h3>
+
+                <div class="box-tools">
+                    <div class="pull-left" id="moss-loading">
+                      <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
+                      <span class="sr-only">Loading...</span>
+                    </div>
+
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- /.box-header -->
+            <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="moss-list">
+                <table class="table table-hover">
+                    <thead>
+                        <th class="sort" data-sort="submissionA">Submission A</th>
+                        <th class="sort" data-sort="similarityA">Similarity in A</th>
+                        <th class="sort" data-sort="submissionB">Submission B</th>
+                        <th class="sort" data-sort="similarityB">Similarity in B</th>
+                    </thead>
+
+                    <tbody class="list">
+                        {%- for item in moss_results %}
+                        <tr>
+                            <td class="submissionA">
+                              {{ helpers.backup_link(item['submissionA']['id']) }}
+                            </td>
+                            <td class="similarityA" data-similarity-a="{{item['similarityA']}}">
+                            <a href="#">
+                                {{ item['similarityA'] }}%
+                            </a>
+                            </td>
+                            <td class="submissionB">
+                              {{ helpers.backup_link(item['submissionB']['id']) }}
+                            </td>
+                            <td class="similarityB" data-similarity-b="{{item['similarityB']}}">
+                            <a href="#">
+                                {{ item['similarityB'] }}%
+                            </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <!-- Include another header because list.js forces us to include this inside of the tbody -->
+                        <div class="box-header">
+                            <span>
+                                <div class="pull-left">
+                                    <ul class="pagination pagination-md no-margin pull-right"></ul>
+                                </div>
+
+                                <div class="pull-right">
+                                    <div class="input-group input-group-md" style="width: 200px;">
+                                        <input type="text" name="query" class="form-control pull-right search" placeholder="Search">
+                                        <div class="input-group-btn">
+                                            <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </span>
+                        </div>
+
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.box-body -->
+            <div class="box-footer">
+                <div class="pull-left">
+                <h5 class="box-title"><span> Total: {{ submissions | length }} </span></h5>
+                </div>
+                <div class='pull-right'>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-sm" onclick="listIncreasePagination(submissionList, 50)">Show 50 more per page</button>
+                    <button type="button" class="btn btn-default btn-sm" onclick="listIncreasePagination(submissionList, submissionList.items.length)">Show All</button>
+                  </div>
+                </div>
+            </div>
+
+        </div>
+
+      </div>
+    </div>
+  <!-- </body> do not close body in template-->
+{% endblock %}
+
+{% block page_js %}
+<script>
+
+    var mossListOptions = {
+      valueNames: [ 'submissionA', 'similarityA', 'submissionB', 'similarityB'
+                  ],
+      plugins: [ListPagination()],
+      page: 20,
+      indexAsync: true,
+    };
+    var mossList = new List('moss-list', mossListOptions);
+    mossList.sort("similarityA", {order: "desc"})
+    document.getElementById('moss-loading').style.display = 'none';
+    document.getElementById('moss-list').style.display = 'block';
+
+</script>
+{% endblock %}

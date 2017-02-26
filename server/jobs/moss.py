@@ -37,12 +37,12 @@ def moss_submit(moss_id, submissions, ref_submissions, language,
         return
 
     subm_keys = set()
-    all_submissions = submissions + ref_submissions
-    for subm in all_submissions:
-        if subm['backup']['id'] in subm_keys:
-            continue
-        else:
-            subm_keys.add(subm['backup']['id'])
+    hashed_subm_keys = set()
+    for subm in submissions:
+        subm_keys.add(subm['backup']['id'])
+        hashed_subm_keys.add(encode_id(subm['backup']['id']))
+    for subm in ref_submissions:
+        subm_keys.add(subm['backup']['id'])
 
     backup_query = (Backup.query.options(db.joinedload('messages'))
                           .filter(Backup.id.in_(subm_keys))
@@ -73,9 +73,9 @@ def moss_submit(moss_id, submissions, ref_submissions, language,
     moss.send("end\n".encode())
     moss.close()
     logger.info('Moss results at: {}'.format(url))
-    parse_moss_results(url, submissions, logger)
+    parse_moss_results(url, hashed_subm_keys, logger)
 
-def parse_moss_results(base_url, submissions, logger):
+def parse_moss_results(base_url, hashed_ids, logger):
     match = 0
     while True:
         r = requests.get('{}/match{}-top.html'.format(base_url, match))
@@ -83,25 +83,32 @@ def parse_moss_results(base_url, submissions, logger):
             logger.info('Finished parsing {} results.'.format(match))
             break
         match += 1
-        logger.info('Parsing Moss result #{}...'.format(match))
         parser = MossParser()
         parser.feed(r.content.decode())
         hashidA, hashidB = parser.ids
+        if hashed_ids and hashidA not in hashed_ids and hashidB not in hashed_ids:
+            logger.info('Skipping Moss result #{}.'.format(match))
+            continue
         similarityA, similarityB = parser.similarities
         rangesA, rangesB = parser.ranges[::2], parser.ranges[1::2]
         matchesA = [[int(i) for i in r.split('-')] for r in rangesA]
         matchesB = [[int(i) for i in r.split('-')] for r in rangesB]
         submissionA = Backup.query.filter_by(id=decode_id(hashidA)).one_or_none()
         submissionB = Backup.query.filter_by(id=decode_id(hashidB)).one_or_none()
-        if not submissionA or not submissionB:
-            continue
-        if submissions and submissionA not in submissions and submissionB not in submissions:
+        result = MossResult.query.filter_by(submissionA=submissionA, submissionB=submissionB,
+            similarityA=similarityA, similarityB=similarityB,
+            matchesA=matchesA, matchesB=matchesB)
+        if result:
+            logger.info('Moss result #{} already exists.'.format(match))
             continue
         result = MossResult(submissionA=submissionA, submissionB=submissionB,
             similarityA=similarityA, similarityB=similarityB,
             matchesA=matchesA, matchesB=matchesB)
         db.session.add(result)
+        logger.info('Adding Moss result #{}...'.format(match))
     db.session.commit()
+    moss_results = MossResult.query.all()
+    logger.info('Total: {}'.format(len(moss_results)))
 
 class MossParser(HTMLParser):
     def __init__(self):
@@ -143,5 +150,5 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
     return moss_submit(moss_id, subms, [], language, template, 10, file_regex)
 
 @jobs.background_job
-def parse_moss_job(base_url, submissions=None):
-    parse_moss_results(base_url, submissions, jobs.get_job_logger())
+def parse_moss_job(base_url, hashed_ids=None):
+    parse_moss_results(base_url, hashed_ids, jobs.get_job_logger())
