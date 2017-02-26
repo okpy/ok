@@ -95,10 +95,13 @@ def parse_moss_results(base_url, hashed_ids, logger):
         matchesB = [[int(i) for i in r.split('-')] for r in rangesB]
         submissionA = Backup.query.filter_by(id=decode_id(hashidA)).one_or_none()
         submissionB = Backup.query.filter_by(id=decode_id(hashidB)).one_or_none()
-        result = MossResult.query.filter_by(submissionA=submissionA, submissionB=submissionB,
+        resultA = MossResult.query.filter_by(submissionA=submissionA, submissionB=submissionB,
             similarityA=similarityA, similarityB=similarityB,
             matchesA=matchesA, matchesB=matchesB)
-        if result:
+        resultB = MossResult.query.filter_by(submissionB=submissionA, submissionA=submissionB,
+            similarityB=similarityA, similarityA=similarityB,
+            matchesB=matchesA, matchesA=matchesB)
+        if resultA or resultB:
             logger.info('Moss result #{} already exists.'.format(match))
             continue
         result = MossResult(submissionA=submissionA, submissionB=submissionB,
