@@ -235,7 +235,7 @@ class EnrollmentForm(BaseForm):
 
 
 class VersionForm(BaseForm):
-    current_version = EmailField('Current Version',
+    current_version = StringField('Current Version',
                                  validators=[validators.required()])
     download_link = StringField('Download Link',
                                 validators=[validators.required(), validators.url()])
