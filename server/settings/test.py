@@ -30,7 +30,7 @@ STORAGE_CONTAINER = os.path.abspath("./local-storage")
 if not os.path.exists(STORAGE_CONTAINER):
     os.makedirs(STORAGE_CONTAINER)
 
-CACHE_TYPE = 'null'
+CACHE_TYPE = 'simple'
 
 RQ_DEFAULT_HOST = REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = 6379
