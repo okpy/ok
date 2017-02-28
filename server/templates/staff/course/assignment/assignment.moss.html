@@ -52,6 +52,7 @@
                         <th class="sort" data-sort="similarityA">Similarity in A</th>
                         <th class="sort" data-sort="submissionB">Submission B</th>
                         <th class="sort" data-sort="similarityB">Similarity in B</th>
+                        <th class="sort" data-sort="created">Created</th>
                     </thead>
 
                     <tbody class="list">
@@ -72,6 +73,9 @@
                             <a href="#">
                                 {{ item['similarityB'] }}%
                             </a>
+                            </td>
+                            <td class="created" data-similarity-b="{{item['created']}}">
+                                {{ item['created'] }}
                             </td>
                         </tr>
                         {% endfor %}
