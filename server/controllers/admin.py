@@ -861,10 +861,23 @@ def view_moss_results(cid, aid):
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
-    moss_resultsA = MossResult.query.join(MossResult.submissionA).filter_by(assignment_id = assign.id).all()
-    moss_resultsB = MossResult.query.join(MossResult.submissionB).filter_by(assignment_id = assign.id).all()
-    moss_results = moss_resultsA + moss_resultsB
-    moss_results = list(set(moss_results))
+    moss_resultsA = MossResult.query.order_by(MossResult.similarityA.desc()) \
+                                    .join(MossResult.submissionA) \
+                                    .filter_by(assignment_id = assign.id).all()
+    moss_resultsB = MossResult.query.order_by(MossResult.similarityA.desc()) \
+                                    .join(MossResult.submissionB) \
+                                    .filter_by(assignment_id = assign.id).all()
+    moss_results = []
+    while moss_resultsA and moss_resultsB:
+        if moss_resultsA[0].similarityA >= moss_resultsB[0].similarityA:
+            result = moss_resultsA.pop(0)
+            if result not in moss_results:
+                moss_results.append(result)
+        else:
+            result = moss_resultsB.pop(0)
+            if result not in moss_results:
+                moss_results.append(result)
+    moss_results += moss_resultsA + moss_resultsB
     return render_template('staff/course/assignment/assignment.moss.html',
                            assignment=assign, moss_results=moss_results,
                            courses=courses, current_course=current_course)
