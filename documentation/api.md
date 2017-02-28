@@ -71,7 +71,7 @@ No authentication required.
 #### Query Parameters
 None
 
-## Client Version
+## Get Client Version
 >><h4> Example Response </h4>
 ```
 curl "https://okpy.org/api/v3/version"
@@ -104,6 +104,39 @@ No authentication required.
 If the endpoint is provided with the name of a client in the form of
 `GET https://okpy.org/api/v3/version/name/`, the results will be filtered for clients with that name.
 Currently, the only client name used is `ok-client`
+
+#### Response
+See example response.
+
+## Set Client Version
+>><h4> Example Response </h4>
+```
+curl "https://okpy.org/api/v3/version"
+{
+    "message": "success",
+    "data": {},
+    "code": 200
+}
+```
+
+Set the current version of OK Clients. Used by automated deploys.
+
+#### Permissions
+Must be a staff member in at least one course.
+
+#### HTTP Request
+`POST https://okpy.org/api/v3/version/<string:client-name>`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of submitter
+
+#### POST Data Fields
+Parameter | Type | Description
+---------- | ------- | -------
+current_version | String | (Required) New version for client
+download_link | String | (Required) New download link for client
 
 #### Response
 See example response.

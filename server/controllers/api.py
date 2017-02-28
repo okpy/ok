@@ -387,6 +387,25 @@ class VersionSchema(APISchema):
         'results': fields.List(fields.Nested(version_fields))
     }
 
+    def __init__(self):
+        APISchema.__init__(self)
+        self.parser.add_argument('current_version', type=str, required=True,
+                                 help='Current assignment')
+        self.parser.add_argument('download_link', type=str, required=True,
+                                 help='Download link')
+
+    def edit_version(self, name):
+        args = self.parse_args()
+        is_staff = current_user.is_admin or current_user.enrollments(roles=STAFF_ROLES)
+        if not is_staff:
+            restful.abort(403)
+        version = models.Version.query.filter_by(name=name).first_or_404()
+        version.current_version = args['current_version']
+        version.download_link = args['download_link']
+        print(version, args)
+        models.db.session.add(version)
+        models.db.session.commit()
+
 
 class ScoreSchema(APISchema):
 
@@ -772,13 +791,14 @@ class Score(Resource):
 
 class Version(PublicResource):
     """ Current version of a client
-    Permissions: World Readable
-    Used by: Ok Client Auth
+    Permissions: World Readable, Staff Writable
+    Used by: Ok Client updates, automated Ok Client deploys
     """
     model = models.Version
     schema = VersionSchema()
     required_scopes = {
-        'get': []
+        'get': [],
+        'post': ['all'],
     }
 
     @marshal_with(schema.get_fields)
@@ -789,6 +809,13 @@ class Version(PublicResource):
         else:
             versions = self.model.query.all()
         return {'results': versions}
+
+    @check_scopes
+    def post(self, name=None):
+        if not name:
+            restful.abort(404)
+        self.schema.edit_version(name)
+        return {}
 
 class Assignment(Resource):
     """ Infromation about an assignment

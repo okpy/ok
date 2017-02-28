@@ -200,6 +200,36 @@ class TestAuth(OkTestCase):
             ]
         }
 
+        self.setup_course()
+        self.login(self.user1.email)
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://localhost/versions/v1.5.1/ok',
+        })
+        self.assert_403(response)
+
+        self.login(self.staff1.email)
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://localhost/versions/v1.5.1/ok',
+        })
+        self.assert_200(response)
+        response = self.client.get('/api/v3/version/')
+        assert response.json['data'] == {
+            'results': [
+                {
+                    "current_version": "v1.5.1",
+                    "download_link": "http://localhost/versions/v1.5.1/ok",
+                    "name": "ok"
+                },
+                {
+                    "current_version": "v2.5.0",
+                    "download_link": "http://localhost/ok2",
+                    "name": "ok2"
+                }
+            ]
+        }
+
     def test_score_anon(self):
         response = self.client.post('/api/v3/score/')
         self.assert_401(response)
