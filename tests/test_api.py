@@ -8,7 +8,7 @@ from server.utils import encode_id
 
 from tests import OkTestCase
 
-class TestAuth(OkTestCase):
+class TestApi(OkTestCase):
     def _test_backup(self, submit, delay=10, success=True):
         self.setup_course()
 
