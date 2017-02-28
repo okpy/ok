@@ -211,7 +211,11 @@
                             </td>
                             <td> {{ utils.local_time(item.created, current_course) }} </td>
                             <td>
-                                <a href="{{ url_for('.student_view', cid=current_course.id, email=item.submitter.email) }}">{{ item.submitter.email }}</a>
+                              {% if item.creator %}
+                                  <a href="{{ url_for('.student_view', cid=current_course.id, email=item.creator.email) }}">{{ item.creator.email }}</a></br> on behalf of </br><a href="{{ url_for('.student_view', cid=current_course.id, email=item.submitter.email) }}">{{ item.submitter.email }}</a>
+                                {% else %}
+                                  <a href="{{ url_for('.student_view', cid=current_course.id, email=item.submitter.email) }}">{{ item.submitter.email }}</a>
+                              {% endif %}  
                             </td>
                             <td> {% call helpers.backup_link(item.id) %}
                                  {% if item.id == assign_status.final_subm.id %}
