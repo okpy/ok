@@ -16,7 +16,7 @@ from oauthlib.common import generate_token
 import markdown
 from pynliner import fromString as emailFormat
 import pytz
-
+import requests
 import sendgrid
 import sendgrid.helpers.mail as sg_helpers
 
@@ -268,3 +268,12 @@ def generate_number_table(num):
     Used in models.Assignment.mysql_course_submissions_query
     """
     return ' UNION '.join('SELECT {} as pos'.format(i) for i in range(1, num + 1))
+
+def check_url(url):
+    """Returns TRUE if the URL can be fetched."""
+    try:
+        r = requests.head(url)
+        r.raise_for_status()
+        return True
+    except Exception:
+        return False

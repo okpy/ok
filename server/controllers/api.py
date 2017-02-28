@@ -24,12 +24,10 @@ import flask_restful as restful
 from flask_restful import reqparse, fields, marshal_with
 from flask_restful.representations.json import output_json
 
+from server import models, utils
 from server.autograder import submit_continuous
-
 from server.constants import STAFF_ROLES, VALID_ROLES
 from server.controllers import files
-from server.extensions import cache
-import server.models as models
 from server.utils import encode_id, decode_id
 
 endpoints = Blueprint('api', __name__)
@@ -399,11 +397,12 @@ class VersionSchema(APISchema):
         is_staff = current_user.is_admin or current_user.enrollments(roles=STAFF_ROLES)
         if not is_staff:
             restful.abort(403)
+        if not utils.check_url(args['download_link']):
+            restful.abort(400, message='URL is not valid')
         version = models.Version.query.filter_by(name=name).first_or_404()
         version.current_version = args['current_version']
         version.download_link = args['download_link']
-        models.db.session.add(version)
-        models.db.session.commit()
+        version.save()
 
 
 class ScoreSchema(APISchema):
@@ -801,12 +800,8 @@ class Version(PublicResource):
     }
 
     @marshal_with(schema.get_fields)
-    @cache.memoize(600)
     def get(self, name=None):
-        if name:
-            versions = self.model.query.filter_by(name=name).all()
-        else:
-            versions = self.model.query.all()
+        versions = models.Version.get_current_versions(name)
         return {'results': versions}
 
     @check_scopes

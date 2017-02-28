@@ -240,6 +240,14 @@ class VersionForm(BaseForm):
     download_link = StringField('Download Link',
                                 validators=[validators.required(), validators.url()])
 
+    def validate(self):
+        if not super().validate():
+            return False
+        if not utils.check_url(self.download_link.data):
+            self.download_link.errors.append('Invalid URL')
+            return False
+        return True
+
 
 class BatchEnrollmentForm(BaseForm):
     csv = TextAreaField('Email, Name, SID, Course Login, Section')
@@ -560,4 +568,3 @@ class CanvasAssignmentForm(BaseForm):
         choices=[(kind, kind.title()) for kind in SCORE_KINDS],
         validators=[validators.required()],
     )
-

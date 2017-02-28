@@ -209,9 +209,16 @@ class TestApi(OkTestCase):
         self.assert_403(response)
 
         self.login(self.staff1.email)
+
         response = self.client.post('/api/v3/version/ok', data={
             'current_version': 'v1.5.1',
-            'download_link': 'http://localhost/versions/v1.5.1/ok',
+            'download_link': 'http://example.com/doesnotexist',
+        })
+        self.assert_400(response)
+
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://example.com',
         })
         self.assert_200(response)
         response = self.client.get('/api/v3/version/')
@@ -219,13 +226,25 @@ class TestApi(OkTestCase):
             'results': [
                 {
                     "current_version": "v1.5.1",
-                    "download_link": "http://localhost/versions/v1.5.1/ok",
+                    "download_link": "http://example.com",
                     "name": "ok"
                 },
                 {
                     "current_version": "v2.5.0",
                     "download_link": "http://localhost/ok2",
                     "name": "ok2"
+                }
+            ]
+        }
+
+        response = self.client.get('/api/v3/version/ok')
+        self.assert_200(response)
+        assert response.json['data'] == {
+            'results': [
+                {
+                    "current_version": "v1.5.1",
+                    "download_link": "http://example.com",
+                    "name": "ok"
                 }
             ]
         }

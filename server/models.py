@@ -1306,12 +1306,17 @@ class Version(Model):
 
     @staticmethod
     @cache.memoize(1800)
-    def get_current_version(name):
-        version = Version.query.filter_by(name=name).one_or_none()
-        if version:
-            return version.current_version, version.download_link
-        return None, None
+    def get_current_versions(name=None):
+        if name:
+            return Version.query.filter_by(name=name).all()
+        else:
+            return Version.query.all()
 
+    def save(self):
+        cache.delete_memoized(Version.get_current_versions, self.name)
+        cache.delete_memoized(Version.get_current_versions, None)
+        db.session.add(self)
+        db.session.commit()
 
 class Comment(Model):
     """ Composition comments. Line is the line # on the Diff.
