@@ -402,7 +402,6 @@ class VersionSchema(APISchema):
         version = models.Version.query.filter_by(name=name).first_or_404()
         version.current_version = args['current_version']
         version.download_link = args['download_link']
-        print(version, args)
         models.db.session.add(version)
         models.db.session.commit()
 
