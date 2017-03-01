@@ -60,6 +60,11 @@ class TestExtension(OkTestCase):
         self.assertEquals(ext, Extension.get_extension(self.user1, self.assignment))
         self.assertFalse(Extension.get_extension(self.user2, self.assignment))
 
+    def test_extension_permissions(self):
+        ext = self._make_ext(self.assignment, self.user1)
+        self.assertFalse(Extension.can(ext, self.user1, 'delete'))
+        self.assertTrue(Extension.can(ext, self.staff1, 'delete'))
+
     def test_extension_expiry(self):
         ext = self._make_ext(self.assignment, self.user1)
         self.assertEquals(ext, Extension.get_extension(self.user1, self.assignment))
