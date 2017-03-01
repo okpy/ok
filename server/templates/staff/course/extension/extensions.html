@@ -47,7 +47,10 @@
                         {% for extension in extensions %}
                         <tr>
                             <td><a href="{{ url_for('.assignment', cid=current_course.id, aid=extension.assignment.id) }}">{{ extension.assignment.display_name }}</a></td>
-                            <td>{{ extension.user.identifier }}</td>
+                            <td><a href="{{ url_for('.student_assignment_detail', cid=current_course.id, email=extension.user.email, aid=extension.assignment.id) }}">
+                                {{ extension.user.identifier }}
+                                </a>
+                            </td>
                             <td>
                                 <span class="label label-{{ 'success' if extension.active else 'default'}}">
                                     {{ utils.local_time(extension.expires, current_course) }}
