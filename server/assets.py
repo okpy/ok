@@ -38,7 +38,7 @@ common_js = Bundle(
     'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js',
     'https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.0.1/markdown-it.js',
-    'https://cdn.rawgit.com/svbergerem/markdown-it-sanitizer/6efc1722/dist/markdown-it-sanitizer.js',
+    'https://cdn.rawgit.com/okpy/markdown-it-sanitizer/master/dist/markdown-it-sanitizer.js',
     'https://cdn.rawgit.com/okpy/markdown-it-anchor/722f7a89/dist/markdown-it-anchor.js',
     'https://cdn.ravenjs.com/2.1.0/raven.js',
     'js/main.js',
@@ -98,6 +98,7 @@ staff_js = Bundle(
 
 code_css = Bundle(
     'https://cdn.rawgit.com/jsvine/nbpreview/9da3f2da/css/vendor/notebook.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css',
     'css/code.css',
     'css/highlight.css',
     'css/notebook.css',
@@ -108,7 +109,9 @@ code_css = Bundle(
 code_js = Bundle(
     'js/comments.js',
     'js/notebook.js',
-    'https://cdn.rawgit.com/okpy/notebookjs/ce53691/notebook.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/contrib/auto-render.min.js',
+    'https://cdn.rawgit.com/okpy/notebookjs/4bea3da/notebook.js',
     'https://cdn.rawgit.com/drudru/ansi_up/32a3c2de/ansi_up.js',
     filters='jsmin',
     output='public/js/code.js'
