@@ -48,8 +48,10 @@
             <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="moss-list">
                 <table class="table table-hover">
                     <thead>
+                        <th class="sort" data-sort="studentA">Student A</th>
                         <th class="sort" data-sort="submissionA">Submission A</th>
                         <th class="sort" data-sort="similarityA">Similarity in A</th>
+                        <th class="sort" data-sort="studentB">Student B</th>
                         <th class="sort" data-sort="submissionB">Submission B</th>
                         <th class="sort" data-sort="similarityB">Similarity in B</th>
                         <th class="sort" data-sort="created">Created</th>
@@ -58,12 +60,24 @@
                     <tbody class="list">
                         {%- for item in moss_results %}
                         <tr>
+                            <td class="studentA" data-email="{{item['submissionA']['submitter']['email']}}"
+                            data-name="{{item['submissionA']['submitter']['name']}}">
+                            <a href="{{ url_for('.student_assignment_detail', aid=assignment.id, cid=current_course.id, email=item['submissionA']['submitter']['email'])}}">
+                                {{ item['submissionA']['submitter']['email'] }}
+                            </a>
+                            </td>
                             <td class="submissionA">
                               {{ helpers.backup_link(item['submissionA']['id']) }}
                             </td>
                             <td class="similarityA" data-similarity-a="{{item['similarityA']}}">
                             <a href="#">
                                 {{ item['similarityA'] }}%
+                            </a>
+                            </td>
+                            <td class="studentB" data-email="{{item['submissionB']['submitter']['email']}}"
+                            data-name="{{item['submissionB']['submitter']['name']}}">
+                            <a href="{{ url_for('.student_assignment_detail', aid=assignment.id, cid=current_course.id, email=item['submissionB']['submitter']['email'])}}">
+                                {{ item['submissionB']['submitter']['email'] }}
                             </a>
                             </td>
                             <td class="submissionB">

@@ -78,6 +78,7 @@
                     <a href="{{ url_for('.student_view', cid=current_course.id, email=item['submissionA']['submitter']['email'])}}">
                         {{ item['submissionA']['submitter']['email'] }}
                     </a>
+                    </td>
                     <td class="otherSubmission">
                       {{ helpers.backup_link(item['submissionA']['id']) }}
                     </td>
