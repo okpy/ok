@@ -1835,4 +1835,4 @@ class Extension(Model):
             return False
         if user.is_admin:
             return True
-        return user.is_enrolled(obj.course, STAFF_ROLES)
+        return user.is_enrolled(obj.assignment.course, STAFF_ROLES)
