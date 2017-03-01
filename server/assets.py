@@ -98,7 +98,6 @@ staff_js = Bundle(
 
 code_css = Bundle(
     'https://cdn.rawgit.com/jsvine/nbpreview/9da3f2da/css/vendor/notebook.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css',
     'css/code.css',
     'css/highlight.css',
     'css/notebook.css',
