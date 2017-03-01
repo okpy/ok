@@ -62,7 +62,7 @@
                         <tr>
                             <td class="studentA" data-email="{{item['submissionA']['submitter']['email']}}"
                             data-name="{{item['submissionA']['submitter']['name']}}">
-                            <a href="{{ url_for('.student_assignment_detail', aid=assignment.id, cid=current_course.id, email=item['submissionA']['submitter']['email'])}}">
+                            <a href="{{ url_for('.student_view', cid=current_course.id, email=item['submissionA']['submitter']['email'])}}">
                                 {{ item['submissionA']['submitter']['email'] }}
                             </a>
                             </td>
@@ -76,7 +76,7 @@
                             </td>
                             <td class="studentB" data-email="{{item['submissionB']['submitter']['email']}}"
                             data-name="{{item['submissionB']['submitter']['name']}}">
-                            <a href="{{ url_for('.student_assignment_detail', aid=assignment.id, cid=current_course.id, email=item['submissionB']['submitter']['email'])}}">
+                            <a href="{{ url_for('.student_view', cid=current_course.id, email=item['submissionB']['submitter']['email'])}}">
                                 {{ item['submissionB']['submitter']['email'] }}
                             </a>
                             </td>
