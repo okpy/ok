@@ -855,7 +855,7 @@ def start_moss_job(cid, aid):
 @admin.route("/course/<int:cid>/assignments/<int:aid>/moss-results",
              methods=["GET", "POST"])
 @is_staff(course_arg='cid')
-def view_moss_results(cid, aid):
+def assignment_moss_results(cid, aid):
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):
@@ -878,9 +878,10 @@ def view_moss_results(cid, aid):
             if result not in moss_results:
                 moss_results.append(result)
     moss_results += moss_resultsA + moss_resultsB
-    return render_template('staff/course/assignment/assignment.moss.html',
+    return render_template('staff/course/plagiarism/list.assignment.html',
                            assignment=assign, moss_results=moss_results,
                            courses=courses, current_course=current_course)
+
 
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/github",
@@ -1075,10 +1076,29 @@ def student_view(cid, email):
                      if not a.active]
     }
 
+    moss_resultsA = MossResult.query.order_by(MossResult.similarityA.desc()) \
+                                    .join(MossResult.submissionA) \
+                                    .join(Backup.submitter) \
+                                    .filter_by(id=student.id).all()
+    moss_resultsB = MossResult.query.order_by(MossResult.similarityB.desc()) \
+                                    .join(MossResult.submissionB) \
+                                    .join(Backup.submitter) \
+                                    .filter_by(id=student.id).all()
+    moss_results = []
+    while moss_resultsA and moss_resultsB:
+        if moss_resultsA[0].similarityA >= moss_resultsB[0].similarityB:
+            result = moss_resultsA.pop(0)
+            if result not in moss_results:
+                moss_results.append(result)
+        else:
+            result = moss_resultsB.pop(0)
+            if result not in moss_results:
+                moss_results.append(result)
+    moss_results += moss_resultsA + moss_resultsB
     return render_template('staff/student/overview.html',
                            courses=courses, current_course=current_course,
                            student=student, enrollment=enrollment,
-                           assignments=assignments)
+                           assignments=assignments, moss_results=moss_results)
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/timeline")
 @is_staff(course_arg='cid')
