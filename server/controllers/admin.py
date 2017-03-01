@@ -300,13 +300,7 @@ def client_version(name):
     form = forms.VersionForm(obj=version)
     if form.validate_on_submit():
         form.populate_obj(version)
-
-        db.session.add(version)
-        db.session.commit()
-
-        cache.delete_memoized(Version.get_current_version, name)
-        cache.delete_memoized(ok_api.Version.get)
-
+        version.save()
         flash(name + " version updated successfully.", "success")
         return redirect(url_for(".client_version", name=name))
 
