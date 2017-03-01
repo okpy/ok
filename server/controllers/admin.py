@@ -1169,6 +1169,26 @@ def student_assignment_detail(cid, email, aid):
         stats['attempts'] = (stats['analytics'].get('history', {})
                                                .get('all_attempts'))
 
+    moss_resultsA = MossResult.query.order_by(MossResult.similarityA.desc()) \
+                                    .join(MossResult.submissionA) \
+                                    .filter_by(submitter_id=student.id) \
+                                    .filter_by(assignment_id=aid).all()
+    moss_resultsB = MossResult.query.order_by(MossResult.similarityB.desc()) \
+                                    .join(MossResult.submissionB) \
+                                    .filter_by(submitter_id=student.id) \
+                                    .filter_by(assignment_id=aid).all()
+    moss_results = []
+    while moss_resultsA and moss_resultsB:
+        if moss_resultsA[0].similarityA >= moss_resultsB[0].similarityB:
+            result = moss_resultsA.pop(0)
+            if result not in moss_results:
+                moss_results.append(result)
+        else:
+            result = moss_resultsB.pop(0)
+            if result not in moss_results:
+                moss_results.append(result)
+    moss_results += moss_resultsA + moss_resultsB
+
     return render_template('staff/student/assignment.html',
                            courses=courses, current_course=current_course,
                            student=student, assignment=assign,
@@ -1176,7 +1196,8 @@ def student_assignment_detail(cid, email, aid):
                            paginate=paginate,
                            csrf_form=forms.CSRFForm(),
                            stats=stats,
-                           assign_status=assignment_stats)
+                           assign_status=assignment_stats,
+                           moss_results=moss_results)
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/<hashid:backup_id>")
 @is_staff(course_arg='cid')
