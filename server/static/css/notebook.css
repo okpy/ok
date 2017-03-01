@@ -1,5 +1,5 @@
 .notebook-pad {
-    width: calc(100% - 5em);
+    width: calc(100% - 7em);
     float: right;
     margin-top: 10px;
 }
@@ -15,12 +15,44 @@
     width: inherit !important;
 }
 
-.nb-markdown-cell * {
-    font-family: Helvetica Neue, Helvetica, sans-serif !important;
-}
-
 .notebook-pad .header-anchor {
     text-decoration: none;
     padding: 0 5px;
     font-size: 75%;
+}
+
+.katex * {
+    font-family:  KaTeX_Main,Times New Roman,serif !important;
+}
+
+.nb-markdown-cell {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif ;
+}
+
+.nb-cell {
+    font-size: 13px;
+}
+
+
+.nb-html-output {
+    max-width: 50vw;
+    max-height: 100vh;
+    overflow-x: auto;
+}
+
+.nb-cell p {
+    padding-right: 5px;
+    font-size: 14px;
+}
+
+/* On < 1200 screens */
+@media (max-width: 1200px) {
+    .nb-html-output {
+        max-width: 60vw;
+    }
+}
+@media (max-width: 768px) {
+    .nb-html-output {
+        max-width: 100vw;
+    }
 }
