@@ -878,7 +878,7 @@ def assignment_moss_results(cid, aid):
             if result not in moss_results:
                 moss_results.append(result)
     moss_results += moss_resultsA + moss_resultsB
-    return render_template('staff/course/plagiarism/list.assignment.html',
+    return render_template('staff/plagiarism/list.assignment.html',
                            assignment=assign, moss_results=moss_results,
                            courses=courses, current_course=current_course)
 
