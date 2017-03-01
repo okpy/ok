@@ -15,10 +15,6 @@
     width: inherit !important;
 }
 
-.nb-markdown-cell * {
-    font-family: Helvetica Neue, Helvetica, sans-serif !important;
-}
-
 .notebook-pad .header-anchor {
     text-decoration: none;
     padding: 0 5px;
