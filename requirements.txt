@@ -28,7 +28,7 @@ Flask-Assets>=0.12,<0.12.99
 https://github.com/okpy/webassets/archive/978b8063ce80c7f91c6bf080872dafe4eecf2454.zip
 
 Flask-Caching>=1.1
-Flask-Login==0.3.2
+Flask-Login==0.4.0
 
 # File Storage
 lockfile==0.10.2 # For local storage
