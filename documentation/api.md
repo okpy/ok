@@ -42,6 +42,24 @@ Access tokens are short lived (10 minutes - 1 day). Once they expire, you must o
 ## Client Version
 If the `client_version` parameter is included in the URL, the API will respond with a 403 if the version is not up to date with the version on the Ok Admin Dashboard. The URL to download the newest version of the client is included in the response.
 
+## Response Format
+
+The OK API responds with JSON data. (Content Type: `application/json`)
+
+### Envelope
+
+All responses from the API are wrapped in an envelope that contains metadata about the response.
+
+Field | Type | Description
+---------- | ------- | -------
+status | int | The HTTP Status Code for the response
+message | string | Describe any errors that were encountered. Default: 'success'
+data | dict | The actual data that the endpoint provided
+
+To disable the envelope - add `envelope=false` as a query parameter to your URL.
+
+> `curl "https://okpy.org/api/v3/endpoint?envelope=false"`
+
 # General Endpoints
 
 ## API Info

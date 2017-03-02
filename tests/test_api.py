@@ -98,6 +98,14 @@ class TestApi(OkTestCase):
         assert response.json['message'] == 'success'
         assert response.json['code'] == 200
 
+    def test_no_envelope(self):
+        response = self.client.get('/api/v3/?envelope=false')
+        self.assert_200(response)
+        assert 'data' not in response.json
+        assert 'message' not in response.json
+        assert 'code' not in response.json
+        assert response.json['version'] == 'v3'
+
     def test_non_existant_api(self):
         response = self.client.get('/api/v3/doesnotexist')
         self.assert_404(response)
