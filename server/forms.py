@@ -14,7 +14,7 @@ import re
 
 from server import utils
 import server.canvas.api as canvas_api
-from server.models import Assignment, User, Course, Message, CanvasCourse
+from server.models import Assignment, User, Client, Course, Message, CanvasCourse
 from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES,
@@ -417,6 +417,17 @@ class ClientForm(BaseForm):
         'Default Scope',
         description='Comma-separated list. Valid scopes are "email" and "all".')
 
+    def validate(self):
+        # if our validators do not pass
+        if not super(ClientForm, self).validate():
+            return False
+        existing_client = Client.query.filter_by(client_id=self.client_id.data).first()
+        if existing_client:
+            self.client_id.errors.append('That client ID already exists')
+            return False
+        return True
+
+
 class EditClientForm(ClientForm):
     roll_secret = BooleanField(
         'Change the secret?',
@@ -426,6 +437,21 @@ class EditClientForm(ClientForm):
         'Placeholder for secret',
         description="Do not fill out or render.",
         validators=[validators.optional()])
+
+    def __init__(self, obj=None, **kwargs):
+        self.obj = obj
+        super(ClientForm, self).__init__(obj=obj, **kwargs)
+
+    def validate(self):
+        # if our validators do not pass
+        if not super(ClientForm, self).validate():
+            return False
+        if self.client_id.data != self.obj.client_id:
+            existing_client = Client.query.filter_by(client_id=self.client_id.data).first()
+            if existing_client:
+                self.client_id.errors.append('That client ID already exists')
+                return False
+        return True
 
 
 class NewCourseForm(BaseForm):
