@@ -104,12 +104,7 @@ class TestApi(OkTestCase):
         assert 'data' not in response.json
         assert 'message' not in response.json
         assert 'code' not in response.json
-        assert response.json == {
-            'version': 'v3',
-            'url': '/api/v3/',
-            'documentation': 'https://okpy.github.io/documentation',
-            'github': 'https://github.com/Cal-CS-61A-Staff/ok'
-        }
+        assert response.json['version'] == 'v3'
 
     def test_non_existant_api(self):
         response = self.client.get('/api/v3/doesnotexist')
