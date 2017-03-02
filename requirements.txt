@@ -79,7 +79,7 @@ gcloud==0.18.3
 # Development
 Flask-DebugToolbar==0.10.1
 Flask-Script==2.0.5
-mccabe==0.5.3
+mccabe==0.6.1
 flake8>=2.5.4
 pylint>=1.5.2
 names==0.3.0
