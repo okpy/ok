@@ -64,7 +64,7 @@ def envelope_api(data, code, headers=None):
         code is the HTTP status code as an int
         message will always be sucess since the request did not fail.
     """
-    if request.args.get('envelope') == 'False':
+    if request.args.get('envelope') == 'false':
         return output_json(data, code, headers)
     message = 'success'
     if 'message' in data:
