@@ -45,9 +45,13 @@ header .landing-btn {
   color:#666;
 }
 
-
 .landing-light {
   padding: 1em 0 !important;
+}
+
+.cta-block {
+  padding-top: 0;
+  padding-bottom: 3em;
 }
 
 .landing-light .subtitle {
