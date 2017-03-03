@@ -47,7 +47,7 @@ header .landing-btn {
 
 
 .landing-light {
-  padding: 1em 0;
+  padding: 1em 0 !important;
 }
 
 .landing-light .subtitle {
