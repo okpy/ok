@@ -1,19 +1,27 @@
     <footer class="footer col-xs-12">
-      <div class="col-xs-12 col-sm-4">
+      <div class="col-xs-12 col-sm-3">
         <ul class="nav nav-pills nav-justified">
           <li>
             <a href="https://okpy.github.io/documentation">Documentation</a>
           </li>
         </ul>
       </div>
-      <div class="col-xs-12 col-sm-4">
+      <div class="col-xs-12 col-sm-3">
+        <ul class="nav nav-pills nav-justified">
+          <li>
+            <a href="{{ url_for('about.research') }}">Publications</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-xs-12 col-sm-3">
         <ul class="nav nav-pills nav-justified">
           <li>
             <a href="https://github.com/Cal-CS-61A-Staff/ok">GitHub Repo</a>
           </li>
         </ul>
       </div>
-      <div class="col-xs-12 col-sm-4">
+      <div class="col-xs-12 col-sm-3">
         <ul class="nav nav-pills nav-justified">
           <li>
             <a href="{{ url_for('about.privacy') }}">Privacy Policy</a>
