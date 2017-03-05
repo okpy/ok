@@ -61,11 +61,23 @@ def is_staff(course_arg=None):
                         return func(*args, **kwargs)
             else:
                 return redirect(url_for("student.index"))
-            flash("You are not on the course staff", "error")
+            flash("You are not on the course staff", "warning")
             return redirect(url_for("student.index"))
         return login_required(wrapper)
     return decorator
 
+def is_admin():
+    """ A decorator for routes to ensure the user is an admin."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if current_user.is_authenticated and current_user.is_admin:
+                return func(*args, **kwargs)
+            else:
+                flash("You are not an administrator", "warning")
+                return redirect(url_for("admin.index"))
+        return login_required(wrapper)
+    return decorator
 
 def get_courses(cid=None):
     if current_user.is_authenticated and current_user.is_admin:
@@ -290,7 +302,7 @@ def autograde_backup(bid):
     return redirect(url_for('.grading', bid=bid))
 
 @admin.route("/versions/<name>", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def client_version(name):
     courses, current_course = get_courses()
 
@@ -1006,7 +1018,7 @@ def enrollment_csv(cid):
                     headers={'Content-Disposition': disposition})
 
 @admin.route("/clients/", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def clients():
     courses, current_course = get_courses()
     clients = Client.query.all()
@@ -1023,7 +1035,7 @@ def clients():
     return render_template('staff/clients.html', clients=clients, form=form, courses=courses)
 
 @admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def client(client_id):
     courses, current_course = get_courses()
 

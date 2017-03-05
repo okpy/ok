@@ -28,7 +28,8 @@ import urllib.parse
 import mimetypes
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-                              SCORE_KINDS, OAUTH_OUT_OF_BAND_URI)
+                              SCORE_KINDS, OAUTH_OUT_OF_BAND_URI,
+                              INSTRUCTOR_ROLE)
 
 from server.extensions import cache, storage
 from server.utils import (encode_id, chunks, generate_number_table,
