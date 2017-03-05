@@ -148,10 +148,11 @@ def new_course_email(instructor, course):
     text = "" # The template already includes the copy
     link_text = "View OK Documentation"
     link = url_for('about.documentation', _external=True)
+    # use +ok in cc'd emails so that those users are still valid recipients
     return send_email(instructor.email, subject, text,
                reply_to="sumukh+ok@berkeley.edu",
                from_name="OK Team",
-               cc=('sumukh+ok@berkeley.edu',), # In prod: 'denero+ok@berkeley.edu'),
+               cc=('sumukh+ok@berkeley.edu', 'denero+ok@berkeley.edu'),
                template=template, link_text=link_text, link=link,
                course=course, instructor=instructor)
 
