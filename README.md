@@ -37,6 +37,8 @@ $ ./manage.py server
 
 The server will listen on http://localhost:5000.
 
+If you are running into issues - see `documentation/SETUP.md` or file an issue
+
 Command Line Manager
 ------------------------
 * To view available commands run `./manage.py` once the virtualenv is activated.
@@ -69,6 +71,10 @@ Projects using ok.py
 Developer Guidelines
 --------------------
 See `documentation/CONTRIBUTING.md`
+
+Recent activity:
+
+[![Throughput Graph](https://graphs.waffle.io/Cal-CS-61A-Staff/ok/throughput.svg)](https://waffle.io/Cal-CS-61A-Staff/ok/metrics/throughput)
 
 Deploying
 ---------
