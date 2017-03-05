@@ -220,6 +220,14 @@ class User(Model, UserMixin):
         # TODO: Pass in assignment_id (Useful for course dashboard)
         return GradingTask.query.filter_by(grader=self, score_id=None).count()
 
+    def is_staff(self):
+        """ Return True if the user is a staff member in any course. """
+        if self.is_admin:
+            return True
+        query = (Enrollment.query.filter(Enrollment.user_id == self.id)
+                                 .filter(Enrollment.role.in_(STAFF_ROLES)))
+        return query.count() > 0
+
     @staticmethod
     def get_by_id(uid):
         """ Performs .query.get; potentially can be cached."""
