@@ -110,6 +110,7 @@
 
 {% block page_js %}
 <script>
+    {% if jobs %}
     var jobOptions = {
       valueNames: ['job-id', 'description', 'user', 'status', 'timestamp'],
       plugins: [ListPagination()],
@@ -118,5 +119,6 @@
     var jobList = new List('job-list', jobOptions);
     jobList.sort('job-id', {order: 'desc'});
     document.getElementById('job-list').style.display = 'block';
+    {% endif %}
 </script>
 {% endblock %}
