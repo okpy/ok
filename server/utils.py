@@ -137,19 +137,6 @@ def random_row(query):
         return None
     return query.offset(random.randrange(count)).first()
 
-def new_course_email(instructor, course):
-    subject = "{} + OK - Welcome!".format(course.display_name)
-    template = 'email/new_course.html'
-    text = "" # The template already includes the copy
-    link_text = "View OK Documentation"
-    link = url_for('about.documentation', _external=True)
-    return send_email(instructor.email, subject, text,
-               reply_to="sumukh+ok@berkeley.edu",
-               from_name="OK Team",
-               cc=('sumukh+ok@berkeley.edu',), # In prod: 'denero+ok@berkeley.edu'),
-               template=template, link_text=link_text, link=link,
-               course=course, instructor=instructor)
-
 def invite_email(member, recipient, assignment):
     subject = "{0} group invitation".format(assignment.display_name)
     text = "{0} has invited you to join their group".format(member.email)
