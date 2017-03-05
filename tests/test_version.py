@@ -11,8 +11,7 @@ class TestVersion(OkTestCase):
     def setUp(self):
         super().setUp()
         self.admin = User(email="admin@okpy.org", is_admin=True)
-        self.non_admin = User(email="normal@okpy.org", is_admin=False)
-        db.session.add_all([self.admin, self.non_admin])
+        db.session.add(self.admin)
         db.session.commit()
 
         old = Version(name="ok-client", current_version="v1.5.0",
