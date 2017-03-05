@@ -171,7 +171,7 @@
                   <h4> Getting Started with OK: </h4>
                   <p> We have created an <a href="{{ url_for('.course_assignments', cid=current_course.id) }}">example assignment</a> for you. </p>
                   <ol>
-                    <li> Check out the student interface and submit to the assignment </li>
+                    <li> Check out <a href="{{ url_for('student.course', offering=current_course.offering) }}">the student interface</a> and submit to the assignment </li>
                     <li> Download a sample assignment and change the endpoint in the <code>.ok</code> file to <code>{{ current_course.offering }}/example</code>
                         <ul>
                             <li><a href="http://inst.eecs.berkeley.edu/~cs61a/fa16/proj/maps/" >Example Python 3 Project</a> &mdash; <a href="http://inst.eecs.berkeley.edu/~cs61a/fa16/proj/maps/maps.zip">(Download)</a></li>
