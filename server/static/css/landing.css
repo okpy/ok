@@ -49,15 +49,21 @@ header .landing-btn {
   padding: 1em 0 !important;
 }
 
+.landing-light .subtitle {
+  line-height:150%;
+  color:#666;
+}
+
 .cta-block {
   padding-top: 0;
   padding-bottom: 3em;
 }
 
-.landing-light .subtitle {
-  line-height:150%;
-  color:#666;
+.cta-block .button {
+  margin-top: 0.5em !important;
 }
+
+
 
 /* Small devices (tablets, 768px and down) */
 @media (max-width: 768px) {
