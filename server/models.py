@@ -316,6 +316,19 @@ class Course(Model):
     def get_students(self):
         return self.get_participants([STUDENT_ROLE])
 
+    def initialize_content(self, user):
+        """ When a course is created, add the creating user as an instructor
+        and then create an example assignment.
+        """
+        enroll = Enrollment(course=self, user_id=user.id, role=INSTRUCTOR_ROLE)
+        assign = Assignment(course=self, display_name="Example",
+                            name=self.offering + '/example',
+                            max_group_size=2, uploads_enabled=True,
+                            due_date=dt.datetime.now() + dt.timedelta(days=7),
+                            lock_date=dt.datetime.now() + dt.timedelta(days=8))
+        db.session.add_all([enroll, assign])
+        db.session.commit()
+
 
 class Assignment(Model):
     """ Assignments are particular to courses and have unique names.

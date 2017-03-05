@@ -338,7 +338,7 @@ def list_courses():
                            other_courses=other_courses)
 
 @admin.route("/course/new", methods=['GET', 'POST'])
-@is_staff()
+@login_required
 def create_course():
     courses, current_course = get_courses()
     form = forms.NewCourseForm()
@@ -346,13 +346,11 @@ def create_course():
         new_course = Course()
         form.populate_obj(new_course)
 
-        # Add user as instructor, can be changed later
-        enroll = Enrollment(course=new_course, user_id=current_user.id,
-                            role=INSTRUCTOR_ROLE)
         db.session.add(new_course)
-        db.session.add(enroll)
+        # Add the user as an instructor, create a default assignment
+        new_course.initialize_content(current_user)
 
-        db.session.commit()
+        utils.new_course_email(current_user, new_course)
 
         flash(new_course.offering + " created successfully.", "success")
         return redirect(url_for(".course", cid=new_course.id))
@@ -364,14 +362,17 @@ def create_course():
 @is_staff(course_arg='cid')
 def course(cid):
     courses, current_course = get_courses(cid)
+
     students = (Enrollment.query
                           .options(db.joinedload('user'))
                           .filter(Enrollment.role == STUDENT_ROLE,
                                   Enrollment.course == current_course)
                             .all())
+    needs_intro = len(students) < 5
 
     return render_template('staff/course/course.html', courses=courses,
                            students=students,
+                           needs_intro=needs_intro,
                            stats=current_course.statistics(),
                            current_course=current_course)
 

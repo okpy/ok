@@ -145,23 +145,18 @@
             <!-- /.box -->
         </div>
         <div class="col-md-9 col-sm-12">
-          {% if students %}
-            {% with title="Students",roster=students %}
-              {% include 'staff/course/enrollment/enrollment.list.html' %}
-            {% endwith %}
-          {% else %}
-
+          {% if needs_intro %}
             <div class="box">
               <div class="box-header with-border">
                 <h3 class="box-title">Welcome to OK!</h3>
                 <div class="box-tools pull-right">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-default btn-lrg" title="Enroll Students">
+                      <a type="button" class="btn btn-default btn-lrg" title="Enroll Students" href="{{ url_for('.enrollment', cid=current_course.id) }}">
                         <i class="fa fa-plus"></i>&nbsp; Enroll Students
-                      </button>
-                      <button type="button" class="btn btn-default btn-lrg" title="Enroll Students">
+                      </a>
+                      <a type="button" class="btn btn-default btn-lrg" title="Create Assignment" href="{{url_for('.new_assignment', cid=current_course.id)}}">
                         <i class="fa fa-code"></i>&nbsp; Create Assignment
-                      </button>
+                      </a>
                     </div>
                 </div>
               </div>
@@ -172,6 +167,12 @@
               </div>
               <!-- /.box-body -->
             </div>
+          {% endif %}
+
+          {% if students %}
+            {% with title="Students",roster=students %}
+              {% include 'staff/course/enrollment/enrollment.list.html' %}
+            {% endwith %}
           {% endif %}
         </div>
 

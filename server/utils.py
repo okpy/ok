@@ -142,6 +142,18 @@ def group_action_email(members, subject, text):
     emails = [m.user.email for m in members]
     return send_email(emails, subject, text)
 
+def new_course_email(instructor, course):
+    subject = "{} + OK - Welcome!".format(course.display_name)
+    template = 'email/new_course.html'
+    text = "" # The template already includes the copy
+    link_text = "View OK Documentation"
+    link = url_for('about.documentation', _external=True)
+    return send_email(instructor.email, subject, text,
+               reply_to="sumukh+ok@berkeley.edu",
+               from_name="OK Team",
+               cc=('sumukh+ok@berkeley.edu',), # In prod: 'denero+ok@berkeley.edu'),
+               template=template, link_text=link_text, link=link,
+               course=course, instructor=instructor)
 
 def invite_email(member, recipient, assignment):
     subject = "{0} group invitation".format(assignment.display_name)

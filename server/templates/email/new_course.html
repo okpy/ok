@@ -1,0 +1,31 @@
+{% extends "email/base.html" %}
+
+{% block body %}
+
+{% if not instructor.name or instructor.name == "None" %}
+  <p> Hi,</p>
+{% else %}
+  <p> Hi {{ instructor.name }},</p>
+{% endif %}
+
+<p>Welcome to OK! We are excited to help {{ course.display_name }} at {{ course.institution | default('your school')}} use OK. </p>
+
+<p>We just wanted to let you know that we are available to help you answer
+any questions you might have about OK.  You can reach us by hitting reply all on this email or reaching out directly to denero@cs.berkeley.edu and sumukh@berkeley.edu </p>
+
+<p> - The OK Team </p>
+
+{% if link and link_text %}
+<!-- button -->
+<table class="btn-primary" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td>
+      <a href="{{link}}">{{link_text}}</a>
+    </td>
+  </tr>
+</table>
+{% endif %}
+<!-- /button -->
+
+
+{% endblock %}
