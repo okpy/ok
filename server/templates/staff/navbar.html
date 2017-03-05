@@ -12,12 +12,14 @@
 {% set api_dropdown %}
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">API <span class="caret"></span></a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('.clients') }}">OAuth Clients</a></li>
-            <li><a href="{{ url_for('.client_version', name='ok-client') }}">OK Client Version</a></li>
+            {% if current_user.is_admin %}
+              <li><a href="{{ url_for('.clients') }}">OAuth Clients</a></li>
+              <li><a href="{{ url_for('.client_version', name='ok-client') }}">OK Client Version</a></li>
+              <li class="divider"></li>
+            {% endif %}
+            <li><a href="{{ url_for('about.documentation' )}}">Documentation</a></li>
             <li class="divider"></li>
             <li><a href="https://ok-oauth.app.cs61a.org">Access Token</a></li>
-            <li class="divider"></li>
-            <li><a href="http://okpy.github.io/documentation">Documentation</a></li>
           </ul>
 {% endset %}
 
