@@ -35,3 +35,12 @@ class TestVersion(OkTestCase):
         new = Version.query.filter_by(name="ok-client").one()
         assert new.current_version == data['current_version']
         assert new.download_link == data['download_link']
+
+        data = {
+            "current_version": "v1.6.0",
+            "download_link": "http://example.com/doesnotexist"
+        }
+
+        response = self.client.post('/admin/versions/ok-client',
+                        data=data, follow_redirects=True)
+        assert 'Invalid URL' in response.get_data(as_text=True)

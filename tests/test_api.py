@@ -8,7 +8,7 @@ from server.utils import encode_id
 
 from tests import OkTestCase
 
-class TestAuth(OkTestCase):
+class TestApi(OkTestCase):
     def _test_backup(self, submit, delay=10, success=True):
         self.setup_course()
 
@@ -97,6 +97,14 @@ class TestAuth(OkTestCase):
         }
         assert response.json['message'] == 'success'
         assert response.json['code'] == 200
+
+    def test_no_envelope(self):
+        response = self.client.get('/api/v3/?envelope=false')
+        self.assert_200(response)
+        assert 'data' not in response.json
+        assert 'message' not in response.json
+        assert 'code' not in response.json
+        assert response.json['version'] == 'v3'
 
     def test_non_existant_api(self):
         response = self.client.get('/api/v3/doesnotexist')
@@ -195,6 +203,55 @@ class TestAuth(OkTestCase):
                 {
                     "current_version": "v1.5.0",
                     "download_link": "http://localhost/ok",
+                    "name": "ok"
+                }
+            ]
+        }
+
+        self.setup_course()
+        self.login(self.user1.email)
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://localhost/versions/v1.5.1/ok',
+        })
+        self.assert_403(response)
+
+        self.login(self.staff1.email)
+
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://example.com/doesnotexist',
+        })
+        self.assert_400(response)
+
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://example.com',
+        })
+        self.assert_200(response)
+        response = self.client.get('/api/v3/version/')
+        assert response.json['data'] == {
+            'results': [
+                {
+                    "current_version": "v1.5.1",
+                    "download_link": "http://example.com",
+                    "name": "ok"
+                },
+                {
+                    "current_version": "v2.5.0",
+                    "download_link": "http://localhost/ok2",
+                    "name": "ok2"
+                }
+            ]
+        }
+
+        response = self.client.get('/api/v3/version/ok')
+        self.assert_200(response)
+        assert response.json['data'] == {
+            'results': [
+                {
+                    "current_version": "v1.5.1",
+                    "download_link": "http://example.com",
                     "name": "ok"
                 }
             ]

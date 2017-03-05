@@ -16,7 +16,7 @@ from oauthlib.common import generate_token
 import markdown
 from pynliner import fromString as emailFormat
 import pytz
-
+import requests
 import sendgrid
 import sendgrid.helpers.mail as sg_helpers
 
@@ -137,12 +137,6 @@ def random_row(query):
         return None
     return query.offset(random.randrange(count)).first()
 
-
-def group_action_email(members, subject, text):
-    emails = [m.user.email for m in members]
-    return send_email(emails, subject, text)
-
-
 def invite_email(member, recipient, assignment):
     subject = "{0} group invitation".format(assignment.display_name)
     text = "{0} has invited you to join their group".format(member.email)
@@ -153,6 +147,9 @@ def invite_email(member, recipient, assignment):
     send_email(recipient.email, subject, text, template,
                link_text=link_text, link=link)
 
+def send_emails(recipients, subject, body, **kwargs):
+    for email in recipients:
+        send_email(email, subject, body, **kwargs)
 
 def send_email(to, subject, body, cc=(), from_name='Ok',
                link=None, link_text="Sign in",
@@ -268,3 +265,12 @@ def generate_number_table(num):
     Used in models.Assignment.mysql_course_submissions_query
     """
     return ' UNION '.join('SELECT {} as pos'.format(i) for i in range(1, num + 1))
+
+def check_url(url):
+    """Returns TRUE if the URL can be fetched."""
+    try:
+        r = requests.head(url)
+        r.raise_for_status()
+        return True
+    except Exception:
+        return False

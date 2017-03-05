@@ -5,11 +5,11 @@ jinja2==2.9.5
 gunicorn==19.6.0
 
 # Errors
-raven[flask]
+raven[flask]==6.0.0
 
 # Database
-pymysql==0.7.9
-sqlalchemy==1.1.4
+pymysql==0.7.10
+sqlalchemy==1.1.6
 
 # Caching
 redis==2.10.5
@@ -28,10 +28,10 @@ Flask-Assets>=0.12,<0.12.99
 https://github.com/okpy/webassets/archive/978b8063ce80c7f91c6bf080872dafe4eecf2454.zip
 
 Flask-Caching>=1.1
-Flask-Login==0.3.2
+Flask-Login==0.4.0
 
 # File Storage
-lockfile==0.10.2 # For local storage
+lockfile==0.12.2 # For local storage
 apache-libcloud==1.5.0
 
 # OAuth
@@ -41,33 +41,33 @@ oauthlib==2.0.1
 # OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
 https://github.com/lepture/flask-oauthlib/archive/d62bf665fa2a4ab71327cd665334fdec25ade116.zip
 
-Flask-WTF==0.13.1
+Flask-WTF==0.14.2
 Flask-RESTful==0.3.5
 Flask-Testing>=0.5.0,<1.0
 Flask-RQ==0.2
 
 # Flask DB Extensions
-Flask-SQLAlchemy==2.1
+Flask-SQLAlchemy==2.2
 Flask-SQLAlchemy-Cache==0.1.5
-Flask-Migrate==2.0.0
+Flask-Migrate==2.0.3
 
 # Timezones
 pytz==2016.10
-arrow
+arrow==0.10.0
 
 # Emailing
 sendgrid==3.6.3
 pynliner<1.0
 
 # Autograder Interface
-requests==2.12
+requests==2.13.0
 
 # Front end
 itsdangerous==0.24
 cssmin==0.2.0
 jsmin==2.2.1
-hashids==1.1.0
-pygments==2.1.3
+hashids==1.2.0
+pygments==2.2.0
 humanize==0.5.1
 markdown>=2.6,<2.7
 pygal>=2.3,<2.4
@@ -79,15 +79,15 @@ gcloud==0.18.3
 # Development
 Flask-DebugToolbar==0.10.1
 Flask-Script==2.0.5
-mccabe==0.5.3
+mccabe==0.6.1
 flake8>=2.5.4
 pylint>=1.5.2
 names==0.3.0
 
 # Testing
 pytest>=3.0.0,<3.1
-pytest-cov==2.3.1
-selenium==3.0.0
+pytest-cov==2.4.0
+selenium==3.0.2
 
 # until version 1.0.6 is on pypi
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip

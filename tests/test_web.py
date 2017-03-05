@@ -134,7 +134,7 @@ if driver:
             response = requests.get(self.get_server_url())
             self.assertEqual(response.status_code, 200)
 
-        # def test_api_is_up_and_running(self):
+        def test_api_is_up_and_running(self):
             api_url = "{}/api/v3/".format(self.get_server_url())
             response = requests.get(api_url)
             self.assertEqual(response.status_code, 200)
@@ -296,37 +296,37 @@ if driver:
         #     file_input.send_keys(os.path.abspath(__file__))
         #     self.driver.find_element_by_class_name('submit-btn').click()
         #     self.assertTrue("Uploaded submission" in self.driver.page_source)
-            # Will only pass when there is network connectivity. TODO: Mock external API response
-            # self.assertTrue("Did not send to autograder" not in self.driver.page_source)
+        #     # Will only pass when there is network connectivity. TODO: Mock external API response
+        #     self.assertTrue("Did not send to autograder" not in self.driver.page_source)
 
-        # def test_staff_submit(self):
-        #     self._seed_course()
+        def test_staff_submit(self):
+            self._seed_course()
 
-        #     self._login_as(email=self.staff1.email)
-        #     self.page_load("{}/admin/course/{}/{}/{}/submit".format(
-        #         self.get_server_url(),
-        #         self.course.id,
-        #         self.user1.email,
-        #         self.assignment.id,
-        #     ))
+            self._login_as(email=self.staff1.email)
+            self.page_load("{}/admin/course/{}/{}/{}/submit".format(
+                self.get_server_url(),
+                self.course.id,
+                self.user1.email,
+                self.assignment.id,
+            ))
 
-        #     # Disable the multiple select, PhantomJS doesn't seem to support it
-        #     # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
-        #     self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
-        #     self.driver.execute_script("document.getElementById('file-select').removeAttribute('webkitdirectory')")
-        #     file_input = self.driver.find_element_by_id("file-select")
-        #     file_input.send_keys(os.path.abspath(__file__))
+            # Disable the multiple select, PhantomJS doesn't seem to support it
+            # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
+            self.driver.execute_script("document.getElementById('file-select').removeAttribute('multiple')")
+            self.driver.execute_script("document.getElementById('file-select').removeAttribute('webkitdirectory')")
+            file_input = self.driver.find_element_by_id("file-select")
+            file_input.send_keys(os.path.abspath(__file__))
 
-        #     # submit early
-        #     self.driver.find_element_by_css_selector('input[name=submission_time][value=early]').click()
+            # submit early
+            self.driver.find_element_by_css_selector('input[name=submission_time][value=early]').click()
 
-        #     self.driver.find_element_by_class_name('submit-btn').click()
-        #     self.assertTrue("Uploaded submission" in self.driver.page_source)
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("Uploaded submission" in self.driver.page_source)
 
-        #     self.assertIn('grading/', self.driver.current_url)
+            self.assertIn('grading/', self.driver.current_url)
 
-        #     submission_date = self.assignment.due_date - datetime.timedelta(days=1)
-        #     self.assertTrue(submission_date.strftime('%a %m/%d') in self.driver.page_source)
+            submission_date = self.assignment.due_date - datetime.timedelta(days=1)
+            self.assertTrue(submission_date.strftime('%a %m/%d') in self.driver.page_source)
 
         def test_login_admin_reject(self):
             self._login(role="student")
@@ -565,39 +565,41 @@ if driver:
             self.assertIn(self.user2.email, self.driver.page_source)
             self._confirm_oauth()
 
-        def test_job(self):
-            self._login_as(self.staff1.email)
+        # Commented out because this job occasionally times out on CI.
+        # https://github.com/Cal-CS-61A-Staff/ok/issues/1113
+        # def test_job(self):
+        #     self._login_as(self.staff1.email)
 
-            jobs_list_url = '{}/admin/course/{}/jobs/'.format(
-                self.get_server_url(), self.course.id)
+        #     jobs_list_url = '{}/admin/course/{}/jobs/'.format(
+        #         self.get_server_url(), self.course.id)
 
-            self.page_load(jobs_list_url + 'test')
-            input_element = self.driver.find_element_by_id('duration')
-            input_element.clear()
-            input_element.send_keys('0')
-            input_element = self.driver.find_element_by_id('should_fail')
-            input_element.click()
-            input_element.submit()
+        #     self.page_load(jobs_list_url + 'test')
+        #     input_element = self.driver.find_element_by_id('duration')
+        #     input_element.clear()
+        #     input_element.send_keys('0')
+        #     input_element = self.driver.find_element_by_id('should_fail')
+        #     input_element.click()
+        #     input_element.submit()
 
-            job_url = self.driver.current_url
-            self.assertIn('Test Job', self.driver.page_source)
-            self.assertIn('Queued', self.driver.page_source)
+        #     job_url = self.driver.current_url
+        #     self.assertIn('Test Job', self.driver.page_source)
+        #     self.assertIn('Queued', self.driver.page_source)
 
-            self.page_load(jobs_list_url)
-            self.assertIn('Test Job', self.driver.page_source)
-            self.assertIn('Queued', self.driver.page_source)
+        #     self.page_load(jobs_list_url)
+        #     self.assertIn('Test Job', self.driver.page_source)
+        #     self.assertIn('Queued', self.driver.page_source)
 
-            OkTestCase.run_jobs(self)
+        #     OkTestCase.run_jobs(self)
 
-            self.page_load(job_url)
-            # Refresh the page again to simulate refresh
-            self.page_load(job_url)
-            self.assertIn('Test Job', self.driver.page_source)
+        #     self.page_load(job_url)
+        #     # Refresh the page again to simulate refresh
+        #     self.page_load(job_url)
+        #     self.assertIn('Test Job', self.driver.page_source)
 
-            self.assertIn('Failed', self.driver.page_source)
-            self.assertIn('Traceback', self.driver.page_source)
-            self.assertIn('ZeroDivisionError', self.driver.page_source)
+        #     self.assertIn('Failed', self.driver.page_source)
+        #     self.assertIn('Traceback', self.driver.page_source)
+        #     self.assertIn('ZeroDivisionError', self.driver.page_source)
 
-            self.page_load(jobs_list_url)
-            self.assertIn('Test Job', self.driver.page_source)
-            self.assertIn('Failed', self.driver.page_source)
+        #     self.page_load(jobs_list_url)
+        #     self.assertIn('Test Job', self.driver.page_source)
+        #     self.assertIn('Failed', self.driver.page_source)

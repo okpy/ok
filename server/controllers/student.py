@@ -14,8 +14,7 @@ from server.constants import VALID_ROLES, STAFF_ROLES, STUDENT_ROLE, MAX_UPLOAD_
 from server.forms import CSRFForm, UploadSubmissionForm
 from server.models import (User, Course, Assignment, Group, Backup, Message,
                            ExternalFile, Extension, db)
-from server.utils import (is_safe_redirect_url, group_action_email,
-                          invite_email, send_email)
+from server.utils import is_safe_redirect_url, send_emails, invite_email
 
 logger = logging.getLogger(__name__)
 
@@ -377,7 +376,7 @@ def group_remove(name):
             else:
                 descriptor = target.email
             body = "{0} removed {1} from the group.".format(current_user.email, descriptor)
-            send_email(members, subject, body)
+            send_emails(members, subject, body)
         except BadRequest as e:
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
@@ -396,20 +395,20 @@ def group_respond(name):
         flash("You are not in a group")
     else:
         try:
-
             if action == "accept":
                 group.accept(current_user)
                 subject = "{0} has accepted the invitation to join your group".format(current_user.email)
                 body = "Your group for {0} now has {1} members".format(assignment.display_name,
                                                                        len(group.members))
-                group_action_email(group.members, subject, body)
+                members = [m.user.email for m in group.members]
+                send_emails(members, subject, body)
             elif action == "decline":
                 members = [m.user.email for m in group.members]
                 group.decline(current_user)
                 subject = "{0} declined an invite to join the group".format(current_user.email)
                 body = "{0} declined to join the group for {1}".format(current_user.email,
                                                                        assignment.display_name)
-                send_email(members, subject, body)
+                send_emails(members, subject, body)
             elif action == "revoke":
                 members = [m.user.email for m in group.members]
                 group.decline(current_user)
@@ -417,8 +416,7 @@ def group_respond(name):
                                                                   target)
                 body = "{0} has revoked the invitation for {1}".format(current_user.email,
                                                                        target)
-                send_email(members, subject, body)
-
+                send_emails(members, subject, body)
         except BadRequest as e:
             flash(e.description, 'danger')
     return redirect(url_for('.assignment', name=assignment.name))
