@@ -225,79 +225,79 @@ if driver:
             self.assertFalse("This field is required" in self.driver.page_source)
             self.assertFalse("Uploaded submission" in self.driver.page_source)
 
-        # def test_web_submit(self):
-        #     self._seed_course()
-        #     self.assignment.uploads_enabled = True
-        #     self.assignment.upload_info = 'Upload all the files!'
-        #     models.db.session.commit()
+        def test_web_submit(self):
+            self._seed_course()
+            self.assignment.uploads_enabled = True
+            self.assignment.upload_info = 'Upload all the files!'
+            models.db.session.commit()
 
-        #     self._login_as(email=self.user4.email)
-        #     self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
-        #     # Disable the multiple select, PhantomJS doesn't seem to support it
-        #     # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
-        #     self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('multiple')")
-        #     self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('webkitdirectory')")
-        #     file_input = self.driver.find_element_by_class_name("dz-hidden-input")
-        #     file_input.send_keys(os.path.abspath(__file__))
+            self._login_as(email=self.user4.email)
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            # Disable the multiple select, PhantomJS doesn't seem to support it
+            # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
+            self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('multiple')")
+            self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('webkitdirectory')")
+            file_input = self.driver.find_element_by_class_name("dz-hidden-input")
+            file_input.send_keys(os.path.abspath(__file__))
 
-        #     self.driver.find_element_by_class_name('submit-btn').click()
-        #     self.assertTrue("Uploaded submission" in self.driver.page_source)
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("Uploaded submission" in self.driver.page_source)
 
 
-        # def test_web_submit_wrong_template(self):
-        #     self._seed_course()
-        #     self.assignment.uploads_enabled = True
-        #     self.assignment.files = {'fizz.py': 'sample template\nfile'}
-        #     self.assignment.upload_info = 'Upload all the files!'
-        #     models.db.session.commit()
+        def test_web_submit_wrong_template(self):
+            self._seed_course()
+            self.assignment.uploads_enabled = True
+            self.assignment.files = {'fizz.py': 'sample template\nfile'}
+            self.assignment.upload_info = 'Upload all the files!'
+            models.db.session.commit()
 
-        #     self._login_as(email=self.user4.email)
-        #     self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self._login_as(email=self.user4.email)
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
 
-        #     # Disable the multiple select, PhantomJS doesn't seem to support it
-        #     # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
-        #     self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('multiple')")
-        #     self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('webkitdirectory')")
-        #     file_input = self.driver.find_element_by_class_name("dz-hidden-input")
-        #     file_input.send_keys(os.path.abspath(__file__))
-        #     self.driver.find_element_by_class_name('submit-btn').click()
-        #     # Template did not match
-        #     self.assertTrue("Missing file" in self.driver.page_source)
+            # Disable the multiple select, PhantomJS doesn't seem to support it
+            # https://github.com/detro/ghostdriver/issues/282 , https://github.com/ariya/phantomjs/issues/14331
+            self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('multiple')")
+            self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('webkitdirectory')")
+            file_input = self.driver.find_element_by_class_name("dz-hidden-input")
+            file_input.send_keys(os.path.abspath(__file__))
+            self.driver.find_element_by_class_name('submit-btn').click()
+            # Template did not match
+            self.assertTrue("Missing file" in self.driver.page_source)
 
-        # def test_web_submit_with_template(self):
-        #     self._seed_course()
-        #     self.assignment.uploads_enabled = True
-        #     dir_path, file_name = os.path.split(os.path.abspath(__file__))
-        #     self.assignment.files = {file_name: 'sample template\nfile'}
-        #     models.db.session.commit()
-        #     self._login_as(email=self.user4.email)
+        def test_web_submit_with_template(self):
+            self._seed_course()
+            self.assignment.uploads_enabled = True
+            dir_path, file_name = os.path.split(os.path.abspath(__file__))
+            self.assignment.files = {file_name: 'sample template\nfile'}
+            models.db.session.commit()
+            self._login_as(email=self.user4.email)
 
-        #     self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
-        #     self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('multiple')")
-        #     self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('webkitdirectory')")
-        #     file_input = self.driver.find_element_by_class_name("dz-hidden-input")
-        #     file_input.send_keys(os.path.abspath(__file__))
-        #     self.driver.find_element_by_class_name('submit-btn').click()
-        #     self.assertTrue("Uploaded submission" in self.driver.page_source)
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('multiple')")
+            self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('webkitdirectory')")
+            file_input = self.driver.find_element_by_class_name("dz-hidden-input")
+            file_input.send_keys(os.path.abspath(__file__))
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("Uploaded submission" in self.driver.page_source)
 
-        # def test_web_submit_with_autograding(self):
-        #     self._seed_course()
-        #     self.assignment.autograding_key = 'test' # the development key
-        #     self.assignment.uploads_enabled = True
-        #     dir_path, file_name = os.path.split(os.path.abspath(__file__))
-        #     self.assignment.files = {file_name: 'sample template\nfile'}
-        #     models.db.session.commit()
-        #     self._login_as(email=self.user4.email)
+        def test_web_submit_with_autograding(self):
+            self._seed_course()
+            self.assignment.autograding_key = 'test' # the development key
+            self.assignment.uploads_enabled = True
+            dir_path, file_name = os.path.split(os.path.abspath(__file__))
+            self.assignment.files = {file_name: 'sample template\nfile'}
+            models.db.session.commit()
+            self._login_as(email=self.user4.email)
 
-        #     self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
-        #     self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('multiple')")
-        #     self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('webkitdirectory')")
-        #     file_input = self.driver.find_element_by_class_name("dz-hidden-input")
-        #     file_input.send_keys(os.path.abspath(__file__))
-        #     self.driver.find_element_by_class_name('submit-btn').click()
-        #     self.assertTrue("Uploaded submission" in self.driver.page_source)
+            self.page_load("{}/cal/cs61a/sp16/proj1/submit".format(self.get_server_url()))
+            self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('multiple')")
+            self.driver.execute_script("document.getElementsByClassName('dz-hidden-input')[0].removeAttribute('webkitdirectory')")
+            file_input = self.driver.find_element_by_class_name("dz-hidden-input")
+            file_input.send_keys(os.path.abspath(__file__))
+            self.driver.find_element_by_class_name('submit-btn').click()
+            self.assertTrue("Uploaded submission" in self.driver.page_source)
             # Will only pass when there is network connectivity. TODO: Mock external API response
-            # self.assertTrue("Did not send to autograder" not in self.driver.page_source)
+            self.assertTrue("Did not send to autograder" not in self.driver.page_source)
 
         # def test_staff_submit(self):
         #     self._seed_course()
