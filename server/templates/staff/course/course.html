@@ -145,6 +145,12 @@
             <!-- /.box -->
         </div>
         <div class="col-md-9 col-sm-12">
+          {% if students %}
+            {% with title="Students",roster=students %}
+              {% include 'staff/course/enrollment/enrollment.list.html' %}
+            {% endwith %}
+          {% endif %}
+
           {% if needs_intro %}
             <div class="box">
               <div class="box-header with-border">
@@ -161,16 +167,15 @@
                 </div>
               </div>
               <div class="box-body">
-                <div class="col-xs-12 wizard">
-                  <h3> Getting Started with OK: </h3>
+                <div class="col-xs-12">
+                  <h4> Getting Started with OK: </h4>
                   <p> We have created an <a href="{{ url_for('.course_assignments', cid=current_course.id) }}">example assignment</a> for you. </p>
-
                   <ol>
                     <li> Check out the student interface and submit to the assignment </li>
                     <li> Download a sample assignment and change the endpoint in the <code>.ok</code> file to <code>{{ current_course.offering }}/example</code>
                         <ul>
-                            <li><a href="http://inst.eecs.berkeley.edu/~cs61a/fa16/proj/maps/maps.zip">Example Python 3 Project</a> <a href="http://inst.eecs.berkeley.edu/~cs61a/fa16/proj/maps/"> (Spec) </a></li>
-                            <li><a href="https://github.com/data-8/data8assets/blob/gh-pages/materials_zips/sp17/hw/hw04.zip"> Example Data Science Project </a></li>
+                            <li><a href="http://inst.eecs.berkeley.edu/~cs61a/fa16/proj/maps/" >Example Python 3 Project</a> &mdash; <a href="http://inst.eecs.berkeley.edu/~cs61a/fa16/proj/maps/maps.zip">(Download)</a></li>
+                            <li>Example Data Science Project  &mdash; <a href="https://github.com/data-8/data8assets/blob/gh-pages/materials_zips/sp17/hw/hw04.zip">(Download)</a></li>
                         </ul>
                     </li>
                     <li> Try running tests and submitting the assignment from the terminal or notebook. </li>
@@ -180,7 +185,6 @@
                   <hr />
                 </div>
                 <div class="col-xs-12">
-
                   <iframe width="100%" height="400" src="https://www.youtube.com/embed/-EWJ6s2_cPE" frameborder="0" allowfullscreen></iframe>
                 </div>
               </div>
@@ -188,11 +192,7 @@
             </div>
           {% endif %}
 
-          {% if students %}
-            {% with title="Students",roster=students %}
-              {% include 'staff/course/enrollment/enrollment.list.html' %}
-            {% endwith %}
-          {% endif %}
+
         </div>
 
       </div>
