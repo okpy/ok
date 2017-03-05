@@ -59,6 +59,17 @@ class TestEnrollment(OkTestCase):
 
         self.enrollment_matches_info(user, self.studentA)
 
+    def test_is_staff(self):
+        self.setup_course()
+        random_user = User(name=self.studentA['name'], email=self.studentA['email'])
+        db.session.add(random_user)
+        db.session.commit()
+
+        self.assertTrue(self.staff1.is_staff())
+        self.assertTrue(self.admin.is_staff())
+        self.assertFalse(self.user1.is_staff())
+        self.assertFalse(random_user.is_staff())
+
     def test_enroll_from_form(self):
         self.setup_course()
 
@@ -159,6 +170,7 @@ class TestEnrollment(OkTestCase):
         assert enrollment.class_account == info.get('class_account')
         assert enrollment.section == info.get('section')
         assert enrollment.role == info.get('role')
+        assert enrollment.user.is_staff() == (enrollment.role in STAFF_ROLES)
 
     def remove_lab_assistants(self):
         for e in self.course.get_participants([LAB_ASSISTANT_ROLE]):
