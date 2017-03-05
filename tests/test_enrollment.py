@@ -2,7 +2,7 @@ from tests import OkTestCase
 
 from server.models import db, Enrollment, User
 from server.forms import EnrollmentForm, BatchEnrollmentForm
-from server.constants import STUDENT_ROLE, LAB_ASSISTANT_ROLE
+from server.constants import STUDENT_ROLE, LAB_ASSISTANT_ROLE, STAFF_ROLES
 
 class TestEnrollment(OkTestCase):
 
