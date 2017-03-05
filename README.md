@@ -10,6 +10,7 @@ The ok.py software was developed for CS 61A at UC Berkeley.
 
 [![Build Status](https://circleci.com/gh/Cal-CS-61A-Staff/ok.svg?style=shield)](https://circleci.com/gh/Cal-CS-61A-Staff/ok)
 [![Coverage Status](https://coveralls.io/repos/github/Cal-CS-61A-Staff/ok/badge.svg)](https://coveralls.io/github/Cal-CS-61A-Staff/ok)
+[![Docker Repository on Quay](https://quay.io/repository/cs61a/ok-server/status "Docker Repository on Quay")](https://quay.io/repository/cs61a/ok-server)
 
 View Documentation at [OK Documentation](https://okpy.github.io/documentation)
 
@@ -28,7 +29,7 @@ Local Server
 To run the server locally:
 
 ```bash
-$ source env/bin/activate
+$ source env/bin/activate # for virtualenv
 $ pip install -r requirements.txt  # to install libraries
 $ ./manage.py createdb
 $ ./manage.py seed
@@ -66,7 +67,7 @@ Autograding
 Projects using ok.py
 --------------------
 - [CS61A](http://cs61a.org) uses ok.py for all assignments.
-- 3 other UC Berkeley CS courses use ok.py
+- Many other UC Berkeley CS courses use ok.py
 
 Developer Guidelines
 --------------------
@@ -78,8 +79,6 @@ Recent activity:
 
 Deploying
 ---------
-[![Docker Repository on Quay](https://quay.io/repository/cs61a/ok-server/status "Docker Repository on Quay")](https://quay.io/repository/cs61a/ok-server)
-
 Docker + Kubernetes on Google Container Engine. See `kubernetes/kubernetes.md` for more info.
 
 The ok-server also supports deployments to Heroku or servers on any major hosting service.
