@@ -298,12 +298,18 @@ def download(name, submit, bid, file):
         abort(404)
     response = make_response(contents)
 
-    content_disposition = "inline" if 'raw' in request.args else "attachment"
+    inline = 'raw' in request.args
+
+    content_disposition = "inline" if inline else "attachment"
     response.headers["Content-Disposition"] = ("{0}; filename={1!s}"
                                                .format(content_disposition, file))
     response.headers["Content-Security-Policy"] = "default-src 'none';"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Content-Type"] = "text/plain; charset=UTF-8"
+    if file.endswith('.ipynb') and not inline:
+        # Prevent safari from adding a .txt extension to files
+        response.headers["Content-Type"] = "application/octet-stream; charset=UTF-8"
+    else:
+        response.headers["Content-Type"] = "text/plain; charset=UTF-8"
 
     return response
 
