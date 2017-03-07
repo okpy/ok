@@ -489,6 +489,30 @@ class TestApi(OkTestCase):
         self.assert_403(response)
         assert response.json['code'] == 403
 
+        def test_get_comments(self):
+            self._test_backup(True)
+            user = User.lookup(self.user1.email)
+            backup = Backup.query.filter(Backup.submitter_id == user.id).first()
+            comment_url = "/api/v3/backups/{}/comment/".format(encode_id(backup.id))
+
+            #check to see if student can view comments on own backup's comments
+            self.login(self.user1.email)
+            response = self.client.get(comment_url)
+            self.assert_200(response)
+            self.logout()
+
+            #check to see if staff can access comments
+            self.login(self.staff1.email)
+            response = self.client.get(comment_url)
+            self.assert_200(response)
+            self.logout()
+
+            #check to see another student can't see others' backup's comments
+            self.login(self.user2.email)
+            response = self.client.get(comment_url)
+            self.assert_403(response)
+            self.logout()
+
 
     def test_user_api(self):
         self._test_backup(True)

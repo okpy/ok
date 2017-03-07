@@ -464,6 +464,15 @@ class CommentSchema(APISchema):
         models.db.session.commit()
         return {}
 
+        get_fields = {
+            'id': HashIDField,
+            'author': fields.Nested(UserSchema.simple_fields),
+            'message': fields.Raw,
+            'created': fields.DateTime(dt_format='iso8601'),
+            'updated': fields.DateTime(dt_format='iso8601')
+        }
+
+
 
 class Resource(restful.Resource):
     version = 'v3'
@@ -923,6 +932,19 @@ class Comment(Resource):
             restful.abort(403)
 
         return self.schema.store_comment(user, backup)
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, backup_id):
+        backup = models.Backup.query.get(backup_id)
+        if not backup:
+            if user.is_admin:
+                restful.abort(404)
+            else:
+                restful.abort(403)
+        if not models.Backup.can(backup, user, "view"):
+            restful.abort(403)
+        return {"comments": [backup.comments]}
+
 
 class File(Resource):
     """ Redirect (or download) a file. No Schema due to redirect

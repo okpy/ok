@@ -652,6 +652,56 @@ message | String | (Required) Comment contents as raw Markdown text. New lines r
 #### Response
 No `data` is returned.
 
+##View a Backup's Comments
+>><h4> Example Response </h4>
+> ```
+python
+import requests
+url = "https://okpy.org/api/v3/backups/a24x23/comment?access_token={}"
+access_token = 'test'
+{
+    "data": [
+      {
+          'filename': 'lab00.py',
+          'line': 2,
+          'message': "Great job.\nConsider using the use of the `total` variable."
+      },
+      ...
+    ]
+}
+r = requests.get(url.format(access_token))
+response = r.json()
+```
+>><h4> Response </h4>
+```
+{
+    "data": {[
+        {
+          'filename': 'lab00.py',
+          'line': 2,
+          'message': "Great job.\nConsider using the use of the `total` variable."        
+        },
+        ...
+    ]},
+    "code": 200,
+    "message": "success"
+}
+```
+
+#### Permissions
+The access_token must be authorized to view the backup to view its comments.
+
+#### HTTP Request
+`GET https://okpy.org/api/v3/backups/<string:backup_id>/comment/`
+
+#### Query Parameters
+Parameter | Default | Description
+---------- | ------- | -------
+access_token | None | (Required) Access Token of viewer
+
+#### Response
+Returns comment objects as a list. 
+
 # Users
 
 ## View a specific user
