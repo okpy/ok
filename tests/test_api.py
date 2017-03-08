@@ -498,9 +498,11 @@ class TestApi(OkTestCase):
         assert response.json['code'] == 403
 
         def test_get_comments(self):
-            self._test_backup(True)
+            # self._test_backup(True)
+            self._test_backup(False)
             user = User.lookup(self.user1.email)
-            backup = Backup.query.filter(Backup.submitter_id == user.id).first()
+            backup = Backup.query.first()
+            # backup = Backup.query.filter(Backup.submitter_id == user.id).first()
             comment_url = "/api/v3/backups/{}/comment/".format(encode_id(backup.id))
 
             #check to see if student can view comments on own backup's comments
