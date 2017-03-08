@@ -280,8 +280,14 @@ class Course(Model):
             semester = "Fall"
         elif "sp" in self.offering[-4:]:
             semester = "Spring"
-        else:
+        elif "wi" in self.offering[-4:]:
+            semester = "Winter"
+        elif "au" in self.offering[-4:]:
+            semester = "Autumn"
+        elif "su" in self.offering[-4:]:
             semester = "Summer"
+        else:
+            return self.display_name + " (20{0})".format(year)
         return self.display_name + " ({0} 20{1})".format(semester, year)
 
     def statistics(self):

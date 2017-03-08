@@ -26,7 +26,7 @@ OAUTH_OUT_OF_BAND_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
 COMMON_LANGUAGES = ['python', 'java', 'c', 'scheme', 'lisp', 'javascript']
 
-COURSE_ENDPOINT_FORMAT = '^\w+/\w+/\w+$'
+COURSE_ENDPOINT_FORMAT = '^\w+/\w+/(fa|sp|su|wi|au|yr)\d\d$'
 ASSIGNMENT_ENDPOINT_FORMAT = COURSE_ENDPOINT_FORMAT[:-1] + '/\w+$'
 
 GRADES_BUCKET = 'ok_grades_bucket'
