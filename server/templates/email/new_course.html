@@ -5,7 +5,7 @@
 {% if not instructor.name or instructor.name == "None" %}
   <p> Hi,</p>
 {% else %}
-  <p> Hi {{ instructor.name }},</p>
+  <p> Hi {{ utils.first_name(instructor.name) }},</p>
 {% endif %}
 
 <p>Welcome to OK! We are excited to help {{ course.display_name }} at {{ course.institution | default('your school')}} use OK. </p>

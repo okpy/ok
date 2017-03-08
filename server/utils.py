@@ -113,6 +113,11 @@ def natural_time(date):
     now = dt.datetime.utcnow()
     return humanize.naturaltime(now - date)
 
+def first_name(name):
+    """ Return the first name of a name."""
+    if not isinstance(name, str):
+        return name
+    return name.split(' ')[0].title()
 
 def humanize_name(name):
     """ Return a canonical representation of a name in First Last format."""
@@ -138,14 +143,14 @@ def random_row(query):
     return query.offset(random.randrange(count)).first()
 
 def new_course_email(instructor, course):
-    subject = "{} + OK - Welcome!".format(course.display_name)
+    subject = "{} + OK".format(course.display_name)
     template = 'email/new_course.html'
     text = "" # The template already includes the copy
     link_text = "View OK Documentation"
     link = url_for('about.documentation', _external=True)
     # use +ok in cc'd emails so that those users are still valid recipients
     return send_email(instructor.email, subject, text,
-               reply_to="sumukh+ok@berkeley.edu",
+               reply_to="sumukh@berkeley.edu",
                from_name="OK Team",
                cc=('sumukh+ok@berkeley.edu', 'denero+ok@berkeley.edu'),
                template=template, link_text=link_text, link=link,
