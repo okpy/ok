@@ -396,8 +396,7 @@ class VersionSchema(APISchema):
 
     def edit_version(self, name):
         args = self.parse_args()
-        is_staff = current_user.is_admin or current_user.enrollments(roles=STAFF_ROLES)
-        if not is_staff:
+        if not current_user.is_admin:
             restful.abort(403)
         if not utils.check_url(args['download_link']):
             restful.abort(400, message='URL is not valid')

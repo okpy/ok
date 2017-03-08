@@ -153,7 +153,7 @@ class AssignmentForm(BaseForm):
     autograding_key = StringField('Autograder Key', [validators.optional()])
     continuous_autograding = BooleanField('Send Submissions to Autograder Immediately',
                                          [validators.optional()])
-    uploads_enabled = BooleanField('Enable Web Uploads', default=False,
+    uploads_enabled = BooleanField('Enable Web Uploads', default=True,
                                    validators=[validators.optional()])
     upload_info = StringField('Upload Instructions',
                               validators=[validators.optional()])
@@ -474,7 +474,7 @@ class NewCourseForm(BaseForm):
 
         # Ensure the name has the right format:
         if not utils.is_valid_endpoint(self.offering.data, COURSE_ENDPOINT_FORMAT):
-            self.offering.errors.append(('The name should like univ/course101/semYY'))
+            self.offering.errors.append(('The name should look like univ/course101/semYY where "sem" is one of (fa, su, sp, au, wi)'))
             return False
 
         course = Course.query.filter_by(offering=self.offering.data).first()

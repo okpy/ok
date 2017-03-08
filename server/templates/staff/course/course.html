@@ -121,7 +121,7 @@
                     </a>
                   </li>
                   <li>
-                    <a href="https://okpy.github.io/documentation/">
+                    <a href="{{ url_for('about.documentation' )}}">
                       <i class="fa fa-book"></i>
                       Documentation
                     </a>
@@ -149,23 +149,41 @@
             {% with title="Students",roster=students %}
               {% include 'staff/course/enrollment/enrollment.list.html' %}
             {% endwith %}
-          {% else %}
+          {% endif %}
 
+          {% if needs_intro %}
             <div class="box">
               <div class="box-header with-border">
                 <h3 class="box-title">Welcome to OK!</h3>
                 <div class="box-tools pull-right">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-default btn-lrg" title="Enroll Students">
+                      <a type="button" class="btn btn-default btn-lrg" title="Enroll Students" href="{{ url_for('.enrollment', cid=current_course.id) }}">
                         <i class="fa fa-plus"></i>&nbsp; Enroll Students
-                      </button>
-                      <button type="button" class="btn btn-default btn-lrg" title="Enroll Students">
+                      </a>
+                      <a type="button" class="btn btn-default btn-lrg" title="Create Assignment" href="{{url_for('.new_assignment', cid=current_course.id)}}">
                         <i class="fa fa-code"></i>&nbsp; Create Assignment
-                      </button>
+                      </a>
                     </div>
                 </div>
               </div>
               <div class="box-body">
+                <div class="col-xs-12">
+                  <h4> Getting Started with OK: </h4>
+                  <p> We have created an <a href="{{ url_for('.course_assignments', cid=current_course.id) }}">example assignment</a> for you. </p>
+                  <ol>
+                    <li> Check out <a href="{{ url_for('student.course', offering=current_course.offering) }}">the student interface</a> and submit to the assignment </li>
+                    <li> Download a sample assignment and change the endpoint in the <code>.ok</code> file to <code>{{ current_course.offering }}/example</code>
+                        <ul>
+                            <li><a href="http://inst.eecs.berkeley.edu/~cs61a/fa16/proj/maps/" >Example Python 3 Project</a> &mdash; <a href="http://inst.eecs.berkeley.edu/~cs61a/fa16/proj/maps/maps.zip">(Download)</a></li>
+                            <li>Example Data Science Project  &mdash; <a href="https://github.com/data-8/data8assets/blob/gh-pages/materials_zips/sp17/hw/hw04.zip">(Download)</a></li>
+                        </ul>
+                    </li>
+                    <li> Try running tests and submitting the assignment from the terminal or notebook. </li>
+                    <li> Read the <a href="{{ url_for('about.documentation') }}">documentation</a> for information on how to add new tests. </li>
+                    <li> <a href="{{ url_for('.enrollment', cid=current_course.id) }}">Enroll</a> your students and TAs into OK. </li>
+                  </ol>
+                  <hr />
+                </div>
                 <div class="col-xs-12">
                   <iframe width="100%" height="400" src="https://www.youtube.com/embed/-EWJ6s2_cPE" frameborder="0" allowfullscreen></iframe>
                 </div>
@@ -173,6 +191,8 @@
               <!-- /.box-body -->
             </div>
           {% endif %}
+
+
         </div>
 
       </div>

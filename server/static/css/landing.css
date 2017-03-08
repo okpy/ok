@@ -35,6 +35,35 @@ header .landing-btn {
   font-family: 'Quicksand';
   letter-spacing: -0.05em;
 }
+.features-block {
+  text-align: center;
+}
+.features-block .more-text {
+  line-height:150%;
+  font-size:1.35em;
+  font-weight:300;
+  color:#666;
+}
+
+.landing-light {
+  padding: 1em 0 !important;
+}
+
+.landing-light .subtitle {
+  line-height:150%;
+  color:#666;
+}
+
+.cta-block {
+  padding-top: 0;
+  padding-bottom: 3em;
+}
+
+.cta-block .button {
+  margin-top: 0.5em !important;
+}
+
+
 
 /* Small devices (tablets, 768px and down) */
 @media (max-width: 768px) {
