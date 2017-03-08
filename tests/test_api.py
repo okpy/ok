@@ -507,14 +507,14 @@ class TestApi(OkTestCase):
                 backupid = backup,
                 author_id = staff.id,
                 filename = 'fizzbuzz.py',
-                line = 2
+                line = 2,
                 message = 'hello world'
             )
             comment2 = Comment(
                 backupid = backup,
                 author_id = staff.id,
                 filename = 'fizzbuzz.py',
-                line = 5
+                line = 5,
                 message = 'wow'
             )
             db.session.add(comment1)
