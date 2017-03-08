@@ -668,7 +668,7 @@ response = r.json()
   "data": {
     "comments":[
       {
-        'id':
+        'id': 'wdLGDb',
         'filename': 'lab00.py',
         'line': 2,
         'message': "Great job.\nConsider using the use of the `total` variable.",
@@ -695,7 +695,7 @@ Parameter | Default | Description
 access_token | None | (Required) Access Token of viewer
 
 #### Response
-Returns comment objects as a list.
+Returns a list of comments.
 
 # Users
 
