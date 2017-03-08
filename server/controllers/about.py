@@ -11,6 +11,10 @@ def privacy():
 def documentation():
     return redirect('https://okpy.github.io/documentation/')
 
+@about.route('/github/')
+def github():
+    return redirect('https://github.com/Cal-CS-61A-Staff/ok')
+
 @about.route('/publications/')
 def research():
     return render_template('about/publications.html')
