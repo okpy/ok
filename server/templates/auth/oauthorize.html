@@ -15,6 +15,9 @@
   {% if 'all' in scopes %}
     <li class="list-group-item"> View all information for {{ current_user.email }} </li>
     <li class="list-group-item"> Create backups &amp; submissions on your behalf </li>
+    {% if is_staff %}
+      <li class="list-group-item"> View your students' data. </li>
+    {% endif %}
   {% elif 'email' in scopes %}
     <li class="list-group-item"> View your email address ({{ current_user.email }}) </li>
     <li class="list-group-item"> View your enrollment status </li>
