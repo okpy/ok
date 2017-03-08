@@ -14,13 +14,15 @@ class TestVersion(OkTestCase):
         db.session.add(self.admin)
         db.session.commit()
 
-    def test_version_form(self):
         old = Version(name="ok-client", current_version="v1.5.0",
             download_link="http://localhost/ok-client")
         db.session.add(old)
         db.session.commit()
 
+    def test_version_form(self):
         self.login(self.admin.email)
+        response = self.client.get('/admin/versions/ok-client')
+        self.assert200(response)
 
         data = {
             "current_version": "v1.6.0",
@@ -44,3 +46,21 @@ class TestVersion(OkTestCase):
         response = self.client.post('/admin/versions/ok-client',
                         data=data, follow_redirects=True)
         assert 'Invalid URL' in response.get_data(as_text=True)
+
+
+    def test_version_permissions(self):
+        self.setup_course()
+        self.login(self.staff1.email)
+        response = self.client.get('/admin/versions/ok-client')
+        self.assertRedirects(response, '/admin/')
+
+        data = {
+            "current_version": "v1.6.0",
+            "download_link": "https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.4/ok"
+        }
+
+        response = self.client.post('/admin/versions/ok-client', data=data)
+        assert response.status_code != 200
+        new = Version.query.filter_by(name="ok-client").one()
+        assert new.current_version == "v1.5.0"
+

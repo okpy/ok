@@ -28,7 +28,8 @@ import urllib.parse
 import mimetypes
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
-                              SCORE_KINDS, OAUTH_OUT_OF_BAND_URI)
+                              SCORE_KINDS, OAUTH_OUT_OF_BAND_URI,
+                              INSTRUCTOR_ROLE)
 
 from server.extensions import cache, storage
 from server.utils import (encode_id, chunks, generate_number_table,
@@ -219,6 +220,14 @@ class User(Model, UserMixin):
         # TODO: Pass in assignment_id (Useful for course dashboard)
         return GradingTask.query.filter_by(grader=self, score_id=None).count()
 
+    def is_staff(self):
+        """ Return True if the user is a staff member in any course. """
+        if self.is_admin:
+            return True
+        query = (Enrollment.query.filter(Enrollment.user_id == self.id)
+                                 .filter(Enrollment.role.in_(STAFF_ROLES)))
+        return query.count() > 0
+
     @staticmethod
     def get_by_id(uid):
         """ Performs .query.get; potentially can be cached."""
@@ -271,8 +280,14 @@ class Course(Model):
             semester = "Fall"
         elif "sp" in self.offering[-4:]:
             semester = "Spring"
-        else:
+        elif "wi" in self.offering[-4:]:
+            semester = "Winter"
+        elif "au" in self.offering[-4:]:
+            semester = "Autumn"
+        elif "su" in self.offering[-4:]:
             semester = "Summer"
+        else:
+            return self.display_name + " (20{0})".format(year)
         return self.display_name + " ({0} 20{1})".format(semester, year)
 
     def statistics(self):
@@ -314,6 +329,19 @@ class Course(Model):
 
     def get_students(self):
         return self.get_participants([STUDENT_ROLE])
+
+    def initialize_content(self, user):
+        """ When a course is created, add the creating user as an instructor
+        and then create an example assignment.
+        """
+        enroll = Enrollment(course=self, user_id=user.id, role=INSTRUCTOR_ROLE)
+        assign = Assignment(course=self, display_name="Example",
+                            name=self.offering + '/example',
+                            max_group_size=2, uploads_enabled=True,
+                            due_date=dt.datetime.now() + dt.timedelta(days=7),
+                            lock_date=dt.datetime.now() + dt.timedelta(days=8))
+        db.session.add_all([enroll, assign])
+        db.session.commit()
 
 
 class Assignment(Model):

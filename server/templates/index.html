@@ -8,6 +8,9 @@
     {% include 'alerts.html' %}
     <h1 class="title">Automate Grading &amp; Personalize Feedback.</h1>
     <p>OK autogrades programming assignments, facilitates submission, <br> composition feedback, and analytics for your class.</p>
+
+
+    <a onclick="showElem('#demo')" class="button">View Demo</a>
     {% if config['TESTING_LOGIN'] and (config['ENV'] == 'dev' or config['ENV'] == 'test') %}
       <a data-no-instant href="{{ url_for('auth.testing_login') }}" id="testing-login" class="button">Testing Login</a>
     {% else %}
@@ -19,9 +22,7 @@
 <div class="landing row feature-block logo-section">
     <hr>
      <h2>Used by courses with millions of submissions</h2>
-
     <div class="col-md-10 col-md-offset-1">
-
         <div class="col-sm-3">
             <img class="landing-logo desaturate select-none" src="{{ url_for('static', filename='img/berkeley.png') }}">
         </div>
@@ -64,24 +65,96 @@
 </div>
 
 <div class="landing row feature-block">
-    <div class="col-md-6">
+    <div class="col-md-6 center">
         <img class="img-responsive select-none" src="{{ url_for('static', filename='img/landing-autograde.png') }}">
     </div>
-    <div class="col-md-6 center">
+    <div class="col-md-6">
         <h1>Grading with one click</h1>
         <p>With a language agnostic autograder, you can grade your assignments by simply specifying a command to run. We'll handle the infrastructure so you can focus on teaching.</p>
-        <p>OK features plagarism detection that will flag submissions that are plagarized from another student or somewhere on the internet.</p>
+    </div>
+</div>
+<hr>
+<div class="landing-light row features-block" id="features-block">
+    <h2>Built for instructors</h2>
+    <p class="more-text"> Improve your progamming assignments with these OK Features</p>
+
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+            <h4>Plagarism Detection</h4>
+            </div>
+            <div class="col-md-4">
+            <h4>Find Online Solutions</h4>
+            </div>
+            <div class="col-md-4">
+            <h4>Late Submissions</h4>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h4>Group Assignments</h4>
+            </div>
+            <div class="col-md-4">
+                <h4>Drag & Drop Uploads</h4>
+            </div>
+            <div class="col-md-4">
+                <h4>Jupyter Notebook Submission</h4>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h4>Assignment Bank</h4>
+            </div>
+            <div class="col-md-4">
+                <h4>Canvas LMS Integration</h4>
+            </div>
+            <div class="col-md-4">
+                <h4>... and many more</h4>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="landing row">
+<div class="landing landing-light row">
     <hr>
+    <div class="col-md-6">
+        <h2>Pricing: <i>Free</i></h2>
+        <p> Use our hosted service for free if you teach a computer science or data science course at an accredited school.</p>
+    </div>
+    <div class="col-md-6">
+        <h2>Open Source</h2>
+        <p> The source code for OK is available on <a href="https://github.com/Cal-CS-61A-Staff/ok">GitHub</a>. You can run an instance of OK on your own servers. </p>
+    </div>
+</div>
 
+<div class="landing landing-light row feature-block" id="demo">
+    <hr />
+    <div class="col-md-4 col-sm-12">
+    <h2> Video Demos </h2>
+    <p> Here are some OK demo videos:</p>
+    <br>
+    <div class="btn-group-vertical">
+        <a class="btn pill pill-button btn-rounded" href="https://www.youtube.com/watch/?q=-EWJ6s2_cPE&rel=0">OK Server Overview</a>
+        <a class="btn pill pill-button btn-rounded" href="https://www.youtube.com/watch?v=PFTm7hmnKho&rel=0">OK + Jupyter Demo</a>
+        <a class="btn pill pill-button btn-rounded" href="https://www.youtube.com/watch?v=polTBnMXGQI&rel=0">Talk: How CS61A uses OK</a>
+        <a class="btn pill pill-button btn-rounded" href="https://www.youtube.com/watch?v=97paBo_U_vY&rel=0">Office Hours Queue</a>
+    </div>
+    </div>
+    <div class="col-md-8 col-sm-12 hidden-xs">
+        <iframe width="100%" height="400" src="https://www.youtube.com/embed/-EWJ6s2_cPE?rel=0" frameborder="0" allowfullscreen></iframe>
+    </div>
+</div>
+
+
+<div class="landing cta-block row">
+    <hr>
     <div class="col-md-12">
-        <h2>Learn more about how OK can streamline your course.</h2>
-        <p> OK is an suite of open source software tools to developed to support computer science courses. <br> Contact us to see how OK can help streamline assignment submissions.  </p>
+        <h2>Use OK in your course.</h2>
+        <p> We built OK to improve computer science and data science courses. <br> Get started with OK by signing up your course: </p>
+        <a href="{{ url_for('admin.create_course') }}" data-no-instant class="button">Register your course</a>
         <a href="mailto://cs61a@berkeley.edu?cc=denero@berkeley.edu&bcc=sumukh@berkeley.edu&subject=Using%20OK" class="button">Contact us</a>
     </div>
 </div>
+
 
 {% endblock content %}

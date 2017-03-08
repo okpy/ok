@@ -217,6 +217,14 @@ class TestApi(OkTestCase):
         self.assert_403(response)
 
         self.login(self.staff1.email)
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://localhost/versions/v1.5.1/ok',
+        })
+        # Staff members do not have permission to edit versions
+        self.assert_403(response)
+
+        self.login(self.admin.email)
 
         response = self.client.post('/api/v3/version/ok', data={
             'current_version': 'v1.5.1',

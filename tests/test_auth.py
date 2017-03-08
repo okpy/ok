@@ -48,6 +48,16 @@ class TestAuth(OkTestCase):
         assert self.email in str(response.data)
         assert 'Courses | Ok' in str(response.data)
 
+    def test_create_course(self):
+        """Users should be able to create a course if logged in."""
+        response = self.client.get('/admin/course/new')
+        self.assertRedirects(response, '/login/')
+
+        self.login(self.email)
+        response = self.client.get('/admin/course/new')
+        self.assert_200(response)
+        self.assert_template_used('staff/course/course.new.html')
+
     def test_sudo(self):
         """ Unauthorized users should not be able to sudo"""
 
