@@ -440,6 +440,18 @@ class ScoreSchema(APISchema):
 
 class CommentSchema(APISchema):
     post_fields = {}
+    comment_fields = {
+        'id': HashIDField,
+        'filename': fields.String,
+        'line': fields.Integer,
+        'message': fields.Raw,
+        'author': fields.Nested(UserSchema.simple_fields),
+        'updated': fields.DateTime(dt_format='iso8601')
+    }
+    get_fields = {
+        'comments': fields.List(fields.Nested(comment_fields))
+    }
+
 
     def __init__(self):
         APISchema.__init__(self)
@@ -462,15 +474,6 @@ class CommentSchema(APISchema):
         models.db.session.add(comment)
         models.db.session.commit()
         return {}
-
-        get_fields = {
-            'id': HashIDField,
-            'author': fields.Nested(UserSchema.simple_fields),
-            'message': fields.Raw,
-            'created': fields.DateTime(dt_format='iso8601'),
-            'updated': fields.DateTime(dt_format='iso8601')
-        }
-
 
 
 class Resource(restful.Resource):
@@ -942,7 +945,7 @@ class Comment(Resource):
                 restful.abort(403)
         if not models.Backup.can(backup, user, "view"):
             restful.abort(403)
-        return {"comments": [backup.comments]}
+        return {"comments": backup.comments}
 
 
 class File(Resource):

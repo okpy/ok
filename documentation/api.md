@@ -659,37 +659,32 @@ python
 import requests
 url = "https://okpy.org/api/v3/backups/a24x23/comment?access_token={}"
 access_token = 'test'
-{
-    "data": [
-      {
-          'filename': 'lab00.py',
-          'line': 2,
-          'message': "Great job.\nConsider using the use of the `total` variable."
-      },
-      ...
-    ]
-}
 r = requests.get(url.format(access_token))
 response = r.json()
 ```
 >><h4> Response </h4>
 ```
 {
-    "data": {[
-        {
-          'filename': 'lab00.py',
-          'line': 2,
-          'message': "Great job.\nConsider using the use of the `total` variable."        
-        },
-        ...
-    ]},
-    "code": 200,
-    "message": "success"
+  "data": {
+    "comments":[
+      {
+        'id':
+        'filename': 'lab00.py',
+        'line': 2,
+        'message': "Great job.\nConsider using the use of the `total` variable.",
+        'author': {"email": "test@berkeley.edu", "id": "a4r4gd"},
+        "updated": "2016-06-21T03:05:53"        
+      },
+      ...
+    ]
+  },
+  "code": 200,
+  "message": "success"
 }
 ```
 
 #### Permissions
-The access_token must be authorized to view the backup to view its comments.
+The access_token must be authorized in order to view the comments.
 
 #### HTTP Request
 `GET https://okpy.org/api/v3/backups/<string:backup_id>/comment/`
@@ -700,7 +695,7 @@ Parameter | Default | Description
 access_token | None | (Required) Access Token of viewer
 
 #### Response
-Returns comment objects as a list. 
+Returns comment objects as a list.
 
 # Users
 
