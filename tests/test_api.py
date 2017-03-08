@@ -500,13 +500,33 @@ class TestApi(OkTestCase):
         def test_get_comments(self):
             self._test_backup(True)
             user = User.lookup(self.user1.email)
+            staff = User.lookup(self.staff1.email)
             backup = Backup.query.filter(Backup.submitter_id == user.id).first()
             comment_url = "/api/v3/backups/{}/comment/".format(encode_id(backup.id))
+            comment1 = Comment(
+                backupid = backup,
+                author_id = staff.id,
+                filename = 'fizzbuzz.py',
+                line = 2
+                message = 'hello world'
+            )
+            comment2 = Comment(
+                backupid = backup,
+                author_id = staff.id,
+                filename = 'fizzbuzz.py',
+                line = 5
+                message = 'wow'
+            )
+            db.session.add(comment1)
+            db.session.add(comment2)
 
             #check to see if student can view comments on own backup's comments
             self.login(self.user1.email)
             response = self.client.get(comment_url)
             self.assert_200(response)
+            self.assertEquals(len(response['data']['comments']), 2)
+            self.assertEquals(response['data']['comments'][0].message, 'hello world')
+            self.assertEquals(response['data']['comments'][1].message, 'wow')
             self.logout()
 
             #check to see if staff can access comments
@@ -520,6 +540,8 @@ class TestApi(OkTestCase):
             response = self.client.get(comment_url)
             self.assert_403(response)
             self.logout()
+
+
 
 
     def test_user_api(self):
