@@ -71,7 +71,7 @@ pygments==2.2.0
 humanize==0.5.1
 markdown>=2.6,<2.7
 pygal>=2.3,<2.4
-bleach==1.5.0
+bleach==2.0.0
 
 # Logging
 gcloud==0.18.3
