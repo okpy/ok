@@ -301,6 +301,12 @@ class CompositionScoreForm(GradeForm):
     kind = HiddenField('Score', default="composition",
                        validators=[validators.required()])
 
+class CheckpointCreditForm(GradeForm):
+    """ Gives credit to all students who submitted before a specific time. """
+    deadline = DateTimeField('Due Date', validators=[validators.required()],
+                             description="Award points to all submissions before this time")
+    include_backups = BooleanField('Include Backups?', default=True,
+                                   description='Check for backups too (or just for submissions?).')
 
 class CreateTaskForm(BaseForm):
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
@@ -551,7 +557,6 @@ class EmailScoresForm(BaseForm):
 class ExportAssignment(BaseForm):
     anonymize = BooleanField('Anonymize', default=False,
                              description="Enable to remove identifying information from submissions")
-
 
 ##########
 # Canvas #
