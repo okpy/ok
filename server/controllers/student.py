@@ -215,7 +215,7 @@ def submit_assignment(name):
         # Send to continuous autograder
         if assign.autograding_key and assign.continuous_autograding:
             try:
-                autograder.submit_continuous(backup)
+                submit_continuous(backup)
             except ValueError as e:
                 flash('Did not send to autograder: {}'.format(e), 'warning')
 
