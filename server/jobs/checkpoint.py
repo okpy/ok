@@ -31,10 +31,11 @@ def assign_scores(assign_id, score, kind, message, deadline,
         return "No Scores Created"
     score_counter, seen = 0, set()
 
-    logger.info("Creating {} scores...".format(total_count))
+    logger.info("Found {} eligible submissions...".format(total_count))
 
     for back in all_backups:
         if back.creator in seen:
+            score_counter += 1
             continue
         new_score = Score(score=score, kind=kind, message=message,
                           user_id=back.submitter_id,
