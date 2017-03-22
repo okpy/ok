@@ -446,7 +446,8 @@ class CommentSchema(APISchema):
         'line': fields.Integer,
         'message': fields.Raw,
         'author': fields.Nested(UserSchema.simple_fields),
-        'updated': fields.DateTime(dt_format='iso8601')
+        'updated': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
     }
     get_fields = {
         'comments': fields.List(fields.Nested(comment_fields))

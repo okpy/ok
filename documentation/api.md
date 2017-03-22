@@ -673,7 +673,8 @@ response = r.json()
         'line': 2,
         'message': "Great job.\nConsider using the use of the `total` variable.",
         'author': {"email": "test@berkeley.edu", "id": "a4r4gd"},
-        "updated": "2016-06-21T03:05:53"        
+        "updated": "2016-06-21T03:05:55",
+        "created": "2016-06-21T03:05:53"
       },
       ...
     ]
@@ -695,7 +696,7 @@ Parameter | Default | Description
 access_token | None | (Required) Access Token of viewer
 
 #### Response
-Returns a list of comments.
+See example response
 
 # Users
 
