@@ -440,6 +440,19 @@ class ScoreSchema(APISchema):
 
 class CommentSchema(APISchema):
     post_fields = {}
+    comment_fields = {
+        'id': HashIDField,
+        'filename': fields.String,
+        'line': fields.Integer,
+        'message': fields.Raw,
+        'author': fields.Nested(UserSchema.simple_fields),
+        'updated': fields.DateTime(dt_format='iso8601'),
+        'created': fields.DateTime(dt_format='iso8601')
+    }
+    get_fields = {
+        'comments': fields.List(fields.Nested(comment_fields))
+    }
+
 
     def __init__(self):
         APISchema.__init__(self)
@@ -922,6 +935,19 @@ class Comment(Resource):
             restful.abort(403)
 
         return self.schema.store_comment(user, backup)
+
+    @marshal_with(schema.get_fields)
+    def get(self, user, backup_id):
+        backup = models.Backup.query.get(backup_id)
+        if not backup:
+            if user.is_admin:
+                restful.abort(404)
+            else:
+                restful.abort(403)
+        if not models.Backup.can(backup, user, "view"):
+            restful.abort(403)
+        return {"comments": backup.comments}
+
 
 class File(Resource):
     """ Redirect (or download) a file. No Schema due to redirect
