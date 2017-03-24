@@ -24,14 +24,17 @@ def assign_scores(assign_id, score, kind, message, deadline,
     if not include_backups:
         backups = backups.filter(Backup.submit == True)
 
-    total_count, all_backups = backups.count(),  backups.all()
-    if not total_count:
+    all_backups =  backups.all()
+
+    if not all_backups:
         logger.info("No submissions were found with a deadline of {}."
                     .format(deadline))
         return "No Scores Created"
-    score_counter, seen = 0, set()
 
+    total_count = len(all_backups)
     logger.info("Found {} eligible submissions...".format(total_count))
+
+    score_counter, seen = 0, set()
 
     for back in all_backups:
         if back.creator in seen:
