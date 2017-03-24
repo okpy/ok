@@ -303,10 +303,10 @@ class CompositionScoreForm(GradeForm):
 
 class CheckpointCreditForm(GradeForm):
     """ Gives credit to all students who submitted before a specific time. """
-    deadline = DateTimeField('Due Date', validators=[validators.required()],
+    deadline = DateTimeField('Checkpoint Date', validators=[validators.required()],
                              description="Award points to all submissions before this time")
-    include_backups = BooleanField('Include Backups?', default=True,
-                                   description='Check for backups too (or just for submissions?).')
+    include_backups = BooleanField('Include Backups', default=True,
+                                   description='Include backups (as well as submissions)')
 
 class CreateTaskForm(BaseForm):
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
