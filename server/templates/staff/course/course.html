@@ -92,6 +92,12 @@
                     </a>
                   </li>
                   <li>
+                    <a href="{{ url_for('.unenrolled', cid=current_course.id) }}">
+                      <i class="fa fa-user-o"></i>
+                      Un-Enrolled Submitters
+                    </a>
+                  </li>
+                  <li>
                     <a href="{{ url_for('.list_extensions', cid=current_course.id) }}">
                       <i class="fa fa-calendar"></i>
                       Extensions

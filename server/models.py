@@ -408,7 +408,7 @@ class Assignment(Model):
             'active_groups': active_groups,
             'percent_groups_active': active_groups/(stats['groups'] or 1)
         })
-
+        
         if detailed:
             stats.update({
                 'raw_data': data
@@ -562,10 +562,10 @@ class Assignment(Model):
         current_db = db.engine.name
         if current_db != 'mysql':
             return self.course_submissions_slow(include_empty=include_empty)
-
+        
         # Can only run the fast query on MySQL
         submissions = []
-
+        
         stats = self.mysql_course_submissions_query()
         keys = stats.keys()
         for r in stats:
