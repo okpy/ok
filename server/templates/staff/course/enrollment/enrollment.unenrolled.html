@@ -39,7 +39,7 @@
                     <table class="table table-hover">
                         <thead>
                             <th class="sort" data-sort="email">User</th>
-                            <th class="sort" data-sort="sid">SID</th>
+                            <th class="sort" data-sort="sid">Name</th>
                         </thead>
 
                         <tbody class="list">
@@ -50,7 +50,7 @@
                                         {{ unenrolled_submitter.email }}
                                     </a>
                                 </td>
-                                <td class="sid">{{ unenrolled_submitter.id }}</td>
+                                <td class="sid">{{ unenrolled_submitter.name }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

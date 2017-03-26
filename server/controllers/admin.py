@@ -1048,14 +1048,18 @@ def client(client_id):
 def unenrolled(cid):
     courses, current_course = get_courses(cid)
     
-    submissions = set(b.submitter_id for b in (Backup.query.join(Backup.assignment).filter(Assignment.course_id == cid).all()))
-    enrollment = set(e.user_id for e in (Enrollment.query.filter(Enrollment.course_id == cid).all()))
     unenrolled_submitters = []
-    
+    staff = set(s.user for s in current_course.get_staff())
+    lab_assistants = set(l.user for l in current_course.get_participants([LAB_ASSISTANT_ROLE]))
+    students = set(e.user for e in current_course.get_students())
+
+    submissions = Backup.query.join(Backup.assignment).filter(Assignment.course_id == cid).all()
+    submissions = set(User.query.get(b.submitter_id) for b in submissions)
+
     for s in submissions:
-        if s not in enrollment:
-            unenrolled_submitters.append(User.query.get(s))
-    
+        if s not in students and s not in staff and s not in lab_assistants:
+            unenrolled_submitters.append(s)
+
     return render_template('staff/course/enrollment/enrollment.unenrolled.html',
                             current_course=current_course,
                             unenrolled_submitters=unenrolled_submitters,
