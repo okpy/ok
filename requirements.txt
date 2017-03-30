@@ -52,7 +52,7 @@ Flask-SQLAlchemy-Cache==0.1.5
 Flask-Migrate==2.0.3
 
 # Timezones
-pytz==2016.10
+pytz==2017.2
 arrow==0.10.0
 
 # Emailing
