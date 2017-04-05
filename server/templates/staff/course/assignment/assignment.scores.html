@@ -77,6 +77,9 @@
                         </button>
                     {% endcall %}
                   </li>
+                  <li> <a href="http://autograder.cs61a.org" target="_blank" type="button">
+                        <i class="fa fa-gear"></i> Go To Autograder
+                  </a></li>
                   <li> <a href="{{ url_for('.publish_scores', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-wpforms"></i> Make Scores Visible
                   </a></li>
