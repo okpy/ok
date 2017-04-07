@@ -16,7 +16,7 @@ redis==2.10.5
 
 # Job Queue
 rq==0.7.1
-rq-dashboard==0.3.7
+rq-dashboard==0.3.8
 
 # Forms
 WTForms>=2.0,<3.0
