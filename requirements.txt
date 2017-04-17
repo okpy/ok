@@ -36,7 +36,7 @@ apache-libcloud==1.5.0
 
 # OAuth
 
-oauthlib==2.0.1
+oauthlib==2.0.2
 # Flask-OAuthlib==0.9.3
 # OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
 https://github.com/lepture/flask-oauthlib/archive/d62bf665fa2a4ab71327cd665334fdec25ade116.zip
