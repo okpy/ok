@@ -67,9 +67,8 @@ The kubernetes documentations on deployments is useful. [Deployment Info](http:/
 
 ## Migrations
 
-Use a local MySQL DB that is based off the lastest deployed version (checkout the git tag/commit).
+Use a local MySQL DB that is based off the latest deployed version (checkout the git tag/commit).
 
-    $ export OK_ENV=migration
     $ export DATABASE_URL=mysql://okdev@localhost:5436/db
     $ # checkout the models that are in production
     $ git checkout <commit-that-was-last-deployed>
