@@ -4,7 +4,7 @@
 The ok.py server collects submissions and displays analysis of student progress
 based on logging sent from client scripts.
 
-Contact us to use our hosted service (http://okpy.org) for your course.
+Courses can sign up for our free hosted service on [okpy.org](https://okpy.org)
 
 The ok.py software was developed for CS 61A at UC Berkeley.
 
@@ -50,7 +50,7 @@ Customizing seed content
 
 Server Development
 ------------------
-The server is developed in Python 3.4+ using Flask.
+The server is developed in Python 3.5+ using Flask.
 
 Core Features
 -------------
