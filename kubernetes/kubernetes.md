@@ -174,7 +174,7 @@ The load balancer will spin up and get configured (takes a few minutes to pass h
 
 - Every branch and tag is automatically built into an image on Docker Hub under the cs61a/ok image
     - [Link](https://hub.docker.org/r/cs61a/ok)
-- As a secondary image host - we use [Quay.io] (https://quay.io/repository/cs61a/ok-server) automated builds for the master branch
+- As a secondary image host - we use [Quay.io](https://quay.io/repository/cs61a/ok-server) automated builds for the master branch
 
 ## Future Work
 

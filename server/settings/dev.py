@@ -1,6 +1,6 @@
 import os
 
-ENV = 'migration'
+ENV = 'dev'
 SECRET_KEY = os.getenv('OK_SESSION_KEY', 'changeinproductionkey')
 CACHE_TYPE = 'simple'
 
@@ -18,7 +18,6 @@ if db_url:
         db_url += "&sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
 else:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///../oksqlite.db'
-    print("Are you sure you want to run a migration with SQLite?")
 # SQLALCHEMY_ECHO = True
 
 RQ_DEFAULT_HOST = REDIS_HOST = 'localhost'
