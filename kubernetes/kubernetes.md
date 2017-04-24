@@ -8,13 +8,15 @@
     - [Ubuntu](https://store.docker.com/editions/community/docker-ce-server-ubuntu?tab=description)
 - Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/)
 
+    `$ curl https://sdk.cloud.google.com | bash`
+
 - Install Kubectl
 
     `$ gcloud components install kubectl`
 
 - Set the zone for gcloud
 
-    `$ gcloud config set compute/zone s-central1-f`
+    `$ gcloud config set compute/zone us-central1-f`
 
 - Login to Google Cloud
 
