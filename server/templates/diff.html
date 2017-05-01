@@ -217,7 +217,7 @@
           {% endif %}
           <div class="timeline-footer">
               <a class="btn btn-primary btn-xs" href="{{ url_for('.grading', bid=event['backup'].id) }}"> Code </a>
-              <a class="btn btn-primary btn-xs" href="{{ url_for('.student_backups_overview', cid=current_course.id, email=event['backup'].submitter.email, aid=assignment.id, backup_id=event['backup'].hashid)}}"> Diff View </a>
+              <a class="btn btn-primary btn-xs" href="{{ url_for('.student_backups_overview', cid=current_course.id, email=event['backup'].submitter.email, aid=assignment.id, backup_id=event['backup'].id)}}"> Diff View </a>
               <span class="pull-right"> Attempt {{ event['attempt'] }} </span>
           </div>
       </div>
