@@ -56,7 +56,7 @@ pytz==2017.2
 arrow==0.10.0
 
 # Emailing
-sendgrid==3.6.3 # pyup: >=3.6,<4.0
+sendgrid==3.6.5 # pyup: >=3.6,<4.0
 pynliner<1.0
 
 # Autograder Interface
