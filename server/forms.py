@@ -15,7 +15,7 @@ import re
 from server import utils
 import server.canvas.api as canvas_api
 from server.models import Assignment, User, Client, Course, Message, CanvasCourse
-from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
+from server.constants import (SCORE_KINDS, TIMESCALES, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES,
                               OAUTH_OUT_OF_BAND_URI)
@@ -557,6 +557,17 @@ class EmailScoresForm(BaseForm):
 class ExportAssignment(BaseForm):
     anonymize = BooleanField('Anonymize', default=False,
                              description="Enable to remove identifying information from submissions")
+
+
+class SlipCalculatorForm(BaseForm):
+    timescale = SelectField('Time Scale', default="Days",
+                            choices=[(c, c.title()) for c in TIMESCALES],
+                            validators=[validators.required()],
+                            description=["Select time scale for slip calculation (slip days, hours, minutes)"])
+    grace_amount = DecimalField('Grace Amount', default=0)
+    grace_scale = SelectField('Grace Scale', default="Minutes",
+                            choices=[(c, c.title()) for c in TIMESCALES],
+                            description=["Select time scale for grace amount (grace days, hours, minutes"])
 
 ##########
 # Canvas #
