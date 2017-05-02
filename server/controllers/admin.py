@@ -974,6 +974,45 @@ def checkpoint_grading(cid, aid):
             form=form,
         )
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/slip",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def slip_calculator(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    # if not assign or not Assignment.can(assign, current_user, 'grade'):
+    #     flash('Cannot access assignment', 'error')
+    #     return abort(404)
+
+    form = forms.SlipCalculatorForm()
+    # if form.validate_on_submit():
+    #     job = jobs.enqueue_job(
+    #         checkpoint.assign_scores,
+    #         description='Checkpoint Scoring for {}'.format(assign.display_name),
+    #         timeout=600,
+    #         course_id=cid,
+    #         user_id=current_user.id,
+    #         assign_id=assign.id,
+    #         score=form.score.data,
+    #         kind=form.kind.data,
+    #         message=form.message.data,
+    #         deadline=form.deadline.data,
+    #         include_backups=form.include_backups.data)
+    #     return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    # else:
+    #     if not form.kind.data:
+    #         form.kind.default = 'checkpoint 1'
+    #     if not form.deadline.data:
+    #         form.deadline.default = utils.local_time_obj(assign.due_date, assign.course)
+    #     form.process()
+
+    return render_template(
+        'staff/jobs/slip_calculator.html',
+        courses=courses,
+        current_course=current_course,
+        assignment=assign,
+        form=form,
+    )
 
 ##############
 # Enrollment #

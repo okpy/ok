@@ -563,11 +563,7 @@ class SlipCalculatorForm(BaseForm):
     timescale = SelectField('Time Scale', default="Days",
                             choices=[(c, c.title()) for c in TIMESCALES],
                             validators=[validators.required()],
-                            description=["Select time scale for slip calculation (slip days, hours, minutes)"])
-    grace_amount = DecimalField('Grace Amount', default=0)
-    grace_scale = SelectField('Grace Scale', default="Minutes",
-                            choices=[(c, c.title()) for c in TIMESCALES],
-                            description=["Select time scale for grace amount (grace days, hours, minutes"])
+                            description="Time scale for slip calculation.")
 
 ##########
 # Canvas #
