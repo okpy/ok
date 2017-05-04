@@ -985,15 +985,17 @@ def calculate_slips(cid, aid):
         return abort(404)
 
     form = forms.SlipCalculatorForm()
+    timescale = form.timescale.data.title()
     if form.validate_on_submit():
         print("submitted!")
         job = jobs.enqueue_job(
             slips.calculate_slips,
-            description='Calculate Slips for {}'.format(assign.display_name),
-            # timeout=600,
+            description='Calculate Slip {} for {}'.format(timescale, assign.display_name),
+            timeout=600,
             course_id=cid,
             # user_id=current_user.id,
-            # assign_id=assign.id,
+            assign_id=assign.id,
+            timescale=timescale,
             # score=form.score.data,
             # kind=form.kind.data,
             # message=form.message.data,
