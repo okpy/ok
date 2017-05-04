@@ -993,14 +993,9 @@ def calculate_slips(cid, aid):
             description='Calculate Slip {} for {}'.format(timescale, assign.display_name),
             timeout=600,
             course_id=cid,
-            # user_id=current_user.id,
+            user_id=current_user.id,
             assign_id=assign.id,
             timescale=timescale,
-            # score=form.score.data,
-            # kind=form.kind.data,
-            # message=form.message.data,
-            # deadline=form.deadline.data,
-            # include_backups=form.include_backups.data
             )
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
 
