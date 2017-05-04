@@ -31,8 +31,10 @@
     <div class="col-md-12">
       <div class="box">
         <div class="box-body">
+          <p> Calculate slips and save as a .csv file. </p>
           {% call forms.render_form(form, action_text='Calculate Slips') %}
             {{ forms.render_field(form.timescale) }}
+            {{ forms.render_checkbox_field(form.show_results) }}
           {% endcall %}
         </div>
       </div>

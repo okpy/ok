@@ -564,6 +564,7 @@ class SlipCalculatorForm(BaseForm):
                             choices=[(c, c.title()) for c in TIMESCALES],
                             validators=[validators.required()],
                             description="Time scale for slip calculation.")
+    show_results = BooleanField('Show Results', default=False)
 
 ##########
 # Canvas #

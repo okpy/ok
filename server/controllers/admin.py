@@ -996,6 +996,8 @@ def calculate_slips(cid, aid):
             user_id=current_user.id,
             assign_id=assign.id,
             timescale=timescale,
+            show_results=form.show_results.data,
+            result_kind='link',
             )
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
 
