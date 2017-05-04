@@ -24,6 +24,10 @@
 
 - Create a [Docker Hub account](https://hub.docker.com) and get a developer to add you to the `cs61a` organization.
 
+- For the CS61A deployment: 
+
+    `$ gcloud container clusters get-credentials ok-v3-prod --zone us-central1-f --project ok-server` 
+
 ## Permissions
 
 - Google Cloud Permissions on the `ok-server` project
