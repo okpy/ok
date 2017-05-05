@@ -20,6 +20,7 @@
 
 - Login to Google Cloud
 
+    `$ gcloud auth login`
     `$ gcloud auth application-default login`
 
 - Create a [Docker Hub account](https://hub.docker.com) and get a developer to add you to the `cs61a` organization.
