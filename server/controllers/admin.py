@@ -987,9 +987,8 @@ def calculate_slips(cid, aid):
     form = forms.AssignSlipCalculatorForm()
     timescale = form.timescale.data.title()
     if form.validate_on_submit():
-        print("submitted!")
         job = jobs.enqueue_job(
-            slips.calculate_slips,
+            slips.calculate_slips_assign,
             description='Calculate Slip {} for {}'.format(timescale, assign.display_name),
             timeout=600,
             course_id=cid,
@@ -1014,27 +1013,26 @@ def calculate_slips(cid, aid):
 @is_staff(course_arg='cid')
 def calculate_all_slips(cid):
     courses, current_course = get_courses(cid)
-    # assgns = current_course.assignments
-    # active_asgns = [a for a in assgns if a.active]
-    # due_asgns = [a for a in assgns if not a.active]
+    assignments = current_course.assignments
     form = forms.CourseSlipCalculatorForm()
-    form.assigns.choices = [('ONE', 'one'), ('TWO', 'two')]
+    form.assigns.choices = [(a.id, a.display_name) for a in assignments]
+    form.assigns.default = [a.id for a in assignments]
     form.process()
-    # timescale = form.timescale.data.title()
-    # if form.validate_on_submit():
-    #     print("submitted!")
-    #     job = jobs.enqueue_job(
-    #         slips.calculate_slips,
-    #         description='Calculate Slip {} for {}'.format(timescale, assign.display_name),
-    #         timeout=600,
-    #         course_id=cid,
-    #         user_id=current_user.id,
-    #         assign_id=assign.id,
-    #         timescale=timescale,
-    #         show_results=form.show_results.data,
-    #         result_kind='link',
-    #         )
-    #     return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    timescale = form.timescale.data.title()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            slips.calculate_slips_course,
+            description="Calculate Slip {} for {}'s assignments"
+                .format(timescale, current_course.display_name),
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            timescale=timescale,
+            assigns=form.assigns.data,
+            show_results=form.show_results.data,
+            result_kind='link',
+            )
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
 
     return render_template(
         'staff/jobs/slips/slips.course.html',

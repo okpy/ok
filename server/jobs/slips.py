@@ -15,7 +15,14 @@ def timediff(created, deadline, timescale):
     return math.ceil(secs_over / timescales[timescale.lower()])
 
 @jobs.background_job
-def calculate_slips(assign_id, timescale, show_results):
+def calculate_slips_course(assigns, timescale, show_results):
+    logger = jobs.get_job_logger()
+    logger.info(assigns)
+    logger.info(timescale)
+    logger.info(show_results)
+
+@jobs.background_job
+def calculate_slips_assign(assign_id, timescale, show_results):
     logger = jobs.get_job_logger()
     job = jobs.get_current_job()
 

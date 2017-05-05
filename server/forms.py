@@ -560,20 +560,14 @@ class ExportAssignment(BaseForm):
 
 
 class AssignSlipCalculatorForm(BaseForm):
-    timescale = SelectField('Time Scale', default="Days",
-                            choices=[(c, c.title()) for c in TIMESCALES],
-                            validators=[validators.required()],
+    timescale = SelectField('Time Scale', default="days",
+                            choices=[(c.lower(), c.title()) for c in TIMESCALES],
                             description="Time scale for slip calculation.")
     show_results = BooleanField('Show Results', default=False)
 
-class CourseSlipCalculatorForm(BaseForm):
-    timescale = SelectField('Time Scale', default="Days",
-                            choices=[(c, c.title()) for c in TIMESCALES],
-                            validators=[validators.required()],
-                            description="Time scale for slip calculation.")
-    assigns = MultiCheckboxField('Assignments',
+class CourseSlipCalculatorForm(AssignSlipCalculatorForm):
+    assigns = MultiCheckboxField('Assignments', coerce=int,
                             description="Select which assignments to calculate slips for.")
-    show_results = BooleanField('Show Results', default=False)
 
 ##########
 # Canvas #
