@@ -988,7 +988,7 @@ def calculate_assign_slips(cid, aid):
     timescale = form.timescale.data.title()
     if form.validate_on_submit():
         job = jobs.enqueue_job(
-            slips.calculate_slips_assign,
+            slips.calculate_assign_slips,
             description='Calculate Slip {} for {}'.format(timescale, assign.display_name),
             timeout=600,
             course_id=cid,
@@ -1014,10 +1014,13 @@ def calculate_assign_slips(cid, aid):
 def calculate_course_slips(cid):
     courses, current_course = get_courses(cid)
     assignments = current_course.assignments
+
     form = forms.CourseSlipCalculatorForm()
-    form.assigns.choices = [(a.id, a.display_name) for a in assignments]
-    form.assigns.default = [a.id for a in assignments]
-    form.process()
+    inactive_assigns = [a for a in assignments if not a.active]
+    form.assigns.choices = [(a.id, a.display_name) for a in inactive_assigns]
+    form.assigns.default = [a.id for a in inactive_assigns]
+    form.process(request.form)
+    
     timescale = form.timescale.data.title()
     if form.validate_on_submit():
         job = jobs.enqueue_job(

@@ -566,8 +566,8 @@ class AssignSlipCalculatorForm(BaseForm):
     show_results = BooleanField('Show Results', default=False)
 
 class CourseSlipCalculatorForm(AssignSlipCalculatorForm):
-    assigns = MultiCheckboxField('Assignments', coerce=int,
-                            description="Select which assignments to calculate slips for.")
+    assigns = MultiCheckboxField('Completed Assignments ', coerce=int,
+                            description="Select which completed assignments to calculate slips for.")
 
 ##########
 # Canvas #
