@@ -977,7 +977,7 @@ def checkpoint_grading(cid, aid):
 @admin.route("/course/<int:cid>/assignments/<int:aid>/slips",
              methods=["GET", "POST"])
 @is_staff(course_arg='cid')
-def calculate_slips(cid, aid):
+def calculate_assign_slips(cid, aid):
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):
@@ -1011,7 +1011,7 @@ def calculate_slips(cid, aid):
 @admin.route("/course/<int:cid>/assignments/slips",
              methods=["GET", "POST"])
 @is_staff(course_arg='cid')
-def calculate_all_slips(cid):
+def calculate_course_slips(cid):
     courses, current_course = get_courses(cid)
     assignments = current_course.assignments
     form = forms.CourseSlipCalculatorForm()
@@ -1021,8 +1021,8 @@ def calculate_all_slips(cid):
     timescale = form.timescale.data.title()
     if form.validate_on_submit():
         job = jobs.enqueue_job(
-            slips.calculate_slips_course,
-            description="Calculate Slip {} for {}'s assignments"
+            slips.calculate_course_slips,
+            description="Calculate Slip {} for {}'s Assignments"
                 .format(timescale, current_course.display_name),
             timeout=600,
             course_id=cid,
