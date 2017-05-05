@@ -974,7 +974,7 @@ def checkpoint_grading(cid, aid):
             form=form,
         )
 
-@admin.route("/course/<int:cid>/assignments/<int:aid>/slip",
+@admin.route("/course/<int:cid>/assignments/<int:aid>/slips",
              methods=["GET", "POST"])
 @is_staff(course_arg='cid')
 def calculate_slips(cid, aid):
@@ -984,7 +984,7 @@ def calculate_slips(cid, aid):
         flash('Cannot access assignment', 'error')
         return abort(404)
 
-    form = forms.SlipCalculatorForm()
+    form = forms.AssignSlipCalculatorForm()
     timescale = form.timescale.data.title()
     if form.validate_on_submit():
         print("submitted!")
@@ -1002,10 +1002,44 @@ def calculate_slips(cid, aid):
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
 
     return render_template(
-        'staff/jobs/calculate_slips.html',
+        'staff/jobs/slips/slips.assign.html',
         courses=courses,
         current_course=current_course,
         assignment=assign,
+        form=form,
+    )
+
+@admin.route("/course/<int:cid>/assignments/slips",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def calculate_all_slips(cid):
+    courses, current_course = get_courses(cid)
+    # assgns = current_course.assignments
+    # active_asgns = [a for a in assgns if a.active]
+    # due_asgns = [a for a in assgns if not a.active]
+    form = forms.CourseSlipCalculatorForm()
+    form.assigns.choices = [('ONE', 'one'), ('TWO', 'two')]
+    form.process()
+    # timescale = form.timescale.data.title()
+    # if form.validate_on_submit():
+    #     print("submitted!")
+    #     job = jobs.enqueue_job(
+    #         slips.calculate_slips,
+    #         description='Calculate Slip {} for {}'.format(timescale, assign.display_name),
+    #         timeout=600,
+    #         course_id=cid,
+    #         user_id=current_user.id,
+    #         assign_id=assign.id,
+    #         timescale=timescale,
+    #         show_results=form.show_results.data,
+    #         result_kind='link',
+    #         )
+    #     return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+
+    return render_template(
+        'staff/jobs/slips/slips.course.html',
+        courses=courses,
+        current_course=current_course,
         form=form,
     )
 
