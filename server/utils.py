@@ -113,6 +113,11 @@ def natural_time(date):
     now = dt.datetime.utcnow()
     return humanize.naturaltime(now - date)
 
+def first_name(name):
+    """ Return the first name of a name."""
+    if not isinstance(name, str):
+        return name
+    return name.split(' ')[0].title()
 
 def humanize_name(name):
     """ Return a canonical representation of a name in First Last format."""
@@ -137,11 +142,19 @@ def random_row(query):
         return None
     return query.offset(random.randrange(count)).first()
 
-
-def group_action_email(members, subject, text):
-    emails = [m.user.email for m in members]
-    return send_email(emails, subject, text)
-
+def new_course_email(instructor, course):
+    subject = "{} + OK".format(course.display_name)
+    template = 'email/new_course.html'
+    text = "" # The template already includes the copy
+    link_text = "View OK Documentation"
+    link = url_for('about.documentation', _external=True)
+    # use +ok in cc'd emails so that those users are still valid recipients
+    return send_email(instructor.email, subject, text,
+               reply_to="ericpai@berkeley.edu",
+               from_name="OK Team",
+               cc=('ericpai+ok@berkeley.edu', 'denero+ok@berkeley.edu'),
+               template=template, link_text=link_text, link=link,
+               course=course, instructor=instructor)
 
 def invite_email(member, recipient, assignment):
     subject = "{0} group invitation".format(assignment.display_name)
@@ -153,6 +166,9 @@ def invite_email(member, recipient, assignment):
     send_email(recipient.email, subject, text, template,
                link_text=link_text, link=link)
 
+def send_emails(recipients, subject, body, **kwargs):
+    for email in recipients:
+        send_email(email, subject, body, **kwargs)
 
 def send_email(to, subject, body, cc=(), from_name='Ok',
                link=None, link_text="Sign in",

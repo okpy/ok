@@ -1,0 +1,47 @@
+{% extends "staff/base.html" %}
+{% import "staff/_formhelpers.html" as forms %}
+
+{% block title %} Checkpoint Grading {{ assignment.display_name }} {% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        Checkpoint Grading for {{ assignment.display_name }}
+        <small>{{ current_course.offering }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li><a href="{{ url_for(".course_jobs", cid=current_course.id) }}">
+            <i class="fa fa-list"></i>Jobs
+        </a></li>
+        <li class="active"><a href="#">
+            <i class="fa fa-inbox"></i>Checkpoint Scoring</a>
+        </li>
+    </ol>
+</section>
+<section class="content">
+  {% include 'alerts.html' %}
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-body">
+          <p> To award points to everyone who submitted before a specific date, fill out this form </p>
+          {% call forms.render_form(form, action_text='Award Points') %}
+            {{ forms.render_field(form.kind) }}
+            {{ forms.render_field(form.score) }}
+            {{ forms.render_field(form.message) }}
+            {{ forms.render_field(form.deadline) }}
+            {{ forms.render_checkbox_field(form.include_backups) }}
+            {% endcall %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

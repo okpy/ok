@@ -30,7 +30,7 @@ from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
 from server.jobs import (example, export, moss, scores_audit, github_search,
-                         scores_notify)
+                         scores_notify, checkpoint)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -61,11 +61,23 @@ def is_staff(course_arg=None):
                         return func(*args, **kwargs)
             else:
                 return redirect(url_for("student.index"))
-            flash("You are not on the course staff", "error")
+            flash("You are not on the course staff", "warning")
             return redirect(url_for("student.index"))
         return login_required(wrapper)
     return decorator
 
+def is_admin():
+    """ A decorator for routes to ensure the user is an admin."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if current_user.is_authenticated and current_user.is_admin:
+                return func(*args, **kwargs)
+            else:
+                flash("You are not an administrator", "warning")
+                return redirect(url_for("admin.index"))
+        return login_required(wrapper)
+    return decorator
 
 def get_courses(cid=None):
     if current_user.is_authenticated and current_user.is_admin:
@@ -290,7 +302,7 @@ def autograde_backup(bid):
     return redirect(url_for('.grading', bid=bid))
 
 @admin.route("/versions/<name>", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def client_version(name):
     courses, current_course = get_courses()
 
@@ -326,7 +338,7 @@ def list_courses():
                            other_courses=other_courses)
 
 @admin.route("/course/new", methods=['GET', 'POST'])
-@is_staff()
+@login_required
 def create_course():
     courses, current_course = get_courses()
     form = forms.NewCourseForm()
@@ -334,13 +346,11 @@ def create_course():
         new_course = Course()
         form.populate_obj(new_course)
 
-        # Add user as instructor, can be changed later
-        enroll = Enrollment(course=new_course, user_id=current_user.id,
-                            role=INSTRUCTOR_ROLE)
         db.session.add(new_course)
-        db.session.add(enroll)
+        # Add the user as an instructor, create a default assignment
+        new_course.initialize_content(current_user)
 
-        db.session.commit()
+        utils.new_course_email(current_user, new_course)
 
         flash(new_course.offering + " created successfully.", "success")
         return redirect(url_for(".course", cid=new_course.id))
@@ -352,14 +362,17 @@ def create_course():
 @is_staff(course_arg='cid')
 def course(cid):
     courses, current_course = get_courses(cid)
+
     students = (Enrollment.query
                           .options(db.joinedload('user'))
                           .filter(Enrollment.role == STUDENT_ROLE,
                                   Enrollment.course == current_course)
                             .all())
+    needs_intro = len(students) < 5
 
     return render_template('staff/course/course.html', courses=courses,
                            students=students,
+                           needs_intro=needs_intro,
                            stats=current_course.statistics(),
                            current_course=current_course)
 
@@ -921,6 +934,45 @@ def export_submissions(cid, aid):
             form=form,
         )
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/checkpoint",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def checkpoint_grading(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.CheckpointCreditForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            checkpoint.assign_scores,
+            description='Checkpoint Scoring for {}'.format(assign.display_name),
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            assign_id=assign.id,
+            score=form.score.data,
+            kind=form.kind.data,
+            message=form.message.data,
+            deadline=form.deadline.data,
+            include_backups=form.include_backups.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        if not form.kind.data:
+            form.kind.default = 'checkpoint 1'
+        if not form.deadline.data:
+            form.deadline.default = utils.local_time_obj(assign.due_date, assign.course)
+        form.process()
+
+        return render_template(
+            'staff/jobs/checkpoint.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
 
 
 ##############
@@ -1006,7 +1058,7 @@ def enrollment_csv(cid):
                     headers={'Content-Disposition': disposition})
 
 @admin.route("/clients/", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def clients():
     courses, current_course = get_courses()
     clients = Client.query.all()
@@ -1023,7 +1075,7 @@ def clients():
     return render_template('staff/clients.html', clients=clients, form=form, courses=courses)
 
 @admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def client(client_id):
     courses, current_course = get_courses()
 
