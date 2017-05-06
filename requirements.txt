@@ -32,7 +32,7 @@ Flask-Login==0.4.0
 
 # File Storage
 lockfile==0.12.2 # For local storage
-apache-libcloud==1.5.0
+apache-libcloud==2.0.0
 
 # OAuth
 
@@ -56,7 +56,7 @@ pytz==2017.2
 arrow==0.10.0
 
 # Emailing
-sendgrid==3.6.3 # pyup: >=3.6,<4.0
+sendgrid==3.6.5 # pyup: >=3.6,<4.0
 pynliner<1.0
 
 # Autograder Interface
@@ -87,7 +87,7 @@ names==0.3.0
 # Testing
 pytest>=3.0.0,<3.1
 pytest-cov==2.4.0
-selenium==3.3.3
+selenium==3.4.1
 
 # until version 1.0.6 is on pypi
 https://github.com/neta79/loremipsum/archive/py3_unicode_fix.zip
