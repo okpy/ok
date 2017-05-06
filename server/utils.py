@@ -150,9 +150,9 @@ def new_course_email(instructor, course):
     link = url_for('about.documentation', _external=True)
     # use +ok in cc'd emails so that those users are still valid recipients
     return send_email(instructor.email, subject, text,
-               reply_to="sumukh@berkeley.edu",
+               reply_to="ericpai@berkeley.edu",
                from_name="OK Team",
-               cc=('sumukh+ok@berkeley.edu', 'denero+ok@berkeley.edu'),
+               cc=('ericpai+ok@berkeley.edu', 'denero+ok@berkeley.edu'),
                template=template, link_text=link_text, link=link,
                course=course, instructor=instructor)
 
