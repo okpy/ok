@@ -2,7 +2,7 @@ from tests import OkTestCase
 
 from server.models import db, Enrollment, User
 from server.forms import EnrollmentForm, BatchEnrollmentForm
-from server.constants import STUDENT_ROLE, LAB_ASSISTANT_ROLE
+from server.constants import STUDENT_ROLE, LAB_ASSISTANT_ROLE, STAFF_ROLES
 
 class TestEnrollment(OkTestCase):
 
@@ -58,6 +58,17 @@ class TestEnrollment(OkTestCase):
         Enrollment.create(self.course.id, [self.studentA])
 
         self.enrollment_matches_info(user, self.studentA)
+
+    def test_is_staff(self):
+        self.setup_course()
+        random_user = User(name=self.studentA['name'], email=self.studentA['email'])
+        db.session.add(random_user)
+        db.session.commit()
+
+        self.assertTrue(self.staff1.is_staff())
+        self.assertTrue(self.admin.is_staff())
+        self.assertFalse(self.user1.is_staff())
+        self.assertFalse(random_user.is_staff())
 
     def test_enroll_from_form(self):
         self.setup_course()
@@ -159,14 +170,11 @@ class TestEnrollment(OkTestCase):
         assert enrollment.class_account == info.get('class_account')
         assert enrollment.section == info.get('section')
         assert enrollment.role == info.get('role')
+        assert enrollment.user.is_staff() == (enrollment.role in STAFF_ROLES)
 
     def remove_lab_assistants(self):
-        [db.session.delete(e) for e in (Enrollment.query
-                            .options(db.joinedload('user'))
-                            .filter_by(role = LAB_ASSISTANT_ROLE,
-                                    course_id = self.course.id)
-                            .all()
-                            )]
+        for e in self.course.get_participants([LAB_ASSISTANT_ROLE]):
+            db.session.delete(e)
         db.session.commit()
 
     def test_lab_assistant_enroll_web(self):

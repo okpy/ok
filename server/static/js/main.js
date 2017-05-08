@@ -28,6 +28,13 @@ $('body').on('click', 'button[data-confirm]', function(e) {
   });
 })
 
+function showElem(selector) {
+    if(!$(selector).is(':visible')) {
+        $(selector).show();
+    }
+    $("html, body").animate({ scrollTop: $(selector).offset().top }, 500);
+}
+
 // From: http://davidwalsh.name/javascript-debounce-function
 function debounce(func, wait, immediate) {
     var timeout;

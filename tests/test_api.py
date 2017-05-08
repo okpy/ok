@@ -8,7 +8,7 @@ from server.utils import encode_id
 
 from tests import OkTestCase
 
-class TestAuth(OkTestCase):
+class TestApi(OkTestCase):
     def _test_backup(self, submit, delay=10, success=True):
         self.setup_course()
 
@@ -97,6 +97,14 @@ class TestAuth(OkTestCase):
         }
         assert response.json['message'] == 'success'
         assert response.json['code'] == 200
+
+    def test_no_envelope(self):
+        response = self.client.get('/api/v3/?envelope=false')
+        self.assert_200(response)
+        assert 'data' not in response.json
+        assert 'message' not in response.json
+        assert 'code' not in response.json
+        assert response.json['version'] == 'v3'
 
     def test_non_existant_api(self):
         response = self.client.get('/api/v3/doesnotexist')
@@ -195,6 +203,63 @@ class TestAuth(OkTestCase):
                 {
                     "current_version": "v1.5.0",
                     "download_link": "http://localhost/ok",
+                    "name": "ok"
+                }
+            ]
+        }
+
+        self.setup_course()
+        self.login(self.user1.email)
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://localhost/versions/v1.5.1/ok',
+        })
+        self.assert_403(response)
+
+        self.login(self.staff1.email)
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://localhost/versions/v1.5.1/ok',
+        })
+        # Staff members do not have permission to edit versions
+        self.assert_403(response)
+
+        self.login(self.admin.email)
+
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://example.com/doesnotexist',
+        })
+        self.assert_400(response)
+
+        response = self.client.post('/api/v3/version/ok', data={
+            'current_version': 'v1.5.1',
+            'download_link': 'http://example.com',
+        })
+        self.assert_200(response)
+        response = self.client.get('/api/v3/version/')
+        assert response.json['data'] == {
+            'results': [
+                {
+                    "current_version": "v1.5.1",
+                    "download_link": "http://example.com",
+                    "name": "ok"
+                },
+                {
+                    "current_version": "v2.5.0",
+                    "download_link": "http://localhost/ok2",
+                    "name": "ok2"
+                }
+            ]
+        }
+
+        response = self.client.get('/api/v3/version/ok')
+        self.assert_200(response)
+        assert response.json['data'] == {
+            'results': [
+                {
+                    "current_version": "v1.5.1",
+                    "download_link": "http://example.com",
                     "name": "ok"
                 }
             ]
@@ -431,6 +496,52 @@ class TestAuth(OkTestCase):
         response = self.client.post(comment_url, data=data)
         self.assert_403(response)
         assert response.json['code'] == 403
+
+        def test_get_comments(self):
+            self._test_backup(True)
+            user = User.lookup(self.user1.email)
+            staff = User.lookup(self.staff1.email)
+            backup = Backup.query.filter(Backup.submitter_id == user.id).first()
+            comment_url = "/api/v3/backups/{}/comment/".format(encode_id(backup.id))
+            comment1 = Comment(
+                backupid = backup,
+                author_id = staff.id,
+                filename = 'fizzbuzz.py',
+                line = 2,
+                message = 'hello world'
+            )
+            comment2 = Comment(
+                backupid = backup,
+                author_id = staff.id,
+                filename = 'fizzbuzz.py',
+                line = 5,
+                message = 'wow'
+            )
+            db.session.add(comment1)
+            db.session.add(comment2)
+
+            #check to see if student can view comments on own backup's comments
+            self.login(self.user1.email)
+            response = self.client.get(comment_url)
+            self.assert_200(response)
+            self.assertEquals(len(response['data']['comments']), 2)
+            self.assertEquals(response['data']['comments'][0].message, 'hello world')
+            self.assertEquals(response['data']['comments'][1].message, 'wow')
+            self.logout()
+
+            #check to see if staff can access comments
+            self.login(self.staff1.email)
+            response = self.client.get(comment_url)
+            self.assert_200(response)
+            self.logout()
+
+            #check to see another student can't see others' backup's comments
+            self.login(self.user2.email)
+            response = self.client.get(comment_url)
+            self.assert_403(response)
+            self.logout()
+
+
 
 
     def test_user_api(self):

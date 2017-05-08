@@ -46,6 +46,7 @@
                 <fieldset>
                     {{ forms.render_checkbox_field(form.visible, label_visible=true) }}
                     {{ forms.render_field(form.autograding_key, label_visible=true, placeholder='5abc... (Optional)', type='text') }}
+                    {{ forms.render_checkbox_field(form.continuous_autograding, label_visible=true) }}
                     {{ forms.render_checkbox_field(form.revisions_allowed, label_visible=true) }}
                     {{ forms.render_checkbox_field(form.uploads_enabled, label_visible=true) }}
                     {{ forms.render_field(form.upload_info, label_visible=true, placeholder='Upload the following files: test.py', type='text') }}

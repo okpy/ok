@@ -12,12 +12,14 @@
 {% set api_dropdown %}
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">API <span class="caret"></span></a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('.clients') }}">OAuth Clients</a></li>
-            <li><a href="{{ url_for('.client_version', name='ok-client') }}">OK Client Version</a></li>
+            {% if current_user.is_admin %}
+              <li><a href="{{ url_for('.clients') }}">OAuth Clients</a></li>
+              <li><a href="{{ url_for('.client_version', name='ok-client') }}">OK Client Version</a></li>
+              <li class="divider"></li>
+            {% endif %}
+            <li><a href="{{ url_for('about.documentation' )}}">Documentation</a></li>
             <li class="divider"></li>
             <li><a href="https://ok-oauth.app.cs61a.org">Access Token</a></li>
-            <li class="divider"></li>
-            <li><a href="http://okpy.github.io/documentation">Documentation</a></li>
           </ul>
 {% endset %}
 
@@ -44,16 +46,18 @@
         <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown"> Courses <span class="caret"></span></a>
           <ul class="dropdown-menu" role="menu">
-
             {% for course in courses %}
               {% if course.active %}
               <li><a href="{{ url_for('.course', cid=course.id) }}">
                     {{ course.display_name_with_semester | truncate(30, True) }}
                    </a>
               </li>
+              {% set should_divide=True %}
               {% endif %}
             {% endfor %}
+            {% if should_divide %}
             <li class="divider"></li>
+            {% endif %}
             <li><a href="{{ url_for('.list_courses') }}"><i class="fa fa-list"></i>View All Courses</a></li>
             <li class="divider"></li>
             <li><a href="{{ url_for('.create_course') }}"><i class="fa fa-plus"></i> Create New Course</a></li>
@@ -80,6 +84,12 @@
               <a href="{{ url_for('.enrollment', cid=current_course.id) }}">
                 <i class="fa fa-group {% if (request.endpoint == 'admin.enrollment' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
                 Enrollment
+              </a>
+            </li>
+            <li>
+              <a href="{{ url_for('.list_extensions', cid=current_course.id) }}">
+                <i class="fa fa-calendar {% if (request.endpoint == 'admin.list_extensions' and request.view_args['cid'] == current_course.id) %}text-blue{% endif %}"></i>
+                Extensions
               </a>
             </li>
             <li>

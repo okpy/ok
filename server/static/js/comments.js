@@ -5,7 +5,7 @@ jQuery(document).ready(function($){
      * '<controller>/base.html' template.
      */
     $(document).ajaxSend(function(e, xhr, s) {
-        if (s.type == 'POST' || s.type == 'PUT') {
+        if (s.type == 'POST' || s.type == 'PUT' || s.type == 'DELETE') {
             xhr.setRequestHeader('X-CSRF-Token', csrf_token);
         }
     });

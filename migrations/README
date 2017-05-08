@@ -1,1 +1,3 @@
 Generic single-database configuration.
+
+See `kubernetes/kubernetes.md` for more information on how to generate and run a migration.

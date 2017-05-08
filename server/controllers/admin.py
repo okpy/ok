@@ -1,5 +1,6 @@
 import collections
 import csv
+import datetime as dt
 from functools import wraps
 from io import StringIO
 
@@ -18,19 +19,18 @@ import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
                            Message, CanvasCourse, CanvasAssignment, MossResult,
-                           db)
+                           Extension, db)
 from server.contrib import analyze
 
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
                               LAB_ASSISTANT_ROLE, SCORE_KINDS)
-
 import server.canvas.api as canvas_api
 import server.canvas.jobs
 from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
-from server.jobs import (example, moss, scores_audit, github_search,
-                         scores_notify)
+from server.jobs import (example, export, moss, scores_audit, github_search,
+                         scores_notify, checkpoint)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -61,11 +61,23 @@ def is_staff(course_arg=None):
                         return func(*args, **kwargs)
             else:
                 return redirect(url_for("student.index"))
-            flash("You are not on the course staff", "error")
+            flash("You are not on the course staff", "warning")
             return redirect(url_for("student.index"))
         return login_required(wrapper)
     return decorator
 
+def is_admin():
+    """ A decorator for routes to ensure the user is an admin."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if current_user.is_authenticated and current_user.is_admin:
+                return func(*args, **kwargs)
+            else:
+                flash("You are not an administrator", "warning")
+                return redirect(url_for("admin.index"))
+        return login_required(wrapper)
+    return decorator
 
 def get_courses(cid=None):
     if current_user.is_authenticated and current_user.is_admin:
@@ -290,7 +302,7 @@ def autograde_backup(bid):
     return redirect(url_for('.grading', bid=bid))
 
 @admin.route("/versions/<name>", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def client_version(name):
     courses, current_course = get_courses()
 
@@ -300,13 +312,7 @@ def client_version(name):
     form = forms.VersionForm(obj=version)
     if form.validate_on_submit():
         form.populate_obj(version)
-
-        db.session.add(version)
-        db.session.commit()
-
-        cache.delete_memoized(Version.get_current_version, name)
-        cache.delete_memoized(ok_api.Version.get)
-
+        version.save()
         flash(name + " version updated successfully.", "success")
         return redirect(url_for(".client_version", name=name))
 
@@ -332,7 +338,7 @@ def list_courses():
                            other_courses=other_courses)
 
 @admin.route("/course/new", methods=['GET', 'POST'])
-@is_staff()
+@login_required
 def create_course():
     courses, current_course = get_courses()
     form = forms.NewCourseForm()
@@ -340,13 +346,11 @@ def create_course():
         new_course = Course()
         form.populate_obj(new_course)
 
-        # Add user as instructor, can be changed later
-        enroll = Enrollment(course=new_course, user_id=current_user.id,
-                            role=INSTRUCTOR_ROLE)
         db.session.add(new_course)
-        db.session.add(enroll)
+        # Add the user as an instructor, create a default assignment
+        new_course.initialize_content(current_user)
 
-        db.session.commit()
+        utils.new_course_email(current_user, new_course)
 
         flash(new_course.offering + " created successfully.", "success")
         return redirect(url_for(".course", cid=new_course.id))
@@ -358,14 +362,17 @@ def create_course():
 @is_staff(course_arg='cid')
 def course(cid):
     courses, current_course = get_courses(cid)
+
     students = (Enrollment.query
                           .options(db.joinedload('user'))
                           .filter(Enrollment.role == STUDENT_ROLE,
                                   Enrollment.course == current_course)
                             .all())
+    needs_intro = len(students) < 5
 
     return render_template('staff/course/course.html', courses=courses,
                            students=students,
+                           needs_intro=needs_intro,
                            stats=current_course.statistics(),
                            current_course=current_course)
 
@@ -530,6 +537,10 @@ def publish_scores(cid, aid):
     return render_template('staff/course/assignment/assignment.publish.html',
                             assignment=assign, form=form, courses=courses,
                             current_course=current_course)
+
+##########
+# Scores #
+##########
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/scores")
 @is_staff(course_arg='cid')
@@ -922,6 +933,81 @@ def start_github_search(cid, aid):
         )
 
 
+@admin.route('/course/<int:cid>/assignments/<int:aid>/export/',
+             methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def export_submissions(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        return abort(404)
+    form = forms.ExportAssignment()
+    if form.validate_on_submit():
+        if form.anonymize.data:
+            description = 'Anonymized Export'
+        else:
+            description = 'Final Submission Export'
+
+        job = jobs.enqueue_job(
+            export.export_assignment,
+            description='{} for {}'.format(description, assign.display_name),
+            timeout=3600,
+            user_id=current_user.id,
+            course_id=cid,
+            assignment_id=aid,
+            anonymized=form.anonymize.data,
+            result_kind='link')
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/export.html',
+            courses=courses,
+            assignment=assign,
+            current_course=current_course,
+            form=form,
+        )
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/checkpoint",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def checkpoint_grading(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.CheckpointCreditForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            checkpoint.assign_scores,
+            description='Checkpoint Scoring for {}'.format(assign.display_name),
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            assign_id=assign.id,
+            score=form.score.data,
+            kind=form.kind.data,
+            message=form.message.data,
+            deadline=form.deadline.data,
+            include_backups=form.include_backups.data)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        if not form.kind.data:
+            form.kind.default = 'checkpoint 1'
+        if not form.deadline.data:
+            form.deadline.default = utils.local_time_obj(assign.due_date, assign.course)
+        form.process()
+
+        return render_template(
+            'staff/jobs/checkpoint.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
+
+
 ##############
 # Enrollment #
 ##############
@@ -937,19 +1023,9 @@ def enrollment(cid):
         flash("Added {email} as {role}".format(
             email=email, role=role), "success")
 
-    students = (Enrollment.query.options(db.joinedload('user'))
-                .filter_by(course_id=cid, role=STUDENT_ROLE)
-                .order_by(Enrollment.created.desc())
-                .all())
-
-    staff = (Enrollment.query.options(db.joinedload('user'))
-             .filter(Enrollment.course_id == cid, Enrollment.role.in_(STAFF_ROLES))
-             .all())
-
-    lab_assistants = (Enrollment.query.options(db.joinedload('user'))
-                      .filter_by(course_id=cid, role=LAB_ASSISTANT_ROLE)
-                      .order_by(Enrollment.created.desc())
-                      .all())
+    students = current_course.get_students()
+    staff = current_course.get_staff()
+    lab_assistants = current_course.get_participants([LAB_ASSISTANT_ROLE])
 
     return render_template('staff/course/enrollment/enrollment.html',
                            enrollments=students, staff=staff,
@@ -1015,7 +1091,7 @@ def enrollment_csv(cid):
                     headers={'Content-Disposition': disposition})
 
 @admin.route("/clients/", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def clients():
     courses, current_course = get_courses()
     clients = Client.query.all()
@@ -1032,7 +1108,7 @@ def clients():
     return render_template('staff/clients.html', clients=clients, form=form, courses=courses)
 
 @admin.route("/clients/<string:client_id>", methods=['GET', 'POST'])
-@is_staff()
+@is_admin()
 def client(client_id):
     courses, current_course = get_courses()
 
@@ -1293,6 +1369,85 @@ def student_assignment_graph_detail(cid, email, aid):
                            student=student, assignment=assign,
                            group=group,
                            graphs=line_charts)
+##############
+# Extensions #
+##############
+@admin.route("/course/<int:cid>/extensions")
+@is_staff(course_arg='cid')
+def list_extensions(cid):
+    courses, current_course = get_courses(cid)
+
+    extensions = (Extension.query.join(Extension.assignment)
+                           .options(db.joinedload('user'),
+                                    db.joinedload('staff'),
+                                    db.joinedload('assignment'))
+                           .filter(Assignment.course_id == cid).all())
+    csrf_form = forms.CSRFForm()
+    return render_template('staff/course/extension/extensions.html',
+                            courses=courses, current_course=current_course,
+                            extensions=extensions, csrf_form=csrf_form)
+
+@admin.route("/course/<int:cid>/extensions/new",
+                methods=['GET', 'POST'])
+@is_staff(course_arg='cid')
+def create_extension(cid):
+    courses, current_course = get_courses(cid)
+
+    form = forms.ExtensionForm()
+    form.assignment_id.choices = sorted(
+        ((a.id, a.display_name) for a in current_course.assignments),
+        key=lambda a: a[1],
+    )
+
+    if request.method == "GET":
+        # Prefill fields if not set
+        form.submission_time.default = 'deadline'
+        if not form.assignment_id.data:
+            form.assignment_id.default = request.args.get('aid')
+        form.process() # Update defaults & choices
+        if not form.email.data:
+            form.email.data = request.args.get('email')
+        if not form.expires.data:
+            extra_week =  utils.local_time_obj(dt.datetime.utcnow(), current_course) + dt.timedelta(days=7)
+            form.expires.data = extra_week.replace(hour=23, minute=59, second=59)
+
+    if form.validate_on_submit():
+        assign = Assignment.query.filter_by(id=form.assignment_id.data).one_or_none()
+        student = User.lookup(form.email.data)
+        if Extension.get_extension(student, assign):
+            flash("{} already has an extension".format(form.email.data), 'danger')
+        else:
+            expires = utils.server_time_obj(form.expires.data, current_course)
+            custom_time = form.get_submission_time(assign)
+
+            ext = Extension(staff=current_user, assignment=assign, user=student,
+                            message=form.reason.data, expires=expires,
+                            custom_submission_time=custom_time)
+            db.session.add(ext)
+            db.session.commit()
+            emails = ', '.join([u.email for u in ext.members()])
+            flash("Granted a extension on {} for {} ".format(assign.display_name,
+                                                             emails), 'success')
+            return redirect(url_for('.list_extensions', cid=cid))
+
+    return render_template('staff/course/extension/extension.new.html',
+                           form=form, courses=courses,
+                           current_course=current_course)
+
+@admin.route("/course/<int:cid>/extensions/<hashid:ext_id>/delete", methods=['POST'])
+@is_staff(course_arg='cid')
+def delete_extension(cid, ext_id):
+    extension = Extension.query.get_or_404(ext_id)
+    if not Extension.can(extension, current_user, 'delete'):
+        abort(401)
+
+    if forms.CSRFForm().validate_on_submit():
+        db.session.delete(extension)
+        db.session.commit()
+        flash("Revoked extension", "success")
+        return redirect(url_for('.list_extensions', cid=cid))
+    abort(401)
+
 
 ########################
 # Student view actions #
@@ -1415,9 +1570,9 @@ def staff_submit_backup(cid, email, aid):
         if form.upload_files.upload_backup_files(backup):
             db.session.add(backup)
             db.session.commit()
-            if assign.autograding_key:
+            if assign.autograding_key and assign.continuous_autograding:
                 try:
-                    autograder.submit_continous(backup)
+                    autograder.submit_continuous(backup)
                 except ValueError as e:
                     flash('Did not send to autograder: {}'.format(e), 'warning')
             flash('Uploaded submission'.format(backup.hashid), 'success')
@@ -1430,6 +1585,7 @@ def staff_submit_backup(cid, email, aid):
         assignment=assign,
         upload_form=form,
     )
+
 
 ########
 # Jobs #

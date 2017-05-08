@@ -131,3 +131,21 @@ class TestOAuth(OkTestCase):
         self.assertTrue(client.is_confidential)
         self.assertEqual(client.redirect_uris, redirect_uris)
         self.assertEqual(client.default_scopes, default_scopes)
+
+    def test_permissions(self):
+        self.setup_course()
+        # Test permissions
+        self.login(self.staff1.email)
+        response = self.client.get('/admin/clients/')
+        self.assertRedirects(response, '/admin/')
+
+        response = self.client.post('/admin/clients/', data={})
+        self.assertRedirects(response, '/admin/')
+
+        self.login(self.user1.email)
+        response = self.client.get('/admin/clients/')
+        self.assertRedirects(response, '/admin/')
+
+        self.logout()
+        response = self.client.get('/admin/clients/')
+        self.assertRedirects(response, '/login/')

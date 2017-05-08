@@ -14,7 +14,7 @@ import re
 
 from server import utils
 import server.canvas.api as canvas_api
-from server.models import Assignment, Course, Message, CanvasCourse
+from server.models import Assignment, User, Client, Course, Message, CanvasCourse
 from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES,
@@ -151,7 +151,9 @@ class AssignmentForm(BaseForm):
     revisions_allowed = BooleanField('Enable Revisions', default=False,
                                      validators=[validators.optional()])
     autograding_key = StringField('Autograder Key', [validators.optional()])
-    uploads_enabled = BooleanField('Enable Web Uploads', default=False,
+    continuous_autograding = BooleanField('Send Submissions to Autograder Immediately',
+                                         [validators.optional()])
+    uploads_enabled = BooleanField('Enable Web Uploads', default=True,
                                    validators=[validators.optional()])
     upload_info = StringField('Upload Instructions',
                               validators=[validators.optional()])
@@ -233,10 +235,18 @@ class EnrollmentForm(BaseForm):
 
 
 class VersionForm(BaseForm):
-    current_version = EmailField('Current Version',
+    current_version = StringField('Current Version',
                                  validators=[validators.required()])
     download_link = StringField('Download Link',
                                 validators=[validators.required(), validators.url()])
+
+    def validate(self):
+        if not super().validate():
+            return False
+        if not utils.check_url(self.download_link.data):
+            self.download_link.errors.append('Invalid URL')
+            return False
+        return True
 
 
 class BatchEnrollmentForm(BaseForm):
@@ -291,6 +301,12 @@ class CompositionScoreForm(GradeForm):
     kind = HiddenField('Score', default="composition",
                        validators=[validators.required()])
 
+class CheckpointCreditForm(GradeForm):
+    """ Gives credit to all students who submitted before a specific time. """
+    deadline = DateTimeField('Checkpoint Date', validators=[validators.required()],
+                             description="Award points to all submissions before this time")
+    include_backups = BooleanField('Include Backups', default=True,
+                                   description='Include backups (as well as submissions)')
 
 class CreateTaskForm(BaseForm):
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
@@ -351,6 +367,27 @@ class SubmissionTimeForm(BaseForm):
 class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
     pass
 
+class ExtensionForm(SubmissionTimeForm):
+    assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])
+    expires = DateTimeField('Extension Expiry', validators=[validators.required()])
+    email = EmailField('Student Email',
+                       validators=[validators.required(), validators.email()])
+    reason = StringField('Justification',
+                         description="Why are you granting this extension?",
+                         validators=[validators.optional()])
+
+    def validate(self):
+        check_validate = super(ExtensionForm, self).validate()
+        # if our validators do not pass
+        if not check_validate:
+            return False
+        user = User.lookup(self.email.data)
+        if not user:
+            message = "{} does not have an OK account".format(self.email.data)
+            self.email.errors.append(message)
+            return False
+        return check_validate
+
 class StaffAddGroupFrom(BaseForm):
     description = """Run this command in the terminal under any assignment folder: python3 ok --get-token"""
 
@@ -386,6 +423,17 @@ class ClientForm(BaseForm):
         'Default Scope',
         description='Comma-separated list. Valid scopes are "email" and "all".')
 
+    def validate(self):
+        # if our validators do not pass
+        if not super(ClientForm, self).validate():
+            return False
+        existing_client = Client.query.filter_by(client_id=self.client_id.data).first()
+        if existing_client:
+            self.client_id.errors.append('That client ID already exists')
+            return False
+        return True
+
+
 class EditClientForm(ClientForm):
     roll_secret = BooleanField(
         'Change the secret?',
@@ -395,6 +443,21 @@ class EditClientForm(ClientForm):
         'Placeholder for secret',
         description="Do not fill out or render.",
         validators=[validators.optional()])
+
+    def __init__(self, obj=None, **kwargs):
+        self.obj = obj
+        super(ClientForm, self).__init__(obj=obj, **kwargs)
+
+    def validate(self):
+        # if our validators do not pass
+        if not super(ClientForm, self).validate():
+            return False
+        if self.client_id.data != self.obj.client_id:
+            existing_client = Client.query.filter_by(client_id=self.client_id.data).first()
+            if existing_client:
+                self.client_id.errors.append('That client ID already exists')
+                return False
+        return True
 
 
 class NewCourseForm(BaseForm):
@@ -417,7 +480,7 @@ class NewCourseForm(BaseForm):
 
         # Ensure the name has the right format:
         if not utils.is_valid_endpoint(self.offering.data, COURSE_ENDPOINT_FORMAT):
-            self.offering.errors.append(('The name should like univ/course101/semYY'))
+            self.offering.errors.append(('The name should look like univ/course101/semYY where "sem" is one of (fa, su, sp, au, wi)'))
             return False
 
         course = Course.query.filter_by(offering=self.offering.data).first()
@@ -490,6 +553,10 @@ class EmailScoresForm(BaseForm):
         choices=[(kind, kind.title()) for kind in SCORE_KINDS],
     )
 
+
+class ExportAssignment(BaseForm):
+    anonymize = BooleanField('Anonymize', default=False,
+                             description="Enable to remove identifying information from submissions")
 
 ##########
 # Canvas #
