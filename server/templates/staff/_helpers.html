@@ -43,6 +43,20 @@
   {% endfor %}
 {% endmacro %}
 
+{% macro tag_pill(tag) %}
+  <a href="#tag={{tag}}">
+      <span class="label label-info score-inline">{{ tag }} </span>
+  </a>
+{% endmacro %}
+
+{% macro tag_pills(tags) %}
+  {% for tag in tags %}
+    {{ tag_pill(tag) }}
+  {% else %}
+    &mdash;
+  {% endfor %}
+{% endmacro %}
+
 {% macro backup_link(backup_id) %}
     <a href="{{ url_for('.grading', bid=backup_id) }}">
         {{ globals.backup_style(utils.encode_id(backup_id)) }}

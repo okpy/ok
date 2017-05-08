@@ -14,8 +14,8 @@ from server.utils import encode_id, decode_id
 from server.highlight import highlight_diff
 from server import jobs
 
-def moss_submit(moss_id, submissions, ref_submissions, language,
-            template_files=None, max_matches=10, file_regex='.*'):
+def moss_submit(moss_id, submissions, ref_submissions, language, template,
+            review_threshold=101, max_matches=10, file_regex='.*'):
     """ Sends SUBMISSIONS and REF_SUBMISSIONS to Moss using MOSS_ID,
     LANGUAGE, and MAX_MATCHES.
     Stores results involving SUBMISSIONS in database.
@@ -49,13 +49,13 @@ def moss_submit(moss_id, submissions, ref_submissions, language,
                           .filter(Backup.id.in_(subm_keys))
                           .order_by(Backup.created.desc())
                           .all())
-    if template_files:
+    if template:
         logger.info('Uploading template...')
         merged_contents = ""
-        for filename in template_files:
+        for filename in template:
             if filename == 'submit' or not match_pattern.match(filename):
                 continue
-            merged_contents += template_files[filename] + '\n'
+            merged_contents += template[filename] + '\n'
         send_file(moss, 'allcode', merged_contents, 0, language)
     fid = 0
     logger.info('Uploading submissions...')
@@ -79,9 +79,10 @@ def moss_submit(moss_id, submissions, ref_submissions, language,
     moss.send("end\n".encode())
     moss.close()
     logger.info('Moss results at: {}'.format(url))
-    parse_moss_results(url, hashed_subm_keys, logger, match_pattern, template_files)
+    parse_moss_results(url, hashed_subm_keys, logger, match_pattern,
+                    template, review_threshold)
 
-def parse_moss_results(base_url, hashed_ids, logger, pattern, template):
+def parse_moss_results(base_url, hashed_ids, logger, pattern, template, review_threshold=101):
     match = 0
     while True:
         r = requests.get('{}/match{}-top.html'.format(base_url, match))
@@ -114,9 +115,12 @@ def parse_moss_results(base_url, hashed_ids, logger, pattern, template):
         if resultA or resultB:
             logger.info('Moss result #{} already exists.'.format(match))
             continue
+        tags = []
+        if similarityA >= review_threshold or similarityB >= review_threshold:
+            tags = ['review']
         result = MossResult(submissionA=submissionA, submissionB=submissionB,
             similarityA=similarityA, similarityB=similarityB,
-            matchesA=matchesA, matchesB=matchesB)
+            matchesA=matchesA, matchesB=matchesB, tags=tags)
         db.session.add(result)
         logger.info('Adding Moss result #{}...'.format(match))
     db.session.commit()
@@ -194,18 +198,14 @@ def send_file(moss, path, contents, fid, language):
 
 @jobs.background_job
 def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=None,
-                   subtract_template=False):
+                   review_threshold=101):
     assign = Assignment.query.filter_by(id=assignment_id).one_or_none()
     if not assign:
         raise Exception("Could not find assignment")
     subms = assign.course_submissions(include_empty=False)
     template = {}
-    if not subtract_template and assign.files:
+    if assign.files:
         for filename in assign.files:
             template[filename] = assign.files[filename]
-    return moss_submit(moss_id, subms, [], language, template, 10, file_regex)
-
-@jobs.background_job
-def parse_moss_job(base_url, hashed_ids=None, file_regex='.*', template={}):
-    parse_moss_results(base_url, hashed_ids, jobs.get_job_logger(),
-                       sre.compile(file_regex), template)
+    return moss_submit(moss_id, subms, [], language, template, review_threshold,
+                    10, file_regex)

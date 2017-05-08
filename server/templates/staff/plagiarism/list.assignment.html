@@ -55,6 +55,7 @@
                         <th class="sort" data-sort="submissionB">Submission B</th>
                         <th class="sort" data-sort="similarityB">Similarity in B</th>
                         <th class="sort" data-sort="created">Created</th>
+                        <th class="sort" data-sort="tags">Tags</th>
                     </thead>
 
                     <tbody class="list">
@@ -90,6 +91,9 @@
                             </td>
                             <td class="created" data-created="{{item['created']}}">
                                 {{ item['created'] }}
+                            </td>
+                            <td class="tags">
+                              {{ helpers.tag_pills(item.tags) }}
                             </td>
                         </tr>
                         {% endfor %}
@@ -139,7 +143,7 @@
 
     var mossListOptions = {
       valueNames: [ 'studentA', 'submissionA', 'similarityA',
-                    'studentB', 'submissionB', 'similarityB'
+                    'studentB', 'submissionB', 'similarityB', 'tags'
                   ],
       plugins: [ListPagination()],
       page: 20,

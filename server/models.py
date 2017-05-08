@@ -1647,6 +1647,8 @@ class MossResult(Model):
 
     submissionA = db.relationship("Backup", foreign_keys='MossResult.submissionA_id')
     submissionB = db.relationship("Backup", foreign_keys='MossResult.submissionB_id')
+    
+    tags = db.Column(StringList, nullable=False, default=[])
 
 
 ##########
