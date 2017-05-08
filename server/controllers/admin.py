@@ -856,6 +856,7 @@ def start_moss_job(cid, aid):
              methods=["GET", "POST"])
 @is_staff(course_arg='cid')
 def assignment_moss_results(cid, aid):
+    tag = request.args.get('tag')
     courses, current_course = get_courses(cid)
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
     if not assign or not Assignment.can(assign, current_user, 'grade'):
@@ -878,11 +879,11 @@ def assignment_moss_results(cid, aid):
             if result not in moss_results:
                 moss_results.append(result)
     moss_results += moss_resultsA + moss_resultsB
+    if tag:
+        moss_results = [r for r in moss_results if tag in r.tags]
     return render_template('staff/plagiarism/list.assignment.html',
                            assignment=assign, moss_results=moss_results,
                            courses=courses, current_course=current_course)
-
-
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/github",
              methods=["GET", "POST"])
