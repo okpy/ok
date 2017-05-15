@@ -60,7 +60,7 @@ sendgrid==3.6.5 # pyup: >=3.6,<4.0
 pynliner<1.0
 
 # Autograder Interface
-requests==2.13.0
+requests==2.14.2
 
 # Front end
 itsdangerous==0.24
