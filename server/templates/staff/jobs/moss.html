@@ -30,6 +30,13 @@
   <div class="row">
     <div class="col-md-12">
       <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">Submit a Moss Request</h3>
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+            </button>
+          </div>
+        </div>
         <div class="box-body">
           {% call forms.render_form(form, action_text='Start Moss Upload') %}
             {{ forms.render_field(form.moss_userid) }}
@@ -37,6 +44,22 @@
             {{ forms.render_field(form.language) }}
             {{ forms.render_field(form.review_threshold) }}
             {% endcall %}
+        </div>
+      </div>
+
+      <div class="box collapsed-box">
+        <div class="box-header with-border">
+          <h3 class="box-title">Getting a Moss user id</h3>
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="box-body">
+          <ol>
+            <li>Go to <a href="http://theory.stanford.edu/~aiken/moss/">moss.stanford.edu</a> and follow the instructions to register an account.</li>
+            <li>Search for `userid` in the email.</li>
+          </ol>
         </div>
       </div>
     </div>

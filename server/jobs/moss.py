@@ -20,7 +20,6 @@ def moss_submit(moss_id, submissions, ref_submissions, language, template,
     LANGUAGE, and MAX_MATCHES.
     Stores results involving SUBMISSIONS in database.
     """
-    match_pattern = re.compile(file_regex)
     logger = jobs.get_job_logger()
     logger.info('Connecting to Moss...')
     moss = socket.socket()
@@ -31,10 +30,14 @@ def moss_submit(moss_id, submissions, ref_submissions, language, template,
     moss.send('maxmatches {}\n'.format(max_matches).encode())
     moss.send('show 250\n'.encode())
     moss.send('language {}\n'.format(language).encode())
-    lang_check = moss.recv(1024).decode().strip()
-    if lang_check != 'yes':
+    moss_success = moss.recv(1024).decode().strip()
+    print(moss_success)
+    moss_success = moss_success == 'yes'
+    if not moss_success:
         moss.close()
-        logger.info('Invalid language {}. Job cancelled.'.format(language))
+        logger.info('FAILED to connect to Moss.  Common issues:') 
+        logger.info('- Make sure your Moss ID is a number, and not your email address.')
+        logger.info('- Check you typed your Moss ID correctly.')
         return
 
     subm_keys = set()
@@ -49,6 +52,8 @@ def moss_submit(moss_id, submissions, ref_submissions, language, template,
                           .filter(Backup.id.in_(subm_keys))
                           .order_by(Backup.created.desc())
                           .all())
+
+    match_pattern = re.compile(file_regex)
     if template:
         logger.info('Uploading template...')
         merged_contents = ""
@@ -84,6 +89,9 @@ def moss_submit(moss_id, submissions, ref_submissions, language, template,
 
 def parse_moss_results(base_url, hashed_ids, logger, pattern, template, review_threshold=101):
     match = 0
+    # Allow decimal and integer thresholds to be accepted (e.g. 0.2 and 20)
+    if review_threshold > 1:
+        review_threshold /= 100
     while True:
         r = requests.get('{}/match{}-top.html'.format(base_url, match))
         if r.status_code == 404:
