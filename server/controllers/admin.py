@@ -557,6 +557,10 @@ def view_scores(cid, aid):
 
     if not include_all:
         query = query.filter_by(archived=False)
+
+    # sort scores by submission time in descending order, to match front end display
+    query = query.order_by(Score.created.desc())
+
     all_scores = query.all()
 
     score_distribution = collections.defaultdict(list)
