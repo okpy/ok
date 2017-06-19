@@ -42,7 +42,7 @@ oauthlib==2.0.2
 https://github.com/lepture/flask-oauthlib/archive/d62bf665fa2a4ab71327cd665334fdec25ade116.zip
 
 Flask-WTF==0.14.2
-Flask-RESTful==0.3.5
+Flask-RESTful==0.3.6
 Flask-Testing>=0.5.0,<1.0
 Flask-RQ==0.2
 
