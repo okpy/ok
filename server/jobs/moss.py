@@ -7,6 +7,7 @@ import re
 import difflib
 import socket
 import requests
+from collections import OrderedDict
 from html.parser import HTMLParser
 
 from server.models import Assignment, Backup, MossResult, db
@@ -14,12 +15,17 @@ from server.utils import encode_id, decode_id
 from server.highlight import highlight_diff
 from server import jobs
 
+MAX_MATCHES = 1000
+
 def moss_submit(moss_id, submissions, ref_submissions, language, template,
-            review_threshold=101, max_matches=10, file_regex='.*'):
+            review_threshold=101, max_matches=MAX_MATCHES, file_regex='.*'):
     """ Sends SUBMISSIONS and REF_SUBMISSIONS to Moss using MOSS_ID,
     LANGUAGE, and MAX_MATCHES.
     Stores results involving SUBMISSIONS in database.
     """
+
+    # ISSUE:  Does not work for .ipynb files well (maybe just use sources?)
+
     logger = jobs.get_job_logger()
     logger.info('Connecting to Moss...')
     moss = socket.socket()
@@ -104,31 +110,37 @@ def parse_moss_results(base_url, hashed_ids, logger, pattern, template, review_t
         if hashed_ids and hashidA not in hashed_ids and hashidB not in hashed_ids:
             logger.info('Skipping Moss result #{}.'.format(match))
             continue
+        submissionA = Backup.query.filter_by(id=decode_id(hashidA)).one_or_none()
+        submissionB = Backup.query.filter_by(id=decode_id(hashidB)).one_or_none()
+
+        # make sure this submission hasn't been processed before
+        resultB = MossResult.query.filter_by(submissionB=submissionA, submissionA=submissionB).one_or_none()
+        if resultB:
+            logger.info('Moss result #{} already exists.'.format(match))
+            continue
+
         similarityA, similarityB = parser.similarities
         rangesA, rangesB = parser.ranges[::2], parser.ranges[1::2]
         matchesA = [[int(i) for i in r.split('-')] for r in rangesA]
         matchesB = [[int(i) for i in r.split('-')] for r in rangesB]
-        submissionA = Backup.query.filter_by(id=decode_id(hashidA)).one_or_none()
-        submissionB = Backup.query.filter_by(id=decode_id(hashidB)).one_or_none()
         matchesA = recalculate_lines(submissionA, matchesA, pattern)
         matchesB = recalculate_lines(submissionB, matchesB, pattern)
+        print(matchesA)
+        print(matchesB)
         similarityA = recalculate_similarity(submissionA, matchesA, template)
         similarityB = recalculate_similarity(submissionB, matchesB, template)
-        resultA = MossResult.query.filter_by(submissionA=submissionA, submissionB=submissionB,
-            similarityA=similarityA, similarityB=similarityB,
-            matchesA=matchesA, matchesB=matchesB).one_or_none()
-        resultB = MossResult.query.filter_by(submissionB=submissionA, submissionA=submissionB,
-            similarityB=similarityA, similarityA=similarityB,
-            matchesB=matchesA, matchesA=matchesB).one_or_none()
-        if resultA or resultB:
-            logger.info('Moss result #{} already exists.'.format(match))
-            continue
+        result = MossResult.query.filter_by(submissionA=submissionA, submissionB=submissionB).one_or_none()
         tags = []
         if similarityA >= review_threshold or similarityB >= review_threshold:
-            tags = ['review']
-        result = MossResult(submissionA=submissionA, submissionB=submissionB,
-            similarityA=similarityA, similarityB=similarityB,
-            matchesA=matchesA, matchesB=matchesB, tags=tags)
+            tags.append('review')
+        result.similarityA = similarityA
+        result.similarityB = similarityB
+        result.matchesA = matchesA
+        result.matchesB = matchesB
+        result.tags = tags
+        # result = MossResult(submissionA=submissionA, submissionB=submissionB,
+        #     similarityA=similarityA, similarityB=similarityB,
+        #     matchesA=matchesA, matchesB=matchesB, tags=tags)
         db.session.add(result)
         logger.info('Adding Moss result #{}...'.format(match))
     db.session.commit()
@@ -152,13 +164,15 @@ class MossParser(HTMLParser):
             self.ranges.append(data)
 
 def recalculate_lines(submission, raw_matches, pattern):
+    print(submission.submitter.email)
     files = submission.files()
     file_matches = {f:[] for f in files if pattern.match(f)}
-    starts = {}
+    file_lengths = {f:len(files[f].split('\n')) for f in file_matches}
+    starts = OrderedDict()
     current = 0
     for filename in sorted(file_matches.keys()):
         starts[current] = filename
-        current += len(files[filename].split('\n'))
+        current += file_lengths[filename]
     def find_file(line):
         last_line = 0
         for start_line in starts:
@@ -168,16 +182,21 @@ def recalculate_lines(submission, raw_matches, pattern):
                 return starts[last_line], last_line
             last_line = start_line
         return starts[last_line], last_line
+    sflist = list(starts.values())
     for match in raw_matches:
-        start_file, sf_line = find_file(match[0])
-        end_file, ef_line = find_file(match[1])
-        if start_file == end_file:
-            file_matches[start_file].append([x - sf_line for x in match])
+        match = [line - 1 for line in match] # 0 index lines
+        startfile, sf_line = find_file(match[0])
+        endfile, ef_line = find_file(match[1])
+        if startfile == endfile:
+            file_matches[startfile].append([x - sf_line for x in match])
         else:
-            start_match = [match[0] - sf_line, len(files[filename].split('\n')) - 1]
-            file_matches[start_file].append(start_match)
+            start_match = [match[0] - sf_line, file_lengths[startfile] - 1]
+            file_matches[startfile].append(start_match)
             end_match = [0, match[1] - ef_line]
-            file_matches[end_file].append(end_match)
+            file_matches[endfile].append(end_match)
+            midfiles = sflist[sflist.index(startfile) + 1: sflist.index(endfile)]
+            for file in midfiles:
+                file_matches[file].append([0, file_lengths[file] - 1])
     return file_matches
 
 def recalculate_similarity(submission, matches, template):
@@ -216,4 +235,4 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
         for filename in assign.files:
             template[filename] = assign.files[filename]
     return moss_submit(moss_id, subms, [], language, template, review_threshold,
-                    10, file_regex)
+                    MAX_MATCHES, file_regex)
