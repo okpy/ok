@@ -30,7 +30,7 @@ from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
 from server.jobs import (example, export, moss, scores_audit, github_search,
-                         scores_notify, checkpoint)
+                         scores_notify, checkpoint, slips)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -978,6 +978,75 @@ def checkpoint_grading(cid, aid):
             form=form,
         )
 
+@admin.route("/course/<int:cid>/assignments/<int:aid>/slips",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def calculate_assign_slips(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    form = forms.AssignSlipCalculatorForm()
+    timescale = form.timescale.data.title()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            slips.calculate_assign_slips,
+            description='Calculate Slip {} for {}'.format(timescale, assign.display_name),
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            assign_id=assign.id,
+            timescale=timescale,
+            show_results=form.show_results.data,
+            result_kind='link',
+            )
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+
+    return render_template(
+        'staff/jobs/slips/slips.assign.html',
+        courses=courses,
+        current_course=current_course,
+        assignment=assign,
+        form=form,
+    )
+
+@admin.route("/course/<int:cid>/assignments/slips",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def calculate_course_slips(cid):
+    courses, current_course = get_courses(cid)
+    assignments = current_course.assignments
+
+    form = forms.CourseSlipCalculatorForm()
+    inactive_assigns = [a for a in assignments if not a.active]
+    form.assigns.choices = [(a.id, a.display_name) for a in inactive_assigns]
+    form.assigns.default = [a.id for a in inactive_assigns]
+    form.process(request.form)
+    
+    timescale = form.timescale.data.title()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            slips.calculate_course_slips,
+            description="Calculate Slip {} for {}'s Assignments"
+                .format(timescale, current_course.display_name),
+            timeout=600,
+            course_id=cid,
+            user_id=current_user.id,
+            timescale=timescale,
+            assigns=form.assigns.data,
+            show_results=form.show_results.data,
+            result_kind='link',
+            )
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+
+    return render_template(
+        'staff/jobs/slips/slips.course.html',
+        courses=courses,
+        current_course=current_course,
+        form=form,
+    )
 
 ##############
 # Enrollment #
