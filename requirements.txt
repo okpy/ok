@@ -5,7 +5,7 @@ jinja2==2.9.6
 gunicorn==19.7.1
 
 # Errors
-raven[flask]==6.0.0
+raven[flask]==6.1.0
 
 # Database
 pymysql==0.7.11
