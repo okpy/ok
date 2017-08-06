@@ -847,11 +847,14 @@ def effort_grading(cid, aid):
     if form.validate_on_submit():
         job = jobs.enqueue_job(
             effort.grade_on_effort,
-            description='Effort Grade {}'.format(assign.display_name),
+            description='Effort Grading for {}'.format(assign.display_name),
+            result_kind='link',
             timeout=1 * 60 * 60,  # 1 hour
             course_id=cid,
             user_id=current_user.id,
-            assignment_id=assign.id)
+            assignment_id=assign.id,
+            full_credit=float(form.full_credit.data),
+            late_multiplier=float(form.late_multiplier.data))
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         return render_template(

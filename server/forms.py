@@ -507,15 +507,16 @@ class PublishScores(BaseForm):
 
 class EffortGradingForm(BaseForm):
     full_credit = DecimalField('Full Credit (in points)',
-                        validators=[validators.required()],
+                        validators=[
+                            validators.required(),
+                            validators.number_range(min=0, message="Points cannot be negative.")],
                         description="Points received for showing sufficient effort on an assignment.")
-    partial_credit = DecimalField('Partial Credit (in points)',
-                        validators=[validators.optional()],
-                        description="Points received for showing good effort that's not enough to get full credit.")
     late_multiplier = DecimalField('Late Multiplier (as a decimal)',
-                        validators=[validators.optional()],
+                        validators=[
+                            validators.required(),
+                            validators.number_range(min=0, max=1, message="Multiplier must be between 0 and 1")],
                         default=0.75,
-                        description="Decimal ratio that is multiplied to the final effort score if it is late.")
+                        description="Decimal ratio that is multiplied to the final score of a late submission.")
 
 ########
 # Jobs #
