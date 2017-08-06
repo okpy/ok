@@ -30,6 +30,7 @@
         <div class="box-body">
           {% call forms.render_form(form, action_text='Grade Effort', class_='form') %}
             {{ forms.render_field(form.full_credit, required='required', type='decimal', min='0') }}
+            {{ forms.render_field(form.required_questions, required='required', type='number', min='0') }}
             {{ forms.render_field(form.late_multiplier, required='required', type='decimal', min='0', max='1')}}
           {% endcall %}
         </div>

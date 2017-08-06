@@ -854,7 +854,9 @@ def effort_grading(cid, aid):
             user_id=current_user.id,
             assignment_id=assign.id,
             full_credit=float(form.full_credit.data),
-            late_multiplier=float(form.late_multiplier.data))
+            late_multiplier=float(form.late_multiplier.data),
+            required_questions=int(form.required_questions.data),
+            grading_url=url_for('admin.grading', bid='', _external=True))
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         return render_template(

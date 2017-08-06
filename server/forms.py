@@ -511,6 +511,11 @@ class EffortGradingForm(BaseForm):
                             validators.required(),
                             validators.number_range(min=0, message="Points cannot be negative.")],
                         description="Points received for showing sufficient effort on an assignment.")
+    required_questions = IntegerField('Required Questions',
+                        validators=[
+                            validators.required(),
+                            validators.number_range(min=0, message="Questions cannot be negative.")],
+                        description="Number of required questions on the assignment.")
     late_multiplier = DecimalField('Late Multiplier (as a decimal)',
                         validators=[
                             validators.required(),

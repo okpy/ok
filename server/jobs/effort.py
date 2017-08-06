@@ -1,16 +1,23 @@
-from flask import url_for
+from sqlalchemy import or_
 from collections import Counter
 
 from server import jobs
 from server.models import Assignment, Score, Backup, db
 
 @jobs.background_job
-def grade_on_effort(assignment_id, full_credit, late_multiplier):
+def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questions, grading_url):
     logger = jobs.get_job_logger()
 
     current_user = jobs.get_current_job().user
     assignment = Assignment.query.get(assignment_id)
     submissions = assignment.course_submissions(include_empty=False)
+
+    # archive all previous effort scores for this assignment
+    scores = Score.query.filter(
+        Score.kind == 'effort',
+        assignment_id == assignment_id).all()
+    for score in scores:
+        db.session.delete(score)
 
     seen = set()
     stats = Counter()
@@ -22,12 +29,19 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier):
 
         backup = Backup.query.get(subm['backup']['id'])
 
+        if backup.submission_time > assignment.due_date:
+            submitter_id = backup.submitter_id
+            backups = (
+                find_ontime(submitter_id, assignment_id, assignment.due_date),
+                find_ontime(submitter_id, assignment_id, assignment.lock_date),
+                backup # default to the late backup
+            )
+            backup = best_scoring(backups, assignment, full_credit, required_questions)
+
         try:
-            score, messages = effort_score(assignment, backup, full_credit, logger)
+            score, messages = effort_score(assignment, backup, full_credit, required_questions)
         except AssertionError:
-            manual.append(backup.hashid)
-            logger.info('No Grading Info for {}'.format(backup.hashid))
-            continue
+            pass
 
         if backup.submission_time > assignment.lock_date:
             messages.append('\nLate - No Credit')
@@ -44,10 +58,7 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier):
                 user_id=backup.submitter_id,
                 assignment=assignment, backup=backup,
                 grader=current_user)
-
         db.session.add(new_score)
-        new_score.archive_duplicates()
-        db.session.commit()
 
         if i % 100 == 0:
             logger.info('Scored {}/{}'.format(i, len(submissions)))
@@ -68,18 +79,41 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier):
     for score, count in sorted_scores:
         logger.info('  {} - {}'.format(str(score).rjust(3), count))
 
-    logger.info('\n{} Backups Need Manual Grading:'.format(len(manual)))
-    for backup_id in manual:
-        logger.info('/grading/{bid}'.format(bid=backup_id))
+    if len(manual) > 0:
+        logger.info('\n{} Backups Need Manual Grading:'.format(len(manual)))
+        for backup_id in manual:
+            logger.info(grading_url + backup_id)
 
-    return '/course/{cid}/assignments/{aid}/scores'.format(
+    db.session.commit()
+    return '/admin/course/{cid}/assignments/{aid}/scores'.format(
                 cid=jobs.get_current_job().course_id,
                 aid=assignment_id)
+
+def best_scoring(backups, assignment, full_credit, required_questions):
+    def effort_grade(backup):
+        score = 0
+        try:
+            score, _ = effort_score(assignment, backup, full_credit, required_questions)
+        except AssertionError:
+            pass
+        return score
+    non_none = (b for b in backups if b is not None)
+    return max(non_none, key=effort_grade)
+
+def find_ontime(submitter_id, assignment_id, due_date):
+    backup = Backup.query.filter(
+            Backup.assignment_id == assignment_id,
+            Backup.submitter_id == submitter_id,
+            or_(Backup.created < due_date,
+                Backup.custom_submission_time < due_date)
+        ).order_by(Backup.created.desc()).first()
+    return backup
+
 
 def nearest_half(score):
     return round(score * 2) / 2
 
-def effort_score(assign, backup, full_credit, logger):
+def effort_score(assign, backup, full_credit, required_questions):
     """
     Gives a score based on "effort" instead of correctness.
 
@@ -91,17 +125,27 @@ def effort_score(assign, backup, full_credit, logger):
     """
     grading = backup.grading()
     analytics = backup.analytics()
-    assert grading, "Grading info not found for backup: {}".format(backup.hashid)
-    history = analytics and analytics.get('history') and analytics['history']['questions']
 
     with_effort = 0
     messages = ['Effort Breakdown']
-    for question, info in grading.items():
-        correct = info['locked'] == 0 and info['failed'] == 0
-        showed_effort = info['passed'] >= 1
+
+    history = analytics and analytics.get('history') and analytics['history']['questions']
+    questions = grading.keys()
+    if history:
+        questions |= history.keys()
+
+    assert len(questions) > 0
+
+    for question in questions:
+        correct, showed_effort = False, False
         if history and history.get(question):
-            attempts = history[question]['attempts']
-            showed_effort = showed_effort or attempts >= 5
+            info = history[question]
+            correct |= info['solved']
+            showed_effort |= info['attempts'] >= 3
+        if grading and grading.get(question):
+            info = grading[question]
+            correct |= info['locked'] == 0 and info['failed'] == 0
+            showed_effort |= info['passed'] >= 1
 
         if correct or showed_effort:
             with_effort += 1
@@ -114,5 +158,5 @@ def effort_score(assign, backup, full_credit, logger):
             message = 'Not Sufficient Effort'
         messages.append('    {}: {}'.format(question, message))
 
-    score = nearest_half(full_credit * with_effort / len(grading))
-    return score, messages
+    score = nearest_half(full_credit * with_effort / required_questions)
+    return min(score, full_credit), messages
