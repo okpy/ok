@@ -70,11 +70,11 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier):
 
     logger.info('\n{} Backups Need Manual Grading:'.format(len(manual)))
     for backup_id in manual:
-        logger.info(url_for('admin.grading', bid=backup_id))
+        logger.info('/grading/{bid}'.format(bid=backup_id))
 
-    return url_for('admin.view_scores',
-            cid=jobs.get_current_job().course_id,
-            aid=assignment_id)
+    return '/course/{cid}/assignments/{aid}/scores'.format(
+                cid=jobs.get_current_job().course_id,
+                aid=assignment_id)
 
 def nearest_half(score):
     return round(score * 2) / 2
