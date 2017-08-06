@@ -87,8 +87,10 @@ def effort_score(assign, backup, full_credit, logger):
     messages = ['Effort Breakdown']
     for question, info in grading.items():
         correct = info['locked'] == 0 and info['failed'] == 0
-        showed_effort = (info['passed'] >= 1 or
-                (history and history[question]['attempts'] >= 5))
+        showed_effort = info['passed'] >= 1
+        if history and history.get(question):
+            attempts = history[question]['attempts']
+            showed_effort = showed_effort or attempts >= 5
 
         if correct or showed_effort:
             with_effort += 1
