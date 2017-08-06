@@ -30,7 +30,7 @@ from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
 from server.jobs import (example, export, moss, scores_audit, github_search,
-                         scores_notify, checkpoint)
+                         scores_notify, checkpoint, effort)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -833,6 +833,34 @@ def autograde(cid, aid):
             assignment_id=assign.id)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     return redirect(url_for('.assignment', cid=cid, aid=aid))
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/effort",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def effort_grading(cid, aid):
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+    form = forms.EffortGradingForm()
+    if form.validate_on_submit():
+        job = jobs.enqueue_job(
+            effort.grade_on_effort,
+            description='Effort Grade {}'.format(assign.display_name),
+            timeout=1 * 60 * 60,  # 1 hour
+            course_id=cid,
+            user_id=current_user.id,
+            assignment_id=assign.id)
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+    else:
+        return render_template(
+            'staff/jobs/effort.html',
+            courses=courses,
+            current_course=current_course,
+            assignment=assign,
+            form=form,
+        )
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/moss",
              methods=["GET", "POST"])

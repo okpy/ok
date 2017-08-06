@@ -1,0 +1,41 @@
+{% extends "staff/base.html" %}fu
+{% import "staff/_formhelpers.html" as forms %}
+
+{% block title %} Grade Effort - {{ current_course.display_name_with_semester }} {% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        Effort Grading Job
+        <small>{{ current_course.offering }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('.course', cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li> <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}"><i class="fa fa-book"></i> {{ assignment.display_name }} </a></li>
+        <li class="active"><a href="{{ url_for('.effort_grading', cid=current_course.id, aid=assignment.id) }}">
+            <i class="fa fa-file-text"></i>Effort Grading</a>
+        </li>
+    </ol>
+</section>
+<section class="content">
+  {% include 'alerts.html' %}
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-body">
+          {% call forms.render_form(form, action_text='Grade on Effort', class_='form') %}
+            {{ forms.render_field(form.full_credit, required='required', type='decimal', min='0') }}
+            {{ forms.render_field(form.partial_credit, required='required', type='decimal', min='0', value='0') }}
+            {{ forms.render_field(form.late_multiplier, required='required', type='decimal', min='0', max='1')}}
+          {% endcall %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
