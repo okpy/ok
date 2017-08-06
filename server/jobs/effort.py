@@ -14,13 +14,20 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier):
 
     seen = set()
     stats = Counter()
+    manual = []
     for i, subm in enumerate(submissions, 1):
         user_id = int(subm['user']['id'])
         if user_id in seen:
             continue
 
         backup = Backup.query.get(subm['backup']['id'])
-        score, messages = effort_score(assignment, backup, full_credit, logger)
+
+        try:
+            score, messages = effort_score(assignment, backup, full_credit, logger)
+        except AssertionError:
+            manual.append(backup.hashid)
+            logger.info('No Grading Info for {}'.format(backup.hashid))
+            continue
 
         if backup.submission_time > assignment.lock_date:
             messages.append('\nLate - No Credit')
@@ -60,6 +67,10 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier):
     sorted_scores = sorted(stats.items(), key=lambda p: -p[0])
     for score, count in sorted_scores:
         logger.info('  {} - {}'.format(str(score).rjust(3), count))
+
+    logger.info('\n{} Backups Need Manual Grading:'.format(len(manual)))
+    for backup_id in manual:
+        logger.info(url_for('admin.grading', hashid=backup_id))
 
     return url_for('admin.view_scores',
             cid=jobs.get_current_job().course_id,
