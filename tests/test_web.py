@@ -109,7 +109,8 @@ if driver:
                         raise AssertionError('Request by page did not complete')
 
             # Assert no console messages
-            self.assertEqual(expected_messages, self.driver.get_log('browser').length)
+            num_messages = len(self.driver.get_log('browser'))
+            self.assertEqual(expected_messages, num_messages)
 
         def _login(self, role="admin"):
             self.driver.get(self.get_server_url() + "/testing-login/")
