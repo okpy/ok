@@ -52,7 +52,7 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
             late.append(backup.hashid)
             late_percent = 100 - round(late_multiplier * 100)
             messages.append('\nLate - {}% off'.format(late_percent))
-            score = round(score * late_multiplier)
+            score = math.floor(score * late_multiplier)
 
         messages.append('\nFinal Score: {}'.format(score))
 
