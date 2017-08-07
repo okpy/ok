@@ -16,7 +16,7 @@ VALID_ROLES = [STUDENT_ROLE, LAB_ASSISTANT_ROLE, GRADER_ROLE, STAFF_ROLE,
                INSTRUCTOR_ROLE]
 STAFF_ROLES = [GRADER_ROLE, STAFF_ROLE, INSTRUCTOR_ROLE]
 
-SCORE_KINDS = ['composition', 'correctness', 'total', 'partner a', 'partner b',
+SCORE_KINDS = ['composition', 'correctness', 'effort', 'total', 'partner a', 'partner b',
                'regrade', 'revision', 'checkpoint 1', 'checkpoint 2',
                'private', 'autograder', 'error']
 
