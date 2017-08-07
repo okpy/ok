@@ -110,7 +110,7 @@ if driver:
 
             # Assert no console messages
             num_messages = len(self.driver.get_log('browser'))
-            self.assertEqual(expected_messages, num_messages)
+            self.assertTrue(num_messages <= expected_messages)
 
         def _login(self, role="admin"):
             self.driver.get(self.get_server_url() + "/testing-login/")
