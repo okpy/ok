@@ -15,7 +15,7 @@ sqlalchemy==1.1.13
 redis==2.10.5
 
 # Job Queue
-rq==0.7.1
+rq==0.8.1
 rq-dashboard==0.3.7 # pyup: != 0.3.8
 
 # Forms
