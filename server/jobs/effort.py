@@ -1,3 +1,4 @@
+import math
 from sqlalchemy import or_
 from collections import Counter
 
@@ -22,6 +23,7 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
     seen = set()
     stats = Counter()
     manual = []
+    late = []
     for i, subm in enumerate(submissions, 1):
         user_id = int(subm['user']['id'])
         if user_id in seen:
@@ -44,12 +46,14 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
             pass
 
         if backup.submission_time > assignment.lock_date:
+            late.append(backup.hashid)
             messages.append('\nLate - No Credit')
             score = 0
         elif backup.submission_time > assignment.due_date:
+            late.append(backup.hashid)
             late_percent = 100 - round(late_multiplier * 100)
             messages.append('\nLate - {}% off'.format(late_percent))
-            score = nearest_half(score * late_multiplier)
+            score = round(score * late_multiplier)
 
         messages.append('\nFinal Score: {}'.format(score))
 
@@ -109,10 +113,6 @@ def find_ontime(submitter_id, assignment_id, due_date):
         ).order_by(Backup.created.desc()).first()
     return backup
 
-
-def nearest_half(score):
-    return round(score * 2) / 2
-
 def effort_score(assign, backup, full_credit, required_questions):
     """
     Gives a score based on "effort" instead of correctness.
@@ -158,5 +158,5 @@ def effort_score(assign, backup, full_credit, required_questions):
             message = 'Not Sufficient Effort'
         messages.append('    {}: {}'.format(question, message))
 
-    score = nearest_half(full_credit * with_effort / required_questions)
+    score = math.ceil(full_credit * with_effort / required_questions)
     return min(score, full_credit), messages
