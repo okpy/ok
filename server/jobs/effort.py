@@ -22,8 +22,7 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
 
     seen = set()
     stats = Counter()
-    manual = []
-    late = []
+    manual, late = [], []
     for i, subm in enumerate(submissions, 1):
         user_id = int(subm['user']['id'])
         if user_id in seen:
@@ -38,10 +37,10 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
                 find_ontime(submitter_id, assignment_id, assignment.lock_date),
                 backup # default to the late backup
             )
-            backup = best_scoring(backups, assignment, full_credit, required_questions)
+            backup = best_scoring(backups, full_credit, required_questions)
 
         try:
-            score, messages = effort_score(assignment, backup, full_credit, required_questions)
+            score, messages = effort_score(backup, full_credit, required_questions)
         except AssertionError:
             pass
 
@@ -78,6 +77,11 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
     logger.info('Scored {}/{}'.format(i, len(submissions)))
     logger.info('done!')
 
+    if len(late) > 0:
+        logger.info('\n{} Late:'.format(len(late)))
+        for backup_id in late:
+            logger.info('  {}'.format(grading_url + backup_id))
+
     logger.info('\nScore Distribution:')
     sorted_scores = sorted(stats.items(), key=lambda p: -p[0])
     for score, count in sorted_scores:
@@ -93,11 +97,11 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
                 cid=jobs.get_current_job().course_id,
                 aid=assignment_id)
 
-def best_scoring(backups, assignment, full_credit, required_questions):
+def best_scoring(backups, full_credit, required_questions):
     def effort_grade(backup):
         score = 0
         try:
-            score, _ = effort_score(assignment, backup, full_credit, required_questions)
+            score, _ = effort_score(backup, full_credit, required_questions)
         except AssertionError:
             pass
         return score
@@ -105,23 +109,29 @@ def best_scoring(backups, assignment, full_credit, required_questions):
     return max(non_none, key=effort_grade)
 
 def find_ontime(submitter_id, assignment_id, due_date):
-    backup = Backup.query.filter(
+    submission = Backup.query.filter(
             Backup.assignment_id == assignment_id,
             Backup.submitter_id == submitter_id,
+            Backup.submit == True,
             or_(Backup.created < due_date,
                 Backup.custom_submission_time < due_date)
         ).order_by(Backup.created.desc()).first()
-    return backup
+    backup = Backup.query.filter(
+        Backup.assignment_id == assignment_id,
+        Backup.submitter_id == submitter_id,
+        or_(Backup.created < due_date,
+            Backup.custom_submission_time < due_date)
+    ).order_by(Backup.created.desc()).first()
+    return submission or backup
 
-def effort_score(assign, backup, full_credit, required_questions):
+def effort_score(backup, full_credit, required_questions):
     """
     Gives a score based on "effort" instead of correctness.
 
     Effort credit for a question is given if either
         1.  The question is correct
         2.  The question has at least one testcase passed
-        3.  Greater than 5 attempts were made
-        4.  At least one attempt was made and the average lines added > 3
+        3.  Greater than 3 attempts were made
     """
     grading = backup.grading()
     analytics = backup.analytics()
