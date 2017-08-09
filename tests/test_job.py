@@ -44,7 +44,7 @@ class TestJob(OkTestCase):
         job = Job.query.get(job_id)
         self.assertEqual(job.status, 'finished')
         self.assertFalse(job.failed)
-        self.assertEqual(job.log, 'Starting...\nFinished!\n')
+        self.assertEqual(job.log, 'Starting...\nThis job will sleep for 0 seconds\nFinished!\n')
 
     def test_failing_job(self):
         job_id = self.start_test_job(should_fail=True)

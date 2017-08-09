@@ -22,7 +22,7 @@ class JobLogHandler(logging.StreamHandler):
         self.counter += 1
         super().handle(record)
         print(record.message)
-        if (self.counter % self.log_every) == 0:
+        if record.levelno >= logging.CRITICAL or not (self.counter % self.log_every):
             self.job.log = self.contents
             db.session.commit()
 

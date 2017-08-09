@@ -13,6 +13,8 @@ def test_job(duration=0, should_fail=False, make_file=False):
     logger = jobs.get_job_logger()
 
     logger.info('Starting...')
+    logger.critical('This job will sleep for {} seconds'.format(duration))
+
     time.sleep(duration)
     if should_fail:
         1/0

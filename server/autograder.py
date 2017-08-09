@@ -178,6 +178,9 @@ def autograde_assignment(assignment_id):
     ]
     num_tasks = len(tasks)
 
+    if not num_tasks:
+        return "No submissions to grade"
+
     def retry_task(task):
         if task.retries >= MAX_RETRIES:
             logger.error('Did not receive a score for backup {} after {} retries'.format(
@@ -194,8 +197,10 @@ def autograde_assignment(assignment_id):
 
         graded = len([task for task in tasks
             if task.status in (GradingStatus.DONE, GradingStatus.FAILED)])
-        logger.info('Graded {:>4}/{} ({:>5.1f}%)'.format(
-            graded, num_tasks, 100 * graded / num_tasks))
+
+        logger.critical('Graded {:>4}/{} ({:>5.1f}%)'.format(
+                        graded, num_tasks, 100 * graded / num_tasks))
+
         if graded == num_tasks:
             break
 
