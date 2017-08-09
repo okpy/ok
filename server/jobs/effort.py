@@ -16,7 +16,7 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
     # archive all previous effort scores for this assignment
     scores = Score.query.filter(
         Score.kind == 'effort',
-        assignment_id == assignment_id).all()
+        Score.assignment_id == assignment_id).all()
     for score in scores:
         db.session.delete(score)
 
