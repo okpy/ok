@@ -518,7 +518,7 @@ class EffortGradingForm(BaseForm):
     late_multiplier = DecimalField('Late Multiplier (as a decimal)',
                     validators=[
                         validators.number_range(min=0, max=1, message="Multiplier must be between 0 and 1")],
-                    default=0.75,
+                    default=0.0,
                     description="Decimal ratio that is multiplied to the final score of a late submission.")
 
 ########
