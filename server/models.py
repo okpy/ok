@@ -1855,11 +1855,12 @@ class Extension(Model):
         return self.assignment.course
 
     @classmethod
-    def get_extension(cls, student, assignment):
+    def get_extension(cls, student, assignment, time=None):
         """ Returns the extension if the student has an extension """
+        time = time or dt.datetime.utcnow()
         group_members = assignment.active_user_ids(student.id)
         return cls.query.filter(cls.assignment == assignment,
-                                cls.expires >= dt.datetime.utcnow(),
+                                cls.expires >= time,
                                 cls.user_id.in_(group_members)).first()
 
     @classmethod
