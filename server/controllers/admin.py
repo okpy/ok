@@ -1404,12 +1404,9 @@ def create_extension(cid):
         else:
             expires = utils.server_time_obj(form.expires.data, current_course)
             custom_time = form.get_submission_time(assign)
-
-            ext = Extension(staff=current_user, assignment=assign, user=student,
+            ext = Extension.create(staff=current_user, assignment=assign, user=student,
                             message=form.reason.data, expires=expires,
                             custom_submission_time=custom_time)
-            db.session.add(ext)
-            db.session.commit()
             emails = ', '.join([u.email for u in ext.members()])
             flash("Granted a extension on {} for {} ".format(assign.display_name,
                                                              emails), 'success')
@@ -1427,8 +1424,7 @@ def delete_extension(cid, ext_id):
         abort(401)
 
     if forms.CSRFForm().validate_on_submit():
-        db.session.delete(extension)
-        db.session.commit()
+        Extension.delete(extension)
         flash("Revoked extension", "success")
         return redirect(url_for('.list_extensions', cid=cid))
     abort(401)

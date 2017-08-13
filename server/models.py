@@ -1854,6 +1854,35 @@ class Extension(Model):
     def course(self):
         return self.assignment.course
 
+    def get_backups(self):
+        """ Returns all backups where this extension applies """
+        return Backup.query.filter(Backup.assignment == self.assignment,
+                Backup.created <= self.expires,
+                Backup.submitter == self.user).all()
+
+    @classmethod
+    def create(cls, staff, assignment, user, expires, custom_submission_time=None, message=None):
+        ext = cls(staff=staff, assignment=assignment, user=user, message=message, expires=expires, custom_submission_time=custom_submission_time)
+        db.session.add(ext)
+
+        # Retroactively change the submission times of all past late backups
+        # that were created before the expiration time.
+        for backup in ext.get_backups():
+            if backup.created > assignment.due_date:
+                backup.custom_submission_time = custom_submission_time
+                db.session.add(backup)
+
+        db.session.commit()
+        return ext
+
+    @classmethod
+    def delete(cls, ext):
+        for backup in ext.get_backups():
+            backup.custom_submission_time = None
+            db.session.add(backup)
+        db.session.delete(ext)
+        db.session.commit()
+
     @classmethod
     def get_extension(cls, student, assignment, time=None):
         """ Returns the extension if the student has an extension """
