@@ -14,7 +14,7 @@ import re
 
 from server import utils
 import server.canvas.api as canvas_api
-from server.models import Assignment, User, Client, Course, Message, CanvasCourse, Category
+from server.models import Assignment, User, Client, Course, Message, CanvasCourse
 from server.constants import (SCORE_KINDS, COURSE_ENDPOINT_FORMAT,
                               TIMEZONE, STUDENT_ROLE, ASSIGNMENT_ENDPOINT_FORMAT,
                               COMMON_LANGUAGES, ROLE_DISPLAY_NAMES,
@@ -148,6 +148,8 @@ class AssignmentForm(BaseForm):
     display_name = StringField('Display Name',
                                validators=[validators.required()])
     category = SelectField('Grading Category', coerce=int)
+    name = StringField('Endpoint (example: cal/cs61a/fa16/proj01)',
+                       validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
                              validators=[validators.required()])
     lock_date = DateTimeField('Lock Date (Course Time)',

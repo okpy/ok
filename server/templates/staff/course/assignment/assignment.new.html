@@ -35,6 +35,8 @@
                                         required="required", type='text', id="display-name") }}
                   {{ forms.render_field(form.category, label_visible=true, placeholder='Uncategorized',
                                         required="required", type='text', id="category") }}
+                  {{ forms.render_field(form.name, label_visible=true, value=current_course.offering + '/',
+                                        placeholder='cal/cs61a/fa16/hog', type='text', id="assignment-name") }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
                 </fieldset>
                 <h3>Deadlines</h3>

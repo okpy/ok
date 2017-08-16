@@ -258,14 +258,6 @@ class Course(Model):
     # assignments (from Assignment backref)
     # categories (from Category backref)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Setup default "Uncategorized" category
-        category = Category(course=self, name='Uncategorized')
-        db.session.add(category)
-        db.session.commit()
-        self.categories.append(category)
-
     @classmethod
     def can(cls, obj, user, action):
         if user.is_admin:
@@ -368,9 +360,8 @@ class Category(Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
-
-    weight = db.Column(db.Float, default=0)
-    visible = db.Column(db.Boolean(), default=False)
+    weight = db.Column(db.Float, nullable=False)
+    visible = db.Column(db.Boolean(), default=True)
     # assignments (from Assignment backref)
     # rules
 
