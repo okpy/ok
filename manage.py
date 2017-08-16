@@ -59,7 +59,6 @@ def setup_default():
     db.session.add(admin)
     admin = User(email="brian.hou@berkeley.edu", is_admin=True)
     db.session.add(admin)
-    db.session.commit()
     course = Course(
             offering='cal/cs61a/sp16',
             institution='UC Berkeley',
