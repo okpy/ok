@@ -22,69 +22,40 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
 
     seen = set()
     stats = Counter()
-    manual, late = [], []
+    manual = []
     for i, subm in enumerate(submissions, 1):
         user_id = int(subm['user']['id'])
         if user_id in seen:
             continue
 
         backup = Backup.query.get(subm['backup']['id'])
-
-        submission_time = get_submission_time(backup, assignment)
-
-        if submission_time > assignment.due_date:
-            submitter_id = backup.submitter_id
-            backups = (
-                find_ontime(submitter_id, assignment_id, assignment.due_date),
-                find_ontime(submitter_id, assignment_id, assignment.lock_date),
-                backup # default to the late backup
-            )
-            backup = best_scoring(backups, full_credit, required_questions)
-            submission_time = get_submission_time(backup, assignment)
-
         try:
-            score, messages = effort_score(backup, full_credit, required_questions)
+            score, messages = score_backup(backup, assignment, full_credit,
+                    required_questions, late_multiplier)
         except AssertionError:
             manual.append(backup.hashid)
             continue
 
-        if submission_time > assignment.lock_date:
-            late.append(backup.hashid)
-            messages.append('\nLate - No Credit')
-            score = 0
-        elif submission_time > assignment.due_date:
-            late.append(backup.hashid)
-            late_percent = 100 - round(late_multiplier * 100)
-            messages.append('\nLate - {}% off'.format(late_percent))
-            score = math.floor(score * late_multiplier)
+        member_ids = {user_id}
+        if subm['group']:
+            member_ids = {int(id) for id in subm['group']['group_member'].split(',')}
 
-        messages.append('\nFinal Score: {}'.format(score))
+        for member_id in member_ids:
+            new_score = Score(score=score, kind='effort',
+                    message='\n'.join(messages),
+                    user_id=member_id,
+                    assignment=assignment, backup=backup,
+                    grader=current_user)
+            db.session.add(new_score)
 
-        new_score = Score(score=score, kind='effort',
-                message='\n'.join(messages),
-                user_id=backup.submitter_id,
-                assignment=assignment, backup=backup,
-                grader=current_user)
-        db.session.add(new_score)
+        seen |= member_ids
+        stats[score] += len(member_ids)
 
         if i % 100 == 0:
             logger.info('Scored {}/{}'.format(i, len(submissions)))
 
-        if subm['group']:
-            member_ids = {int(id) for id in subm['group']['group_member'].split(',')}
-            seen |= member_ids
-            stats[score] += len(member_ids)
-        else:
-            seen.add(user_id)
-            stats[score] += 1
-
     logger.info('Scored {}/{}'.format(i, len(submissions)))
     logger.info('done!')
-
-    if len(late) > 0:
-        logger.info('\n{} Late:'.format(len(late)))
-        for backup_id in late:
-            logger.info('  {}'.format(grading_url + backup_id))
 
     logger.info('\nScore Distribution:')
     sorted_scores = sorted(stats.items(), key=lambda p: -p[0])
@@ -100,6 +71,28 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
     return '/admin/course/{cid}/assignments/{aid}/scores'.format(
                 cid=jobs.get_current_job().course_id,
                 aid=assignment_id)
+
+def score_backup(backup, assignment, full_credit, required_questions, late_multiplier):
+    submission_time = get_submission_time(backup, assignment)
+    if submission_time > assignment.due_date:
+        submitter_id = backup.submitter_id
+        backups = (
+            find_ontime(submitter_id, assignment_id, assignment.due_date),
+            find_ontime(submitter_id, assignment_id, assignment.lock_date),
+            backup # default to the late backup
+        )
+        backup = best_scoring(backups, full_credit, required_questions)
+        submission_time = get_submission_time(backup, assignment)
+    score, messages = effort_score(backup, full_credit, required_questions)
+    if submission_time > assignment.lock_date:
+        messages.append('\nLate - No Credit')
+        score = 0
+    elif submission_time > assignment.due_date:
+        late_percent = 100 - round(late_multiplier * 100)
+        messages.append('\nLate - {}% off'.format(late_percent))
+        score = math.floor(score * late_multiplier)
+    messages.append('\nFinal Score: {}'.format(score))
+    return score, messages
 
 def get_submission_time(backup, assignment):
     """
