@@ -135,17 +135,19 @@ class AssignmentForm(BaseForm):
                     obj.lock_date, course)
 
         # dynamically set values
+        self.display_name.description = 'endpoint: `{}/{}`'.format(
+                self.course.offering, self.display_name.data or 'hog'
+            ).lower()
+
         categories = Category.query.filter_by(
                 course=course
             ).order_by(Category.name).all()
         self.category.choices = [(c.id, c.name) for c in categories]
+        self.category.default = 'Uncategorized'
 
     display_name = StringField('Display Name',
                                validators=[validators.required()])
-    category = SelectField('Grading Category',
-                        validators=[validators.required()])
-    name = StringField('Endpoint (example: cal/cs61a/fa16/proj01)',
-                       validators=[validators.required()])
+    category = SelectField('Grading Category', coerce=int)
     due_date = DateTimeField('Due Date (Course Time)',
                              validators=[validators.required()])
     lock_date = DateTimeField('Lock Date (Course Time)',
@@ -168,59 +170,37 @@ class AssignmentForm(BaseForm):
     visible = BooleanField('Visible On Student Dashboard', default=True)
     autograding_key = StringField('Autograder Key',
                                   validators=[validators.optional()])
+    @property
+    def endpoint(self):
+        return '{}/{}'.format(self.course.offering, self.display_name.data)
 
     def populate_obj(self, obj):
         """ Updates obj attributes based on form contents. """
-
+        self.category.data = Category.query.get(self.category.data)
         super(AssignmentForm, self).populate_obj(obj)
         obj.due_date = utils.server_time_obj(self.due_date.data, self.course)
         obj.lock_date = utils.server_time_obj(self.lock_date.data, self.course)
+        obj.name = self.endpoint
 
     def validate(self):
-        check_validate = super(AssignmentForm, self).validate()
-
-        # if our validators do not pass
-        if not check_validate:
+        if not super(AssignmentForm, self).validate():
             return False
-
-        # Ensure the name has the right format:
-        is_valid_endpoint = utils.is_valid_endpoint(self.name.data,
-                                                    ASSIGNMENT_ENDPOINT_FORMAT)
-        has_course_endpoint = self.name.data.startswith(self.course.offering)
-
-        if not has_course_endpoint or not is_valid_endpoint:
-            self.name.errors.append(
-                'The endpoint should be of the form {0}/<name>'.format(self.course.offering))
-            return False
-
-        # If the name is changed, ensure assignment offering is unique
-        assgn = Assignment.query.filter_by(name=self.name.data).first()
+        assgn = Assignment.query.filter_by(name=self.endpoint).first()
         if assgn:
-            self.name.errors.append('That endpoint already exists')
+            self.display_name.errors.append(
+                'An assignment with the same name already exists.')
             return False
         return True
 
 
 class AssignmentUpdateForm(AssignmentForm):
-
     def validate(self):
-        # if our validators do not pass
         if not super(AssignmentForm, self).validate():
             return False
-
-        # Ensure the name has the right format:
-        is_valid_endpoint = utils.is_valid_endpoint(self.name.data,
-                                                    ASSIGNMENT_ENDPOINT_FORMAT)
-        has_course_endpoint = self.name.data.startswith(self.course.offering)
-
-        if not has_course_endpoint or not is_valid_endpoint:
-            self.name.errors.append(
-                'The name should be of the form {0}/<name>'.format(self.course.offering))
-            return False
-
-        assgn = Assignment.query.filter_by(name=self.name.data).first()
+        assgn = Assignment.query.filter_by(name=self.endpoint).first()
         if assgn and (self.obj and assgn.id != self.obj.id):
-            self.name.errors.append('That offering already exists.')
+            self.display_name.errors.append(
+                'An assignment with the same name already exists.')
             return False
         return True
 
