@@ -1,11 +1,13 @@
-from server.models import db, Backup, Group, Message, GradingTask, Score
+from server.models import db, Backup, Extension, Group, Score
 import server.utils as utils
 from server import generate
 from server import constants
 from server.controllers import api
-from server.jobs.effort import effort_score
+from server import jobs
+from server.jobs.effort import grade_on_effort, effort_score, get_submission_time
 
 from itertools import zip_longest
+import datetime as dt
 
 from tests import OkTestCase
 
@@ -14,8 +16,9 @@ class TestEffortGrading(OkTestCase):
     def setUp(self):
         super().setUp()
         self.setup_course()
+        self.curr_time = dt.datetime.utcnow()
 
-    def make_backup(self, grading=None, attempts=None, submit=False):
+    def make_backup(self, grading=None, attempts=None, submit=False, time=None):
         """
         Create a Backup with specific message info.
 
@@ -36,6 +39,7 @@ class TestEffortGrading(OkTestCase):
         """
         grading = grading or ''
         attempts = attempts or ''
+        custom_time = time or self.curr_time
         messages = {
             'grading': {
                 q: {
@@ -58,7 +62,10 @@ class TestEffortGrading(OkTestCase):
                 }
             }
         }
-        return api.make_backup(self.user1, self.assignment.id, messages, submit)
+        backup = api.make_backup(self.user1, self.assignment.id, messages, submit)
+        backup.created = custom_time
+        db.session.commit()
+        return backup
 
     def score_equals(self, backup, score, qs=2):
         try:
@@ -107,4 +114,59 @@ class TestEffortGrading(OkTestCase):
     def test_effort_missing(self):
         self.score_equals(self.make_backup(grading='f c', attempts='33'), 2, qs=3) # 2
         self.score_equals(self.make_backup(grading='p', attempts=' 3'), 2)
+
+
+    def _make_ext(self, assignment, user, time=None):
+        custom_time = time or self.curr_time
+        ext = Extension.create(assignment=assignment, user=user,
+                custom_submission_time=custom_time,
+                expires=self.curr_time,
+                staff=self.staff1)
+        return ext
+
+    def test_extension_submission_time(self):
+        self.assignment.due_date = self.curr_time - dt.timedelta(days=1)
+        backup = self.make_backup(time=self.curr_time - dt.timedelta(hours=1))
+
+        # Submission time shouldn't initially be on time
+        self.assertFalse(backup.submission_time <= self.assignment.due_date)
+
+        ext = self._make_ext(self.assignment, self.user1, time=self.assignment.due_date)
+
+        # Should use the extension's time instead of the backup's time
+        self.assertTrue(backup.submission_time <= self.assignment.due_date)
+
+    def test_scores_group(self):
+        self.assignment.due_date = self.curr_time + dt.timedelta(days=1)
+
+        Group.invite(self.user1, self.user2, self.assignment)
+        group = Group.lookup(self.user1, self.assignment)
+        group.accept(self.user2)
+
+        backup = self.make_backup(grading='cc')
+        job_id = jobs.enqueue_job(
+            grade_on_effort,
+            description='test effort job',
+            course_id=self.course.id,
+            user_id=self.admin.id,
+            assignment_id=self.assignment.id,
+            full_credit=3,
+            late_multiplier=0,
+            required_questions=2,
+            grading_url='http://example.com/'
+        ).id
+        self.run_jobs()
+
+        score1 = Score.query.filter_by(
+                kind='effort',
+                user=self.user1,
+                assignment=self.assignment).first().score
+        self.assertEquals(score1, 3)
+
+        score2 = Score.query.filter_by(
+                kind='effort',
+                user=self.user2,
+                assignment=self.assignment).first().score
+        self.assertEquals(score2, 3)
+
 

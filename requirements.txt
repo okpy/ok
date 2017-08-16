@@ -12,6 +12,7 @@ pymysql==0.7.11
 sqlalchemy==1.1.9
 
 # Caching
+werkzeug
 redis==2.10.5
 
 # Job Queue
@@ -35,7 +36,6 @@ lockfile==0.12.2 # For local storage
 apache-libcloud==1.5.0
 
 # OAuth
-
 oauthlib==2.0.2
 # Flask-OAuthlib==0.9.3
 # OAuthlib version that logs errors - use until Flask-OAuthlib > 0.9.3 is published
