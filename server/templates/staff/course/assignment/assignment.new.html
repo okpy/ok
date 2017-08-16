@@ -33,10 +33,9 @@
                 <fieldset>
                   {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog',
                                         required="required", type='text', id="display-name") }}
-                  {{ forms.render_field(form.category, label_visible=true, placeholder='Uncategorized',
+                  {{ forms.render_field(form.name, label_visible=false, value=current_course.offering + '/hog', type='text', id="assignment-name") }}
+                  {{ forms.render_field(form.category, label_visible=true,
                                         required="required", type='text', id="category") }}
-                  {{ forms.render_field(form.name, label_visible=true, value=current_course.offering + '/',
-                                        placeholder='cal/cs61a/fa16/hog', type='text', id="assignment-name") }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
                 </fieldset>
                 <h3>Deadlines</h3>
@@ -84,11 +83,17 @@ form.steps({
     }
 })
 
+var nameChanged = false
 function registerDisplayName(courseOffering) {
     $('#display-name').on('change, keyup', function () {
-        displayName = $('#display-name').val().toLowerCase().split(' ').join('')
-        endpoint = courseOffering + '/' + displayName
-        $('label[for="display_name"] ~ .help-block').html('endpoint: ' + endpoint)
+        if (!nameChanged) {
+            displayName = $('#display-name').val().toLowerCase().split(' ').join('')
+            endpoint = courseOffering + '/' + displayName
+            $('#assignment-name').val(endpoint)
+        }
+    })
+    $('#assignment-name').on('change', function () {
+        nameChanged = true
     })
 }
 registerDisplayName('{{ current_course.offering }}')
