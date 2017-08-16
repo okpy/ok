@@ -255,6 +255,8 @@ class Course(Model):
     website = db.Column(db.String(255))
     active = db.Column(db.Boolean(), nullable=False, default=True)
     timezone = db.Column(Timezone, nullable=False, default=pytz.timezone(TIMEZONE))
+    # assignments (from Assignment backref)
+    # categories (from Category backref)
 
     @classmethod
     def can(cls, obj, user, action):
@@ -344,9 +346,45 @@ class Course(Model):
         db.session.commit()
 
 
+class Category(Model):
+    """
+    Categories are particular to courses and have unique names.
+
+    name:  name of the category
+    course:  one-to-many reference to the course the category belongs to
+    assignments:  many-to-one reference to the assignments in the category
+    weight:  float weight of the category used in final grading
+    rules:  many-to-one reference to rules used when calculating grades
+        e.g. "Drop lowest X", "Cap at X points", "Never drop X"
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), index=True, nullable=False, unique=True)
+    course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
+    weight = db.Column(db.Float, nullable=False)
+    visible = db.Column(db.Boolean(), default=True)
+    # assignments (from Assignment backref)
+    # rules
+
+    course = db.relationship("Course", backref="categories")
+
+    @classmethod
+    def can(cls, obj, user, action):
+        if not obj:
+            if action == "create":
+                return user.enrollments(roles=STAFF_ROLES) or user.is_admin
+            return False
+        if user.is_admin:
+            return True
+        is_staff = user.is_enrolled(obj.course.id, STAFF_ROLES)
+        if action == "view":
+            return is_staff or obj.visible
+        return is_staff
+
+
 class Assignment(Model):
     """ Assignments are particular to courses and have unique names.
         name - cal/cs61a/fa14/proj1
+        category - Projects
         display_name - Hog
         due_date - DEADLINE (Publically displayed)
         lock_date - DEADLINE+1 (Hard Deadline for submissions)
@@ -356,8 +394,8 @@ class Assignment(Model):
     """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
-    course_id = db.Column(db.ForeignKey("course.id"), index=True,
-                          nullable=False)
+    category_id = db.Column(db.ForeignKey("category.id"), index=True, nullable=False)
+    course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
     display_name = db.Column(db.String(255), nullable=False)
     due_date = db.Column(db.DateTime(timezone=True), nullable=False)
     lock_date = db.Column(db.DateTime(timezone=True), nullable=False)
@@ -374,6 +412,7 @@ class Assignment(Model):
 
     files = db.Column(JsonBlob)  # JSON object mapping filenames to contents
     course = db.relationship("Course", backref="assignments")
+    category = db.relationship("Category", backref="assignments")
 
     user_assignment = namedtuple('UserAssignment',
                                  ['assignment', 'subm_time', 'group',
