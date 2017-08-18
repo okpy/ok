@@ -405,6 +405,7 @@ class Assignment(Model):
     category_id = db.Column(db.ForeignKey("category.id"), index=True, nullable=False)
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
     display_name = db.Column(db.String(255), nullable=False)
+    points = db.Column(db.Integer, default=0)
     due_date = db.Column(db.DateTime(timezone=True), nullable=False)
     lock_date = db.Column(db.DateTime(timezone=True), nullable=False)
     visible = db.Column(db.Boolean(), default=True)

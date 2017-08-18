@@ -28,18 +28,56 @@
                 <i class="fa fa-plus"></i> Category
               </a>
               <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.new_assignment', cid=current_course.id)}}">
-                <i class="fa fa-plus"></i> Create Assignment
+                <i class="fa fa-plus"></i> Assignment
               </a>
             </div>
           </div>
           <div class="box-body">
+            <div class="box-group" id="accordion" aria-multiselectable="true">
             {% for category in categories %}
             <div class="panel box box-solid">
-              <div class="box-header ">
-                <h3 class="box-title">{{ category.name }}</h3>
+              <a role="button" data-toggle="collapse" href={{ "#collapse" + category.name }} aria-expanded="true">
+                <div class="box-header">
+                  <h3 class="box-title">
+                   {{ category.name }}
+                  </h3>
+                </div>
+              </a>
+              <div id={{ "collapse" + category.name }} class="panel-collapse collapse in">
+              <div class="box-body">
+                <table class="table">
+                  <tbody>
+              {% if category.assignments %}
+                  <tr>
+                    <th>Name</th>
+                    <th>Endpoint</th>
+                    <th>Points</th>
+                    <th>Visible</th>
+                    <th>Due Date</th>
+                  </tr>
+              {% endif %}
+              {% for assignment in category.assignments %}
+                  <tr>
+                    <td style='width: 200px'><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}">{{ assignment.display_name }}</a></td>
+                    <td>{{ assignment.name }}</td>
+                    <td style='width:40px'>{{ assignment.points }}</td>
+                    <td style='width:60px'>
+                        {% if assignment.visible %}
+                          <span class="label label-success">Visible</span>
+                        {% else %}
+                          <span class="label label-warning">Hidden</span>
+                        {% endif %}
+                    </td>
+                    <td style='width: 140px'>{{ utils.local_time(assignment.due_date, current_course) }}</td>
+                  </tr>
+              {% endfor %}
+                </tbody>
+              </table>
+              </div>
               </div>
             </div>
             {% endfor %}
+          </div>
           </div>
           <!-- /.box-body -->
           <!-- /.box-footer-->
@@ -49,4 +87,25 @@
   </section>
 
   <!-- </body> do not close body in template-->
+{% endblock %}
+
+
+{% block page_css %}
+<style>
+.box-body {
+  padding: 0;
+}
+.panel .box-header {
+  background-color: #f9f9f9;
+  padding: 15px 10px;
+  border-bottom: 1px solid #ddd;
+}
+#accordion .panel {
+  box-shadow: none;
+  margin-bottom: 5px;
+}
+th {
+  color: #333;
+}
+</style>
 {% endblock %}
