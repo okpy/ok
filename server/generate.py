@@ -8,9 +8,7 @@ import loremipsum
 import names
 import pytz
 
-from server.models import (db, User, Course, Assignment, Enrollment, Group,
-                           Backup, Message, Comment, Version, Score,
-                           GradingTask, Client)
+from server.models import *
 from server.constants import STUDENT_ROLE, OAUTH_SCOPES
 from server.extensions import cache
 
@@ -107,15 +105,14 @@ def gen_course():
             random.choice(['', 'A'])),
         active=gen_bool(0.6))
 
-def gen_assignment(course):
+def gen_assignment(course, categories):
     if gen_bool(0.5):
-        display_name = random.choice([
-            'Hog', 'Hog Contest', 'Maps', 'Ants', 'Scheme'
-        ])
+        category_name = "Project"
+        display_name = random.choice('Hog Maps Ants Scheme'.split())
     else:
-        display_name = '{0} {1}'.format(
-            random.choice(['Homework', 'Lab', 'Quiz']),
-            str(random.randrange(15)).zfill(2))
+        category_name = random.choice('Homework Lab'.split())
+        number = str(random.randrange(15)).zfill(2)
+        display_name = '{0} {1}'.format(category_name, number)
     name = course.offering + '/' + display_name.lower().replace(' ', '')
 
     last_night = (datetime.datetime.utcnow()
@@ -133,6 +130,7 @@ def gen_assignment(course):
     return Assignment(
         name=name,
         course_id=course.id,
+        category_id=categories[category_name].id,
         display_name=display_name,
         due_date=due_date,
         lock_date=lock_date,
@@ -288,11 +286,28 @@ def seed_courses():
     db.session.commit()
 
 
+def seed_categories(course):
+    categories_data = {
+        'Lab': 20,
+        'Homework': 30,
+        'Project': 100,
+        'Exam': 150
+    }
+    categories = {}
+    for name, points in categories_data.items():
+        category = Category(course=course, name=name, points=points)
+        categories[name] = category
+        db.session.add(category)
+    db.session.commit()
+    return categories
+
+
 def seed_assignments():
     print('Seeding assignments...')
     for course in Course.query.all():
+        categories = seed_categories(course)
         assignments = gen_unique(functools.partial(
-            gen_assignment, course), 5, 'name')
+                gen_assignment, course, categories), 5, 'name')
         db.session.add_all(assignments)
     db.session.commit()
 
@@ -417,13 +432,13 @@ def seed():
     seed_users(num=15)
     seed_courses()
     seed_assignments()
-    seed_enrollments()
-    seed_backups()
-    seed_comments()
-    seed_groups()
-    seed_flags()
-    seed_queues()
-    seed_scores()
+    # seed_enrollments()
+    # seed_backups()
+    # seed_comments()
+    # seed_groups()
+    # seed_flags()
+    # seed_queues()
+    # seed_scores()
     seed_oauth()
 
     # Large course test. Uncomment to test large number of enrollments
