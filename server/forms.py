@@ -121,6 +121,38 @@ class BaseForm(FlaskForm):
             return unbound_field.bind(form=form, filters=filters, **options)
 
 
+class CategoryForm(BaseForm):
+    name = StringField('Name', validators=[validators.required()])
+    weight_scheme = RadioField(
+        'Weighting Scheme',
+        choices=[
+            ('percentage', 'Percentage'),
+            ('points', 'Points'),],
+        default='percentage')
+    points = IntegerField('Points')
+    percentage = DecimalField('Percentage',
+            validators=[validators.number_range(min=0.0, max=1.0)])
+
+    def __init__(self, course, obj=None, **kwargs):
+        self.course = course
+        self.obj = obj
+        super().__init__(obj=obj, **kwargs)
+
+    def validate(self):
+        if not super().validate():
+            return False
+        if not getattr(self, self.weight_scheme.data):
+            return False
+        category = Category.query.filter_by(
+                name=self.name.data, course=self.course
+            ).first()
+        if category:
+            self.name.errors.append(
+                    'A category with the same name already exists.')
+            return False
+        return True
+
+
 class AssignmentForm(BaseForm):
 
     def __init__(self, course, obj=None, **kwargs):

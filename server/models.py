@@ -360,7 +360,9 @@ class Category(Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
-    weight = db.Column(db.Float, nullable=False)
+
+    percentage = db.Column(db.Float, nullable=True)
+    points = db.Column(db.Float, nullable=True)
     visible = db.Column(db.Boolean(), default=True)
     # assignments (from Assignment backref)
     # rules

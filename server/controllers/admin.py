@@ -16,10 +16,7 @@ import requests.exceptions
 from server import autograder
 
 import server.controllers.api as ok_api
-from server.models import (User, Course, Assignment, Enrollment, Version,
-                           GradingTask, Backup, Score, Group, Client, Job,
-                           Message, CanvasCourse, CanvasAssignment,
-                           Extension, db)
+from server.models import *
 from server.contrib import analyze
 
 from server.constants import (INSTRUCTOR_ROLE, STAFF_ROLES, STUDENT_ROLE,
@@ -391,18 +388,32 @@ def course_settings(cid):
                            courses=courses, current_course=current_course)
 
 
+@admin.route("/course/<int:cid>/categories", methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def new_category(cid):
+    courses, current_course = get_courses(cid)
+    if not Category.can(None, current_user, 'create'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
+    form = forms.CategoryForm(current_course)
+    if form.validate_on_submit():
+        pass
+    return render_template('staff/course/category/category.new.html',
+            form=form,
+            current_course=current_course,
+            current_weight_scheme=form.weight_scheme.data)
+
+
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
 def course_assignments(cid):
     courses, current_course = get_courses(cid)
-    assgns = current_course.assignments
-    active_asgns = [a for a in assgns if a.active]
-    due_asgns = [a for a in assgns if not a.active]
+    categories = current_course.categories
     # TODO CLEANUP : Better way to send this data to the template.
     return render_template('staff/course/assignment/assignments.html',
-                           courses=courses, current_course=current_course,
-                           active_asgns=active_asgns, due_assgns=due_asgns)
-
+           current_course=current_course,
+           categories=categories)
 
 @admin.route("/course/<int:cid>/assignments/new", methods=["GET", "POST"])
 @is_staff(course_arg='cid')
