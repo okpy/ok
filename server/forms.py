@@ -122,26 +122,25 @@ class BaseForm(FlaskForm):
 
 
 class CategoryForm(BaseForm):
-    name = StringField('Name', validators=[validators.required()])
-    weight_scheme = RadioField(
-        'Weighting Scheme',
-        choices=[
-            ('percentage', 'Percentage'),
-            ('points', 'Points'),],
-        default='percentage')
-    points = IntegerField('Points')
-    percentage = DecimalField('Percentage',
-            validators=[validators.number_range(min=0.0, max=1.0)])
+    name = StringField('Name')
+    points = IntegerField('Points', validators=[validators.number_range(min=0)])
+    ceil = BooleanField('Allow Extra Credit')
+    visible = BooleanField('Make Visible on Student Dashboard')
 
     def __init__(self, course, obj=None, **kwargs):
         self.course = course
         self.obj = obj
         super().__init__(obj=obj, **kwargs)
 
+    def populate_obj(self, obj):
+        if not obj:
+            return
+        self.ceil.data = not self.ceil.data
+        obj.course = self.course
+        super().populate_obj(obj)
+
     def validate(self):
         if not super().validate():
-            return False
-        if not getattr(self, self.weight_scheme.data):
             return False
         category = Category.query.filter_by(
                 name=self.name.data, course=self.course

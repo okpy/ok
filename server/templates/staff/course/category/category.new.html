@@ -29,13 +29,9 @@
           <div class="box-body">
   {% call forms.render_form(form, action_text='Create Category', class_='form') %}
     {{ forms.render_field(form.name, required='true', type='text') }}
-    <label class="control-label">Weighting Scheme</label>
-    {{ forms.render_radio_field(form.weight_scheme)}}
-    <div class="percentage">
-      {{ forms.render_field(form.percentage, type='decimal', value=0.0) }}
-    </div>
-    <div class="points">
-      {{ forms.render_field(form.points, type='number', value=0) }}
+    {{ forms.render_field(form.points, required='true', type='number') }}
+    {{ forms.render_checkbox_field(form.ceil) }}
+    {{ forms.render_checkbox_field(form.visible) }}
     </div>
   {% endcall %}
           </div>
@@ -43,34 +39,4 @@
       </div>
     </div>
   <!-- </body> do not close body in template-->
-{% endblock %}
-
-{% block page_css %}
-<style>
-.percentage, .points {
-  display: none;
-}
-</style>
-{% endblock %}
-
-{% block page_js %}
-<script>
-var currentScheme = $({{ current_weight_scheme }}).attr('id')
-$('.' + currentScheme).css('display', 'block')
-
-$("input[type='radio']").on('click', function(e) {
-  $(".percentage, .points").css('display', 'none')
-  $("." + e.target.value).css('display', 'block')
-})
-
-$("#percentage").on('keyup', debounce(function() {
-  var input = $("#percentage")
-  var currVal = Number(input.val())
-  if (currVal <= 1)
-    return
-  while (currVal >= 1)
-    currVal = currVal / 10
-  input.val(currVal.toFixed(2))
-}, 500))
-</script>
 {% endblock %}

@@ -258,6 +258,13 @@ class Course(Model):
     # assignments (from Assignment backref)
     # categories (from Category backref)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add default "Uncategorized" category
+        default_category = Category(course=self, name="Uncategorized")
+        db.session.add(default_category)
+        db.session.commit()
+
     @classmethod
     def can(cls, obj, user, action):
         if user.is_admin:
@@ -358,12 +365,11 @@ class Category(Model):
         e.g. "Drop lowest X", "Cap at X points", "Never drop X"
     """
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), index=True, nullable=False, unique=True)
+    name = db.Column(db.String(255), index=True, default="Uncategorized")
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
-
-    percentage = db.Column(db.Float, nullable=True)
-    points = db.Column(db.Float, nullable=True)
-    visible = db.Column(db.Boolean(), default=True)
+    points = db.Column(db.Float, default=0.0)
+    visible = db.Column(db.Boolean, default=False)
+    ceil = db.Column(db.Boolean, default=True)
     # assignments (from Assignment backref)
     # rules
 

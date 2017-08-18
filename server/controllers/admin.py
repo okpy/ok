@@ -398,11 +398,15 @@ def new_category(cid):
 
     form = forms.CategoryForm(current_course)
     if form.validate_on_submit():
-        pass
+        category = Category(course_id=cid)
+        form.populate_obj(category)
+        db.session.add(category)
+        db.session.commit()
+        flash("Category \"{}\" created successfully.".format(form.name.data), "success")
+        return redirect(url_for(".course_assignments", cid=cid))
     return render_template('staff/course/category/category.new.html',
             form=form,
-            current_course=current_course,
-            current_weight_scheme=form.weight_scheme.data)
+            current_course=current_course)
 
 
 @admin.route("/course/<int:cid>/assignments")
