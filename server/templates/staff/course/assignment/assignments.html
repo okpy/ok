@@ -24,6 +24,7 @@
           <div class="box-header with-border">
             <h3 class="box-title">Categories</h3>
             <div class="box-tools pull-right">
+              <a href="javascript:void(0)" class="toggle-accordion btn btn-sm btn-default btn-flat" accordion-id="#accordion">Collapse All</a>
               <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.new_category', cid=current_course.id)}}">
                 <i class="fa fa-plus"></i> Category
               </a>
@@ -41,6 +42,9 @@
                   <h3 class="box-title">
                    {{ category.name }}
                   </h3>
+                  <div class="pull-right">
+                    <small>{{ category.assignments|length }} Assignments</small>
+                  </div>
                 </div>
               </a>
               <div id={{ "collapse" + category.name }} class="panel-collapse collapse in">
@@ -92,20 +96,54 @@
 
 {% block page_css %}
 <style>
+body {
+  overflow: scroll
+}
 .box-body {
   padding: 0;
 }
 .panel .box-header {
   background-color: #f9f9f9;
-  padding: 15px 10px;
+  padding: 16px 10px;
   border-bottom: 1px solid #ddd;
+}
+.panel small {
+  padding-left: 8px;
 }
 #accordion .panel {
   box-shadow: none;
-  margin-bottom: 5px;
+  margin-bottom: 0px;
 }
 th {
   color: #333;
 }
 </style>
+{% endblock %}
+
+{% block page_js %}
+<script>
+$(".toggle-accordion").on("click", function() {
+    var accordionId = $(this).attr("accordion-id"),
+      numPanelOpen = $(accordionId + ' .collapse.in').length;
+
+    $(this).toggleClass("active");
+
+    if (numPanelOpen == 0) {
+      $(this).html("Collapse All")
+      openAllPanels(accordionId);
+    } else {
+      $(this).html("Expand All")
+      closeAllPanels(accordionId);
+    }
+  })
+
+  openAllPanels = function(aId) {
+    console.log("setAllPanelOpen");
+    $(aId + ' .panel-collapse:not(".in")').collapse('show');
+  }
+  closeAllPanels = function(aId) {
+    console.log("setAllPanelclose");
+    $(aId + ' .panel-collapse.in').collapse('hide');
+  }
+</script>
 {% endblock %}
