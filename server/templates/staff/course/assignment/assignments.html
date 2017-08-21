@@ -24,7 +24,9 @@
           <div class="box-header with-border">
             <h3 class="box-title">Categories</h3>
             <div class="box-tools pull-right">
-              <a href="javascript:void(0)" class="toggle-accordion btn btn-sm btn-default btn-flat" accordion-id="#accordion">Collapse All</a>
+              <a href="javascript:void(0)" class="toggle-accordion btn btn-sm btn-default btn-flat" accordion-id="#accordion">
+                Collapse All
+              </a>
               <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.new_category', cid=current_course.id)}}">
                 <i class="fa fa-plus"></i> Category
               </a>
@@ -40,7 +42,7 @@
               <a role="button" data-toggle="collapse" href={{ "#collapse" + category.name }} aria-expanded="true">
                 <div class="box-header">
                   <h3 class="box-title">
-                   {{ category.name }}
+                   {{ category.name }} <i class="fa fa-chevron-down"></i>
                   </h3>
                   <div class="pull-right">
                     <small>{{ category.assignments|length }} Assignments</small>
@@ -109,6 +111,14 @@ body {
 }
 .panel small {
   padding-left: 8px;
+}
+.panel .fa {
+  font-size: 0.7em;
+  color: #aaa;
+  transition: 0.1s
+}
+.panel a[aria-expanded='false'] .fa {
+  transform: rotate(-90deg);
 }
 #accordion .panel {
   box-shadow: none;
