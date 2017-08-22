@@ -16,7 +16,9 @@
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
           <i class="fa fa-list"></i> Assignments</a>
         </li>
-        <li class="active hidden-xs"><a href="#"><i class="fa fa-plus"></i> Create Category</a></li>
+        <li class="active hidden-xs">
+          <a href="#"><i class="fa fa-plus"></i> Create Category</a>
+        </li>
       </ol>
   </section>
 
@@ -31,8 +33,6 @@
     {{ forms.render_field(form.name, required='true', type='text') }}
     {{ forms.render_field(form.points, required='true', type='number') }}
     {{ forms.render_checkbox_field(form.ceil) }}
-    {{ forms.render_checkbox_field(form.visible) }}
-    </div>
   {% endcall %}
           </div>
         </div>

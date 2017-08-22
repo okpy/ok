@@ -367,8 +367,9 @@ class Category(Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, default="Uncategorized")
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
-    points = db.Column(db.Float, default=0.0)
-    visible = db.Column(db.Boolean, default=False)
+    points = db.Column(db.Integer, default=0.0)
+    visible = db.Column(db.Boolean, default=True)
+    archived = db.Column(db.Boolean, default=False)
     ceil = db.Column(db.Boolean, default=True)
     # assignments (from Assignment backref)
     # rules
@@ -387,6 +388,26 @@ class Category(Model):
         if action == "view":
             return is_staff or obj.visible
         return is_staff
+
+    def archive(self):
+        uncategorized = Category.query.filter_by(
+                course=self.course,
+                name='Uncategorized'
+            ).first()
+        assign_ids = [a.id for a in self.assignments]
+        for assignment in self.assignments:
+            assignment.category = uncategorized
+        self.archived = True
+        return assign_ids
+
+    def unarchive(self, assignments):
+        uncategorized = Category.query.filter_by(
+                course=self.course,
+                name='Uncategorized'
+            ).first()
+        for assignment in assignments:
+            assignment.category = self
+        self.archived = False
 
 
 class Assignment(Model):

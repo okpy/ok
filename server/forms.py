@@ -124,8 +124,12 @@ class BaseForm(FlaskForm):
 class CategoryForm(BaseForm):
     name = StringField('Name')
     points = IntegerField('Points', validators=[validators.number_range(min=0)])
-    ceil = BooleanField('Allow Extra Credit')
-    visible = BooleanField('Make Visible on Student Dashboard')
+    ceil = BooleanField('Allow Extra Credit',
+            description="Students can earn more than the total points this category is worth.")
+    visible = BooleanField('Make Visible on Student Dashboard', default=True)
+    delete = BooleanField('Delete',
+            description='All Assignments in this category will be moved to "Uncategorized".',
+            default=False)
 
     def __init__(self, course, obj=None, **kwargs):
         self.course = course
@@ -139,13 +143,13 @@ class CategoryForm(BaseForm):
         obj.course = self.course
         super().populate_obj(obj)
 
-    def validate(self):
+    def validate(self, editing=False):
         if not super().validate():
             return False
         category = Category.query.filter_by(
                 name=self.name.data, course=self.course
             ).first()
-        if category:
+        if not editing and category:
             self.name.errors.append(
                     'A category with the same name already exists.')
             return False
