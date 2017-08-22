@@ -173,12 +173,13 @@ class AssignmentForm(BaseForm):
         categories = Category.query.filter_by(
                 course=course
             ).order_by(Category.name).all()
-        self.category.choices = [(c.id, c.name) for c in categories]
+        self.category.choices = [(str(c.id), c.name) for c in categories]
+        self.category.choices.insert(0, ('0', 'Uncategorized'))
         self.category.default = 'Uncategorized'
 
     display_name = StringField('Name',
                                validators=[validators.required()])
-    category = SelectField('Grading Category', coerce=int)
+    category = SelectField('Grading Category')
     name = StringField(description='Endpoint',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
@@ -209,7 +210,9 @@ class AssignmentForm(BaseForm):
 
     def populate_obj(self, obj):
         """ Updates obj attributes based on form contents. """
-        self.category.data = Category.query.get(self.category.data)
+        category_id = int(self.category.data)
+        if self.category.data:
+            self.category.data = Category.query.get(category_id)
         super(AssignmentForm, self).populate_obj(obj)
         obj.due_date = utils.server_time_obj(self.due_date.data, self.course)
         obj.lock_date = utils.server_time_obj(self.lock_date.data, self.course)

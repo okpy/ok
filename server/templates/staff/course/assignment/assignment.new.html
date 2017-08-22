@@ -31,11 +31,11 @@
               {% call forms.render_form_bare(form, action_url="", class_='form new-assign-form wizard') %}
                 <h3>Name</h3>
                 <fieldset>
-                  {{ forms.render_field(form.display_name, label_visible=true, placeholder='Hog',
+                  {{ forms.render_field(form.display_name, label_visible=true,
                                         required="required", type='text', id="display-name") }}
-                  {{ forms.render_field(form.name, label_visible=false, value=current_course.offering + '/hog', type='text', id="assignment-name") }}
+                  {{ forms.render_field(form.name, label_visible=false, value=current_course.offering + '/...', type='text', id="assignment-name") }}
                   {{ forms.render_field(form.category, label_visible=true,
-                                        required="required", type='text', id="category") }}
+                                        required="required", id="category") }}
                   {{ forms.render_field(form.max_group_size, label_visible=true, type='number', min='1', value='1') }}
                 </fieldset>
                 <h3>Deadlines</h3>

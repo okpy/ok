@@ -420,50 +420,33 @@ def edit_category(cid, category_id):
     form = forms.CategoryForm(current_course, category)
     if request.method == 'POST' and form.validate(editing=True):
         if form.delete.data == True:
-            assign_ids = category.archive()
-            session['moved_assignments'] = assign_ids
-            msg = Markup("Category \"{}\" was deleted. <a href='{}'>undo</a>".format(
-                    category.name,
-                    url_for('.undo_delete_category', cid=cid, category_id=category_id)))
+            category.archive()
+            db.session.commit()
+            msg = "Category \"{}\" was deleted.".format(category.name)
             flash(msg, "error")
-            print('flashed')
         else:
             form.populate_obj(category)
-            msg = "Category \"{}\" was edited successfully.".format(form.name.data)
+            db.session.commit()
+            msg = "Category \"{}\" was edited successfully.".format(category.name)
             flash(msg, "success")
-        print('done')
-        db.session.commit()
         return redirect(url_for(".course_assignments", cid=cid))
     return render_template('staff/course/category/category.edit.html',
             form=form,
             current_course=current_course)
 
-@admin.route("/course/<int:cid>/categories/<int:category_id>/undo")
-@is_staff(course_arg='cid')
-def undo_delete_category(cid, category_id):
-    courses, current_course = get_courses(cid)
-    category = Category.query.get_or_404(category_id)
-    if not Category.can(category, current_user, 'edit'):
-        flash('Insufficient permissions', 'error')
-        return abort(401)
-    assign_ids = session.get('moved_assignments')
-    if assign_ids:
-        assignments = Assignment.query.filter(Assignment.id.in_(assign_ids)).all()
-        category.unarchive(assignments)
-        db.session.commit()
-        flash("Category \"{}\" was restored.".format(category.name), "success")
-    else:
-        flash("Failed to restore \"{}\".".format(category.name), "error")
-    return redirect(url_for(".course_assignments", cid=cid))
-
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
 def course_assignments(cid):
     courses, current_course = get_courses(cid)
-    categories = [c for c in current_course.categories if not c.archived]
+    categories = current_course.categories
+    uncategorized = Assignment.query.filter_by(
+            course=current_course,
+            category=None
+        ).all()
     return render_template('staff/course/assignment/assignments.html',
            current_course=current_course,
-           categories=categories)
+           categories=categories,
+           uncategorized=uncategorized)
 
 @admin.route("/course/<int:cid>/assignments/new", methods=["GET", "POST"])
 @is_staff(course_arg='cid')

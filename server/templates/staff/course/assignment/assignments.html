@@ -37,6 +37,43 @@
       </div>
       <div class="box-body">
         <div class="box-group" id="accordion" aria-multiselectable="true">
+    {% if uncategorized %}
+        <div class="panel box box-solid uncategorized">
+          <div class="box-header">
+            <a class="panel-title" data-toggle="collapse" href="#collapse___Uncategorized___" aria-expanded="true">
+              <h3 class="box-title">Uncategorized <i class="fa fa-chevron-down"></i></h3>
+            </a>
+            <div class="pull-right">
+              <small>{{ uncategorized|length }} Assignments</small>
+            </div>
+          </div>
+          <div id="collapse___Uncategorized___" class="panel-collapse collapse in">
+          <div class="box-body">
+            <table class="table">
+              <tbody>
+          {% for assignment in uncategorized %}
+              <tr>
+                <td style='width: 200px'>
+                  <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}">{{ assignment.display_name }}</a>
+                </td>
+                <td>{{ assignment.name }}</td>
+                <td style='width:40px'>{{ assignment.points }}</td>
+                <td style='width:60px'>
+                    {% if assignment.visible %}
+                      <span class="label label-success">Visible</span>
+                    {% else %}
+                      <span class="label label-warning">Hidden</span>
+                    {% endif %}
+                </td>
+                <td style='width: 140px'>{{ utils.local_time(assignment.due_date, current_course) }}</td>
+              </tr>
+          {% endfor %}
+            </tbody>
+          </table>
+          </div>
+          </div>
+        </div>
+    {% endif %}
     {% for category in categories %}
         <div class="panel box box-solid">
           <div class="box-header">
