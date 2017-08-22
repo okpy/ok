@@ -1,0 +1,75 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms with context %}
+
+{% block title %} Edit Category - {{ current_course.display_name_with_semester }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        Edit Category
+        <small id="course-offering">{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('admin.course', cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li class="active hidden-xs">
+          <a href="#"><i class="fa fa-gear"></i> Edit Category</a>
+        </li>
+      </ol>
+  </section>
+
+  <section class="content">
+
+    {% include 'alerts.html' %}
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box">
+          <div class="box-body">
+  {% call forms.render_form(form, action_text='Edit Category', class_='form') %}
+    {{ forms.render_field(form.name, required='true', type='text') }}
+    {{ forms.render_field(form.points, required='true', type='number') }}
+    {{ forms.render_checkbox_field(form.ceil) }}
+    {{ forms.render_checkbox_field(form.delete) }}
+  {% endcall %}
+          </div>
+        </div>
+      </div>
+    </div>
+  <!-- </body> do not close body in template-->
+{% endblock %}
+
+
+{% block page_css %}
+<style>
+button.delete {
+  background-color: red;
+  color: white;
+}
+button.delete:hover {
+  background-color: #C20000;
+  color: white;
+}
+</style>
+{% endblock %}
+
+{% block page_js %}
+<script>
+$("#delete").on('click', function(e) {
+  var checked = !$('#delete').is(':checked')
+  var submitButton = $(".submit-btn")
+  if (!checked && confirm('Are you sure you want to delete this category?')) {
+    submitButton.addClass("delete")
+    submitButton.html("Delete Category")
+  } else if (!checked) {
+    e.preventDefault()
+  } else {
+    submitButton.removeClass("delete")
+    submitButton.html("Edit Category")
+  }
+})
+</script>
+{% endblock %}
