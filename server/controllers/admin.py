@@ -852,7 +852,8 @@ def start_moss_job(cid, aid):
             moss_id=form.moss_userid.data,
             file_regex=form.file_regex.data or '.*',
             language=form.language.data,
-            review_threshold=form.review_threshold.data or 101)
+            review_threshold=form.review_threshold.data or 101,
+            num_results=form.num_results.data or 250)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         return render_template(
@@ -873,23 +874,14 @@ def assignment_moss_results(cid, aid):
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
-    moss_resultsA = MossResult.query.order_by(MossResult.similarityA.desc()) \
-                                    .join(MossResult.submissionA) \
-                                    .filter_by(assignment_id = assign.id).all()
-    moss_resultsB = MossResult.query.order_by(MossResult.similarityA.desc()) \
-                                    .join(MossResult.submissionB) \
-                                    .filter_by(assignment_id = assign.id).all()
     moss_results = []
-    while moss_resultsA and moss_resultsB:
-        if moss_resultsA[0].similarityA >= moss_resultsB[0].similarityA:
-            result = moss_resultsA.pop(0)
-            if result not in moss_results:
-                moss_results.append(result)
-        else:
-            result = moss_resultsB.pop(0)
-            if result not in moss_results:
-                moss_results.append(result)
-    moss_results += moss_resultsA + moss_resultsB
+    last_run = MossResult.query.order_by(MossResult.run_time.desc()) \
+        .join(MossResult.primary).filter_by(assignment_id = assign.id).first()
+    print(last_run)
+    if last_run:
+        moss_results = MossResult.query.order_by(MossResult.similarity.desc()) \
+            .filter_by(run_time = last_run.run_time).join(MossResult.primary) \
+            .filter_by(assignment_id = assign.id).all()
     if tag:
         moss_results = [r for r in moss_results if tag in r.tags]
     return render_template('staff/plagiarism/list.assignment.html',
@@ -1153,25 +1145,11 @@ def student_view(cid, email):
                      if not a.active]
     }
 
-    moss_resultsA = MossResult.query.order_by(MossResult.similarityA.desc()) \
-                                    .join(MossResult.submissionA) \
-                                    .join(Backup.submitter) \
-                                    .filter_by(id=student.id).all()
-    moss_resultsB = MossResult.query.order_by(MossResult.similarityB.desc()) \
-                                    .join(MossResult.submissionB) \
-                                    .join(Backup.submitter) \
-                                    .filter_by(id=student.id).all()
-    moss_results = []
-    while moss_resultsA and moss_resultsB:
-        if moss_resultsA[0].similarityA >= moss_resultsB[0].similarityB:
-            result = moss_resultsA.pop(0)
-            if result not in moss_results:
-                moss_results.append(result)
-        else:
-            result = moss_resultsB.pop(0)
-            if result not in moss_results:
-                moss_results.append(result)
-    moss_results += moss_resultsA + moss_resultsB
+    moss_results = MossResult.query.order_by(MossResult.run_time.desc()) \
+        .group_by(MossResult.primary_id, MossResult.secondary_id) \
+        .order_by(MossResult.similarity.desc()) \
+        .join(MossResult.primary).join(Backup.submitter).filter_by(id=student.id).all()
+
     return render_template('staff/student/overview.html',
                            courses=courses, current_course=current_course,
                            student=student, enrollment=enrollment,

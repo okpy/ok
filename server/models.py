@@ -1086,7 +1086,7 @@ class Backup(Model):
         return "Unknown Question"
 
     def moss_results(self):
-        return MossResult.query.filter(or_(submissionA=self, submissionB=self))
+        return MossResult.query.filter(primary=self)
 
     @staticmethod
     @cache.memoize(120)
@@ -1677,17 +1677,27 @@ class Job(Model):
 class MossResult(Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    submissionA_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    submissionB_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
-    similarityA = db.Column(db.Integer, nullable=False)
-    similarityB = db.Column(db.Integer, nullable=False)
-    matchesA = db.Column(JsonBlob, nullable=False)
-    matchesB = db.Column(JsonBlob, nullable=False)
-
-    submissionA = db.relationship("Backup", foreign_keys='MossResult.submissionA_id')
-    submissionB = db.relationship("Backup", foreign_keys='MossResult.submissionB_id')
+    # Time that Moss was run
+    run_time = db.Column(db.DateTime(timezone=True), nullable=False)
     
+    # Primary submission and matches of this result (filter by this)
+    primary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    # Each file key maps to a list of 2 item lists
+    # (which represent the start and end of the range, inclusive)
+    primary_matches = db.Column(JsonBlob, nullable=False)
+    
+    # Secondary submission and matches of this result
+    secondary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    secondary_matches = db.Column(JsonBlob, nullable=False)
+    
+    # Percentage of primary that is similar to secondary
+    similarity = db.Column(db.Integer, nullable=False)
+    
+    # Tags on this result used for organizing
     tags = db.Column(StringList, nullable=False, default=[])
+
+    primary = db.relationship("Backup", foreign_keys='MossResult.primary_id')
+    secondary = db.relationship("Backup", foreign_keys='MossResult.secondary_id')
 
 
 ##########

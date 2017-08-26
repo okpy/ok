@@ -48,12 +48,11 @@
             <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="moss-list">
                 <table class="table table-hover">
                     <thead>
-                        <th class="sort" data-sort="studentA">Student A</th>
-                        <th class="sort" data-sort="submissionA">Submission A</th>
-                        <th class="sort" data-sort="similarityA">Similarity in A</th>
-                        <th class="sort" data-sort="studentB">Student B</th>
-                        <th class="sort" data-sort="submissionB">Submission B</th>
-                        <th class="sort" data-sort="similarityB">Similarity in B</th>
+                        <th class="sort" data-sort="student">Student</th>
+                        <th class="sort" data-sort="primary">Submission</th>
+                        <th class="sort" data-sort="similarity">Similarity</th>
+                        <th class="sort" data-sort="other">Similar Student</th>
+                        <th class="sort" data-sort="secondary">Similar Submission</th>
                         <th class="sort" data-sort="created">Created</th>
                         <th class="sort" data-sort="tags">Tags</th>
                     </thead>
@@ -61,36 +60,31 @@
                     <tbody class="list">
                         {%- for item in moss_results %}
                         <tr>
-                            <td class="studentA" data-email="{{item['submissionA']['submitter']['email']}}"
-                            data-name="{{item['submissionA']['submitter']['name']}}">
-                            <a href="{{ url_for('.student_view', cid=current_course.id, email=item['submissionA']['submitter']['email'])}}">
-                                {{ item['submissionA']['submitter']['email'] }}
+                            <td class="student" data-email="{{item['primary']['submitter']['email']}}"
+                            data-name="{{item['primary']['submitter']['name']}}">
+                            <a href="{{ url_for('.student_view', cid=current_course.id, email=item['primary']['submitter']['email'])}}">
+                                {{ item['primary']['submitter']['identifier'] }}
                             </a>
                             </td>
-                            <td class="submissionA">
-                              {{ helpers.backup_link(item['submissionA']['id']) }}
+                            <td class="primary">
+                              {{ helpers.backup_link(item['primary']['id']) }}
                             </td>
-                            <td class="similarityA" data-similarity-a="{{item['similarityA']}}">
+                            <td class="similarity" data-similarity="{{item['similarity']}}">
                             <a href="#">
-                                {{ item['similarityA'] }}%
+                                {{ item['similarity'] }}%
                             </a>
                             </td>
-                            <td class="studentB" data-email="{{item['submissionB']['submitter']['email']}}"
-                            data-name="{{item['submissionB']['submitter']['name']}}">
-                            <a href="{{ url_for('.student_view', cid=current_course.id, email=item['submissionB']['submitter']['email'])}}">
-                                {{ item['submissionB']['submitter']['email'] }}
+                            <td class="other" data-email="{{item['secondary']['submitter']['email']}}"
+                            data-name="{{item['secondary']['submitter']['name']}}">
+                            <a href="{{ url_for('.student_view', cid=current_course.id, email=item['secondary']['submitter']['email'])}}">
+                                {{ item['secondary']['submitter']['identifier'] }}
                             </a>
                             </td>
-                            <td class="submissionB">
-                              {{ helpers.backup_link(item['submissionB']['id']) }}
+                            <td class="secondary">
+                              {{ helpers.backup_link(item['secondary']['id']) }}
                             </td>
-                            <td class="similarityB" data-similarity-b="{{item['similarityB']}}">
-                            <a href="#">
-                                {{ item['similarityB'] }}%
-                            </a>
-                            </td>
-                            <td class="created" data-created="{{item['created']}}">
-                                {{ item['created'] }}
+                            <td class="created" data-created="{{item['run_time']}}">
+                                {{ item['run_time'] }}
                             </td>
                             <td class="tags">
                               {{ helpers.tag_pills(item.tags) }}

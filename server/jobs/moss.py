@@ -8,6 +8,7 @@ import difflib
 import socket
 import requests
 from collections import OrderedDict
+from datetime import datetime
 from html.parser import HTMLParser
 
 from server.models import Assignment, Backup, MossResult, db
@@ -16,9 +17,11 @@ from server.highlight import highlight_diff
 from server import jobs
 
 MAX_MATCHES = 1000
+NUM_RESULTS = 250
 
 def moss_submit(moss_id, submissions, ref_submissions, language, template,
-            review_threshold=101, max_matches=MAX_MATCHES, file_regex='.*'):
+            review_threshold=101, max_matches=MAX_MATCHES, file_regex='.*',
+            num_results=NUM_RESULTS):
     """ Sends SUBMISSIONS and REF_SUBMISSIONS to Moss using MOSS_ID,
     LANGUAGE, and MAX_MATCHES.
     Stores results involving SUBMISSIONS in database.
@@ -34,7 +37,8 @@ def moss_submit(moss_id, submissions, ref_submissions, language, template,
     moss.send('directory 1\n'.encode())
     moss.send('X 0\n'.encode())
     moss.send('maxmatches {}\n'.format(max_matches).encode())
-    moss.send('show 250\n'.encode())
+    moss.send('show {}\n'.format(num_results).encode())
+    print(num_results)
     moss.send('language {}\n'.format(language).encode())
     moss_success = moss.recv(1024).decode().strip()
     print(moss_success)
@@ -94,10 +98,11 @@ def moss_submit(moss_id, submissions, ref_submissions, language, template,
                     template, review_threshold)
 
 def parse_moss_results(base_url, hashed_ids, logger, pattern, template, review_threshold=101):
+    run_time = datetime.now()
     match = 0
-    # Allow decimal and integer thresholds to be accepted (e.g. 0.2 and 20)
-    if review_threshold > 1:
-        review_threshold /= 100
+    # Convert decimal thresholds to percentages
+    if review_threshold < 1:
+        review_threshold *= 100
     while True:
         r = requests.get('{}/match{}-top.html'.format(base_url, match))
         if r.status_code == 404:
@@ -113,35 +118,26 @@ def parse_moss_results(base_url, hashed_ids, logger, pattern, template, review_t
         submissionA = Backup.query.filter_by(id=decode_id(hashidA)).one_or_none()
         submissionB = Backup.query.filter_by(id=decode_id(hashidB)).one_or_none()
 
-        # make sure this submission hasn't been processed before
-        resultB = MossResult.query.filter_by(submissionB=submissionA, submissionA=submissionB).one_or_none()
-        if resultB:
-            logger.info('Moss result #{} already exists.'.format(match))
-            continue
-
         similarityA, similarityB = parser.similarities
         rangesA, rangesB = parser.ranges[::2], parser.ranges[1::2]
         matchesA = [[int(i) for i in r.split('-')] for r in rangesA]
         matchesB = [[int(i) for i in r.split('-')] for r in rangesB]
         matchesA = recalculate_lines(submissionA, matchesA, pattern)
         matchesB = recalculate_lines(submissionB, matchesB, pattern)
-        print(matchesA)
-        print(matchesB)
         similarityA = recalculate_similarity(submissionA, matchesA, template)
         similarityB = recalculate_similarity(submissionB, matchesB, template)
-        result = MossResult.query.filter_by(submissionA=submissionA, submissionB=submissionB).one_or_none()
-        tags = []
-        if similarityA >= review_threshold or similarityB >= review_threshold:
-            tags.append('review')
-        result.similarityA = similarityA
-        result.similarityB = similarityB
-        result.matchesA = matchesA
-        result.matchesB = matchesB
-        result.tags = tags
-        # result = MossResult(submissionA=submissionA, submissionB=submissionB,
-        #     similarityA=similarityA, similarityB=similarityB,
-        #     matchesA=matchesA, matchesB=matchesB, tags=tags)
-        db.session.add(result)
+        if not hashed_ids or hashidA in hashed_ids:
+            result = MossResult(primary=submissionA, secondary=submissionB,
+                primary_matches=matchesA, secondary_matches=matchesB,
+                tags=['review'] if similarityA >= review_threshold else [], 
+                similarity=similarityA, run_time=run_time)
+            db.session.add(result)
+        if not hashed_ids or hashidB in hashed_ids:
+            result = MossResult(primary=submissionB, secondary=submissionA,
+                primary_matches=matchesB, secondary_matches=matchesA,
+                tags=['review'] if similarityB >= review_threshold else [],
+                similarity=similarityB, run_time=run_time)
+            db.session.add(result)
         logger.info('Adding Moss result #{}...'.format(match))
     db.session.commit()
 
@@ -164,7 +160,6 @@ class MossParser(HTMLParser):
             self.ranges.append(data)
 
 def recalculate_lines(submission, raw_matches, pattern):
-    print(submission.submitter.email)
     files = submission.files()
     file_matches = {f:[] for f in files if pattern.match(f)}
     file_lengths = {f:len(files[f].split('\n')) for f in file_matches}
@@ -225,7 +220,7 @@ def send_file(moss, path, contents, fid, language):
 
 @jobs.background_job
 def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=None,
-                   review_threshold=101):
+                   review_threshold=101, num_results=NUM_RESULTS):
     assign = Assignment.query.filter_by(id=assignment_id).one_or_none()
     if not assign:
         raise Exception("Could not find assignment")
@@ -234,5 +229,5 @@ def submit_to_moss(moss_id=None, file_regex=".*", assignment_id=None, language=N
     if assign.files:
         for filename in assign.files:
             template[filename] = assign.files[filename]
-    return moss_submit(moss_id, subms, [], language, template, review_threshold,
-                    MAX_MATCHES, file_regex)
+    return moss_submit(moss_id, subms, [], language, template,
+        review_threshold, MAX_MATCHES, file_regex, num_results)
