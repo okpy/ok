@@ -153,3 +153,16 @@ def diff_lines(files_before, files_after):
             elif tag == 'insert':
                 diff_lines += (j2 - j1)
     return diff_lines
+
+def lines_added(files_before, files_after):
+    added = 0
+    for filename in files_before.keys() | files_after.keys():
+        a = files_before.get(filename, '')
+        b = files_after.get(filename, '')
+        matcher = difflib.SequenceMatcher(difflib.IS_CHARACTER_JUNK, a.splitlines(), b.splitlines())
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if tag == 'replace':
+                added += (j2 - j1)
+            elif tag == 'insert':
+                added += (j2 - j1)
+    return added
