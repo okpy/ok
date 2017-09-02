@@ -250,14 +250,19 @@ class VersionForm(BaseForm):
 
 
 class BatchEnrollmentForm(BaseForm):
-    csv = TextAreaField('Email, Name, SID, Course Login, Section')
+    file = FileField('csv/json file', validators=[
+            FileRequired(),
+            FileAllowed(['json', 'csv'], 'csv/json files only!')
+        ])
+    fields = StringField('Field names for "Email, Name, SID, Course Login, Section"',
+        default="Email, Name, SID, Course Login, Section",
+        description="A comma-separated-list of field names equivalent to above")
     role = SelectField('Role', default=STUDENT_ROLE,
                        choices=ROLE_DISPLAY_NAMES.items())
 
     def validate(self):
-        check_validate = super(BatchEnrollmentForm, self).validate()
         # if our validators do not pass
-        if not check_validate:
+        if not super(BatchEnrollmentForm, self).validate():
             return False
         try:
             rows = self.csv.data.splitlines()
