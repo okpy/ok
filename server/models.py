@@ -1868,9 +1868,8 @@ class Extension(Model):
         # Retroactively change the submission times of all past late backups
         # that were created before the expiration time.
         for backup in ext.get_backups():
-            if backup.created > assignment.due_date:
-                backup.custom_submission_time = custom_submission_time
-                db.session.add(backup)
+            backup.custom_submission_time = custom_submission_time
+            db.session.add(backup)
 
         db.session.commit()
         return ext
