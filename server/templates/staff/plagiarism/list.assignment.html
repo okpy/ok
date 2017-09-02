@@ -53,7 +53,7 @@
                         <th class="sort" data-sort="similarity">Similarity</th>
                         <th class="sort" data-sort="other">Similar Student</th>
                         <th class="sort" data-sort="secondary">Similar Submission</th>
-                        <th class="sort" data-sort="created">Created</th>
+                        <th class="sort" data-sort="created">Time Compared</th>
                         <th class="sort" data-sort="tags">Tags</th>
                     </thead>
 
@@ -70,7 +70,7 @@
                               {{ helpers.backup_link(item['primary']['id']) }}
                             </td>
                             <td class="similarity" data-similarity="{{item['similarity']}}">
-                            <a href="#">
+                            <a id="diff_viewer" href="#">
                                 {{ item['similarity'] }}%
                             </a>
                             </td>
@@ -133,8 +133,8 @@
 {% endblock %}
 
 {% block page_js %}
-<script>
 
+<script>
     var mossListOptions = {
       valueNames: [ 'studentA', 'submissionA', 'similarityA',
                     'studentB', 'submissionB', 'similarityB', 'tags'
@@ -148,5 +148,8 @@
     document.getElementById('moss-loading').style.display = 'none';
     document.getElementById('moss-list').style.display = 'block';
 
+    $("#diff_viewer").on("click", function() {
+        console.log("showing a diff viewer");
+    });
 </script>
 {% endblock %}
