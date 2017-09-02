@@ -70,7 +70,7 @@
                               {{ helpers.backup_link(item['primary']['id']) }}
                             </td>
                             <td class="similarity" data-similarity="{{item['similarity']}}">
-                            <a href="{{ url_for('.moss_viewer', bid_1=item['primary_id'], bid_2=item['secondary_id']) }}">
+                            <a href="{{ url_for('.moss_viewer', moss_id=item['id']) }}">
                                 {{ item['similarity'] }}%
                             </a>
                             </td>

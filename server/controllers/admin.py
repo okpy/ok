@@ -187,19 +187,15 @@ def composition(bid):
         form.score.data = existing.score
     return grading_view(backup, form=form, is_composition=True)
 
-@admin.route('/moss-viewer/<hashid:bid_1>/<hashid:bid_2>')
+@admin.route('/moss-viewer/<hashid:moss_id>')
 @is_staff()
-def moss_viewer(bid_1, bid_2):
-    # backup = Backup.query.get(bid)
-    # if not (backup and Backup.can(backup, current_user, "grade")):
+def moss_viewer(moss_id):
+    moss_result = MossResult.query.get(moss_id)
+    # backup_1 = Backup.query.get(bid_1)
+    # backup_2 = Backup.query.get(bid_2)
+    # if not backup_1 or not backup_2:
     #     abort(404)
-    # form = forms.CompositionScoreForm()
-    # existing = Score.query.filter_by(backup=backup, kind="composition").first()
-    # if existing:
-    #     form.kind.data = "composition"
-    #     form.message.data = existing.message
-    #     form.score.data = existing.score
-    return render_template('staff/plagiarism/moss-viewer.html')
+    return render_template('staff/plagiarism/moss-viewer.html', xyzzyx=moss_result.primary_id)
 
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
 @is_staff()
@@ -337,6 +333,7 @@ def client_version(name):
 ##########
 # Course #
 ##########
+
 @admin.route("/course/")
 @is_staff()
 def list_courses():
