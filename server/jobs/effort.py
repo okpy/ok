@@ -31,9 +31,9 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
             continue
 
         latest_backup = Backup.query.get(subm['backup']['id'])
-        submission_time = get_submission_time(backup, assignment)
+        submission_time = get_submission_time(latest_backup, assignment)
         backup, submission_time = find_best_scoring(latest_backup,
-                submission_time, assignment, required_questions)
+                submission_time, assignment, required_questions, full_credit)
 
         try:
             score, messages = effort_score(backup, full_credit, required_questions)
@@ -41,17 +41,8 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
             manual.append(backup.hashid)
             score, messages = 0, ['Manual grading needed - Ping your TA']
         else:
-            score, messages = handle_late(backup, assignment, late, messages, late_multiplier)
-
-        if submission_time > assignment.lock_date:
-            late.append(backup.hashid)
-            messages.append('\nLate - No Credit')
-            score = 0
-        elif submission_time > assignment.due_date:
-            late.append(backup.hashid)
-            late_percent = 100 - round(late_multiplier * 100)
-            messages.append('\nLate - {}% off'.format(late_percent))
-            score = math.floor(score * late_multiplier)
+            score, messages = handle_late(backup, assignment,
+                    late, submission_time, score, messages, late_multiplier)
 
         messages.append('\nFinal Score: {}'.format(score))
         new_score = Score(score=score, kind='effort',
@@ -93,24 +84,24 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
                 cid=jobs.get_current_job().course_id, aid=assignment_id)
 
 
-def handle_late(backup, assignment, late, messages, late_multiplier):
-    if backup.submission_time > assignment.lock_date:
+def handle_late(backup, assignment, late, submission_time, score, messages, late_multiplier):
+    if submission_time > assignment.lock_date:
         late.append(backup.hashid)
         messages.append('\nLate - No Credit')
         score = 0
-    elif backup.submission_time > assignment.due_date:
+    elif submission_time > assignment.due_date:
         late.append(backup.hashid)
         late_percent = 100 - round(late_multiplier * 100)
         messages.append('\nLate - {}% off'.format(late_percent))
         score = math.floor(score * late_multiplier)
     return score, messages
 
-def find_best_scoring(backup, submission_time, assignment, required_questions):
+def find_best_scoring(backup, submission_time, assignment, required_questions, full_credit):
     if submission_time > assignment.due_date:
         submitter_id = backup.submitter_id
         backups = (
-            find_ontime(submitter_id, assignment_id, assignment.due_date),
-            find_ontime(submitter_id, assignment_id, assignment.lock_date),
+            find_ontime(submitter_id, assignment.id, assignment.due_date),
+            find_ontime(submitter_id, assignment.id, assignment.lock_date),
             backup # default to the late backup
         )
         backup = best_scoring(backups, full_credit, required_questions)
