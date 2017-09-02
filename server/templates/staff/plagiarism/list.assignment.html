@@ -11,7 +11,7 @@
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
+        <li><a href="{{ url_for('admin.course', cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
@@ -70,7 +70,7 @@
                               {{ helpers.backup_link(item['primary']['id']) }}
                             </td>
                             <td class="similarity" data-similarity="{{item['similarity']}}">
-                            <a id="diff_viewer" href="#">
+                            <a href="{{ url_for('.moss_viewer', bid_1=item['primary_id'], bid_2=item['secondary_id']) }}">
                                 {{ item['similarity'] }}%
                             </a>
                             </td>
@@ -147,9 +147,5 @@
     mossList.sort("similarityA", {order: "desc"})
     document.getElementById('moss-loading').style.display = 'none';
     document.getElementById('moss-list').style.display = 'block';
-
-    $("#diff_viewer").on("click", function() {
-        console.log("showing a diff viewer");
-    });
 </script>
 {% endblock %}

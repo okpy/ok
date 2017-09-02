@@ -142,6 +142,7 @@ class StringList(types.TypeDecorator):
                 values.append(val)
         return values
 
+
 class Model(db.Model):
     """ Timestamps all models, and serializes model objects."""
     __abstract__ = True
@@ -846,7 +847,6 @@ class Assignment(Model):
         self.published_scores = [t for t in self.published_scores if t != tag]
 
 
-
 class Enrollment(Model):
     __tablename__ = 'enrollment'
     __table_args__ = (
@@ -948,6 +948,7 @@ class Enrollment(Model):
             db.session.add(record)
         cache.delete_memoized(User.is_enrolled)
         return created, updated
+
 
 class Message(Model):
     __tablename__ = 'message'
@@ -1328,6 +1329,7 @@ class GroupAction(Model):
     group_before = db.Column(Json, nullable=False)
     group_after = db.Column(Json, nullable=False)
 
+
 class Version(Model):
     id = db.Column(db.Integer(), primary_key=True)
     # software name e.g. 'ok'
@@ -1348,6 +1350,7 @@ class Version(Model):
         cache.delete_memoized(Version.get_current_versions, None)
         db.session.add(self)
         db.session.commit()
+
 
 class Comment(Model):
     """ Composition comments. Line is the line # on the Diff.
@@ -1587,6 +1590,7 @@ class Client(Model):
             return True
         return redirect_uri in self.redirect_uris
 
+
 class Grant(Model):
     id = db.Column(db.Integer, primary_key=True)
 
@@ -1699,7 +1703,6 @@ class MossResult(Model):
     primary = db.relationship("Backup", foreign_keys='MossResult.primary_id')
     secondary = db.relationship("Backup", foreign_keys='MossResult.secondary_id')
 
-
 ##########
 # Canvas #
 ##########
@@ -1729,6 +1732,7 @@ class CanvasCourse(Model):
     @property
     def url(self):
         return 'https://{}/courses/{}'.format(self.api_domain, self.external_id)
+
 
 class CanvasAssignment(Model):
     id = db.Column(db.Integer, primary_key=True)
