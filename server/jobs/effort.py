@@ -131,7 +131,7 @@ def find_ontime(submitter_id, assignment_id, due_date):
     ).order_by(Backup.created.desc()).first()
     return submission or backup
 
-def effort_score(backup, full_credit, required_questions):
+def effort_score(backup, full_credit, required_questions, attempts_needed=ATTEMPTS_NEEDED):
     """
     Gives a score based on "effort" instead of correctness.
 
@@ -139,6 +139,8 @@ def effort_score(backup, full_credit, required_questions):
         1.  The question is correct
         2.  The question has at least one testcase passed
         3.  Greater than 5 attempts were made
+
+    Effort scores are all or nothing!
     """
     grading, analytics = backup.grading(), backup.analytics()
     with_effort, messages = 0, ['Effort Breakdown']
@@ -151,7 +153,7 @@ def effort_score(backup, full_credit, required_questions):
     assert len(questions) > 0
 
     for question in questions:
-        correct, effort = effort_score_question(question, history, grading)
+        correct, effort = effort_score_question(question, history, grading, attempts_needed)
         if correct or effort:
             with_effort += 1
         message = correct and 'Correct' or effort and 'Sufficient Effort' or 'Not Sufficient Effort'
@@ -160,12 +162,12 @@ def effort_score(backup, full_credit, required_questions):
     score = full_credit * (with_effort // required_questions)
     return min(score, full_credit), messages
 
-def effort_score_question(question, history, grading):
+def effort_score_question(question, history, grading, attempts_needed):
     correct, showed_effort = False, False
     if history and history.get(question):
         info = history[question]
         correct |= info['solved']
-        showed_effort |= info['attempts'] >= ATTEMPTS_NEEDED
+        showed_effort |= info['attempts'] >= attempts_needed
     if grading and grading.get(question):
         info = grading[question]
         correct |= info['locked'] == 0 and info['failed'] == 0
