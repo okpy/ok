@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from collections import Counter
 
 from server import jobs
-from server.models import Assignment, Score, Backup, db
+from server.models import Assignment, Score, Backup, Extension, db
 
 ATTEMPTS_NEEDED = 5
 
@@ -31,15 +31,27 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
             continue
 
         latest_backup = Backup.query.get(subm['backup']['id'])
-        backup = find_best_scoring(latest_backup, assignment, required_questions)
+        submission_time = get_submission_time(backup, assignment)
+        backup, submission_time = find_best_scoring(latest_backup,
+                submission_time, assignment, required_questions)
 
         try:
             score, messages = effort_score(backup, full_credit, required_questions)
         except AssertionError:
             manual.append(backup.hashid)
-            score, messages = 0, []
+            score, messages = 0, ['Manual grading needed - Ping your TA']
         else:
             score, messages = handle_late(backup, assignment, late, messages, late_multiplier)
+
+        if submission_time > assignment.lock_date:
+            late.append(backup.hashid)
+            messages.append('\nLate - No Credit')
+            score = 0
+        elif submission_time > assignment.due_date:
+            late.append(backup.hashid)
+            late_percent = 100 - round(late_multiplier * 100)
+            messages.append('\nLate - {}% off'.format(late_percent))
+            score = math.floor(score * late_multiplier)
 
         messages.append('\nFinal Score: {}'.format(score))
         new_score = Score(score=score, kind='effort',
@@ -72,7 +84,7 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
         logger.info('  {} - {}'.format(str(score).rjust(3), count))
 
     if len(manual) > 0:
-        logger.info('\n{} Backups Need Manual Grading:'.format(len(manual)))
+        logger.info('\n{} Backups Needing Manual Grading:'.format(len(manual)))
         for backup_id in manual:
             logger.info(grading_url + backup_id)
 
@@ -93,16 +105,32 @@ def handle_late(backup, assignment, late, messages, late_multiplier):
         score = math.floor(score * late_multiplier)
     return score, messages
 
-def find_best_scoring(backup, assignment, required_questions):
-    if backup.submission_time > assignment.due_date:
+def find_best_scoring(backup, submission_time, assignment, required_questions):
+    if submission_time > assignment.due_date:
         submitter_id = backup.submitter_id
         backups = (
-            find_ontime(submitter_id, assignment.id, assignment.due_date),
-            find_ontime(submitter_id, assignment.id, assignment.lock_date),
+            find_ontime(submitter_id, assignment_id, assignment.due_date),
+            find_ontime(submitter_id, assignment_id, assignment.lock_date),
             backup # default to the late backup
         )
         backup = best_scoring(backups, full_credit, required_questions)
-    return backup
+        submission_time = get_submission_time(backup, assignment)
+    return backup, submission_time
+
+def get_submission_time(backup, assignment):
+    """
+    Returns the "time" the backup was submitted.
+
+    If an extension exists and it hasn't expired, use its
+    ``custom_submission_time`` instead of the backup's.
+
+    If the extension's ``custom_submission_time`` is None, assume it's right
+    before the assignment's due date.
+    """
+    extension = Extension.get_extension(backup.submitter, assignment, backup.created)
+    if extension:
+        return extension.custom_submission_time or assignment.due_date
+    return backup.submission_time
 
 def best_scoring(backups, full_credit, required_questions):
     def effort_grade(backup):

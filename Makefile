@@ -26,6 +26,7 @@ clean:
 lint:
 	flake8 --exclude=env,tests .
 
+tests: test
 test:
 	py.test --cov-report term-missing --cov=server tests/
 

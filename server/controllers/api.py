@@ -360,7 +360,7 @@ class BackupSchema(APISchema):
                              eligible_submit)
         if args['submit'] and past_due:
             assign_obj = models.Assignment.by_name(args['assignment'])
-            extension = models.Extension.get_extension(user, assign_obj)
+            extension = models.Extension.get_extension(user, assign_obj, time=backup.created)
             # Submissions after the deadline with an extension are allowed
             if extension:
                 backup.submit = True  # Need to set if the assignment is inactive

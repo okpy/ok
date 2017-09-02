@@ -1,4 +1,4 @@
-from server.models import db, Backup, Group, Message, GradingTask, Score
+from server.models import db, Backup, Extension
 import server.utils as utils
 from server import generate
 from server import constants
@@ -6,6 +6,7 @@ from server.controllers import api
 from server.jobs.effort import *
 
 from itertools import zip_longest
+import datetime as dt
 
 from tests import OkTestCase
 
@@ -15,7 +16,7 @@ class TestEffortGrading(OkTestCase):
         super().setUp()
         self.setup_course()
 
-    def make_backup(self, grading=None, attempts=None, submit=False):
+    def make_backup(self, grading=None, attempts=None, submit=False, time=None):
         """
         Create a Backup with specific message info.
 
@@ -36,6 +37,7 @@ class TestEffortGrading(OkTestCase):
         """
         grading = grading or ''
         attempts = attempts or ''
+        custom_time = time or dt.datetime.utcnow()
         messages = {
             'grading': {
                 q: {
@@ -58,7 +60,10 @@ class TestEffortGrading(OkTestCase):
                 }
             }
         }
-        return api.make_backup(self.user1, self.assignment.id, messages, submit)
+        backup = api.make_backup(self.user1, self.assignment.id, messages, submit)
+        backup.created = custom_time
+        db.session.commit()
+        return backup
 
     def score_equals(self, backup, score, qs=2):
         try:
@@ -108,4 +113,29 @@ class TestEffortGrading(OkTestCase):
     def test_effort_missing(self):
         self.score_equals(self.make_backup(grading='f c', attempts='33 '), 2, qs=3) # 2
         self.score_equals(self.make_backup(grading='p', attempts=' 3'), 2)
+
+
+    def _make_ext(self, assignment, user, time=None):
+        custom_time = time or dt.datetime.utcnow()
+        ext = Extension(assignment=assignment, user=user,
+                custom_submission_time=custom_time,
+                expires=dt.datetime.utcnow() + dt.timedelta(days=1),
+                staff=self.staff1)
+        db.session.add(ext)
+        db.session.commit()
+        return ext
+
+    def test_extension_submission_time(self):
+        curr_time = dt.datetime.utcnow()
+        self.assignment.due_date = curr_time - dt.timedelta(days=1)
+        backup = self.make_backup(time=curr_time)
+
+        # Submission time shouldn't initially be on time
+        self.assertFalse(backup.submission_time <= self.assignment.due_date)
+
+        ext = self._make_ext(self.assignment, self.user1, time=self.assignment.due_date)
+        custom_submission_time = get_submission_time(backup, self.assignment)
+
+        # Should use the extension's time instead of the backup's time
+        self.assertTrue(custom_submission_time <= self.assignment.due_date)
 
