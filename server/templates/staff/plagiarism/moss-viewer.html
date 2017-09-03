@@ -1,19 +1,14 @@
 {% extends "staff/base.html" %}
 {% import 'diff.html' as diff with context %}
-{% import 'staff/_formhelpers.html' as forms %}
 {% import '_globalhelpers.html' as globals %}
+{% import 'staff/_helpers.html' as helpers %}
 
 {% block title %}Moss Viewer{% endblock %}
 
 {% block main %}
 <section class="content-header">
     <h1>
-        Grade {{ backup.assignment.display_name }} {{ "submission" if backup.is_submit else "backup" }}
-        {% if task %}
-        <small> Assigned to {{ task.grader.email }} </small>
-        {% else %}
-        <small> Not assigned to grade </small>
-        {% endif %}
+        MOSS Results for {{ backup.assignment.display_name }} Submissions {{ helpers.backup_link(backup.id) }} & {{ helpers.backup_link(assignment.id) }}
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for(".course", cid=backup.assignment.course.id) }}">
@@ -23,7 +18,7 @@
           <i class="fa fa-list"></i> Assignments</a>
         </li>
         <li class="active"><a href="{{ url_for('.assignment', cid=backup.assignment.course.id, aid=backup.assignment.id) }}"><i class="fa fa-book"></i> {{ backup.assignment.display_name }}</a></li>
-        <li class="active"><a href="{{ url_for('.grading', bid=backup.id) }}"><i class="fa fa-book"></i> Grade {{ globals.backup_style(utils.encode_id(backup.id)) }}</a></li>
+        <li class="active hidden-xs"><a href="{{ url_for('.assignment_moss_results', cid=backup.assignment.course.id, aid=backup.assignment.id) }}"><i class="fa fa-bar-chart"></i> Moss Results </a></li>
     </ol>
 </section>
 
@@ -69,22 +64,6 @@
                       {{ backup.creator.email }}
                     </li>
                   {% endif %}
-                    <li class="list-group-item">
-                      <b>Creation Time: </b>
-                      {{ utils.local_time(backup.created, backup.assignment.course) }}
-                    </li>
-                  {% if backup.custom_submission_time %}
-                    <li class="list-group-item">
-                      <b>Custom Submission Time: </b>
-                      {{ utils.local_time(backup.custom_submission_time, backup.assignment.course) }}
-                    </li>
-                  {% endif %}
-                    <li class="list-group-item">
-                      <b>Student URL: </b>
-                      {% with student_url = url_for('student.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit, _external=True) %}
-                      <a href="{{ student_url }}"> {{ student_url }} </a>
-                      {% endwith %}
-                    </li>
                   {% for score in backup.active_scores %}
                     <li class="list-group-item">
                       <p>
@@ -99,21 +78,9 @@
                       <p>{{ utils.local_time(score.created, backup.assignment.course) }} from {{ score.grader.email }}</p>
                     </li>
                   {% else %}
-                    <li class="list-group-item"><b>No Scores </b></li>
+                    <li class="list-group-item"><b>No Scores</b></li>
                   {% endfor %}
                   </ul>
-                  <div class="btn-toolbar">
-                    <div class="btn-group">
-                      <a class="btn btn-default" href="{{ url_for('.edit_backup', bid=backup.id) }}"> <i class="fa fa-edit"></i> Edit Submission </a>
-                    </div>
-                    <div class="btn-group">
-                    {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}
-                      <button id="autograde-button" class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
-                      </button>
-                    {% endcall %}
-                    </div>
-                  </div>
-                </div>
             </div>
             {% macro diff_tab(target_diff_type, text) %}
             {% if is_composition %}
@@ -144,19 +111,6 @@
                     </div>
                 </div>
                 <!-- ./box-body -->
-                <div class="box-footer">
-                    <!-- Grade Box -->
-
-                    {% call forms.render_form(form, action_url=url_for('.grade', bid=backup.id),
-                                              action_text='Submit Score',
-                                              class_='form') %}
-                        {{ forms.render_field(form.kind, label_visible=true) }}
-                        {{ forms.render_field(form.message, label_visible=true, placeholder='Great work! Here are some suggestions ... ', type='text') }}
-                        {{ forms.render_field(form.score, label_visible=true) }}
-                    {% endcall %}
-
-                </div>
-                <!-- /.box-footer -->
             </div>
             <!-- /.box -->
         </div>

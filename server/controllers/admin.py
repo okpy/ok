@@ -224,15 +224,14 @@ def moss_viewer(moss_id):
     for filename, ex_file in backup_1.external_files_dict().items():
         files[filename] = ex_file
 
-    group = [User.query.get(o) for o in backup_1.owners()]
     task = backup_1.grading_tasks
     if task:
         # Choose the first grading_task
         task = task[0]
 
     return render_template('staff/plagiarism/moss-viewer.html', courses=courses, assignment=backup_2,
-                           backup=backup_1, group=group, files=files, diff_type=diff_type,
-                           task=task, form=forms.GradeForm(), is_composition=False)
+                           backup=backup_1, files=files, diff_type=diff_type,
+                           task=task, is_composition=False)
 
 
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
@@ -439,7 +438,6 @@ def course_settings(cid):
     return render_template('staff/course/course.edit.html', form=form,
                            courses=courses, current_course=current_course)
 
-
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
 def course_assignments(cid):
@@ -451,7 +449,6 @@ def course_assignments(cid):
     return render_template('staff/course/assignment/assignments.html',
                            courses=courses, current_course=current_course,
                            active_asgns=active_asgns, due_assgns=due_asgns)
-
 
 @admin.route("/course/<int:cid>/assignments/new", methods=["GET", "POST"])
 @is_staff(course_arg='cid')
@@ -811,7 +808,6 @@ def assignment_single_queue(cid, aid, uid):
                            assignment=assignment, grader=assigned_grader,
                            queue=queue, remaining=remaining,
                            percent_left=percent_left)
-
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/queues/new",
              methods=["GET", "POST"])
@@ -1433,9 +1429,11 @@ def student_assignment_graph_detail(cid, email, aid):
                            student=student, assignment=assign,
                            group=group,
                            graphs=line_charts)
+
 ##############
 # Extensions #
 ##############
+
 @admin.route("/course/<int:cid>/extensions")
 @is_staff(course_arg='cid')
 def list_extensions(cid):
