@@ -193,9 +193,17 @@ def moss_viewer(moss_id):
     moss_result = MossResult.query.get(moss_id)
     if not moss_result:
         abort(404)
+    backup_1 = Backup.query.get(moss_result.primary_id)
+    backup_2 = Backup.query.get(moss_result.secondary_id)
+    if not backup_1 or not backup_2:
+        abort(404)
+    files = highlight.diff_files(backup_1.files(), backup_2.files(), 'short')
     return render_template('staff/plagiarism/moss-viewer.html',
                            primary_matches=moss_result.primary_matches,
-                           secondary_matches=moss_result.secondary_matches)
+                           secondary_matches=moss_result.secondary_matches,
+                           backup=backup_1,
+                           secondary_backup=backup_2,
+                           files=files)
 
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
 @is_staff()

@@ -1,21 +1,18 @@
 {% extends "staff/base.html" %}
-{% import 'staff/_formhelpers.html' as forms with context%}
-{% import 'staff/_helpers.html' as helpers %}
+{% import 'diff.html' as diff with context %}
+{% import 'staff/_formhelpers.html' as forms %}
+{% import '_globalhelpers.html' as globals %}
 
 {% block title %}Moss Viewer{% endblock %}
 
 {% block main %}
-<p>primary matches:</p>
-<br>
-{{ primary_matches }}
-<br>
-<p>secondary matches:</p>
-<br>
-{{secondary_matches }}
-<br>
+
+{{ diff.render_files(backup, files) }}
+
+{% endblock %}
+
+{% block page_css %}
 {% endblock %}
 
 {% block page_js %}
-<script>
-</script>
 {% endblock %}
