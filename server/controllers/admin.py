@@ -197,13 +197,43 @@ def moss_viewer(moss_id):
     backup_2 = Backup.query.get(moss_result.secondary_id)
     if not backup_1 or not backup_2:
         abort(404)
-    files = highlight.diff_files(backup_1.files(), backup_2.files(), 'short')
-    return render_template('staff/plagiarism/moss-viewer.html',
-                           primary_matches=moss_result.primary_matches,
-                           secondary_matches=moss_result.secondary_matches,
-                           backup=backup_1,
-                           secondary_backup=backup_2,
-                           files=files)
+    # files = highlight.diff_files(backup_1.files(), backup_2.files(), 'short')
+    # return render_template('staff/plagiarism/moss-viewer.html',
+    #                        primary_matches=moss_result.primary_matches,
+    #                        secondary_matches=moss_result.secondary_matches,
+    #                        backup=backup_1,
+    #                        secondary_backup=backup_2,
+    #                        files=files)
+
+
+
+
+    courses, current_course = get_courses()
+    diff_type = 'short'
+
+    # sort comments by (filename, line)
+    comments = collections.defaultdict(list)
+    for comment in backup_1.comments:
+        comments[(comment.filename, comment.line)].append(comment)
+
+    # highlight files and add comments
+    files = highlight.diff_files(backup_2.files(), backup_1.files(), diff_type)
+    for filename, source_file in files.items():
+        for line in source_file.lines:
+            line.comments = comments[(filename, line.line_after)]
+    for filename, ex_file in backup_1.external_files_dict().items():
+        files[filename] = ex_file
+
+    group = [User.query.get(o) for o in backup_1.owners()]
+    task = backup_1.grading_tasks
+    if task:
+        # Choose the first grading_task
+        task = task[0]
+
+    return render_template('staff/plagiarism/moss-viewer.html', courses=courses, assignment=backup_2,
+                           backup=backup_1, group=group, files=files, diff_type=diff_type,
+                           task=task, form=forms.GradeForm(), is_composition=False)
+
 
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
 @is_staff()

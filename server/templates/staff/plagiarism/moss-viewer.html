@@ -6,13 +6,189 @@
 {% block title %}Moss Viewer{% endblock %}
 
 {% block main %}
+<section class="content-header">
+    <h1>
+        Grade {{ backup.assignment.display_name }} {{ "submission" if backup.is_submit else "backup" }}
+        {% if task %}
+        <small> Assigned to {{ task.grader.email }} </small>
+        {% else %}
+        <small> Not assigned to grade </small>
+        {% endif %}
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=backup.assignment.course.id) }}">
+            <i class="fa fa-university"></i> {{ backup.assignment.course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=backup.assignment.course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li class="active"><a href="{{ url_for('.assignment', cid=backup.assignment.course.id, aid=backup.assignment.id) }}"><i class="fa fa-book"></i> {{ backup.assignment.display_name }}</a></li>
+        <li class="active"><a href="{{ url_for('.grading', bid=backup.id) }}"><i class="fa fa-book"></i> Grade {{ globals.backup_style(utils.encode_id(backup.id)) }}</a></li>
+    </ol>
+</section>
 
-{{ diff.render_files(backup, files) }}
+<section class="content">
+    {% include 'alerts.html' %}
 
-{% endblock %}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box {% if is_composition %}collapsed-box{% endif %}">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
+
+                    <div class="box-tools pull-right">
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa {% if not is_composition %}fa-minus{% else %}fa-plus{% endif %}"></i>
+                        </button>
+                    </div>
+                    <!-- /.box-tools -->
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" class="spoiler" style="display: {% if not is_composition %}block{% else %}none{% endif %};">
+                  <ul class="list-group list-group-unbordered">
+                    <li class="list-group-item">
+                      <b>Submitter: </b>
+                      <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
+                        {{ backup.submitter.email }}
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                    {% if group | length > 1 %}
+                      <b>Group: </b>
+                      {% for member in group %}
+                        <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
+                           {{ member.email }}
+                        </a>
+                      {% endfor %}
+                    {% else %}
+                      <b>No Group</b>
+                    {% endif %}
+                    </li>
+                  {% if backup.creator %}
+                    <li class="list-group-item">
+                      <b>Creator: </b>
+                      {{ backup.creator.email }}
+                    </li>
+                  {% endif %}
+                    <li class="list-group-item">
+                      <b>Creation Time: </b>
+                      {{ utils.local_time(backup.created, backup.assignment.course) }}
+                    </li>
+                  {% if backup.custom_submission_time %}
+                    <li class="list-group-item">
+                      <b>Custom Submission Time: </b>
+                      {{ utils.local_time(backup.custom_submission_time, backup.assignment.course) }}
+                    </li>
+                  {% endif %}
+                    <li class="list-group-item">
+                      <b>Student URL: </b>
+                      {% with student_url = url_for('student.code', name=backup.assignment.name, bid=backup.id, submit=backup.submit, _external=True) %}
+                      <a href="{{ student_url }}"> {{ student_url }} </a>
+                      {% endwith %}
+                    </li>
+                  {% for score in backup.active_scores %}
+                    <li class="list-group-item">
+                      <p>
+                        <b>{{ score.kind.title() }}: </b>{{ score.score | round(2) }}&ensp;
+                        {% if score.kind in backup.assignment.published_scores %}
+                          <span class="label label-success">Published</span>
+                        {% else %}
+                          <span class="label label-default">Unpublished</span>
+                        {% endif %}
+                      </p>
+                      <pre class="score-box">{{ score.message }}</pre>
+                      <p>{{ utils.local_time(score.created, backup.assignment.course) }} from {{ score.grader.email }}</p>
+                    </li>
+                  {% else %}
+                    <li class="list-group-item"><b>No Scores </b></li>
+                  {% endfor %}
+                  </ul>
+                  <div class="btn-toolbar">
+                    <div class="btn-group">
+                      <a class="btn btn-default" href="{{ url_for('.edit_backup', bid=backup.id) }}"> <i class="fa fa-edit"></i> Edit Submission </a>
+                    </div>
+                    <div class="btn-group">
+                    {% call forms.render_form_bare(CSRFForm(), action_url=url_for('.autograde_backup', bid=backup.id), class_='form') %}
+                      <button id="autograde-button" class="btn btn-primary" type="submit"> <i class="fa fa-send"></i> Autograde
+                      </button>
+                    {% endcall %}
+                    </div>
+                  </div>
+                </div>
+            </div>
+            {% macro diff_tab(target_diff_type, text) %}
+            {% if is_composition %}
+            <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+                <a href="{{ url_for('.composition', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
+            </li>
+            {% else %}
+            <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+                <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
+            </li>
+            {% endif %}
+            {% endmacro %}
+            {% if assignment.files %}
+            <ul class="nav nav-tabs nav-justified">
+                {{ diff_tab(None, 'Files') }}
+                {{ diff_tab('short', 'Diff (short)') }}
+                {{ diff_tab('full', 'Diff (full)') }}
+            </ul>
+            {% endif %}
+            <div class="box">
+                <!-- /.box-header -->
+                <div class="box-body">
+
+                    <div class="subcontent list">
+                        <div class="wrap">
+                            {{ diff.render_files(backup, files) }}
+                        </div>
+                    </div>
+                </div>
+                <!-- ./box-body -->
+                <div class="box-footer">
+                    <!-- Grade Box -->
+
+                    {% call forms.render_form(form, action_url=url_for('.grade', bid=backup.id),
+                                              action_text='Submit Score',
+                                              class_='form') %}
+                        {{ forms.render_field(form.kind, label_visible=true) }}
+                        {{ forms.render_field(form.message, label_visible=true, placeholder='Great work! Here are some suggestions ... ', type='text') }}
+                        {{ forms.render_field(form.score, label_visible=true) }}
+                    {% endcall %}
+
+                </div>
+                <!-- /.box-footer -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+
+    <script type="text/template" id="editor-template">
+        {{ diff.editor_template() }}
+    </script>
+    <!-- /.box -->
+    <!-- </section> do not close the content section -->
+
+    <!-- </body> do not close body in template-->
+    {% endblock %}
 
 {% block page_css %}
+  {{ css_asset("code_css") }}
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">
 {% endblock %}
 
 {% block page_js %}
+    {{ js_asset("code_js") }}
+    <script>
+    var ipyFiles = {
+        {% for filename, file in files | dictsort %}
+            {% if '.ipynb' in filename %}
+                {{ filename.lower() | tojson }} : {{ file.source | tojson }},
+            {% endif %}
+        {% endfor %}
+    }
+
+    $(document).ready(function() {
+        displayNotebooks(ipyFiles)
+    })
+    </script>
 {% endblock %}
