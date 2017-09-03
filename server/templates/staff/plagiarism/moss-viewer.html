@@ -27,18 +27,19 @@
 
     <div class="row">
         <div class="col-xs-12">
-            <div class="box {% if is_composition %}collapsed-box{% endif %}">
+            <!-- backup_1 info -->
+            <div class="box collapsed-box">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
+                    <h3 class="box-title">{{ helpers.backup_link(backup.id) }} Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
 
                     <div class="box-tools pull-right">
-                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa {% if not is_composition %}fa-minus{% else %}fa-plus{% endif %}"></i>
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
                         </button>
                     </div>
                     <!-- /.box-tools -->
                 </div>
                 <!-- /.box-header -->
-                <div class="box-body" class="spoiler" style="display: {% if not is_composition %}block{% else %}none{% endif %};">
+                <div class="box-body" class="spoiler" style="display: none;">
                   <ul class="list-group list-group-unbordered">
                     <li class="list-group-item">
                       <b>Submitter: </b>
@@ -82,16 +83,70 @@
                   {% endfor %}
                   </ul>
             </div>
+            </div>
+            <!-- backup_2 info -->
+            <div class="box collapsed-box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">{{ helpers.backup_link(assignment.id) }} Submission Information ({{ assignment.active_scores | length }} Assigned Scores) </h3>
+
+                    <div class="box-tools pull-right">
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                    <!-- /.box-tools -->
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" class="spoiler" style="display: none;">
+                  <ul class="list-group list-group-unbordered">
+                    <li class="list-group-item">
+                      <b>Submitter: </b>
+                      <a href="{{ url_for('.student_assignment_detail', cid=assignment.assignment.course.id, email=assignment.submitter.email, aid=assignment.assignment.id) }}">
+                        {{ assignment.submitter.email }}
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                    {% if group | length > 1 %}
+                      <b>Group: </b>
+                      {% for member in group %}
+                        <a href="{{ url_for('.student_assignment_detail', cid=assignment.assignment.course.id, email=member.email, aid=assignment.assignment.id) }}">
+                           {{ member.email }}
+                        </a>
+                      {% endfor %}
+                    {% else %}
+                      <b>No Group</b>
+                    {% endif %}
+                    </li>
+                  {% if assignment.creator %}
+                    <li class="list-group-item">
+                      <b>Creator: </b>
+                      {{ assignment.creator.email }}
+                    </li>
+                  {% endif %}
+                  {% for score in assignment.active_scores %}
+                    <li class="list-group-item">
+                      <p>
+                        <b>{{ score.kind.title() }}: </b>{{ score.score | round(2) }}&ensp;
+                        {% if score.kind in assignment.assignment.published_scores %}
+                          <span class="label label-success">Published</span>
+                        {% else %}
+                          <span class="label label-default">Unpublished</span>
+                        {% endif %}
+                      </p>
+                      <pre class="score-box">{{ score.message }}</pre>
+                      <p>{{ utils.local_time(score.created, assignment.assignment.course) }} from {{ score.grader.email }}</p>
+                    </li>
+                  {% else %}
+                    <li class="list-group-item"><b>No Scores</b></li>
+                  {% endfor %}
+                  </ul>
+            </div>
+            </div>
+            <!-- Diff viewer -->
+            <div>
             {% macro diff_tab(target_diff_type, text) %}
-            {% if is_composition %}
-            <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
-                <a href="{{ url_for('.composition', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
-            </li>
-            {% else %}
             <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
                 <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
             </li>
-            {% endif %}
             {% endmacro %}
             {% if assignment.files %}
             <ul class="nav nav-tabs nav-justified">

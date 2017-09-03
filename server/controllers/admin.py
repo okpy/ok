@@ -231,7 +231,7 @@ def moss_viewer(moss_id):
 
     return render_template('staff/plagiarism/moss-viewer.html', courses=courses, assignment=backup_2,
                            backup=backup_1, files=files, diff_type=diff_type,
-                           task=task, is_composition=False)
+                           task=task)
 
 
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
