@@ -148,7 +148,7 @@ RUNNING_TIMEOUT = 5 * 60  # time to wait for an autograder job to run, in second
 WAITING_TIMEOUT = 2 * 60  # time to wait for a score, in seconds
 POLL_INTERVAL = 10        # how often to poll the autograder, in seconds
 
-def autograde_backups(assginment, user_id, backup_ids, logger):
+def autograde_backups(assignment, user_id, backup_ids, logger):
     token = create_autograder_token(user_id)
 
     start_time = time.time()
