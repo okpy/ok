@@ -34,18 +34,18 @@
                 </li>
             {% endmacro %}
             <!-- backup_1 -->
-            <div class="box collapsed-box">
+            <div class="box">
                 <!-- backup_1 submission info -->
                 <div class="box-header with-border">
                     <h3 class="box-title">{{ helpers.backup_link(backup.id) }} Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
 
                     <div class="box-tools pull-right">
-                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
                         </button>
                     </div>
                     <!-- /.box-tools -->
                 </div>
-                <div class="box-body" class="spoiler" style="display: none;">
+                <div class="box-body" class="spoiler" style="display: block;">
                   <ul class="list-group list-group-unbordered">
                     <li class="list-group-item">
                       <b>Submitter: </b>
@@ -111,18 +111,18 @@
                 <!-- /.box -->
             </div>
             <!-- backup_2 -->
-            <div class="box collapsed-box">
+            <div class="box">
                 <!-- backup_2 submission info -->
                 <div class="box-header with-border">
                     <h3 class="box-title">{{ helpers.backup_link(assignment.id) }} Submission Information ({{ assignment.active_scores | length }} Assigned Scores) </h3>
 
                     <div class="box-tools pull-right">
-                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
                         </button>
                     </div>
                     <!-- /.box-tools -->
                 </div>
-                <div class="box-body" class="spoiler" style="display: none;">
+                <div class="box-body" class="spoiler" style="display: block;">
                   <ul class="list-group list-group-unbordered">
                     <li class="list-group-item">
                       <b>Submitter: </b>

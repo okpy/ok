@@ -122,18 +122,17 @@ def highlight_diff(filename, a, b, diff_type='short'):
 def highlight_range(filename, file, match_bundles, diff_type='short'):
     highlighted = highlight(filename, file)
 
-    bundles = [x + 1 for x in sum(match_bundles, [])]
-    # TODO: bundles.append(last line in file, if not already at the end)
+    bundles = sum(match_bundles, [])
 
     def get_next_pivot():
         return bundles.pop(0) if bundles else None
 
     # TESTING PORPOISES only:
-    if filename == 'fizzbuzz.py':
-        bundles = [1, 9, 10, 11]
+    # if filename == 'fizzbuzz.py':
+    #     bundles = [1, 9, 10, 11]
 
     is_sim, line_number, next_pivot = False, 0, get_next_pivot()
-    while bundles:
+    while bundles or line_number < len(highlighted):
         if line_number == next_pivot:
             is_sim = not is_sim
             next_pivot = get_next_pivot()
