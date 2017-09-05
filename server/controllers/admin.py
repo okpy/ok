@@ -1541,7 +1541,7 @@ def staff_submit_backup(cid, email, aid):
     # TODO: DRY - Unify with student upload code - should just be a function
     form = forms.StaffUploadSubmissionForm()
     if form.validate_on_submit():
-        backup = Backup(
+        backup = Backup.create(
             submitter=student,
             creator=current_user,
             assignment=assign,

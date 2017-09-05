@@ -144,7 +144,7 @@ def make_backup(user, assignment_id, messages, submit):
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
     """
-    backup = models.Backup(submitter=user, assignment_id=assignment_id,
+    backup = models.Backup.create(submitter=user, assignment_id=assignment_id,
                            submit=submit)
     backup.messages = [models.Message(kind=k, contents=m)
                        for k, m in messages.items()]
