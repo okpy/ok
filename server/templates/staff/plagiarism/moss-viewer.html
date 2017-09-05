@@ -27,8 +27,15 @@
 
     <div class="row">
         <div class="col-xs-12">
-            <!-- backup_1 info -->
+            <!-- Diff tab macros -->
+            {% macro diff_tab(target_diff_type, text) %}
+                <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+                    <a href="{{ url_for('.moss_viewer', moss_id=id, diff=target_diff_type) }}">{{ text }}</a>
+                </li>
+            {% endmacro %}
+            <!-- backup_1 -->
             <div class="box collapsed-box">
+                <!-- backup_1 submission info -->
                 <div class="box-header with-border">
                     <h3 class="box-title">{{ helpers.backup_link(backup.id) }} Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
 
@@ -38,7 +45,6 @@
                     </div>
                     <!-- /.box-tools -->
                 </div>
-                <!-- /.box-header -->
                 <div class="box-body" class="spoiler" style="display: none;">
                   <ul class="list-group list-group-unbordered">
                     <li class="list-group-item">
@@ -83,9 +89,30 @@
                   {% endfor %}
                   </ul>
             </div>
+                <!-- backup_1 diff viewer -->
+                {% if assignment.files %}
+                <ul class="nav nav-tabs nav-justified">
+                    {{ diff_tab(None, 'Files') }}
+                    {{ diff_tab('short', 'Diff (short)') }}
+                    {{ diff_tab('full', 'Diff (full)') }}
+                </ul>
+                {% endif %}
+                <div class="box">
+                    <div class="box-body">
+
+                        <div class="subcontent list">
+                            <div class="wrap">
+                                {{ diff.render_files(backup, files) }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+                <!-- /.box -->
             </div>
-            <!-- backup_2 info -->
+            <!-- backup_2 -->
             <div class="box collapsed-box">
+                <!-- backup_2 submission info -->
                 <div class="box-header with-border">
                     <h3 class="box-title">{{ helpers.backup_link(assignment.id) }} Submission Information ({{ assignment.active_scores | length }} Assigned Scores) </h3>
 
@@ -95,7 +122,6 @@
                     </div>
                     <!-- /.box-tools -->
                 </div>
-                <!-- /.box-header -->
                 <div class="box-body" class="spoiler" style="display: none;">
                   <ul class="list-group list-group-unbordered">
                     <li class="list-group-item">
@@ -139,36 +165,28 @@
                     <li class="list-group-item"><b>No Scores</b></li>
                   {% endfor %}
                   </ul>
-            </div>
-            </div>
-            <!-- Diff viewer -->
-            <div>
-            {% macro diff_tab(target_diff_type, text) %}
-            <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
-                <a href="{{ url_for('.grading', bid=backup.id, diff=target_diff_type) }}">{{ text }}</a>
-            </li>
-            {% endmacro %}
-            {% if assignment.files %}
-            <ul class="nav nav-tabs nav-justified">
-                {{ diff_tab(None, 'Files') }}
-                {{ diff_tab('short', 'Diff (short)') }}
-                {{ diff_tab('full', 'Diff (full)') }}
-            </ul>
-            {% endif %}
-            <div class="box">
-                <!-- /.box-header -->
-                <div class="box-body">
+                </div>
+                <!-- backup_2 diff viewer -->
+                {% if assignment.files %}
+                <ul class="nav nav-tabs nav-justified">
+                    {{ diff_tab(None, 'Files') }}
+                    {{ diff_tab('short', 'Diff (short)') }}
+                    {{ diff_tab('full', 'Diff (full)') }}
+                </ul>
+                {% endif %}
+                <div class="box">
+                    <div class="box-body">
 
-                    <div class="subcontent list">
-                        <div class="wrap">
-                            {{ diff.render_files(backup, files) }}
+                        <div class="subcontent list">
+                            <div class="wrap">
+                                {{ diff.render_files(assignment, files_2) }}
+                            </div>
                         </div>
                     </div>
+                    <!-- ./box-body -->
                 </div>
-                <!-- ./box-body -->
+                <!-- /.box -->
             </div>
-            <!-- /.box -->
-        </div>
     </div>
 
     <script type="text/template" id="editor-template">

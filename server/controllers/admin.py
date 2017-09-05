@@ -206,21 +206,24 @@ def moss_viewer(moss_id):
     #                        files=files)
 
 
-
+    # moss_result.primary_matches   ---> `backup`
+    # moss_result.secondary_matches ---> `assignment`
 
     courses, current_course = get_courses()
     diff_type = 'short'
 
-    # sort comments by (filename, line)
-    comments = collections.defaultdict(list)
-    for comment in backup_1.comments:
-        comments[(comment.filename, comment.line)].append(comment)
 
     # highlight files and add comments
+    # TODO: This is the only bit that needs to change.
     files = highlight.diff_files(backup_2.files(), backup_1.files(), diff_type)
-    for filename, source_file in files.items():
-        for line in source_file.lines:
-            line.comments = comments[(filename, line.line_after)]
+    files_2 = highlight.diff_files(backup_1.files(), backup_2.files(), diff_type)
+    # files = highlight.highlight_range(backup_1.files(), moss_result.primary_matches, diff_type)
+    # files_2 = highlight.highlight_range(backup_2.files(), moss_result.secondary_matches, diff_type)
+
+
+
+
+
     for filename, ex_file in backup_1.external_files_dict().items():
         files[filename] = ex_file
 
@@ -229,8 +232,8 @@ def moss_viewer(moss_id):
         # Choose the first grading_task
         task = task[0]
 
-    return render_template('staff/plagiarism/moss-viewer.html', courses=courses, assignment=backup_2,
-                           backup=backup_1, files=files, diff_type=diff_type,
+    return render_template('staff/plagiarism/moss-viewer.html', id=moss_id, courses=courses, assignment=backup_2,
+                           backup=backup_1, files=files, files_2=files_2, diff_type=diff_type,
                            task=task)
 
 
