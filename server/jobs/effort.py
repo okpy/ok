@@ -45,7 +45,7 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
             score, messages = handle_late(backup, assignment,
                     late, submission_time, score, messages, late_multiplier)
 
-        if score < full_credit:
+        if score < full_credit and backup.hashid not in late:
             not_perfect.append(backup)
 
         messages.append('\nFinal Score: {}'.format(score))
@@ -66,6 +66,9 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
             seen.add(user_id)
             stats[score] += 1
 
+    # Commit all scores at once
+    db.session.commit()
+
     logger.info('Scored {}/{}'.format(i, len(submissions)))
     logger.info('done!')
 
@@ -79,12 +82,9 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
     for score, count in sorted_scores:
         logger.info('  {} - {}'.format(str(score).rjust(3), count))
 
-    if len(manual) > 0:
-        logger.info('\n{} Backups Needing Manual Grading:'.format(len(manual)))
-        for backup in manual:
-            logger.info(grading_url + backup.hashid)
-
-    if len(manual) + len(not_perfect) > 0:
+    needs_autograding = len(manual) + len(not_perfect)
+    if needs_autograding > 0:
+        logger.info('\nAutograding {} manual and/or not perfect backups'.format(needs_autograding))
         backup_ids = [backup.id for backup in manual + not_perfect]
         try:
             autograde_backups(assignment, current_user.id, backup_ids, logger)
