@@ -119,17 +119,10 @@ def highlight_diff(filename, a, b, diff_type='short'):
             elif tag == 'equal':
                 yield from equal(i1, i2, j1, j2)
 
-def highlight_range(filename, file, match_bundles, diff_type='short'):
+def highlight_range(filename, file, match_bundles):
     highlighted = highlight(filename, file)
-
     bundles = sum(match_bundles, [])
-
-    def get_next_pivot():
-        return bundles.pop(0) if bundles else None
-
-    # TESTING PORPOISES only:
-    # if filename == 'fizzbuzz.py':
-    #     bundles = [1, 9, 10, 11]
+    get_next_pivot = lambda: bundles.pop(0) if bundles else None
 
     is_sim, line_number, next_pivot = False, 0, get_next_pivot()
     while bundles or line_number < len(highlighted):
@@ -145,11 +138,10 @@ def highlight_range(filename, file, match_bundles, diff_type='short'):
         line_number += 1
 
 def sim_files(files_after, matches, diff_type='short'):
-    # matches = {'fizzbuzz.py':    [[2, 9]],
+    # matches : {'fizzbuzz.py':    [[2, 9]],
     #            'moby_dick':      [],
     #            'notebook.ipynb': [[0, 203]]}
 
-    # TODO: this is bad code. rewrite after it works.
     files = {}
     if diff_type:
         for filename in matches.keys():

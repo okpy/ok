@@ -197,44 +197,20 @@ def moss_viewer(moss_id):
     backup_2 = Backup.query.get(moss_result.secondary_id)
     if not backup_1 or not backup_2:
         abort(404)
-    # files = highlight.diff_files(backup_1.files(), backup_2.files(), 'short')
-    # return render_template('staff/plagiarism/moss-viewer.html',
-    #                        primary_matches=moss_result.primary_matches,
-    #                        secondary_matches=moss_result.secondary_matches,
-    #                        backup=backup_1,
-    #                        secondary_backup=backup_2,
-    #                        files=files)
-
-
-    # moss_result.primary_matches   ---> `backup`
-    # moss_result.secondary_matches ---> `assignment`
-
-    courses, current_course = get_courses()
+    # Highlight files and add comments
     diff_type = 'short'
-
-
-    # highlight files and add comments
-    # TODO: This is the only bit that needs to change.
-    # files = highlight.diff_files(backup_2.files(), backup_1.files(), diff_type)
-    # files_2 = highlight.diff_files(backup_1.files(), backup_2.files(), diff_type)
     files = highlight.sim_files(backup_1.files(), moss_result.primary_matches, diff_type)
     files_2 = highlight.sim_files(backup_2.files(), moss_result.secondary_matches, diff_type)
-
-
-
-
-
+    # Add external files
     for filename, ex_file in backup_1.external_files_dict().items():
         files[filename] = ex_file
-
-    task = backup_1.grading_tasks
-    if task:
-        # Choose the first grading_task
-        task = task[0]
-
-    return render_template('staff/plagiarism/moss-viewer.html', id=moss_id, courses=courses, assignment=backup_2,
-                           backup=backup_1, files=files, files_2=files_2, diff_type=diff_type)
-
+    for filename, ex_file in backup_2.external_files_dict().items():
+        files_2[filename] = ex_file
+    # If you're looking at this past midnight, go to sleep
+    return render_template('staff/plagiarism/moss-viewer.html', id=moss_id,
+                           backup=backup_1, assignment=backup_2,
+                           files=files, files_2=files_2,
+                           diff_type=diff_type)
 
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
 @is_staff()
