@@ -119,15 +119,46 @@ def highlight_diff(filename, a, b, diff_type='short'):
             elif tag == 'equal':
                 yield from equal(i1, i2, j1, j2)
 
-def highlight_range(files_after, matches, diff_type='short'):
+def highlight_range(filename, file, match_bundles, diff_type='short'):
+    highlighted = highlight(filename, file)
+
+    bundles = [x + 1 for x in sum(match_bundles, [])]
+    # TODO: bundles.append(last line in file, if not already at the end)
+
+    def get_next_pivot():
+        return bundles.pop(0) if bundles else None
+
+    # TESTING PORPOISES only:
+    if filename == 'fizzbuzz.py':
+        bundles = [1, 9, 10, 11]
+
+    is_sim, line_number, next_pivot = False, 0, get_next_pivot()
+    while bundles:
+        if line_number == next_pivot:
+            is_sim = not is_sim
+            next_pivot = get_next_pivot()
+        if is_sim:
+            yield Line(tag='insert', line_after=line_number + 1,
+                       contents='+' + highlighted[line_number])
+        else:
+            yield Line(tag='equal', line_after=line_number + 1,
+                       contents=' ' + highlighted[line_number])
+        line_number += 1
+
+def sim_files(files_after, matches, diff_type='short'):
+    # matches = {'fizzbuzz.py':    [[2, 9]],
+    #            'moby_dick':      [],
+    #            'notebook.ipynb': [[0, 203]]}
+
+    # TODO: this is bad code. rewrite after it works.
     files = {}
     if diff_type:
-        for filename in files_after.keys():
+        for filename in matches.keys():
             after = files_after.get(filename, '')
             if len(after) > DIFF_SIZE_LIMIT:
                 files[filename] = File(filename, source=after, too_big=True)
             else:
-                lines = list(highlight_diff(filename, before, after, diff_type))
+                lines = list(highlight_range(filename, after, matches[filename], diff_type))
                 files[filename] = File(filename, lines, after)
     else:
         for filename, source in files_after.items():
