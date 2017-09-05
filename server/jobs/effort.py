@@ -4,6 +4,7 @@ from collections import Counter
 
 from server import jobs
 from server.models import Assignment, Score, Backup, Extension, db
+from server.autograder import autograde_backups
 
 ATTEMPTS_NEEDED = 5
 
@@ -24,7 +25,7 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
 
     seen = set()
     stats = Counter()
-    manual, late = [], []
+    manual, late, not_perfect = [], [], []
     for i, subm in enumerate(submissions, 1):
         user_id = int(subm['user']['id'])
         if user_id in seen:
@@ -38,13 +39,17 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
         try:
             score, messages = effort_score(backup, full_credit, required_questions)
         except AssertionError:
-            manual.append(backup.hashid)
-            score, messages = 0, ['Manual grading needed - Ping your TA']
+            manual.append(backup)
+            continue
         else:
             score, messages = handle_late(backup, assignment,
                     late, submission_time, score, messages, late_multiplier)
 
+        if score < full_credit:
+            not_perfect.append(backup)
+
         messages.append('\nFinal Score: {}'.format(score))
+        messages.append('Your final score will be the max of either this score or the `Total` score (if exists)')
         new_score = Score(score=score, kind='effort',
                 message='\n'.join(messages), user_id=backup.submitter_id,
                 assignment=assignment, backup=backup, grader=current_user)
@@ -76,8 +81,15 @@ def grade_on_effort(assignment_id, full_credit, late_multiplier, required_questi
 
     if len(manual) > 0:
         logger.info('\n{} Backups Needing Manual Grading:'.format(len(manual)))
-        for backup_id in manual:
-            logger.info(grading_url + backup_id)
+        for backup in manual:
+            logger.info(grading_url + backup.hashid)
+
+    if len(manual) + len(not_perfect) > 0:
+        backup_ids = [backup.id for backup in manual + not_perfect]
+        try:
+            autograde_backups(assignment, current_user.id, backup_ids, logger)
+        except ValueError:
+            logger.info('Could not autograde backups - Please add an autograding key.')
 
     db.session.commit()
     return '/admin/course/{cid}/assignments/{aid}/scores'.format(
