@@ -149,7 +149,7 @@ def sim_files(files_after, matches, diff_type='short'):
             if len(after) > DIFF_SIZE_LIMIT:
                 files[filename] = File(filename, source=after, too_big=True)
             else:
-                lines = list(highlight_range(filename, after, matches[filename], diff_type))
+                lines = list(highlight_range(filename, after, matches[filename]))
                 files[filename] = File(filename, lines, after)
     else:
         for filename, source in files_after.items():
