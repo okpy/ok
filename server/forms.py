@@ -531,13 +531,15 @@ class TestJobForm(BaseForm):
     duration = IntegerField('Duration (seconds)', default=2)
 
 class MossSubmissionForm(BaseForm):
-    moss_userid = StringField('Your MOSS User ID',
+    moss_userid = StringField('Moss User ID', default='619379711',
                               validators=[validators.required()])
     file_regex = StringField('Regex for submitted files', default='.*',
                              validators=[validators.required()])
-    language = SelectField('Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
-    subtract_template = BooleanField('Subtract Template', default=False,
-                                     description="Only send the changes from the template to MOSS")
+    language = SelectField('Programming Language', choices=[(pl, pl) for pl in COMMON_LANGUAGES])
+    review_threshold = DecimalField('Review Threshold', default=0.30,
+        description="Results with this similarity percentage or higher will be tagged for review.")
+    num_results = IntegerField('Number of Results', default=250,
+        description="Number of similarity results to request from Moss.")
 
 class GithubSearchRecentForm(BaseForm):
     access_token = StringField('Github Access Token',
