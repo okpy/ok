@@ -11,7 +11,7 @@
         <small>{{ current_course.offering }}</small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="{{ url_for('admin.course', cid=current_course.id) }}">
+        <li><a href="{{ url_for("admin.course", cid=current_course.id) }}">
             <i class="fa fa-university"></i> {{ current_course.offering }}
         </a></li>
         <li><a href="{{ url_for('.course_assignments', cid=current_course.id) }}">
@@ -133,7 +133,6 @@
 {% endblock %}
 
 {% block page_js %}
-
 <script>
     var mossListOptions = {
       valueNames: [ 'studentA', 'submissionA', 'similarityA',
