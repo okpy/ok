@@ -1182,7 +1182,7 @@ def student_view(cid, email):
                      if not a.active]
     }
 
-    moss_results = MossResult.query.order_by(MossResult.run_time.desc()) \
+    moss_results = MossResult.query.order_by(MossResult.run_time) \
         .group_by(MossResult.primary_id, MossResult.secondary_id) \
         .order_by(MossResult.similarity.desc()) \
         .join(MossResult.primary).join(Backup.submitter).filter_by(id=student.id).all()
