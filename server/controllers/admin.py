@@ -1432,6 +1432,10 @@ def create_extension(cid):
         if Extension.get_extension(student, assign):
             flash("{} already has an extension".format(form.email.data), 'danger')
         else:
+            group_members = assign.active_user_ids(student.id)
+            ext = Extension.query.filter(Extension.assignment == assign, Extension.user_id.in_(group_members)).first()
+            if ext:
+                Extension.delete(ext)
             expires = utils.server_time_obj(form.expires.data, current_course)
             custom_time = form.get_submission_time(assign)
             ext = Extension.create(staff=current_user, assignment=assign, user=student,
