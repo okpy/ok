@@ -364,10 +364,12 @@ class BackupSchema(APISchema):
             # Submissions after the deadline with an extension are allowed
             if extension:
                 backup.submit = True  # Need to set if the assignment is inactive
-                backup.custom_submission_time = extension.custom_submission_time
+                backup.custom_submission_time = extension.custom_submission_time or assign_obj.due_date
                 eligible_submit = True
             elif lock_flag:
                 raise ValueError('Late Submission of {}'.format(args['assignment']))
+
+        models.db.session.commit()
 
         if (eligible_submit and assignment['autograding_key']
                 and assignment['continuous_autograding']):

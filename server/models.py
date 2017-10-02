@@ -1700,20 +1700,20 @@ class MossResult(Model):
 
     # Time that Moss was run
     run_time = db.Column(db.DateTime(timezone=True), nullable=False)
-    
+
     # Primary submission and matches of this result (filter by this)
     primary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
     # Each file key maps to a list of 2 item lists
     # (which represent the start and end of the range, inclusive)
     primary_matches = db.Column(JsonBlob, nullable=False)
-    
+
     # Secondary submission and matches of this result
     secondary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
     secondary_matches = db.Column(JsonBlob, nullable=False)
-    
+
     # Percentage of primary that is similar to secondary
     similarity = db.Column(db.Integer, nullable=False)
-    
+
     # Tags on this result used for organizing
     tags = db.Column(StringList, nullable=False, default=[])
 
@@ -1923,7 +1923,7 @@ class Extension(Model):
         # Retroactively change the submission times of all past late backups
         # that were created before the expiration time.
         for backup in ext.get_backups():
-            backup.custom_submission_time = custom_submission_time
+            backup.custom_submission_time = custom_submission_time or assignment.due_date
             db.session.add(backup)
 
         db.session.commit()
