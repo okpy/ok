@@ -1106,6 +1106,9 @@ class Backup(Model):
                 return case
         return "Unknown Question"
 
+    def moss_results(self):
+        return MossResult.query.filter(primary=self)
+
     @staticmethod
     @cache.memoize(120)
     def statistics(self):
@@ -1687,6 +1690,36 @@ class Job(Model):
 
     result_kind = db.Column(db.Enum(*result_kinds, name='result_kind'), default='string')
     result = db.Column(mysql.MEDIUMTEXT)  # Final output, if the job did not crash
+
+################
+# Moss Results #
+################
+
+class MossResult(Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Time that Moss was run
+    run_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    
+    # Primary submission and matches of this result (filter by this)
+    primary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    # Each file key maps to a list of 2 item lists
+    # (which represent the start and end of the range, inclusive)
+    primary_matches = db.Column(JsonBlob, nullable=False)
+    
+    # Secondary submission and matches of this result
+    secondary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    secondary_matches = db.Column(JsonBlob, nullable=False)
+    
+    # Percentage of primary that is similar to secondary
+    similarity = db.Column(db.Integer, nullable=False)
+    
+    # Tags on this result used for organizing
+    tags = db.Column(StringList, nullable=False, default=[])
+
+    primary = db.relationship("Backup", foreign_keys='MossResult.primary_id')
+    secondary = db.relationship("Backup", foreign_keys='MossResult.secondary_id')
+
 
 ##########
 # Canvas #

@@ -18,7 +18,7 @@ from server import autograder
 import server.controllers.api as ok_api
 from server.models import (User, Course, Assignment, Enrollment, Version,
                            GradingTask, Backup, Score, Group, Client, Job,
-                           Message, CanvasCourse, CanvasAssignment,
+                           Message, CanvasCourse, CanvasAssignment, MossResult,
                            Extension, db)
 from server.contrib import analyze
 
@@ -887,9 +887,10 @@ def start_moss_job(cid, aid):
             user_id=current_user.id,
             assignment_id=assign.id,
             moss_id=form.moss_userid.data,
-            file_regex=form.file_regex.data or '*',
+            file_regex=form.file_regex.data or '.*',
             language=form.language.data,
-            subtract_template=form.subtract_template.data)
+            review_threshold=form.review_threshold.data or 101,
+            num_results=form.num_results.data or 250)
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     else:
         return render_template(
@@ -899,6 +900,30 @@ def start_moss_job(cid, aid):
             assignment=assign,
             form=form,
         )
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/moss-results",
+             methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def assignment_moss_results(cid, aid):
+    tag = request.args.get('tag')
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+    moss_results = []
+    last_run = MossResult.query.order_by(MossResult.run_time.desc()) \
+        .join(MossResult.primary).filter_by(assignment_id = assign.id).first()
+    print(last_run)
+    if last_run:
+        moss_results = MossResult.query.order_by(MossResult.similarity.desc()) \
+            .filter_by(run_time = last_run.run_time).join(MossResult.primary) \
+            .filter_by(assignment_id = assign.id).all()
+    if tag:
+        moss_results = [r for r in moss_results if tag in r.tags]
+    return render_template('staff/plagiarism/list.assignment.html',
+                           assignment=assign, moss_results=moss_results,
+                           courses=courses, current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/github",
              methods=["GET", "POST"])
@@ -1157,10 +1182,15 @@ def student_view(cid, email):
                      if not a.active]
     }
 
+    moss_results = MossResult.query.order_by(MossResult.run_time.desc()) \
+        .group_by(MossResult.primary_id, MossResult.secondary_id) \
+        .order_by(MossResult.similarity.desc()) \
+        .join(MossResult.primary).join(Backup.submitter).filter_by(id=student.id).all()
+
     return render_template('staff/student/overview.html',
                            courses=courses, current_course=current_course,
                            student=student, enrollment=enrollment,
-                           assignments=assignments)
+                           assignments=assignments, moss_results=moss_results)
 
 @admin.route("/course/<int:cid>/<string:email>/<int:aid>/timeline")
 @is_staff(course_arg='cid')
