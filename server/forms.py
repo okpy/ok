@@ -317,6 +317,9 @@ class CreateTaskForm(BaseForm):
 class UploadSubmissionForm(BaseForm):
     upload_files = BackupUploadField('Submission Files', [FileRequired()])
 
+class ScoreUploadForm(BaseForm):
+    upload_files = FileField()
+
 class SubmissionTimeForm(BaseForm):
     submission_time = RadioField(
         'Custom submission time',
@@ -366,6 +369,73 @@ class SubmissionTimeForm(BaseForm):
 
 class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
     pass
+
+class BatchCSVScoreForm(StaffUploadSubmissionForm):
+    def validate(self): 
+        """Load in csv based on form contents. If successful,
+        return the csv; otherwise, add errors to the form and return False.
+        """
+        if len(upload_files) > 1: 
+            self.errors.append('more than 1 file chosen')
+            return False
+        if len(upload_files) == 0: 
+            self.errors.append('no file chosen')
+            return False
+        elif 'csv' not in upload_files.keys()[0].split('.'): 
+            self.errors.append('csv file not submitted')
+            return False
+        else: 
+            with open(upload_files.values()[0], 'rt') as f: 
+                reader = csv.reader(f)
+                for row in reader: 
+                    if len(row) != 2: 
+                        err = "{0} did not have 2 columns".format(row)
+                        self.errors.append(err)
+                        return False
+                    if not row[0]:
+                        err = "{0} did not have an email".format(row)
+                        self.csv.errors.append(err)
+                        return False
+                    elif "@" not in row[0]:
+                        # TODO : Better email check.
+                        err = "{0} is not a valid email".format(row[0])
+                        self.csv.errors.append(err)
+                        return False
+            return True
+        return False
+
+class BatchScoreForm(SubmissionTimeForm):
+    csv = TextAreaField('Email, Score')
+
+    def validate(self):
+        check_validate = super(BatchScoreForm, self).validate()
+        # if our validators do not pass
+        if not check_validate:
+            return False
+        try:
+            rows = self.csv.data.splitlines()
+            self.csv.parsed = list(csv.reader(rows))
+        except csv.Error as e:
+            logging.error(e)
+            self.csv.errors.append(['The CSV could not be parsed'])
+            return False
+
+        for row in self.csv.parsed:
+            if len(row) != 2:
+                err = "{0} did not have 2 columns".format(row)
+                self.csv.errors.append(err)
+                return False
+            if not row[0]:
+                err = "{0} did not have an email".format(row)
+                self.csv.errors.append(err)
+                return False
+            elif "@" not in row[0]:
+                # TODO : Better email check.
+                err = "{0} is not a valid email".format(row[0])
+                self.csv.errors.append(err)
+                return False
+        return True
+    
 
 class ExtensionForm(SubmissionTimeForm):
     assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])

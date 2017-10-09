@@ -834,6 +834,40 @@ def autograde(cid, aid):
         return redirect(url_for('.course_job', cid=cid, job_id=job.id))
     return redirect(url_for('.assignment', cid=cid, aid=aid))
 
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/upload",
+            methods=["GET","POST"])
+@is_staff(course_arg='cid')
+def upload(cid, aid):
+    courses, current_course = get_courses(cid)
+    batch_form = forms.BatchScoreForm()
+    upload_form = forms.BatchCSVScoreForm()
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+    if batch_form.validate_on_submit() and batch_form.csv.data:
+        Score.score_from_csv(cid, aid, current_user, batch_form)
+        msg = ("Added scores through text input for {name}"
+               .format(name=assign.name))
+        flash(msg, "success with text input")
+        return redirect(url_for(".assignment", cid=cid, aid=aid))
+    elif upload_form.upload_files.upload_backup_files():
+        upload_csv = upload_form.validate()
+        if upload_csv: 
+            Score.score_from_csv(cid, aid, current_user, None, uploaded_csv=upload_csv)
+            msg = ("Added scores through csv load for {name}"
+               .format(name=assign.name))
+            flash(msg, "success with csv")
+            return redirect(url_for(".assignment", cid=cid, aid=aid))
+    
+    return render_template('staff/course/assignment/assignment.upload.html',
+                       batch_form=batch_form,
+                       upload_form=upload_form,
+                       courses=courses,
+                       current_course=current_course,
+                       assignment=assign)
+
 @admin.route("/course/<int:cid>/assignments/<int:aid>/effort",
              methods=["GET", "POST"])
 @is_staff(course_arg='cid')

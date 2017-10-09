@@ -1452,6 +1452,34 @@ class Score(Model):
             return obj.backup.can_view(user, course)
         return user.is_enrolled(course.id, STAFF_ROLES)
 
+    @staticmethod
+    @transaction
+    def score_from_csv(cid, aid, current_user, form, uploaded_csv=None):
+        message = []
+        if not uploaded_csv:
+            rows = form.csv.data.splitlines()
+        else: 
+            rows = open(uploaded_csv, 'rt')
+        assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+        for entry in csv.reader(rows):
+            entry = [x.strip() for x in entry]
+            email, score = entry[0], entry[1]
+            user = User.query.filter_by(email=email).one_or_none()
+            backup = Backup.create(
+                submitter=user,
+                assignment_id=assign.id, 
+                submit=True
+            )
+            uploaded_score = Score(grader_id=current_user.id, assignment=backup.assignment,\
+                        backup=backup, user_id=backup.submitter_id, score=score, kind='total')
+            db.session.add(uploaded_score)
+            db.session.commit()
+            uploaded_score.archive_duplicates()
+        try: 
+            rows.close()
+        except: 
+            pass
+
     def archive(self, commit=True):
         self.public = False
         self.archived = True
