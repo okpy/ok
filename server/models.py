@@ -1464,12 +1464,13 @@ class Score(Model):
         else: 
             rows = uploaded_csv.read().decode('utf-8').splitlines()
         assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+        line_num = 0
         for entry in csv.reader(rows):
             entry = [x.strip() for x in entry]
             try: 
                 email, score = entry[0], entry[1]
             except: 
-                return 'csv not formatted properly'
+                return 'csv not formatted properly on line {linenum}, {entry}'.format(linenum=line_num,entry=entry)
             user = User.query.filter_by(email=email).one_or_none()
             backup = Backup.create(
                 submitter=user,
@@ -1481,6 +1482,7 @@ class Score(Model):
             db.session.add(uploaded_score)
             db.session.commit()
             uploaded_score.archive_duplicates()
+            line_num += 1
 
     def archive(self, commit=True):
         self.public = False

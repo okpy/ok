@@ -859,7 +859,7 @@ def upload(cid, aid):
         if upload_csv: 
             error = Score.score_from_csv(cid, aid, current_user, None, uploaded_csv=upload_csv)
             if error: 
-                msg = ("csv improperly formatted for {name}").format(name=assign.name)
+                msg = ("csv improperly formatted for {name}, with {error}").format(name=assign.name,error=error)
                 flash(msg, "failure with csv")
             else: 
                 msg = ("Added scores through csv load for {name}"
