@@ -852,16 +852,20 @@ def upload(cid, aid):
                .format(name=assign.name))
         flash(msg, "success with text input")
         return redirect(url_for(".assignment", cid=cid, aid=aid))
-    '''
-    elif upload_form.upload_files.upload_backup_files():
-        upload_csv = upload_form.validate()
+    elif upload_form.validate_on_submit():
+        f = upload_form.upload_files.data
+        #filename = secure_filename(f.filename)
+        upload_csv = f
         if upload_csv: 
-            Score.score_from_csv(cid, aid, current_user, None, uploaded_csv=upload_csv)
-            msg = ("Added scores through csv load for {name}"
-               .format(name=assign.name))
-            flash(msg, "success with csv")
+            error = Score.score_from_csv(cid, aid, current_user, None, uploaded_csv=upload_csv)
+            if error: 
+                msg = ("csv improperly formatted for {name}").format(name=assign.name)
+                flash(msg, "failure with csv")
+            else: 
+                msg = ("Added scores through csv load for {name}"
+                    .format(name=assign.name))
+                flash(msg, "success with csv")
             return redirect(url_for(".assignment", cid=cid, aid=aid))
-    '''
     return render_template('staff/course/assignment/assignment.upload.html',
                        batch_form=batch_form,
                        upload_form=upload_form,

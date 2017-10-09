@@ -1,6 +1,6 @@
 from flask import request
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 import requests.exceptions
 from wtforms import (StringField, DateTimeField, BooleanField, IntegerField,
                      SelectField, TextAreaField, DecimalField, HiddenField,
@@ -317,9 +317,6 @@ class CreateTaskForm(BaseForm):
 class UploadSubmissionForm(BaseForm):
     upload_files = BackupUploadField('Submission Files', [FileRequired()])
 
-class ScoreUploadForm(BaseForm):
-    upload_files = FileField()
-
 class SubmissionTimeForm(BaseForm):
     submission_time = RadioField(
         'Custom submission time',
@@ -370,39 +367,10 @@ class SubmissionTimeForm(BaseForm):
 class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
     pass
 
-class BatchCSVScoreForm(StaffUploadSubmissionForm):
-    def validate(self): 
-        """Load in csv based on form contents. If successful,
-        return the csv; otherwise, add errors to the form and return False.
-        """
-        if len(upload_files) > 1: 
-            self.errors.append('more than 1 file chosen')
-            return False
-        if len(upload_files) == 0: 
-            self.errors.append('no file chosen')
-            return False
-        elif 'csv' not in upload_files.keys()[0].split('.'): 
-            self.errors.append('csv file not submitted')
-            return False
-        else: 
-            with open(upload_files.values()[0], 'rt') as f: 
-                reader = csv.reader(f)
-                for row in reader: 
-                    if len(row) != 2: 
-                        err = "{0} did not have 2 columns".format(row)
-                        self.errors.append(err)
-                        return False
-                    if not row[0]:
-                        err = "{0} did not have an email".format(row)
-                        self.csv.errors.append(err)
-                        return False
-                    elif "@" not in row[0]:
-                        # TODO : Better email check.
-                        err = "{0} is not a valid email".format(row[0])
-                        self.csv.errors.append(err)
-                        return False
-            return True
-        return False
+class BatchCSVScoreForm(SubmissionTimeForm):
+    upload_files = FileField('csv', validators=[
+        FileRequired(), 
+        FileAllowed(['csv'], 'csvs only!')])
 
 class BatchScoreForm(SubmissionTimeForm):
     csv = TextAreaField('Email, Score')

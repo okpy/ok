@@ -1455,15 +1455,21 @@ class Score(Model):
     @staticmethod
     @transaction
     def score_from_csv(cid, aid, current_user, form, uploaded_csv=None):
+        '''
+        Returns None if successful, returns an error message if an error occurs
+        '''
         message = []
         if not uploaded_csv:
             rows = form.csv.data.splitlines()
         else: 
-            rows = open(uploaded_csv, 'rt')
+            rows = uploaded_csv.read().decode('utf-8').splitlines()
         assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
         for entry in csv.reader(rows):
             entry = [x.strip() for x in entry]
-            email, score = entry[0], entry[1]
+            try: 
+                email, score = entry[0], entry[1]
+            except: 
+                return 'csv not formatted properly'
             user = User.query.filter_by(email=email).one_or_none()
             backup = Backup.create(
                 submitter=user,
@@ -1475,10 +1481,6 @@ class Score(Model):
             db.session.add(uploaded_score)
             db.session.commit()
             uploaded_score.archive_duplicates()
-        try: 
-            rows.close()
-        except: 
-            pass
 
     def archive(self, commit=True):
         self.public = False
