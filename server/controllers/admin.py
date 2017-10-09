@@ -852,6 +852,7 @@ def upload(cid, aid):
                .format(name=assign.name))
         flash(msg, "success with text input")
         return redirect(url_for(".assignment", cid=cid, aid=aid))
+    '''
     elif upload_form.upload_files.upload_backup_files():
         upload_csv = upload_form.validate()
         if upload_csv: 
@@ -860,7 +861,7 @@ def upload(cid, aid):
                .format(name=assign.name))
             flash(msg, "success with csv")
             return redirect(url_for(".assignment", cid=cid, aid=aid))
-    
+    '''
     return render_template('staff/course/assignment/assignment.upload.html',
                        batch_form=batch_form,
                        upload_form=upload_form,
