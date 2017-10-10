@@ -51,6 +51,7 @@
             {% call forms.render_form(batch_form, action_url=url_for('.upload', cid=current_course.id, aid=assignment.id), action_text='Score Upload',
                                         class_='form') %}
                 {{ forms.render_field(batch_form.csv, label_visible=true, placeholder='Line Separated CSV') }}
+                {{ forms.render_field(batch_form.kind, label_visible=true) }}
                 {{ forms.render_radio_field(batch_form.submission_time) }}
                 {{ forms.render_field(
                   batch_form.custom_submission_time,
@@ -75,6 +76,7 @@
         
                   {% call forms.render_form(upload_form, class_='form', enctype="multipart/form-data") %}
                     {{ forms.render_field(upload_form.upload_files, label_visible=false, multiple="", id="file-select") }}
+                    {{ forms.render_field(upload_form.kindCSV, label_visible=true) }}
                     <label class="control-label">Submission time: </label>
                     {{ forms.render_radio_field(upload_form.submission_time) }}
                     {{ forms.render_field(

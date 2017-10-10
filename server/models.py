@@ -1454,7 +1454,7 @@ class Score(Model):
 
     @staticmethod
     @transaction
-    def score_from_csv(cid, aid, current_user, form, uploaded_csv=None):
+    def score_from_csv(cid, aid, current_user, form, uploaded_csv=None, kind='total'):
         '''
         Returns None if successful, returns an error message if an error occurs
         '''
@@ -1478,9 +1478,10 @@ class Score(Model):
                 submit=True
             )
             uploaded_score = Score(grader_id=current_user.id, assignment=backup.assignment,\
-                        backup=backup, user_id=backup.submitter_id, score=score, kind='total')
+                        backup=backup, user_id=backup.submitter_id, score=score, kind=kind)
             db.session.add(uploaded_score)
             db.session.commit()
+            #CURRENTLY NOT ARCHIVING OLD SCORES
             uploaded_score.archive_duplicates()
             line_num += 1
 

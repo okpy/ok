@@ -371,6 +371,8 @@ class BatchCSVScoreForm(SubmissionTimeForm):
     upload_files = FileField('csv', validators=[
         FileRequired(), 
         FileAllowed(['csv'], 'csvs only!')])
+    kindCSV = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
+                       validators=[validators.required()])
     def validate(self):
         check_validate = super(BatchCSVScoreForm, self).validate()
         # if our validators do not pass
@@ -402,6 +404,8 @@ class BatchCSVScoreForm(SubmissionTimeForm):
 
 class BatchScoreForm(SubmissionTimeForm):
     csv = TextAreaField('Email, Score')
+    kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
+                       validators=[validators.required()])
 
     def validate(self):
         check_validate = super(BatchScoreForm, self).validate()
