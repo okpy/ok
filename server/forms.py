@@ -371,6 +371,34 @@ class BatchCSVScoreForm(SubmissionTimeForm):
     upload_files = FileField('csv', validators=[
         FileRequired(), 
         FileAllowed(['csv'], 'csvs only!')])
+    def validate(self):
+        check_validate = super(BatchCSVScoreForm, self).validate()
+        # if our validators do not pass
+        if not check_validate:
+            return False
+        try:
+            rows = self.upload_files.data.read().decode('utf-8').splitlines()
+            self.upload_files.parsed = list(csv.reader(rows))
+        except csv.Error as e:
+            logging.error(e)
+            self.upload_files.errors.append(['The CSV could not be parsed'])
+            return False
+
+        for row in self.upload_files.parsed:
+            if len(row) != 2:
+                err = "{0} did not have 2 columns".format(row)
+                self.upload_files.errors.append(err)
+                return False
+            if not row[0]:
+                err = "{0} did not have an email".format(row)
+                self.upload_files.errors.append(err)
+                return False
+            elif "@" not in row[0]:
+                # TODO : Better email check.
+                err = "{0} is not a valid email".format(row[0])
+                self.upload_files.errors.append(err)
+                return False
+        return True
 
 class BatchScoreForm(SubmissionTimeForm):
     csv = TextAreaField('Email, Score')
