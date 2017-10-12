@@ -1460,23 +1460,27 @@ class Score(Model):
         '''
         message = []
         if not uploaded_csv:
-            rows = form.csv.data.splitlines()
+            rows = csv.reader(form.csv.data.splitlines())
         else: 
-            rows = uploaded_csv.read().decode('utf-8').splitlines()
+            rows = uploaded_csv
         assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
         line_num = 0
-        for entry in csv.reader(rows):
+        for entry in rows:
             entry = [x.strip() for x in entry]
             try: 
                 email, score = entry[0], entry[1]
             except: 
                 return 'csv not formatted properly on line {linenum}, {entry}'.format(linenum=line_num,entry=entry)
             user = User.query.filter_by(email=email).one_or_none()
-            backup = Backup.create(
-                submitter=user,
-                assignment_id=assign.id, 
-                submit=True
-            )
+            try: 
+                backup = Backup.create(
+                    submitter=user,
+                    assignment_id=assign.id, 
+                    submit=True
+                )
+            except: 
+                db.session.rollback()
+                return 'Error with entering {0} - User not Found. Entries before entered into DB'.format(entry)
             uploaded_score = Score(grader_id=current_user.id, assignment=backup.assignment,\
                         backup=backup, user_id=backup.submitter_id, score=score, kind=kind)
             db.session.add(uploaded_score)

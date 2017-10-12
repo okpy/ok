@@ -380,6 +380,7 @@ class BatchCSVScoreForm(SubmissionTimeForm):
             return False
         try:
             rows = self.upload_files.data.read().decode('utf-8').splitlines()
+            print(rows)
             self.upload_files.parsed = list(csv.reader(rows))
         except csv.Error as e:
             logging.error(e)

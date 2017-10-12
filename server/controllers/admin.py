@@ -847,20 +847,22 @@ def upload(cid, aid):
         flash('Cannot access assignment', 'error')
         return abort(404)
     if batch_form.validate_on_submit() and batch_form.csv.data:
-        Score.score_from_csv(cid, aid, current_user, batch_form, kind=batch_form.kind.data)
-        msg = ("Added scores through text input for {name}"
-               .format(name=assign.name))
-        flash(msg, "success with text input")
+        error = Score.score_from_csv(cid, aid, current_user, batch_form, kind=batch_form.kind.data)
+        if error: 
+            msg = ("csv improperly formatted for {name}, with {error}").format(name=assign.name,error=error)
+            flash(msg, "error")
+        else: 
+            msg = ("Added scores through csv load for {name}"
+                .format(name=assign.name))
+            flash(msg, "success with csv")
         return redirect(url_for(".assignment", cid=cid, aid=aid))
     elif upload_form.validate_on_submit():
-        f = upload_form.upload_files.data
         #filename = secure_filename(f.filename)
-        upload_csv = f
-        if upload_csv: 
-            error = Score.score_from_csv(cid, aid, current_user, None, uploaded_csv=upload_csv,kind=upload_form.kindCSV.data)
+        if upload_form.upload_files.data: 
+            error = Score.score_from_csv(cid, aid, current_user, None, uploaded_csv=upload_form.upload_files.parsed,kind=upload_form.kindCSV.data)
             if error: 
                 msg = ("csv improperly formatted for {name}, with {error}").format(name=assign.name,error=error)
-                flash(msg, "failure with csv")
+                flash(msg, "error")
             else: 
                 msg = ("Added scores through csv load for {name}"
                     .format(name=assign.name))
