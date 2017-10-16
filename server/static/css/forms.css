@@ -1,0 +1,7 @@
+/* Checkbox Fields */
+div.checkbox {
+  display: inline-block;
+}
+.checkbox + .help-block {
+  display: inline-block;
+}

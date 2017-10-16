@@ -17,77 +17,119 @@
   </section>
 
   <section class="content">
-        {% include 'alerts.html' %}
+    {% include 'alerts.html' %}
 
-        <!-- Default box -->
-        <div class="box box-default box-solid">
-          <div class="box-header with-border">
-            <h3 class="box-title">Categories</h3>
-            <div class="box-tools pull-right">
-              <a href="javascript:void(0)" class="toggle-accordion btn btn-sm btn-default btn-flat" accordion-id="#accordion">Collapse All</a>
-              <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.new_category', cid=current_course.id)}}">
-                <i class="fa fa-plus"></i> Category
-              </a>
-              <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.new_assignment', cid=current_course.id)}}">
-                <i class="fa fa-plus"></i> Assignment
-              </a>
-            </div>
-          </div>
-          <div class="box-body">
-            <div class="box-group" id="accordion" aria-multiselectable="true">
-            {% for category in categories %}
-            <div class="panel box box-solid">
-              <a role="button" data-toggle="collapse" href={{ "#collapse" + category.name }} aria-expanded="true">
-                <div class="box-header">
-                  <h3 class="box-title">
-                   {{ category.name }}
-                  </h3>
-                  <div class="pull-right">
-                    <small>{{ category.assignments|length }} Assignments</small>
-                  </div>
-                </div>
-              </a>
-              <div id={{ "collapse" + category.name }} class="panel-collapse collapse in">
-              <div class="box-body">
-                <table class="table">
-                  <tbody>
-              {% if category.assignments %}
-                  <tr>
-                    <th>Name</th>
-                    <th>Endpoint</th>
-                    <th>Points</th>
-                    <th>Visible</th>
-                    <th>Due Date</th>
-                  </tr>
-              {% endif %}
-              {% for assignment in category.assignments %}
-                  <tr>
-                    <td style='width: 200px'><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}">{{ assignment.display_name }}</a></td>
-                    <td>{{ assignment.name }}</td>
-                    <td style='width:40px'>{{ assignment.points }}</td>
-                    <td style='width:60px'>
-                        {% if assignment.visible %}
-                          <span class="label label-success">Visible</span>
-                        {% else %}
-                          <span class="label label-warning">Hidden</span>
-                        {% endif %}
-                    </td>
-                    <td style='width: 140px'>{{ utils.local_time(assignment.due_date, current_course) }}</td>
-                  </tr>
-              {% endfor %}
-                </tbody>
-              </table>
-              </div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-          </div>
-          <!-- /.box-body -->
-          <!-- /.box-footer-->
+    <!-- Default box -->
+    <div class="box box-default box-solid">
+      <div class="box-header with-border">
+        <h3 class="box-title">Categories</h3>
+        <div class="box-tools pull-right">
+          <a href="javascript:void(0)" class="toggle-accordion btn btn-sm btn-default btn-flat" accordion-id="#accordion">
+            Collapse All
+          </a>
+          <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.new_category', cid=current_course.id)}}">
+            <i class="fa fa-plus"></i> Category
+          </a>
+          <a class="btn btn-sm btn-default btn-flat" href="{{url_for('.new_assignment', cid=current_course.id)}}">
+            <i class="fa fa-plus"></i> Assignment
+          </a>
         </div>
-        <!-- /.box -->
-
+      </div>
+      <div class="box-body">
+        <div class="box-group" id="accordion" aria-multiselectable="true">
+    {% if uncategorized %}
+        <div class="panel box box-solid uncategorized">
+          <div class="box-header">
+            <a class="panel-title" data-toggle="collapse" href="#collapse___Uncategorized___" aria-expanded="true">
+              <h3 class="box-title">Uncategorized <i class="fa fa-chevron-down"></i></h3>
+            </a>
+            <div class="pull-right">
+              <small>{{ uncategorized|length }} Assignments</small>
+            </div>
+          </div>
+          <div id="collapse___Uncategorized___" class="panel-collapse collapse in">
+          <div class="box-body">
+            <table class="table">
+              <tbody>
+          {% for assignment in uncategorized %}
+              <tr>
+                <td style='width: 200px'>
+                  <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}">{{ assignment.display_name }}</a>
+                </td>
+                <td>{{ assignment.name }}</td>
+                <td style='width:40px'>{{ assignment.points }}</td>
+                <td style='width:60px'>
+                    {% if assignment.visible %}
+                      <span class="label label-success">Visible</span>
+                    {% else %}
+                      <span class="label label-warning">Hidden</span>
+                    {% endif %}
+                </td>
+                <td style='width: 140px'>{{ utils.local_time(assignment.due_date, current_course) }}</td>
+              </tr>
+          {% endfor %}
+            </tbody>
+          </table>
+          </div>
+          </div>
+        </div>
+    {% endif %}
+    {% for category in categories %}
+        <div class="panel box box-solid">
+          <div class="box-header">
+            <a class="panel-title" data-toggle="collapse" href={{ "#collapse" + category.name }} aria-expanded="true">
+              <h3 class="box-title">{{ category.name }} <i class="fa fa-chevron-down"></i></h3>
+            </a>
+            <div class="pull-right">
+              <small>{{ category.assignments|length }} Assignments</small>
+              <small>{{ category.points }} Points</small>
+              <a href="{{url_for('.edit_category', cid=current_course.id, category_id=category.id)}}">
+                <i class="fa fa-gear"></i> Edit
+              </a>
+            </div>
+          </div>
+          <div id={{ "collapse" + category.name }} class="panel-collapse collapse in">
+          <div class="box-body">
+            <table class="table">
+              <tbody>
+          {% if category.assignments %}
+              <tr>
+                <th>Name</th>
+                <th>Endpoint</th>
+                <th>Points</th>
+                <th>Visible</th>
+                <th>Due Date</th>
+              </tr>
+          {% endif %}
+          {% for assignment in category.assignments %}
+              <tr>
+                <td style='width: 200px'>
+                  <a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}">{{ assignment.display_name }}</a>
+                </td>
+                <td>{{ assignment.name }}</td>
+                <td style='width:40px'>{{ assignment.points }}</td>
+                <td style='width:60px'>
+                    {% if assignment.visible %}
+                      <span class="label label-success">Visible</span>
+                    {% else %}
+                      <span class="label label-warning">Hidden</span>
+                    {% endif %}
+                </td>
+                <td style='width: 140px'>{{ utils.local_time(assignment.due_date, current_course) }}</td>
+              </tr>
+          {% endfor %}
+            </tbody>
+          </table>
+          </div>
+          </div>
+        </div>
+    {% endfor %}
+      </div>
+      </div>
+      <!-- /.box-body -->
+      <!-- /.box-footer-->
+    </div>
+    <!-- /.box -->
   </section>
 
   <!-- </body> do not close body in template-->
@@ -104,11 +146,35 @@ body {
 }
 .panel .box-header {
   background-color: #f9f9f9;
-  padding: 16px 10px;
   border-bottom: 1px solid #ddd;
+  padding: 0;
+  display: flex;
+}
+.panel .panel-title {
+  flex: 3;
+  padding: 16px 10px;
+}
+.panel .box-header .pull-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-right: 10px;
+}
+.panel .box-header a.panel-title:hover {
+  background-color: #f9f9f9;
+  color: black;
 }
 .panel small {
   padding-left: 8px;
+}
+.panel .fa {
+  font-size: 0.7em;
+  color: #aaa;
+  transition: 0.1s
+}
+.panel a[aria-expanded='false'] .fa {
+  transform: rotate(-90deg);
 }
 #accordion .panel {
   box-shadow: none;

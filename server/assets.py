@@ -22,6 +22,7 @@ common_css = Bundle(
     'css/helper.css',
     'css/main.css',
     'css/swal-theme.css',
+    'css/forms.css',
     filters='cssmin',
     output='public/css/common.css'
 )

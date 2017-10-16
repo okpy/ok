@@ -258,13 +258,6 @@ class Course(Model):
     # assignments (from Assignment backref)
     # categories (from Category backref)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Add default "Uncategorized" category
-        default_category = Category(course=self, name="Uncategorized")
-        db.session.add(default_category)
-        db.session.commit()
-
     @classmethod
     def can(cls, obj, user, action):
         if user.is_admin:
@@ -367,8 +360,8 @@ class Category(Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, default="Uncategorized")
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
-    points = db.Column(db.Float, default=0.0)
-    visible = db.Column(db.Boolean, default=False)
+    points = db.Column(db.Integer, default=0.0)
+    visible = db.Column(db.Boolean, default=True)
     ceil = db.Column(db.Boolean, default=True)
     # assignments (from Assignment backref)
     # rules
@@ -388,6 +381,14 @@ class Category(Model):
             return is_staff or obj.visible
         return is_staff
 
+    def archive(self):
+        uncategorized = Category.query.filter_by(
+                course=self.course,
+                name='Uncategorized'
+            ).first()
+        for assignment in self.assignments:
+            assignment.category = uncategorized
+
 
 class Assignment(Model):
     """ Assignments are particular to courses and have unique names.
@@ -402,7 +403,7 @@ class Assignment(Model):
     """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, nullable=False, unique=True)
-    category_id = db.Column(db.ForeignKey("category.id"), index=True, nullable=False)
+    category_id = db.Column(db.ForeignKey("category.id"), index=True, nullable=True)
     course_id = db.Column(db.ForeignKey("course.id"), index=True, nullable=False)
     display_name = db.Column(db.String(255), nullable=False)
     points = db.Column(db.Integer, default=0)

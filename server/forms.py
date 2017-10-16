@@ -124,8 +124,12 @@ class BaseForm(FlaskForm):
 class CategoryForm(BaseForm):
     name = StringField('Name')
     points = IntegerField('Points', validators=[validators.number_range(min=0)])
-    ceil = BooleanField('Allow Extra Credit')
-    visible = BooleanField('Make Visible on Student Dashboard')
+    ceil = BooleanField('Allow Extra Credit',
+            description="Students can earn more than the total points this category is worth.")
+    visible = BooleanField('Make Visible on Student Dashboard', default=True)
+    delete = BooleanField('Delete',
+            description='All Assignments in this category will be moved to "Uncategorized".',
+            default=False)
 
     def __init__(self, course, obj=None, **kwargs):
         self.course = course
@@ -139,13 +143,13 @@ class CategoryForm(BaseForm):
         obj.course = self.course
         super().populate_obj(obj)
 
-    def validate(self):
+    def validate(self, editing=False):
         if not super().validate():
             return False
         category = Category.query.filter_by(
                 name=self.name.data, course=self.course
             ).first()
-        if category:
+        if not editing and category:
             self.name.errors.append(
                     'A category with the same name already exists.')
             return False
@@ -169,12 +173,13 @@ class AssignmentForm(BaseForm):
         categories = Category.query.filter_by(
                 course=course
             ).order_by(Category.name).all()
-        self.category.choices = [(c.id, c.name) for c in categories]
+        self.category.choices = [(str(c.id), c.name) for c in categories]
+        self.category.choices.insert(0, ('0', 'Uncategorized'))
         self.category.default = 'Uncategorized'
 
     display_name = StringField('Name',
                                validators=[validators.required()])
-    category = SelectField('Grading Category', coerce=int)
+    category = SelectField('Grading Category')
     name = StringField(description='Endpoint',
                        validators=[validators.required()])
     due_date = DateTimeField('Due Date (Course Time)',
@@ -205,7 +210,9 @@ class AssignmentForm(BaseForm):
 
     def populate_obj(self, obj):
         """ Updates obj attributes based on form contents. """
-        self.category.data = Category.query.get(self.category.data)
+        category_id = int(self.category.data)
+        if self.category.data:
+            self.category.data = Category.query.get(category_id)
         super(AssignmentForm, self).populate_obj(obj)
         obj.due_date = utils.server_time_obj(self.due_date.data, self.course)
         obj.lock_date = utils.server_time_obj(self.lock_date.data, self.course)

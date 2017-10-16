@@ -5,7 +5,7 @@ from functools import wraps
 from io import StringIO
 
 from flask import (Blueprint, render_template, flash, redirect, Response,
-                   url_for, abort, request, stream_with_context)
+                   url_for, abort, request, stream_with_context, Markup, session)
 from werkzeug.exceptions import BadRequest
 
 from flask_login import current_user, login_required
@@ -397,27 +397,56 @@ def new_category(cid):
         return abort(401)
 
     form = forms.CategoryForm(current_course)
-    if form.validate_on_submit():
+    if request.method == 'POST' and form.validate(editing=False):
         category = Category(course_id=cid)
         form.populate_obj(category)
         db.session.add(category)
         db.session.commit()
-        flash("Category \"{}\" created successfully.".format(form.name.data), "success")
+        flash("Category \"{}\" was created successfully.".format(form.name.data), "success")
         return redirect(url_for(".course_assignments", cid=cid))
     return render_template('staff/course/category/category.new.html',
             form=form,
             current_course=current_course)
 
+@admin.route("/course/<int:cid>/categories/<int:category_id>/edit", methods=["GET", "POST"])
+@is_staff(course_arg='cid')
+def edit_category(cid, category_id):
+    courses, current_course = get_courses(cid)
+    category = Category.query.get_or_404(category_id)
+    if not Category.can(category, current_user, 'edit'):
+        flash('Insufficient permissions', 'error')
+        return abort(401)
+
+    form = forms.CategoryForm(current_course, category)
+    if request.method == 'POST' and form.validate(editing=True):
+        if form.delete.data == True:
+            category.archive()
+            db.session.commit()
+            msg = "Category \"{}\" was deleted.".format(category.name)
+            flash(msg, "error")
+        else:
+            form.populate_obj(category)
+            db.session.commit()
+            msg = "Category \"{}\" was edited successfully.".format(category.name)
+            flash(msg, "success")
+        return redirect(url_for(".course_assignments", cid=cid))
+    return render_template('staff/course/category/category.edit.html',
+            form=form,
+            current_course=current_course)
 
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
 def course_assignments(cid):
     courses, current_course = get_courses(cid)
     categories = current_course.categories
-    # TODO CLEANUP : Better way to send this data to the template.
+    uncategorized = Assignment.query.filter_by(
+            course=current_course,
+            category=None
+        ).all()
     return render_template('staff/course/assignment/assignments.html',
            current_course=current_course,
-           categories=categories)
+           categories=categories,
+           uncategorized=uncategorized)
 
 @admin.route("/course/<int:cid>/assignments/new", methods=["GET", "POST"])
 @is_staff(course_arg='cid')
@@ -448,9 +477,7 @@ def new_assignment(cid):
 @is_staff(course_arg='cid')
 def assignment(cid, aid):
     courses, current_course = get_courses(cid)
-    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
-    if not assign:
-        return abort(404)
+    assign = Assignment.query.get_or_404(aid)
     if not Assignment.can(assign, current_user, 'edit'):
         flash('Insufficient permissions', 'error')
         return abort(401)
