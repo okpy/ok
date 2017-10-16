@@ -1035,6 +1035,27 @@ class Backup(Model):
     db.Index('idx_backupCreated', 'created')
 
     @classmethod
+    def create(cls, submitter, assignment_id=None, assignment=None, submit=False,
+            creator=None, created=None, custom_submission_time=None):
+        created = created or db.func.now()
+        assignment_id = assignment_id or assignment.id
+        backup = cls(submitter=submitter, assignment_id=assignment_id,
+                creator=creator, submit=submit, created=created,
+                custom_submission_time=custom_submission_time)
+        db.session.add(backup)
+        db.session.commit()
+
+        assignment = assignment or Assignment.query.get(assignment_id)
+        extension = Extension.get_extension(submitter or creator, assignment, time=created)
+        # Submissions after the deadline with an extension are allowed
+        if extension:
+            backup.submit = True  # Need to set if the assignment is inactive
+            backup.custom_submission_time = extension.custom_submission_time
+
+        db.session.commit()
+        return backup
+
+    @classmethod
     def can(cls, obj, user, action):
         if action == "create":
             return user.is_authenticated
@@ -1132,6 +1153,9 @@ class Backup(Model):
                 case = dict_form["case_id"]
                 return case
         return "Unknown Question"
+
+    def moss_results(self):
+        return MossResult.query.filter(primary=self)
 
     @staticmethod
     @cache.memoize(120)
@@ -1715,6 +1739,36 @@ class Job(Model):
     result_kind = db.Column(db.Enum(*result_kinds, name='result_kind'), default='string')
     result = db.Column(mysql.MEDIUMTEXT)  # Final output, if the job did not crash
 
+################
+# Moss Results #
+################
+
+class MossResult(Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Time that Moss was run
+    run_time = db.Column(db.DateTime(timezone=True), nullable=False)
+
+    # Primary submission and matches of this result (filter by this)
+    primary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    # Each file key maps to a list of 2 item lists
+    # (which represent the start and end of the range, inclusive)
+    primary_matches = db.Column(JsonBlob, nullable=False)
+
+    # Secondary submission and matches of this result
+    secondary_id = db.Column(db.ForeignKey("backup.id"), nullable=False)
+    secondary_matches = db.Column(JsonBlob, nullable=False)
+
+    # Percentage of primary that is similar to secondary
+    similarity = db.Column(db.Integer, nullable=False)
+
+    # Tags on this result used for organizing
+    tags = db.Column(StringList, nullable=False, default=[])
+
+    primary = db.relationship("Backup", foreign_keys='MossResult.primary_id')
+    secondary = db.relationship("Backup", foreign_keys='MossResult.secondary_id')
+
+
 ##########
 # Canvas #
 ##########
@@ -1902,12 +1956,43 @@ class Extension(Model):
     def course(self):
         return self.assignment.course
 
+    def get_backups(self):
+        """ Returns all backups where this extension applies """
+        return Backup.query.filter(Backup.assignment == self.assignment,
+                Backup.created <= self.expires,
+                Backup.submitter == self.user).all()
+
     @classmethod
-    def get_extension(cls, student, assignment):
+    def create(cls, staff, assignment, user, expires, custom_submission_time=None, message=None):
+        ext = cls(staff=staff, assignment=assignment, user=user, message=message, expires=expires, custom_submission_time=custom_submission_time)
+        db.session.add(ext)
+        db.session.commit()
+
+        # Retroactively change the submission times of all past late backups
+        # that were created before the expiration time.
+        for backup in ext.get_backups():
+            backup.custom_submission_time = custom_submission_time or assignment.due_date
+            db.session.add(backup)
+
+        db.session.commit()
+        return ext
+
+    @classmethod
+    def delete(cls, ext):
+        for backup in ext.get_backups():
+            backup.custom_submission_time = None
+            db.session.add(backup)
+        db.session.delete(ext)
+        db.session.commit()
+
+    @classmethod
+    def get_extension(cls, student, assignment, time=None):
         """ Returns the extension if the student has an extension """
+        if time is None:
+            time = db.func.now()
         group_members = assignment.active_user_ids(student.id)
         return cls.query.filter(cls.assignment == assignment,
-                                cls.expires >= dt.datetime.utcnow(),
+                                cls.expires >= time,
                                 cls.user_id.in_(group_members)).first()
 
     @classmethod

@@ -215,10 +215,10 @@ def gen_backup(user, assignment):
     submit = gen_bool(0.3)
     if submit:
         messages['file_contents']['submit'] = ''
-    backup = Backup(
+    backup = Backup.create(
         created=assignment.due_date + datetime.timedelta(seconds=seconds_offset),
-        submitter_id=user.id,
-        assignment_id=assignment.id,
+        submitter=user,
+        assignment=assignment,
         submit=submit)
     backup.messages = [Message(kind=k, contents=m) for k, m in messages.items()]
     return backup

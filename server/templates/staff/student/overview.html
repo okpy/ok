@@ -84,6 +84,10 @@
           {% with assignments=assignments['inactive'], title='Inactive' %}
             {% include 'staff/student/assignment.list.html' %}
           {% endwith %}
+
+          {% with moss_results=moss_results, student=student, show_assignment=True %}
+            {% include 'staff/plagiarism/list.student.html' %}
+          {% endwith %}
         </div>
       </div>
   </section>
