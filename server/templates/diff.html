@@ -49,7 +49,7 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_source(backup, file) %}
+{% macro render_source(file, backup=None) %}
     {% for line in file.lines %}
       <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
         {% if line.is_diff %}
@@ -75,7 +75,7 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_notebook(backup, file) %}
+{% macro render_notebook(file, backup=None) %}
 <tr>
     <td>
         <div class="notebook-pad" id="{{ file.name }}-notebook" data-filename="{{ file.name }}"
@@ -159,9 +159,9 @@
       </thead>
       <tbody>
         {% if file.extension == ".ipynb" and not moss_diff %}
-          {{ render_notebook(backup, file) }}
+          {{ render_notebook(file, backup) }}
         {% else %}
-          {{ render_source(backup, file) }}
+          {{ render_source(file, backup) }}
         {% endif %}
       </tbody>
     </table>

@@ -25,6 +25,7 @@
                 <th class="sort" data-sort="similarity">Similarity</th>
                 <th class="sort" data-sort="other">Similar Student</th>
                 <th class="sort" data-sort="secondary">Similar Submission</th>
+                <th class="sort" data-sort="diffs"> Diff </th>
             </thead>
 
             <tbody class="list">
@@ -54,6 +55,11 @@
                     </a>
                     <td class="secondary">
                       {{ helpers.backup_link(item['secondary']['id']) }}
+                    </td>
+                    <td class="diffs">
+                        <a href="{{ url_for('.get_moss_diffs', cid=current_course.id, aid=item['primary']['assignment_id'], mid=item['id'])}}">
+                        View
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
