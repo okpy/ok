@@ -1,0 +1,113 @@
+{% extends "staff/base.html" %}
+{% import 'diff.html' as diff with context %}
+{% import 'staff/_formhelpers.html' as forms %}
+{% import '_globalhelpers.html' as globals %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        MOSS Diff Result
+        <small> {{ backups['Primary'].assignment.display_name }} {{ "Submission" if backups['Primary'].is_submit else "Backup" }} </small>
+    </h1>
+</section>
+
+<section class="content">
+    {% include 'alerts.html' %}
+
+      <div class="row">
+        <div class="col-xs-12">
+            <div class="box {% if is_composition %}collapsed-box{% endif %}">
+                <div class="box-header with-border">
+                    <h3 class="box-title"> MOSS Result Similarity:
+                    {% if moss_result.similarity > 90 %} 
+                        <b style="color:red"> {{moss_result.similarity}}%</b> 
+                    {% elif moss_result.similarity > 80 %}
+                        <b style="color:orange"> {{moss_result.similarity}}%</b>
+                    {% else %}
+                        {{moss_result.similarity}}%
+                    {% endif %}
+                    </h3>
+                    <div class="box-tools pull-right">
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa {% if not is_composition %}fa-plus{% else %}fa-minus{% endif %}"></i>
+                        </button>
+                    </div>
+                </div>
+                    <div class="box-body" class="spoiler" style="display: {% if not is_composition %}none{% else %}block{% endif %};">
+                    <li class="list-group-item">
+                          <b>MOSS Run ID: </b>
+                          {{ moss_result.id }}
+                    </li>
+                    <li class="list-group-item">
+                          <b>MOSS Run Time: </b>
+                          {{ moss_result.run_time }}
+                    </li>
+                    <!-- /.box-tools -->
+                </div>
+                </div>
+                <!-- /.box-header -->
+                {% for sub in backup_disp_ord %}
+                <div class="col-xs-6">
+                    <div class="box-body" class="spoiler" style="display: {% if not is_composition %}block{% else %}none{% endif %};">
+                      <ul class="list-group list-group-unbordered">
+                        <li class="list-group-item">
+                          <b>{{sub}} Submitter: </b>
+                          <a href="{{ url_for('.student_assignment_detail', cid=backups[sub].assignment.course.id, email=backups[sub].submitter.email, aid=backups[sub].assignment.id) }}">
+                            {{ backups[sub].submitter.email }}
+                          </a>
+                        </li>
+                        <li class="list-group-item">
+                        {% if group | length > 1 %}
+                          <b>{{sub}} Group: </b>
+                          {% for member in group %}
+                            <a href="{{ url_for('.student_assignment_detail', cid=backups[sub].assignment.course.id, email=member.email, aid=backups[sub].assignment.id) }}">
+                               {{ member.email }}
+                            </a>
+                          {% endfor %}
+                        {% else %}
+                          <p><b>{{sub}} Group:</b> No Group</p>
+                        {% endif %}
+                        </li>
+                      {% if backups[sub].creator %}
+                        <li class="list-group-item">
+                          <b>Creator: </b>
+                          {{ backups[sub].creator.email }}
+                        </li>
+                      {% endif %}
+                        <li class="list-group-item">
+                          <b>Creation Time: </b>
+                          {{ utils.local_time(backups[sub].created, backups[sub].assignment.course) }}
+                        </li>
+                      {% if backups[sub].custom_submission_time %}
+                        <li class="list-group-item">
+                          <b>Custom Submission Time: </b>
+                          {{ utils.local_time(backups[sub].custom_submission_time, backups[sub].assignment.course) }}
+                        </li>
+                      {% endif %}
+                        <li class="list-group-item">
+                          <b>Student URL: </b>
+                          {% with student_url = url_for('student.code', name=backups[sub].assignment.name, bid=backups[sub].id, submit=backups[sub].submit, _external=True) %}
+                          <a href="{{ student_url }}"> {{ student_url }} </a>
+                          {% endwith %}
+                        </li>
+                    </div>
+            <div class="box">
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="subcontent list">
+                        <div class="wrap">
+                            {{ diff.render_files(backups[sub], files[sub], moss_diff=True) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endblock %}
+{% block page_css %}
+  {{ css_asset("code_css") }}
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">
+{% endblock %}
+

@@ -39,17 +39,17 @@
   </div>
 {% endmacro %}
 
-{% macro render_files(backup, files) %}
+{% macro render_files(backup, files, moss_diff=False) %}
     {% for filename, file in files | dictsort %}
         {% if file.id %}
               {{ external_file(backup, filename, file) }}
         {% else %}
-              {{ source_file(backup, filename, file) }}
+              {{ source_file(backup, filename, file, moss_diff) }}
         {% endif %}
     {% endfor %}
 {% endmacro %}
 
-{% macro render_source(file) %}
+{% macro render_source(backup, file) %}
     {% for line in file.lines %}
       <tr class="fixed-width-font highlight-{{ line.tag }}" data-line={{ line.line_after }}>
         {% if line.is_diff %}
@@ -75,7 +75,7 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_notebook(file) %}
+{% macro render_notebook(backup, file) %}
 <tr>
     <td>
         <div class="notebook-pad" id="{{ file.name }}-notebook" data-filename="{{ file.name }}"
@@ -127,7 +127,7 @@
 </div>
 {% endmacro %}
 
-{% macro source_file(backup, filename, file) %}
+{% macro source_file(backup, filename, file, moss_diff) %}
   <div class="source-file table-responsive"
     data-backup-id={{ utils.encode_id(backup.id) }}
     data-filename={{ filename }}>
@@ -158,10 +158,10 @@
         {% endif %}
       </thead>
       <tbody>
-        {% if file.extension == ".ipynb" %}
-          {{ render_notebook(file) }}
+        {% if file.extension == ".ipynb" and not moss_diff %}
+          {{ render_notebook(backup, file) }}
         {% else %}
-          {{ render_source(file) }}
+          {{ render_source(backup, file) }}
         {% endif %}
       </tbody>
     </table>

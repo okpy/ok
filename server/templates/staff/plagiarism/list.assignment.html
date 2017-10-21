@@ -48,18 +48,22 @@
             <div class="box-body table-responsive no-padding table-loading" style="display: none;" id="moss-list">
                 <table class="table table-hover">
                     <thead>
+                        <th class="sort" data-sort="created">Created</th>
                         <th class="sort" data-sort="student">Student</th>
                         <th class="sort" data-sort="primary">Submission</th>
                         <th class="sort" data-sort="similarity">Similarity</th>
                         <th class="sort" data-sort="other">Similar Student</th>
                         <th class="sort" data-sort="secondary">Similar Submission</th>
-                        <th class="sort" data-sort="created">Created</th>
+                        <th class="sort" data-sort="diffs"> Diff </th>
                         <th class="sort" data-sort="tags">Tags</th>
                     </thead>
 
                     <tbody class="list">
                         {%- for item in moss_results %}
                         <tr>
+                            <td class="created" data-created="{{item['run_time']}}">
+                                {{ item['run_time'] }}
+                            </td>
                             <td class="student" data-email="{{item['primary']['submitter']['email']}}"
                             data-name="{{item['primary']['submitter']['name']}}">
                             <a href="{{ url_for('.student_view', cid=current_course.id, email=item['primary']['submitter']['email'])}}">
@@ -83,8 +87,10 @@
                             <td class="secondary">
                               {{ helpers.backup_link(item['secondary']['id']) }}
                             </td>
-                            <td class="created" data-created="{{item['run_time']}}">
-                                {{ item['run_time'] }}
+                            <td class="diffs">
+                                <a href="{{ url_for('.get_moss_diffs', cid=current_course.id, aid=assignment.id, mid=item['id'])}}">
+                                View
+                                </a>
                             </td>
                             <td class="tags">
                               {{ helpers.tag_pills(item.tags) }}

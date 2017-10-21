@@ -1,6 +1,8 @@
 import collections
 import csv
 import datetime as dt
+import copy
+
 from functools import wraps
 from io import StringIO
 
@@ -924,6 +926,59 @@ def assignment_moss_results(cid, aid):
     return render_template('staff/plagiarism/list.assignment.html',
                            assignment=assign, moss_results=moss_results,
                            courses=courses, current_course=current_course)
+
+
+@admin.route("/course/<int:cid>/assignments/<int:aid>/moss-results/<int:mid>",
+             methods=["GET"])
+@is_staff(course_arg='cid')
+def get_moss_diffs(cid, aid, mid, diff_type='short'):
+
+    courses, current_course = get_courses(cid)
+    assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+    form = forms.GradeForm()
+
+    if not assign or not Assignment.can(assign, current_user, 'grade'):
+        flash('Cannot access assignment', 'error')
+        return abort(404)
+
+    last_run = MossResult.query.order_by(MossResult.run_time.desc()) \
+        .join(MossResult.primary).filter_by(assignment_id = assign.id).first()
+    if last_run:
+        moss_result = MossResult.query.order_by(MossResult.similarity.desc()) \
+            .filter_by(run_time = last_run.run_time, id = mid) \
+            .join(MossResult.primary).filter_by(assignment_id = assign.id).first()
+
+
+    primary_files = moss_result.primary.files()
+    primary_unmatch = {}
+    for file in primary_files:
+        list_of_lines = primary_files[file].splitlines()
+        unique_lines = copy.deepcopy(list_of_lines)
+        for primary_matches in moss_result.primary_matches[file]:
+            for line in range(primary_matches[0], primary_matches[1] + 1):
+                unique_lines[line] = -1
+        primary_unmatch[file] = ''.join([line + '\n' for line in unique_lines if line != -1])
+    primary_hlt = highlight.diff_files(primary_files, primary_unmatch, diff_type)
+
+    secondary_files = moss_result.secondary.files()
+    secondary_unmatch = {}
+    for file in secondary_files:
+        list_of_lines = secondary_files[file].splitlines()
+        unique_lines = copy.deepcopy(list_of_lines)
+        for secondary_matches in moss_result.secondary_matches[file]:
+            for line in range(secondary_matches[0], secondary_matches[1] + 1):
+                unique_lines[line] = -1
+        secondary_unmatch[file] = ''.join([line + '\n' for line in unique_lines if line != -1])
+    secondary_hlt = highlight.diff_files(secondary_files, secondary_unmatch, diff_type)
+
+    return render_template('staff/plagiarism/moss_diff.html',
+                           assignment=assign, courses=courses, form=form, backup_disp_ord=['Primary', 'Secondary'],
+                           backups={'Primary': moss_result.primary, 'Secondary': moss_result.secondary}, 
+                           files={'Primary': primary_hlt, 'Secondary': secondary_hlt}, diff_type=diff_type,
+                           current_course=current_course, moss_result=moss_result)
+
+
+
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/github",
              methods=["GET", "POST"])
