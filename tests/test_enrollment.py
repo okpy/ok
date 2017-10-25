@@ -3,6 +3,8 @@ from tests import OkTestCase
 from server.models import db, Enrollment, User
 from server.forms import EnrollmentForm, BatchEnrollmentForm
 from server.constants import STUDENT_ROLE, LAB_ASSISTANT_ROLE, STAFF_ROLES
+import csv
+
 
 class TestEnrollment(OkTestCase):
 
@@ -154,6 +156,23 @@ class TestEnrollment(OkTestCase):
         assert user.id == user_updated.id
 
         self.enrollment_matches_info(user, self.studentB_alt)
+
+    def test_enrollment_export_web(self):
+        self.setup_course()
+        self.login(self.staff1.email)
+        chosen_roles = [LAB_ASSISTANT_ROLE]
+        response = (self.client.post('/admin/course/{}/enrollment/csv'
+                            .format(self.course.id), 
+                            data={"roles": chosen_roles}))
+        self.assert200(response)
+        source = response.get_data().decode("utf-8").splitlines()
+        reader = csv.DictReader(source)
+        emails = {row["email"] for row in reader}
+        enrolled_las = [e.user for e in self.course.get_participants(chosen_roles)]
+        assert len(enrolled_las) == len(emails)
+        for user in enrolled_las:
+            assert user.email in emails
+            
 
     def enrollment_matches_info(self, user, info):
         query = Enrollment.query.filter_by(
