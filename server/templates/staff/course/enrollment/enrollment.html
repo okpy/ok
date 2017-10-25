@@ -42,9 +42,11 @@
                     </div>
                 </div>
                 <div class="box-body">
-                    <a href="{{url_for('.enrollment_csv',cid=current_course.id)}}">
-                        <button class="btn btn-primary btn-block"> Export Roster (CSV) </button>
-                    </a>
+                    <!-- form goes here -->
+                    {% call forms.render_form(export_form, action_url=url_for('.enrollment_csv', cid=current_course.id), action_text='Export Roster (CSV)',
+                    class_='form') %}
+                        {{ forms.render_field(export_form.roles, label_visible=true, required="required", class_="checkbox-list") }}
+                    {% endcall %}
                 </div>
                 <!-- /.box-body -->
                 <!-- /.box-footer-->
