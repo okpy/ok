@@ -23,6 +23,7 @@ To install:
   - If brew cannot find `virtualenv`, use `brew install pyenv-virtualenv`.
 * Create a virtualenv with `virtualenv -p python3 env`
 * Activate the virtualenv with `source env/bin/activate`
+* (Optional, but reccomended) Install `redis-server`. You can do `brew install redis` on a mac or `apt-get install redis-server`
 
 Local Server
 ------------

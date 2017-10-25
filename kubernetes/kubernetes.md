@@ -183,6 +183,19 @@ The load balancer will spin up and get configured (takes a few minutes to pass h
     - [Link](https://hub.docker.org/r/cs61a/ok)
 - As a secondary image host - we use [Quay.io](https://quay.io/repository/cs61a/ok-server) automated builds for the master branch
 
+## Adding an Admin
+
+```
+$ kubectl get pod # to get the name of the staging pod 
+$ kubectl exec -ti ok-staging-deployment-number-something -- ./manage.py shell
+>>> # BE VERY CAREFUL about who you give admin access to. This should be limited to lead developers & John DeNero
+>>> new_admin = User.query.filter_by(email="<email>").first()
+>>> new_admin.is_admin = True 
+>>> db.session.commit()
+>>> exit()
+```
+
+
 ## Future Work
 
 @okpy: Automate this deployment process (circleCI?)
