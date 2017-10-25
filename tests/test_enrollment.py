@@ -166,8 +166,8 @@ class TestEnrollment(OkTestCase):
                             data={"roles": chosen_roles}))
         self.assert200(response)
         source = response.get_data().decode("utf-8").splitlines()
-        reader = csv.DictReader(source)
-        emails = {row["email"] for row in reader}
+        rows = csv.DictReader(source)
+        emails = {row["email"] for row in rows}
         enrolled_las = [e.user for e in self.course.get_participants(chosen_roles)]
         assert len(enrolled_las) == len(emails)
         for user in enrolled_las:
