@@ -22,10 +22,9 @@
                 <th class="sort" data-sort="assignment">Assignment</th>
                 {% endif %}
                 <th class="sort" data-sort="submission">Student's Submission</th>
-                <th class="sort" data-sort="similarity">Similarity</th>
                 <th class="sort" data-sort="other">Similar Student</th>
                 <th class="sort" data-sort="secondary">Similar Submission</th>
-                <th class="sort" data-sort="diffs"> Diff </th>
+                <th class="sort" data-sort="similarity"> Similarity </th>
             </thead>
 
             <tbody class="list">
@@ -43,11 +42,6 @@
                     <td class="submission">
                       {{ helpers.backup_link(item['primary']['id']) }}
                     </td>
-                    <td class="similarity" data-similarity="{{item['similarity']}}">
-                    <a href="#">
-                        {{ item['similarity'] }}%
-                    </a>
-                    </td>
                     <td class="other" data-email="{{item['secondary']['submitter']['email']}}"
                     data-name="{{item['secondary']['submitter']['name']}}">
                     <a href="{{ url_for('.student_view', cid=current_course.id, email=item['secondary']['submitter']['email'])}}">
@@ -56,9 +50,9 @@
                     <td class="secondary">
                       {{ helpers.backup_link(item['secondary']['id']) }}
                     </td>
-                    <td class="diffs">
+                    <td class="similarity">
                         <a href="{{ url_for('.get_moss_diffs', cid=current_course.id, aid=item['primary']['assignment_id'], mid=item['id'])}}">
-                        View
+                        {{ item['similarity'] }}%
                         </a>
                     </td>
                 </tr>

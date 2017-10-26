@@ -948,34 +948,63 @@ def get_moss_diffs(cid, aid, mid, diff_type='short'):
             .filter_by(run_time = last_run.run_time, id = mid) \
             .join(MossResult.primary).filter_by(assignment_id = assign.id).first()
 
+    moss_backup_dict = {'Primary': moss_result.primary, 'Secondary' : moss_result.secondary}
+    moss_matches_dict = {'Primary': moss_result.primary_matches, 'Secondary' : moss_result.secondary_matches}
+    data = {}
 
-    primary_files = moss_result.primary.files()
-    primary_unmatch = {}
-    for file in primary_files:
-        list_of_lines = primary_files[file].splitlines()
-        unique_lines = copy.deepcopy(list_of_lines)
-        for primary_matches in moss_result.primary_matches[file]:
-            for line in range(primary_matches[0], primary_matches[1] + 1):
-                unique_lines[line] = -1
-        primary_unmatch[file] = ''.join([line + '\n' for line in unique_lines if line != -1])
-    primary_hlt = highlight.diff_files(primary_files, primary_unmatch, diff_type)
+    for sub, res in moss_backup_dict.items():
 
-    secondary_files = moss_result.secondary.files()
-    secondary_unmatch = {}
-    for file in secondary_files:
-        list_of_lines = secondary_files[file].splitlines()
-        unique_lines = copy.deepcopy(list_of_lines)
-        for secondary_matches in moss_result.secondary_matches[file]:
-            for line in range(secondary_matches[0], secondary_matches[1] + 1):
-                unique_lines[line] = -1
-        secondary_unmatch[file] = ''.join([line + '\n' for line in unique_lines if line != -1])
-    secondary_hlt = highlight.diff_files(secondary_files, secondary_unmatch, diff_type)
+        # get highlighted areas
+        data[sub] = {}
+        submitted_files = res.files()
+        group = [User.email_by_id(uid.user_id) for uid in res.group.members]
+        tot_backups = Backup.query.filter(Backup.assignment_id == aid, Backup.submitter_id ==  res.submitter_id).count()
+        approved = {} # contains cleaned files, with no lines suspected of plagiarism
+        for file in submitted_files:
+            lines_lst = submitted_files[file].splitlines()
+            all_lines = copy.deepcopy(lines_lst)
+            matches = moss_matches_dict[sub][file]
+            for match in matches:
+                for line in range(match[0], match[1] + 1):
+                    all_lines[line] = -1 # mark the offending lines for removal
+            approved[file] = ''.join([line + '\n' for line in all_lines if line != -1])
+            hlt = highlight.diff_files(submitted_files, approved, diff_type)
+
+        # get the diff timelines
+        user_ids = [uid.user_id for uid in res.group.members]
+        line_charts = []
+        all_backups = (Backup.query.options(db.joinedload('messages'),
+                                            db.joinedload('submitter'))
+                             .filter(Backup.submitter_id.in_(set(user_ids)),
+                                     Backup.assignment_id == assign.id)
+                             .order_by(Backup.created.asc())).all()
+        all_backups_dict = {}
+        for backup in all_backups:
+            if backup.submitter_id not in all_backups_dict:
+                all_backups_dict[backup.submitter_id] = [backup]
+            else:
+                all_backups_dict[backup.submitter_id].append(backup)
+
+        for user_id in user_ids:
+            backups = []
+            if user_id in all_backups_dict:
+                backups = all_backups_dict[user_id]
+            analyze.sort_by_client_time(backups)
+            line_chart = analyze.generate_line_chart(backups, cid, User.query.get(user_id).email, aid)
+            line_charts.append(line_chart)
+
+
+        data[sub]['backups'] = res
+        data[sub]['file_hlt'] = hlt
+        data[sub]['total_backups'] = tot_backups
+        data[sub]['group'] = group
+        data[sub]['graph'] = line_charts
+
 
     return render_template('staff/plagiarism/moss_diff.html',
-                           assignment=assign, courses=courses, form=form, backup_disp_ord=['Primary', 'Secondary'],
-                           backups={'Primary': moss_result.primary, 'Secondary': moss_result.secondary}, 
-                           files={'Primary': primary_hlt, 'Secondary': secondary_hlt}, diff_type=diff_type,
-                           current_course=current_course, moss_result=moss_result)
+                           assignment=assign, courses=courses, form=form, graphs=line_charts,
+                           data = collections.OrderedDict(sorted(data.items(), key=lambda x: x[0])),
+                           diff_type=diff_type, current_course=current_course, moss_result=moss_result)
 
 
 
