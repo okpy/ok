@@ -1028,9 +1028,9 @@ class Backup(Model):
             return self.custom_submission_time
         return self.created
 
-    @hybrid_property
-    def group(self):
-        return Group.lookup(self.submitter, self.assignment)
+    # @hybrid_property
+    # def group(self):
+    #     return Group.lookup(self.submitter, self.assignment)
 
     def owners(self):
         """ Return a set of user ids in the same group as the submitter."""

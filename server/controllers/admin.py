@@ -957,7 +957,6 @@ def get_moss_diffs(cid, aid, mid, diff_type='short'):
         # get highlighted areas
         data[sub] = {}
         submitted_files = res.files()
-        group = [User.email_by_id(uid.user_id) for uid in res.group.members]
         tot_backups = Backup.query.filter(Backup.assignment_id == aid, Backup.submitter_id ==  res.submitter_id).count()
         approved = {} # contains cleaned files, with no lines suspected of plagiarism
         for file in submitted_files:
@@ -971,7 +970,8 @@ def get_moss_diffs(cid, aid, mid, diff_type='short'):
             hlt = highlight.diff_files(submitted_files, approved, diff_type)
 
         # get the diff timelines
-        user_ids = [uid.user_id for uid in res.group.members]
+        user_ids = res.owners()
+        group = [User.query.get(uid).email for uid in user_ids]
         line_charts = []
         all_backups = (Backup.query.options(db.joinedload('messages'),
                                             db.joinedload('submitter'))
