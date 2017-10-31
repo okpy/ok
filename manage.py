@@ -113,6 +113,7 @@ def generate_session_key():
 
 @manager.command
 def worker():
+    """ Run RQ workers. """
     get_worker().work()
 
 if __name__ == "__main__":
