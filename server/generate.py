@@ -126,10 +126,7 @@ def gen_assignment(course):
                       .astimezone(pytz.utc))
     due_date = last_night + datetime.timedelta(
         days=random.randrange(-100, 100))
-    lock_date = due_date + random.choice([
-        datetime.timedelta(minutes=15),
-        datetime.timedelta(days=1)
-    ])
+    lock_date = due_date + datetime.timedelta(days=1)
 
     support_online = gen_bool(0.5)
 
@@ -215,15 +212,15 @@ def gen_messages(assignment, seconds_offset):
 
 
 def gen_backup(user, assignment):
-    seconds_offset = random.randrange(-100000, 100)
+    seconds_offset = random.randrange(-100000, 100000)
     messages = gen_messages(assignment, seconds_offset)
     submit = gen_bool(0.3)
     if submit:
         messages['file_contents']['submit'] = ''
-    backup = Backup(
-        created=assignment.due_date - datetime.timedelta(seconds=seconds_offset),
-        submitter_id=user.id,
-        assignment_id=assignment.id,
+    backup = Backup.create(
+        created=assignment.due_date + datetime.timedelta(seconds=seconds_offset),
+        submitter=user,
+        assignment=assignment,
         submit=submit)
     backup.messages = [Message(kind=k, contents=m) for k, m in messages.items()]
     return backup

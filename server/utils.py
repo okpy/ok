@@ -163,7 +163,7 @@ def invite_email(member, recipient, assignment):
     link = url_for('student.assignment', name=assignment.name, _external=True)
     template = 'email/invite.html'
 
-    send_email(recipient.email, subject, text, template,
+    send_email(recipient.email, subject, text, template=template,
                link_text=link_text, link=link)
 
 def send_emails(recipients, subject, body, **kwargs):

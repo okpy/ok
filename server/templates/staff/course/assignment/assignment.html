@@ -92,6 +92,9 @@
                   <li> <a href="{{ url_for('.create_extension', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-calendar"></i> Grant Extension
                   </a></li>
+                  <li> <a href="{{ url_for('.effort_grading', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-thumbs-up"></i> Effort Grading
+                  </a></li>
                   <li> <a href="http://autograder.cs61a.org" target="_blank" type="button">
                         <i class="fa fa-gear"></i> Configure Autograder
                   </a></li>
@@ -118,6 +121,9 @@
                   </a></li>
                   <li> <a href="{{ url_for('.start_moss_job', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-gavel"></i> Run MOSS
+                  </a></li>
+                  <li> <a href="{{ url_for('.assignment_moss_results', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-list"></i> Moss Results
                   </a></li>
                   <li> <a href="{{ url_for('.start_github_search', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-github"></i> Search Github
