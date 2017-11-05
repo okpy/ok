@@ -1,0 +1,101 @@
+{% extends "staff/base.html" %}
+{% import 'staff/_formhelpers.html' as forms %}
+{% import 'staff/_helpers.html' as helpers %}
+
+{% block title %}  Batch Score Upload - {{ assignment.name }}{% endblock %}
+
+{% block main %}
+  <section class="content-header">
+      <h1>
+        {{ assignment.name }} Score Upload
+        <small>{{ current_course.offering }}</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=current_course.id) }}">
+            <i class="fa fa-university"></i> {{ current_course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.assignment', cid=current_course.id, aid=assignment.id) }}">
+            <i class="fa fa-list"></i> Assignment</a>
+          </li>
+        <li><a href="#"><i class="fa fa-plus"></i>Batch Score Upload</a></li>
+
+      </ol>
+  </section>
+
+  <section class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+              {{message}}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+      <div class="col-md-12 col-xs-12">
+        <!-- Default box -->
+        <!--  Box -->
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Batch Score Upload</h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+                <i class="fa fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="box-body">
+            <p> Upload Scores as Text</p>
+            {% call forms.render_form(batch_form, action_url=url_for('.upload', cid=current_course.id, aid=assignment.id), action_text='Score Upload',
+                                        class_='form') %}
+                {{ forms.render_field(batch_form.csv, label_visible=true, placeholder='Line Separated CSV') }}
+                {{ forms.render_field(batch_form.kind, label_visible=true) }}
+                {{ forms.render_radio_field(batch_form.submission_time) }}
+                {{ forms.render_field(
+                  batch_form.custom_submission_time,
+                  placeholder='YYYY-MM-DD hh:mm:ss',
+                  label_visible=false) }}
+            {% endcall %}
+          </div>
+        </div>
+        
+        <div class="box">
+          <div class="box-body">
+              <h4> OR: Upload Scores as a CSV </h4>
+              <p class="upload-directions">
+                  {% if assignment.upload_info %}
+                   {{ assignment.upload_info }}
+                  {% endif %}
+        
+                  {% if assignment.files %}
+                   Required Files: {% for f in assignment.files %} {{ f }} {% endfor %}
+                  {% endif %}
+              </p>
+        
+                  {% call forms.render_form(upload_form, class_='form', enctype="multipart/form-data") %}
+                    {{ forms.render_field(upload_form.upload_files, label_visible=false, multiple="", id="file-select") }}
+                    {{ forms.render_field(upload_form.kindCSV, label_visible=true) }}
+                    <label class="control-label">Submission time: </label>
+                    {{ forms.render_radio_field(upload_form.submission_time) }}
+                    {{ forms.render_field(
+                      upload_form.custom_submission_time,
+                      placeholder='YYYY-MM-DD hh:mm:ss',
+                      label_visible=false) }}
+                  {% endcall %}
+          </div>
+          <!-- /.box-body -->
+          <!-- /.box-footer-->
+        </div>
+
+
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- </body> do not close body in template-->
+{% endblock %}
+

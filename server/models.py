@@ -1459,6 +1459,43 @@ class Score(Model):
             return obj.backup.can_view(user, course)
         return user.is_enrolled(course.id, STAFF_ROLES)
 
+    @staticmethod
+    @transaction
+    def score_from_csv(cid, aid, current_user, form, uploaded_csv=None, kind='total'):
+        '''
+        Returns None if successful, returns an error message if an error occurs
+        '''
+        message = []
+        if not uploaded_csv:
+            rows = csv.reader(form.csv.data.splitlines())
+        else: 
+            rows = uploaded_csv
+        assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+        line_num = 0
+        for entry in rows:
+            entry = [x.strip() for x in entry]
+            try: 
+                email, score = entry[0], entry[1]
+            except: 
+                return 'csv not formatted properly on line {linenum}, {entry}'.format(linenum=line_num,entry=entry)
+            user = User.query.filter_by(email=email).one_or_none()
+            try: 
+                backup = Backup.create(
+                    submitter=user,
+                    assignment_id=assign.id, 
+                    submit=True
+                )
+            except: 
+                db.session.rollback()
+                return 'Error with entering {0} - User not Found. Entries before entered into DB'.format(entry)
+            uploaded_score = Score(grader_id=current_user.id, assignment=backup.assignment,\
+                        backup=backup, user_id=backup.submitter_id, score=score, kind=kind)
+            db.session.add(uploaded_score)
+            db.session.commit()
+            #CURRENTLY NOT ARCHIVING OLD SCORES
+            uploaded_score.archive_duplicates()
+            line_num += 1
+
     def archive(self, commit=True):
         self.public = False
         self.archived = True

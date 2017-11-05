@@ -89,6 +89,9 @@
                   <li> <a href="{{ url_for('.send_scores_job', cid=current_course.id, aid=assignment.id) }}" type="button">
                         <i class="fa fa-envelope"></i> Send Score Emails
                   </a></li>
+                  <li><a href="{{ url_for('.upload', cid=current_course.id, aid=assignment.id) }}" type="button">
+                        <i class="fa fa-upload"></i> Upload Scores as CSV
+                  </li>
                 </ul>
               </div>
               <!-- /.box-body -->
