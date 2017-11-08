@@ -20,7 +20,7 @@ from tests import OkTestCase
 
 try:
     driver = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true',
-        '--ssl-protocol=any'])
+        '--ssl-protocol=tlsv1'])
 except:
     print("PhantomJS is not installed. Not running integration tests")
     driver = None
