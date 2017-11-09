@@ -275,7 +275,68 @@
 {% endmacro %}
 
 {% macro render_assign_mobile(assignments, course, categories, tname="Assignments", admin=False, empty=False, show_scores=False) %}
-  {% if assignments %}
+  {% if categories %}
+  <div class="subcontent list hidden-md hidden-lg">
+   {% for category, assignments in categories %}
+    <div class="wrap">
+      <h2>{{ category.name }}</h2>
+      {% for assign, subm_time, group, fs, scores in assignments %}
+      <div class="cell col-xs-12">
+        <div class="cell-title">
+          <a class="dashed" href="{{ url_for('.assignment', name=assign.name)}}">
+              {{assign.display_name}} &raquo;
+          </a>
+        </div>
+        <div class="cell-text">
+          {% if subm_time %}
+            <span class="due-dot green"></span>
+            <span class="green">Submitted</span>
+            <span>{{ utils.local_time(subm_time, course) }}</span>
+          {% else %}
+          <!-- <span class="due-dot grey">
+          <span class="grey">No Submission</span>
+          <span>Did you run --submit<?</span> -->
+          {% endif %}
+        </div>
+        {% if show_scores %}
+            {% if scores %}
+            <div class="cell-text">
+                Scores:
+                {% for score in scores %}
+                   <span>
+                    <a href="{{ url_for('.code', name=assign.name, submit=score.backup.submit, bid=score.backup_id) }}" class="score-inline">
+                     <b>{{score.kind}}:</b> {{score.score | round(2)}}
+                    </a>
+                  </span>
+                {% endfor %}
+            </div>
+            {% elif fs %}
+            <div class="cell-text"><span>Scores are not available on OK</span></div>
+            {% endif %}
+        {% endif %}
+        <div class="cell-status">
+          {% if assign.active %}
+          <span class="due-dot green">
+        </div>
+        <span class="green">Due: {{ utils.natural_time(assign.due_date) }}</span>
+        <span>({{ utils.local_time(assign.due_date, course) }})</span>
+          {% elif subm_time %}
+          <span class="due-dot grey">
+         </div>
+        <span class="grey">Due: {{ utils.natural_time(assign.due_date) }}</span>
+        <span>({{ utils.local_time(assign.due_date, course) }})</span>
+          {% else %}
+          <span class="due-dot red">
+         </div>
+        <span class=" red">Due: {{ utils.natural_time(assign.due_date) }}</span>
+        <span>({{ utils.local_time(assign.due_date, course) }})</span>
+          {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+  {% elif assignments %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
       <h2>{{ tname }}</h2>
@@ -334,7 +395,6 @@
     {% endfor %}
   </div>
 </div>
-
   {% elif empty %}
   <div class="subcontent list hidden-md hidden-lg">
     <div class="wrap">
