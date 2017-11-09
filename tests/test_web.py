@@ -19,8 +19,7 @@ from server.constants import STAFF_ROLES
 from tests import OkTestCase
 
 try:
-    driver = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true',
-        '--ssl-protocol=tlsv1'])
+    driver = webdriver.PhantomJS()
 except:
     print("PhantomJS is not installed. Not running integration tests")
     driver = None
@@ -31,7 +30,8 @@ if driver:
     class WebTest(LiveServerTestCase):
 
         def setUp(self):
-            self.driver = webdriver.PhantomJS()
+            self.driver = webdriver.PhantomJS(
+                    service_args=['--ssl-protocol=any'])
             OkTestCase.setUp(self)
             OkTestCase.setup_course(self)
             self.driver.set_window_size(1268, 1024)
