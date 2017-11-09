@@ -144,7 +144,7 @@ def make_backup(user, assignment_id, messages, submit):
     :param submit: Whether this backup is a submission to be graded
     :return: (Backup) backup
     """
-    backup = models.Backup(submitter=user, assignment_id=assignment_id,
+    backup = models.Backup.create(submitter=user, assignment_id=assignment_id,
                            submit=submit)
     backup.messages = [models.Message(kind=k, contents=m)
                        for k, m in messages.items()]
@@ -360,14 +360,16 @@ class BackupSchema(APISchema):
                              eligible_submit)
         if args['submit'] and past_due:
             assign_obj = models.Assignment.by_name(args['assignment'])
-            extension = models.Extension.get_extension(user, assign_obj)
+            extension = models.Extension.get_extension(user, assign_obj, time=backup.created)
             # Submissions after the deadline with an extension are allowed
             if extension:
                 backup.submit = True  # Need to set if the assignment is inactive
-                backup.custom_submission_time = extension.custom_submission_time
+                backup.custom_submission_time = extension.custom_submission_time or assign_obj.due_date
                 eligible_submit = True
             elif lock_flag:
                 raise ValueError('Late Submission of {}'.format(args['assignment']))
+
+        models.db.session.commit()
 
         if (eligible_submit and assignment['autograding_key']
                 and assignment['continuous_autograding']):
