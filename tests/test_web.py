@@ -31,7 +31,9 @@ if driver:
 
         def setUp(self):
             self.driver = webdriver.PhantomJS(
-                    service_args=['--ssl-protocol=any'])
+                    service_args=[
+                        '--ignore-ssl-errors=true',
+                        '--ssl-protocol=any'])
             OkTestCase.setUp(self)
             OkTestCase.setup_course(self)
             self.driver.set_window_size(1268, 1024)
