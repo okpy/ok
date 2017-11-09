@@ -32,19 +32,21 @@
         <!-- Side Panel -->
         <div class="col-md-3 col-xs-12">
             <!-- Box -->
-            <div class="box">
+            <div class="box collapsed-box">
                 <div class="box-header with-border">
                     <h3 class="box-title">Export Roster</h3>
                     <div class="box-tools pull-right">
                         <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
-                            <i class="fa fa-minus"></i>
+                            <i class="fa fa-plus"></i>
                         </button>
                     </div>
                 </div>
                 <div class="box-body">
-                    <a href="{{url_for('.enrollment_csv',cid=current_course.id)}}">
-                        <button class="btn btn-primary btn-block"> Export Roster (CSV) </button>
-                    </a>
+                    <!-- form goes here -->
+                    {% call forms.render_form(export_form, action_url=url_for('.enrollment_csv', cid=current_course.id), action_text='Export Roster (CSV)',
+                    class_='form') %}
+                        {{ forms.render_field(export_form.roles, label_visible=true, required="required", class_="checkbox-list") }}
+                    {% endcall %}
                 </div>
                 <!-- /.box-body -->
                 <!-- /.box-footer-->

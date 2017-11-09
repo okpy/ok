@@ -23,6 +23,7 @@ To install:
   - If brew cannot find `virtualenv`, use `brew install pyenv-virtualenv`.
 * Create a virtualenv with `virtualenv -p python3 env`
 * Activate the virtualenv with `source env/bin/activate`
+* (Optional, but reccomended) Install `redis-server`. You can do `brew install redis` on a mac or `apt-get install redis-server`
 
 Local Server
 ------------
@@ -39,6 +40,19 @@ $ ./manage.py server
 The server will listen on http://localhost:5000.
 
 If you are running into issues - see `documentation/SETUP.md` or file an issue
+
+Running Workers
+---------------
+To run workers locally:
+
+```bash
+$ ./manage.py worker
+```
+
+To be able to run the workers you should have a `redis` server installed and running.
+
+If `redis` is not installed you can install it using your distribution's package
+manager or follow [Redis Quick Start](https://redis.io/topics/quickstart).
 
 Command Line Manager
 ------------------------

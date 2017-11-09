@@ -2,6 +2,7 @@ import datetime as dt
 import json
 
 from server.models import db, Backup, Group, Extension
+from server.controllers import api
 
 from tests import OkTestCase
 
@@ -44,16 +45,11 @@ class TestExtension(OkTestCase):
 
 
     def _make_ext(self, assignment, user, custom_time=None):
-        if not custom_time:
-           custom_time = dt.datetime.utcnow()
-
-        ext = Extension(assignment=assignment, user=user,
-                              custom_submission_time=custom_time,
-                              expires=dt.datetime.utcnow() + dt.timedelta(days=1),
-                              staff=self.staff1)
-        db.session.add(ext)
-        db.session.commit()
-        return ext
+        custom_time = custom_time or dt.datetime.utcnow()
+        return Extension.create(assignment=assignment, user=user,
+                custom_submission_time=custom_time,
+                expires=dt.datetime.utcnow() + dt.timedelta(days=1),
+                staff=self.staff1)
 
     def test_extension_basic(self):
         ext = self._make_ext(self.assignment, self.user1)
@@ -100,7 +96,7 @@ class TestExtension(OkTestCase):
         # Should allow submission after the submission
         self._submit_to_api(self.user1, True)
 
-        # The custom_submission_time should be set
+        # The custom_submission_time should always be set for extensions
         backup = Backup.query.filter(Backup.submitter_id == self.user1.id,
                                      Backup.submit == True).first()
         self.assertIsNotNone(backup)
@@ -118,11 +114,11 @@ class TestExtension(OkTestCase):
         # Should allow submission after the submission
         self._submit_to_api(self.user1, True)
 
-        # The custom_submission_time should not be set
+        # The custom_submission_time should always be set for extensions
         backup = Backup.query.filter(Backup.submitter_id == self.user1.id,
                                      Backup.submit == True).first()
         self.assertIsNotNone(backup)
-        self.assertNotEquals(backup.custom_submission_time,
+        self.assertEquals(backup.custom_submission_time,
                              ext.custom_submission_time)
 
     def test_group_submit_with_extension(self):
@@ -175,3 +171,18 @@ class TestExtension(OkTestCase):
         # The submission from User 2 should have a custom submission time
         self.assertEquals(second_back.custom_submission_time, ext.custom_submission_time)
 
+    def test_extension_after_backups(self):
+        """ Backups from before the extension was made should use the extension
+        time instead of the submission time.
+        """
+        now = dt.datetime.utcnow()
+        self.assignment.due_date = now - dt.timedelta(hours=1)
+
+        # Make a late backup
+        backup = api.make_backup(self.user1, self.assignment.id, messages={}, submit=True)
+        self.assertFalse(backup.submission_time <= self.assignment.due_date)
+
+        # After an extension, backup should no longer be late
+        early = now - dt.timedelta(days=1)
+        ext = self._make_ext(self.assignment, self.user1, custom_time=early)
+        self.assertTrue(backup.submission_time <= self.assignment.due_date)
