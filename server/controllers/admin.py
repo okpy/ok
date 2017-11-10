@@ -187,6 +187,31 @@ def composition(bid):
         form.score.data = existing.score
     return grading_view(backup, form=form, is_composition=True)
 
+@admin.route('/moss-viewer/<hashid:moss_id>')
+@is_staff()
+def moss_viewer(moss_id):
+    moss_result = MossResult.query.get(moss_id)
+    if not moss_result:
+        abort(404)
+    backup_1 = Backup.query.get(moss_result.primary_id)
+    backup_2 = Backup.query.get(moss_result.secondary_id)
+    if not backup_1 or not backup_2:
+        abort(404)
+    # Highlight files and add comments
+    diff_type = 'short'
+    files = highlight.sim_files(backup_1.files(), moss_result.primary_matches, diff_type)
+    files_2 = highlight.sim_files(backup_2.files(), moss_result.secondary_matches, diff_type)
+    # Add external files
+    for filename, ex_file in backup_1.external_files_dict().items():
+        files[filename] = ex_file
+    for filename, ex_file in backup_2.external_files_dict().items():
+        files_2[filename] = ex_file
+    # If you're looking at this past midnight, go to sleep
+    return render_template('staff/plagiarism/moss-viewer.html', id=moss_id,
+                           backup=backup_1, assignment=backup_2,
+                           files=files, files_2=files_2,
+                           diff_type=diff_type)
+
 @admin.route('/grading/<hashid:bid>/edit', methods=['GET', 'POST'])
 @is_staff()
 def edit_backup(bid):
@@ -323,6 +348,7 @@ def client_version(name):
 ##########
 # Course #
 ##########
+
 @admin.route("/course/")
 @is_staff()
 def list_courses():
@@ -390,7 +416,6 @@ def course_settings(cid):
     return render_template('staff/course/course.edit.html', form=form,
                            courses=courses, current_course=current_course)
 
-
 @admin.route("/course/<int:cid>/assignments")
 @is_staff(course_arg='cid')
 def course_assignments(cid):
@@ -402,7 +427,6 @@ def course_assignments(cid):
     return render_template('staff/course/assignment/assignments.html',
                            courses=courses, current_course=current_course,
                            active_asgns=active_asgns, due_assgns=due_asgns)
-
 
 @admin.route("/course/<int:cid>/assignments/new", methods=["GET", "POST"])
 @is_staff(course_arg='cid')
@@ -762,7 +786,6 @@ def assignment_single_queue(cid, aid, uid):
                            assignment=assignment, grader=assigned_grader,
                            queue=queue, remaining=remaining,
                            percent_left=percent_left)
-
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/queues/new",
              methods=["GET", "POST"])
@@ -1392,9 +1415,11 @@ def student_assignment_graph_detail(cid, email, aid):
                            student=student, assignment=assign,
                            group=group,
                            graphs=line_charts)
+
 ##############
 # Extensions #
 ##############
+
 @admin.route("/course/<int:cid>/extensions")
 @is_staff(course_arg='cid')
 def list_extensions(cid):

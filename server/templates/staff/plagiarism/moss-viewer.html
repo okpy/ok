@@ -1,0 +1,221 @@
+{% extends "staff/base.html" %}
+{% import 'diff.html' as diff with context %}
+{% import '_globalhelpers.html' as globals %}
+{% import 'staff/_helpers.html' as helpers %}
+
+{% block title %}Moss Viewer{% endblock %}
+
+{% block main %}
+<section class="content-header">
+    <h1>
+        MOSS Results for {{ backup.assignment.display_name }} Submissions {{ helpers.backup_link(backup.id) }} & {{ helpers.backup_link(assignment.id) }}
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for(".course", cid=backup.assignment.course.id) }}">
+            <i class="fa fa-university"></i> {{ backup.assignment.course.offering }}
+        </a></li>
+        <li><a href="{{ url_for('.course_assignments', cid=backup.assignment.course.id) }}">
+          <i class="fa fa-list"></i> Assignments</a>
+        </li>
+        <li class="active"><a href="{{ url_for('.assignment', cid=backup.assignment.course.id, aid=backup.assignment.id) }}"><i class="fa fa-book"></i> {{ backup.assignment.display_name }}</a></li>
+        <li class="active hidden-xs"><a href="{{ url_for('.assignment_moss_results', cid=backup.assignment.course.id, aid=backup.assignment.id) }}"><i class="fa fa-bar-chart"></i> Moss Results </a></li>
+    </ol>
+</section>
+
+<section class="content">
+    {% include 'alerts.html' %}
+
+    <div class="row">
+        <div class="col-xs-12">
+            <!-- Diff tab macros -->
+            {% macro diff_tab(target_diff_type, text) %}
+                <li role="presentation" class="{{ 'active' if diff_type == target_diff_type else '' }}">
+                    <a href="{{ url_for('.moss_viewer', moss_id=id, diff=target_diff_type) }}">{{ text }}</a>
+                </li>
+            {% endmacro %}
+            <!-- backup_1 -->
+            <div class="box">
+                <!-- backup_1 submission info -->
+                <div class="box-header with-border">
+                    <h3 class="box-title">{{ helpers.backup_link(backup.id) }} Submission Information ({{ backup.active_scores | length }} Assigned Scores) </h3>
+
+                    <div class="box-tools pull-right">
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                    <!-- /.box-tools -->
+                </div>
+                <div class="box-body" class="spoiler" style="display: block;">
+                  <ul class="list-group list-group-unbordered">
+                    <li class="list-group-item">
+                      <b>Submitter: </b>
+                      <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=backup.submitter.email, aid=backup.assignment.id) }}">
+                        {{ backup.submitter.email }}
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                    {% if group | length > 1 %}
+                      <b>Group: </b>
+                      {% for member in group %}
+                        <a href="{{ url_for('.student_assignment_detail', cid=backup.assignment.course.id, email=member.email, aid=backup.assignment.id) }}">
+                           {{ member.email }}
+                        </a>
+                      {% endfor %}
+                    {% else %}
+                      <b>No Group</b>
+                    {% endif %}
+                    </li>
+                  {% if backup.creator %}
+                    <li class="list-group-item">
+                      <b>Creator: </b>
+                      {{ backup.creator.email }}
+                    </li>
+                  {% endif %}
+                  {% for score in backup.active_scores %}
+                    <li class="list-group-item">
+                      <p>
+                        <b>{{ score.kind.title() }}: </b>{{ score.score | round(2) }}&ensp;
+                        {% if score.kind in backup.assignment.published_scores %}
+                          <span class="label label-success">Published</span>
+                        {% else %}
+                          <span class="label label-default">Unpublished</span>
+                        {% endif %}
+                      </p>
+                      <pre class="score-box">{{ score.message }}</pre>
+                      <p>{{ utils.local_time(score.created, backup.assignment.course) }} from {{ score.grader.email }}</p>
+                    </li>
+                  {% else %}
+                    <li class="list-group-item"><b>No Scores</b></li>
+                  {% endfor %}
+                  </ul>
+            </div>
+                <!-- backup_1 diff viewer -->
+                {% if assignment.files %}
+                <ul class="nav nav-tabs nav-justified">
+                    {{ diff_tab(None, 'Files') }}
+                    {{ diff_tab('short', 'Diff (short)') }}
+                    {{ diff_tab('full', 'Diff (full)') }}
+                </ul>
+                {% endif %}
+                <div class="box">
+                    <div class="box-body">
+
+                        <div class="subcontent list">
+                            <div class="wrap">
+                                {{ diff.render_files(backup, files) }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- backup_2 -->
+            <div class="box">
+                <!-- backup_2 submission info -->
+                <div class="box-header with-border">
+                    <h3 class="box-title">{{ helpers.backup_link(assignment.id) }} Submission Information ({{ assignment.active_scores | length }} Assigned Scores) </h3>
+
+                    <div class="box-tools pull-right">
+                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                    <!-- /.box-tools -->
+                </div>
+                <div class="box-body" class="spoiler" style="display: block;">
+                  <ul class="list-group list-group-unbordered">
+                    <li class="list-group-item">
+                      <b>Submitter: </b>
+                      <a href="{{ url_for('.student_assignment_detail', cid=assignment.assignment.course.id, email=assignment.submitter.email, aid=assignment.assignment.id) }}">
+                        {{ assignment.submitter.email }}
+                      </a>
+                    </li>
+                    <li class="list-group-item">
+                    {% if group | length > 1 %}
+                      <b>Group: </b>
+                      {% for member in group %}
+                        <a href="{{ url_for('.student_assignment_detail', cid=assignment.assignment.course.id, email=member.email, aid=assignment.assignment.id) }}">
+                           {{ member.email }}
+                        </a>
+                      {% endfor %}
+                    {% else %}
+                      <b>No Group</b>
+                    {% endif %}
+                    </li>
+                  {% if assignment.creator %}
+                    <li class="list-group-item">
+                      <b>Creator: </b>
+                      {{ assignment.creator.email }}
+                    </li>
+                  {% endif %}
+                  {% for score in assignment.active_scores %}
+                    <li class="list-group-item">
+                      <p>
+                        <b>{{ score.kind.title() }}: </b>{{ score.score | round(2) }}&ensp;
+                        {% if score.kind in assignment.assignment.published_scores %}
+                          <span class="label label-success">Published</span>
+                        {% else %}
+                          <span class="label label-default">Unpublished</span>
+                        {% endif %}
+                      </p>
+                      <pre class="score-box">{{ score.message }}</pre>
+                      <p>{{ utils.local_time(score.created, assignment.assignment.course) }} from {{ score.grader.email }}</p>
+                    </li>
+                  {% else %}
+                    <li class="list-group-item"><b>No Scores</b></li>
+                  {% endfor %}
+                  </ul>
+                </div>
+                <!-- backup_2 diff viewer -->
+                {% if assignment.files %}
+                <ul class="nav nav-tabs nav-justified">
+                    {{ diff_tab(None, 'Files') }}
+                    {{ diff_tab('short', 'Diff (short)') }}
+                    {{ diff_tab('full', 'Diff (full)') }}
+                </ul>
+                {% endif %}
+                <div class="box">
+                    <div class="box-body">
+
+                        <div class="subcontent list">
+                            <div class="wrap">
+                                {{ diff.render_files(assignment, files_2) }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+                <!-- /.box -->
+            </div>
+    </div>
+
+    <script type="text/template" id="editor-template">
+        {{ diff.editor_template() }}
+    </script>
+    <!-- /.box -->
+    <!-- </section> do not close the content section -->
+
+    <!-- </body> do not close body in template-->
+    {% endblock %}
+
+{% block page_css %}
+  {{ css_asset("code_css") }}
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">
+{% endblock %}
+
+{% block page_js %}
+    {{ js_asset("code_js") }}
+    <script>
+    var ipyFiles = {
+        {% for filename, file in files | dictsort %}
+            {% if '.ipynb' in filename %}
+                {{ filename.lower() | tojson }} : {{ file.source | tojson }},
+            {% endif %}
+        {% endfor %}
+    }
+
+    $(document).ready(function() {
+        displayNotebooks(ipyFiles)
+    })
+    </script>
+{% endblock %}
