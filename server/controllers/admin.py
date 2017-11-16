@@ -1130,6 +1130,7 @@ def checkpoint_grading(cid, aid):
 def enrollment(cid):
     courses, current_course = get_courses(cid)
     form = forms.EnrollmentForm()
+    export_form = forms.EnrollmentExportForm()
     if form.validate_on_submit():
         email, role = form.email.data, form.role.data
         Enrollment.enroll_from_form(cid, form)
@@ -1144,6 +1145,7 @@ def enrollment(cid):
                            enrollments=students, staff=staff,
                            lab_assistants=lab_assistants,
                            form=form,
+                           export_form=export_form,
                            unenroll_form=forms.CSRFForm(),
                            courses=courses,
                            current_course=current_course)
@@ -1182,26 +1184,32 @@ def batch_enroll(cid):
                            courses=courses,
                            current_course=current_course)
 
-@admin.route("/course/<int:cid>/enrollment/csv")
+@admin.route("/course/<int:cid>/enrollment/csv", methods=['POST'])
 @is_staff(course_arg='cid')
 def enrollment_csv(cid):
+    export_form = forms.EnrollmentExportForm()
     courses, current_course = get_courses(cid)
+    if export_form.validate_on_submit():
+        roles = export_form.roles.data
+        query = (Enrollment.query.options(db.joinedload('user'))
+                       .filter_by(course_id=cid)
+                       .filter(Enrollment.role.in_(roles))
+                       .order_by(Enrollment.role))
 
-    query = (Enrollment.query.options(db.joinedload('user'))
-                       .filter_by(course_id=cid, role=STUDENT_ROLE))
+        file_name = "{0}-roster.csv".format(current_course.offering.replace('/', '-'))
+        disposition = 'attachment; filename={0}'.format(file_name)
+        items = User.export_items + Enrollment.export_items
 
-    file_name = "{0}-roster.csv".format(current_course.offering.replace('/', '-'))
-    disposition = 'attachment; filename={0}'.format(file_name)
-    items = User.export_items + Enrollment.export_items
+        def row_to_csv(row):
+            return [row.export, row.user.export]
 
-    def row_to_csv(row):
-        return [row.export, row.user.export]
+        csv_generator = utils.generate_csv(query, items, row_to_csv)
 
-    csv_generator = utils.generate_csv(query, items, row_to_csv)
-
-    return Response(stream_with_context(csv_generator),
-                    mimetype='text/csv',
-                    headers={'Content-Disposition': disposition})
+        return Response(stream_with_context(csv_generator),
+                        mimetype='text/csv',
+                        headers={'Content-Disposition': disposition})
+    flash('Invalid roles to export.', 'error')
+    return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/clients/", methods=['GET', 'POST'])
 @is_admin()
@@ -1266,7 +1274,7 @@ def student_view(cid, email):
                      if not a.active]
     }
 
-    moss_results = MossResult.query.order_by(MossResult.run_time.desc()) \
+    moss_results = MossResult.query.order_by(MossResult.run_time) \
         .group_by(MossResult.primary_id, MossResult.secondary_id) \
         .order_by(MossResult.similarity.desc()) \
         .join(MossResult.primary).join(Backup.submitter).filter_by(id=student.id).all()
@@ -1516,14 +1524,15 @@ def create_extension(cid):
         if Extension.get_extension(student, assign):
             flash("{} already has an extension".format(form.email.data), 'danger')
         else:
+            group_members = assign.active_user_ids(student.id)
+            ext = Extension.query.filter(Extension.assignment == assign, Extension.user_id.in_(group_members)).first()
+            if ext:
+                Extension.delete(ext)
             expires = utils.server_time_obj(form.expires.data, current_course)
             custom_time = form.get_submission_time(assign)
-
-            ext = Extension(staff=current_user, assignment=assign, user=student,
+            ext = Extension.create(staff=current_user, assignment=assign, user=student,
                             message=form.reason.data, expires=expires,
                             custom_submission_time=custom_time)
-            db.session.add(ext)
-            db.session.commit()
             emails = ', '.join([u.email for u in ext.members()])
             flash("Granted a extension on {} for {} ".format(assign.display_name,
                                                              emails), 'success')
@@ -1541,8 +1550,7 @@ def delete_extension(cid, ext_id):
         abort(401)
 
     if forms.CSRFForm().validate_on_submit():
-        db.session.delete(extension)
-        db.session.commit()
+        Extension.delete(extension)
         flash("Revoked extension", "success")
         return redirect(url_for('.list_extensions', cid=cid))
     abort(401)
@@ -1659,7 +1667,7 @@ def staff_submit_backup(cid, email, aid):
     # TODO: DRY - Unify with student upload code - should just be a function
     form = forms.StaffUploadSubmissionForm()
     if form.validate_on_submit():
-        backup = Backup(
+        backup = Backup.create(
             submitter=student,
             creator=current_user,
             assignment=assign,

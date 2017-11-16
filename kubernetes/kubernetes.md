@@ -38,15 +38,18 @@
 
 ### Deploy Script
 
-To deploy you can use the deploy script which will perform the steps necessary to deploy.
+First, make sure you have access to the ok-server project, and you have logged in the terminal using `gcloud auth login`.  You can then use this deploy script to run the necessary steps to deploy:
 
     $ ./kubernetes/deploy.sh <version-name>
+    
+Make sure things work in staging first before pushing to production!  Make sure your "version-name"s are unique.  As a suggestion, always append e.g. `-staging-1` or `-production-1` to your version number, so you can cleanly make multiple deploy attempts.
 
-This will create a tag. OK version names use `vMAJOR.MINOR.PATCH` format (for example `v3.4.20`).
-
-Be sure to push up your tags after a deploy to production
+This script will NOT create a tag; make sure to add a tag using `git tag <tag-name>`.  OK version names use `vMAJOR.MINOR.PATCH` format (for example `v3.4.20`).  Be sure to push up your tags after a deploy to production:
 
     $ git push origin master --tags
+    
+Common troubleshooting:
+- Make sure you have logged into gcloud using `gcloud auth login`
 
 ### Manual Instructions
 Rolling updates the running service one pod at a time, allowing for zero downtime updates.
@@ -182,6 +185,19 @@ The load balancer will spin up and get configured (takes a few minutes to pass h
 - Every branch and tag is automatically built into an image on Docker Hub under the cs61a/ok image
     - [Link](https://hub.docker.org/r/cs61a/ok)
 - As a secondary image host - we use [Quay.io](https://quay.io/repository/cs61a/ok-server) automated builds for the master branch
+
+## Adding an Admin
+
+```
+$ kubectl get pod # to get the name of the staging pod 
+$ kubectl exec -ti ok-staging-deployment-number-something -- ./manage.py shell
+>>> # BE VERY CAREFUL about who you give admin access to. This should be limited to lead developers & John DeNero
+>>> new_admin = User.query.filter_by(email="<email>").first()
+>>> new_admin.is_admin = True 
+>>> db.session.commit()
+>>> exit()
+```
+
 
 ## Future Work
 

@@ -29,6 +29,7 @@ class RunTests(Command):
         test_suite = test_loader.discover('tests/')
         test_runner.run(test_suite)
 
+
 manager.add_command("server", Server(host='localhost'))
 manager.add_command("show-urls", ShowUrls())
 manager.add_command("clean", Clean())
@@ -61,10 +62,11 @@ def setup_default():
     db.session.add(admin)
     db.session.commit()
     course = Course(
-            offering='cal/cs61a/sp16',
-            institution='UC Berkeley',
-            display_name='CS 61A',
-            active=True)
+        offering='cal/cs61a/sp16',
+        institution='UC Berkeley',
+        display_name='CS 61A',
+        active=True
+    )
     db.session.add(course)
 
     url = 'https://github.com/Cal-CS-61A-Staff/ok-client/releases/download/v1.5.5/ok'
@@ -113,7 +115,9 @@ def generate_session_key():
 
 @manager.command
 def worker():
+    """ Run RQ workers. """
     get_worker().work()
+
 
 if __name__ == "__main__":
     manager.run()
