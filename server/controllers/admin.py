@@ -965,7 +965,8 @@ def get_moss_diffs(cid, aid, mid, diff_type='short'):
             matches = moss_matches_dict[sub][file]
             for match in matches:
                 for line in range(match[0], match[1] + 1):
-                    all_lines[line] = -1 # mark the offending lines for removal
+                    print(line - 1, len(all_lines))
+                    all_lines[line - 1] = -1 # mark the offending lines for removal
             approved[file] = ''.join([line + '\n' for line in all_lines if line != -1])
             hlt = highlight.diff_files(submitted_files, approved, diff_type)
 
