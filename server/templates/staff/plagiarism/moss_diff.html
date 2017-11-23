@@ -7,7 +7,7 @@
 <section class="content-header">
     <h1>
         MOSS Diff Result
-        <small> {{ data['Primary']['backups'].assignment.display_name }} {{ "Submission" if data['Primary']['backups'].is_submit else "Backup" }} </small>
+        <small> {{ info[0][1]['backup'].assignment.display_name }} {{ "Submission" if info[0][1]['backup'].is_submit else "Backup" }} </small>
     </h1>
 </section>
 
@@ -19,8 +19,8 @@
             <div class="box collapsed-box">
                 <div class="box-header with-border">
                     <h3 class="box-title"> MOSS Result Similarity:
-                    {% if moss_result.similarity > 95 %} 
-                        <b style="color:red"> {{moss_result.similarity}}%</b> 
+                    {% if moss_result.similarity > 95 %}
+                        <b style="color:red"> {{moss_result.similarity}}%</b>
                     {% elif moss_result.similarity > 90 %}
                         <b style="color:darkorange"> {{moss_result.similarity}}%</b>
                     {% elif moss_result.similarity > 80 %}
@@ -45,94 +45,109 @@
                     </li>
                     <!-- /.box-tools -->
                 </div>
-                </div>
+              </div>
+            </div>
+            <div class="col-xs-12">
                 <!-- /.box-header -->
-                {% for sub in data %}
+                {% for sub, data in info %}
                 <div class="diff-column col-xs-6">
                     <div class="box" class="spoiler" style="display: block;">
                       <ul class="list-group list-group-unbordered">
                         <li class="list-group-item">
                           <b>{{sub}} Submitter: </b>
-                          <a href="{{ url_for('.student_assignment_detail', cid=data[sub]['backups'].assignment.course.id, email=data[sub]['backups'].submitter.email, aid=data[sub]['backups'].assignment.id) }}">
-                            {{ data[sub]['backups'].submitter.email }}
+                          <a href="{{ url_for('.student_assignment_detail', cid=data['backup'].assignment.course.id, email=data['backup'].submitter.email, aid=data['backup'].assignment.id) }}">
+                            {{ data['backup'].submitter.email }}
                           </a>
                         </li>
                         <li class="list-group-item">
-                        {% if data[sub]['group'] | length > 1 %}
-                          <b>{{sub}} Group: </b>
-                          {% for member in data[sub]['group'] %}
-                            <a href="{{ url_for('.student_assignment_detail', cid=data[sub]['backups'].assignment.course.id, email=member, aid=data[sub]['backups'].assignment.id) }}">
+                        {% if data['group'] | length > 1 %}
+                          <b>Group: </b>
+                          {% for member in data['group'] %}
+                            <a href="{{ url_for('.student_assignment_detail', cid=data['backup'].assignment.course.id, email=member, aid=data['backup'].assignment.id) }}">
                                {{member}}
                             </a>
                           {% endfor %}
                         {% else %}
-                          <p><b>{{sub}} Group:</b> No Group</p>
+                          <p><b>Group:</b> No Group</p>
                         {% endif %}
                         </li>
-                      {% if data[sub]['backups'].creator %}
+                      {% if data['backup'].creator %}
                         <li class="list-group-item">
                           <b>Creator: </b>
-                          {{ data[sub]['backups'].creator.email }}
+                          {{ data['backup'].creator.email }}
                         </li>
                       {% endif %}
                         <li class="list-group-item">
                           <b>Creation Time: </b>
-                          {{ utils.local_time(data[sub]['backups'].created, data[sub]['backups'].assignment.course) }}
+                          {{ utils.local_time(data['backup'].created, data['backup'].assignment.course) }}
                         </li>
-                      {% if data[sub]['backups'].custom_submission_time %}
+                      {% if data['backup'].custom_submission_time %}
                         <li class="list-group-item">
                           <b>Custom Submission Time: </b>
-                          {{ utils.local_time(data[sub]['backups'].custom_submission_time, data[sub]['backups'].assignment.course) }}
+                          {{ utils.local_time(data['backup'].custom_submission_time, data['backup'].assignment.course) }}
                         </li>
                       {% endif %}
                         <li class="list-group-item">
-                          <b>Student URL: </b>
-                          {% with student_url = url_for('student.code', name=data[sub]['backups'].assignment.name, bid=data[sub]['backups'].id, submit=data[sub]['backups'].submit, _external=True) %}
-                          <a href="{{ student_url }}"> {{ student_url }} </a>
+                          <b>Backup URL: </b>
+                          {% with backup_url = url_for('admin.grading', bid=data['backup'].id, _external=True) %}
+                          <a href="{{ backup_url }}"> {{ backup_url }} </a>
                           {% endwith %}
                         </li>
                         <li class="list-group-item">
                           <b> Number of Backups: </b>
-                          {{ data[sub]['total_backups']}}
+                          {{ data['total']}}
                         </li>
+                      </ul>
                     </div>
-              <div class="box collapsed-box">
-                <div class="box-header with-border">
-                    <h3 class="box-title"> {{data[sub]['group'] | length}} 
-                      {% if data[sub]['group'] | length > 1 %} {{sub}} Diff Timelines 
-                      {% else %} {{sub}} Diff Timeline
+                  </div>
+              {% endfor %}
+              </div>
+
+              <div class="col-xs-12">
+              {% for sub, data in graphs %}
+              <div class="diff-column col-xs-6">
+                <div class="box collapsed-box">
+                  <div class="box-header with-border">
+                      <h3 class="box-title"> {{data['group'] | length}}
+                        {% if data['group'] | length > 1 %} {{sub}} Diff Timelines
+                        {% else %} {{sub}} Diff Timeline
+                        {% endif %}
+                      </h3>
+                      <div class="box-tools pull-right">
+                          <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+                          </button>
+                      </div>
+                  </div>
+                      <div class="box-body" class="spoiler" style="display: none;">
+                      <div class="box-body">
+                      <div class="graph">
+                      {% for graph in data['graphs'] %}
+                          <div class="col-xs-8 centered">
+                              {{ graph.render() | safe }}
+                          </div>
+                      {% endfor %}
+                      </div>
+                      </div>
+                      <!-- /.box-tools -->
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+              </div>
+
+              {% for data in files %}
+              <div class="col-xs-12">
+                  {% for backup, filename, file in data %}
+                  <div class="diff-column col-xs-6">
+                      {% if file.id %}
+                          {{ diff.external_file(backup, filename, file) }}
+                      {% else %}
+                          {{ diff.source_file(backup, filename, file, True) }}
                       {% endif %}
-                    </h3>
-                    <div class="box-tools pull-right">
-                        <button id="expand-submission-information" type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-                    <div class="box-body" class="spoiler" style="display: none;">
-                    <div class="box-body">
-                    <div class="graph">
-                    {% for graph in data[sub]['graph'] %}
-                        <div class="col-xs-8 centered">
-                            {{ graph.render() | safe }}
-                        </div>
-                    {% endfor %}
-                    </div>
-                    </div>
-                    <!-- /.box-tools -->
-                </div>
-                </div>
-            <div class="box">
-                <!-- /.box-header -->
-                <div class="box-body">
-                    <div class="subcontent list">
-                        <div class="wrap">
-                            {{ diff.render_files(data[sub]['backups'], data[sub]['file_hlt'], moss_diff=True) }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-          </div>
-          {% endfor %}
+                  </div>
+                  {% endfor %}
+              </div>
+              {% endfor %}
         </div>
       </div>
     </div>
@@ -162,10 +177,10 @@
     min-width: 0;
   }
   .subcontent {
-    padding: 0px; 
+    padding: 0px;
   }
   .box-body {
-    padding: 0px; 
+    padding: 0px;
   }
   .col-xs-8 {
     width: 100%;
@@ -179,6 +194,6 @@
   .list-group-item:last-child {
     border-bottom: 0;
   }
-  </style> 
+  </style>
 {% endblock %}
 
