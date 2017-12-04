@@ -41,6 +41,19 @@ The server will listen on http://localhost:5000.
 
 If you are running into issues - see `documentation/SETUP.md` or file an issue
 
+Running Workers
+---------------
+To run workers locally:
+
+```bash
+$ ./manage.py worker
+```
+
+To be able to run the workers you should have a `redis` server installed and running.
+
+If `redis` is not installed you can install it using your distribution's package
+manager or follow [Redis Quick Start](https://redis.io/topics/quickstart).
+
 Command Line Manager
 ------------------------
 * To view available commands run `./manage.py` once the virtualenv is activated.
