@@ -29,7 +29,7 @@ import mimetypes
 
 from server.constants import (VALID_ROLES, STUDENT_ROLE, STAFF_ROLES, TIMEZONE,
                               SCORE_KINDS, OAUTH_OUT_OF_BAND_URI,
-                              INSTRUCTOR_ROLE)
+                              INSTRUCTOR_ROLE, ROLE_DISPLAY_NAMES)
 
 from server.extensions import cache, storage
 from server.utils import (encode_id, chunks, generate_number_table,
@@ -865,7 +865,14 @@ class Enrollment(Model):
     user = db.relationship("User", backref="participations")
     course = db.relationship("Course", backref="participations")
 
-    export_items = ('sid', 'class_account', 'section')
+    export_items = ('sid', 'class_account', 'section', 'role')
+
+    @hybrid_property
+    def export(self):
+        """ CSV export data. Overrides Model.export."""
+        data = self.as_dict()
+        data['role'] = ROLE_DISPLAY_NAMES[self.role]
+        return {k: v for k, v in data.items() if k in self.export_items}
 
     def has_role(self, course, role):
         if self.course != course:

@@ -221,6 +221,16 @@ class AssignmentTemplateForm(BaseForm):
     template_files = FileField('Template Files', [FileRequired()])
 
 
+class EnrollmentExportForm(BaseForm):
+    roles = MultiCheckboxField('Roles', choices=ROLE_DISPLAY_NAMES.items(),
+            validators=[validators.required()])
+
+    def validate(self):
+        if not super().validate():
+            return False
+        return all(role in ROLE_DISPLAY_NAMES.keys() for role in self.roles.data)
+
+
 class EnrollmentForm(BaseForm):
     name = StringField('Name', validators=[validators.required()])
     email = EmailField('Email',

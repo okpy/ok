@@ -1080,6 +1080,7 @@ def checkpoint_grading(cid, aid):
 def enrollment(cid):
     courses, current_course = get_courses(cid)
     form = forms.EnrollmentForm()
+    export_form = forms.EnrollmentExportForm()
     if form.validate_on_submit():
         email, role = form.email.data, form.role.data
         Enrollment.enroll_from_form(cid, form)
@@ -1094,6 +1095,7 @@ def enrollment(cid):
                            enrollments=students, staff=staff,
                            lab_assistants=lab_assistants,
                            form=form,
+                           export_form=export_form,
                            unenroll_form=forms.CSRFForm(),
                            courses=courses,
                            current_course=current_course)
@@ -1132,26 +1134,32 @@ def batch_enroll(cid):
                            courses=courses,
                            current_course=current_course)
 
-@admin.route("/course/<int:cid>/enrollment/csv")
+@admin.route("/course/<int:cid>/enrollment/csv", methods=['POST'])
 @is_staff(course_arg='cid')
 def enrollment_csv(cid):
+    export_form = forms.EnrollmentExportForm()
     courses, current_course = get_courses(cid)
+    if export_form.validate_on_submit():
+        roles = export_form.roles.data
+        query = (Enrollment.query.options(db.joinedload('user'))
+                       .filter_by(course_id=cid)
+                       .filter(Enrollment.role.in_(roles))
+                       .order_by(Enrollment.role))
 
-    query = (Enrollment.query.options(db.joinedload('user'))
-                       .filter_by(course_id=cid, role=STUDENT_ROLE))
+        file_name = "{0}-roster.csv".format(current_course.offering.replace('/', '-'))
+        disposition = 'attachment; filename={0}'.format(file_name)
+        items = User.export_items + Enrollment.export_items
 
-    file_name = "{0}-roster.csv".format(current_course.offering.replace('/', '-'))
-    disposition = 'attachment; filename={0}'.format(file_name)
-    items = User.export_items + Enrollment.export_items
+        def row_to_csv(row):
+            return [row.export, row.user.export]
 
-    def row_to_csv(row):
-        return [row.export, row.user.export]
+        csv_generator = utils.generate_csv(query, items, row_to_csv)
 
-    csv_generator = utils.generate_csv(query, items, row_to_csv)
-
-    return Response(stream_with_context(csv_generator),
-                    mimetype='text/csv',
-                    headers={'Content-Disposition': disposition})
+        return Response(stream_with_context(csv_generator),
+                        mimetype='text/csv',
+                        headers={'Content-Disposition': disposition})
+    flash('Invalid roles to export.', 'error')
+    return redirect(url_for(".enrollment", cid=cid))
 
 @admin.route("/clients/", methods=['GET', 'POST'])
 @is_admin()

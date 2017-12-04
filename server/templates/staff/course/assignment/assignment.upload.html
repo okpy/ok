@@ -50,6 +50,10 @@
                   {% if assignment.upload_info %}
                    {{ assignment.upload_info }}
                   {% endif %}
+
+                  {% if assignment.files %}
+                   Required Files: scores.csv
+                  {% endif %}
               </p>
 
               {% call forms.render_form(upload_form, class_='form', enctype="multipart/form-data") %}
