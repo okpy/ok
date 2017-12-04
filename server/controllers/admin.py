@@ -30,7 +30,7 @@ from server.extensions import cache
 import server.forms as forms
 import server.jobs as jobs
 from server.jobs import (example, export, moss, scores_audit, github_search,
-                         scores_notify, checkpoint, effort)
+                         scores_notify, checkpoint, effort, upload_scores)
 
 import server.highlight as highlight
 import server.utils as utils
@@ -848,19 +848,31 @@ def upload(cid, aid):
         flash('Cannot access assignment', 'error')
         return abort(404)
     if upload_form.validate_on_submit():
-        error = Score.score_from_csv(cid, aid, current_user, None,
+        # error = Score.score_from_csv(cid, aid, current_user, None,
+        #     email_label=upload_form.labels['email'],
+        #     score_label=upload_form.labels['score'],
+        #     uploaded_csv=upload_form.parsed,
+        #     kind=upload_form.kind.data)
+        job = jobs.enqueue_job(
+            upload_scores.score_from_csv,
+            description='Upload Scores for {}'.format(assign.display_name),
+            result_kind='link',
+            timeout=600,  # 5 mins
+            course_id=cid,
+            user_id=current_user.id,
+            # params
+            assign_id=assign.id,
             email_label=upload_form.labels['email'],
             score_label=upload_form.labels['score'],
             uploaded_csv=upload_form.parsed,
             kind=upload_form.kind.data)
-        if not error:
-            flash('Successfully added scores for {}'.format(assign.display_name), 'success')
-            return redirect(url_for(".assignment", cid=cid, aid=aid))
-    else:
-        error = upload_form.error
+        return redirect(url_for('.course_job', cid=cid, job_id=job.id))
+        # if not error:
+        #     flash('Successfully added scores for {}'.format(assign.display_name), 'success')
+        #     return redirect(url_for(".assignment", cid=cid, aid=aid))
 
-    if error:
-        flash(error, 'error')
+    elif upload_form.error:
+        flash(upload_form.error, 'error')
     return render_template('staff/course/assignment/assignment.upload.html',
                        upload_form=upload_form,
                        courses=courses,

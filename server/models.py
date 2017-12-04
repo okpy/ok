@@ -1481,6 +1481,8 @@ class Score(Model):
                     email, score = entry[0], entry[1]
             except Exception as e:
                 return 'csv not formatted properly on line {linenum}: {entry}'.format(linenum=line_num,entry=entry)
+            if not score:
+                score = 0
             user = User.query.filter_by(email=email).one_or_none()
             try:
                 backup = Backup.create(

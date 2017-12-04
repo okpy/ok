@@ -406,6 +406,8 @@ class BatchCSVScoreForm(SubmissionTimeForm):
         return email_re.fullmatch(s) is not None
 
     def is_number(self, s):
+        if s == '':
+            return True
         try:
             float(s)
         except Exception:
@@ -437,10 +439,10 @@ class BatchCSVScoreForm(SubmissionTimeForm):
 
             for row in self.parsed:
                 print(row)
-                email, score = self.labels['email'], self.labels['score']
+                email, score = self.labels['email'].strip(), self.labels['score'].strip()
                 assert self.labels.values() & row.keys(), "`{0}` must have a {1} and {2} field".format(row, email, score)
-                assert self.is_email(row[email]), "`{0}` is not a valid email".format(row[email])
-                assert self.is_number(row[score]), "`{0}` is not a valid score".format(row[score])
+                assert self.is_email(row[email]), "`{0}` is not a valid email (row: {1})".format(row[email], row)
+                assert self.is_number(row[score]), "`{0}` is not a valid score (row: {1})".format(row[score], row)
 
         except AssertionError as e:
             logging.error(e)
