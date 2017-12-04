@@ -840,40 +840,33 @@ def autograde(cid, aid):
 @is_staff(course_arg='cid')
 def upload(cid, aid):
     courses, current_course = get_courses(cid)
-    batch_form = forms.BatchScoreForm()
-    upload_form = forms.BatchCSVScoreForm()
+    upload_form = forms.BatchCSVScoreForm(kind='total')
+    upload_form.submission_time.data = 'deadline'
     assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
+
     if not assign or not Assignment.can(assign, current_user, 'grade'):
         flash('Cannot access assignment', 'error')
         return abort(404)
-    if batch_form.validate_on_submit() and batch_form.csv.data:
-        error = Score.score_from_csv(cid, aid, current_user, batch_form, kind=batch_form.kind.data)
-        if error: 
-            msg = ("csv improperly formatted for {name}, with {error}").format(name=assign.name,error=error)
-            flash(msg, "error")
-        else: 
-            msg = ("Added scores through csv load for {name}"
-                .format(name=assign.name))
-            flash(msg, "success with csv")
-        return redirect(url_for(".assignment", cid=cid, aid=aid))
-    elif upload_form.validate_on_submit():
-        #filename = secure_filename(f.filename)
-        if upload_form.upload_files.data: 
-            error = Score.score_from_csv(cid, aid, current_user, None, uploaded_csv=upload_form.upload_files.parsed,kind=upload_form.kindCSV.data)
-            if error: 
-                msg = ("csv improperly formatted for {name}, with {error}").format(name=assign.name,error=error)
-                flash(msg, "error")
-            else: 
-                msg = ("Added scores through csv load for {name}"
-                    .format(name=assign.name))
-                flash(msg, "success with csv")
+    if upload_form.validate_on_submit():
+        error = Score.score_from_csv(cid, aid, current_user, None,
+            email_label=upload_form.labels['email'],
+            score_label=upload_form.labels['score'],
+            uploaded_csv=upload_form.parsed,
+            kind=upload_form.kind.data)
+        if not error:
+            flash('Successfully added scores for {}'.format(assign.display_name), 'success')
             return redirect(url_for(".assignment", cid=cid, aid=aid))
+    else:
+        error = upload_form.error
+
+    if error:
+        flash(error, 'error')
     return render_template('staff/course/assignment/assignment.upload.html',
-                       batch_form=batch_form,
                        upload_form=upload_form,
                        courses=courses,
                        current_course=current_course,
                        assignment=assign)
+
 
 @admin.route("/course/<int:cid>/assignments/<int:aid>/effort",
              methods=["GET", "POST"])

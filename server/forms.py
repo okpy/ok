@@ -368,75 +368,88 @@ class StaffUploadSubmissionForm(UploadSubmissionForm, SubmissionTimeForm):
     pass
 
 class BatchCSVScoreForm(SubmissionTimeForm):
+    use_csv = RadioField(
+        'Upload Scores Using',
+        choices=[
+            ('csv', 'CSV'),
+            ('text', 'Text'),
+        ],
+        default='csv',
+        validators=[validators.required()],
+    )
+
+    # CSV Fields
     upload_files = FileField('csv', validators=[
-        FileRequired(), 
         FileAllowed(['csv'], 'csvs only!')])
-    kindCSV = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
-                       validators=[validators.required()])
-    def validate(self):
-        check_validate = super(BatchCSVScoreForm, self).validate()
-        # if our validators do not pass
-        if not check_validate:
-            return False
-        try:
-            rows = self.upload_files.data.read().decode('utf-8').splitlines()
-            print(rows)
-            self.upload_files.parsed = list(csv.reader(rows))
-        except csv.Error as e:
-            logging.error(e)
-            self.upload_files.errors.append(['The CSV could not be parsed'])
-            return False
+    email = StringField('Email Label Name')
+    score = StringField('Score Label Name')
 
-        for row in self.upload_files.parsed:
-            if len(row) != 2:
-                err = "{0} did not have 2 columns".format(row)
-                self.upload_files.errors.append(err)
-                return False
-            if not row[0]:
-                err = "{0} did not have an email".format(row)
-                self.upload_files.errors.append(err)
-                return False
-            elif "@" not in row[0]:
-                # TODO : Better email check.
-                err = "{0} is not a valid email".format(row[0])
-                self.upload_files.errors.append(err)
-                return False
-        return True
+    # Text Fields
+    textarea = TextAreaField('text')
 
-class BatchScoreForm(SubmissionTimeForm):
-    csv = TextAreaField('Email, Score')
     kind = SelectField('Kind', choices=[(c, c.title()) for c in SCORE_KINDS],
-                       validators=[validators.required()])
+                validators=[validators.required()])
+    error = None
+
+    def is_email(self, s):
+        email_re = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+        return email_re.fullmatch(s) is not None
+
+    def is_number(self, s):
+        try:
+            float(s)
+        except Exception:
+            return False
+        else:
+            return True
 
     def validate(self):
-        check_validate = super(BatchScoreForm, self).validate()
-        # if our validators do not pass
-        if not check_validate:
-            return False
-        try:
-            rows = self.csv.data.splitlines()
-            self.csv.parsed = list(csv.reader(rows))
-        except csv.Error as e:
-            logging.error(e)
-            self.csv.errors.append(['The CSV could not be parsed'])
+
+        if not super().validate():
             return False
 
-        for row in self.csv.parsed:
-            if len(row) != 2:
-                err = "{0} did not have 2 columns".format(row)
-                self.csv.errors.append(err)
-                return False
-            if not row[0]:
-                err = "{0} did not have an email".format(row)
-                self.csv.errors.append(err)
-                return False
-            elif "@" not in row[0]:
-                # TODO : Better email check.
-                err = "{0} is not a valid email".format(row[0])
-                self.csv.errors.append(err)
-                return False
+        try:
+            if self.use_csv.data == 'csv':
+                self.input_field = self.upload_files
+                assert self.upload_files.data, 'CSV file is required'
+                assert self.email.data, 'Email label name is required'
+                assert self.score.data, 'Score label name is required'
+                self.labels = {'email': self.email.data, 'score': self.score.data}
+                rows = self.upload_files.data.read().decode('utf-8').splitlines()
+            else:
+                self.input_field = self.textarea
+                assert self.textarea.data, 'textarea cannot be empty'
+                self.labels = {'email': 'Email', 'score': 'Score'}
+                rows = self.textarea.data.splitlines()
+                rows.insert(0, 'Email,Score')
+
+            self.parsed = list(csv.DictReader(rows))
+
+            for row in self.parsed:
+                print(row)
+                email, score = self.labels['email'], self.labels['score']
+                assert self.labels.values() & row.keys(), "`{0}` must have a {1} and {2} field".format(row, email, score)
+                assert self.is_email(row[email]), "`{0}` is not a valid email".format(row[email])
+                assert self.is_number(row[score]), "`{0}` is not a valid score".format(row[score])
+
+        except AssertionError as e:
+            logging.error(e)
+            self.error = str(e)
+            self.input_field.errors.append(self.error)
+            return False
+        except KeyError as e:
+            missing = str(e).lstrip('KeyError: ')
+            self.error = 'No such column {}'.format(missing)
+            self.input_field.errors.append(self.error)
+            return False
+        except csv.Error as e:
+            logging.error(e)
+            self.error = 'The CSV could not be parsed'
+            self.input_field.errors.append(self.error)
+            return False
+
         return True
-    
+
 
 class ExtensionForm(SubmissionTimeForm):
     assignment_id = SelectField('Assignment', coerce=int, validators=[validators.required()])

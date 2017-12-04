@@ -1454,40 +1454,44 @@ class Score(Model):
 
     @staticmethod
     @transaction
-    def score_from_csv(cid, aid, current_user, form, uploaded_csv=None, kind='total'):
+    def score_from_csv(cid, aid, current_user, form, email_label=None, score_label=None, uploaded_csv=None, kind='total'):
         '''
         Returns None if successful, returns an error message if an error occurs
         '''
         message = []
         if not uploaded_csv:
             rows = csv.reader(form.csv.data.splitlines())
-        else: 
+        else:
             rows = uploaded_csv
         assign = Assignment.query.filter_by(id=aid, course_id=cid).one_or_none()
         line_num = 0
         for entry in rows:
-            entry = [x.strip() for x in entry]
-            try: 
-                email, score = entry[0], entry[1]
-            except: 
-                return 'csv not formatted properly on line {linenum}, {entry}'.format(linenum=line_num,entry=entry)
+            try:
+                if uploaded_csv and email_label and score_label:
+                    email, score = entry[email_label], entry[score_label]
+                else:
+                    entry = [x.strip() for x in entry]
+                    email, score = entry[0], entry[1]
+            except Exception as e:
+                return 'csv not formatted properly on line {linenum}: {entry}'.format(linenum=line_num,entry=entry)
             user = User.query.filter_by(email=email).one_or_none()
-            try: 
+            try:
                 backup = Backup.create(
                     submitter=user,
-                    assignment_id=assign.id, 
+                    assignment_id=assign.id,
                     submit=True
                 )
-            except: 
+            except:
                 db.session.rollback()
-                return 'Error with entering {0} - User not Found. Entries before entered into DB'.format(entry)
+                return 'User with email `{}` not Found.'.format(email)
             uploaded_score = Score(grader_id=current_user.id, assignment=backup.assignment,\
                         backup=backup, user_id=backup.submitter_id, score=score, kind=kind)
             db.session.add(uploaded_score)
-            db.session.commit()
             #CURRENTLY NOT ARCHIVING OLD SCORES
             uploaded_score.archive_duplicates()
             line_num += 1
+
+        db.session.commit()
 
     def archive(self, commit=True):
         self.public = False
