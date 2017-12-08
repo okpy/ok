@@ -122,7 +122,7 @@
                     {% endif %}
                     <td>
                     {% if item.score_id %}
-                    <a href="{{ url_for(grading_view, bid=item.backup.id, diff='full')}}" class="btn btn-block btn-info btn-flat">
+                    <a href="{{ url_for(grading_view, bid=item.backup.id, diff='full') }}" class="btn btn-block btn-info btn-flat">
                         Regrade
                     </a>
                     {% else %}
